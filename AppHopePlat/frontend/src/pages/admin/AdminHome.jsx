@@ -1,0 +1,138 @@
+import { Link, useOutletContext } from 'react-router-dom';
+
+import {
+  IconeBeneficiaires,
+  IconeBudgets,
+  IconeChevronDroit,
+  IconeDepenses,
+  IconeDonateurs,
+  IconeGraphique,
+  IconePlus,
+  IconeProjets,
+} from '../../components/admin/AdminIcons.jsx';
+import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
+import {
+  Alerte,
+  Badge,
+  Chargement,
+  EtatVide,
+  Panneau,
+  Progression,
+  Tableau,
+} from '../../components/admin/ui.jsx';
+import { useChargement } from '../../hooks/useChargement.js';
+import * as catalogService from '../../services/catalog.service.js';
+import * as dashboardService from '../../services/dashboard.service.js';
+import * as fmt from '../../utils/format.js';
+
+import photoBandeau from '../../assets/hope-baobabs.jpg';
+import silhouette from '../../assets/hope-madagascar.png';
+
+/** Couleur de la pastille du fil d'activite selon la nature de l'ecriture. */
+const TEINTES_ACTIVITE = {
+  DONATION: 'vert',
+  INVESTMENT: 'ambre',
+  EXPENSE: 'ambre',
+  PROJECT: 'bleu',
+  PROJECT_COMPLETED: 'vert',
+  BENEFICIARY: 'gris',
+  MESSAGE: 'violet',
+};
+
+/** Une carte de chiffre cle. */
+function CarteChiffre({ libelle, valeur, variation, Icone, teinte }) {
+  return (
+    <article className="carte-chiffre">
+      <div>
+        <p className="carte-chiffre__libelle">{libelle}</p>
+        <p className="carte-chiffre__valeur">{valeur}</p>
+        {variation && <p className="carte-chiffre__variation">{variation}</p>}
+      </div>
+      <span className={`carte-chiffre__icone carte-chiffre__icone--${teinte}`} aria-hidden="true">
+        <Icone />
+      </span>
+    </article>
+  );
+}
+
+/**
+ * Accueil de l'espace administrateur.
+ *
+ * Quatre chiffres cles, la lecture du budget, les projets en cours, le fil
+ * d'activite et les actions rapides. Pas de graphique ici : ils ont leur
+ * ecran dedie.
+ */
+export default function AdminHome() {
+  const { admin } = useOutletContext();
+
+  const { donnees, chargement, erreur } = useChargement(
+    () => dashboardService.recupererAccueil(),
+    []
+  );
+  const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
+
+  const libelles = catalogue?.labels ?? {};
+  const stats = donnees?.stats;
+  const tendances = donnees?.trends;
+
+  // Le flux des fonds attend la meme forme que celle de l'ecran Budget.
+  const resumeFonds = stats
+    ? {
+        designatedTotal: stats.donsAffectes,
+        hopeTotal: stats.donsHope,
+        investedTotal: stats.investi,
+        availableTotal: stats.fondsDisponible,
+        designatedShare: stats.partAffectee,
+        hopeShare: stats.partHope,
+      }
+    : null;
+
+  return (
+    <>
+      {/* ---------- Bandeau de bienvenue ---------- */}
+      <section className="accueil__bandeau" style={{ '--photo-bandeau': `url(${photoBandeau})` }}>
+        <p className="page-entete__fil">Accueil</p>
+        <h1 className="accueil__salutation">Bienvenue, {admin?.adminLog ?? 'AdminHope'}</h1>
+        <p className="accueil__accroche">
+          Suivez les dons reçus, décidez de leur emploi et mesurez ce qu’ils changent pour les
+          enfants et les familles de Madagascar.
+        </p>
+      </section>
+
+      {erreur && <Alerte>{erreur}</Alerte>}
+
+      {chargement && !donnees ? (
+        <Chargement texte="Chargement du tableau de bord…" />
+      ) : (
+        <>
+        
+
+          {/* ---------- Deux colonnes ---------- */}
+          <div className="accueil__colonnes" style={{ marginTop: '18px' }}>
+            <div className="accueil__pile">
+                          
+            </div>
+            <div className="accueil__pile">
+             
+
+              <section className="carte-mission">
+                <p className="carte-mission__label">Notre mission</p>
+                <h2 className="carte-mission__titre">
+                  Un avenir meilleur
+                  <br />
+                  pour Madagascar
+                </h2>
+                <p className="carte-mission__texte">
+                  Chaque don suivi jusqu’à son impact, c’est un enfant scolarisé, une mère
+                  autonome, une famille qui tient debout.
+                </p>
+                <div className="carte-mission__trait" />
+                <img src={silhouette} alt="" aria-hidden="true" />
+              </section>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}

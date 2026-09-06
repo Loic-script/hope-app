@@ -1,0 +1,588 @@
+/* ============================================================
+   HOPE - En-tete de l'espace administrateur
+
+   Deux rangees dans un bandeau sombre :
+     1. la marque, la recherche, le profil ;
+     2. la navigation, en icones seules, chacune revelant son nom
+        au survol.
+
+   Le nom n'apparait qu'au survol : l'infobulle est donc un confort,
+   jamais le seul moyen de savoir ou l'on va. Chaque lien porte son
+   aria-label, et l'infobulle s'affiche aussi au focus clavier.
+   ============================================================ */
+
+:root {
+  --entete-fond-haut: #242b3e;
+  --entete-fond-bas: #2a3145;
+  --entete-texte: rgba(255, 255, 255, 0.66);
+  --entete-survol: rgba(255, 255, 255, 0.1);
+  --entete-separateur: rgba(255, 255, 255, 0.12);
+
+  /* Hauteur des deux rangees : sert au calcul des zones defilantes. */
+  --admin-entete-hauteur: 124px;
+}
+
+.admin {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--admin-fond);
+  color: var(--admin-texte);
+}
+
+.admin__contenu {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 30px 44px;
+}
+
+/* ============================================================
+   1. Bandeau : marque, recherche, profil
+   ============================================================ */
+
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: linear-gradient(180deg, var(--entete-fond-haut), var(--entete-fond-bas));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 20px rgba(36, 43, 62, 0.16);
+}
+
+.entete__barre {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 26px;
+}
+
+.entete__marque {
+  flex: none;
+  text-decoration: none;
+}
+
+/* Le logotype est concu pour un fond clair : on l'eclaircit ici. */
+.entete__marque .hope-logo__lettre {
+  font-size: 27px;
+  color: #ffffff;
+}
+
+.entete__marque .hope-logo__soleil {
+  width: 27px;
+  height: 27px;
+}
+
+.entete__marque .hope-logo__soleil line[stroke='#5D5696'] {
+  stroke: #ffffff;
+}
+
+.entete__marque .hope-logo__signature {
+  font-size: 8px;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* --- Recherche --- */
+
+.entete__recherche {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+}
+
+.entete__recherche svg {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  transition: color 0.18s ease;
+}
+
+.entete__recherche input {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px 0 38px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.07);
+  font-size: 14px;
+  color: #ffffff;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.entete__recherche input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.entete__recherche input:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.entete__recherche input:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  background-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.24);
+}
+
+.entete__recherche:focus-within svg {
+  color: var(--hope-bleu);
+}
+
+/* --- Actions de droite --- */
+
+.entete__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.entete__cloche {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: var(--entete-texte);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.entete__cloche:hover,
+.entete__cloche:focus-visible {
+  color: #ffffff;
+  background-color: var(--entete-survol);
+}
+
+.entete__cloche svg {
+  width: 19px;
+  height: 19px;
+}
+
+.entete__point {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--entete-fond-haut);
+  border-radius: 50%;
+  background-color: var(--hope-orange);
+}
+
+/* --- Profil --- */
+
+.profil {
+  position: relative;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--entete-separateur);
+}
+
+.profil__bouton {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 5px 10px 5px 5px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  color: #ffffff;
+  transition: background-color 0.18s ease;
+}
+
+.profil__bouton:hover,
+.profil__bouton[aria-expanded='true'] {
+  background-color: var(--entete-survol);
+}
+
+.profil__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profil__identite {
+  text-align: left;
+  line-height: 1.25;
+}
+
+.profil__nom {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profil__role {
+  display: block;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.profil__chevron {
+  width: 15px;
+  height: 15px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.profil__bouton[aria-expanded='true'] .profil__chevron {
+  transform: rotate(180deg);
+}
+
+/* --- Menu deroulant du profil --- */
+
+.profil__menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 208px;
+  padding: 7px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre-flottante);
+  animation: menu-apparition 0.16s ease-out;
+}
+
+.profil__entree {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  color: var(--admin-texte);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.profil__entree:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.profil__entree svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--admin-texte-doux);
+}
+
+.profil__entree--sortie {
+  color: var(--etat-rouge);
+}
+
+.profil__entree--sortie svg {
+  color: var(--etat-rouge);
+}
+
+.profil__entree--sortie:hover {
+  background-color: var(--etat-rouge-fond);
+}
+
+.profil__separateur {
+  height: 1px;
+  margin: 6px 4px;
+  background-color: var(--admin-bordure);
+}
+
+@keyframes menu-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================================
+   2. Navigation en icones
+   ============================================================ */
+
+.nav-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 26px 12px;
+}
+
+.nav-top__groupe {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-top__groupe--fin {
+  margin-left: auto;
+  padding-left: 10px;
+  border-left: 1px solid var(--entete-separateur);
+}
+
+/* --- Un bouton de navigation --- */
+
+.nav-top__lien {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--entete-texte);
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.nav-top__lien svg {
+  width: 19px;
+  height: 19px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.nav-top__lien:hover,
+.nav-top__lien:focus-visible {
+  color: #ffffff;
+  background-color: var(--entete-survol);
+  transform: translateY(-2px);
+}
+
+.nav-top__lien:hover svg,
+.nav-top__lien:focus-visible svg {
+  transform: scale(1.12);
+}
+
+.nav-top__lien:active {
+  transform: translateY(0);
+}
+
+/* --- L'onglet courant --- */
+
+.nav-top__lien--actif,
+.nav-top__lien--actif:hover {
+  color: #ffffff;
+  background-color: var(--hope-violet);
+  box-shadow: 0 5px 16px rgba(93, 86, 150, 0.5);
+}
+
+/* La pastille se pose avec un leger rebond a l'arrivee sur la page. */
+.nav-top__lien--actif {
+  animation: pastille-active 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes pastille-active {
+  from {
+    background-color: transparent;
+    box-shadow: none;
+    transform: scale(0.86);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.nav-top__lien--sortie:hover,
+.nav-top__lien--sortie:focus-visible {
+  color: #ffb4a8;
+  background-color: rgba(224, 84, 68, 0.18);
+}
+
+/* --- Compteur sur l'icone --- */
+
+.nav-top__compteur {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  min-width: 17px;
+  padding: 0 4px;
+  border: 2px solid var(--entete-fond-bas);
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.nav-top__lien--actif .nav-top__compteur {
+  border-color: var(--hope-violet);
+}
+
+/* --- Infobulle : le nom du menu --- */
+
+.nav-top__bulle {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  z-index: 50;
+  padding: 6px 11px;
+  border-radius: 7px;
+  background-color: #2b3244;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(27, 33, 48, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -5px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s;
+  visibility: hidden;
+}
+
+/* La petite fleche vers l'icone. */
+.nav-top__bulle::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  border: 5px solid transparent;
+  border-bottom-color: #2b3244;
+  transform: translateX(-50%);
+}
+
+/* Le dernier bouton touche le bord droit : centrer son infobulle la
+   ferait deborder de la fenetre. On l'aligne donc sur sa droite. */
+.nav-top__groupe--fin .nav-top__bulle {
+  left: auto;
+  right: 0;
+  transform: translate(0, -5px);
+}
+
+.nav-top__groupe--fin .nav-top__bulle::after {
+  left: auto;
+  right: 16px;
+  transform: none;
+}
+
+.nav-top__groupe--fin .nav-top__lien:hover .nav-top__bulle,
+.nav-top__groupe--fin .nav-top__lien:focus-visible .nav-top__bulle {
+  transform: translate(0, 0);
+}
+
+.nav-top__lien:hover .nav-top__bulle,
+.nav-top__lien:focus-visible .nav-top__bulle {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  /* Un court delai evite que les bulles clignotent quand la souris
+     traverse la barre sans s'arreter. */
+  transition-delay: 0.12s;
+}
+
+/* ============================================================
+   3. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .entete__barre {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .entete__recherche {
+    order: 3;
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .nav-top {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-top::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-top__groupe--fin {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .entete__barre,
+  .nav-top {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .admin__contenu {
+    padding: 20px 16px 36px;
+  }
+
+  .profil__identite {
+    display: none;
+  }
+
+  .profil {
+    padding-left: 8px;
+  }
+
+  /* Sur un ecran tactile il n'y a pas de survol : l'infobulle
+     n'apporterait rien et generait le defilement. */
+  .nav-top__bulle {
+    display: none;
+  }
+}
+
+/* ============================================================
+   4. Mouvement reduit
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-top__lien,
+  .nav-top__lien svg,
+  .nav-top__bulle,
+  .profil__chevron {
+    transition-duration: 0.01ms;
+  }
+
+  .nav-top__lien:hover,
+  .nav-top__lien:focus-visible {
+    transform: none;
+  }
+
+  .nav-top__lien:hover svg,
+  .nav-top__lien:focus-visible svg {
+    transform: none;
+  }
+
+  .nav-top__lien--actif,
+  .profil__menu {
+    animation: none;
+  }
+}

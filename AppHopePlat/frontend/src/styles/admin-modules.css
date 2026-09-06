@@ -1,0 +1,464 @@
+/* ============================================================
+   HOPE - Espace administrateur : modules specifiques
+
+   Complete admin.css avec les composants propres aux ecrans
+   Budget, Statistiques, Notifications et Messages.
+   ============================================================ */
+
+/* ============================================================
+   1. Flux des fonds
+
+   L'element signature de l'espace admin. Les largeurs des
+   segments sont proportionnelles aux montants reels : la barre
+   n'est pas une decoration, c'est la lecture du budget.
+
+       DONS RECUS
+       [ dons affectes .....| fonds HOPE ................. ]
+              |                        |
+        aux projets           [ investi ....| disponible ]
+   ============================================================ */
+
+.flux {
+  padding: 22px 24px 24px;
+}
+
+.flux__entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.flux__intitule {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.flux__total {
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Barre principale : dons affectes contre fonds HOPE --- */
+
+.flux__barre {
+  display: flex;
+  gap: 3px;
+  height: 66px;
+}
+
+.flux__segment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0 15px;
+  border-radius: 9px;
+  overflow: hidden;
+  transition: flex-grow 0.4s ease;
+}
+
+.flux__segment--affecte {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--hope-violet), var(--hope-violet-2));
+}
+
+.flux__segment--hope {
+  color: var(--admin-texte);
+  background-color: var(--hope-bleu-clair);
+  border: 1px solid #c4dced;
+}
+
+.flux__segment--vide {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-texte-faible);
+  background-color: #eef2f8;
+  border: 1px dashed var(--admin-bordure-forte);
+  font-size: 13.5px;
+}
+
+.flux__etiquette {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.88;
+}
+
+.flux__montant {
+  margin-top: 2px;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Descente vers la destination de chaque part --- */
+
+.flux__descente {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.flux__branche {
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0 15px;
+}
+
+.flux__fleche {
+  width: 2px;
+  height: 18px;
+  margin-left: 9px;
+  background-color: var(--admin-bordure-forte);
+}
+
+.flux__destination {
+  padding: 6px 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Sous-barre : usage du fonds HOPE --- */
+
+.flux__sous-barre {
+  display: flex;
+  gap: 3px;
+  height: 50px;
+  margin-top: 8px;
+}
+
+.flux__sous-segment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0 13px;
+  border-radius: 8px;
+  transition: flex-grow 0.4s ease;
+}
+
+.flux__sous-segment--investi {
+  color: #ffffff;
+  background-color: #4f8bd0;
+}
+
+.flux__sous-segment--disponible {
+  color: #7a5713;
+  background-color: var(--hope-jaune);
+}
+
+.flux__sous-etiquette {
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flux__sous-montant {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   2. Series de barres (ecran Statistiques)
+   ============================================================ */
+
+.serie {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.serie__ligne {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) minmax(0, 3fr) minmax(96px, auto);
+  align-items: center;
+  gap: 14px;
+}
+
+.serie__libelle {
+  font-size: 13.5px;
+  color: var(--admin-texte);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.serie__piste {
+  height: 10px;
+  border-radius: 5px;
+  background-color: #eef2f8;
+  overflow: hidden;
+}
+
+.serie__barre {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--hope-violet), var(--hope-bleu));
+  transition: width 0.4s ease;
+}
+
+.serie__barre--orange {
+  background: linear-gradient(90deg, var(--hope-orange), var(--hope-jaune));
+}
+
+.serie__valeur {
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* --- Histogramme mensuel : colonnes empilees affecte / HOPE --- */
+
+.histogramme {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding-top: 8px;
+}
+
+.histogramme__mois {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+}
+
+.histogramme__colonne {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 100%;
+  max-width: 44px;
+  height: 100%;
+}
+
+.histogramme__part {
+  border-radius: 3px;
+  transition: height 0.4s ease;
+}
+
+.histogramme__part--affecte {
+  background-color: var(--hope-violet);
+}
+
+.histogramme__part--hope {
+  background-color: var(--hope-bleu);
+}
+
+.histogramme__vide {
+  height: 3px;
+  border-radius: 3px;
+  background-color: #e4e9f2;
+}
+
+.histogramme__etiquette {
+  font-size: 11px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.legende__entree {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.legende__pastille {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 3px;
+}
+
+/* --- Grille des ecrans de statistiques --- */
+
+.stats-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+/* ============================================================
+   3. Notifications
+   ============================================================ */
+
+.notif {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0f3f9;
+}
+
+.notif:last-child {
+  border-bottom: 0;
+}
+
+.notif--non-lue {
+  background-color: #f7f9ff;
+}
+
+.notif__marque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 9px;
+}
+
+.notif__marque svg {
+  width: 17px;
+  height: 17px;
+}
+
+.notif__marque--don      { color: #2c8f63; background-color: #e2f4ea; }
+.notif__marque--message  { color: #2668b8; background-color: #e4eefc; }
+.notif__marque--projet   { color: #6a58b8; background-color: #ece7fb; }
+.notif__marque--investi  { color: #c58116; background-color: #fdf1de; }
+
+.notif__contenu {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif__texte {
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--admin-texte);
+}
+
+.notif--non-lue .notif__texte {
+  font-weight: 600;
+}
+
+.notif__meta {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.notif__actions {
+  flex: none;
+  padding-top: 3px;
+}
+
+/* ============================================================
+   4. Media d'un projet
+   ============================================================ */
+
+.media-projet {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface-douce);
+}
+
+.media-projet--absente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  border: 1px dashed var(--admin-bordure-forte);
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   5. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 1240px) {
+  .stats-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .flux__barre,
+  .flux__descente,
+  .flux__sous-barre {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .flux__segment,
+  .flux__sous-segment {
+    padding: 12px 14px;
+  }
+
+  .flux__fleche {
+    display: none;
+  }
+
+  .flux__branche {
+    padding: 0;
+  }
+
+  .serie__ligne {
+    grid-template-columns: minmax(0, 1fr) minmax(80px, auto);
+  }
+
+  .serie__piste {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .histogramme {
+    height: 160px;
+    gap: 4px;
+  }
+
+  .histogramme__etiquette {
+    font-size: 9px;
+  }
+
+  .message__entete {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

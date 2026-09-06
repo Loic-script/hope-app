@@ -1,0 +1,387 @@
+/* ============================================================
+   HOPE - Messagerie
+
+   Deux volets : la liste des conversations a gauche, l'echange
+   selectionne a droite avec sa zone de reponse en bas.
+   ============================================================ */
+
+.messagerie {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  /* Les deux volets occupent la hauteur restante sous le bandeau. */
+  height: calc(100vh - var(--admin-entete-hauteur) - 190px);
+  min-height: 460px;
+}
+
+.messagerie__volet {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+/* ============================================================
+   1. Volet gauche : les conversations
+   ============================================================ */
+
+.conversations__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.conversations__titre {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.conversations__compte {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.conversations__marque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 11px;
+  background-color: var(--hope-bleu-clair);
+  color: var(--hope-violet);
+}
+
+.conversations__marque svg {
+  width: 19px;
+  height: 19px;
+}
+
+.conversations__liste {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.conversation {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-bottom: 1px solid #f0f3f9;
+  border-left: 3px solid transparent;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.conversation:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.conversation--active,
+.conversation--active:hover {
+  background-color: #f3f1fb;
+  border-left-color: var(--hope-violet);
+}
+
+.conversation__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.conversation__avatar--international {
+  background-color: var(--hope-bleu);
+  color: var(--admin-texte);
+}
+
+.conversation__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversation__ligne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Sans min-width a 0, un enfant flex refuse de passer sous sa taille de
+   contenu : l'ellipse ne se declencherait jamais. */
+.conversation__ligne > .conversation__nom,
+.conversation__ligne > .conversation__courriel {
+  min-width: 0;
+}
+
+.conversation__nom {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation__temps {
+  flex: none;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+.conversation__extrait {
+  display: block;
+  margin-top: 2px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation--nouvelle .conversation__nom,
+.conversation--nouvelle .conversation__extrait {
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.conversation__courriel {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation__pastille {
+  min-width: 19px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  color: #ffffff;
+}
+
+/* ============================================================
+   2. Volet droit : l'echange
+   ============================================================ */
+
+.echange__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.echange__identite {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.echange__nom {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.echange__courriel {
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.echange__fil {
+  flex: 1;
+  min-height: 0;
+  padding: 22px 24px;
+  overflow-y: auto;
+  background-color: #fafbfe;
+}
+
+.echange__vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Bulles --- */
+
+.bulle {
+  max-width: 76%;
+  margin-bottom: 16px;
+}
+
+.bulle--recue {
+  margin-right: auto;
+}
+
+.bulle--envoyee {
+  margin-left: auto;
+}
+
+.bulle__sujet {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.bulle__contenu {
+  padding: 13px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bulle--recue .bulle__contenu {
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px 12px 12px 3px;
+  background-color: var(--admin-surface);
+  color: var(--admin-texte);
+}
+
+.bulle--envoyee .bulle__contenu {
+  border-radius: 12px 12px 3px 12px;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.bulle__meta {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.bulle--envoyee .bulle__meta {
+  text-align: right;
+}
+
+/* --- Zone de reponse --- */
+
+.reponse {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface);
+}
+
+.reponse textarea {
+  flex: 1;
+  min-height: 46px;
+  max-height: 140px;
+  padding: 12px 14px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+  resize: vertical;
+}
+
+.reponse textarea:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+.reponse textarea:disabled {
+  background-color: #f4f6fa;
+  color: var(--admin-texte-doux);
+}
+
+.reponse .btn {
+  height: 46px;
+  padding: 0 20px;
+  flex: none;
+}
+
+.reponse__aide {
+  padding: 0 20px 14px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   3. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .messagerie {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .messagerie__volet {
+    min-height: 340px;
+  }
+
+  .conversations__liste {
+    max-height: 320px;
+  }
+
+  .echange__fil {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 620px) {
+  .bulle {
+    max-width: 92%;
+  }
+
+  .reponse {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reponse .btn {
+    width: 100%;
+  }
+}

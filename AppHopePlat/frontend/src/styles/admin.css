@@ -1,0 +1,1204 @@
+/* ============================================================
+   HOPE - Espace administrateur
+
+   Composants communs a toutes les pages : en-tete, boutons, panneaux,
+   tableaux, badges, formulaires, modales. L'ossature et la barre de
+   navigation vivent dans admin-entete.css.
+
+   Peu d'icones, peu de couleur, des tableaux lisibles : l'ecran doit
+   ressembler a un logiciel de gestion, pas a une page marketing.
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --admin-fond: #f2f6fb;
+  --admin-surface: #ffffff;
+  --admin-surface-douce: #f7f9fd;
+  --admin-bordure: #e5eaf3;
+  --admin-bordure-forte: #d5dced;
+
+  /* Texte */
+  --admin-texte: #2b3244;
+  --admin-texte-doux: #6b7285;
+  --admin-texte-faible: #9099ad;
+
+  /* Etats */
+  --etat-vert: #2c8f63;
+  --etat-vert-fond: #e6f5ed;
+  --etat-bleu: #2668b8;
+  --etat-bleu-fond: #e6effb;
+  --etat-ambre: #a56a12;
+  --etat-ambre-fond: #fdf3e0;
+  --etat-rouge: #b0392c;
+  --etat-rouge-fond: #fdeceb;
+  --etat-gris: #667085;
+  --etat-gris-fond: #eef1f6;
+  --etat-violet: #56508f;
+  --etat-violet-fond: #eceaf7;
+
+  --admin-ombre: 0 1px 2px rgba(43, 50, 68, 0.04), 0 1px 3px rgba(43, 50, 68, 0.06);
+  --admin-ombre-flottante: 0 18px 48px rgba(36, 43, 62, 0.18);
+  --admin-rayon: 12px;
+}
+
+/* ============================================================
+   1. En-tete de page
+   ============================================================ */
+
+.page-entete {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.page-entete__fil {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.page-entete__fil::before {
+  content: '';
+  width: 26px;
+  height: 3px;
+  border-radius: 3px;
+  background-color: var(--hope-orange);
+}
+
+.page-entete__fil a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-entete__fil a:hover {
+  text-decoration: underline;
+}
+
+.page-entete__titre {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--admin-texte);
+}
+
+.page-entete__accroche {
+  max-width: 640px;
+  margin-top: 7px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.page-entete__actions {
+  display: flex;
+  gap: 10px;
+  flex: none;
+}
+
+/* ============================================================
+   2. Boutons
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--principal {
+  color: #ffffff;
+  background-color: var(--hope-violet);
+}
+
+.btn--principal:hover:not(:disabled) {
+  background-color: #4f4986;
+}
+
+.btn--accent {
+  color: #ffffff;
+  background-color: var(--hope-orange);
+}
+
+.btn--accent:hover:not(:disabled) {
+  background-color: var(--hope-orange-fonce);
+}
+
+.btn--neutre {
+  color: var(--admin-texte);
+  background-color: var(--admin-surface);
+  border-color: var(--admin-bordure-forte);
+}
+
+.btn--neutre:hover:not(:disabled) {
+  background-color: var(--admin-surface-douce);
+  border-color: var(--hope-bleu);
+}
+
+.btn--danger {
+  color: var(--etat-rouge);
+  background-color: var(--admin-surface);
+  border-color: #e8c4c0;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background-color: var(--etat-rouge-fond);
+}
+
+.btn--petit {
+  height: 31px;
+  padding: 0 11px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+
+/* Action discrete dans une cellule de tableau. */
+.lien-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--etat-bleu);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.lien-action:hover {
+  text-decoration: underline;
+}
+
+.lien-action--danger {
+  color: var(--etat-rouge);
+}
+
+.cellule-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   3. Panneaux
+   ============================================================ */
+
+.panneau {
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.panneau + .panneau {
+  margin-top: 18px;
+}
+
+.panneau__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.panneau__titre {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.panneau__sous-titre {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.panneau__corps {
+  padding: 20px;
+}
+
+.panneau__corps--serre {
+  padding: 0;
+}
+
+/* ============================================================
+   4. Tableaux
+   ============================================================ */
+
+.table-enveloppe {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface-douce);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-texte-doux);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid #f0f3f9;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover td {
+  background-color: #fafcff;
+}
+
+.table__nombre {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.table__principal {
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.table__secondaire {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.table__lien {
+  font-weight: 600;
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.table__lien:hover {
+  color: var(--hope-violet);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   5. Badges de statut
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--vert   { color: var(--etat-vert);   background-color: var(--etat-vert-fond); }
+.badge--bleu   { color: var(--etat-bleu);   background-color: var(--etat-bleu-fond); }
+.badge--ambre  { color: var(--etat-ambre);  background-color: var(--etat-ambre-fond); }
+.badge--rouge  { color: var(--etat-rouge);  background-color: var(--etat-rouge-fond); }
+.badge--gris   { color: var(--etat-gris);   background-color: var(--etat-gris-fond); }
+.badge--violet { color: var(--etat-violet); background-color: var(--etat-violet-fond); }
+
+/* ============================================================
+   6. Barre de progression
+   ============================================================ */
+
+.progression {
+  min-width: 116px;
+}
+
+.progression__valeur {
+  margin-bottom: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+}
+
+.progression__rail {
+  height: 6px;
+  border-radius: 3px;
+  background-color: #e8ecf3;
+  overflow: hidden;
+}
+
+.progression__barre {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progression__barre--vert  { background-color: #2fa571; }
+.progression__barre--bleu  { background-color: #2d80e6; }
+.progression__barre--ambre { background-color: #f0b542; }
+.progression__barre--rouge { background-color: #d4584a; }
+
+/* ============================================================
+   7. Barre d'outils (recherche + filtres)
+   ============================================================ */
+
+.outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.outils__recherche {
+  position: relative;
+  flex: 1;
+  min-width: 210px;
+  max-width: 340px;
+}
+
+.outils__recherche svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: var(--admin-texte-faible);
+  pointer-events: none;
+}
+
+.outils__recherche input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px 0 36px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  background-color: var(--admin-surface);
+  font-size: 14px;
+}
+
+.outils__recherche input:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+/* Filtres par onglets : Tous | Actifs | Termines | Archives */
+.filtres {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 9px;
+  background-color: #eef2f8;
+}
+
+.filtres__bouton {
+  padding: 6px 13px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.filtres__bouton:hover {
+  color: var(--admin-texte);
+}
+
+.filtres__bouton--actif,
+.filtres__bouton--actif:hover {
+  color: var(--hope-violet);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.outils__droite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.outils__compteur {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   8. Etats vides, chargement, erreurs
+   ============================================================ */
+
+.etat-vide {
+  padding: 46px 24px;
+  text-align: center;
+}
+
+.etat-vide__titre {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.etat-vide__texte {
+  max-width: 430px;
+  margin: 7px auto 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.etat-vide__action {
+  margin-top: 18px;
+}
+
+.chargement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 44px 20px;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}
+
+.chargement__rotation {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid #e2e7f1;
+  border-top-color: var(--hope-violet);
+  border-radius: 50%;
+  animation: rotation 0.75s linear infinite;
+}
+
+.alerte {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 15px;
+  border-radius: 9px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.alerte svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.alerte--erreur {
+  color: #8f2c20;
+  background-color: var(--etat-rouge-fond);
+  border: 1px solid #f1cbc6;
+}
+
+.alerte--succes {
+  color: #1f6f4a;
+  background-color: var(--etat-vert-fond);
+  border: 1px solid #c3e4d3;
+}
+
+.alerte--info {
+  color: #3c4a63;
+  background-color: #eef3fb;
+  border: 1px solid #d5e1f2;
+}
+
+.alerte + .alerte,
+.alerte + * {
+  margin-top: 14px;
+}
+
+/* ============================================================
+   9. Formulaires
+   ============================================================ */
+
+.formulaire-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.champ-admin {
+  display: flex;
+  flex-direction: column;
+}
+
+.champ-admin--pleine-largeur {
+  grid-column: 1 / -1;
+}
+
+.champ-admin__label {
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.champ-admin__label span {
+  margin-left: 5px;
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+.champ-admin__aide {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+}
+
+.champ-admin input,
+.champ-admin select,
+.champ-admin textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.champ-admin textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.champ-admin input:focus,
+.champ-admin select:focus,
+.champ-admin textarea:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+.champ-admin input:disabled,
+.champ-admin select:disabled {
+  background-color: #f4f6fa;
+  color: var(--admin-texte-doux);
+}
+
+.champ-admin--erreur input,
+.champ-admin--erreur select,
+.champ-admin--erreur textarea {
+  border-color: #dda49d;
+}
+
+.champ-admin__message {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--etat-rouge);
+}
+
+.formulaire-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+/* ============================================================
+   10. Modales
+   ============================================================ */
+
+.modale-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: rgba(36, 43, 62, 0.48);
+  animation: apparition-fond 0.16s ease-out;
+}
+
+.modale {
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre-flottante);
+  animation: apparition-modale 0.18s ease-out;
+}
+
+.modale--large {
+  max-width: 760px;
+}
+
+.modale__entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.modale__titre {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.modale__sous-titre {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.modale__fermer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--admin-texte-doux);
+}
+
+.modale__fermer:hover {
+  background-color: var(--admin-surface-douce);
+  color: var(--admin-texte);
+}
+
+.modale__fermer svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modale__corps {
+  flex: 1;
+  padding: 22px;
+  overflow-y: auto;
+}
+
+.modale__pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+@keyframes apparition-fond {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes apparition-modale {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   11. Accueil : bandeau, cartes de chiffres, activites
+   ============================================================ */
+
+.accueil__bandeau {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 26px 30px 28px;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+/* Photo en filigrane a droite, comme sur la maquette. */
+.accueil__bandeau::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 42%;
+  background-image: var(--photo-bandeau);
+  background-size: cover;
+  background-position: center 42%;
+  mask-image: linear-gradient(90deg, transparent, #000 55%);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 55%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.accueil__bandeau > * {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.accueil__salutation {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--admin-texte);
+}
+
+.accueil__accroche {
+  max-width: 520px;
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.cartes-chiffres {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.carte-chiffre {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 17px 19px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.carte-chiffre__libelle {
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.carte-chiffre__valeur {
+  margin-top: 6px;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+}
+
+.carte-chiffre__variation {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.carte-chiffre__variation strong {
+  font-weight: 700;
+  color: var(--etat-vert);
+}
+
+.carte-chiffre__icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 11px;
+}
+
+.carte-chiffre__icone svg {
+  width: 21px;
+  height: 21px;
+}
+
+.carte-chiffre__icone--bleu   { color: #2d80e6; background-color: #e4eefc; }
+.carte-chiffre__icone--vert   { color: #2c8f63; background-color: #e2f4ea; }
+.carte-chiffre__icone--violet { color: #6a58b8; background-color: #ece7fb; }
+.carte-chiffre__icone--ambre  { color: #c58116; background-color: #fdf1de; }
+
+.accueil__colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.accueil__pile {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Fil d'activite */
+.activites {
+  display: flex;
+  flex-direction: column;
+}
+
+.activite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f3f9;
+  font-size: 14px;
+}
+
+.activite:last-child {
+  border-bottom: 0;
+}
+
+.activite__pastille {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.activite__pastille--vert   { background-color: #2fa571; }
+.activite__pastille--bleu   { background-color: #2d80e6; }
+.activite__pastille--ambre  { background-color: #f0b542; }
+.activite__pastille--violet { background-color: #6a58b8; }
+.activite__pastille--gris   { background-color: #9099ad; }
+
+.activite__texte {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activite__montant {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.activite__temps {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+/* Actions rapides */
+.actions-rapides {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+}
+
+.action-rapide {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 9px;
+  background-color: var(--admin-surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  text-decoration: none;
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.action-rapide:hover {
+  border-color: var(--hope-bleu);
+  background-color: var(--admin-surface-douce);
+}
+
+.action-rapide svg:first-child {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--hope-violet);
+}
+
+.action-rapide__chevron {
+  width: 15px;
+  height: 15px;
+  margin-left: auto;
+  color: var(--admin-texte-faible);
+}
+
+/* Carte mission */
+.carte-mission {
+  position: relative;
+  padding: 22px;
+  overflow: hidden;
+  border-radius: var(--admin-rayon);
+  background-color: #eceefb;
+}
+
+.carte-mission__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.carte-mission__titre {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--hope-violet);
+}
+
+.carte-mission__texte {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+.carte-mission__trait {
+  width: 46px;
+  height: 3px;
+  margin-top: 16px;
+  border-radius: 3px;
+  background-color: var(--hope-orange);
+}
+
+.carte-mission img {
+  position: absolute;
+  right: -14px;
+  bottom: -22px;
+  width: 88px;
+  opacity: 0.28;
+  filter: brightness(0) saturate(100%) invert(35%) sepia(19%) saturate(1043%) hue-rotate(212deg);
+  pointer-events: none;
+}
+
+/* ============================================================
+   12. Page projet : resume, onglets, listes de definitions
+   ============================================================ */
+
+.onglets {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 18px;
+  padding-bottom: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.onglets__bouton {
+  padding: 11px 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--admin-texte-doux);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.onglets__bouton:hover {
+  color: var(--admin-texte);
+}
+
+.onglets__bouton--actif,
+.onglets__bouton--actif:hover {
+  color: var(--hope-violet);
+  border-bottom-color: var(--hope-violet);
+}
+
+.onglets__compteur {
+  margin-left: 7px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: #eef2f8;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-texte-doux);
+}
+
+/* Bandeau de chiffres du projet */
+.resume-financier {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+  overflow: hidden;
+}
+
+.resume-financier__bloc {
+  padding: 16px 20px;
+  border-right: 1px solid var(--admin-bordure);
+}
+
+.resume-financier__bloc:last-child {
+  border-right: 0;
+}
+
+.resume-financier__libelle {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.resume-financier__valeur {
+  margin-top: 5px;
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.resume-financier__detail {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* Liste de definitions (fiche d'identite d'un projet) */
+.fiche {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 18px 26px;
+  margin: 0;
+}
+
+.fiche__terme {
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-texte-faible);
+}
+
+.fiche__valeur {
+  margin: 5px 0 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--admin-texte);
+}
+
+.bloc-texte {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--admin-texte);
+  white-space: pre-wrap;
+}
+
+/* ============================================================
+   13. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 1240px) {
+  .cartes-chiffres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accueil__colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resume-financier {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resume-financier__bloc:nth-child(2) {
+    border-right: 0;
+  }
+
+  .resume-financier__bloc:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--admin-bordure);
+  }
+}
+
+@media (max-width: 900px) {
+  .accueil__bandeau::after {
+    display: none;
+  }
+
+  .formulaire-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-entete {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Certains ecrans ont six filtres : sur un telephone, la rangee defile
+     lateralement plutot que de pousser la page hors de la fenetre. */
+  .filtres {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .filtres::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filtres__bouton {
+    flex: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .cartes-chiffres,
+  .resume-financier {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resume-financier__bloc {
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-bordure);
+  }
+}
