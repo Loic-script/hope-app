@@ -1,0 +1,46 @@
+# ============================================================
+# HOPE - Fichiers exclus du versionnement (racine du depot)
+#
+# Ce fichier protege l'ensemble du depot. Chaque sous-projet peut
+# avoir son propre .gitignore, mais celui-ci doit rester la garantie
+# qu'aucun secret ni dependance ne part sur GitHub.
+# ============================================================
+
+# --- Dependances ---
+node_modules/
+
+# --- Variables d'environnement ---
+# Contiennent le mot de passe PostgreSQL et le secret JWT.
+# NE JAMAIS COMMITER.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Builds ---
+dist/
+build/
+*.tsbuildinfo
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-error.log*
+logs/
+
+# --- Cache des outils ---
+.vite/
+.cache/
+coverage/
+
+# --- Fichiers televerses par l'association ---
+# Justificatifs et medias : donnees reelles, jamais versionnees.
+backend/uploads/
+**/backend/uploads/
+
+# --- Editeurs et systemes d'exploitation ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
