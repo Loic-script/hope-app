@@ -11,6 +11,7 @@ import {
   IconeProjets,
 } from '../../components/admin/AdminIcons.jsx';
 import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
+import PublicationProjet from '../../components/admin/PublicationProjet.jsx';
 import {
   Alerte,
   Badge,
@@ -110,7 +111,36 @@ export default function AdminHome() {
           {/* ---------- Deux colonnes ---------- */}
           <div className="accueil__colonnes" style={{ marginTop: '18px' }}>
             <div className="accueil__pile">
-                          
+              {/* ---------- Les projets en cours, en publications ---------- */}
+              <Panneau
+                titre="Projets en cours"
+                sousTitre="Ce qui est financé, ce qui manque encore"
+                actions={
+                  <Link className="btn btn--neutre btn--petit" to="/admin/projects">
+                    Tous les projets
+                    <IconeChevronDroit />
+                  </Link>
+                }
+              >
+                {donnees?.activeProjects?.length ? (
+                  <div className="publications">
+                    {donnees.activeProjects.map((projet, rang) => (
+                      <PublicationProjet key={projet.id} projet={projet} rang={rang} />
+                    ))}
+                  </div>
+                ) : (
+                  <EtatVide
+                    titre="Aucun projet en cours"
+                    texte="Créez un projet pour commencer à suivre son financement et son impact."
+                    action={
+                      <Link className="btn btn--principal" to="/admin/projects/new">
+                        <IconePlus />
+                        Créer un projet
+                      </Link>
+                    }
+                  />
+                )}
+              </Panneau>
             </div>
             <div className="accueil__pile">
              

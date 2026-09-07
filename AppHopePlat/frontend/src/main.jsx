@@ -11,6 +11,7 @@ import './styles/login-success.css';
 import './styles/admin.css';
 import './styles/admin-entete.css';
 import './styles/admin-modules.css';
+import './styles/admin-publications.css';
 import './styles/admin-media.css';
 import './styles/admin-messagerie.css';
 
