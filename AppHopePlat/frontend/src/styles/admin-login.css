@@ -648,13 +648,8 @@
     font-size: 22px;
   }
 
-  .hope-logo__lettre {
-    font-size: 42px;
-  }
-
-  .hope-logo__soleil {
-    width: 42px;
-    height: 42px;
+  .hope-logo {
+    height: 54px;
   }
 
   .formulaire__options {

@@ -108,7 +108,7 @@ export default function AdminLayout() {
         {/* ---------- Marque, recherche, profil ---------- */}
         <div className="entete__barre">
           <Link className="entete__marque" to="/admin" aria-label="HOPE — accueil administrateur">
-            <HopeLogo />
+            <HopeLogo compact />
           </Link>
 
           <form className="entete__recherche" onSubmit={lancerRecherche} role="search">
