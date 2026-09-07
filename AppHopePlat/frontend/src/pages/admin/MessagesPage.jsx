@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
-import { IconeJustificatifs, IconeRecherche } from '../../components/admin/AdminIcons.jsx';
+import { IconeMessages, IconeRecherche } from '../../components/admin/AdminIcons.jsx';
 import { NouveauMessageModale } from '../../components/admin/modales.jsx';
 import { Alerte, Badge, Chargement, EntetePage } from '../../components/admin/ui.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
@@ -218,7 +218,7 @@ export default function MessagesPage() {
                 </p>
               </div>
               <span className="conversations__marque" aria-hidden="true">
-                <IconeJustificatifs />
+                <IconeMessages />
               </span>
             </header>
 

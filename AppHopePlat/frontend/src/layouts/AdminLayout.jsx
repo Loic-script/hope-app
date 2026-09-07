@@ -11,17 +11,22 @@ import {
   IconeDonateurs,
   IconeGraphique,
   IconeImpacts,
-  IconeJustificatifs,
+  IconeMessages,
   IconeParametres,
   IconeProjets,
-  IconeRecherche,
 } from '../components/admin/AdminIcons.jsx';
 import { api } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les huit sections de l'espace administrateur, plus les parametres.
+ * Les six sections de travail de l'espace administrateur.
+ *
+ * Trois entrees n'y figurent pas, et c'est voulu :
+ *   * Notifications et Messages sont des alertes, pas des destinations : la
+ *     barre du haut les montre avec leur pastille depuis n'importe ou ;
+ *   * Parametres et Se deconnecter relevent du compte : ils vivent dans le
+ *     menu du profil, en haut a droite.
  *
  * La barre n'affiche que les icones : le libelle sert d'aria-label et
  * s'affiche en infobulle au survol comme au focus clavier.
@@ -31,11 +36,8 @@ const NAVIGATION = [
   { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
   { to: '/admin/impact', label: 'Impact', Icone: IconeImpacts },
   { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
-  { to: '/admin/notifications', label: 'Notifications', Icone: IconeCloche, compteur: 'notifications' },
   { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
-  { to: '/admin/messages', label: 'Messages', Icone: IconeJustificatifs, compteur: 'messages' },
   { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
-  { to: '/admin/settings', label: 'Paramètres', Icone: IconeParametres },
 ];
 
 /**
@@ -50,7 +52,6 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  const [recherche, setRecherche] = useState('');
   const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
   const [menuOuvert, setMenuOuvert] = useState(false);
 
@@ -95,37 +96,40 @@ export default function AdminLayout() {
     navigate('/admin/login', { replace: true });
   }
 
-  /** La recherche globale ouvre la liste des projets, deja filtree. */
-  function lancerRecherche(evenement) {
-    evenement.preventDefault();
-    const terme = recherche.trim();
-    navigate(terme === '' ? '/admin/projects' : `/admin/projects?search=${encodeURIComponent(terme)}`);
-  }
-
   return (
     <div className="admin">
       <header className="entete">
-        {/* ---------- Marque, recherche, profil ---------- */}
+        {/* ---------- Marque, navigation, alertes, profil : une seule rangee ---------- */}
         <div className="entete__barre">
           <Link className="entete__marque" to="/admin" aria-label="HOPE — accueil administrateur">
             <HopeLogo compact />
           </Link>
 
-          <form className="entete__recherche" onSubmit={lancerRecherche} role="search">
-            <IconeRecherche />
-            <input
-              type="search"
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-              placeholder="Rechercher un projet, un donateur, un bénéficiaire…"
-              aria-label="Recherche globale"
-            />
-          </form>
+          <nav className="nav-top" aria-label="Navigation principale">
+            <div className="nav-top__groupe">
+              {NAVIGATION.map(({ to, label, Icone, exact }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={exact}
+                  aria-label={label}
+                  className={({ isActive }) =>
+                    `nav-top__lien${isActive ? ' nav-top__lien--actif' : ''}`
+                  }
+                >
+                  <Icone />
+                  <span className="nav-top__bulle" aria-hidden="true">
+                    {label}
+                  </span>
+                </NavLink>
+              ))}
+            </div>
+          </nav>
 
           <div className="entete__actions">
             <Link
               to="/admin/notifications"
-              className="entete__cloche"
+              className="entete__action"
               aria-label={
                 compteurs.notifications > 0
                   ? `Notifications : ${compteurs.notifications} non lue(s)`
@@ -134,6 +138,19 @@ export default function AdminLayout() {
             >
               <IconeCloche />
               {compteurs.notifications > 0 && <span className="entete__point" aria-hidden="true" />}
+            </Link>
+
+            <Link
+              to="/admin/messages"
+              className="entete__action"
+              aria-label={
+                compteurs.messages > 0
+                  ? `Messages : ${compteurs.messages} non lu(s)`
+                  : 'Messages'
+              }
+            >
+              <IconeMessages />
+              {compteurs.messages > 0 && <span className="entete__point" aria-hidden="true" />}
             </Link>
 
             <div className="profil" ref={profil}>
@@ -175,51 +192,6 @@ export default function AdminLayout() {
             </div>
           </div>
         </div>
-
-        {/* ---------- Navigation en icones ---------- */}
-        <nav className="nav-top" aria-label="Navigation principale">
-          <div className="nav-top__groupe">
-            {NAVIGATION.map(({ to, label, Icone, exact, compteur }) => {
-              const nombre = compteur ? compteurs[compteur] : 0;
-
-              return (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={exact}
-                  aria-label={label}
-                  className={({ isActive }) =>
-                    `nav-top__lien${isActive ? ' nav-top__lien--actif' : ''}`
-                  }
-                >
-                  <Icone />
-                  {nombre > 0 && (
-                    <span className="nav-top__compteur" aria-hidden="true">
-                      {nombre > 99 ? '99+' : nombre}
-                    </span>
-                  )}
-                  <span className="nav-top__bulle" aria-hidden="true">
-                    {label}
-                  </span>
-                </NavLink>
-              );
-            })}
-          </div>
-
-          <div className="nav-top__groupe nav-top__groupe--fin">
-            <button
-              type="button"
-              className="nav-top__lien nav-top__lien--sortie"
-              onClick={seDeconnecter}
-              aria-label="Se déconnecter"
-            >
-              <IconeDeconnexion />
-              <span className="nav-top__bulle" aria-hidden="true">
-                Se déconnecter
-              </span>
-            </button>
-          </div>
-        </nav>
       </header>
 
       <main className="admin__contenu">

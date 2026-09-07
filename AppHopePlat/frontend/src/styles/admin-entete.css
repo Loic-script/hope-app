@@ -1,10 +1,13 @@
 /* ============================================================
    HOPE - En-tete de l'espace administrateur
 
-   Deux rangees dans un bandeau sombre :
-     1. la marque, la recherche, le profil ;
-     2. la navigation, en icones seules, chacune revelant son nom
-        au survol.
+   Une seule rangee dans un bandeau sombre : la marque a gauche, la
+   navigation en icones au centre, les alertes et le profil a droite.
+
+   Une rangee plutot que deux : la fiche projet porte deja ses propres
+   onglets, et trois barres horizontales empilees inversaient la
+   hierarchie. Le menu global tient sur une ligne, les onglets de page
+   redeviennent le seul autre niveau.
 
    Le nom n'apparait qu'au survol : l'infobulle est donc un confort,
    jamais le seul moyen de savoir ou l'on va. Chaque lien porte son
@@ -18,8 +21,8 @@
   --entete-survol: rgba(255, 255, 255, 0.1);
   --entete-separateur: rgba(255, 255, 255, 0.12);
 
-  /* Hauteur des deux rangees : sert au calcul des zones defilantes. */
-  --admin-entete-hauteur: 124px;
+  /* Hauteur de la rangee : sert au calcul des zones defilantes. */
+  --admin-entete-hauteur: 70px;
 }
 
 .admin {
@@ -38,7 +41,7 @@
 }
 
 /* ============================================================
-   1. Bandeau : marque, recherche, profil
+   1. Bandeau : marque, navigation, alertes, profil
    ============================================================ */
 
 .entete {
@@ -49,15 +52,24 @@
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 20px rgba(36, 43, 62, 0.16);
 }
 
+/*
+ * Trois colonnes : la marque, la navigation, les actions.
+ * Les deux colonnes laterales valent 1fr, donc exactement la meme largeur :
+ * le groupe d'icones tombe au centre reel du bandeau, quelle que soit la
+ * place prise par la marque a gauche ou par le nom de l'administrateur a
+ * droite. Un simple flex l'aurait decale.
+ */
 .entete__barre {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 24px;
   padding: 12px 26px;
 }
 
 .entete__marque {
-  flex: none;
+  grid-column: 1;
+  justify-self: start;
   text-decoration: none;
 }
 
@@ -73,67 +85,17 @@
   --logo-lettres: #ffffff;
 }
 
-/* --- Recherche --- */
-
-.entete__recherche {
-  position: relative;
-  flex: 1;
-  max-width: 420px;
-}
-
-.entete__recherche svg {
-  position: absolute;
-  top: 50%;
-  left: 13px;
-  width: 17px;
-  height: 17px;
-  transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.5);
-  pointer-events: none;
-  transition: color 0.18s ease;
-}
-
-.entete__recherche input {
-  width: 100%;
-  height: 38px;
-  padding: 0 14px 0 38px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.07);
-  font-size: 14px;
-  color: #ffffff;
-  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.entete__recherche input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.entete__recherche input:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.entete__recherche input:focus {
-  outline: none;
-  border-color: var(--hope-bleu);
-  background-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.24);
-}
-
-.entete__recherche:focus-within svg {
-  color: var(--hope-bleu);
-}
-
 /* --- Actions de droite --- */
 
 .entete__actions {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
 }
 
-.entete__cloche {
+.entete__action {
   position: relative;
   display: flex;
   align-items: center;
@@ -145,13 +107,13 @@
   transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-.entete__cloche:hover,
-.entete__cloche:focus-visible {
+.entete__action:hover,
+.entete__action:focus-visible {
   color: #ffffff;
   background-color: var(--entete-survol);
 }
 
-.entete__cloche svg {
+.entete__action svg {
   width: 19px;
   height: 19px;
 }
@@ -315,22 +277,17 @@
    ============================================================ */
 
 .nav-top {
+  grid-column: 2;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 0 26px 12px;
 }
 
+/* Les icones restent serrees entre elles. */
 .nav-top__groupe {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.nav-top__groupe--fin {
-  margin-left: auto;
-  padding-left: 10px;
-  border-left: 1px solid var(--entete-separateur);
 }
 
 /* --- Un bouton de navigation --- */
@@ -338,6 +295,7 @@
 .nav-top__lien {
   position: relative;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 46px;
@@ -400,34 +358,6 @@
   }
 }
 
-.nav-top__lien--sortie:hover,
-.nav-top__lien--sortie:focus-visible {
-  color: #ffb4a8;
-  background-color: rgba(224, 84, 68, 0.18);
-}
-
-/* --- Compteur sur l'icone --- */
-
-.nav-top__compteur {
-  position: absolute;
-  top: 3px;
-  right: 4px;
-  min-width: 17px;
-  padding: 0 4px;
-  border: 2px solid var(--entete-fond-bas);
-  border-radius: 999px;
-  background-color: var(--hope-orange);
-  font-size: 10.5px;
-  font-weight: 700;
-  line-height: 15px;
-  text-align: center;
-  color: #ffffff;
-}
-
-.nav-top__lien--actif .nav-top__compteur {
-  border-color: var(--hope-violet);
-}
-
 /* --- Infobulle : le nom du menu --- */
 
 .nav-top__bulle {
@@ -464,25 +394,6 @@
   transform: translateX(-50%);
 }
 
-/* Le dernier bouton touche le bord droit : centrer son infobulle la
-   ferait deborder de la fenetre. On l'aligne donc sur sa droite. */
-.nav-top__groupe--fin .nav-top__bulle {
-  left: auto;
-  right: 0;
-  transform: translate(0, -5px);
-}
-
-.nav-top__groupe--fin .nav-top__bulle::after {
-  left: auto;
-  right: 16px;
-  transform: none;
-}
-
-.nav-top__groupe--fin .nav-top__lien:hover .nav-top__bulle,
-.nav-top__groupe--fin .nav-top__lien:focus-visible .nav-top__bulle {
-  transform: translate(0, 0);
-}
-
 .nav-top__lien:hover .nav-top__bulle,
 .nav-top__lien:focus-visible .nav-top__bulle {
   opacity: 1;
@@ -497,19 +408,37 @@
    3. Adaptation aux petits ecrans
    ============================================================ */
 
+/*
+ * Sous 1024px, la rangee unique redevient deux lignes : marque et profil en
+ * haut, navigation en dessous sur toute la largeur. Tout garder sur une
+ * ligne obligerait a comprimer le nom de l'administrateur ou a rogner le
+ * menu, et la hauteur regagnee sur grand ecran importe peu ici.
+ */
 @media (max-width: 1024px) {
+  :root {
+    --admin-entete-hauteur: 124px;
+  }
+
   .entete__barre {
-    flex-wrap: wrap;
-    gap: 14px;
+    grid-template-columns: auto 1fr;
+    gap: 14px 14px;
+    padding-bottom: 8px;
   }
 
-  .entete__recherche {
-    order: 3;
-    flex-basis: 100%;
-    max-width: none;
+  .entete__actions {
+    grid-column: 2;
   }
 
+  /*
+   * La navigation passe a la ligne et prend toute la largeur. Elle defile
+   * horizontalement si les icones ne tiennent pas, en repartant de la
+   * gauche : dans un conteneur defilant, un contenu centre plus large que
+   * la fenetre voit son debut deborder du cote inatteignable au defilement.
+   */
   .nav-top {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding-bottom: 4px;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -517,15 +446,10 @@
   .nav-top::-webkit-scrollbar {
     display: none;
   }
-
-  .nav-top__groupe--fin {
-    margin-left: 0;
-  }
 }
 
 @media (max-width: 720px) {
-  .entete__barre,
-  .nav-top {
+  .entete__barre {
     padding-left: 16px;
     padding-right: 16px;
   }

@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import {
   IconeBudgets,
   IconeDons,
-  IconeJustificatifs,
+  IconeMessages,
   IconeValide,
 } from '../../components/admin/AdminIcons.jsx';
 import {
@@ -32,7 +32,7 @@ const FILTRES = [
 const APPARENCE = {
   DONATION: { Icone: IconeDons, classe: 'don' },
   INVESTMENT: { Icone: IconeBudgets, classe: 'investi' },
-  MESSAGE: { Icone: IconeJustificatifs, classe: 'message' },
+  MESSAGE: { Icone: IconeMessages, classe: 'message' },
   PROJECT_COMPLETED: { Icone: IconeValide, classe: 'projet' },
 };
 
