@@ -95,6 +95,14 @@ export const IconeJustificatifs = creerIcone(
   </>
 );
 
+export const IconeMessages = creerIcone(
+  'IconeMessages',
+  <>
+    <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2" />
+    <path d="M3.2 7.1l7.75 5.3a1.9 1.9 0 0 0 2.1 0L20.8 7.1" />
+  </>
+);
+
 export const IconeBeneficiaires = creerIcone(
   'IconeBeneficiaires',
   <>
