@@ -1,0 +1,38 @@
+# ============================================================
+# HOPE - Fichiers exclus du versionnement
+# ============================================================
+
+# Dependances
+node_modules/
+
+# Variables d'environnement (contiennent le mot de passe PostgreSQL
+# et le secret JWT : NE JAMAIS COMMITER)
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+logs/
+
+# Cache des outils
+.vite/
+.cache/
+coverage/
+
+# Editeurs / systemes d'exploitation
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Justificatifs televerses : fichiers de l'association, jamais versionnes
+backend/uploads/

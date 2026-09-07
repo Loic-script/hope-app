@@ -1,0 +1,33 @@
+{
+  "name": "hope-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API HOPE - espace administrateur (projets, dons, budgets, depenses, justificatifs, beneficiaires, impacts)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node src/scripts/initDatabase.js",
+    "db:migrate": "node src/scripts/migrate.js",
+    "db:seed": "node src/scripts/seedAdmin.js",
+    "db:categories": "node src/scripts/seedCategories.js",
+    "db:seed-demo": "node src/scripts/seedDemoData.js",
+    "db:reset": "node src/scripts/resetData.js",
+    "db:setup": "npm run db:init && npm run db:migrate && npm run db:seed && npm run db:categories",
+    "test:api": "node src/scripts/testAuthFlow.js",
+    "test:admin": "node src/scripts/testAdminFlow.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.3.0",
+    "pg": "^8.16.3"
+  }
+}
