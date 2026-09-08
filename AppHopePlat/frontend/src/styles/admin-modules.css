@@ -645,3 +645,70 @@
   font-weight: 600;
   color: var(--hope-orange);
 }
+
+/* ============================================================
+   Chaine de resultats
+
+   Depenses -> Activite -> Resultat -> Impact : ce qu'on a
+   engage, ce qu'on a fait, ce qu'on a obtenu, ce que cela a
+   change. Une liste de definitions plutot qu'un tableau :
+   chaque valeur est un texte ou une liste, pas une cellule.
+   ============================================================ */
+
+.chaine {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 14px 18px;
+  margin: 0;
+}
+
+.chaine__terme {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+  /* Aligne l'intitule sur la premiere ligne de sa valeur, et non sur le
+     milieu du bloc quand celui-ci fait plusieurs lignes. */
+  padding-top: 2px;
+}
+
+.chaine__valeur {
+  margin: 0;
+  min-width: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+}
+
+.chaine__liste {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.chaine__liste li + li {
+  margin-top: 4px;
+}
+
+.chaine__date {
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte-faible);
+}
+
+.chaine__vide {
+  color: var(--admin-texte-faible);
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .chaine {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px 0;
+  }
+
+  .chaine__terme + .chaine__valeur {
+    margin-bottom: 10px;
+  }
+}

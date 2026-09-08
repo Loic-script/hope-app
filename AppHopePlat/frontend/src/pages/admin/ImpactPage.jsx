@@ -16,6 +16,7 @@ import {
 } from '../../components/admin/ui.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as catalogService from '../../services/catalog.service.js';
+import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as impactService from '../../services/impact.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
@@ -46,6 +47,11 @@ export default function ImpactPage() {
     chargement: chargementImpacts,
     recharger: rechargerImpacts,
   } = useChargement(() => impactService.lister(), []);
+
+  // Les preuves terrain alimentent la ligne "Activite" : ce qui a ete
+  // fait avec l'argent, entre la depense et le resultat. Une seule
+  // requete, regroupee ensuite par projet, plutot qu'une par projet.
+  const { donnees: preuves } = useChargement(() => fieldProofService.lister(), []);
 
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
   const { donnees: tousProjets } = useChargement(
@@ -83,6 +89,18 @@ export default function ImpactPage() {
     return total;
   }, {});
   const indicateursCumules = Object.values(cumul).sort((a, b) => b.total - a.total);
+
+  /** Regroupe une liste par projet, pour la chaine de resultats. */
+  function parProjet(liste) {
+    const groupes = {};
+    for (const element of liste ?? []) {
+      (groupes[element.projectId] ??= []).push(element);
+    }
+    return groupes;
+  }
+
+  const activitesParProjet = parProjet(preuves?.items);
+  const impactsParProjet = parProjet(impacts?.items);
 
   return (
     <>
@@ -215,7 +233,59 @@ export default function ImpactPage() {
                   </Link>
                 }
               >
-                <p className="bloc-texte">{projet.outcome}</p>
+                {/*
+                  La chaine de resultats, dans l'ordre ou elle se lit :
+                  ce qu'on a depense, ce qu'on a fait, ce qu'on a obtenu,
+                  ce que cela a change.
+                */}
+                <dl className="chaine">
+                  <dt className="chaine__terme">Dépenses</dt>
+                  <dd className="chaine__valeur">
+                    <strong>{fmt.montant(projet.spentTotal, projet.currency)}</strong>
+                    {' engagés sur '}
+                    {fmt.montant(projet.fundedTotal, projet.currency)}
+                    {' reçus'}
+                  </dd>
+
+                  <dt className="chaine__terme">Activité</dt>
+                  <dd className="chaine__valeur">
+                    {(activitesParProjet[projet.id] ?? []).length === 0 ? (
+                      <span className="chaine__vide">
+                        Aucune preuve terrain publiée pour ce projet.
+                      </span>
+                    ) : (
+                      <ul className="chaine__liste">
+                        {activitesParProjet[projet.id].map((preuve) => (
+                          <li key={preuve.id}>
+                            <span className="chaine__date">{fmt.date(preuve.occurredOn)}</span>
+                            {preuve.description}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </dd>
+
+                  <dt className="chaine__terme">Résultat</dt>
+                  <dd className="chaine__valeur">{projet.outcome}</dd>
+
+                  <dt className="chaine__terme">Impact</dt>
+                  <dd className="chaine__valeur">
+                    {(impactsParProjet[projet.id] ?? []).length === 0 ? (
+                      <span className="chaine__vide">Aucun indicateur mesuré pour l’instant.</span>
+                    ) : (
+                      <ul className="chaine__liste">
+                        {impactsParProjet[projet.id].map((impact) => (
+                          <li key={impact.id}>
+                            <strong>
+                              {fmt.nombre(impact.value)} {impact.unit}
+                            </strong>{' '}
+                            — {impact.title}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </dd>
+                </dl>
               </Panneau>
             ))}
         </>
