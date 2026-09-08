@@ -33,6 +33,8 @@ const TABLES_ATTENDUES = [
   'impacts',
   'messages',
   'notifications',
+  'field_proofs',
+  'activity_log',
 ];
 
 async function executer() {

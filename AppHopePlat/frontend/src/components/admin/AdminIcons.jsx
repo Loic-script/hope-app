@@ -103,6 +103,14 @@ export const IconeMessages = creerIcone(
   </>
 );
 
+export const IconePreuves = creerIcone(
+  'IconePreuves',
+  <>
+    <path d="M3.2 8.6a1.8 1.8 0 0 1 1.8-1.8h2.6l1.4-2.2h6l1.4 2.2H19a1.8 1.8 0 0 1 1.8 1.8v8.6a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8Z" />
+    <circle cx="12" cy="12.6" r="3.4" />
+  </>
+);
+
 export const IconeBeneficiaires = creerIcone(
   'IconeBeneficiaires',
   <>

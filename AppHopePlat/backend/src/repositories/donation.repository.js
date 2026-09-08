@@ -167,6 +167,45 @@ export async function etatDuFonds(client = null) {
 }
 
 /**
+ * La derniere occurrence de chaque don mensuel encore attendu ce mois-ci.
+ *
+ * Un don mensuel n'est pas une ligne unique qui se repete : c'est une
+ * occurrence par mois. La recurrence est donc identifiee par le triplet
+ * (donateur, affectation, projet), et la derniere occurrence sert de
+ * modele a la suivante.
+ *
+ * Seules remontent les recurrences dont la derniere occurrence est
+ * anterieure au mois courant : celles deja generees sont ignorees, ce qui
+ * rend la generation rejouable sans creer de doublon.
+ *
+ * Un don affecte a un projet qui n'est plus en cours est ecarte : la
+ * regle PROJET_FERME le refuserait de toute facon.
+ */
+export async function echeancesMensuellesAGenerer(client = null) {
+  const resultat = await query(
+    `SELECT DISTINCT ON (d.donor_id, d.allocation, COALESCE(d.project_id, 0))
+            d.donor_id, d.donor_account_id, d.amount, d.currency, d.allocation,
+            d.project_id, d.payment_method, d.received_at AS derniere_occurrence
+       FROM donations d
+       LEFT JOIN projects p ON p.id = d.project_id
+      WHERE d.frequency = 'MONTHLY'
+        AND d.status IN ('RECEIVED', 'PENDING')
+        AND (d.project_id IS NULL OR p.status = 'IN_PROGRESS')
+      ORDER BY d.donor_id, d.allocation, COALESCE(d.project_id, 0), d.received_at DESC`,
+    [],
+    client
+  );
+
+  return versListe(
+    resultat.rows.filter(
+      (ligne) =>
+        new Date(ligne.derniere_occurrence) <
+        new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
+    )
+  );
+}
+
+/**
  * Verrouille l'ensemble des dons HOPE le temps de decider d'un
  * investissement : deux investissements simultanes ne peuvent pas vider
  * le fonds deux fois.

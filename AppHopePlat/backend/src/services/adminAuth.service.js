@@ -29,6 +29,8 @@ function versAdminPublic(admin) {
   return {
     id: admin.id,
     adminLog: admin.adminLog,
+    fullName: admin.fullName ?? admin.adminLog,
+    role: admin.role,
   };
 }
 
@@ -81,7 +83,19 @@ export async function connecter({ adminLog, password } = {}) {
     throw new ErreurAuthentification('Identifiants incorrects');
   }
 
-  // 4. Emission du jeton.
+  // 4. Un compte suspendu ne se connecte plus. Le controle vient APRES la
+  //    verification du mot de passe : refuser plus tot revelerait, par le
+  //    seul message d'erreur, qu'un identifiant existe.
+  if (admin.status === 'SUSPENDED') {
+    throw new ErreurAuthentification(
+      'Ce compte est suspendu. Contactez un administrateur.',
+      'COMPTE_SUSPENDU'
+    );
+  }
+
+  await adminRepository.marquerConnexion(admin.id);
+
+  // 5. Emission du jeton.
   return {
     token: signerJeton(admin),
     admin: versAdminPublic(admin),

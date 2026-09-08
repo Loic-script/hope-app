@@ -22,9 +22,30 @@ const SQL_TABLE_ADMINS = `
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
   );
 
-  COMMENT ON TABLE  admins               IS 'Administrateurs de la plateforme HOPE';
+  -- Colonnes ajoutees apres coup : ADD COLUMN IF NOT EXISTS rend le script
+  -- rejouable sur une base existante comme sur une base neuve.
+  ALTER TABLE admins ADD COLUMN IF NOT EXISTS full_name     VARCHAR(160);
+  ALTER TABLE admins ADD COLUMN IF NOT EXISTS role          VARCHAR(20)  NOT NULL DEFAULT 'ADMIN';
+  ALTER TABLE admins ADD COLUMN IF NOT EXISTS status        VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE';
+  ALTER TABLE admins ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+
+  -- Un compte sans nom affiche retombe sur son identifiant de connexion.
+  UPDATE admins SET full_name = admin_log WHERE full_name IS NULL;
+
+  ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_role_valide;
+  ALTER TABLE admins ADD  CONSTRAINT admins_role_valide
+    CHECK (role IN ('ADMIN', 'COORDINATOR', 'VIEWER'));
+
+  ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_status_valide;
+  ALTER TABLE admins ADD  CONSTRAINT admins_status_valide
+    CHECK (status IN ('ACTIVE', 'SUSPENDED'));
+
+  COMMENT ON TABLE  admins               IS 'Comptes de l equipe HOPE';
   COMMENT ON COLUMN admins.admin_log     IS 'Identifiant de connexion, unique';
   COMMENT ON COLUMN admins.password_hash IS 'Hash bcrypt du mot de passe - jamais le mot de passe en clair';
+  COMMENT ON COLUMN admins.full_name     IS 'Nom affiche sur les actions : "Njara R."';
+  COMMENT ON COLUMN admins.role          IS 'ADMIN (tout) / COORDINATOR (terrain) / VIEWER (lecture seule)';
+  COMMENT ON COLUMN admins.status        IS 'Un compte SUSPENDED ne peut plus se connecter';
 `;
 
 const SQL_TRIGGER_UPDATED_AT = `

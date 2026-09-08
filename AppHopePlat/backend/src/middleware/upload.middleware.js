@@ -198,6 +198,95 @@ export function televerserMedia(req, res, suite) {
   });
 }
 
+/* ==================================================================
+   Preuves terrain : la photo ou le document qui montre l'action menee
+
+   Servies derriere le jeton, comme les justificatifs, et non en acces
+   libre comme les medias de projet : ce sont des photos de
+   beneficiaires. Leur exposition publique se decidera avec l'espace
+   donateur, pas par defaut.
+   ================================================================== */
+
+/** backend/uploads/preuves */
+export const DOSSIER_PREUVES = path.resolve(dossierCourant, '..', '..', 'uploads', 'preuves');
+
+/** Types acceptes : une preuve est une photo, parfois un document scanne. */
+const PREUVES_ACCEPTEES = new Map([
+  ['image/jpeg', '.jpg'],
+  ['image/png', '.png'],
+  ['image/webp', '.webp'],
+  ['application/pdf', '.pdf'],
+]);
+
+const EXTENSIONS_PREUVES = new Set(['.jpg', '.jpeg', '.png', '.webp', '.pdf']);
+
+/** 10 Mo : une photo de terrain prise au telephone tient largement dedans. */
+export const TAILLE_MAXIMALE_PREUVE = 10 * 1024 * 1024;
+
+fs.mkdirSync(DOSSIER_PREUVES, { recursive: true });
+
+const stockagePreuve = multer.diskStorage({
+  destination(_req, _fichier, suite) {
+    suite(null, DOSSIER_PREUVES);
+  },
+  filename(_req, fichier, suite) {
+    // Nom genere : jamais celui fourni par le client.
+    const extension = PREUVES_ACCEPTEES.get(fichier.mimetype) ?? '.bin';
+    const identifiant = crypto.randomBytes(16).toString('hex');
+    suite(null, `preuve-${Date.now()}-${identifiant}${extension}`);
+  },
+});
+
+function filtrerPreuve(_req, fichier, suite) {
+  const extension = path.extname(fichier.originalname ?? '').toLowerCase();
+
+  if (!PREUVES_ACCEPTEES.has(fichier.mimetype) || !EXTENSIONS_PREUVES.has(extension)) {
+    suite(
+      new ErreurValidation('Format non accepté. Photos : JPG, PNG, WEBP. Document : PDF.', {
+        file: 'Format non accepté',
+      })
+    );
+    return;
+  }
+  suite(null, true);
+}
+
+const televerseurPreuve = multer({
+  storage: stockagePreuve,
+  fileFilter: filtrerPreuve,
+  limits: { fileSize: TAILLE_MAXIMALE_PREUVE, files: 1 },
+});
+
+/**
+ * Middleware acceptant un fichier facultatif sous le champ "file".
+ *
+ * Facultatif : un temoignage se suffit de son texte, la contrainte
+ * field_proofs_fichier_coherent verifie le reste cote base.
+ */
+export function televerserPreuve(req, res, suite) {
+  televerseurPreuve.single('file')(req, res, (erreur) => {
+    if (!erreur) {
+      suite();
+      return;
+    }
+
+    if (erreur instanceof multer.MulterError) {
+      if (erreur.code === 'LIMIT_FILE_SIZE') {
+        suite(
+          new ErreurValidation('Le fichier dépasse la taille maximale de 10 Mo.', {
+            file: 'Fichier trop volumineux',
+          })
+        );
+        return;
+      }
+      suite(new ErreurValidation(`Téléversement refusé : ${erreur.message}`, { file: erreur.code }));
+      return;
+    }
+
+    suite(erreur);
+  });
+}
+
 /** Supprime un fichier du disque sans faire echouer l'appel s'il a disparu. */
 export async function supprimerFichier(cheminAbsolu) {
   try {

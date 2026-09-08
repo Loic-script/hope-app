@@ -19,6 +19,7 @@ import * as documentRepository from '../repositories/document.repository.js';
 import * as beneficiaryRepository from '../repositories/beneficiary.repository.js';
 import * as impactRepository from '../repositories/impact.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
+import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
 import * as mediaService from './media.service.js';
 
@@ -196,7 +197,7 @@ export async function recupererApercu(id) {
 }
 
 /** Cree un projet. Il demarre systematiquement en cours. */
-export async function creer(corps = {}) {
+export async function creer(corps = {}, auteur = null) {
   const donnees = await preparerDonnees(corps, { creation: true });
   const budget = enCentimes(corps.requiredBudget, 'requiredBudget');
 
@@ -204,6 +205,13 @@ export async function creer(corps = {}) {
     ...donnees,
     reference: await projectRepository.genererReference(),
     requiredBudget: centimesVersTexte(budget),
+  });
+
+  await activityLogRepository.deposer(auteur, {
+    action: 'CREATE',
+    entityType: 'PROJECT',
+    entityId: projet.id,
+    label: `a créé le projet « ${projet.name} »`,
   });
 
   return enrichir(projet);
@@ -261,7 +269,7 @@ export async function mettreAJour(id, corps = {}) {
  * Termine un projet et enregistre son resultat.
  * Le resultat est obligatoire : c'est lui qui alimente l'ecran Impact.
  */
-export async function terminer(id, corps = {}) {
+export async function terminer(id, corps = {}, auteur = null) {
   const projectId = identifiantRequis(id, 'id');
 
   return transaction(async (client) => {
@@ -280,6 +288,17 @@ export async function terminer(id, corps = {}) {
         type: 'PROJECT_COMPLETED',
         projectId,
         label: `Le projet « ${termine.name} » est terminé`,
+      },
+      client
+    );
+
+    await activityLogRepository.deposer(
+      auteur,
+      {
+        action: 'COMPLETE',
+        entityType: 'PROJECT',
+        entityId: projectId,
+        label: `a marqué « ${termine.name} » comme terminé`,
       },
       client
     );

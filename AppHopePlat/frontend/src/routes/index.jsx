@@ -12,6 +12,7 @@ import NotificationsPage from '../pages/admin/NotificationsPage.jsx';
 import ProjectDetailPage from '../pages/admin/ProjectDetailPage.jsx';
 import ProjectFormPage from '../pages/admin/ProjectFormPage.jsx';
 import ProjectsPage from '../pages/admin/ProjectsPage.jsx';
+import ProofsPage from '../pages/admin/ProofsPage.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
 import StatisticsPage from '../pages/admin/StatisticsPage.jsx';
 import RequireAuth from './RequireAuth.jsx';
@@ -41,6 +42,8 @@ export default function AppRoutes() {
           <Route path="/admin/projects" element={<ProjectsPage />} />
           <Route path="/admin/projects/new" element={<ProjectFormPage />} />
           <Route path="/admin/projects/:id" element={<ProjectDetailPage />} />
+
+          <Route path="/admin/proofs" element={<ProofsPage />} />
           <Route path="/admin/projects/:id/edit" element={<ProjectFormPage />} />
 
           <Route path="/admin/impact" element={<ImpactPage />} />

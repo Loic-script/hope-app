@@ -10,8 +10,16 @@
  */
 import { Router } from 'express';
 
-import { authenticateAdmin } from '../middleware/auth.middleware.js';
-import { televerserJustificatif, televerserMedia } from '../middleware/upload.middleware.js';
+import {
+  authenticateAdmin,
+  exigerEcriture,
+  exigerRole,
+} from '../middleware/auth.middleware.js';
+import {
+  televerserJustificatif,
+  televerserMedia,
+  televerserPreuve,
+} from '../middleware/upload.middleware.js';
 
 import {
   beneficiaries,
@@ -21,18 +29,43 @@ import {
   donations,
   donors,
   expenses,
+  fieldProofs,
   fund,
   impacts,
   messages,
   notifications,
   projects,
   statistics,
+  team,
 } from '../controllers/admin.controllers.js';
 
 const router = Router();
 
 // --- Verrou global de l'espace administrateur ------------------------
 router.use(authenticateAdmin);
+
+/*
+ * Changer SON mot de passe reste ouvert a tous les roles, y compris la
+ * lecture seule. Cette route est donc declaree AVANT le verrou d'ecriture
+ * ci-dessous : elle repond, et la requete n'atteint jamais le verrou.
+ */
+router.post('/me/password', team.changerSonMotDePasse);
+
+/*
+ * SECURITE : toute ecriture exige au moins le role coordinateur.
+ *
+ * Le verrou porte sur la methode HTTP plutot que sur chaque route, pour
+ * la meme raison qu'authenticateAdmin est monte en tete : une route
+ * ajoutee plus bas est protegee par defaut, sans qu'on ait a y penser.
+ * Les lectures (GET, HEAD) passent : un compte VIEWER consulte tout.
+ */
+router.use((req, res, suite) => {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
+    suite();
+    return;
+  }
+  exigerEcriture(req, res, suite);
+});
 
 // --- Accueil et donnees de reference ---------------------------------
 router.get('/dashboard', dashboard.recuperer);
@@ -53,7 +86,8 @@ router.patch('/projects/:id', projects.mettreAJour);
 router.patch('/projects/:id/complete', projects.terminer);
 router.patch('/projects/:id/reopen', projects.rouvrir);
 router.patch('/projects/:id/archive', projects.archiver);
-router.delete('/projects/:id', projects.supprimer);
+// Supprimer un projet efface un dossier : decision d'administrateur.
+router.delete('/projects/:id', exigerRole('ADMIN'), projects.supprimer);
 
 // Sous-ressources d'un projet
 router.get('/projects/:projectId/beneficiaries', beneficiaries.listerParProjet);
@@ -70,7 +104,8 @@ router.delete('/impacts/:id', impacts.supprimer);
 // --- 3. Budget : etat du fonds et investissements ---------------------
 router.get('/fund', fund.etat);
 router.get('/investments', fund.listerInvestissements);
-router.post('/investments', fund.investir);
+// Investir engage l'argent libre de l'association : decision d'administrateur.
+router.post('/investments', exigerRole('ADMIN'), fund.investir);
 
 // --- 4. Notifications -------------------------------------------------
 router.get('/badges', notifications.compteurs);
@@ -91,6 +126,8 @@ router.get('/donations', donations.lister);
 router.post('/donations', donations.creer);
 router.get('/donations/:id', donations.recuperer);
 router.patch('/donations/:id/status', donations.changerStatut);
+// Genere les occurrences du mois EN ATTENTE : aucun prelevement reel.
+router.post('/donations/generate-monthly', donations.genererEcheances);
 
 // --- 6. Messages ------------------------------------------------------
 router.get('/messages', messages.lister);
@@ -112,6 +149,27 @@ router.get('/documents', documents.lister);
 router.get('/documents/:id', documents.recuperer);
 router.get('/documents/:id/download', documents.telecharger);
 router.delete('/documents/:id', documents.supprimer);
+
+// --- 7. Preuves terrain -----------------------------------------------
+// televerserPreuve doit passer avant le controleur : c'est lui qui
+// remplit req.body pour un envoi multipart, en plus de req.file.
+router.get('/field-proofs', fieldProofs.lister);
+router.post('/field-proofs', televerserPreuve, fieldProofs.creer);
+router.get('/field-proofs/:id', fieldProofs.recuperer);
+router.get('/field-proofs/:id/file', fieldProofs.telecharger);
+router.delete('/field-proofs/:id', fieldProofs.supprimer);
+router.get('/projects/:projectId/field-proofs', fieldProofs.lister);
+
+// --- 8. Equipe HOPE et journal d'activite -----------------------------
+// Gerer les comptes est reserve aux administrateurs : c'est la seule
+// action qui permet d'en creer d'autres, donc de tout ouvrir.
+router.get('/team', exigerRole('ADMIN'), team.lister);
+router.post('/team', exigerRole('ADMIN'), team.creer);
+router.patch('/team/:id', exigerRole('ADMIN'), team.mettreAJour);
+router.patch('/team/:id/password', exigerRole('ADMIN'), team.reinitialiserMotDePasse);
+
+// Le journal se lit ; personne ne l'ecrit a la main.
+router.get('/activity', team.journal);
 
 // --- Beneficiaires ----------------------------------------------------
 router.get('/beneficiaries', beneficiaries.lister);

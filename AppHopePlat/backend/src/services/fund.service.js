@@ -22,6 +22,7 @@ import * as investmentRepository from '../repositories/investment.repository.js'
 import * as projectRepository from '../repositories/project.repository.js';
 import * as expenseRepository from '../repositories/expense.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
+import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
 import { centimesVersTexte, depuisBase, enCentimes, normaliserDevise, pourcentage } from '../shared/money.js';
@@ -108,7 +109,7 @@ export async function listerInvestissements(requete = {}) {
  * @param {{ projectId: unknown, amount: unknown, justification: unknown,
  *           investedAt?: unknown }} corps
  */
-export async function investir(corps = {}) {
+export async function investir(corps = {}, auteur = null) {
   const projectId = identifiantRequis(corps.projectId, 'projectId');
   const montant = enCentimes(corps.amount, 'amount');
   const justification = texteRequis(corps.justification, 'justification', { max: 2000 });
@@ -188,6 +189,19 @@ export async function investir(corps = {}) {
         projectId,
         label:
           `${centimesVersTexte(montant)} ${devise} du fonds HOPE investis ` +
+          `dans « ${projet.name} »`,
+      },
+      client
+    );
+
+    await activityLogRepository.deposer(
+      auteur,
+      {
+        action: 'INVEST',
+        entityType: 'PROJECT',
+        entityId: projectId,
+        label:
+          `a investi ${centimesVersTexte(montant)} ${devise} du fonds HOPE ` +
           `dans « ${projet.name} »`,
       },
       client

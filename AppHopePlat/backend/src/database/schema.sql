@@ -332,7 +332,72 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE INDEX IF NOT EXISTS notifications_lues_idx ON notifications (is_read, created_at DESC);
 
 -- ------------------------------------------------------------
--- 14. Declencheurs updated_at
+-- 14. Preuves terrain
+--
+--    A ne pas confondre avec supporting_documents : un justificatif
+--    prouve une DEPENSE (facture, recu), une preuve terrain prouve une
+--    ACTION ("les fournitures ont ete remises ce matin"). C'est elle qui
+--    alimentera le suivi que verra le donateur.
+--
+--    admin_id est renseigne des maintenant, alors qu'il n'existe qu'un
+--    seul compte : le jour ou l'equipe aura des comptes nommes, les
+--    preuves deja publiees porteront deja leur auteur.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS field_proofs (
+  id          SERIAL       PRIMARY KEY,
+  project_id  INTEGER      NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  admin_id    INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  proof_type  VARCHAR(20)  NOT NULL DEFAULT 'PHOTO',
+  description TEXT         NOT NULL,
+  file_name   VARCHAR(255),
+  file_path   TEXT,
+  mime_type   VARCHAR(120),
+  file_size   INTEGER,
+  occurred_on DATE         NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  CONSTRAINT field_proofs_type_valide
+    CHECK (proof_type IN ('PHOTO', 'DOCUMENT', 'TESTIMONY')),
+  -- Une photo ou un document portent forcement un fichier ; un
+  -- temoignage se suffit de son texte.
+  CONSTRAINT field_proofs_fichier_coherent
+    CHECK (proof_type = 'TESTIMONY' OR file_path IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS field_proofs_project_idx ON field_proofs (project_id);
+CREATE INDEX IF NOT EXISTS field_proofs_date_idx    ON field_proofs (created_at DESC);
+
+-- ------------------------------------------------------------
+-- 15. Journal d'activite
+--
+--    Le pendant signe du fil de l'accueil. Celui-ci est reconstruit par
+--    lecture des tables metier : il dit ce qui s'est passe, jamais qui
+--    l'a fait. Le journal, lui, est depose par les services au moment de
+--    l'evenement -- comme les notifications -- et porte son auteur.
+--
+--    Il n'est jamais modifie : une ligne ecrite reste telle quelle.
+--    D'ou l'absence de updated_at et de declencheur.
+--
+--    admin_id passe a NULL si le compte est supprime : on perd le lien,
+--    jamais la trace. author_label garde le nom tel qu'il etait au moment
+--    de l'action.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS activity_log (
+  id           SERIAL      PRIMARY KEY,
+  admin_id     INTEGER     REFERENCES admins(id) ON DELETE SET NULL,
+  author_label VARCHAR(160) NOT NULL,
+  action       VARCHAR(40) NOT NULL,
+  entity_type  VARCHAR(40) NOT NULL,
+  entity_id    INTEGER,
+  label        TEXT        NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS activity_log_date_idx   ON activity_log (created_at DESC);
+CREATE INDEX IF NOT EXISTS activity_log_entite_idx ON activity_log (entity_type, entity_id);
+
+-- ------------------------------------------------------------
+-- 16. Declencheurs updated_at
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$
@@ -349,7 +414,7 @@ BEGIN
   FOREACH cible IN ARRAY ARRAY[
     'project_categories', 'projects', 'donors', 'donor_accounts', 'donations',
     'investments', 'expenses', 'supporting_documents', 'beneficiaries',
-    'project_beneficiaries', 'impacts', 'messages'
+    'project_beneficiaries', 'impacts', 'messages', 'field_proofs'
   ]
   LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', cible || '_updated_at', cible);

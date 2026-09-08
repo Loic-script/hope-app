@@ -14,6 +14,7 @@ import * as donationRepository from '../repositories/donation.repository.js';
 import * as donorRepository from '../repositories/donor.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
+import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
 import { centimesVersTexte, depuisBase, enCentimes, normaliserDevise } from '../shared/money.js';
@@ -153,6 +154,71 @@ export async function creer(corps = {}) {
 
     return don;
   });
+}
+
+/**
+ * Genere les echeances des dons mensuels pour le mois en cours.
+ *
+ * ATTENTION AU MOT : il ne s'agit pas d'un prelevement. Rien n'est
+ * debite -- la plateforme n'est reliee a aucun prestataire de paiement.
+ * On cree une occurrence EN ATTENTE, que l'administrateur passe a
+ * "encaisse" une fois l'argent effectivement recu.
+ *
+ * Ce que cela remplace : la ressaisie complete de chaque don mensuel,
+ * chaque mois. Ce qu'il reste a faire a la main : confirmer la reception.
+ *
+ * Un don PENDING ne compte dans aucun total : le fonds, les projets et
+ * les statistiques ne retiennent que le statut RECEIVED.
+ *
+ * L'operation est rejouable : une recurrence deja generee ce mois-ci
+ * n'est plus proposee.
+ */
+export async function genererEcheancesMensuelles(auteur = null) {
+  const attendues = await donationRepository.echeancesMensuellesAGenerer();
+
+  if (attendues.length === 0) {
+    return { created: 0, items: [], message: 'Aucune échéance à générer ce mois-ci.' };
+  }
+
+  const crees = [];
+
+  for (const modele of attendues) {
+    const don = await transaction(async (client) => {
+      return donationRepository.creer(
+        {
+          reference: await donationRepository.genererReference(client),
+          donorId: modele.donorId,
+          donorAccountId: modele.donorAccountId,
+          amount: modele.amount,
+          currency: modele.currency,
+          allocation: modele.allocation,
+          projectId: modele.projectId,
+          frequency: 'MONTHLY',
+          paymentMethod: modele.paymentMethod,
+          paymentReference: null,
+          // En attente : l'argent n'est pas encore arrive.
+          status: 'PENDING',
+          receivedAt: null,
+          message: null,
+        },
+        client
+      );
+    });
+    crees.push(don);
+  }
+
+  await activityLogRepository.deposer(auteur, {
+    action: 'GENERATE',
+    entityType: 'DONATION',
+    entityId: null,
+    label: `a généré ${crees.length} échéance(s) de dons mensuels, en attente d’encaissement`,
+  });
+
+  return {
+    created: crees.length,
+    items: crees,
+    message: `${crees.length} échéance(s) créée(s), en attente d’encaissement.`,
+  };
 }
 
 /** Change le statut d'un don (encaissement, echec, remboursement). */

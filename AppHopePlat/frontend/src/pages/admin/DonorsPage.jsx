@@ -18,6 +18,7 @@ import {
   Tableau,
 } from '../../components/admin/ui.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
+import { messageErreur } from '../../services/api.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as donationService from '../../services/donation.service.js';
 import * as donorService from '../../services/donor.service.js';
@@ -111,6 +112,27 @@ export default function DonorsPage() {
     rechargerDons();
   }
 
+  const [envoi, setEnvoi] = useState(false);
+  const [messageEcheances, setMessageEcheances] = useState('');
+
+  /**
+   * Cree les occurrences du mois pour les dons mensuels.
+   * Aucun argent n'est preleve : elles arrivent en attente d'encaissement.
+   */
+  async function genererEcheances() {
+    setEnvoi(true);
+    setMessageEcheances('');
+    try {
+      const resultat = await donationService.genererEcheancesMensuelles();
+      setMessageEcheances(resultat.message);
+      rechargerDons();
+    } catch (echec) {
+      setMessageEcheances(messageErreur(echec, 'Génération impossible.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
   return (
     <>
       <EntetePage
@@ -118,6 +140,15 @@ export default function DonorsPage() {
         accroche="Ceux qui soutiennent HOPE : donateurs réguliers avec un compte, donateurs ponctuels, et donateurs à l’étranger."
         actions={
           <>
+            <button
+              type="button"
+              className="btn btn--neutre"
+              onClick={genererEcheances}
+              disabled={envoi}
+              title="Crée les occurrences du mois pour les dons mensuels, en attente d’encaissement. Aucun prélèvement n’est effectué."
+            >
+              Échéances du mois
+            </button>
             <button type="button" className="btn btn--neutre" onClick={() => ouvrir('donateur')}>
               Nouveau donateur
             </button>
@@ -156,6 +187,8 @@ export default function DonorsPage() {
           </div>
         </div>
       )}
+
+      {messageEcheances && <Alerte type="info">{messageEcheances}</Alerte>}
 
       <Onglets
         onglets={[

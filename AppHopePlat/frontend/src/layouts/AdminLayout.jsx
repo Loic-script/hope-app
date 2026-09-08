@@ -13,6 +13,7 @@ import {
   IconeImpacts,
   IconeMessages,
   IconeParametres,
+  IconePreuves,
   IconeProjets,
 } from '../components/admin/AdminIcons.jsx';
 import { api } from '../services/api.js';
@@ -34,6 +35,7 @@ import { initiales } from '../utils/format.js';
 const NAVIGATION = [
   { to: '/admin', label: 'Accueil', Icone: IconeAccueil, exact: true },
   { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
+  { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
   { to: '/admin/impact', label: 'Impact', Icone: IconeImpacts },
   { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
   { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },

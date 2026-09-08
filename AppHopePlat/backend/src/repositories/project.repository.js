@@ -39,6 +39,10 @@ const AGREGATS = `
       JOIN donors o ON o.id = d.donor_id
      WHERE d.project_id = p.id AND d.status = 'RECEIVED'
   ) donateur ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT MAX(created_at) AS derniere
+      FROM field_proofs WHERE project_id = p.id
+  ) preuve ON TRUE
 `;
 
 const COLONNES = `
@@ -57,7 +61,13 @@ const COLONNES = `
   dep.nombre      AS expenses_count,
   ben.nombre      AS beneficiaries_count,
   donateur.nombre AS donors_count,
-  donateur.noms   AS donor_names
+  donateur.noms   AS donor_names,
+  preuve.derniere AS last_proof_at,
+  -- Depuis combien de jours ce projet est-il muet ? On repart de sa date
+  -- de creation quand il n'a jamais eu de preuve : reprocher un silence
+  -- a un projet cree hier n'aurait pas de sens.
+  FLOOR(EXTRACT(EPOCH FROM (NOW() - COALESCE(preuve.derniere, p.created_at))) / 86400)::int
+    AS days_since_proof
 `;
 
 /**

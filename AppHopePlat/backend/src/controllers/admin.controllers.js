@@ -6,6 +6,7 @@
  * chaque handler tenant en une ligne grace a l'enveloppe gerer().
  */
 import fs from 'node:fs';
+import path from 'node:path';
 
 import * as beneficiaryService from '../services/beneficiary.service.js';
 import * as catalogService from '../services/catalog.service.js';
@@ -14,6 +15,7 @@ import * as documentService from '../services/document.service.js';
 import * as donationService from '../services/donation.service.js';
 import * as donorService from '../services/donor.service.js';
 import * as expenseService from '../services/expense.service.js';
+import * as fieldProofService from '../services/fieldProof.service.js';
 import * as fundService from '../services/fund.service.js';
 import * as impactService from '../services/impact.service.js';
 import * as mediaService from '../services/media.service.js';
@@ -21,7 +23,9 @@ import * as messageService from '../services/message.service.js';
 import * as notificationService from '../services/notification.service.js';
 import * as projectService from '../services/project.service.js';
 import * as statisticsService from '../services/statistics.service.js';
+import * as teamService from '../services/team.service.js';
 
+import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
 
@@ -51,9 +55,9 @@ export const projects = {
   lister: gerer((req) => projectService.lister(req.query)),
   recuperer: gerer((req) => projectService.recupererParId(req.params.id)),
   recupererApercu: gerer((req) => projectService.recupererApercu(req.params.id)),
-  creer: gerer((req) => projectService.creer(req.body), { statut: 201 }),
+  creer: gerer((req) => projectService.creer(req.body, req.admin), { statut: 201 }),
   mettreAJour: gerer((req) => projectService.mettreAJour(req.params.id, req.body)),
-  terminer: gerer((req) => projectService.terminer(req.params.id, req.body)),
+  terminer: gerer((req) => projectService.terminer(req.params.id, req.body, req.admin)),
   rouvrir: gerer((req) => projectService.rouvrir(req.params.id)),
   archiver: gerer((req) => projectService.archiver(req.params.id)),
   supprimer: gerer((req) => projectService.supprimer(req.params.id)),
@@ -70,7 +74,7 @@ export const projects = {
 export const fund = {
   etat: gerer(() => fundService.etat()),
   listerInvestissements: gerer((req) => fundService.listerInvestissements(req.query)),
-  investir: gerer((req) => fundService.investir(req.body), { statut: 201 }),
+  investir: gerer((req) => fundService.investir(req.body, req.admin), { statut: 201 }),
 };
 
 /* ================================================================
@@ -82,6 +86,9 @@ export const donations = {
   recuperer: gerer((req) => donationService.recupererParId(req.params.id)),
   creer: gerer((req) => donationService.creer(req.body), { statut: 201 }),
   changerStatut: gerer((req) => donationService.changerStatut(req.params.id, req.body)),
+  genererEcheances: gerer((req) => donationService.genererEcheancesMensuelles(req.admin), {
+    statut: 201,
+  }),
 };
 
 export const donors = {
@@ -127,6 +134,80 @@ export const documents = {
     res.setHeader(
       'Content-Disposition',
       `inline; filename="${encodeURIComponent(document.fileName)}"`
+    );
+    res.sendFile(cheminAbsolu);
+  }),
+};
+
+/* ================================================================
+   Equipe HOPE et journal d'activite
+
+   req.admin est l'auteur de l'action : il est passe aux services pour
+   qu'ils sachent qui journaliser et qui refuser.
+   ================================================================ */
+
+export const team = {
+  lister: gerer(() => teamService.lister()),
+  creer: gerer((req) => teamService.creer(req.body, req.admin), { statut: 201 }),
+  mettreAJour: gerer((req) => teamService.mettreAJour(req.params.id, req.body, req.admin)),
+  reinitialiserMotDePasse: gerer((req) =>
+    teamService.reinitialiserMotDePasse(req.params.id, req.body, req.admin)
+  ),
+  changerSonMotDePasse: gerer((req) => teamService.changerSonMotDePasse(req.admin, req.body)),
+  journal: gerer((req) => teamService.journal(req.query)),
+};
+
+/* ================================================================
+   Preuves terrain
+
+   Le pendant des justificatifs : ceux-ci prouvent une depense, celles-la
+   prouvent une action. Meme traitement du fichier, servi derriere le
+   jeton et jamais en acces libre.
+   ================================================================ */
+
+export const fieldProofs = {
+  // Deux chemins mènent ici : /field-proofs?projectId=1 et
+  // /projects/1/field-proofs. Le parametre d'URL prime sur la requete.
+  lister: gerer((req) =>
+    fieldProofService.lister({
+      ...req.query,
+      projectId: req.params.projectId ?? req.query.projectId,
+    })
+  ),
+  recuperer: gerer((req) => fieldProofService.recupererParId(req.params.id)),
+
+  // req.admin vient de authenticateAdmin : c'est l'auteur de la preuve.
+  creer: gerer((req) => fieldProofService.creer(req.body, req.admin, req.file ?? null), {
+    statut: 201,
+  }),
+
+  supprimer: gerer(async (req) => {
+    const resultat = await fieldProofService.supprimer(req.params.id);
+    // La ligne est partie : le fichier peut suivre.
+    if (resultat.filePath) {
+      await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(resultat.filePath)));
+    }
+    return { id: resultat.id, deleted: true };
+  }),
+
+  /** Sert le fichier lui-meme ; repond directement, sans passer par gerer(). */
+  telecharger: gerer(async (req, res) => {
+    const preuve = await fieldProofService.recupererParId(req.params.id);
+
+    if (!preuve.filePath) {
+      throw new ErreurIntrouvable('Le fichier de la preuve', req.params.id);
+    }
+
+    // basename() neutralise toute tentative de remontee de repertoire.
+    const cheminAbsolu = path.join(DOSSIER_PREUVES, path.basename(preuve.filePath));
+    if (!fs.existsSync(cheminAbsolu)) {
+      throw new ErreurIntrouvable('Le fichier de la preuve', req.params.id);
+    }
+
+    res.setHeader('Content-Type', preuve.mimeType ?? 'application/octet-stream');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${encodeURIComponent(preuve.fileName ?? 'preuve')}"`
     );
     res.sendFile(cheminAbsolu);
   }),

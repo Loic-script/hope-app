@@ -42,7 +42,12 @@ async function executer() {
     await adminRepository.mettreAJourMotDePasse(existant.id, hash);
     console.log(`[HOPE] Mot de passe de "${login}" reinitialise (id ${existant.id}).`);
   } else {
-    const cree = await adminRepository.creer(login, hash);
+    const cree = await adminRepository.creer({
+      adminLog: login,
+      passwordHash: hash,
+      fullName: login,
+      role: 'ADMIN',
+    });
     console.log(`[HOPE] Administrateur "${login}" cree (id ${cree.id}).`);
   }
 

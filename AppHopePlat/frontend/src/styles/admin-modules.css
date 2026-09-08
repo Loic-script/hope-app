@@ -462,3 +462,186 @@
     gap: 10px;
   }
 }
+
+/* ============================================================
+   Preuves terrain
+
+   Le formulaire reste visible en permanence a gauche : publier
+   une preuve doit prendre quelques secondes, pas trois clics.
+   La liste, a droite, sert de controle immediat de ce qui vient
+   d'etre publie.
+   ============================================================ */
+
+.preuves__colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.preuves {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preuve {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+}
+
+/* Format carre : les photos de terrain arrivent dans tous les
+   cadrages, un ratio impose evite une liste en escalier. */
+.preuve__vignette {
+  width: 74px;
+  height: 74px;
+  flex: none;
+  border-radius: 9px;
+  object-fit: cover;
+  background-color: var(--admin-surface-douce);
+}
+
+.preuve__vignette--vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--admin-texte-faible);
+}
+
+.preuve__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.preuve__projet {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.preuve__description {
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+}
+
+.preuve__signature {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+@media (max-width: 1024px) {
+  .preuves__colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   Journal d'activite
+
+   Une ligne = une action signee. L'auteur est mis en avant :
+   c'est l'information que le fil de l'accueil ne donne pas.
+   ============================================================ */
+
+.journal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal__ligne {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--admin-bordure);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.journal__ligne:last-child {
+  border-bottom: 0;
+}
+
+.journal__auteur {
+  flex: none;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.journal__action {
+  flex: 1;
+  min-width: 0;
+  color: var(--admin-texte);
+}
+
+.journal__date {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Projets silencieux : l'alerte de l'ecran Preuves --- */
+
+.silence {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.silence__ligne {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.silence__ligne:last-child {
+  border-bottom: 0;
+}
+
+.silence__projet {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.silence__reference {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+/* L'orange de la charte, celui des barres de financement incomplet :
+   c'est un signal d'attention, pas une erreur. */
+.silence__duree {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hope-orange);
+}
