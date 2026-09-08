@@ -209,12 +209,20 @@ CREATE INDEX IF NOT EXISTS expenses_project_idx ON expenses (project_id);
 CREATE INDEX IF NOT EXISTS expenses_status_idx  ON expenses (status);
 
 -- ------------------------------------------------------------
--- 8. Justificatifs (facture, recu, preuve bancaire, contrat)
+-- 8. Justificatifs
+--
+--    Dix natures, du document comptable (facture, devis, bon de
+--    livraison) a la preuve d'execution (rapport d'activite, photo de
+--    realisation, certificat).
+--
+--    admin_id repond a "qui l'a ajoute" : la table field_proofs porte la
+--    meme colonne, pour la meme raison.
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS supporting_documents (
   id            SERIAL       PRIMARY KEY,
   expense_id    INTEGER      NOT NULL REFERENCES expenses(id) ON DELETE CASCADE,
-  document_type VARCHAR(20)  NOT NULL DEFAULT 'OTHER',
+  admin_id      INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  document_type VARCHAR(20)  NOT NULL DEFAULT 'INVOICE',
   file_name     VARCHAR(255) NOT NULL,
   file_path     TEXT         NOT NULL,
   mime_type     VARCHAR(120),
@@ -224,8 +232,32 @@ CREATE TABLE IF NOT EXISTS supporting_documents (
   created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   CONSTRAINT documents_type_valide
-    CHECK (document_type IN ('INVOICE', 'RECEIPT', 'BANK_PROOF', 'CONTRACT', 'OTHER'))
+    CHECK (document_type IN (
+      'INVOICE',          -- Facture
+      'RECEIPT',          -- Recu
+      'QUOTE',            -- Devis
+      'CONTRACT',         -- Contrat
+      'DELIVERY_NOTE',    -- Bon de livraison
+      'BANK_PROOF',       -- Preuve de paiement
+      'ACTIVITY_REPORT',  -- Rapport d'activite
+      'COMPLETION_PHOTO', -- Photo de realisation
+      'CERTIFICATE',      -- Certificat
+      'PARTNER_AGREEMENT',-- Convention partenaire
+      'OTHER'             -- conserve pour les lignes anterieures
+    ))
 );
+
+-- Colonnes et contrainte ajoutees apres coup : le schema doit rester
+-- rejouable sur une base existante comme sur une base neuve.
+ALTER TABLE supporting_documents ADD COLUMN IF NOT EXISTS admin_id INTEGER
+  REFERENCES admins(id) ON DELETE SET NULL;
+
+ALTER TABLE supporting_documents DROP CONSTRAINT IF EXISTS documents_type_valide;
+ALTER TABLE supporting_documents ADD  CONSTRAINT documents_type_valide
+  CHECK (document_type IN (
+    'INVOICE', 'RECEIPT', 'QUOTE', 'CONTRACT', 'DELIVERY_NOTE', 'BANK_PROOF',
+    'ACTIVITY_REPORT', 'COMPLETION_PHOTO', 'CERTIFICATE', 'PARTNER_AGREEMENT', 'OTHER'
+  ));
 
 CREATE INDEX IF NOT EXISTS documents_expense_idx ON supporting_documents (expense_id);
 

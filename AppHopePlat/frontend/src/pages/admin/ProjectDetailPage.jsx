@@ -536,6 +536,22 @@ export default function ProjectDetailPage() {
           titre="Justificatifs"
           sousTitre="Factures, reçus, preuves bancaires et contrats prouvant chaque dépense."
           serre
+          actions={
+            <button
+              type="button"
+              className="btn btn--principal btn--petit"
+              onClick={() => ouvrir('justificatif', null)}
+              disabled={donnees.expenses.length === 0}
+              title={
+                donnees.expenses.length === 0
+                  ? 'Enregistrez d’abord une dépense : un justificatif se rattache toujours à l’une d’elles.'
+                  : undefined
+              }
+            >
+              <IconePlus />
+              Ajouter un justificatif
+            </button>
+          }
         >
           <Tableau
             lignes={donnees.documents}
@@ -572,6 +588,11 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
                 ),
+              },
+              {
+                cle: 'authorName',
+                titre: 'Ajouté par',
+                rendu: (doc) => doc.authorName ?? doc.authorLog ?? '—',
               },
               { cle: 'reference', titre: 'Référence', rendu: (doc) => doc.reference ?? '—' },
               {
@@ -848,6 +869,7 @@ export default function ProjectDetailPage() {
       <JustificatifModale
         ouverte={modale.nom === 'justificatif'}
         depense={modale.cible}
+        depenses={donnees.expenses}
         libelles={libelles}
         onFermer={fermer}
         onEnregistre={rechargerTout}

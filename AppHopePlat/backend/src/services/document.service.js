@@ -20,14 +20,37 @@ import {
   valeurParmi,
 } from '../shared/validation.js';
 
-export const TYPES = ['INVOICE', 'RECEIPT', 'BANK_PROOF', 'CONTRACT', 'OTHER'];
+export const TYPES = [
+  'INVOICE',
+  'RECEIPT',
+  'QUOTE',
+  'CONTRACT',
+  'DELIVERY_NOTE',
+  'BANK_PROOF',
+  'ACTIVITY_REPORT',
+  'COMPLETION_PHOTO',
+  'CERTIFICATE',
+  'PARTNER_AGREEMENT',
+  'OTHER',
+];
 
-/** Libelles metier, utilises par le frontend pour l'affichage. */
+/**
+ * Libelles metier, utilises par le frontend pour l'affichage.
+ *
+ * L'ordre suit celui du cahier des charges : les pieces comptables
+ * d'abord, les preuves d'execution ensuite.
+ */
 export const LIBELLES_TYPES = {
   INVOICE: 'Facture',
-  RECEIPT: 'Recu',
-  BANK_PROOF: 'Preuve bancaire',
+  RECEIPT: 'Reçu',
+  QUOTE: 'Devis',
   CONTRACT: 'Contrat',
+  DELIVERY_NOTE: 'Bon de livraison',
+  BANK_PROOF: 'Preuve de paiement',
+  ACTIVITY_REPORT: 'Rapport d’activité',
+  COMPLETION_PHOTO: 'Photo de réalisation',
+  CERTIFICATE: 'Certificat',
+  PARTNER_AGREEMENT: 'Convention partenaire',
   OTHER: 'Autre',
 };
 
@@ -73,7 +96,7 @@ export async function recupererParId(id) {
  * @param {Express.Multer.File} fichier fichier ecrit sur le disque
  * @param {Record<string, unknown>} corps champs du formulaire
  */
-export async function creer(expenseId, fichier, corps = {}) {
+export async function creer(expenseId, fichier, corps = {}, admin = null) {
   const id = identifiantRequis(expenseId, 'expenseId');
 
   if (!fichier) {
@@ -91,7 +114,10 @@ export async function creer(expenseId, fichier, corps = {}) {
 
   const document = await documentRepository.creer({
     expenseId: id,
-    documentType: valeurParmi(corps.documentType, 'documentType', TYPES, { defaut: 'OTHER' }),
+    // Qui a depose le fichier : repond a la propriete "Personne qui l'a
+    // ajoute" du cahier des charges.
+    adminId: admin?.id ?? null,
+    documentType: valeurParmi(corps.documentType, 'documentType', TYPES, { defaut: 'INVOICE' }),
     // On garde le nom d'origine pour l'affichage, mais il ne sert jamais de
     // chemin sur le disque : seul le nom genere par multer est stocke.
     fileName: texteFacultatif(corps.fileName, 'fileName', { max: 255 }) ?? fichier.originalname,

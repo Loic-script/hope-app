@@ -5,8 +5,10 @@ import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
 const COLONNES = `
-  s.id, s.expense_id, s.document_type, s.file_name, s.file_path, s.mime_type,
-  s.file_size, s.reference, s.issued_at, s.created_at, s.updated_at,
+  s.id, s.expense_id, s.admin_id, s.document_type, s.file_name, s.file_path,
+  s.mime_type, s.file_size, s.reference, s.issued_at, s.created_at, s.updated_at,
+  a.full_name AS author_name,
+  a.admin_log AS author_log,
   e.description AS expense_description,
   e.amount      AS expense_amount,
   e.currency    AS expense_currency,
@@ -18,6 +20,7 @@ const COLONNES = `
 const JOINTURES = `
   JOIN expenses e ON e.id = s.expense_id
   JOIN projects p ON p.id = e.project_id
+  LEFT JOIN admins a ON a.id = s.admin_id
 `;
 
 /**
@@ -74,12 +77,13 @@ export async function trouverParId(id, client = null) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO supporting_documents
-       (expense_id, document_type, file_name, file_path, mime_type, file_size,
+       (expense_id, admin_id, document_type, file_name, file_path, mime_type, file_size,
         reference, issued_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING id`,
     [
       donnees.expenseId,
+      donnees.adminId ?? null,
       donnees.documentType,
       donnees.fileName,
       donnees.filePath,

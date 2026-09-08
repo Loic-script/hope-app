@@ -67,8 +67,14 @@ export const LIBELLES = {
   documentType: {
     INVOICE: 'Facture',
     RECEIPT: 'Reçu',
-    BANK_PROOF: 'Preuve bancaire',
+    QUOTE: 'Devis',
     CONTRACT: 'Contrat',
+    DELIVERY_NOTE: 'Bon de livraison',
+    BANK_PROOF: 'Preuve de paiement',
+    ACTIVITY_REPORT: 'Rapport d’activité',
+    COMPLETION_PHOTO: 'Photo de réalisation',
+    CERTIFICATE: 'Certificat',
+    PARTNER_AGREEMENT: 'Convention partenaire',
     OTHER: 'Autre',
   },
   beneficiaryType: {

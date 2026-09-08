@@ -780,12 +780,30 @@ export function DepenseModale({
    Justificatif
    ================================================================== */
 
-export function JustificatifModale({ ouverte, depense, libelles = {}, onFermer, onEnregistre }) {
+/**
+ * @param {object} props
+ * @param {object} [props.depense] depense a justifier ; si elle n'est pas
+ *        fournie, la modale la fait choisir dans props.depenses
+ * @param {object[]} [props.depenses] depenses du projet, pour ce choix
+ */
+export function JustificatifModale({
+  ouverte,
+  depense,
+  depenses = [],
+  libelles = {},
+  onFermer,
+  onEnregistre,
+}) {
   const [fichier, setFichier] = useState(null);
   const [type, setType] = useState('INVOICE');
   const [reference, setReference] = useState('');
   const [dateEmission, setDateEmission] = useState('');
+  const [depenseChoisie, setDepenseChoisie] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  // Un justificatif ne se rattache jamais au projet, toujours a une
+  // depense precise : soit on arrive depuis elle, soit on la designe.
+  const depenseId = depense?.id ?? (depenseChoisie ? Number(depenseChoisie) : null);
 
   useEffect(() => {
     if (!ouverte) return;
@@ -794,16 +812,21 @@ export function JustificatifModale({ ouverte, depense, libelles = {}, onFermer, 
     setType('INVOICE');
     setReference('');
     setDateEmission('');
+    setDepenseChoisie('');
   }, [ouverte, depense, setErreur]);
 
   async function enregistrer() {
+    if (!depenseId) {
+      setErreur('Choisissez la dépense que ce document justifie.');
+      return;
+    }
     if (!fichier) {
       setErreur('Sélectionnez un fichier PDF, JPG ou PNG (10 Mo maximum).');
       return;
     }
     await soumettre(
       () =>
-        documentService.televerser(depense.id, {
+        documentService.televerser(depenseId, {
           file: fichier,
           documentType: type,
           reference: reference || undefined,
@@ -828,6 +851,24 @@ export function JustificatifModale({ ouverte, depense, libelles = {}, onFermer, 
       erreur={erreur}
       libelleValider="Téléverser"
     >
+      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis une
+          depense : inutile de faire redesigner ce qu'on vient de designer. */}
+      {!depense && (
+        <ChampSelection
+          label="Dépense justifiée"
+          id="justificatif-depense"
+          obligatoire
+          vide="Choisir une dépense…"
+          options={depenses.map((d) => ({
+            valeur: d.id,
+            label: `${fmt.tronquer(d.description, 48)} — ${fmt.montant(d.amount, d.currency)}`,
+          }))}
+          value={depenseChoisie}
+          onChange={(e) => setDepenseChoisie(e.target.value)}
+          pleineLargeur
+        />
+      )}
+
       <div className="formulaire-grille">
         <Champ
           label="Fichier"

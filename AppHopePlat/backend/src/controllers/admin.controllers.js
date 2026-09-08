@@ -117,7 +117,7 @@ export const documents = {
   lister: gerer((req) => documentService.lister(req.query)),
   listerParDepense: gerer((req) => documentService.listerParDepense(req.params.expenseId)),
   recuperer: gerer((req) => documentService.recupererParId(req.params.id)),
-  creer: gerer((req) => documentService.creer(req.params.expenseId, req.file, req.body), {
+  creer: gerer((req) => documentService.creer(req.params.expenseId, req.file, req.body, req.admin), {
     statut: 201,
   }),
   supprimer: gerer((req) => documentService.supprimer(req.params.id)),
