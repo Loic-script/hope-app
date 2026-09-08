@@ -26,7 +26,7 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as dashboardService from '../../services/dashboard.service.js';
 import * as fmt from '../../utils/format.js';
 
-import photoBandeau from '../../assets/hope-baobabs.jpg';
+import photoBandeau from '../../assets/hope-bandeau.jpg';
 import silhouette from '../../assets/hope-madagascar.png';
 
 /** Couleur de la pastille du fil d'activite selon la nature de l'ecriture. */

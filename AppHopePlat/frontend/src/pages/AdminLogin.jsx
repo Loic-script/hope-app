@@ -14,7 +14,7 @@ import {
   IconeUtilisateur,
 } from '../components/HopeIcons.jsx';
 import * as authService from '../services/auth.service.js';
-import photoHope from '../assets/hope-children.jpg';
+import photoHope from '../assets/hope-couverture.jpg';
 
 /** Message unique en cas d'echec : il ne revele jamais quel champ est faux. */
 const MESSAGE_ERREUR = 'Login ou mot de passe incorrect.';

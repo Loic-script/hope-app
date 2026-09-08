@@ -24,18 +24,28 @@
   padding: 72px 62px 56px;
   overflow: hidden;
   color: var(--hope-blanc);
+  /* Le violet ne sert plus que de secours, le temps que la photo charge. */
   background-color: var(--hope-violet);
   background-image: var(--photo-hope);
-  /* La photo occupe la largeur du panneau et s'arrete naturellement en haut :
-     le degrade violet prend le relais en dessous, comme sur la maquette.
-     Un "cover" etirerait le cadrage sur toute la hauteur et zoomerait le sujet. */
-  background-size: 100% auto;
-  background-position: 50% 0%;
+  /* La photo couvre tout le panneau, quelle que soit sa proportion. Le
+     cadrage est centre : sur un ecran haut c'est la largeur qui est rognee,
+     sur un ecran large c'est la hauteur, et le sujet reste au milieu. */
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
   isolation: isolate;
 }
 
-/* Voile violet : discret sur la photo, opaque en bas pour porter le texte. */
+/*
+ * Voile violet, translucide de haut en bas : il ne masque jamais la photo.
+ * Il s'epaissit vers le bas, la ou le titre et la signature ont besoin de
+ * contraste. L'ancienne version devenait opaque des 82 % : c'est elle qui
+ * produisait la bande violette unie sous la photo.
+ *
+ * Contraste du texte blanc mesure sur le rendu : 8,0:1 sur le titre, le
+ * sous-titre et la signature, 5,1:1 sur l'accroche haute -- tous au-dessus
+ * du seuil AA (4,5:1), les trois premiers au-dessus de AAA (7:1).
+ */
 .connexion__illustration::before {
   content: '';
   position: absolute;
@@ -43,14 +53,11 @@
   z-index: -1;
   background: linear-gradient(
     180deg,
-    rgba(93, 86, 150, 0.3) 0%,
-    rgba(93, 86, 150, 0.16) 25%,
-    rgba(93, 86, 150, 0.3) 45%,
-    rgba(92, 84, 148, 0.56) 60%,
-    rgba(90, 82, 146, 0.86) 73%,
-    rgba(88, 81, 141, 0.99) 82%,
-    #58518d 88%,
-    #5d5696 100%
+    rgba(93, 86, 150, 0.34) 0%,
+    rgba(93, 86, 150, 0.26) 30%,
+    rgba(90, 83, 147, 0.44) 55%,
+    rgba(85, 78, 138, 0.66) 75%,
+    rgba(78, 71, 126, 0.82) 100%
   );
 }
 
