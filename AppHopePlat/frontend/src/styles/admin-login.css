@@ -164,13 +164,23 @@
   background-color: var(--hope-fond-panneau);
 }
 
+/*
+ * Trois couches empilees, comme la maquette d'origine. En CSS la premiere
+ * couche listee est celle du dessus : on lit donc la pile a l'envers, du
+ * voile bleu jusqu'au motif.
+ *
+ * Pas d'opacite sur le pseudo-element : elle affaiblirait aussi les voiles,
+ * or ce sont eux qui doivent rester pleins pour delaver le motif.
+ */
 .connexion__panneau::before {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.32;
-  background-image: var(--motif-soleils);
-  background-size: 190px 190px;
+  background-image:
+    linear-gradient(var(--voile-bleu), var(--voile-bleu)),
+    linear-gradient(var(--voile-blanc), var(--voile-blanc)),
+    var(--motif-soleils);
+  background-size: auto, auto, var(--motif-soleils-taille) auto;
   pointer-events: none;
 }
 

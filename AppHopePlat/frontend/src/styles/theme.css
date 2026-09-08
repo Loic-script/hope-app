@@ -113,7 +113,37 @@ a {
   }
 }
 
-/* Motif de soleils du panneau de droite (SVG inline, aucun fichier a charger). */
+/*
+ * Motif de soleils de la charte HOPE.
+ *
+ * C'est le visuel officiel (assets/background.png), pas une imitation : des
+ * demi-disques pleins en #5d5696 sur fond transparent, alternant soleil
+ * levant et soleil couchant, relies par des traits.
+ *
+ * Le fichier source mesure 4090x2694 et contient 2,13 motifs en largeur : le
+ * repeter tel quel laisserait une couture. On tuile donc motif-soleils.png,
+ * qui en est la decoupe exacte sur une periode (1921x298), verifiee sans
+ * raccord visible. Le fond etant transparent, le motif se pose sur n'importe
+ * quelle couleur ; c'est l'opacite du calque qui regle sa presence.
+ */
 :root {
-  --motif-soleils: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='190' height='190' viewBox='0 0 190 190'><g fill='none' stroke='%23BFD6EF' stroke-width='2.6' stroke-linecap='round'><path d='M34 62a16 16 0 0 1 32 0'/><path d='M26 62h48'/><path d='M50 32v8M31 41l5 5M69 41l-5 5'/><path d='M124 148a13 13 0 0 1 26 0'/><path d='M117 148h40'/><path d='M137 124v7M121 131l4 4M153 131l-4 4'/></g></svg>");
+  --motif-soleils: url('../assets/motif-soleils.png');
+  /* Largeur d'affichage d'un carreau ; la hauteur suit le rapport 1921/298. */
+  --motif-soleils-taille: 640px;
+
+  /*
+   * Les deux voiles poses par-dessus le motif, dans cet ordre :
+   *
+   *   1. le motif, a pleine force ;
+   *   2. le voile BLANC, qui le delave -- c'est lui qui evite des soleils
+   *      detoures : sans ce voile, les demi-disques restent nets et le fond
+   *      passe devant le contenu ;
+   *   3. le voile BLEU (--hope-bleu), qui ramene l'ensemble dans la charte.
+   *
+   * C'est le voile BLANC qui commande la discretion du motif : le monter
+   * l'efface, le baisser le fait ressortir. Le voile bleu, lui, ne joue que
+   * sur la teinte du fond.
+   */
+  --voile-blanc: rgba(255, 255, 255, 0.945);
+  --voile-bleu: rgba(134, 185, 222, 0.26);
 }
