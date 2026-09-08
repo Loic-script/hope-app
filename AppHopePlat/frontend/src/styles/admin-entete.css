@@ -23,6 +23,18 @@
 
   /* Hauteur de la rangee : sert au calcul des zones defilantes. */
   --admin-entete-hauteur: 70px;
+  /* Largeur de la barre laterale, et hauteur de la barre du bas sur mobile. */
+  /*
+   * Les quatre mesures de l'arc. Elles vont ensemble : la largeur et la
+   * hauteur decoulent du rayon et de l'ouverture (70deg), et le bouton
+   * sert au calcul de l'origine du cercle. Les redefinir toutes les
+   * quatre suffit a changer d'echelle -- c'est ce que fait le petit
+   * ecran plus bas.
+   */
+  --admin-arc-rayon: 240px;
+  --admin-arc-largeur: 321px;
+  --admin-arc-hauteur: 89px;
+  --admin-arc-bouton: 46px;
 }
 
 .admin {
@@ -34,10 +46,17 @@
   color: var(--admin-texte);
 }
 
+/*
+ * Le menu ne reserve aucune place : ni colonne dans la coquille, ni
+ * retrait dans le contenu. Il flotte par-dessus la page, qui occupe
+ * toute la largeur. Son conteneur est en pointer-events: none, donc rien
+ * de ce qui passe dessous ne devient inaccessible.
+ */
 .admin__contenu {
   flex: 1;
   min-width: 0;
-  padding: 26px 30px 44px;
+  /* De quoi degager l'arc, ses fleches et une marge de respiration. */
+  padding: 26px 30px calc(var(--admin-arc-hauteur) + 60px);
 }
 
 /* ============================================================
@@ -53,11 +72,11 @@
 }
 
 /*
- * Trois colonnes : la marque, la navigation, les actions.
- * Les deux colonnes laterales valent 1fr, donc exactement la meme largeur :
- * le groupe d'icones tombe au centre reel du bandeau, quelle que soit la
- * place prise par la marque a gauche ou par le nom de l'administrateur a
- * droite. Un simple flex l'aurait decale.
+ * Trois colonnes : un vide a gauche, la marque, les actions a droite.
+ * Les deux colonnes laterales valent 1fr, donc exactement la meme
+ * largeur : la marque tombe au centre reel du bandeau, quelle que soit
+ * la place prise par le nom de l'administrateur. Un simple flex l'aurait
+ * decalee vers la gauche de la moitie du bloc profil.
  */
 .entete__barre {
   display: grid;
@@ -68,21 +87,27 @@
 }
 
 .entete__marque {
-  grid-column: 1;
-  justify-self: start;
+  grid-column: 2;
   text-decoration: none;
 }
 
-/* Le logotype est concu pour un fond clair. Sur le bandeau sombre, seules
-   les lettres passent au blanc : le soleil et la ligne d'horizon gardent
-   leurs couleurs, comme la declinaison officielle sur fond violet.
-
-   Le bandeau utilise le cadrage compact, sans la signature : a cette
-   hauteur elle tomberait sous six pixels et ne serait plus lisible. La
-   place ainsi gagnee revient au mot lui-meme. */
-.entete__marque .hope-logo {
+/*
+ * Le fichier porte deja les bonnes couleurs pour un fond sombre : rien a
+ * recolorer ici, contrairement au composant SVG.
+ *
+ * Il inclut en revanche la signature "for a better life", qui ne ferait
+ * que 4,5 px de haut a cette taille -- illisible, et 19 % de hauteur
+ * volee au mot. On la recadre donc : le cadre impose un rapport de
+ * 2,63:1 la ou l'image en fait 2,21, et object-position: top laisse la
+ * signature deborder par le bas. Un recadrage plutot qu'un second
+ * fichier a maintenir.
+ */
+.entete__logo {
+  display: block;
+  width: 100px;
   height: 38px;
-  --logo-lettres: #ffffff;
+  object-fit: cover;
+  object-position: top;
 }
 
 /* --- Actions de droite --- */
@@ -273,98 +298,184 @@
 }
 
 /* ============================================================
-   2. Navigation en icones
+   2. Barre laterale
+
+   En bas de l'ecran, centre : les icones suivent un arc de cercle
+   dont le centre est sous la page, si bien que la courbe bombe
+   vers le haut. L'entree active occupe le sommet.
+
+   Elle est en position fixe plutot que dans le flux : le menu ne
+   defile pas avec le contenu, et l'en-tete garde son "sticky".
    ============================================================ */
 
-.nav-top {
-  grid-column: 2;
+.lateral {
+  position: fixed;
+  left: 50%;
+  bottom: 10px;
+  z-index: 50;
   display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Les icones restent serrees entre elles. */
-.nav-top__groupe {
-  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
+  width: var(--admin-arc-largeur);
+  padding: 0;
+  transform: translateX(-50%);
+  /* Aucun panneau : les boutons flottent sur le fond de page. Les couleurs
+     ci-dessous sont donc calees sur un fond CLAIR, contrairement a la barre
+     du bas mobile, qui garde son bandeau sombre. */
+  background: none;
+  box-shadow: none;
+  /* Le conteneur n'existe que pour positionner : il ne doit pas voler les
+     clics destines au contenu qui passe dessous. Les boutons, eux, les
+     reprennent. */
+  pointer-events: none;
+  /* Surtout pas d'overflow ici : il rognerait les infobulles, qui
+     debordent volontairement a droite du rail. Sept entrees tiennent
+     largement en hauteur. */
+  overflow: visible;
 }
 
-/* --- Un bouton de navigation --- */
-
-.nav-top__lien {
+/*
+ * Le repere de l'arc : les entrees sont posees en absolu par rapport a
+ * lui, et son bord gauche sert de centre au cercle.
+ */
+/*
+ * La zone du geste. Elle doit reprendre les evenements que le conteneur
+ * abandonne, sinon ni le glissement ni les clics ne l'atteindraient.
+ *
+ * touch-action: none empeche le navigateur d'interpreter un glissement
+ * horizontal comme un defilement de page : sans cela, sur telephone,
+ * l'arc ne bougerait pas et la page partirait de cote.
+ */
+.lateral__nav {
   position: relative;
+  width: 100%;
+  height: var(--admin-arc-hauteur);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+.lateral__nav--glisse {
+  cursor: grabbing;
+}
+
+/*
+ * Pendant le geste, l'arc doit coller au doigt : la transition de
+ * placement ferait trainer les boutons derriere lui. Elle revient au
+ * relachement, ou elle sert justement a animer le calage sur le cran.
+ */
+.lateral__nav--glisse .lateral__lien {
+  transition: none;
+}
+
+/*
+ * Placement sur l'arc, en trois temps :
+ *   1. rotate() oriente le rayon selon l'angle de l'entree ;
+ *   2. translateX() la pousse a la distance du rayon ;
+ *   3. la rotation inverse remet l'icone d'aplomb -- sans elle, chaque
+ *      icone pencherait de son propre angle.
+ *
+ * Le -90deg oriente l'arc vers le HAUT : le centre du cercle est sous le
+ * bloc, si bien que seule la calotte superieure se voit.
+ *
+ * Ce centre est a (rayon + demi-bouton) du haut du bloc, et NON a son
+ * pied : c'est ce qui fait tomber le bouton du sommet pile en haut du
+ * bloc et ceux des extremites pile en bas. Le poser au pied du bloc
+ * decalerait tout l'arc vers le haut de la difference -- 174 px avec un
+ * rayon de 240.
+ */
+.lateral__lien {
+  position: absolute;
+  top: calc(var(--admin-arc-rayon) + 0.5 * var(--admin-arc-bouton));
+  left: 50%;
+  pointer-events: auto;
   display: flex;
-  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 40px;
+  width: var(--admin-arc-bouton);
+  height: var(--admin-arc-bouton);
+  margin: calc(-0.5 * var(--admin-arc-bouton)) 0 0 calc(-0.5 * var(--admin-arc-bouton));
   border: 0;
-  border-radius: 10px;
-  background: none;
-  color: var(--entete-texte);
+  border-radius: 50%;
+  /* Sombre, et non blanc : sur le fond bleu tres pale de l'espace admin,
+     des pastilles blanches se confondaient avec la page. Cette teinte est
+     celle du bandeau du haut, ce qui rattache le menu a l'en-tete. */
+  background-color: var(--entete-fond-bas);
+  box-shadow: 0 4px 14px rgba(36, 43, 62, 0.28);
   text-decoration: none;
+  color: rgba(255, 255, 255, 0.82);
+  transform: rotate(calc(var(--angle) - 90deg)) translateX(var(--admin-arc-rayon))
+    rotate(calc(90deg - var(--angle)));
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+    background-color 0.18s ease,
+    color 0.18s ease,
+    opacity 0.24s ease,
+    transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
-.nav-top__lien svg {
-  width: 19px;
-  height: 19px;
-  transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+/* Hors de la fenetre : l'entree reste dans le DOM pour que son
+   deplacement s'anime, mais elle ne se voit ni ne se clique. */
+.lateral__lien--horschamp {
+  opacity: 0;
+  pointer-events: none;
 }
 
-.nav-top__lien:hover,
-.nav-top__lien:focus-visible {
+.lateral__lien svg {
+  width: calc(var(--admin-arc-bouton) * 0.43);
+  height: calc(var(--admin-arc-bouton) * 0.43);
+  flex: none;
+}
+
+/* --- Les deux fleches qui font glisser la fenetre --- */
+
+.lateral__fleches {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.lateral__fleche {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--entete-fond-bas);
+  box-shadow: 0 2px 8px rgba(36, 43, 62, 0.24);
+  color: rgba(255, 255, 255, 0.72);
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.lateral__fleche svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Une seule icone de chevron dans le jeu : la premiere est retournee. */
+.lateral__fleche:first-child svg {
+  transform: rotate(180deg);
+}
+
+.lateral__fleche:hover:not(:disabled) {
   color: #ffffff;
-  background-color: var(--entete-survol);
-  transform: translateY(-2px);
+  background-color: var(--entete-fond-haut);
 }
 
-.nav-top__lien:hover svg,
-.nav-top__lien:focus-visible svg {
-  transform: scale(1.12);
+.lateral__fleche:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
-.nav-top__lien:active {
-  transform: translateY(0);
-}
-
-/* --- L'onglet courant --- */
-
-.nav-top__lien--actif,
-.nav-top__lien--actif:hover {
-  color: #ffffff;
-  background-color: var(--hope-violet);
-  box-shadow: 0 5px 16px rgba(93, 86, 150, 0.5);
-}
-
-/* La pastille se pose avec un leger rebond a l'arrivee sur la page. */
-.nav-top__lien--actif {
-  animation: pastille-active 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
-}
-
-@keyframes pastille-active {
-  from {
-    background-color: transparent;
-    box-shadow: none;
-    transform: scale(0.86);
-  }
-  to {
-    transform: none;
-  }
-}
-
-/* --- Infobulle : le nom du menu --- */
-
-.nav-top__bulle {
+/* Infobulle AU-DESSUS du bouton : sur un arc horizontal, la sortir sur
+   le cote recouvrirait l'entree voisine. */
+.lateral__libelle {
   position: absolute;
-  top: calc(100% + 10px);
   left: 50%;
-  z-index: 50;
+  bottom: calc(100% + 10px);
+  z-index: 60;
   padding: 6px 11px;
   border-radius: 7px;
   background-color: #2b3244;
@@ -374,34 +485,38 @@
   color: #ffffff;
   box-shadow: 0 8px 20px rgba(27, 33, 48, 0.28);
   opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -5px);
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    visibility 0.18s;
   visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 5px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 }
 
-/* La petite fleche vers l'icone. */
-.nav-top__bulle::after {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  border: 5px solid transparent;
-  border-bottom-color: #2b3244;
-  transform: translateX(-50%);
-}
-
-.nav-top__lien:hover .nav-top__bulle,
-.nav-top__lien:focus-visible .nav-top__bulle {
+.lateral__lien:hover .lateral__libelle,
+.lateral__lien:focus-visible .lateral__libelle {
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0);
   /* Un court delai evite que les bulles clignotent quand la souris
-     traverse la barre sans s'arreter. */
+     traverse le rail sans s'arreter. */
   transition-delay: 0.12s;
+}
+
+.lateral__lien:hover,
+.lateral__lien:focus-visible {
+  color: #ffffff;
+  background-color: var(--entete-fond-haut);
+  box-shadow: 0 6px 18px rgba(36, 43, 62, 0.36);
+}
+
+/*
+ * L'entree courante change de couleur, et rien d'autre : ni taille, ni
+ * position. Un agrandissement la faisait paraitre sortir de l'arc.
+ */
+.lateral__lien--actif,
+.lateral__lien--actif:hover {
+  color: #ffffff;
+  background-color: var(--hope-violet);
+  box-shadow: 0 6px 18px rgba(93, 86, 150, 0.55);
 }
 
 /* ============================================================
@@ -409,41 +524,26 @@
    ============================================================ */
 
 /*
- * Sous 1024px, la rangee unique redevient deux lignes : marque et profil en
- * haut, navigation en dessous sur toute la largeur. Tout garder sur une
- * ligne obligerait a comprimer le nom de l'administrateur ou a rogner le
- * menu, et la hauteur regagnee sur grand ecran importe peu ici.
+ * Le meme arc sur mobile, simplement plus petit : rayon reduit, boutons
+ * reduits, et les quatre mesures restent coherentes entre elles.
+ *
+ * Pas de barre droite ici, contrairement a ce que faisait la version
+ * precedente : le geste et le repere restent les memes d'un ecran a
+ * l'autre. Le pouce atteint toujours le bas de l'ecran, et l'arc y est.
  */
-@media (max-width: 1024px) {
+@media (max-width: 560px) {
   :root {
-    --admin-entete-hauteur: 124px;
+    --admin-arc-rayon: 200px;
+    --admin-arc-largeur: 271px;
+    --admin-arc-hauteur: 78px;
+    --admin-arc-bouton: 42px;
   }
+}
 
-  .entete__barre {
-    grid-template-columns: auto 1fr;
-    gap: 14px 14px;
-    padding-bottom: 8px;
-  }
-
-  .entete__actions {
-    grid-column: 2;
-  }
-
-  /*
-   * La navigation passe a la ligne et prend toute la largeur. Elle defile
-   * horizontalement si les icones ne tiennent pas, en repartant de la
-   * gauche : dans un conteneur defilant, un contenu centre plus large que
-   * la fenetre voit son debut deborder du cote inatteignable au defilement.
-   */
-  .nav-top {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    padding-bottom: 4px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .nav-top::-webkit-scrollbar {
+/* Sur un ecran tactile il n'y a pas de survol : l'infobulle ne
+   s'afficherait qu'au moment du tap, juste avant de changer de page. */
+@media (hover: none) {
+  .lateral__libelle {
     display: none;
   }
 }
@@ -465,12 +565,6 @@
   .profil {
     padding-left: 8px;
   }
-
-  /* Sur un ecran tactile il n'y a pas de survol : l'infobulle
-     n'apporterait rien et generait le defilement. */
-  .nav-top__bulle {
-    display: none;
-  }
 }
 
 /* ============================================================
@@ -478,24 +572,11 @@
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  .nav-top__lien,
-  .nav-top__lien svg,
-  .nav-top__bulle,
+  .lateral__lien,
   .profil__chevron {
     transition-duration: 0.01ms;
   }
 
-  .nav-top__lien:hover,
-  .nav-top__lien:focus-visible {
-    transform: none;
-  }
-
-  .nav-top__lien:hover svg,
-  .nav-top__lien:focus-visible svg {
-    transform: none;
-  }
-
-  .nav-top__lien--actif,
   .profil__menu {
     animation: none;
   }

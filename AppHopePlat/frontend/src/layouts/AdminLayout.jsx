@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
-import HopeLogo from '../components/HopeLogo.jsx';
+// Declinaison officielle pour fond sombre : les lettres y sont deja
+// blanches, contrairement au composant SVG qu'il fallait recolorer.
+import logoSurFondViolet from '../assets/LOGO_WORDMARK_SUR_FOND_VIOLET.png';
 import {
   IconeAccueil,
   IconeBudgets,
   IconeChevronBas,
+  IconeChevronDroit,
   IconeCloche,
   IconeDeconnexion,
   IconeDonateurs,
@@ -43,6 +46,48 @@ const NAVIGATION = [
 ];
 
 /**
+ * Ouverture de l'arc, en degres.
+ *
+ * Volontairement faible : plus l'arc est ouvert, plus il est haut. A 150
+ * il mangeait 133 px de hauteur ; a 70, sur un rayon plus grand, il n'en
+ * prend que 89 tout en gardant le meme espacement entre boutons.
+ */
+const OUVERTURE_ARC = 70;
+
+/**
+ * Nombre d'entrees posees sur l'arc a la fois. Impair : il faut une
+ * place centrale, et c'est elle qui revient a l'entree active.
+ */
+const FENETRE_ARC = 5;
+
+/** Nombre de places de part et d'autre du centre. */
+const RAYON_FENETRE = (FENETRE_ARC - 1) / 2;
+
+/** Distance a parcourir, en pixels, pour faire tourner l'arc d'un cran. */
+const PIXELS_PAR_CRAN = 62;
+
+/**
+ * Deplacement au-dela duquel un geste est un glissement et non un clic.
+ * Sans ce seuil, le moindre tremblement pendant un clic ferait naviguer
+ * vers une entree qu'on n'a fait qu'effleurer.
+ */
+const SEUIL_GLISSEMENT = 6;
+
+/**
+ * Place d'une entree sur l'arc, relative au centre.
+ *
+ * Le calcul est circulaire : l'entree qui suit la derniere revient a la
+ * premiere. Sans ce reboudage, centrer la premiere entree laisserait
+ * l'arc a moitie vide au-dessus d'elle.
+ *
+ * @returns {number} 0 au centre, negatif au-dessus, positif en dessous
+ */
+function placeSurLArc(rang, centre, total) {
+  const ecart = (((rang - centre) % total) + total) % total;
+  return ecart > total / 2 ? ecart - total : ecart;
+}
+
+/**
  * Ossature de l'espace administrateur : bandeau sombre en haut, contenu
  * en dessous sur toute la largeur.
  *
@@ -56,6 +101,31 @@ export default function AdminLayout() {
 
   const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
   const [menuOuvert, setMenuOuvert] = useState(false);
+
+  /**
+   * Rotation manuelle de l'arc, en crans, par rapport a la position ou
+   * l'entree active occupe le centre. Les fleches la font varier ; elle
+   * repart de zero des qu'on change de page.
+   */
+  const [rotationArc, setRotationArc] = useState(0);
+
+  /**
+   * Glissement en cours, en crans fractionnaires. Zero au repos ; pendant
+   * un geste, l'arc suit le doigt ou le curseur sans a-coups, et se cale
+   * sur le cran le plus proche au relachement.
+   */
+  const [glissement, setGlissement] = useState(0);
+  const [enGlissement, setEnGlissement] = useState(false);
+  const geste = useRef(null);
+
+  /**
+   * Retient qu'un glissement vient de s'achever.
+   *
+   * Le navigateur emet le clic APRES le relachement du pointeur : sans
+   * ce drapeau, qui survit a la fin du geste, le filtre du clic
+   * trouverait le geste deja efface et laisserait naviguer.
+   */
+  const vientDeGlisser = useRef(false);
 
   const profil = useRef(null);
 
@@ -73,6 +143,86 @@ export default function AdminLayout() {
     rafraichirCompteurs();
     setMenuOuvert(false);
   }, [emplacement.pathname, rafraichirCompteurs]);
+
+  // Changer de page remet l'entree active au sommet : la rotation
+  // manuelle en cours est abandonnee.
+  useEffect(() => {
+    setRotationArc(0);
+  }, [emplacement.pathname]);
+
+  /** Rang de l'entree correspondant a la page affichee. */
+  const rangActif = NAVIGATION.findIndex(({ to, exact }) =>
+    exact ? emplacement.pathname === to : emplacement.pathname.startsWith(to)
+  );
+
+  /*
+   * Ce qui occupe le sommet de l'arc : l'entree active, decalee de la
+   * rotation manuelle eventuelle.
+   *
+   * Cliquer une entree l'amene donc au sommet. Elle y change de couleur
+   * mais garde sa taille : c'est l'agrandissement, retire depuis, qui
+   * donnait l'impression qu'elle sortait de l'arc.
+   */
+  const centreArc =
+    (Math.max(0, rangActif) + rotationArc + NAVIGATION.length * 8) % NAVIGATION.length;
+
+  /* ---------- Glissement de l'arc, souris et tactile ----------
+   *
+   * Les evenements Pointer couvrent souris, doigt et stylet avec un seul
+   * jeu de gestionnaires.
+   *
+   * La capture du pointeur n'est demandee qu'une fois le seuil franchi,
+   * et surtout PAS des l'appui : un pointeur capture fait rediriger le
+   * clic vers l'element capteur. Capturer trop tot volait donc son clic
+   * a chaque lien, et le menu devenait impossible a utiliser.
+   */
+  function debuterGeste(evenement) {
+    geste.current = { x: evenement.clientX, aBouge: false };
+    vientDeGlisser.current = false;
+    setEnGlissement(true);
+  }
+
+  function suivreGeste(evenement) {
+    if (!geste.current) return;
+
+    const ecart = evenement.clientX - geste.current.x;
+
+    // Le seuil franchi, c'est un glissement : on capture le pointeur pour
+    // suivre le geste meme si le curseur quitte l'arc, et on renonce au
+    // clic qui suivra.
+    if (!geste.current.aBouge && Math.abs(ecart) > SEUIL_GLISSEMENT) {
+      geste.current.aBouge = true;
+      evenement.currentTarget.setPointerCapture(evenement.pointerId);
+    }
+
+    if (geste.current.aBouge) setGlissement(ecart / PIXELS_PAR_CRAN);
+  }
+
+  function terminerGeste() {
+    if (!geste.current) return;
+
+    // On se cale sur le cran le plus proche. Un glissement vers la droite
+    // fait descendre les entrees le long de l'arc, donc recule le centre.
+    const crans = Math.round(glissement);
+    if (crans !== 0) setRotationArc((r) => r - crans);
+
+    vientDeGlisser.current = geste.current.aBouge;
+    geste.current = null;
+    setGlissement(0);
+    setEnGlissement(false);
+  }
+
+  /**
+   * Un glissement ne doit pas naviguer : on annule le clic qui suit,
+   * mais seulement si le doigt a reellement parcouru du chemin.
+   */
+  function filtrerClic(evenement) {
+    if (!vientDeGlisser.current) return;
+
+    evenement.preventDefault();
+    evenement.stopPropagation();
+    vientDeGlisser.current = false;
+  }
 
   // Le menu du profil se ferme au clic exterieur et a la touche Echap.
   useEffect(() => {
@@ -100,33 +250,84 @@ export default function AdminLayout() {
 
   return (
     <div className="admin">
+      {/*
+        Barre laterale sur ecran large, barre du bas sur mobile : c'est la
+        meme balise, seule sa mise en page change. Elle n'affiche que des
+        icones ; le libelle sert d'infobulle au survol et au focus clavier,
+        et c'est l'aria-label du lien qui porte le nom pour les lecteurs
+        d'ecran.
+      */}
+      <aside className="lateral">
+        <nav
+          className={`lateral__nav${enGlissement ? ' lateral__nav--glisse' : ''}`}
+          aria-label="Navigation principale"
+          onPointerDown={debuterGeste}
+          onPointerMove={suivreGeste}
+          onPointerUp={terminerGeste}
+          onPointerCancel={terminerGeste}
+          onClickCapture={filtrerClic}
+        >
+          {NAVIGATION.map(({ to, label, Icone, exact }, rang) => {
+            // Place fractionnaire pendant un geste : l'arc suit le doigt.
+            const place = placeSurLArc(rang, centreArc, NAVIGATION.length) + glissement;
+            // La demi-place de marge evite qu'une entree apparaisse d'un
+            // coup au bord de l'arc en cours de glissement.
+            const surLArc = Math.abs(place) <= RAYON_FENETRE + 0.5;
+
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={exact}
+                aria-label={label}
+                // Hors de l'arc, l'entree est retiree du parcours clavier
+                // en plus d'etre invisible : on ne tabule pas vers un
+                // bouton qu'on ne voit pas.
+                tabIndex={surLArc ? undefined : -1}
+                aria-hidden={surLArc ? undefined : true}
+                style={{
+                  '--angle': `${place * (OUVERTURE_ARC / (FENETRE_ARC - 1))}deg`,
+                }}
+                className={({ isActive }) =>
+                  `lateral__lien${isActive ? ' lateral__lien--actif' : ''}` +
+                  (surLArc ? '' : ' lateral__lien--horschamp')
+                }
+              >
+                <Icone />
+                <span className="lateral__libelle" aria-hidden="true">
+                  {label}
+                </span>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <div className="lateral__fleches">
+          <button
+            type="button"
+            className="lateral__fleche"
+            onClick={() => setRotationArc((r) => r - 1)}
+            aria-label="Faire tourner le menu vers le haut"
+          >
+            <IconeChevronDroit />
+          </button>
+          <button
+            type="button"
+            className="lateral__fleche"
+            onClick={() => setRotationArc((r) => r + 1)}
+            aria-label="Faire tourner le menu vers le bas"
+          >
+            <IconeChevronDroit />
+          </button>
+        </div>
+      </aside>
+
       <header className="entete">
-        {/* ---------- Marque, navigation, alertes, profil : une seule rangee ---------- */}
+        {/* ---------- Marque au centre, alertes et profil a droite ---------- */}
         <div className="entete__barre">
           <Link className="entete__marque" to="/admin" aria-label="HOPE — accueil administrateur">
-            <HopeLogo compact />
+            <img className="entete__logo" src={logoSurFondViolet} alt="HOPE" />
           </Link>
-
-          <nav className="nav-top" aria-label="Navigation principale">
-            <div className="nav-top__groupe">
-              {NAVIGATION.map(({ to, label, Icone, exact }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={exact}
-                  aria-label={label}
-                  className={({ isActive }) =>
-                    `nav-top__lien${isActive ? ' nav-top__lien--actif' : ''}`
-                  }
-                >
-                  <Icone />
-                  <span className="nav-top__bulle" aria-hidden="true">
-                    {label}
-                  </span>
-                </NavLink>
-              ))}
-            </div>
-          </nav>
 
           <div className="entete__actions">
             <Link
