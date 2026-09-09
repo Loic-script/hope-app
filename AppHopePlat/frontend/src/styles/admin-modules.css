@@ -712,3 +712,42 @@
     margin-bottom: 10px;
   }
 }
+
+/* --- Notification cliquable --- */
+
+/*
+ * Le lien du libelle s'etire sur toute la ligne grace a son ::after :
+ * la notification entiere devient cliquable sans qu'il faille imbriquer
+ * le bouton "marquer comme lu" a l'interieur du lien, ce qui serait du
+ * HTML invalide et un piege au clavier.
+ */
+.notif--cliquable {
+  position: relative;
+}
+
+.notif__lien {
+  color: inherit;
+  text-decoration: none;
+}
+
+.notif__lien::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.notif--cliquable:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.notif__lien:hover,
+.notif--cliquable:focus-within .notif__lien {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Au-dessus de la zone etiree, sinon le lien avalerait le clic. */
+.notif__actions {
+  position: relative;
+  z-index: 1;
+}

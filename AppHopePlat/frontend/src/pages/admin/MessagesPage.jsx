@@ -77,7 +77,12 @@ export default function MessagesPage() {
   const { rafraichirCompteurs } = useOutletContext();
 
   const [recherche, setRecherche] = useState('');
-  const [compteSelectionne, setCompteSelectionne] = useState(null);
+  // ?compte=<id> ouvre directement une conversation, par exemple
+  // depuis une notification de message.
+  const [compteSelectionne, setCompteSelectionne] = useState(() => {
+    const demande = new URLSearchParams(window.location.search).get('compte');
+    return demande ? Number(demande) : null;
+  });
   const [brouillon, setBrouillon] = useState('');
   const [modaleOuverte, setModaleOuverte] = useState(false);
 

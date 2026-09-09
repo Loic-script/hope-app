@@ -1,4 +1,4 @@
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 
 import {
   IconeBudgets,
@@ -37,6 +37,37 @@ const APPARENCE = {
 };
 
 /**
+ * Ou mene une notification.
+ *
+ * On vise l'endroit ou l'on peut AGIR, pas seulement la page qui parle du
+ * sujet : un investissement ouvre l'onglet Financement du projet, un projet
+ * termine son onglet Impact, un message sa conversation.
+ *
+ * Un don affecte mene a son projet ; un don pour le fonds n'en a pas, il
+ * mene alors au journal des dons.
+ *
+ * @returns {string|null} null si l'evenement n'a plus de cible -- la
+ *          notification reste alors affichee, simplement non cliquable.
+ */
+function destination(notification) {
+  const { type, projectId, donorAccountId } = notification;
+
+  if (type === 'INVESTMENT' && projectId) {
+    return `/admin/projects/${projectId}?onglet=financement`;
+  }
+  if (type === 'PROJECT_COMPLETED' && projectId) {
+    return `/admin/projects/${projectId}?onglet=impact`;
+  }
+  if (type === 'MESSAGE') {
+    return donorAccountId ? `/admin/messages?compte=${donorAccountId}` : '/admin/messages';
+  }
+  if (type === 'DONATION') {
+    return projectId ? `/admin/projects/${projectId}?onglet=financement` : '/admin/donors?onglet=dons';
+  }
+  return null;
+}
+
+/**
  * Ecran Notifications : le journal de ce qui arrive a HOPE.
  *
  * Un don reçu y apparait sous la forme demandee :
@@ -67,6 +98,20 @@ export default function NotificationsPage() {
         rafraichirCompteurs?.();
       },
     });
+  }
+
+  /**
+   * Ouvrir une notification vaut lecture : on la marque avant de partir.
+   *
+   * Sans recharger la liste -- on la quitte -- mais en rafraichissant la
+   * pastille de l'en-tete, qui reste visible sur la page d'arrivee.
+   */
+  function ouvrir(notification) {
+    if (notification.isRead) return;
+    notificationService
+      .marquerLue(notification.id)
+      .then(() => rafraichirCompteurs?.())
+      .catch(() => {});
   }
 
   async function toutMarquerLu() {
@@ -131,10 +176,14 @@ export default function NotificationsPage() {
             {notifications.map((notification) => {
               const apparence = APPARENCE[notification.type] ?? APPARENCE.DONATION;
               const Icone = apparence.Icone;
+              const cible = destination(notification);
 
               return (
                 <article
-                  className={`notif${notification.isRead ? '' : ' notif--non-lue'}`}
+                  className={
+                    `notif${notification.isRead ? '' : ' notif--non-lue'}` +
+                    (cible ? ' notif--cliquable' : '')
+                  }
                   key={notification.id}
                 >
                   <span
@@ -145,7 +194,18 @@ export default function NotificationsPage() {
                   </span>
 
                   <div className="notif__contenu">
-                    <p className="notif__texte">{notification.label}</p>
+                    <p className="notif__texte">
+                      {cible ? (
+                        // Le lien s'etire sur toute la ligne via son ::after,
+                        // ce qui rend la notification entiere cliquable sans
+                        // imbriquer le bouton "marquer comme lu" dedans.
+                        <Link className="notif__lien" to={cible} onClick={() => ouvrir(notification)}>
+                          {notification.label}
+                        </Link>
+                      ) : (
+                        notification.label
+                      )}
+                    </p>
                     <p className="notif__meta">
                       {fmt.depuis(notification.createdAt)} · {fmt.date(notification.createdAt)}
                       {notification.donationReference ? ` · ${notification.donationReference}` : ''}

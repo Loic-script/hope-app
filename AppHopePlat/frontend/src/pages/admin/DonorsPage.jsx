@@ -46,7 +46,11 @@ const FILTRES_DONS = [
  */
 export default function DonorsPage() {
   const [parametres, setParametres] = useSearchParams();
-  const [ongletActif, setOngletActif] = useState('donateurs');
+  // ?onglet=dons permet d'arriver directement sur le journal des dons,
+  // par exemple depuis une notification.
+  const [ongletActif, setOngletActif] = useState(
+    () => new URLSearchParams(window.location.search).get('onglet') ?? 'donateurs'
+  );
 
   const [recherche, setRecherche] = useState('');
   const [rechercheAppliquee, setRechercheAppliquee] = useState('');

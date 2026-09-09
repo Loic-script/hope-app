@@ -17,13 +17,18 @@ const COLONNES = `
   d.allocation,
   p.name      AS project_name,
   COALESCE(NULLIF(TRIM(CONCAT_WS(' ', o.first_name, o.last_name)), ''),
-           o.organization_name, 'Donateur anonyme') AS donor_name
+           o.organization_name, 'Donateur anonyme') AS donor_name,
+  -- La messagerie s'ouvre par compte donateur, pas par message : sans
+  -- cette colonne, une notification de message ne saurait pas quelle
+  -- conversation designer.
+  m.donor_account_id
 `;
 
 const JOINTURES = `
   LEFT JOIN donations d ON d.id = n.donation_id
   LEFT JOIN projects p  ON p.id = n.project_id
   LEFT JOIN donors o    ON o.id = n.donor_id
+  LEFT JOIN messages m  ON m.id = n.message_id
 `;
 
 /** @param {{ type?: string, nonLues?: boolean, limite?: number }} filtres */
