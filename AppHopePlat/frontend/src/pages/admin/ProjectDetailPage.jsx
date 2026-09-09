@@ -91,6 +91,18 @@ export default function ProjectDetailPage() {
   async function archiver() {
     await soumettre(() => projectService.archiver(projet.id), { onSucces: rechargerTout });
   }
+  /**
+   * Confirme la reception d'un don en attente.
+   *
+   * Rien n'a ete preleve : la plateforme n'est reliee a aucun prestataire
+   * de paiement. C'est l'administrateur qui atteste que l'argent est
+   * arrive, et le don entre alors dans les totaux.
+   */
+  async function encaisser() {
+    await soumettre(() => donationService.changerStatut(modale.cible.id, 'RECEIVED'), {
+      onSucces: rechargerTout,
+    });
+  }
   async function annulerDepense() {
     await soumettre(() => expenseService.annuler(modale.cible.id), { onSucces: rechargerTout });
   }
@@ -333,6 +345,20 @@ export default function ProjectDetailPage() {
                   cle: 'status',
                   titre: 'Statut',
                   rendu: (d) => <Badge valeur={d.status} libelles={libelles.donationStatus} />,
+                },
+                {
+                  cle: 'encaisser',
+                  titre: '',
+                  rendu: (don) =>
+                    don.status === 'PENDING' ? (
+                      <button
+                        type="button"
+                        className="lien-action"
+                        onClick={() => ouvrir('encaisser', don)}
+                      >
+                        Encaisser
+                      </button>
+                    ) : null,
                 },
               ]}
               vide={
@@ -906,6 +932,21 @@ export default function ProjectDetailPage() {
         projet={projet}
         onFermer={fermer}
         onEnregistre={rechargerTout}
+      />
+
+      <ModaleConfirmation
+        ouverte={modale.nom === 'encaisser'}
+        titre="Marquer ce don comme reçu ?"
+        message={
+          modale.cible
+            ? `${modale.cible.reference} — ${fmt.montant(modale.cible.amount, modale.cible.currency)} de ${modale.cible.donorName}. Il comptera alors dans les fonds du projet.`
+            : ''
+        }
+        onFermer={fermer}
+        onConfirmer={encaisser}
+        envoi={envoi}
+        erreur={erreurAction}
+        libelleConfirmer="Marquer comme reçu"
       />
 
       <ModaleConfirmation

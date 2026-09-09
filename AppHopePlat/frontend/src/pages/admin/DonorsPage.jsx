@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
+import { ModaleConfirmation } from '../../components/admin/forms.jsx';
 import {
   CompteDonateurModale,
   DonModale,
@@ -118,6 +119,27 @@ export default function DonorsPage() {
 
   const [envoi, setEnvoi] = useState(false);
   const [messageEcheances, setMessageEcheances] = useState('');
+  const [aEncaisser, setAEncaisser] = useState(null);
+
+  /**
+   * Confirme la reception d'une echeance.
+   *
+   * Rien n'a ete preleve : c'est l'administrateur qui atteste que l'argent
+   * est arrive. Le don entre alors dans les totaux du fonds et du projet.
+   */
+  async function encaisser() {
+    setEnvoi(true);
+    try {
+      await donationService.changerStatut(aEncaisser.id, 'RECEIVED');
+      setAEncaisser(null);
+      rechargerDons();
+      rechargerDonateurs();
+    } catch (echec) {
+      setMessageEcheances(messageErreur(echec, 'Encaissement impossible.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
 
   /**
    * Cree les occurrences du mois pour les dons mensuels.
@@ -426,6 +448,16 @@ export default function DonorsPage() {
                 titre: 'Statut',
                 rendu: (don) => <Badge valeur={don.status} libelles={libelles.donationStatus} />,
               },
+              {
+                cle: 'encaisser',
+                titre: '',
+                rendu: (don) =>
+                  don.status === 'PENDING' ? (
+                    <button type="button" className="lien-action" onClick={() => setAEncaisser(don)}>
+                      Encaisser
+                    </button>
+                  ) : null,
+              },
             ]}
             vide={
               <EtatVide
@@ -473,6 +505,20 @@ export default function DonorsPage() {
         onFermer={fermer}
         onEnregistre={apresEnregistrement}
       />
+      <ModaleConfirmation
+        ouverte={aEncaisser !== null}
+        titre="Marquer ce don comme reçu ?"
+        message={
+          aEncaisser
+            ? `${aEncaisser.reference} — ${fmt.montant(aEncaisser.amount, aEncaisser.currency)} de ${aEncaisser.donorName}. Il comptera alors dans les totaux.`
+            : ''
+        }
+        onFermer={() => setAEncaisser(null)}
+        onConfirmer={encaisser}
+        envoi={envoi}
+        libelleConfirmer="Marquer comme reçu"
+      />
+
     </>
   );
 }
