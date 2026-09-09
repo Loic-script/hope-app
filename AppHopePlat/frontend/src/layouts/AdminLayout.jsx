@@ -24,26 +24,48 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les six sections de travail de l'espace administrateur.
+ * Les sept sections de travail, rangees en deux familles.
+ *
+ * "Pilotage" reunit ce que l'on fait -- ouvrir un projet, documenter le
+ * terrain ; "Analyse" ce que l'on constate ensuite. Deux familles de
+ * trois et quatre entrees se lisent d'un coup d'oeil la ou une liste de
+ * sept demande d'etre parcourue.
  *
  * Trois entrees n'y figurent pas, et c'est voulu :
  *   * Notifications et Messages sont des alertes, pas des destinations : la
  *     barre du haut les montre avec leur pastille depuis n'importe ou ;
  *   * Parametres et Se deconnecter relevent du compte : ils vivent dans le
  *     menu du profil, en haut a droite.
- *
- * La barre n'affiche que les icones : le libelle sert d'aria-label et
- * s'affiche en infobulle au survol comme au focus clavier.
  */
-const NAVIGATION = [
-  { to: '/admin', label: 'Accueil', Icone: IconeAccueil, exact: true },
-  { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
-  { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
-  { to: '/admin/impact', label: 'Impact', Icone: IconeImpacts },
-  { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
-  { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
-  { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
+const GROUPES = [
+  {
+    titre: 'Pilotage',
+    entrees: [
+      { to: '/admin', label: 'Accueil', Icone: IconeAccueil, exact: true },
+      { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
+      { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
+    ],
+  },
+  {
+    titre: 'Analyse',
+    entrees: [
+      { to: '/admin/impact', label: 'Impact', Icone: IconeImpacts },
+      { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
+      { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
+      { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
+    ],
+  },
 ];
+
+/**
+ * La meme liste a plat, et le rang de chaque entree.
+ *
+ * L'arc mobile raisonne en rangs continus : il ignore les familles, qui
+ * n'auraient de toute facon la place ni d'un intitule ni d'un
+ * separateur. Le rail de bureau, lui, s'en sert.
+ */
+const NAVIGATION = GROUPES.flatMap((groupe) => groupe.entrees);
+const RANGS = new Map(NAVIGATION.map((entree, rang) => [entree.to, rang]));
 
 /**
  * Ouverture de l'arc, en degres.
@@ -55,13 +77,16 @@ const NAVIGATION = [
 const OUVERTURE_ARC = 70;
 
 /**
- * Nombre d'entrees posees sur l'arc a la fois. Impair : il faut une
- * place centrale, et c'est elle qui revient a l'entree active.
+ * Nombre d'entrees affichees a la fois, selon la forme du menu.
+ *
+ * Sur mobile l'arc n'en accueille que cinq -- impair, il faut une place
+ * centrale, et c'est elle qui revient a l'entree active. Sur bureau la
+ * barre les montre toutes : rien a masquer, donc rien a faire tourner.
  */
 const FENETRE_ARC = 5;
 
-/** Nombre de places de part et d'autre du centre. */
-const RAYON_FENETRE = (FENETRE_ARC - 1) / 2;
+/** En dessous de cette largeur, le menu prend la forme d'un arc. */
+const LARGEUR_ARC = '(max-width: 560px)';
 
 /** Distance a parcourir, en pixels, pour faire tourner l'arc d'un cran. */
 const PIXELS_PAR_CRAN = 62;
@@ -117,6 +142,27 @@ export default function AdminLayout() {
   const [glissement, setGlissement] = useState(0);
   const [enGlissement, setEnGlissement] = useState(false);
   const geste = useRef(null);
+
+  /*
+   * Forme du menu. On ne peut pas la deduire du seul CSS : c'est elle qui
+   * decide combien d'entrees sont rendues, donc lesquelles sont
+   * focalisables au clavier et annoncees aux lecteurs d'ecran. Une entree
+   * masquee par CSS mais presente dans le DOM serait un piege a tabulation.
+   */
+  const [enArc, setEnArc] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(LARGEUR_ARC).matches
+  );
+
+  useEffect(() => {
+    const requete = window.matchMedia(LARGEUR_ARC);
+    const suivre = (e) => setEnArc(e.matches);
+    requete.addEventListener('change', suivre);
+    return () => requete.removeEventListener('change', suivre);
+  }, []);
+
+  // Sur bureau la barre montre tout ; sur mobile l'arc n'accueille que cinq.
+  const fenetre = enArc ? FENETRE_ARC : NAVIGATION.length;
+  const rayonFenetre = (fenetre - 1) / 2;
 
   /**
    * Retient qu'un glissement vient de s'achever.
@@ -251,75 +297,99 @@ export default function AdminLayout() {
   return (
     <div className="admin">
       {/*
-        Barre laterale sur ecran large, barre du bas sur mobile : c'est la
-        meme balise, seule sa mise en page change. Elle n'affiche que des
-        icones ; le libelle sert d'infobulle au survol et au focus clavier,
-        et c'est l'aria-label du lien qui porte le nom pour les lecteurs
-        d'ecran.
+        Rail vertical a gauche sur ecran large, arc en bas de l'ecran sur
+        mobile : c'est la meme balise, seule sa mise en page change.
+
+        Le rail montre les icones en permanence et se deploie au survol
+        pour reveler les noms ; l'arc, lui, n'a de place que pour les
+        icones. Dans les deux cas c'est l'aria-label du lien qui porte le
+        nom pour les lecteurs d'ecran.
       */}
       <aside className="lateral">
         <nav
           className={`lateral__nav${enGlissement ? ' lateral__nav--glisse' : ''}`}
           aria-label="Navigation principale"
-          onPointerDown={debuterGeste}
-          onPointerMove={suivreGeste}
-          onPointerUp={terminerGeste}
-          onPointerCancel={terminerGeste}
-          onClickCapture={filtrerClic}
+          onPointerDown={enArc ? debuterGeste : undefined}
+          onPointerMove={enArc ? suivreGeste : undefined}
+          onPointerUp={enArc ? terminerGeste : undefined}
+          onPointerCancel={enArc ? terminerGeste : undefined}
+          onClickCapture={enArc ? filtrerClic : undefined}
         >
-          {NAVIGATION.map(({ to, label, Icone, exact }, rang) => {
-            // Place fractionnaire pendant un geste : l'arc suit le doigt.
-            const place = placeSurLArc(rang, centreArc, NAVIGATION.length) + glissement;
-            // La demi-place de marge evite qu'une entree apparaisse d'un
-            // coup au bord de l'arc en cours de glissement.
-            const surLArc = Math.abs(place) <= RAYON_FENETRE + 0.5;
+          {/*
+            Le groupe est un simple conteneur : en arc il passe en
+            display: contents et s'efface, si bien que les entrees restent
+            positionnees par rapport au repere du <nav>.
+          */}
+          {GROUPES.map((groupe) => (
+            <div className="lateral__groupe" key={groupe.titre}>
+              <p className="lateral__section" aria-hidden="true">
+                {groupe.titre}
+              </p>
 
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                end={exact}
-                aria-label={label}
-                // Hors de l'arc, l'entree est retiree du parcours clavier
-                // en plus d'etre invisible : on ne tabule pas vers un
-                // bouton qu'on ne voit pas.
-                tabIndex={surLArc ? undefined : -1}
-                aria-hidden={surLArc ? undefined : true}
-                style={{
-                  '--angle': `${place * (OUVERTURE_ARC / (FENETRE_ARC - 1))}deg`,
-                }}
-                className={({ isActive }) =>
-                  `lateral__lien${isActive ? ' lateral__lien--actif' : ''}` +
-                  (surLArc ? '' : ' lateral__lien--horschamp')
-                }
-              >
-                <Icone />
-                <span className="lateral__libelle" aria-hidden="true">
-                  {label}
-                </span>
-              </NavLink>
-            );
-          })}
+              {groupe.entrees.map(({ to, label, Icone, exact }) => {
+                // Place fractionnaire pendant un geste : l'arc suit le doigt.
+                const place =
+                  placeSurLArc(RANGS.get(to), centreArc, NAVIGATION.length) + glissement;
+                // La demi-place de marge evite qu'une entree apparaisse
+                // d'un coup au bord de l'arc en cours de glissement.
+                const surLArc = !enArc || Math.abs(place) <= rayonFenetre + 0.5;
+
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={exact}
+                    aria-label={label}
+                    // Hors de l'arc, l'entree est retiree du parcours
+                    // clavier en plus d'etre invisible : on ne tabule pas
+                    // vers un bouton qu'on ne voit pas.
+                    tabIndex={surLArc ? undefined : -1}
+                    aria-hidden={surLArc ? undefined : true}
+                    style={{
+                      '--angle': `${place * (OUVERTURE_ARC / (fenetre - 1))}deg`,
+                    }}
+                    className={({ isActive }) =>
+                      `lateral__lien${isActive ? ' lateral__lien--actif' : ''}` +
+                      (surLArc ? '' : ' lateral__lien--horschamp')
+                    }
+                  >
+                    <Icone />
+                    <span className="lateral__libelle" aria-hidden="true">
+                      {label}
+                    </span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
-        <div className="lateral__fleches">
-          <button
-            type="button"
-            className="lateral__fleche"
-            onClick={() => setRotationArc((r) => r - 1)}
-            aria-label="Faire tourner le menu vers le haut"
-          >
-            <IconeChevronDroit />
-          </button>
-          <button
-            type="button"
-            className="lateral__fleche"
-            onClick={() => setRotationArc((r) => r + 1)}
-            aria-label="Faire tourner le menu vers le bas"
-          >
-            <IconeChevronDroit />
-          </button>
-        </div>
+        {/*
+          Les fleches ne servent qu'a l'arc, qui ne montre que cinq
+          entrees sur sept. Le rail les affiche toutes : elles n'ont rien
+          a faire tourner, et les rendre malgre tout mettrait deux boutons
+          morts dans le parcours clavier.
+        */}
+        {enArc && (
+          <div className="lateral__fleches">
+            <button
+              type="button"
+              className="lateral__fleche"
+              onClick={() => setRotationArc((r) => r - 1)}
+              aria-label="Faire tourner le menu vers le haut"
+            >
+              <IconeChevronDroit />
+            </button>
+            <button
+              type="button"
+              className="lateral__fleche"
+              onClick={() => setRotationArc((r) => r + 1)}
+              aria-label="Faire tourner le menu vers le bas"
+            >
+              <IconeChevronDroit />
+            </button>
+          </div>
+        )}
       </aside>
 
       <header className="entete">

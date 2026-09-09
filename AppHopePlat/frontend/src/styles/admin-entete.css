@@ -1,17 +1,16 @@
 /* ============================================================
-   HOPE - En-tete de l'espace administrateur
+   HOPE - En-tete et menu de l'espace administrateur
 
-   Une seule rangee dans un bandeau sombre : la marque a gauche, la
-   navigation en icones au centre, les alertes et le profil a droite.
+   Deux pieces, et une seule balise pour la seconde :
 
-   Une rangee plutot que deux : la fiche projet porte deja ses propres
-   onglets, et trois barres horizontales empilees inversaient la
-   hierarchie. Le menu global tient sur une ligne, les onglets de page
-   redeviennent le seul autre niveau.
+     * le bandeau sombre du haut -- la marque au centre, les alertes
+       et le profil a droite ;
+     * le menu, rail vertical le long du bord gauche sur ecran large,
+       arc pose en bas de l'ecran sur telephone.
 
-   Le nom n'apparait qu'au survol : l'infobulle est donc un confort,
-   jamais le seul moyen de savoir ou l'on va. Chaque lien porte son
-   aria-label, et l'infobulle s'affiche aussi au focus clavier.
+   Le nom des sections n'est jamais le seul moyen de savoir ou l'on
+   va : chaque lien porte son aria-label, et le rail se deploie au
+   focus clavier comme au survol.
    ============================================================ */
 
 :root {
@@ -21,20 +20,39 @@
   --entete-survol: rgba(255, 255, 255, 0.1);
   --entete-separateur: rgba(255, 255, 255, 0.12);
 
-  /* Hauteur de la rangee : sert au calcul des zones defilantes. */
-  --admin-entete-hauteur: 70px;
-  /* Largeur de la barre laterale, et hauteur de la barre du bas sur mobile. */
   /*
-   * Les quatre mesures de l'arc. Elles vont ensemble : la largeur et la
-   * hauteur decoulent du rayon et de l'ouverture (70deg), et le bouton
-   * sert au calcul de l'origine du cercle. Les redefinir toutes les
-   * quatre suffit a changer d'echelle -- c'est ce que fait le petit
-   * ecran plus bas.
+   * Hauteur de la rangee du haut.
+   *
+   * Elle sert de repere a deux voisins : le sommet du rail, et le "top"
+   * des colonnes sticky des pages. 12 px de marge en haut et en bas
+   * autour du bloc profil, le plus haut de la rangee avec ses 46 px.
+   */
+  --admin-entete-hauteur: 70px;
+
+  /*
+   * Mesures de l'arc.
+   *
+   * Il n'existe que sous 560 px, ou le petit ecran redefinit les quatre
+   * valeurs ensemble : largeur et hauteur decoulent du rayon et de
+   * l'ouverture (70deg), et le bouton sert au calcul de l'origine du
+   * cercle. Au-dela, seule --admin-arc-hauteur sert encore, et
+   * uniquement au retrait bas du contenu.
    */
   --admin-arc-rayon: 240px;
   --admin-arc-largeur: 321px;
   --admin-arc-hauteur: 89px;
-  --admin-arc-bouton: 46px;
+  --admin-arc-bouton: 52px;
+
+  /*
+   * Mesures du rail de bureau.
+   *
+   * Replie, il ne montre que les icones ; deploye, il laisse la place au
+   * plus long des sept noms, "Preuves terrain". La marge est celle qui
+   * le detache des trois bords : il flotte, il n'est pas colle.
+   */
+  --admin-rail-large: 74px;
+  --admin-rail-ouvert: 246px;
+  --admin-rail-marge: 14px;
 }
 
 .admin {
@@ -47,10 +65,11 @@
 }
 
 /*
- * Le menu ne reserve aucune place : ni colonne dans la coquille, ni
- * retrait dans le contenu. Il flotte par-dessus la page, qui occupe
- * toute la largeur. Son conteneur est en pointer-events: none, donc rien
- * de ce qui passe dessous ne devient inaccessible.
+ * Le menu n'occupe aucune colonne dans la coquille : il flotte
+ * par-dessus la page, qui garde toute la largeur. Seul un retrait la
+ * tient a l'ecart -- en bas pour l'arc, a gauche pour le rail (section
+ * 3). L'arc va plus loin : son conteneur est en pointer-events: none,
+ * donc rien de ce qui passe dessous ne devient inaccessible.
  */
 .admin__contenu {
   flex: 1;
@@ -298,13 +317,16 @@
 }
 
 /* ============================================================
-   2. Barre laterale
+   2. Le menu, forme mobile : l'arc
+
+   C'est la forme de base, celle que la section 3 remplace par le
+   rail au-dela de 560 px.
 
    En bas de l'ecran, centre : les icones suivent un arc de cercle
    dont le centre est sous la page, si bien que la courbe bombe
    vers le haut. L'entree active occupe le sommet.
 
-   Elle est en position fixe plutot que dans le flux : le menu ne
+   Le menu est en position fixe plutot que dans le flux : il ne
    defile pas avec le contenu, et l'en-tete garde son "sticky".
    ============================================================ */
 
@@ -358,6 +380,20 @@
 
 .lateral__nav--glisse {
   cursor: grabbing;
+}
+
+/*
+ * Les familles n'existent que pour le rail. Sur l'arc, le conteneur
+ * disparait de la mise en page -- display: contents -- pour que les
+ * entrees restent positionnees par rapport au repere du <nav>, et
+ * l'intitule n'a nulle part ou aller.
+ */
+.lateral__groupe {
+  display: contents;
+}
+
+.lateral__section {
+  display: none;
 }
 
 /*
@@ -520,33 +556,274 @@
 }
 
 /* ============================================================
-   3. Adaptation aux petits ecrans
+   3. Bureau : le rail vertical, a gauche
+
+   L'arc reste la forme mobile. Au-dela de 560 px, le menu
+   devient un rail sombre pose le long du bord gauche, sous le
+   bandeau : les sept icones y sont visibles en permanence, et
+   les noms apparaissent quand le rail se deploie au survol --
+   ou au focus clavier, pour qu'il s'ouvre aussi sans souris.
+
+   Le rail flotte a 14 px des bords plutot que de s'y coller :
+   la page reste une surface posee sur le fond, et le rail une
+   piece a part, comme les panneaux du contenu.
    ============================================================ */
 
-/*
- * Le meme arc sur mobile, simplement plus petit : rayon reduit, boutons
- * reduits, et les quatre mesures restent coherentes entre elles.
- *
- * Pas de barre droite ici, contrairement a ce que faisait la version
- * precedente : le geste et le repere restent les memes d'un ecran a
- * l'autre. Le pouce atteint toujours le bas de l'ecran, et l'arc y est.
- */
-@media (max-width: 560px) {
-  :root {
-    --admin-arc-rayon: 200px;
-    --admin-arc-largeur: 271px;
-    --admin-arc-hauteur: 78px;
-    --admin-arc-bouton: 42px;
+@media (min-width: 561px) {
+  .lateral {
+    /* Le rail occupe la hauteur laissee par le bandeau, qui reste
+       sticky au-dessus de lui. */
+    top: calc(var(--admin-entete-hauteur) + var(--admin-rail-marge));
+    left: var(--admin-rail-marge);
+    bottom: var(--admin-rail-marge);
+    width: var(--admin-rail-large);
+    align-items: stretch;
+    gap: 0;
+    padding: 10px 11px;
+    transform: none;
+    /* Le rail est etroit et longe le bord : il peut reprendre les
+       evenements sans gener le contenu, et il le faut pour que le survol
+       du conteneur declenche l'ouverture. */
+    pointer-events: auto;
+    border-radius: 22px;
+    /* Un halo violet au sommet, la teinte du bandeau en dessous : le
+       rail descend de l'en-tete plutot que d'etre un bloc rapporte. */
+    background:
+      radial-gradient(120% 45% at 50% 0%, rgba(93, 86, 150, 0.5), transparent 72%),
+      linear-gradient(180deg, var(--entete-fond-haut), var(--entete-fond-bas));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 44px rgba(36, 43, 62, 0.24);
+    /* Replie, le rail rognerait ses propres libelles sans cela. Sur un
+       ecran bas, les sept entrees defilent -- sans barre visible, qui
+       trahirait un debordement sur la plupart des ecrans. */
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    transition:
+      width 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.34s ease;
+  }
+
+  .lateral::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * Deux regles jumelles plutot qu'un selecteur a deux membres : un
+   * navigateur qui ignore :has() jetterait la regle entiere, et le rail
+   * ne s'ouvrirait plus meme au survol.
+   *
+   * :has(:focus-visible) et non :focus-within : ce dernier retient aussi
+   * le focus pose par un clic, si bien que le rail restait deploie
+   * apres chaque navigation, par-dessus la page qu'on venait d'ouvrir.
+   */
+  .lateral:hover {
+    width: var(--admin-rail-ouvert);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 26px 58px rgba(36, 43, 62, 0.32);
+  }
+
+  .lateral:has(:focus-visible) {
+    width: var(--admin-rail-ouvert);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 26px 58px rgba(36, 43, 62, 0.32);
+  }
+
+  /* Ni geste, ni repere circulaire : une simple colonne. */
+  .lateral__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    height: auto;
+    touch-action: auto;
+    cursor: default;
+  }
+
+  .lateral__groupe {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  /* Le trait de partage entre les deux familles. Replie, il porte seul
+     la separation ; deploye, l'intitule vient s'y ajouter. */
+  .lateral__groupe + .lateral__groupe {
+    margin-top: 11px;
+    padding-top: 11px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  /*
+   * L'intitule garde sa place meme replie, ou il est simplement
+   * transparent.
+   *
+   * L'escamoter aurait ete plus propre a l'oeil, mais faisait descendre
+   * les entrees de 21 px a l'ouverture : la souris qui venait d'entrer
+   * sur une icone se retrouvait sur celle du dessus, et le clic partait
+   * vers la mauvaise page. Un menu ne doit pas bouger sous le curseur.
+   */
+  .lateral__section {
+    display: block;
+    height: 15px;
+    margin: 0 0 4px;
+    padding-left: 17px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.4);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .lateral:hover .lateral__section {
+    opacity: 1;
+    transition-delay: 0.06s;
+  }
+
+  .lateral:has(:focus-visible) .lateral__section {
+    opacity: 1;
+    transition-delay: 0.06s;
+  }
+
+  /*
+   * L'entree du rail : une ligne, l'icone puis le nom.
+   *
+   * Le calage horizontal n'est pas cosmetique. Rail replie, 11 px de
+   * marge interieure plus 16 px de retrait posent le centre de l'icone
+   * a 37 px du bord -- l'axe exact du rail. L'icone ne bouge donc pas
+   * d'un pixel a l'ouverture : seul le nom entre par la droite.
+   */
+  .lateral__lien {
+    position: relative;
+    top: auto;
+    left: auto;
+    justify-content: flex-start;
+    gap: 13px;
+    width: auto;
+    height: 46px;
+    margin: 0;
+    padding: 0 16px;
+    border-radius: 14px;
+    background: none;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 1;
+    pointer-events: auto;
+    color: rgba(255, 255, 255, 0.64);
+    transform: none;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .lateral__lien svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .lateral__lien:hover,
+  .lateral__lien:focus-visible {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+
+  /* Le fond violet de la page courante, et son halo. */
+  .lateral__lien--actif,
+  .lateral__lien--actif:hover {
+    color: #ffffff;
+    background: linear-gradient(
+      90deg,
+      var(--hope-violet) 0%,
+      rgba(109, 103, 160, 0.72) 100%
+    );
+    box-shadow: 0 8px 20px rgba(93, 86, 150, 0.42);
+  }
+
+  /*
+   * Le repere de la page courante : un trait vif colle au bord interieur
+   * du rail. Il compte surtout rail replie, ou le fond violet seul se
+   * distingue mal du survol. La couleur est celle du soleil du logo.
+   */
+  .lateral__lien--actif::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: calc(-1 * 11px);
+    width: 3px;
+    height: 22px;
+    margin-top: -11px;
+    border-radius: 0 3px 3px 0;
+    background-color: var(--hope-jaune);
+  }
+
+  /*
+   * Le nom, en clair dans la ligne : ce n'est plus une infobulle. Il
+   * entre par la gauche pendant que le rail s'ouvre, avec un leger
+   * retard pour ne pas devancer la largeur.
+   */
+  .lateral__libelle {
+    position: static;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: inherit;
+    visibility: visible;
+    opacity: 0;
+    transform: translateX(-8px);
+    transition:
+      opacity 0.22s ease,
+      transform 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Le survol d'UNE entree ne revele plus son seul nom : c'est le rail
+     entier qui s'ouvre. Sans cette remise a plat, la regle de
+     l'infobulle recentrerait le libelle sur son ancien axe. */
+  .lateral__lien:hover .lateral__libelle,
+  .lateral__lien:focus-visible .lateral__libelle {
+    transform: translateX(-8px);
+    transition-delay: 0s;
+  }
+
+  /* Le rail ouvert a le dernier mot, y compris sur l'entree survolee. */
+  .lateral:hover .lateral__libelle,
+  .lateral:hover .lateral__lien:hover .lateral__libelle {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.08s;
+  }
+
+  .lateral:has(:focus-visible) .lateral__libelle,
+  .lateral:has(:focus-visible) .lateral__lien:focus-visible .lateral__libelle {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.08s;
+  }
+
+  /*
+   * Le contenu se decale de la largeur du rail REPLIE seulement : le
+   * deploiement passe par-dessus la page plutot que de la pousser, ce
+   * qui reflowerait tableaux et graphiques a chaque survol.
+   */
+  .admin__contenu {
+    padding: 26px 30px 40px
+      calc(var(--admin-rail-large) + var(--admin-rail-marge) + 20px);
   }
 }
 
-/* Sur un ecran tactile il n'y a pas de survol : l'infobulle ne
-   s'afficherait qu'au moment du tap, juste avant de changer de page. */
-@media (hover: none) {
-  .lateral__libelle {
-    display: none;
-  }
-}
+/* ============================================================
+   4. Adaptation aux petits ecrans
+   ============================================================ */
 
 @media (max-width: 720px) {
   .entete__barre {
@@ -554,8 +831,11 @@
     padding-right: 16px;
   }
 
+  /* Le retrait de gauche vient du rail et n'est pas touche ici : sur une
+     tablette etroite, seuls le haut et la droite se resserrent. */
   .admin__contenu {
-    padding: 20px 16px 36px;
+    padding-top: 20px;
+    padding-right: 16px;
   }
 
   .profil__identite {
@@ -567,12 +847,49 @@
   }
 }
 
+/*
+ * Le meme arc sur mobile, simplement plus petit : rayon reduit, boutons
+ * reduits, et les quatre mesures restent coherentes entre elles.
+ *
+ * Pas de rail ici : il mangerait un cinquieme d'un ecran de telephone,
+ * et le pouce n'atteint pas le haut de l'ecran. L'arc reste en bas, la
+ * ou la main se trouve deja.
+ *
+ * Ce bloc suit celui des 720 px : c'est lui qui doit avoir le dernier
+ * mot sur le retrait du contenu, qui doit ici degager l'arc et ses
+ * fleches plutot que le rail.
+ */
+@media (max-width: 560px) {
+  :root {
+    --admin-arc-rayon: 200px;
+    --admin-arc-largeur: 271px;
+    --admin-arc-hauteur: 78px;
+    --admin-arc-bouton: 42px;
+  }
+
+  .admin__contenu {
+    padding: 20px 16px calc(var(--admin-arc-hauteur) + 56px);
+  }
+}
+
+/* Sur un ecran tactile il n'y a pas de survol : l'infobulle de l'arc ne
+   s'afficherait qu'au moment du tap, juste avant de changer de page.
+   Le rail, lui, garde ses noms : ils font partie de sa ligne. */
+@media (hover: none) and (max-width: 560px) {
+  .lateral__libelle {
+    display: none;
+  }
+}
+
 /* ============================================================
-   4. Mouvement reduit
+   5. Mouvement reduit
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
+  .lateral,
   .lateral__lien,
+  .lateral__libelle,
+  .lateral__section,
   .profil__chevron {
     transition-duration: 0.01ms;
   }
