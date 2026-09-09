@@ -44,3 +44,15 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# --- Sources de travail deposees dans src/assets ---
+# Photos brutes, exports de maquette et captures d'ecran : aucune n'est
+# importee par le code, et elles pesent 12 Mo -- quatre fois le depot.
+# Elles restent sur le disque, simplement hors du versionnement. Un
+# visuel qui SERT a l'application est redimensionne, renomme, puis
+# ajoute explicitement (git add -f) comme les autres assets suivis.
+Capture d’écran*
+Copie de WEBSITE HOPE*
+*-unsplash.jpg
+pexels-*
+AppHopePlat/frontend/src/assets/COUVERTURE.jpg
