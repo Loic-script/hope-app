@@ -77,6 +77,22 @@ export default function ImpactPage() {
   }
 
   const libelles = catalogue?.labels ?? {};
+
+  /**
+   * Nom lisible d'un indicateur.
+   *
+   * Le backend renvoie les indicateurs qu'il suggere, avec leur libelle.
+   * Mais le champ reste libre : une mesure peut porter un code absent de
+   * cette liste. On le rend alors presentable -- "people_with_water_access"
+   * devient "People with water access" -- plutot que d'afficher tel quel
+   * un identifiant technique.
+   */
+  const libelleIndicateur = (code) => {
+    const connu = (impacts?.indicators ?? []).find((i) => i.code === code);
+    if (connu) return connu.label;
+    const mots = String(code).replace(/[_-]+/g, ' ').trim();
+    return mots.charAt(0).toUpperCase() + mots.slice(1);
+  };
   const projetsTermines = termines?.items ?? [];
   const mesures = impacts?.items ?? [];
 
@@ -123,7 +139,7 @@ export default function ImpactPage() {
           {indicateursCumules.slice(0, 4).map((ligne) => (
             <article className="carte-chiffre" key={ligne.indicator}>
               <div>
-                <p className="carte-chiffre__libelle">{ligne.indicator}</p>
+                <p className="carte-chiffre__libelle">{libelleIndicateur(ligne.indicator)}</p>
                 <p className="carte-chiffre__valeur">
                   {fmt.nombre(ligne.total)} {ligne.unit ?? ''}
                 </p>
@@ -298,7 +314,11 @@ export default function ImpactPage() {
             <Panneau titre="Cumul par indicateur" serre>
               <Tableau
                 colonnes={[
-                  { cle: 'indicator', titre: 'Indicateur' },
+                  {
+                    cle: 'indicator',
+                    titre: 'Indicateur',
+                    rendu: (l) => libelleIndicateur(l.indicator),
+                  },
                   {
                     cle: 'total',
                     titre: 'Total',
@@ -348,7 +368,11 @@ export default function ImpactPage() {
                     </div>
                   ),
                 },
-                { cle: 'indicator', titre: 'Indicateur' },
+                {
+                  cle: 'indicator',
+                  titre: 'Indicateur',
+                  rendu: (l) => libelleIndicateur(l.indicator),
+                },
                 {
                   cle: 'value',
                   titre: 'Valeur',
