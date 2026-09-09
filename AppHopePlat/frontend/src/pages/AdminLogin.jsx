@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import HopeLogo from '../components/HopeLogo.jsx';
+// Le pictogramme officiel remplace le soleil dessine : declinaison
+// pour fond violet, dont les couleurs conviennent au panneau sombre.
+import pictogramme from '../assets/LOGO_PICTOGRAMME_FOND_VIOLET.png';
 import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
 import {
   IconeAlerte,
@@ -10,7 +13,6 @@ import {
   IconeOeil,
   IconeOeilBarre,
   IconeBouclier,
-  IconeSoleil,
   IconeUtilisateur,
 } from '../components/HopeIcons.jsx';
 import * as authService from '../services/auth.service.js';
@@ -108,7 +110,7 @@ export default function AdminLogin() {
             demain
           </p>
         </div>
-          <IconeSoleil className="illustration__soleil" />
+          <img className="illustration__soleil" src={pictogramme} alt="" aria-hidden="true" />
 
         <div className="illustration__principal">
           <h1 className="illustration__titre">

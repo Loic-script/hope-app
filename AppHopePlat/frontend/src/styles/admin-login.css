@@ -77,13 +77,16 @@
   text-shadow: 0 2px 10px rgba(53, 51, 67, 0.35);
 }
 
+/* Le pictogramme fait 1,61:1 : on pilote la largeur, la hauteur suit.
+   L'ombre portee reste : le logo est pose sur une photo, et sans elle
+   ses aplats clairs se perdraient sur un fond clair. */
 .illustration__soleil {
-  width: 40px;
-  height: 40px;
+  display: block;
+  width: 64px;
+  height: auto;
   flex: none;
   margin-bottom: 6px;
-  color: var(--hope-orange);
-  filter: drop-shadow(0 2px 6px rgba(53, 51, 67, 0.3));
+  filter: drop-shadow(0 2px 6px rgba(53, 51, 67, 0.35));
 }
 
 /* Bloc principal, pousse vers le bas du panneau. */
