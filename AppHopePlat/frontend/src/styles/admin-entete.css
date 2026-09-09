@@ -810,6 +810,44 @@
     transition-delay: 0.08s;
   }
 
+  /* --- Le pied du rail : se deconnecter --- */
+
+  /*
+   * "margin-top: auto" colle le pied au bas du rail quelle que soit la
+   * hauteur prise par les entrees. Sur un ecran court, ou le rail
+   * defile, la marge automatique retombe a zero : le bouton suit alors
+   * la derniere entree au lieu de disparaitre sous le pli.
+   */
+  .lateral__pied {
+    margin-top: auto;
+    padding-top: 11px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  /*
+   * Le bouton reprend la forme d'une entree du rail, a deux details
+   * pres : un <button> n'herite pas de la police du document, et il
+   * centre son texte.
+   *
+   * Sa couleur est plus sourde que celle des sections : se deconnecter
+   * n'est pas une destination, et rien ne doit y attirer l'oeil en
+   * cours de travail.
+   */
+  .lateral__lien--sortie {
+    width: 100%;
+    font-family: inherit;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  /* Apres la regle de survol commune, qui a la meme specificite : le
+     rouge doit l'emporter sur le blanc des entrees. */
+  .lateral__lien--sortie:hover,
+  .lateral__lien--sortie:focus-visible {
+    color: #ffb0a3;
+    background-color: rgba(224, 90, 70, 0.16);
+  }
+
   /*
    * Le contenu se decale de la largeur du rail REPLIE seulement : le
    * deploiement passe par-dessus la page plutot que de la pousser, ce

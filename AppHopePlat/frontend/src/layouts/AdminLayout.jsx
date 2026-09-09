@@ -390,6 +390,31 @@ export default function AdminLayout() {
             </button>
           </div>
         )}
+
+        {/*
+          Le pied du rail. Se deconnecter reste aussi dans le menu du
+          profil : c'est la meme action a deux endroits, et non un
+          doublon a arbitrer -- l'un se trouve avec le compte, l'autre au
+          bout du menu, la ou l'oeil descend en fin de session.
+
+          Absent de l'arc, qui n'a pas de pied ou l'accrocher, et ou une
+          huitieme pastille prendrait la place d'une section.
+        */}
+        {!enArc && (
+          <div className="lateral__pied">
+            <button
+              type="button"
+              className="lateral__lien lateral__lien--sortie"
+              onClick={seDeconnecter}
+              aria-label="Se déconnecter"
+            >
+              <IconeDeconnexion />
+              <span className="lateral__libelle" aria-hidden="true">
+                Se déconnecter
+              </span>
+            </button>
+          </div>
+        )}
       </aside>
 
       <header className="entete">
