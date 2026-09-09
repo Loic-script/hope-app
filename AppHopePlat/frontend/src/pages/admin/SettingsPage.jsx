@@ -203,7 +203,7 @@ export default function SettingsPage() {
                   </button>
                 ),
             }))}
-            cleLigne="cle"
+            cleLigne={(membre) => membre.cle}
             chargement={chargementEquipe}
           />
         </Panneau>
