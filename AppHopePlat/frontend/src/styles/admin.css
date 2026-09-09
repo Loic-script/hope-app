@@ -47,6 +47,10 @@
 
 .page-entete {
   display: flex;
+  /* Le titre et ses actions passent a la ligne plutot que de forcer la
+     page a s'elargir : un debordement horizontal ferait defiler tout le
+     document de cote, et emporterait avec lui le menu en position fixe. */
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
@@ -97,8 +101,12 @@
 
 .page-entete__actions {
   display: flex;
+  /* Les boutons s'empilent quand la largeur manque. flex-shrink reste a 1
+     -- avec flex: none, le bloc gardait sa largeur maximale et le retour
+     a la ligne ne se declenchait jamais. */
+  flex-wrap: wrap;
   gap: 10px;
-  flex: none;
+  min-width: 0;
 }
 
 /* ============================================================
@@ -221,11 +229,61 @@
 
 .panneau__entete {
   display: flex;
+  /* Meme raison que pour l'entete de page : sur un ecran etroit, le titre
+     et son action passent a la ligne au lieu d'elargir le document. */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--admin-bordure);
+}
+
+/* Sans min-width: 0, ce bloc refuse de descendre sous la largeur de son
+   titre et pousse l'action hors de la page. */
+.panneau__intitule {
+  min-width: 0;
+}
+
+/* --- Fleche de retour de l'en-tete de page --- */
+
+.page-entete__gauche {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  /* Comme pour le panneau : sans cela le titre pousserait les actions
+     hors de la page sur un ecran etroit. */
+  min-width: 0;
+}
+
+.page-entete__intitule {
+  min-width: 0;
+}
+
+.page-entete__retour {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+  background-color: var(--admin-surface);
+  color: var(--admin-texte-doux);
+  transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.page-entete__retour svg {
+  width: 18px;
+  height: 18px;
+}
+
+.page-entete__retour:hover,
+.page-entete__retour:focus-visible {
+  color: var(--hope-violet);
+  border-color: var(--hope-violet);
+  background-color: var(--hope-fond-panneau);
 }
 
 .panneau__titre {

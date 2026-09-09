@@ -5,9 +5,15 @@
  * barre d'outils, panneau, tableau) pour obtenir un ensemble homogene sans
  * dupliquer le balisage.
  */
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-import { IconeAlerte, IconePlus, IconeRecherche, IconeValide } from './AdminIcons.jsx';
+import {
+  IconeAlerte,
+  IconePlus,
+  IconeRecherche,
+  IconeRetour,
+  IconeValide,
+} from './AdminIcons.jsx';
 import * as fmt from '../../utils/format.js';
 
 /* ------------------------------------------------------------------
@@ -18,10 +24,37 @@ import * as fmt from '../../utils/format.js';
  * @param {{ fil?: {label: string, to?: string}[], titre: string,
  *           accroche?: string, actions?: React.ReactNode }} props
  */
-export function EntetePage({ fil = [], titre, accroche, actions }) {
+/**
+ * @param {object} props
+ * @param {boolean} [props.retour] affiche la fleche de retour ; vrai par
+ *        defaut, a passer a faux sur une page sans page precedente
+ */
+export function EntetePage({ fil = [], titre, accroche, actions, retour = true }) {
+  const navigate = useNavigate();
+  const emplacement = useLocation();
+
+  /*
+   * Une cle "default" signale la toute premiere entree de l'historique :
+   * la page a ete ouverte directement, par un lien ou un rafraichissement.
+   * Un navigate(-1) sortirait alors de l'application ; on remonte a
+   * l'accueil a la place.
+   */
+  const revenir = () => (emplacement.key === 'default' ? navigate('/admin') : navigate(-1));
+
   return (
     <header className="page-entete">
-      <div>
+      <div className="page-entete__gauche">
+        {retour && (
+          <button
+            type="button"
+            className="page-entete__retour"
+            onClick={revenir}
+            aria-label="Revenir à la page précédente"
+          >
+            <IconeRetour />
+          </button>
+        )}
+        <div className="page-entete__intitule">
         {fil.length > 0 && (
           <nav className="page-entete__fil" aria-label="Fil d'Ariane">
             {fil.map((etape, index) => (
@@ -34,6 +67,7 @@ export function EntetePage({ fil = [], titre, accroche, actions }) {
         )}
         <h1 className="page-entete__titre">{titre}</h1>
         {accroche && <p className="page-entete__accroche">{accroche}</p>}
+        </div>
       </div>
       {actions && <div className="page-entete__actions">{actions}</div>}
     </header>
@@ -49,7 +83,7 @@ export function Panneau({ titre, sousTitre, actions, children, serre = false, cl
     <section className={`panneau ${className}`.trim()}>
       {(titre || actions) && (
         <div className="panneau__entete">
-          <div>
+          <div className="panneau__intitule">
             {titre && <h2 className="panneau__titre">{titre}</h2>}
             {sousTitre && <p className="panneau__sous-titre">{sousTitre}</p>}
           </div>
