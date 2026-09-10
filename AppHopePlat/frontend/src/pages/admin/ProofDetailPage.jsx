@@ -72,52 +72,68 @@ function Lecteur({ preuve }) {
   const estImage = mime.startsWith('image/');
   const estVideo = mime.startsWith('video/');
 
+  /*
+   * Le cadre est le meme dans tous les cas : c'est lui qui occupe toute
+   * la largeur, porte le fond et centre ce qu'il contient. Seule sa
+   * surface change selon qu'il porte un media ou du texte.
+   *
+   * Les branches image et video renvoyaient auparavant la balise nue :
+   * une photo plus etroite que la colonne se posait alors a gauche, sans
+   * fond derriere elle.
+   */
+  const cadre = (variante, contenu) => (
+    <div className={`lecteur lecteur--${variante}`}>{contenu}</div>
+  );
+
   if (!preuve.filePath) {
-    return (
-      <div className="lecteur lecteur--texte">
+    return cadre(
+      'texte',
+      <>
         <p className="lecteur__citation">{preuve.description}</p>
         <p className="lecteur__mention">Témoignage — cette preuve n’a pas de fichier.</p>
-      </div>
+      </>
     );
   }
 
   if (chargement) {
-    return (
-      <div className="lecteur lecteur--attente">
-        <Chargement texte={estVideo ? 'Chargement de la vidéo…' : 'Chargement de l’image…'} />
-      </div>
+    return cadre(
+      'attente',
+      <Chargement texte={estVideo ? 'Chargement de la vidéo…' : 'Chargement de l’image…'} />
     );
   }
 
   if (echec || !url) {
-    return (
-      <div className="lecteur lecteur--attente">
-        <EtatVide
-          titre="Fichier introuvable"
-          texte="Le fichier n’est plus sur le serveur. La preuve, elle, reste enregistrée."
-        />
-      </div>
+    return cadre(
+      'attente',
+      <EtatVide
+        titre="Fichier introuvable"
+        texte="Le fichier n’est plus sur le serveur. La preuve, elle, reste enregistrée."
+      />
     );
   }
 
   if (estImage) {
-    return <img className="lecteur__media" src={url} alt={preuve.description} />;
+    return cadre('media', <img className="lecteur__media" src={url} alt={preuve.description} />);
   }
 
   if (estVideo) {
     // controls et non autoPlay : on ne lance pas le son d'une video de
     // terrain dans un bureau sans l'avoir demande.
-    return <video className="lecteur__media" src={url} controls playsInline preload="metadata" />;
+    return cadre(
+      'media',
+      <video className="lecteur__media" src={url} controls playsInline preload="metadata" />
+    );
   }
 
   // Un PDF : le navigateur sait l'afficher, mais dans un cadre a lui.
-  return (
-    <div className="lecteur lecteur--texte">
+  return cadre(
+    'texte',
+    <>
       <p className="lecteur__mention">Ce document ne s’affiche pas ici.</p>
       <a className="btn btn--principal" href={url} target="_blank" rel="noreferrer">
         Ouvrir le document
       </a>
-    </div>
+    </>
   );
 }
 

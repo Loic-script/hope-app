@@ -622,11 +622,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Toute la largeur de la colonne, quelle que soit celle du media : une
+     photo verticale se pose alors au centre du cadre et non a gauche. */
+  width: 100%;
   min-height: 320px;
   max-height: 70vh;
   overflow: hidden;
   border-radius: 14px;
-  background-color: #1c2231;
+}
+
+/*
+ * Fond sombre pour une photo ou une video : une image de terrain a des
+ * bords clairs aussi souvent que sombres, et flotterait sans limite
+ * visible sur du blanc. Il remplit aussi les cotes laissees libres par
+ * un cadrage vertical.
+ */
+.lecteur--media {
+  background:
+    radial-gradient(120% 90% at 50% 0%, #232a3c, transparent 70%),
+    #171c28;
 }
 
 .lecteur__media {
