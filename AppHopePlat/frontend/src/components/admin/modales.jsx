@@ -21,6 +21,7 @@ import * as documentService from '../../services/document.service.js';
 import * as donationService from '../../services/donation.service.js';
 import * as donorService from '../../services/donor.service.js';
 import * as expenseService from '../../services/expense.service.js';
+import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as impactService from '../../services/impact.service.js';
 import * as messageService from '../../services/message.service.js';
@@ -1483,6 +1484,138 @@ export function NouveauMessageModale({ ouverte, comptes = [], onFermer, onEnregi
           disabled={envoi}
           rows={6}
         />
+      </div>
+    </ModaleFormulaire>
+  );
+}
+
+/* ==================================================================
+   Publier une preuve terrain
+   ================================================================== */
+
+/**
+ * Un temoignage se suffit de son texte ; les deux autres portent un
+ * fichier. C'est une regle metier et non un libelle : elle reste ici,
+ * la ou les noms des trois types viennent du catalogue.
+ */
+const TYPES_PREUVE_AVEC_FICHIER = new Set(['PHOTO', 'DOCUMENT']);
+
+/**
+ * Publie une preuve depuis la fiche d'un projet.
+ *
+ * L'ecran Preuves terrain garde son formulaire pose en permanence : on y
+ * publie a la chaine, souvent depuis le terrain. Ici c'est l'inverse --
+ * on documente le projet qu'on a sous les yeux, ponctuellement -- d'ou
+ * la modale et le projet deja fixe.
+ *
+ * @param {{ ouverte, projet: object, libelles: object, onFermer,
+ *           onEnregistre }} props
+ */
+export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnregistre }) {
+  const [type, setType] = useState('PHOTO');
+  const [description, setDescription] = useState('');
+  const [dateAction, setDateAction] = useState('');
+  const [fichier, setFichier] = useState(null);
+  const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  useEffect(() => {
+    if (!ouverte) return;
+    setErreur('');
+    setType('PHOTO');
+    setDescription('');
+    setDateAction(fmt.aujourdhui());
+    setFichier(null);
+  }, [ouverte, setErreur]);
+
+  const fichierRequis = TYPES_PREUVE_AVEC_FICHIER.has(type);
+
+  async function enregistrer() {
+    if (fichierRequis && !fichier) {
+      setErreur(
+        type === 'PHOTO'
+          ? 'Une preuve photo doit porter une image.'
+          : 'Une preuve de type document doit porter un fichier.'
+      );
+      return;
+    }
+
+    await soumettre(
+      () =>
+        fieldProofService.publier({
+          projectId: projet.id,
+          proofType: type,
+          description,
+          occurredOn: dateAction || undefined,
+          file: fichier,
+        }),
+      { onSucces: onEnregistre }
+    );
+  }
+
+  return (
+    <ModaleFormulaire
+      ouverte={ouverte}
+      titre="Ajouter une preuve terrain"
+      sousTitre={
+        projet
+          ? `${projet.name} — une photo et deux lignes suffisent.`
+          : 'Une photo et deux lignes suffisent.'
+      }
+      onFermer={onFermer}
+      onSoumettre={enregistrer}
+      envoi={envoi}
+      erreur={erreur}
+      libelleValider="Publier la preuve"
+    >
+      <ChampTexteLong
+        label="Description courte"
+        id="preuve-description"
+        obligatoire
+        required
+        rows={3}
+        placeholder="Ex. Fournitures scolaires remises à Tsinjo ce matin."
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        disabled={envoi}
+      />
+
+      <div className="formulaire-grille">
+        <ChampSelection
+          label="Type de preuve"
+          id="preuve-type"
+          obligatoire
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          options={optionsDepuisLibelles(libelles)}
+          disabled={envoi}
+        />
+
+        <ChampTexte
+          label="Date de l’action"
+          id="preuve-date"
+          type="date"
+          max={fmt.aujourdhui()}
+          aide="Le jour où l’action a eu lieu, pas celui de la publication."
+          value={dateAction}
+          onChange={(e) => setDateAction(e.target.value)}
+          disabled={envoi}
+        />
+
+        <Champ
+          label={fichierRequis ? 'Fichier' : 'Fichier (facultatif)'}
+          id="preuve-fichier"
+          obligatoire={fichierRequis}
+          aide="Photos : JPG, PNG, WEBP. Document : PDF. 10 Mo maximum."
+          pleineLargeur
+        >
+          <input
+            id="preuve-fichier"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp,.pdf"
+            onChange={(e) => setFichier(e.target.files?.[0] ?? null)}
+            disabled={envoi}
+          />
+        </Champ>
       </div>
     </ModaleFormulaire>
   );

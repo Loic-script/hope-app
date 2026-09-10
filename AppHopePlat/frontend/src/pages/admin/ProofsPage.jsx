@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
@@ -9,17 +9,12 @@ import {
   ModaleConfirmation,
 } from '../../components/admin/forms.jsx';
 import { Alerte, Badge, Chargement, EntetePage, EtatVide, Panneau } from '../../components/admin/ui.jsx';
+import VignettePreuve from '../../components/admin/VignettePreuve.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
+import * as catalogService from '../../services/catalog.service.js';
 import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
-
-/** Libelles des trois natures de preuve. */
-const TYPES = {
-  PHOTO: 'Photo',
-  DOCUMENT: 'Document',
-  TESTIMONY: 'Témoignage',
-};
 
 /** Un temoignage se suffit de son texte ; les deux autres portent un fichier. */
 const TYPES_AVEC_FICHIER = new Set(['PHOTO', 'DOCUMENT']);
@@ -31,45 +26,6 @@ const FORMULAIRE_VIDE = {
   occurredOn: fmt.aujourdhui(),
   file: null,
 };
-
-/**
- * Vignette d'une preuve.
- *
- * Le fichier est servi derriere le jeton : une balise <img src="..."> ne
- * peut donc pas l'afficher directement, elle ne porte pas d'en-tete
- * Authorization. On recupere le blob puis on libere l'URL au demontage,
- * sinon le navigateur garderait chaque image en memoire.
- */
-function Vignette({ preuve }) {
-  const [url, setUrl] = useState(null);
-
-  useEffect(() => {
-    let annule = false;
-    let courante = null;
-
-    if (preuve.mimeType?.startsWith('image/')) {
-      fieldProofService.urlDuFichier(preuve).then((resultat) => {
-        if (annule || !resultat) return;
-        courante = resultat;
-        setUrl(resultat);
-      });
-    }
-
-    return () => {
-      annule = true;
-      if (courante) URL.revokeObjectURL(courante);
-    };
-  }, [preuve]);
-
-  if (url) {
-    return <img className="preuve__vignette" src={url} alt="" />;
-  }
-  return (
-    <span className="preuve__vignette preuve__vignette--vide" aria-hidden="true">
-      {preuve.proofType === 'TESTIMONY' ? '“”' : 'PDF'}
-    </span>
-  );
-}
 
 /**
  * Ecran Preuves terrain.
@@ -88,6 +44,10 @@ export default function ProofsPage() {
     []
   );
   const { donnees: projets } = useChargement(() => projectService.lister({ pageSize: 200 }), []);
+  // Les libelles des trois natures de preuve viennent du catalogue,
+  // comme ceux de tous les autres enums.
+  const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
+  const TYPES = catalogue?.labels?.proofType ?? {};
 
   const { envoi, erreur: erreurAction, soumettre } = useSoumission();
 
@@ -281,7 +241,7 @@ export default function ProofsPage() {
             <ul className="preuves">
               {preuves.map((preuve) => (
                 <li className="preuve" key={preuve.id}>
-                  <Vignette preuve={preuve} />
+                  <VignettePreuve preuve={preuve} />
 
                   <div className="preuve__corps">
                     <p className="preuve__projet">

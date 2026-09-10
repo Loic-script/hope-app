@@ -150,3 +150,26 @@ export function tailleFichier(octets) {
   if (octets < 1024 * 1024) return `${Math.round(octets / 1024)} Ko`;
   return `${(octets / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
 }
+
+/**
+ * Nom lisible d'un indicateur d'impact.
+ *
+ * Le backend renvoie les indicateurs qu'il suggere, avec leur libelle.
+ * Mais le champ reste libre : une mesure peut porter un code absent de
+ * cette liste. On le rend alors presentable -- "people_with_water_access"
+ * devient "People with water access" -- plutot que d'afficher tel quel un
+ * identifiant technique.
+ *
+ * @param {string} code code stocke avec la mesure
+ * @param {{ code: string, label: string }[]} indicateurs catalogue du backend
+ */
+export function libelleIndicateur(code, indicateurs = []) {
+  const connu = indicateurs.find((element) => element.code === code);
+  if (connu) return connu.label;
+
+  const mots = String(code ?? '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+  if (mots === '') return '—';
+  return mots.charAt(0).toUpperCase() + mots.slice(1);
+}

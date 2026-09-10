@@ -78,21 +78,9 @@ export default function ImpactPage() {
 
   const libelles = catalogue?.labels ?? {};
 
-  /**
-   * Nom lisible d'un indicateur.
-   *
-   * Le backend renvoie les indicateurs qu'il suggere, avec leur libelle.
-   * Mais le champ reste libre : une mesure peut porter un code absent de
-   * cette liste. On le rend alors presentable -- "people_with_water_access"
-   * devient "People with water access" -- plutot que d'afficher tel quel
-   * un identifiant technique.
-   */
-  const libelleIndicateur = (code) => {
-    const connu = (impacts?.indicators ?? []).find((i) => i.code === code);
-    if (connu) return connu.label;
-    const mots = String(code).replace(/[_-]+/g, ' ').trim();
-    return mots.charAt(0).toUpperCase() + mots.slice(1);
-  };
+  // La fiche projet affiche les memes indicateurs : la mise en forme est
+  // partagee plutot que recopiee (fmt.libelleIndicateur).
+  const libelleIndicateur = (code) => fmt.libelleIndicateur(code, impacts?.indicators ?? []);
   const projetsTermines = termines?.items ?? [];
   const mesures = impacts?.items ?? [];
 
