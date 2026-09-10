@@ -450,6 +450,31 @@
     transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
+/*
+ * Pastille de non-lus.
+ *
+ * Sur l'arc, un simple point pose au bord haut-droit de la rondelle : le
+ * nombre y est masque par une taille de police nulle, il n'y aurait pas
+ * la place de l'ecrire. Le liseré reprend la couleur du bouton et
+ * detache le point du fond sombre.
+ */
+.lateral__pastille {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12px;
+  height: 12px;
+  border: 2px solid var(--entete-fond-bas);
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  font-size: 0;
+  font-weight: 700;
+  color: #ffffff;
+}
+
 /* Hors de la fenetre : l'entree reste dans le DOM pour que son
    deplacement s'anime, mais elle ne se voit ni ne se clique. */
 .lateral__lien--horschamp {
@@ -808,6 +833,50 @@
     opacity: 1;
     transform: none;
     transition-delay: 0.08s;
+  }
+
+  /*
+   * La pastille du rail : un point au coin de l'icone quand le rail est
+   * replie, un jeton chiffre au bout de la ligne quand il s'ouvre.
+   *
+   * Le deplacement passe par "left" et non par "right" : "right: auto"
+   * ne s'interpole pas, la pastille sauterait d'un bord a l'autre au
+   * lieu de glisser. Plus de liseré non plus -- il servait a detacher le
+   * point du bouton rond de l'arc, ici il barrerait le fond violet de
+   * l'entree courante.
+   */
+  .lateral__pastille {
+    top: 11px;
+    left: 30px;
+    right: auto;
+    min-width: 10px;
+    height: 10px;
+    padding: 0;
+    border-width: 0;
+    transition:
+      top 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+      left 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+      min-width 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+      height 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+      font-size 0.18s ease;
+  }
+
+  .lateral:hover .lateral__pastille {
+    top: 13px;
+    left: 192px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  .lateral:has(:focus-visible) .lateral__pastille {
+    top: 13px;
+    left: 192px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
   }
 
   /* --- Le pied du rail : se deconnecter --- */

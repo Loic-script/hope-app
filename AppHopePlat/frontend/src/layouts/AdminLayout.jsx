@@ -24,18 +24,22 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les sept sections de travail, rangees en deux familles.
+ * Les huit sections de travail, rangees en deux familles.
  *
  * "Pilotage" reunit ce que l'on fait -- ouvrir un projet, documenter le
- * terrain ; "Analyse" ce que l'on constate ensuite. Deux familles de
- * trois et quatre entrees se lisent d'un coup d'oeil la ou une liste de
- * sept demande d'etre parcourue.
+ * terrain, repondre a un donateur ; "Analyse" ce que l'on constate
+ * ensuite. Deux familles de quatre entrees se lisent d'un coup d'oeil la
+ * ou une liste de huit demande d'etre parcourue.
  *
- * Trois entrees n'y figurent pas, et c'est voulu :
- *   * Notifications et Messages sont des alertes, pas des destinations : la
- *     barre du haut les montre avec leur pastille depuis n'importe ou ;
- *   * Parametres et Se deconnecter relevent du compte : ils vivent dans le
- *     menu du profil, en haut a droite.
+ * Messages est ici et non plus dans le bandeau : repondre a un donateur
+ * est un travail quotidien, pas une alerte qu'on traite en passant. La
+ * pastille de non-lus le suit dans le rail, elle n'est pas perdue.
+ *
+ * Deux entrees n'y figurent pas, et c'est voulu :
+ *   * Notifications reste une alerte et non une destination : la barre du
+ *     haut la montre avec sa pastille depuis n'importe ou ;
+ *   * Parametres releve du compte : il vit dans le menu du profil, en
+ *     haut a droite, avec la deconnexion.
  */
 const GROUPES = [
   {
@@ -44,6 +48,9 @@ const GROUPES = [
       { to: '/admin', label: 'Accueil', Icone: IconeAccueil, exact: true },
       { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
       { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
+      // "compteur" designe la cle des pastilles renvoyees par
+      // /admin/badges : l'entree porte alors son nombre de non-lus.
+      { to: '/admin/messages', label: 'Messages', Icone: IconeMessages, compteur: 'messages' },
     ],
   },
   {
@@ -326,20 +333,24 @@ export default function AdminLayout() {
                 {groupe.titre}
               </p>
 
-              {groupe.entrees.map(({ to, label, Icone, exact }) => {
+              {groupe.entrees.map(({ to, label, Icone, exact, compteur }) => {
                 // Place fractionnaire pendant un geste : l'arc suit le doigt.
                 const place =
                   placeSurLArc(RANGS.get(to), centreArc, NAVIGATION.length) + glissement;
                 // La demi-place de marge evite qu'une entree apparaisse
                 // d'un coup au bord de l'arc en cours de glissement.
                 const surLArc = !enArc || Math.abs(place) <= rayonFenetre + 0.5;
+                const nonLus = compteur ? (compteurs[compteur] ?? 0) : 0;
 
                 return (
                   <NavLink
                     key={to}
                     to={to}
                     end={exact}
-                    aria-label={label}
+                    // La pastille est decorative : c'est l'aria-label qui
+                    // annonce le nombre, sans quoi un lecteur d'ecran
+                    // lirait "Messages 3" sans dire de quoi il s'agit.
+                    aria-label={nonLus > 0 ? `${label} : ${nonLus} non lu(s)` : label}
                     // Hors de l'arc, l'entree est retiree du parcours
                     // clavier en plus d'etre invisible : on ne tabule pas
                     // vers un bouton qu'on ne voit pas.
@@ -357,6 +368,11 @@ export default function AdminLayout() {
                     <span className="lateral__libelle" aria-hidden="true">
                       {label}
                     </span>
+                    {nonLus > 0 && (
+                      <span className="lateral__pastille" aria-hidden="true">
+                        {nonLus > 99 ? '99+' : nonLus}
+                      </span>
+                    )}
                   </NavLink>
                 );
               })}
@@ -436,19 +452,6 @@ export default function AdminLayout() {
             >
               <IconeCloche />
               {compteurs.notifications > 0 && <span className="entete__point" aria-hidden="true" />}
-            </Link>
-
-            <Link
-              to="/admin/messages"
-              className="entete__action"
-              aria-label={
-                compteurs.messages > 0
-                  ? `Messages : ${compteurs.messages} non lu(s)`
-                  : 'Messages'
-              }
-            >
-              <IconeMessages />
-              {compteurs.messages > 0 && <span className="entete__point" aria-hidden="true" />}
             </Link>
 
             <div className="profil" ref={profil}>
