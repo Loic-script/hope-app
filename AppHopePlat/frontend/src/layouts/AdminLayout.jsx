@@ -25,17 +25,18 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les neuf sections de travail, rangees en deux familles.
+ * Les neuf sections de travail, rangees en trois familles.
  *
- * "Pilotage" reunit ce que l'on fait -- ouvrir un projet, enregistrer
- * les personnes accompagnees, documenter le terrain, repondre a un
- * donateur ; "Analyse" ce que l'on constate ensuite. Deux familles de
- * cinq et quatre entrees se lisent d'un coup d'oeil la ou une liste de
- * neuf demande d'etre parcourue.
+ * L'ordre suit celui du travail : "Pilotage" ce que l'on fait -- ouvrir
+ * un projet, enregistrer les personnes accompagnees, documenter le
+ * terrain ; "Communaute" les echanges avec ceux qui soutiennent HOPE ;
+ * "Analyse" ce que l'on constate ensuite. Trois familles courtes se
+ * lisent d'un coup d'oeil la ou une liste de neuf demande d'etre
+ * parcourue.
  *
- * Messages est ici et non plus dans le bandeau : repondre a un donateur
- * est un travail quotidien, pas une alerte qu'on traite en passant. La
- * pastille de non-lus le suit dans le rail, elle n'est pas perdue.
+ * Messages n'est plus dans le bandeau : repondre a un donateur est un
+ * travail quotidien, pas une alerte qu'on traite en passant. La pastille
+ * de non-lus le suit dans le rail, elle n'est pas perdue.
  *
  * Deux entrees n'y figurent pas, et c'est voulu :
  *   * Notifications reste une alerte et non une destination : la barre du
@@ -51,6 +52,11 @@ const GROUPES = [
       { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
       { to: '/admin/beneficiaries', label: 'Bénéficiaires', Icone: IconeBeneficiaires },
       { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
+    ],
+  },
+  {
+    titre: 'Communauté',
+    entrees: [
       // "compteur" designe la cle des pastilles renvoyees par
       // /admin/badges : l'entree porte alors son nombre de non-lus.
       { to: '/admin/messages', label: 'Messages', Icone: IconeMessages, compteur: 'messages' },
