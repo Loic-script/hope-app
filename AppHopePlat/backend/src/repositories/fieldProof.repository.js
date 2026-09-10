@@ -16,19 +16,39 @@ import { versListe, versObjet } from '../shared/mapping.js';
  */
 export const SEUIL_SILENCE_JOURS = 15;
 
+/*
+ * Les fichiers arrivent agreges en JSON plutot que par une seconde
+ * requete : une preuve en porte plusieurs, et lister vingt preuves ferait
+ * autant d'allers-retours. COALESCE ramene un tableau vide -- et non
+ * NULL -- pour un temoignage, qui n'a pas de fichier.
+ */
 const COLONNES = `
   f.id, f.project_id, f.admin_id, f.proof_type, f.description,
-  f.file_name, f.file_path, f.mime_type, f.file_size, f.occurred_on,
-  f.created_at, f.updated_at,
+  f.occurred_on, f.created_at, f.updated_at,
   p.name      AS project_name,
   p.reference AS project_reference,
   p.status    AS project_status,
-  a.admin_log AS author_log
+  a.admin_log AS author_log,
+  COALESCE(fichiers.liste, '[]'::json) AS files
 `;
 
 const JOINTURES = `
   JOIN projects p ON p.id = f.project_id
   LEFT JOIN admins a ON a.id = f.admin_id
+  LEFT JOIN LATERAL (
+    SELECT json_agg(
+             json_build_object(
+               'id',       x.id,
+               'fileName', x.file_name,
+               'filePath', x.file_path,
+               'mimeType', x.mime_type,
+               'fileSize', x.file_size,
+               'position', x.position
+             ) ORDER BY x.position, x.id
+           ) AS liste
+      FROM field_proof_files x
+     WHERE x.proof_id = f.id
+  ) fichiers ON TRUE
 `;
 
 /**
@@ -76,31 +96,79 @@ export async function trouverParId(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
+/**
+ * Cree une preuve et ses fichiers.
+ *
+ * @param {{ files?: object[] }} donnees les fichiers sont ranges dans
+ *        l'ordre ou ils ont ete televerses : le premier represente la
+ *        preuve dans les listes.
+ */
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO field_proofs
-       (project_id, admin_id, proof_type, description,
-        file_name, file_path, mime_type, file_size, occurred_on)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, CURRENT_DATE))
+       (project_id, admin_id, proof_type, description, occurred_on)
+     VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE))
      RETURNING id`,
     [
       donnees.projectId,
       donnees.adminId ?? null,
       donnees.proofType,
       donnees.description,
-      donnees.fileName ?? null,
-      donnees.filePath ?? null,
-      donnees.mimeType ?? null,
-      donnees.fileSize ?? null,
       donnees.occurredOn ?? null,
     ],
     client
   );
-  return trouverParId(resultat.rows[0].id, client);
+
+  const preuveId = resultat.rows[0].id;
+  await ajouterFichiers(preuveId, donnees.files ?? [], client);
+  return trouverParId(preuveId, client);
 }
 
+/** Attache des fichiers a une preuve, dans l'ordre recu. */
+export async function ajouterFichiers(preuveId, fichiers, client = null) {
+  for (const [rang, fichier] of fichiers.entries()) {
+    await query(
+      `INSERT INTO field_proof_files
+         (proof_id, file_name, file_path, mime_type, file_size, position)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        preuveId,
+        fichier.fileName,
+        fichier.filePath,
+        fichier.mimeType ?? null,
+        fichier.fileSize ?? null,
+        rang,
+      ],
+      client
+    );
+  }
+}
+
+/** Un fichier precis, pour le servir ou l'effacer. */
+export async function trouverFichier(preuveId, fichierId, client = null) {
+  const resultat = await query(
+    `SELECT id, proof_id, file_name, file_path, mime_type, file_size, position
+       FROM field_proof_files WHERE id = $1 AND proof_id = $2`,
+    [fichierId, preuveId],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
+/**
+ * Supprime une preuve et rend les chemins de ses fichiers.
+ *
+ * La suppression en base cascade sur field_proof_files ; le disque, lui,
+ * ne cascade pas : l'appelant a besoin de la liste pour l'effacer.
+ */
 export async function supprimer(id, client = null) {
+  const fichiers = await query(
+    'SELECT file_path FROM field_proof_files WHERE proof_id = $1',
+    [id],
+    client
+  );
   await query('DELETE FROM field_proofs WHERE id = $1', [id], client);
+  return fichiers.rows.map((ligne) => ligne.file_path);
 }
 
 /**

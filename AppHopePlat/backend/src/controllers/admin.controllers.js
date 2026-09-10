@@ -187,10 +187,12 @@ export const fieldProofs = {
   creer: gerer(
     async (req) => {
       try {
-        return await fieldProofService.creer(req.body, req.admin, req.file ?? null);
+        return await fieldProofService.creer(req.body, req.admin, req.files ?? []);
       } catch (erreur) {
-        if (req.file?.filename) {
-          await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(req.file.filename)));
+        // Tout le lot part : un refus ne doit pas laisser la moitie des
+        // images sur le disque, sans rien pour les referencer.
+        for (const fichier of req.files ?? []) {
+          await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(fichier.filename)));
         }
         throw erreur;
       }
@@ -200,31 +202,31 @@ export const fieldProofs = {
 
   supprimer: gerer(async (req) => {
     const resultat = await fieldProofService.supprimer(req.params.id);
-    // La ligne est partie : le fichier peut suivre.
-    if (resultat.filePath) {
-      await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(resultat.filePath)));
+    // Les lignes sont parties, en cascade : les fichiers peuvent suivre.
+    for (const chemin of resultat.filePaths) {
+      await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(chemin)));
     }
     return { id: resultat.id, deleted: true };
   }),
 
   /** Sert le fichier lui-meme ; repond directement, sans passer par gerer(). */
+  /**
+   * Sert un fichier de la preuve. Le fichier est designe par son
+   * identifiant, la preuve en portant desormais plusieurs.
+   */
   telecharger: gerer(async (req, res) => {
-    const preuve = await fieldProofService.recupererParId(req.params.id);
-
-    if (!preuve.filePath) {
-      throw new ErreurIntrouvable('Le fichier de la preuve', req.params.id);
-    }
+    const fichier = await fieldProofService.recupererFichier(req.params.id, req.params.fileId);
 
     // basename() neutralise toute tentative de remontee de repertoire.
-    const cheminAbsolu = path.join(DOSSIER_PREUVES, path.basename(preuve.filePath));
+    const cheminAbsolu = path.join(DOSSIER_PREUVES, path.basename(fichier.filePath));
     if (!fs.existsSync(cheminAbsolu)) {
-      throw new ErreurIntrouvable('Le fichier de la preuve', req.params.id);
+      throw new ErreurIntrouvable('Le fichier de la preuve', req.params.fileId);
     }
 
-    res.setHeader('Content-Type', preuve.mimeType ?? 'application/octet-stream');
+    res.setHeader('Content-Type', fichier.mimeType ?? 'application/octet-stream');
     res.setHeader(
       'Content-Disposition',
-      `inline; filename="${encodeURIComponent(preuve.fileName ?? 'preuve')}"`
+      `inline; filename="${encodeURIComponent(fichier.fileName ?? 'preuve')}"`
     );
     res.sendFile(cheminAbsolu);
   }),

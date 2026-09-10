@@ -43,6 +43,15 @@ const TYPES_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
  */
 const PREFIXE_ATTENDU = { PHOTO: 'image/', VIDEO: 'video/' };
 
+/**
+ * Nombre de fichiers acceptes par preuve.
+ *
+ * Douze : une action de terrain se raconte en quelques images, pas en
+ * reportage. La galerie n'en montre que six, le reste passe derriere le
+ * "+N" du carrousel.
+ */
+export const MAX_FICHIERS = 12;
+
 export async function lister(requete = {}) {
   const preuves = await fieldProofRepository.lister({
     projectId: identifiantFacultatif(requete.projectId, 'projectId'),
@@ -80,30 +89,40 @@ export async function recupererParId(id) {
  *        middleware d'authentification ; c'est lui l'auteur de la preuve
  * @param {Express.Multer.File|null} fichier fichier televerse, s'il y en a un
  */
-export async function creer(corps = {}, admin = null, fichier = null) {
+export async function creer(corps = {}, admin = null, fichiers = []) {
   const projectId = identifiantRequis(corps.projectId, 'projectId');
   const type = valeurParmi(corps.proofType, 'proofType', TYPES, { defaut: 'PHOTO' });
   const description = texteRequis(corps.description, 'description', { max: 2000 });
   const dateAction = dateFacultative(corps.occurredOn, 'occurredOn');
 
-  if (TYPES_AVEC_FICHIER.has(type) && !fichier) {
+  const liste = Array.isArray(fichiers) ? fichiers : [fichiers].filter(Boolean);
+
+  if (TYPES_AVEC_FICHIER.has(type) && liste.length === 0) {
     throw new ErreurValidation(
       {
-        PHOTO: 'Une preuve photo doit porter une image.',
-        VIDEO: 'Une preuve vidéo doit porter une vidéo.',
-      }[type] ?? 'Une preuve de type document doit porter un fichier.',
-      { file: 'Champ obligatoire' }
+        PHOTO: 'Une preuve photo doit porter au moins une image.',
+        VIDEO: 'Une preuve vidéo doit porter au moins une vidéo.',
+      }[type] ?? 'Une preuve de type document doit porter au moins un fichier.',
+      { files: 'Champ obligatoire' }
     );
   }
 
-  if (fichier) {
+  if (liste.length > MAX_FICHIERS) {
+    throw new ErreurValidation(`Une preuve ne peut pas porter plus de ${MAX_FICHIERS} fichiers.`, {
+      files: 'Trop de fichiers',
+    });
+  }
+
+  // Chaque fichier est verifie separement : un lot ou la troisieme image
+  // est en fait un PDF doit etre refuse en entier, pas a moitie accepte.
+  for (const fichier of liste) {
     const attendu = PREFIXE_ATTENDU[type];
     if (attendu && !String(fichier.mimetype ?? '').startsWith(attendu)) {
       throw new ErreurValidation(
         type === 'PHOTO'
-          ? 'Ce fichier n’est pas une image : choisissez le type Vidéo ou Document.'
-          : 'Ce fichier n’est pas une vidéo : choisissez le type Photo ou Document.',
-        { file: 'Format incohérent avec le type' }
+          ? `« ${fichier.originalname} » n’est pas une image : choisissez le type Vidéo ou Document.`
+          : `« ${fichier.originalname} » n’est pas une vidéo : choisissez le type Photo ou Document.`,
+        { files: 'Format incohérent avec le type' }
       );
     }
 
@@ -112,8 +131,8 @@ export async function creer(corps = {}, admin = null, fichier = null) {
     const plafond = plafondPreuve(fichier.mimetype);
     if (fichier.size > plafond) {
       throw new ErreurValidation(
-        `Le fichier dépasse la taille maximale de ${Math.round(plafond / (1024 * 1024))} Mo.`,
-        { file: 'Fichier trop volumineux' }
+        `« ${fichier.originalname} » dépasse la taille maximale de ${Math.round(plafond / (1024 * 1024))} Mo.`,
+        { files: 'Fichier trop volumineux' }
       );
     }
   }
@@ -141,10 +160,12 @@ export async function creer(corps = {}, admin = null, fichier = null) {
     proofType: type,
     description,
     occurredOn: dateAction,
-    fileName: fichier?.originalname ?? null,
-    filePath: fichier?.filename ?? null,
-    mimeType: fichier?.mimetype ?? null,
-    fileSize: fichier?.size ?? null,
+    files: liste.map((fichier) => ({
+      fileName: fichier.originalname,
+      filePath: fichier.filename,
+      mimeType: fichier.mimetype,
+      fileSize: fichier.size,
+    })),
   });
 
   await activityLogRepository.deposer(admin, {
@@ -157,12 +178,23 @@ export async function creer(corps = {}, admin = null, fichier = null) {
   return preuve;
 }
 
+/** Un fichier precis d'une preuve, pour le servir. */
+export async function recupererFichier(preuveId, fichierId) {
+  const preuve = await recupererParId(preuveId);
+  const fichier = await fieldProofRepository.trouverFichier(
+    preuve.id,
+    identifiantRequis(fichierId, 'fileId')
+  );
+  if (!fichier) throw new ErreurIntrouvable('Le fichier de la preuve', fichierId);
+  return fichier;
+}
+
 /**
- * Supprime une preuve et rend le nom du fichier a effacer du disque.
- * Le controleur s'occupe du disque : le service ne connait pas les chemins.
+ * Supprime une preuve et rend les fichiers a effacer du disque.
+ * Le controleur s'occupe du disque : le service n'y touche pas.
  */
 export async function supprimer(id) {
   const preuve = await recupererParId(id);
-  await fieldProofRepository.supprimer(preuve.id);
-  return { id: preuve.id, deleted: true, filePath: preuve.filePath };
+  const chemins = await fieldProofRepository.supprimer(preuve.id);
+  return { id: preuve.id, deleted: true, filePaths: chemins };
 }

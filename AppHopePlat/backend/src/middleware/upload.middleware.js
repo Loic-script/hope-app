@@ -184,9 +184,18 @@ export function televerserMedia(req, res, suite) {
     if (erreur instanceof multer.MulterError) {
       if (erreur.code === 'LIMIT_FILE_SIZE') {
         suite(
-          new ErreurValidation('Le fichier dépasse la taille maximale de 50 Mo.', {
-            file: 'Fichier trop volumineux',
+          new ErreurValidation('Un fichier dépasse la taille maximale de 50 Mo.', {
+            files: 'Fichier trop volumineux',
           })
+        );
+        return;
+      }
+      if (erreur.code === 'LIMIT_FILE_COUNT') {
+        suite(
+          new ErreurValidation(
+            `Une preuve ne peut pas porter plus de ${MAX_FICHIERS_PREUVE} fichiers.`,
+            { files: 'Trop de fichiers' }
+          )
         );
         return;
       }
@@ -245,6 +254,9 @@ const EXTENSIONS_PREUVES = new Set([
 export const TAILLE_MAXIMALE_PREUVE = 10 * 1024 * 1024;
 export const TAILLE_MAXIMALE_VIDEO = 50 * 1024 * 1024;
 
+/** Nombre de fichiers acceptes par preuve. */
+export const MAX_FICHIERS_PREUVE = 12;
+
 /** Plafond applicable a un fichier, d'apres son type MIME. */
 export function plafondPreuve(mimeType) {
   return String(mimeType ?? '').startsWith('video/')
@@ -286,17 +298,19 @@ const televerseurPreuve = multer({
   fileFilter: filtrerPreuve,
   // La plus haute des deux limites : le service applique ensuite celle
   // du type. Sans cela, multer couperait toute video a 10 Mo.
-  limits: { fileSize: TAILLE_MAXIMALE_VIDEO, files: 1 },
+  limits: { fileSize: TAILLE_MAXIMALE_VIDEO, files: MAX_FICHIERS_PREUVE },
 });
 
 /**
- * Middleware acceptant un fichier facultatif sous le champ "file".
+ * Middleware acceptant un lot de fichiers facultatifs sous "files".
  *
- * Facultatif : un temoignage se suffit de son texte, la contrainte
- * field_proofs_fichier_coherent verifie le reste cote base.
+ * Facultatif : un temoignage se suffit de son texte. C'est le service
+ * qui exige au moins un fichier pour les trois autres natures -- "au
+ * moins un" porte sur plusieurs lignes, une contrainte CHECK ne saurait
+ * pas l'exprimer.
  */
 export function televerserPreuve(req, res, suite) {
-  televerseurPreuve.single('file')(req, res, (erreur) => {
+  televerseurPreuve.array('files', MAX_FICHIERS_PREUVE)(req, res, (erreur) => {
     if (!erreur) {
       suite();
       return;
@@ -305,9 +319,18 @@ export function televerserPreuve(req, res, suite) {
     if (erreur instanceof multer.MulterError) {
       if (erreur.code === 'LIMIT_FILE_SIZE') {
         suite(
-          new ErreurValidation('Le fichier dépasse la taille maximale de 50 Mo.', {
-            file: 'Fichier trop volumineux',
+          new ErreurValidation('Un fichier dépasse la taille maximale de 50 Mo.', {
+            files: 'Fichier trop volumineux',
           })
+        );
+        return;
+      }
+      if (erreur.code === 'LIMIT_FILE_COUNT') {
+        suite(
+          new ErreurValidation(
+            `Une preuve ne peut pas porter plus de ${MAX_FICHIERS_PREUVE} fichiers.`,
+            { files: 'Trop de fichiers' }
+          )
         );
         return;
       }
