@@ -32,7 +32,7 @@ export async function listerParProjet(projectId) {
  * Publie une preuve.
  *
  * @param {{ projectId: number, proofType: string, description: string,
- *           occurredOn?: string, file?: File|null }} champs
+ *           occurredOn?: string, files?: File[] }} champs
  */
 export async function publier(champs) {
   const formulaire = new FormData();
@@ -40,8 +40,8 @@ export async function publier(champs) {
   formulaire.append('proofType', champs.proofType);
   formulaire.append('description', champs.description);
   if (champs.occurredOn) formulaire.append('occurredOn', champs.occurredOn);
-  // Un temoignage se passe de fichier : on n'envoie le champ que s'il existe.
-  if (champs.file) formulaire.append('file', champs.file);
+  // Un temoignage se passe de fichier : la boucle ne tourne alors pas.
+  for (const fichier of champs.files ?? []) formulaire.append('files', fichier);
 
   const { data } = await api.post('/admin/field-proofs', formulaire, {
     headers: { 'Content-Type': undefined },
@@ -54,19 +54,27 @@ export async function supprimer(id) {
   return data;
 }
 
+/** Le premier fichier d'une preuve : celui qui la represente. */
+export function fichierPrincipal(preuve) {
+  return preuve?.files?.[0] ?? null;
+}
+
 /**
- * Recupere le fichier d'une preuve sous forme d'URL locale, utilisable
- * dans une balise <img>.
+ * Recupere un fichier de preuve sous forme d'URL locale, utilisable dans
+ * une balise <img> ou <video>.
  *
  * L'appelant doit liberer l'URL avec URL.revokeObjectURL quand il n'en a
  * plus besoin, sinon le navigateur garde le blob en memoire.
  *
- * @returns {Promise<string|null>} null si la preuve n'a pas de fichier
+ * @param {{ id: number }} preuve
+ * @param {{ id: number }} [fichier] a defaut, le premier de la preuve
+ * @returns {Promise<string|null>} null s'il n'y a pas de fichier
  */
-export async function urlDuFichier(preuve) {
-  if (!preuve?.filePath) return null;
+export async function urlDuFichier(preuve, fichier = null) {
+  const cible = fichier ?? fichierPrincipal(preuve);
+  if (!preuve?.id || !cible?.id) return null;
 
-  const reponse = await fetch(`${URL_API}/admin/field-proofs/${preuve.id}/file`, {
+  const reponse = await fetch(`${URL_API}/admin/field-proofs/${preuve.id}/files/${cible.id}`, {
     headers: { Authorization: `Bearer ${lireJeton()}` },
   });
   if (!reponse.ok) return null;

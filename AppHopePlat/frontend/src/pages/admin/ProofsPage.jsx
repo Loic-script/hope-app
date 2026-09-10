@@ -24,7 +24,7 @@ const FORMULAIRE_VIDE = {
   proofType: 'PHOTO',
   description: '',
   occurredOn: fmt.aujourdhui(),
-  file: null,
+  files: [],
 };
 
 /**
@@ -206,17 +206,18 @@ export default function ProofsPage() {
             />
 
             <Champ
-              label={fichierRequis ? 'Fichier' : 'Fichier (facultatif)'}
+              label={fichierRequis ? 'Fichiers' : 'Fichiers (facultatif)'}
               id="file"
               obligatoire={fichierRequis}
-              aide="Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
+              aide="Plusieurs fichiers possibles, douze au plus. Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
             >
               <input
                 id="file"
-                name="file"
+                name="files"
                 type="file"
+                multiple
                 accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.pdf"
-                onChange={(e) => modifier('file', e.target.files?.[0] ?? null)}
+                onChange={(e) => modifier('files', [...(e.target.files ?? [])])}
               />
             </Champ>
 

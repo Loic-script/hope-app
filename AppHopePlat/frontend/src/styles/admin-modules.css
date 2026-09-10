@@ -643,6 +643,13 @@
     #171c28;
 }
 
+/* Le cadre unique est un bouton : il ouvre le carrousel. */
+.lecteur--ouvrable {
+  padding: 0;
+  border: 0;
+  cursor: zoom-in;
+}
+
 .lecteur__media {
   display: block;
   max-width: 100%;
@@ -722,6 +729,245 @@
 
 .lecture__discret {
   color: var(--admin-texte-faible);
+}
+
+/* --- La mosaique --- */
+
+/*
+ * Six tuiles au plus, sur trois colonnes. La premiere prend deux
+ * colonnes sur deux rangs : elle porte l'image qui represente la preuve,
+ * et l'oeil a besoin d'un point d'entree plutot que de six carres
+ * identiques.
+ *
+ * Ratio impose sur les tuiles : les photos arrivent dans tous les
+ * cadrages, et une grille en escalier se lit mal.
+ */
+.galerie {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.galerie__tuile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #232a3c, transparent 70%),
+    #171c28;
+  cursor: zoom-in;
+}
+
+/* La premiere tuile occupe le carre de gauche, sauf s'il n'y en a que
+   deux : elles se partagent alors la largeur a egalite. */
+.galerie[data-nombre='2'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.galerie:not([data-nombre='2']) .galerie__tuile:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
+  border-radius: 12px;
+}
+
+.galerie__media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.galerie__tuile:hover .galerie__media {
+  opacity: 0.88;
+}
+
+/* Le triangle de lecture sur une tuile video. */
+.galerie__lecture {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: rgba(23, 28, 40, 0.72);
+  font-size: 16px;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+/*
+ * Le "+N" de la derniere tuile. Il couvre l'image plutot que de se poser
+ * dans un coin : c'est un bouton "voir la suite", pas une etiquette.
+ */
+.galerie__reste {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(23, 28, 40, 0.62);
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+/* --- Le carrousel plein ecran --- */
+
+.visionneuse {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 84px;
+  background-color: rgba(14, 17, 25, 0.94);
+  animation: visionneuse-apparition 0.18s ease-out;
+}
+
+@keyframes visionneuse-apparition {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.visionneuse__scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.visionneuse__media {
+  display: block;
+  max-width: 100%;
+  /* La hauteur disponible, moins les marges du cadre. */
+  max-height: calc(100vh - 128px);
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.visionneuse__fermer,
+.visionneuse__fleche {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transition: background-color 0.16s ease;
+}
+
+.visionneuse__fermer:hover,
+.visionneuse__fleche:hover {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+
+.visionneuse__fermer {
+  top: 18px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+}
+
+.visionneuse__fermer svg {
+  width: 20px;
+  height: 20px;
+}
+
+.visionneuse__fleche {
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+}
+
+.visionneuse__fleche--gauche {
+  left: 18px;
+}
+
+/* Une seule icone de chevron dans le jeu : la gauche est retournee. */
+.visionneuse__fleche--gauche svg {
+  transform: rotate(180deg);
+}
+
+.visionneuse__fleche--droite {
+  right: 18px;
+}
+
+.visionneuse__fleche svg {
+  width: 24px;
+  height: 24px;
+}
+
+.visionneuse__compteur {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Sur un petit ecran, les fleches mangeraient l'image : elles passent
+   en bas, au pouce, et le cadre reprend la largeur. */
+@media (max-width: 700px) {
+  .visionneuse {
+    padding: 60px 12px 92px;
+  }
+
+  .visionneuse__media {
+    max-height: calc(100vh - 152px);
+  }
+
+  .visionneuse__fleche {
+    top: auto;
+    bottom: 20px;
+    margin-top: 0;
+  }
+
+  .visionneuse__fleche--gauche {
+    left: calc(50% - 66px);
+  }
+
+  .visionneuse__fleche--droite {
+    right: calc(50% - 66px);
+  }
+}
+
+/* --- Le compte d'images sur une vignette de liste --- */
+
+.preuve__vignette-cadre {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+.preuve__compte {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background-color: rgba(23, 28, 40, 0.78);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 /* --- Les autres preuves du projet --- */

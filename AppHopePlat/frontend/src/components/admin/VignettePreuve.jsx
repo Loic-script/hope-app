@@ -16,12 +16,16 @@ import * as fieldProofService from '../../services/fieldProof.service.js';
 export default function VignettePreuve({ preuve }) {
   const [url, setUrl] = useState(null);
 
+  // Une preuve porte plusieurs fichiers : la vignette montre le premier,
+  // celui qui la represente dans les listes.
+  const principal = fieldProofService.fichierPrincipal(preuve);
+
   useEffect(() => {
     let annule = false;
     let courante = null;
 
-    if (preuve.mimeType?.startsWith('image/')) {
-      fieldProofService.urlDuFichier(preuve).then((resultat) => {
+    if (principal?.mimeType?.startsWith('image/')) {
+      fieldProofService.urlDuFichier(preuve, principal).then((resultat) => {
         if (annule || !resultat) return;
         courante = resultat;
         setUrl(resultat);
@@ -32,14 +36,24 @@ export default function VignettePreuve({ preuve }) {
       annule = true;
       if (courante) URL.revokeObjectURL(courante);
     };
-  }, [preuve]);
+  }, [preuve, principal]);
 
   if (url) {
-    return <img className="preuve__vignette" src={url} alt="" />;
+    return (
+      <span className="preuve__vignette-cadre">
+        <img className="preuve__vignette" src={url} alt="" />
+        {/* Le compte des images en plus, comme sur une annonce. */}
+        {preuve.files?.length > 1 && (
+          <span className="preuve__compte" aria-hidden="true">+{preuve.files.length - 1}</span>
+        )}
+      </span>
+    );
   }
+
+  const etiquette = { TESTIMONY: '“”', VIDEO: '▶', DOCUMENT: 'PDF' }[preuve.proofType] ?? 'PDF';
   return (
     <span className="preuve__vignette preuve__vignette--vide" aria-hidden="true">
-      {preuve.proofType === 'TESTIMONY' ? '“”' : 'PDF'}
+      {etiquette}
     </span>
   );
 }

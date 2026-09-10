@@ -1515,7 +1515,7 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
   const [type, setType] = useState('PHOTO');
   const [description, setDescription] = useState('');
   const [dateAction, setDateAction] = useState('');
-  const [fichier, setFichier] = useState(null);
+  const [fichiers, setFichiers] = useState([]);
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
   useEffect(() => {
@@ -1524,18 +1524,18 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
     setType('PHOTO');
     setDescription('');
     setDateAction(fmt.aujourdhui());
-    setFichier(null);
+    setFichiers([]);
   }, [ouverte, setErreur]);
 
   const fichierRequis = TYPES_PREUVE_AVEC_FICHIER.has(type);
 
   async function enregistrer() {
-    if (fichierRequis && !fichier) {
+    if (fichierRequis && fichiers.length === 0) {
       setErreur(
         {
-          PHOTO: 'Une preuve photo doit porter une image.',
-          VIDEO: 'Une preuve vidéo doit porter une vidéo.',
-        }[type] ?? 'Une preuve de type document doit porter un fichier.'
+          PHOTO: 'Une preuve photo doit porter au moins une image.',
+          VIDEO: 'Une preuve vidéo doit porter au moins une vidéo.',
+        }[type] ?? 'Une preuve de type document doit porter au moins un fichier.'
       );
       return;
     }
@@ -1547,7 +1547,7 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
           proofType: type,
           description,
           occurredOn: dateAction || undefined,
-          file: fichier,
+          files: fichiers,
         }),
       { onSucces: onEnregistre }
     );
@@ -1603,17 +1603,18 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
         />
 
         <Champ
-          label={fichierRequis ? 'Fichier' : 'Fichier (facultatif)'}
+          label={fichierRequis ? 'Fichiers' : 'Fichiers (facultatif)'}
           id="preuve-fichier"
           obligatoire={fichierRequis}
-          aide="Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
+          aide="Plusieurs fichiers possibles, douze au plus. Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
           pleineLargeur
         >
           <input
             id="preuve-fichier"
             type="file"
+            multiple
             accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.pdf"
-            onChange={(e) => setFichier(e.target.files?.[0] ?? null)}
+            onChange={(e) => setFichiers([...(e.target.files ?? [])])}
             disabled={envoi}
           />
         </Champ>
