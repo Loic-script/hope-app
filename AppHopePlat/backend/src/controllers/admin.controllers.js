@@ -176,10 +176,27 @@ export const fieldProofs = {
   ),
   recuperer: gerer((req) => fieldProofService.recupererParId(req.params.id)),
 
-  // req.admin vient de authenticateAdmin : c'est l'auteur de la preuve.
-  creer: gerer((req) => fieldProofService.creer(req.body, req.admin, req.file ?? null), {
-    statut: 201,
-  }),
+  /*
+   * req.admin vient de authenticateAdmin : c'est l'auteur de la preuve.
+   *
+   * multer a deja ecrit le fichier quand le service se prononce : un
+   * refus -- projet archive, date future, format incoherent -- laisserait
+   * sinon un fichier orphelin sur le disque, que plus rien ne
+   * reference.
+   */
+  creer: gerer(
+    async (req) => {
+      try {
+        return await fieldProofService.creer(req.body, req.admin, req.file ?? null);
+      } catch (erreur) {
+        if (req.file?.filename) {
+          await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(req.file.filename)));
+        }
+        throw erreur;
+      }
+    },
+    { statut: 201 }
+  ),
 
   supprimer: gerer(async (req) => {
     const resultat = await fieldProofService.supprimer(req.params.id);

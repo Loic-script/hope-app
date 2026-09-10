@@ -16,6 +16,7 @@ import * as fieldProofRepository from '../repositories/fieldProof.repository.js'
 import * as projectRepository from '../repositories/project.repository.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
+import { plafondPreuve } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import {
   dateFacultative,
@@ -26,11 +27,21 @@ import {
   valeurParmi,
 } from '../shared/validation.js';
 
-/** Les trois natures de preuve proposees par les maquettes. */
-export const TYPES = ['PHOTO', 'DOCUMENT', 'TESTIMONY'];
+/** Les quatre natures de preuve. */
+export const TYPES = ['PHOTO', 'VIDEO', 'DOCUMENT', 'TESTIMONY'];
 
-/** Un temoignage se suffit de son texte ; les deux autres non. */
-const TYPES_AVEC_FICHIER = new Set(['PHOTO', 'DOCUMENT']);
+/** Un temoignage se suffit de son texte ; les trois autres non. */
+const TYPES_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
+
+/**
+ * Familles de type MIME attendues par nature de preuve.
+ *
+ * Le format seul ne suffit pas : le middleware accepte JPG comme MP4
+ * pour toute preuve, si bien qu'une video deposee sous le type "Photo"
+ * passerait, et s'afficherait ensuite dans une balise <img> vide. On
+ * verifie donc que le fichier correspond a ce qui est annonce.
+ */
+const PREFIXE_ATTENDU = { PHOTO: 'image/', VIDEO: 'video/' };
 
 export async function lister(requete = {}) {
   const preuves = await fieldProofRepository.lister({
@@ -77,11 +88,34 @@ export async function creer(corps = {}, admin = null, fichier = null) {
 
   if (TYPES_AVEC_FICHIER.has(type) && !fichier) {
     throw new ErreurValidation(
-      type === 'PHOTO'
-        ? 'Une preuve photo doit porter une image.'
-        : 'Une preuve de type document doit porter un fichier.',
+      {
+        PHOTO: 'Une preuve photo doit porter une image.',
+        VIDEO: 'Une preuve vidéo doit porter une vidéo.',
+      }[type] ?? 'Une preuve de type document doit porter un fichier.',
       { file: 'Champ obligatoire' }
     );
+  }
+
+  if (fichier) {
+    const attendu = PREFIXE_ATTENDU[type];
+    if (attendu && !String(fichier.mimetype ?? '').startsWith(attendu)) {
+      throw new ErreurValidation(
+        type === 'PHOTO'
+          ? 'Ce fichier n’est pas une image : choisissez le type Vidéo ou Document.'
+          : 'Ce fichier n’est pas une vidéo : choisissez le type Photo ou Document.',
+        { file: 'Format incohérent avec le type' }
+      );
+    }
+
+    // multer plafonne a la plus haute des deux limites : c'est ici que
+    // celle du type s'applique.
+    const plafond = plafondPreuve(fichier.mimetype);
+    if (fichier.size > plafond) {
+      throw new ErreurValidation(
+        `Le fichier dépasse la taille maximale de ${Math.round(plafond / (1024 * 1024))} Mo.`,
+        { file: 'Fichier trop volumineux' }
+      );
+    }
   }
 
   // Une preuve constate le passe : elle ne peut pas etre datee de demain.

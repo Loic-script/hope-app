@@ -389,12 +389,18 @@ CREATE TABLE IF NOT EXISTS field_proofs (
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   CONSTRAINT field_proofs_type_valide
-    CHECK (proof_type IN ('PHOTO', 'DOCUMENT', 'TESTIMONY')),
-  -- Une photo ou un document portent forcement un fichier ; un
-  -- temoignage se suffit de son texte.
+    CHECK (proof_type IN ('PHOTO', 'VIDEO', 'DOCUMENT', 'TESTIMONY')),
+  -- Une photo, une video ou un document portent forcement un fichier ;
+  -- un temoignage se suffit de son texte.
   CONSTRAINT field_proofs_fichier_coherent
     CHECK (proof_type = 'TESTIMONY' OR file_path IS NOT NULL)
 );
+
+-- VIDEO ajoute apres coup : le schema doit rester rejouable sur une base
+-- existante comme sur une base neuve.
+ALTER TABLE field_proofs DROP CONSTRAINT IF EXISTS field_proofs_type_valide;
+ALTER TABLE field_proofs ADD  CONSTRAINT field_proofs_type_valide
+  CHECK (proof_type IN ('PHOTO', 'VIDEO', 'DOCUMENT', 'TESTIMONY'));
 
 CREATE INDEX IF NOT EXISTS field_proofs_project_idx ON field_proofs (project_id);
 CREATE INDEX IF NOT EXISTS field_proofs_date_idx    ON field_proofs (created_at DESC);
