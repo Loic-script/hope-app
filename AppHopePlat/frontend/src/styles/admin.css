@@ -861,6 +861,14 @@
   margin-bottom: 20px;
 }
 
+/* Une precision posee sous un panneau : ni alerte, ni titre, juste une
+   phrase qui dit ou faire ce qu'on ne peut pas faire ici. */
+.mention-page {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
 .carte-chiffre {
   display: flex;
   align-items: flex-start;

@@ -6,6 +6,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext } fro
 import logoSurFondViolet from '../assets/LOGO_WORDMARK_SUR_FOND_VIOLET.png';
 import {
   IconeAccueil,
+  IconeBeneficiaires,
   IconeBudgets,
   IconeChevronBas,
   IconeChevronDroit,
@@ -24,12 +25,13 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les huit sections de travail, rangees en deux familles.
+ * Les neuf sections de travail, rangees en deux familles.
  *
- * "Pilotage" reunit ce que l'on fait -- ouvrir un projet, documenter le
- * terrain, repondre a un donateur ; "Analyse" ce que l'on constate
- * ensuite. Deux familles de quatre entrees se lisent d'un coup d'oeil la
- * ou une liste de huit demande d'etre parcourue.
+ * "Pilotage" reunit ce que l'on fait -- ouvrir un projet, enregistrer
+ * les personnes accompagnees, documenter le terrain, repondre a un
+ * donateur ; "Analyse" ce que l'on constate ensuite. Deux familles de
+ * cinq et quatre entrees se lisent d'un coup d'oeil la ou une liste de
+ * neuf demande d'etre parcourue.
  *
  * Messages est ici et non plus dans le bandeau : repondre a un donateur
  * est un travail quotidien, pas une alerte qu'on traite en passant. La
@@ -47,6 +49,7 @@ const GROUPES = [
     entrees: [
       { to: '/admin', label: 'Accueil', Icone: IconeAccueil, exact: true },
       { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
+      { to: '/admin/beneficiaries', label: 'Bénéficiaires', Icone: IconeBeneficiaires },
       { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
       // "compteur" designe la cle des pastilles renvoyees par
       // /admin/badges : l'entree porte alors son nombre de non-lus.
