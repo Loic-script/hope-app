@@ -1498,7 +1498,7 @@ export function NouveauMessageModale({ ouverte, comptes = [], onFermer, onEnregi
  * fichier. C'est une regle metier et non un libelle : elle reste ici,
  * la ou les noms des trois types viennent du catalogue.
  */
-const TYPES_PREUVE_AVEC_FICHIER = new Set(['PHOTO', 'DOCUMENT']);
+const TYPES_PREUVE_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
 
 /**
  * Publie une preuve depuis la fiche d'un projet.
@@ -1532,9 +1532,10 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
   async function enregistrer() {
     if (fichierRequis && !fichier) {
       setErreur(
-        type === 'PHOTO'
-          ? 'Une preuve photo doit porter une image.'
-          : 'Une preuve de type document doit porter un fichier.'
+        {
+          PHOTO: 'Une preuve photo doit porter une image.',
+          VIDEO: 'Une preuve vidéo doit porter une vidéo.',
+        }[type] ?? 'Une preuve de type document doit porter un fichier.'
       );
       return;
     }
@@ -1605,13 +1606,13 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
           label={fichierRequis ? 'Fichier' : 'Fichier (facultatif)'}
           id="preuve-fichier"
           obligatoire={fichierRequis}
-          aide="Photos : JPG, PNG, WEBP. Document : PDF. 10 Mo maximum."
+          aide="Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
           pleineLargeur
         >
           <input
             id="preuve-fichier"
             type="file"
-            accept=".jpg,.jpeg,.png,.webp,.pdf"
+            accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.pdf"
             onChange={(e) => setFichier(e.target.files?.[0] ?? null)}
             disabled={envoi}
           />

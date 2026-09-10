@@ -523,6 +523,45 @@
   min-width: 0;
 }
 
+/*
+ * Ligne cliquable : le lien de la description s'etire sur toute la
+ * surface par son ::after, si bien que la vignette ouvre la lecture
+ * sans qu'il faille imbriquer l'image et le bouton dans un meme lien --
+ * ce qui serait du HTML invalide et un piege au clavier.
+ */
+.preuve--cliquable {
+  position: relative;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.preuve--cliquable:hover {
+  border-color: var(--admin-bordure-forte);
+  box-shadow: 0 4px 14px rgba(36, 43, 62, 0.08);
+}
+
+.preuve__lien {
+  text-decoration: none;
+  color: inherit;
+}
+
+.preuve__lien::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.preuve--cliquable:hover .preuve__lien,
+.preuve--cliquable:focus-within .preuve__lien {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Au-dessus de la zone etiree, sinon le lien avalerait le clic. */
+.preuve__action {
+  position: relative;
+  z-index: 1;
+}
+
 .preuve__projet {
   display: flex;
   align-items: center;
@@ -546,6 +585,195 @@
 
 @media (max-width: 1024px) {
   .preuves__colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   Lecture d'une preuve
+
+   Une preuve est le plus souvent une photo ou une video : elle
+   merite d'etre vue en grand. La disposition est celle d'un
+   lecteur -- le media prend la place, ce qui le decrit vient
+   dessous, les autres preuves du projet attendent a droite.
+   ============================================================ */
+
+.lecture {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.lecture__principal {
+  min-width: 0;
+}
+
+/*
+ * Le cadre du media, sur fond sombre : une photo de terrain a des
+ * bords clairs aussi souvent que sombres, et un fond blanc la
+ * laisserait flotter sans limite visible.
+ *
+ * Hauteur bornee plutot que ratio impose : une photo verticale prise
+ * au telephone ne doit ni etre rognee ni pousser la fiche hors de
+ * l'ecran.
+ */
+.lecteur {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  max-height: 70vh;
+  overflow: hidden;
+  border-radius: 14px;
+  background-color: #1c2231;
+}
+
+.lecteur__media {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+/* Les etats sans media -- temoignage, fichier absent, PDF -- reprennent
+   la surface claire des panneaux : il n'y a plus d'image a mettre en
+   valeur, seulement du texte a lire. */
+.lecteur--texte,
+.lecteur--attente {
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px 26px;
+  border: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface);
+  text-align: center;
+}
+
+.lecteur__citation {
+  max-width: 46ch;
+  font-size: 19px;
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--admin-texte);
+}
+
+.lecteur__mention {
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+.lecture__entete {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.lecture__description {
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--admin-texte);
+}
+
+/* La fiche technique : deux colonnes tant que la place le permet. */
+.lecture__fiche {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px 22px;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+}
+
+.lecture__fiche dt {
+  margin-bottom: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.lecture__fiche dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--admin-texte);
+  overflow-wrap: anywhere;
+}
+
+.lecture__discret {
+  color: var(--admin-texte-faible);
+}
+
+/* --- Les autres preuves du projet --- */
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestion {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px;
+  border-radius: 11px;
+  transition: background-color 0.16s ease;
+}
+
+.suggestion:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.suggestion .preuve__vignette {
+  width: 92px;
+  height: 62px;
+}
+
+.suggestion__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Le lien s'etire sur toute la ligne : la vignette devient cliquable
+   sans imbriquer une image dans un lien par ligne. */
+.suggestion__lien {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  color: var(--admin-texte);
+}
+
+.suggestion__lien::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.suggestion__lien:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.suggestion__signature {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+@media (max-width: 1024px) {
+  .lecture {
     grid-template-columns: minmax(0, 1fr);
   }
 }

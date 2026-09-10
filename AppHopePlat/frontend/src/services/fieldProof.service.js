@@ -18,6 +18,11 @@ export async function lister(filtres = {}) {
   return data;
 }
 
+export async function recuperer(id) {
+  const { data } = await api.get(`/admin/field-proofs/${id}`);
+  return data;
+}
+
 export async function listerParProjet(projectId) {
   const { data } = await api.get(`/admin/projects/${projectId}/field-proofs`);
   return data;

@@ -16,8 +16,8 @@ import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Un temoignage se suffit de son texte ; les deux autres portent un fichier. */
-const TYPES_AVEC_FICHIER = new Set(['PHOTO', 'DOCUMENT']);
+/** Un temoignage se suffit de son texte ; les trois autres portent un fichier. */
+const TYPES_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
 
 const FORMULAIRE_VIDE = {
   projectId: '',
@@ -95,7 +95,7 @@ export default function ProofsPage() {
   return (
     <>
       <EntetePage
-        fil={['Back-office']}
+        fil={[{ label: 'Back-office' }]}
         titre="Preuves terrain"
         accroche="Une photo et deux lignes suffisent — c’est ce qui alimentera le suivi de don de chaque donateur et de chaque bailleur."
       />
@@ -209,13 +209,13 @@ export default function ProofsPage() {
               label={fichierRequis ? 'Fichier' : 'Fichier (facultatif)'}
               id="file"
               obligatoire={fichierRequis}
-              aide="Photos : JPG, PNG, WEBP. Document : PDF. 10 Mo maximum."
+              aide="Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
             >
               <input
                 id="file"
                 name="file"
                 type="file"
-                accept=".jpg,.jpeg,.png,.webp,.pdf"
+                accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.pdf"
                 onChange={(e) => modifier('file', e.target.files?.[0] ?? null)}
               />
             </Champ>
@@ -240,7 +240,7 @@ export default function ProofsPage() {
           ) : (
             <ul className="preuves">
               {preuves.map((preuve) => (
-                <li className="preuve" key={preuve.id}>
+                <li className="preuve preuve--cliquable" key={preuve.id}>
                   <VignettePreuve preuve={preuve} />
 
                   <div className="preuve__corps">
@@ -248,7 +248,14 @@ export default function ProofsPage() {
                       <Link to={`/admin/projects/${preuve.projectId}`}>{preuve.projectName}</Link>
                       <Badge valeur={preuve.proofType} libelles={TYPES} />
                     </p>
-                    <p className="preuve__description">{preuve.description}</p>
+                    {/* Le lien s'etire sur toute la ligne via son ::after :
+                        la vignette ouvre la lecture, et le bouton
+                        Supprimer garde son propre clic. */}
+                    <p className="preuve__description">
+                      <Link className="preuve__lien" to={`/admin/proofs/${preuve.id}`}>
+                        {preuve.description}
+                      </Link>
+                    </p>
                     <p className="preuve__signature">
                       {fmt.date(preuve.occurredOn)} · ajouté par {preuve.authorLog ?? 'compte supprimé'}
                     </p>
@@ -256,7 +263,7 @@ export default function ProofsPage() {
 
                   <button
                     type="button"
-                    className="btn btn--neutre btn--petit"
+                    className="btn btn--neutre btn--petit preuve__action"
                     onClick={() => setASupprimer(preuve)}
                   >
                     Supprimer

@@ -945,14 +945,18 @@ export default function ProjectDetailPage() {
             ) : (
               <ul className="preuves">
                 {listePreuves.map((preuve) => (
-                  <li className="preuve" key={preuve.id}>
+                  <li className="preuve preuve--cliquable" key={preuve.id}>
                     <VignettePreuve preuve={preuve} />
 
                     <div className="preuve__corps">
                       <p className="preuve__projet">
                         <Badge valeur={preuve.proofType} libelles={libelles.proofType ?? {}} />
                       </p>
-                      <p className="preuve__description">{preuve.description}</p>
+                      <p className="preuve__description">
+                        <Link className="preuve__lien" to={`/admin/proofs/${preuve.id}`}>
+                          {preuve.description}
+                        </Link>
+                      </p>
                       <p className="preuve__signature">
                         {fmt.date(preuve.occurredOn)} · ajouté par{' '}
                         {preuve.authorLog ?? 'compte supprimé'}
@@ -962,7 +966,7 @@ export default function ProjectDetailPage() {
                     {!archive && (
                       <button
                         type="button"
-                        className="btn btn--neutre btn--petit"
+                        className="btn btn--neutre btn--petit preuve__action"
                         onClick={() => ouvrir('supprimerPreuve', preuve)}
                       >
                         Supprimer
