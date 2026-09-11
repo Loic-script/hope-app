@@ -14,7 +14,6 @@ import {
   IconeDeconnexion,
   IconeDonateurs,
   IconeGraphique,
-  IconeImpacts,
   IconeMessages,
   IconeParametres,
   IconePreuves,
@@ -25,24 +24,27 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les neuf sections de travail, rangees en trois familles.
+ * Les huit sections de travail, rangees en trois familles.
  *
  * L'ordre suit celui du travail : "Pilotage" ce que l'on fait -- ouvrir
  * un projet, enregistrer les personnes accompagnees, documenter le
  * terrain ; "Communaute" les echanges avec ceux qui soutiennent HOPE ;
  * "Analyse" ce que l'on constate ensuite. Trois familles courtes se
- * lisent d'un coup d'oeil la ou une liste de neuf demande d'etre
+ * lisent d'un coup d'oeil la ou une liste de huit demande d'etre
  * parcourue.
  *
  * Messages n'est plus dans le bandeau : repondre a un donateur est un
  * travail quotidien, pas une alerte qu'on traite en passant. La pastille
  * de non-lus le suit dans le rail, elle n'est pas perdue.
  *
- * Deux entrees n'y figurent pas, et c'est voulu :
+ * Trois entrees n'y figurent pas, et c'est voulu :
  *   * Notifications reste une alerte et non une destination : la barre du
  *     haut la montre avec sa pastille depuis n'importe ou ;
  *   * Parametres releve du compte : il vit dans le menu du profil, en
- *     haut a droite, avec la deconnexion.
+ *     haut a droite, avec la deconnexion ;
+ *   * Impact a ete retire du menu. La route /admin/impact existe
+ *     toujours, mais plus rien n'y mene : l'onglet Impact de chaque
+ *     fiche projet porte desormais la meme lecture, projet par projet.
  */
 const GROUPES = [
   {
@@ -65,7 +67,6 @@ const GROUPES = [
   {
     titre: 'Analyse',
     entrees: [
-      { to: '/admin/impact', label: 'Impact', Icone: IconeImpacts },
       { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
       { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
       { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
