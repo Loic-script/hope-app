@@ -289,6 +289,44 @@ export default function ProjectDetailPage() {
           )}
 
           {/*
+            Le devis : d'ou vient le budget necessaire. Il n'apparait que
+            s'il existe -- un projet dont le montant a ete saisi
+            directement n'a rien a montrer ici.
+          */}
+          {projet.quoteItems?.length > 0 && (
+            <Panneau
+              titre="Devis"
+              sousTitre={`${projet.quoteItems.length} poste(s) — c’est leur somme qui fait le budget nécessaire`}
+              serre
+            >
+              <Tableau
+                lignes={projet.quoteItems}
+                cleLigne={(poste) => poste.id}
+                colonnes={[
+                  { cle: 'label', titre: 'Poste' },
+                  {
+                    cle: 'category',
+                    titre: 'Catégorie',
+                    rendu: (poste) => poste.category ?? '—',
+                  },
+                  {
+                    cle: 'amount',
+                    titre: 'Montant',
+                    aligne: 'droite',
+                    rendu: (poste) => (
+                      <strong>{fmt.montant(poste.amount, projet.currency)}</strong>
+                    ),
+                  },
+                ]}
+              />
+              <p className="devis__recapitulatif">
+                Total
+                <strong>{fmt.montant(projet.requiredBudget, projet.currency)}</strong>
+              </p>
+            </Panneau>
+          )}
+
+          {/*
             Les objectifs specifiques : ce que le projet doit avoir
             accompli. Ils suivent la description, qui dit ce qu'il est.
           */}

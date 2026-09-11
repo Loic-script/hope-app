@@ -740,6 +740,97 @@
   height: 15px;
 }
 
+/* ------------------------------------------------------------------
+   Devis d'un projet
+
+   Une ligne par poste : intitule, categorie, montant, et la croix qui
+   retire la ligne. Les trois saisies se partagent la largeur dans des
+   proportions fixes -- l'intitule est ce qu'on lit, le montant ce qu'on
+   verifie.
+   ------------------------------------------------------------------ */
+
+.devis {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.devis__ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* min-width: 0 sur chaque saisie : sans lui, aucune ne se replie sous sa
+   largeur naturelle et la ligne deborde du panneau. */
+.devis__ligne input,
+.devis__ligne select {
+  min-width: 0;
+}
+
+.devis__intitule {
+  flex: 3;
+}
+
+.devis__categorie {
+  flex: 1.4;
+}
+
+.devis__montant {
+  flex: 1.2;
+  text-align: right;
+}
+
+.devis__pied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.devis__total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* Le total sous le tableau de la fiche projet : hors du tableau, pour
+   ne pas se confondre avec une ligne de devis. */
+.devis__recapitulatif {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--admin-bordure);
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.devis__recapitulatif strong {
+  font-size: 17px;
+  color: var(--admin-texte);
+}
+
+.devis__total strong {
+  font-size: 16px;
+  color: var(--admin-texte);
+}
+
+/* Le budget calcule : gris comme un champ desactive, mais selectionnable
+   -- on doit pouvoir copier le montant. */
+.champ-admin input[readonly] {
+  background-color: var(--admin-surface-douce);
+  color: var(--admin-texte-doux);
+  cursor: default;
+}
+
 .champ-admin__message {
   margin-top: 6px;
   font-size: 12.5px;

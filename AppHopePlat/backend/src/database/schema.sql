@@ -104,6 +104,38 @@ CREATE INDEX IF NOT EXISTS project_objectives_projet_idx
   ON project_objectives (project_id, position);
 
 -- ------------------------------------------------------------
+-- 2 ter. Devis d'un projet
+--
+--    D'ou vient le budget necessaire. Une ligne par poste : "Fournitures
+--    scolaires, 1 200 000 Ar". Quand il y a au moins une ligne, le
+--    required_budget du projet n'est plus saisi mais calcule -- leur
+--    somme. Sans ligne, il reste saisi a la main : celui qui connait
+--    deja le montant ne doit pas etre oblige de le detailler.
+--
+--    "category" reprend le vocabulaire des depenses, ce qui permettra
+--    de comparer le prevu au reel poste par poste. Elle reste
+--    facultative : un devis approximatif vaut mieux que pas de devis.
+--
+--    Le devis ne touche pas au circuit de l'argent. Ce n'est pas un
+--    budget qui vit sa vie a cote des dons, des investissements et des
+--    depenses : c'est la facon d'arriver a un chiffre.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_quote_items (
+  id         SERIAL        PRIMARY KEY,
+  project_id INTEGER       NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  label      VARCHAR(200)  NOT NULL,
+  category   VARCHAR(60),
+  amount     NUMERIC(14,2) NOT NULL,
+  position   SMALLINT      NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  CONSTRAINT project_quote_items_montant_positif CHECK (amount > 0),
+  CONSTRAINT project_quote_items_libelle_non_vide CHECK (BTRIM(label) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS project_quote_items_projet_idx
+  ON project_quote_items (project_id, position);
+
+-- ------------------------------------------------------------
 -- 3. Donateurs
 --
 --    Tout don est rattache a un donateur. Le donateur devient
