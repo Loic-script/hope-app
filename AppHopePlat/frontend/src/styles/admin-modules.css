@@ -576,8 +576,7 @@
   color: var(--admin-texte-faible);
 }
 
-@media (max-width: 1024px) {
-  /* ============================================================
+/* ============================================================
    Lecture d'une preuve
 
    Une preuve est le plus souvent une photo ou une video : elle
