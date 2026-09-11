@@ -33,13 +33,12 @@ import silhouette from '../../assets/hope-madagascar.png';
 /**
  * Les quatre gestes du quotidien.
  *
- * "Enregistrer une depense" mene a la liste des projets et non a un
- * formulaire : une depense appartient toujours a un projet, il faut donc
- * commencer par en choisir un.
+ * Chacun ouvre directement le formulaire, les ecrans concernes sachant
+ * lire le parametre qui le declenche.
  */
 const RACCOURCIS = [
   { to: '/admin/projects/new', label: 'Créer un projet', Icone: IconeProjets },
-  { to: '/admin/projects', label: 'Enregistrer une dépense', Icone: IconeDepenses },
+  { to: '/admin/budget?depense=1', label: 'Enregistrer une dépense', Icone: IconeDepenses },
   { to: '/admin/beneficiaries?nouveau=1', label: 'Ajouter un bénéficiaire', Icone: IconeBeneficiaires },
   { to: '/admin/donors?don=1', label: 'Affecter un don', Icone: IconeDons },
 ];

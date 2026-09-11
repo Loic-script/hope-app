@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
-import { InvestirModale } from '../../components/admin/modales.jsx';
+import { DepenseModale, InvestirModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
   Chargement,
@@ -14,7 +14,9 @@ import {
   Tableau,
 } from '../../components/admin/ui.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
+import * as catalogService from '../../services/catalog.service.js';
 import * as fundService from '../../services/fund.service.js';
+import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
 /**
@@ -28,13 +30,29 @@ import * as fmt from '../../utils/format.js';
 export default function BudgetPage() {
   const [parametres, setParametres] = useSearchParams();
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [depenseOuverte, setDepenseOuverte] = useState(false);
 
   const { donnees, chargement, erreur, recharger } = useChargement(() => fundService.etat(), []);
+  /*
+   * L'etat du fonds ne porte des projets que ce qu'il faut pour
+   * investir : leur besoin restant. Une depense se heurte a une autre
+   * limite -- les fonds deja recus et pas encore depenses -- que seule
+   * la liste complete des projets connait.
+   */
+  const { donnees: listeProjets, recharger: rechargerProjets } = useChargement(
+    () => projectService.lister({ status: 'IN_PROGRESS', pageSize: 200 }),
+    []
+  );
+  const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
 
-  // Ouverture directe depuis l'action rapide de l'accueil.
+  // Ouvertures directes depuis les actions rapides de l'accueil.
   useEffect(() => {
     if (parametres.get('investir') === '1') {
       setModaleOuverte(true);
+      setParametres({}, { replace: true });
+    }
+    if (parametres.get('depense') === '1') {
+      setDepenseOuverte(true);
       setParametres({}, { replace: true });
     }
   }, [parametres, setParametres]);
@@ -44,6 +62,11 @@ export default function BudgetPage() {
   const resume = donnees?.summary;
   const projets = donnees?.projects ?? [];
   const investissements = donnees?.investments ?? [];
+  // Le service refuse une depense sur un projet qui n'est pas en cours :
+  // autant ne pas le proposer.
+  const projetsOuverts = (listeProjets?.items ?? []).filter(
+    (projet) => projet.status === 'IN_PROGRESS'
+  );
 
   return (
     <>
@@ -51,15 +74,31 @@ export default function BudgetPage() {
         titre="Budget"
         accroche="Les dons affectés vont directement aux projets. Les dons non affectés forment le fonds HOPE, que vous répartissez."
         actions={
-          <button
-            type="button"
-            className="btn btn--principal"
-            onClick={() => setModaleOuverte(true)}
-            disabled={Number(resume?.availableTotal ?? 0) <= 0 || projets.length === 0}
-          >
-            <IconePlus />
-            Investir
-          </button>
+          <>
+            {/*
+              Enregistrer une depense, c'est sortir l'argent deja recu
+              par un projet -- une autre operation que d'y investir le
+              fonds HOPE, d'ou deux boutons et non un menu.
+            */}
+            <button
+              type="button"
+              className="btn btn--neutre"
+              onClick={() => setDepenseOuverte(true)}
+              disabled={projetsOuverts.length === 0}
+            >
+              <IconePlus />
+              Enregistrer une dépense
+            </button>
+            <button
+              type="button"
+              className="btn btn--principal"
+              onClick={() => setModaleOuverte(true)}
+              disabled={Number(resume?.availableTotal ?? 0) <= 0 || projets.length === 0}
+            >
+              <IconePlus />
+              Investir
+            </button>
+          </>
         }
       />
 
@@ -234,6 +273,18 @@ export default function BudgetPage() {
           }
         />
       </Panneau>
+
+      <DepenseModale
+        ouverte={depenseOuverte}
+        projets={projetsOuverts}
+        categories={catalogue?.expenseCategories ?? []}
+        onFermer={() => setDepenseOuverte(false)}
+        onEnregistre={() => {
+          setDepenseOuverte(false);
+          recharger();
+          rechargerProjets();
+        }}
+      />
 
       <InvestirModale
         ouverte={modaleOuverte}

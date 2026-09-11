@@ -667,9 +667,22 @@ const DEPENSE_VIDE = {
   expenseDate: '',
 };
 
+/**
+ * Enregistre une depense.
+ *
+ * Deux chemins y menent. Depuis la fiche d'un projet, celui-ci est deja
+ * connu. Depuis le budget, il faut le choisir : seuls les projets en
+ * cours sont proposes -- le service refuse les autres -- et chaque
+ * option porte ses fonds disponibles, qui sont la vraie contrainte.
+ *
+ * @param {{ ouverte, projet?: object|null, projets?: object[],
+ *           depense?: object|null, categories: string[], onFermer,
+ *           onEnregistre }} props
+ */
 export function DepenseModale({
   ouverte,
-  projet,
+  projet = null,
+  projets = [],
   depense = null,
   categories = [],
   onFermer,
@@ -677,11 +690,18 @@ export function DepenseModale({
 }) {
   const edition = Boolean(depense);
   const [formulaire, setFormulaire] = useState(DEPENSE_VIDE);
+  const [projectId, setProjectId] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  // Le projet designe : celui qu'on a fixe, ou celui qu'on vient de
+  // choisir. C'est lui qui porte les fonds disponibles affiches.
+  const projetChoisi =
+    projet ?? projets.find((element) => String(element.id) === String(projectId)) ?? null;
 
   useEffect(() => {
     if (!ouverte) return;
     setErreur('');
+    setProjectId(projet?.id ?? depense?.projectId ?? '');
     setFormulaire(
       depense
         ? {
@@ -700,11 +720,15 @@ export function DepenseModale({
   }
 
   async function enregistrer() {
+    if (!edition && !projectId) {
+      setErreur('Choisissez le projet sur lequel imputer cette dépense.');
+      return;
+    }
     await soumettre(
       () =>
         edition
           ? expenseService.mettreAJour(depense.id, formulaire)
-          : expenseService.creer({ ...formulaire, projectId: projet.id }),
+          : expenseService.creer({ ...formulaire, projectId: Number(projectId) }),
       { onSucces: onEnregistre }
     );
   }
@@ -714,8 +738,8 @@ export function DepenseModale({
       ouverte={ouverte}
       titre={edition ? 'Modifier la dépense' : 'Enregistrer une dépense'}
       sousTitre={
-        projet
-          ? `Fonds disponibles sur « ${projet.name} » : ${fmt.montant(projet.availableFunds, projet.currency)}`
+        projetChoisi
+          ? `Fonds disponibles sur « ${projetChoisi.name} » : ${fmt.montant(projetChoisi.availableFunds, projetChoisi.currency)}`
           : undefined
       }
       onFermer={onFermer}
@@ -725,6 +749,26 @@ export function DepenseModale({
       libelleValider={edition ? 'Enregistrer' : 'Enregistrer la dépense'}
       large
     >
+      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis un
+          projet, et jamais en modification : une depense ne change pas
+          de projet, on l'annule et on la ressaisit. */}
+      {!projet && !edition && (
+        <ChampSelection
+          label="Projet concerné"
+          id="depense-projet"
+          obligatoire
+          vide="Choisir un projet…"
+          options={projets.map((element) => ({
+            valeur: element.id,
+            label: `${element.reference} · ${element.name} — ${fmt.montant(element.availableFunds, element.currency)} disponibles`,
+          }))}
+          value={projectId}
+          onChange={(e) => setProjectId(e.target.value)}
+          disabled={envoi}
+          pleineLargeur
+        />
+      )}
+
       <div className="formulaire-grille">
         <ChampMontant
           label="Montant"
