@@ -731,6 +731,49 @@
   color: var(--admin-texte-faible);
 }
 
+/* ============================================================
+   Objectifs specifiques d'un projet
+   ============================================================ */
+
+/*
+ * Une liste numerotee : "le deuxieme objectif" doit pouvoir se
+ * designer en reunion. Le numero est pose a part plutot que laisse au
+ * marqueur du navigateur, qui se colle au texte sur une ligne longue.
+ */
+.objectifs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: objectif;
+}
+
+.objectifs__ligne {
+  display: flex;
+  gap: 12px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  counter-increment: objectif;
+}
+
+.objectifs__ligne::before {
+  content: counter(objectif);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--hope-bleu-clair);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--hope-violet-fonce);
+}
+
 /* --- La mosaique --- */
 
 /*

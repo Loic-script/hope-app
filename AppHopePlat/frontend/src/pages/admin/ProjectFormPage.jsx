@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { IconeCroix, IconePlus } from '../../components/admin/AdminIcons.jsx';
 import {
+  Champ,
   ChampMontant,
   ChampSelection,
   ChampTexte,
@@ -13,9 +15,20 @@ import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 
+/**
+ * Nombre d'objectifs specifiques acceptes, comme cote serveur.
+ *
+ * Dix : au-dela, ce ne sont plus des objectifs mais un plan d'action, et
+ * la liste cesse de se relire d'un coup d'oeil.
+ */
+const MAX_OBJECTIFS = 10;
+
 const FORMULAIRE_VIDE = {
   name: '',
   description: '',
+  // Une ligne vide au depart : le champ doit se voir sans qu'il faille
+  // deviner qu'un bouton l'ouvre.
+  objectives: [''],
   categoryId: '',
   location: '',
   managerName: '',
@@ -56,6 +69,8 @@ export default function ProjectFormPage() {
     setFormulaire({
       name: projet.name ?? '',
       description: projet.description ?? '',
+      objectives:
+        projet.objectives?.length > 0 ? projet.objectives.map((o) => o.label) : [''],
       categoryId: projet.categoryId ?? '',
       location: projet.location ?? '',
       managerName: projet.managerName ?? '',
@@ -74,6 +89,32 @@ export default function ProjectFormPage() {
     setFormulaire((actuel) => ({ ...actuel, [champ]: valeur }));
   }
 
+  /* ---------- Les objectifs specifiques, ligne a ligne ---------- */
+
+  function modifierObjectif(rang, valeur) {
+    setFormulaire((actuel) => ({
+      ...actuel,
+      objectives: actuel.objectives.map((libelle, index) => (index === rang ? valeur : libelle)),
+    }));
+  }
+
+  function ajouterObjectif() {
+    setFormulaire((actuel) =>
+      actuel.objectives.length >= MAX_OBJECTIFS
+        ? actuel
+        : { ...actuel, objectives: [...actuel.objectives, ''] }
+    );
+  }
+
+  /** Retirer la derniere ligne la vide au lieu de la supprimer : le champ
+      ne doit jamais disparaitre completement. */
+  function retirerObjectif(rang) {
+    setFormulaire((actuel) => {
+      const restant = actuel.objectives.filter((_, index) => index !== rang);
+      return { ...actuel, objectives: restant.length > 0 ? restant : [''] };
+    });
+  }
+
   async function enregistrer(evenement) {
     evenement.preventDefault();
 
@@ -87,6 +128,9 @@ export default function ProjectFormPage() {
       beneficiaryTarget: formulaire.beneficiaryTarget === '' ? null : Number(formulaire.beneficiaryTarget),
       mediaUrl: formulaire.mediaUrl || null,
       mediaType: formulaire.mediaUrl ? formulaire.mediaType : null,
+      // Le serveur ecarte lui aussi les lignes vides ; on les retire ici
+      // pour ne pas envoyer du vide qu'il devra nettoyer.
+      objectives: formulaire.objectives.map((o) => o.trim()).filter(Boolean),
     };
 
     await soumettre(
@@ -145,6 +189,66 @@ export default function ProjectFormPage() {
               maxLength={5000}
               disabled={envoi}
             />
+
+            {/*
+              Les objectifs specifiques : ce que le projet doit avoir
+              accompli. "Ouvrir une cantine" est le projet ; "servir un
+              repas chaud a 200 eleves" en est un objectif.
+
+              Une ligne par objectif plutot qu'un texte libre : on les
+              relit point par point, et chacun pourra plus tard porter
+              son indicateur.
+            */}
+            <Champ
+              label="Objectifs spécifiques"
+              id="objective-0"
+              aide={`Un objectif par ligne, ${MAX_OBJECTIFS} au maximum. Ce que le projet doit avoir accompli, pas ce qu’il est.`}
+              pleineLargeur
+            >
+              <ul className="liste-champs">
+                {formulaire.objectives.map((libelle, rang) => (
+                  // L'index sert de cle faute de mieux : ces lignes n'ont
+                  // pas d'identite tant qu'elles ne sont pas enregistrees,
+                  // et elles ne se reordonnent pas.
+                  // eslint-disable-next-line react/no-array-index-key
+                  <li className="liste-champs__ligne" key={rang}>
+                    <input
+                      id={`objective-${rang}`}
+                      type="text"
+                      value={libelle}
+                      onChange={(e) => modifierObjectif(rang, e.target.value)}
+                      placeholder={
+                        rang === 0
+                          ? 'Servir un repas chaud par jour à 200 élèves'
+                          : 'Objectif suivant…'
+                      }
+                      maxLength={300}
+                      disabled={envoi}
+                      aria-label={`Objectif spécifique ${rang + 1}`}
+                    />
+                    <button
+                      type="button"
+                      className="liste-champs__retirer"
+                      onClick={() => retirerObjectif(rang)}
+                      disabled={envoi}
+                      aria-label={`Retirer l’objectif ${rang + 1}`}
+                    >
+                      <IconeCroix />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                className="btn btn--neutre btn--petit"
+                onClick={ajouterObjectif}
+                disabled={envoi || formulaire.objectives.length >= MAX_OBJECTIFS}
+              >
+                <IconePlus />
+                Ajouter un objectif
+              </button>
+            </Champ>
 
             <ChampSelection
               label="Catégorie"

@@ -43,6 +43,14 @@ const AGREGATS = `
     SELECT MAX(created_at) AS derniere
       FROM field_proofs WHERE project_id = p.id
   ) preuve ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT json_agg(
+             json_build_object('id', o.id, 'label', o.label, 'position', o.position)
+             ORDER BY o.position, o.id
+           ) AS liste
+      FROM project_objectives o
+     WHERE o.project_id = p.id
+  ) objectifs ON TRUE
 `;
 
 const COLONNES = `
@@ -67,7 +75,10 @@ const COLONNES = `
   -- de creation quand il n'a jamais eu de preuve : reprocher un silence
   -- a un projet cree hier n'aurait pas de sens.
   FLOOR(EXTRACT(EPOCH FROM (NOW() - COALESCE(preuve.derniere, p.created_at))) / 86400)::int
-    AS days_since_proof
+    AS days_since_proof,
+  -- Les objectifs specifiques, agreges plutot que joints : une seconde
+  -- requete par projet ferait vingt allers-retours sur la liste.
+  COALESCE(objectifs.liste, '[]'::json) AS objectives
 `;
 
 /**
@@ -204,7 +215,28 @@ export async function creer(donnees, client = null) {
     ],
     client
   );
-  return trouverParId(resultat.rows[0].id, client);
+  const projetId = resultat.rows[0].id;
+  await remplacerObjectifs(projetId, donnees.objectives ?? [], client);
+  return trouverParId(projetId, client);
+}
+
+/**
+ * Reecrit la liste des objectifs d'un projet.
+ *
+ * Effacer puis reinserer plutot que reconcilier ligne a ligne : la liste
+ * arrive entiere du formulaire, l'ordre en fait partie, et une poignee
+ * d'objectifs ne justifie pas de comparer les anciens aux nouveaux.
+ */
+export async function remplacerObjectifs(projetId, objectifs, client = null) {
+  await query('DELETE FROM project_objectives WHERE project_id = $1', [projetId], client);
+
+  for (const [rang, libelle] of objectifs.entries()) {
+    await query(
+      'INSERT INTO project_objectives (project_id, label, position) VALUES ($1, $2, $3)',
+      [projetId, libelle, rang],
+      client
+    );
+  }
 }
 
 export async function mettreAJour(id, colonnes, client = null) {

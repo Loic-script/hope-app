@@ -23,7 +23,7 @@ import * as activityLogRepository from '../repositories/activityLog.repository.j
 
 import * as mediaService from './media.service.js';
 
-import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
+import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, depuisBase, enCentimes, normaliserDevise, pourcentage } from '../shared/money.js';
 import {
   dateRequise,
@@ -79,6 +79,54 @@ function exigerProjetEnCours(projet) {
 }
 
 /** Valide et normalise les champs du formulaire de projet. */
+/**
+ * Nombre d'objectifs specifiques acceptes par projet.
+ *
+ * Dix : au-dela, ce ne sont plus des objectifs mais un plan d'action,
+ * et la liste cesse de se relire d'un coup d'oeil.
+ */
+export const MAX_OBJECTIFS = 10;
+
+/**
+ * Nettoie la liste des objectifs specifiques.
+ *
+ * Les lignes vides sont retirees plutot que refusees : le formulaire en
+ * laisse une derriere lui des qu'on clique "+ Ajouter" sans la remplir,
+ * et bloquer l'enregistrement pour cela serait penible.
+ *
+ * @param {unknown} valeur ce qu'a envoye le client
+ * @returns {string[]} libelles, dans l'ordre de saisie
+ */
+function preparerObjectifs(valeur) {
+  if (!Array.isArray(valeur)) {
+    throw new ErreurValidation('Les objectifs spécifiques doivent former une liste.', {
+      objectives: 'Format invalide',
+    });
+  }
+
+  const libelles = valeur
+    .map((element) => (typeof element === 'string' ? element : element?.label))
+    .map((libelle) => String(libelle ?? '').trim())
+    .filter((libelle) => libelle !== '');
+
+  if (libelles.length > MAX_OBJECTIFS) {
+    throw new ErreurValidation(
+      `Un projet ne peut pas porter plus de ${MAX_OBJECTIFS} objectifs spécifiques.`,
+      { objectives: 'Trop d’objectifs' }
+    );
+  }
+
+  for (const libelle of libelles) {
+    if (libelle.length > 300) {
+      throw new ErreurValidation('Un objectif spécifique ne peut pas dépasser 300 caractères.', {
+        objectives: 'Objectif trop long',
+      });
+    }
+  }
+
+  return libelles;
+}
+
 async function preparerDonnees(corps, { creation }) {
   const donnees = {};
 
@@ -122,6 +170,9 @@ async function preparerDonnees(corps, { creation }) {
     donnees.mediaType = donnees.mediaUrl
       ? valeurParmi(corps.mediaType, 'mediaType', ['PHOTO', 'VIDEO'], { defaut: 'PHOTO' })
       : null;
+  }
+  if (creation || corps.objectives !== undefined) {
+    donnees.objectives = preparerObjectifs(corps.objectives ?? []);
   }
 
   return donnees;
@@ -252,6 +303,12 @@ export async function mettreAJour(id, corps = {}) {
       );
     }
     colonnes.required_budget = centimesVersTexte(nouveau);
+  }
+
+  // Les objectifs ne sont pas une colonne : ils vivent dans leur propre
+  // table, et ne sont reecrits que si le client les a envoyes.
+  if (donnees.objectives !== undefined) {
+    await projectRepository.remplacerObjectifs(projectId, donnees.objectives);
   }
 
   const misAJour = await projectRepository.mettreAJour(projectId, colonnes);

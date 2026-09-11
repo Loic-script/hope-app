@@ -81,6 +81,29 @@ CREATE INDEX IF NOT EXISTS projects_status_idx   ON projects (status);
 CREATE INDEX IF NOT EXISTS projects_category_idx ON projects (category_id);
 
 -- ------------------------------------------------------------
+-- 2 bis. Objectifs specifiques d'un projet
+--
+--    "Ouvrir une cantine" est le projet ; "servir un repas chaud par
+--    jour a 200 eleves" et "former quatre cuisinieres" en sont les
+--    objectifs specifiques. Une ligne par objectif plutot qu'un texte
+--    unique : c'est une liste qu'on relit point par point, et chaque
+--    point pourra plus tard porter son etat ou son indicateur.
+--
+--    "position" fixe l'ordre de saisie, qui est celui de lecture.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_objectives (
+  id         SERIAL       PRIMARY KEY,
+  project_id INTEGER      NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  label      VARCHAR(300) NOT NULL,
+  position   SMALLINT     NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  CONSTRAINT project_objectives_libelle_non_vide CHECK (BTRIM(label) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS project_objectives_projet_idx
+  ON project_objectives (project_id, position);
+
+-- ------------------------------------------------------------
 -- 3. Donateurs
 --
 --    Tout don est rattache a un donateur. Le donateur devient

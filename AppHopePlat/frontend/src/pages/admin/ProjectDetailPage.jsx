@@ -288,6 +288,25 @@ export default function ProjectDetailPage() {
             </Panneau>
           )}
 
+          {/*
+            Les objectifs specifiques : ce que le projet doit avoir
+            accompli. Ils suivent la description, qui dit ce qu'il est.
+          */}
+          {projet.objectives?.length > 0 && (
+            <Panneau
+              titre="Objectifs spécifiques"
+              sousTitre={`${projet.objectives.length} objectif(s)`}
+            >
+              <ol className="objectifs">
+                {projet.objectives.map((objectif) => (
+                  <li className="objectifs__ligne" key={objectif.id}>
+                    {objectif.label}
+                  </li>
+                ))}
+              </ol>
+            </Panneau>
+          )}
+
           {projet.outcome && (
             <Panneau titre="Résultat du projet">
               <p className="bloc-texte">{projet.outcome}</p>
