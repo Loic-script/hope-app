@@ -1503,15 +1503,23 @@ const TYPES_PREUVE_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
 /**
  * Publie une preuve depuis la fiche d'un projet.
  *
- * L'ecran Preuves terrain garde son formulaire pose en permanence : on y
- * publie a la chaine, souvent depuis le terrain. Ici c'est l'inverse --
- * on documente le projet qu'on a sous les yeux, ponctuellement -- d'ou
- * la modale et le projet deja fixe.
+ * Deux chemins y menent. Depuis la fiche d'un projet, celui-ci est deja
+ * connu et le champ ne s'affiche pas : inutile de faire redesigner ce
+ * qu'on vient de designer. Depuis l'ecran Preuves terrain, il faut le
+ * choisir.
  *
- * @param {{ ouverte, projet: object, libelles: object, onFermer,
- *           onEnregistre }} props
+ * @param {{ ouverte, projet?: object|null, projets?: object[],
+ *           libelles: object, onFermer, onEnregistre }} props
  */
-export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnregistre }) {
+export function PreuveModale({
+  ouverte,
+  projet = null,
+  projets = [],
+  libelles = {},
+  onFermer,
+  onEnregistre,
+}) {
+  const [projectId, setProjectId] = useState('');
   const [type, setType] = useState('PHOTO');
   const [description, setDescription] = useState('');
   const [dateAction, setDateAction] = useState('');
@@ -1521,15 +1529,20 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
   useEffect(() => {
     if (!ouverte) return;
     setErreur('');
+    setProjectId(projet?.id ?? '');
     setType('PHOTO');
     setDescription('');
     setDateAction(fmt.aujourdhui());
     setFichiers([]);
-  }, [ouverte, setErreur]);
+  }, [ouverte, projet, setErreur]);
 
   const fichierRequis = TYPES_PREUVE_AVEC_FICHIER.has(type);
 
   async function enregistrer() {
+    if (!projectId) {
+      setErreur('Choisissez le projet que cette preuve documente.');
+      return;
+    }
     if (fichierRequis && fichiers.length === 0) {
       setErreur(
         {
@@ -1543,7 +1556,7 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
     await soumettre(
       () =>
         fieldProofService.publier({
-          projectId: projet.id,
+          projectId: Number(projectId),
           proofType: type,
           description,
           occurredOn: dateAction || undefined,
@@ -1568,6 +1581,25 @@ export function PreuveModale({ ouverte, projet, libelles = {}, onFermer, onEnreg
       erreur={erreur}
       libelleValider="Publier la preuve"
     >
+      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis un
+          projet : inutile de faire redesigner ce qu'on vient de designer. */}
+      {!projet && (
+        <ChampSelection
+          label="Projet concerné"
+          id="preuve-projet"
+          obligatoire
+          vide="Choisir un projet…"
+          options={projets.map((element) => ({
+            valeur: element.id,
+            label: `${element.reference} · ${element.name}`,
+          }))}
+          value={projectId}
+          onChange={(e) => setProjectId(e.target.value)}
+          disabled={envoi}
+          pleineLargeur
+        />
+      )}
+
       <ChampTexteLong
         label="Description courte"
         id="preuve-description"

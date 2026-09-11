@@ -468,16 +468,9 @@
 
    Le formulaire reste visible en permanence a gauche : publier
    une preuve doit prendre quelques secondes, pas trois clics.
-   La liste, a droite, sert de controle immediat de ce qui vient
-   d'etre publie.
+   La liste sert de controle immediat de ce qui vient d'etre
+   publie ; la publication elle-meme passe par la modale.
    ============================================================ */
-
-.preuves__colonnes {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-  gap: 18px;
-  align-items: start;
-}
 
 .preuves {
   display: flex;
@@ -584,12 +577,7 @@
 }
 
 @media (max-width: 1024px) {
-  .preuves__colonnes {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* ============================================================
+  /* ============================================================
    Lecture d'une preuve
 
    Une preuve est le plus souvent une photo ou une video : elle
