@@ -1,0 +1,152 @@
+import { useState } from 'react';
+
+import {
+  Alerte,
+  Badge,
+  CelluleDouble,
+  EntetePage,
+  EtatVide,
+  Onglets,
+  Panneau,
+  Tableau,
+} from '../../components/admin/ui.jsx';
+import { useChargement, useSoumission } from '../../hooks/useChargement.js';
+import * as volunteerService from '../../services/volunteer.service.js';
+import * as fmt from '../../utils/format.js';
+
+/** Libelles des statuts, tels qu'ils s'affichent. */
+const LIBELLES = {
+  en_attente: 'En attente',
+  actif: 'Actif',
+  suspendu: 'Suspendu',
+  supprime: 'Supprimé',
+};
+
+/** Teinte de la pastille de statut. */
+const COULEURS = {
+  en_attente: 'ambre',
+  actif: 'vert',
+  suspendu: 'rouge',
+  supprime: 'gris',
+};
+
+/**
+ * Gestion des benevoles.
+ *
+ * Un benevole s'inscrit seul, mais n'entre pas seul : son compte reste
+ * "en attente" jusqu'a ce qu'un administrateur l'active. Cet ecran est
+ * l'endroit ou cette decision se prend, et les demandes en attente
+ * arrivent en tete de liste.
+ */
+export default function VolunteersPage() {
+  const [filtre, setFiltre] = useState('');
+  const { donnees, chargement, erreur, recharger } = useChargement(
+    () => volunteerService.lister(filtre ? { statut: filtre } : {}),
+    [filtre]
+  );
+  const { soumettre, envoi, erreur: erreurAction } = useSoumission();
+
+  const comptes = donnees?.items ?? [];
+  const compteurs = donnees?.counts ?? {};
+
+  function agir(action) {
+    soumettre(action, { onSucces: recharger });
+  }
+
+  const onglets = [
+    { cle: '', label: 'Tous' },
+    { cle: 'en_attente', label: 'En attente', compteur: compteurs.en_attente ?? 0 },
+    { cle: 'actif', label: 'Actifs', compteur: compteurs.actif ?? 0 },
+    { cle: 'suspendu', label: 'Suspendus', compteur: compteurs.suspendu ?? 0 },
+  ];
+
+  const colonnes = [
+    {
+      cle: 'nom',
+      titre: 'Bénévole',
+      rendu: (compte) => (
+        <CelluleDouble
+          principal={`${compte.prenom} ${compte.nom}`.trim()}
+          secondaire={compte.email}
+        />
+      ),
+    },
+    {
+      cle: 'statut',
+      titre: 'Statut',
+      rendu: (compte) => (
+        <Badge valeur={compte.statut} libelles={LIBELLES} couleur={COULEURS[compte.statut]} />
+      ),
+    },
+    {
+      cle: 'creeLe',
+      titre: 'Inscrit le',
+      rendu: (compte) => fmt.date(compte.creeLe),
+    },
+    {
+      cle: 'derniereConnexion',
+      titre: 'Dernière connexion',
+      rendu: (compte) =>
+        compte.derniereConnexion ? fmt.depuis(compte.derniereConnexion) : 'Jamais',
+    },
+    {
+      cle: 'actions',
+      titre: '',
+      rendu: (compte) => (
+        <div className="tableau__actions">
+          {compte.statut !== 'actif' && (
+            <button
+              type="button"
+              className="btn btn--principal btn--petit"
+              disabled={envoi}
+              onClick={() => agir(() => volunteerService.activer(compte.id))}
+            >
+              Activer
+            </button>
+          )}
+          {compte.statut === 'actif' && (
+            <button
+              type="button"
+              className="btn btn--neutre btn--petit"
+              disabled={envoi}
+              onClick={() => agir(() => volunteerService.changerStatut(compte.id, 'suspendu'))}
+            >
+              Suspendre
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <EntetePage
+        fil={[{ label: 'Accueil', to: '/admin' }, { label: 'Bénévoles' }]}
+        titre="Bénévoles"
+        accroche="Activez les comptes pour ouvrir l’accès à l’espace bénévole."
+      />
+
+      {erreur && <Alerte>{erreur}</Alerte>}
+      {erreurAction && <Alerte>{erreurAction}</Alerte>}
+
+      <Panneau>
+        <Onglets onglets={onglets} actif={filtre} onChange={setFiltre} />
+
+        {!chargement && comptes.length === 0 ? (
+          <EtatVide
+            titre="Aucun bénévole"
+            texte="Les inscriptions apparaîtront ici, en attente de votre validation."
+          />
+        ) : (
+          <Tableau
+            colonnes={colonnes}
+            lignes={comptes}
+            cleLigne={(compte) => compte.id}
+            chargement={chargement}
+          />
+        )}
+      </Panneau>
+    </>
+  );
+}

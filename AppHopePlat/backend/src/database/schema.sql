@@ -429,7 +429,526 @@ CREATE INDEX IF NOT EXISTS activity_log_date_idx   ON activity_log (created_at D
 CREATE INDEX IF NOT EXISTS activity_log_entite_idx ON activity_log (entity_type, entity_id);
 
 -- ------------------------------------------------------------
--- 16. Declencheurs updated_at
+-- 16. Comptes des espaces non administrateurs
+--
+-- Un compte par personne, et un ou plusieurs roles a cote : la meme
+-- personne peut etre a la fois donatrice et benevole, sans double
+-- inscription.
+--
+-- Ces comptes n'ont rien a voir avec la table "admins" : un benevole
+-- ne peut pas se connecter a l'espace administrateur, et vice versa.
+-- Les jetons des deux espaces portent d'ailleurs une audience
+-- differente, donc l'un ne vaut jamais pour l'autre.
+--
+-- Trois ecarts assumes avec le modele fourni :
+--
+--   * telephone accepte NULL. Le formulaire d'inscription ne le
+--     demande pas ; la contrainte d'unicite continue de s'appliquer
+--     des qu'il est renseigne.
+--   * statut vaut "en_attente" a la creation et non "actif" : c'est
+--     l'administrateur qui ouvre l'acces a l'espace.
+--   * age n'est pas stocke. Il se deduit de date_de_naissance, et une
+--     colonne figee serait fausse des le lendemain de l'anniversaire.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS utilisateur (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nom                VARCHAR(80)  NOT NULL,
+  prenom             VARCHAR(80)  NOT NULL,
+  -- Identifiant principal a Madagascar, renseigne apres l'inscription.
+  telephone          VARCHAR(20)  UNIQUE,
+  -- Stocke en minuscules : c'est lui qui sert a se connecter.
+  email              VARCHAR(160) UNIQUE,
+  -- Hash bcrypt. Le mot de passe en clair ne touche jamais la base.
+  mot_de_passe       VARCHAR(255) NOT NULL,
+  photo_url          TEXT,
+  adresse            VARCHAR(255),
+  date_de_naissance  DATE,
+  statut             VARCHAR(20)  NOT NULL DEFAULT 'en_attente',
+  telephone_verifie  BOOLEAN      NOT NULL DEFAULT FALSE,
+  cree_le            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  derniere_connexion TIMESTAMPTZ,
+  -- Le compte existe, mais la fiche propre a son role est-elle remplie ?
+  -- Un marqueur explicite plutot qu'une deduction : un benevole peut
+  -- legitimement n'avoir declare aucune competence, et on ne doit pas
+  -- lui redemander son formulaire a chaque connexion.
+  profil_complete    BOOLEAN      NOT NULL DEFAULT FALSE,
+  -- Trace de l'activation : qui a ouvert l'acces, et quand.
+  active_le          TIMESTAMPTZ,
+  active_par         INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+
+  CONSTRAINT utilisateur_statut_valide
+    CHECK (statut IN ('en_attente', 'actif', 'suspendu', 'supprime')),
+
+  -- Un compte injoignable ne sert a rien : au moins un des deux.
+  CONSTRAINT utilisateur_contact_present
+    CHECK (email IS NOT NULL OR telephone IS NOT NULL)
+);
+
+CREATE TABLE IF NOT EXISTS utilisateur_role (
+  utilisateur_id UUID        NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  role           VARCHAR(20) NOT NULL,
+  attribue_le    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  PRIMARY KEY (utilisateur_id, role),
+
+  CONSTRAINT utilisateur_role_valide
+    CHECK (role IN ('donateur', 'benevole', 'bailleur', 'staff'))
+);
+
+-- Les tables existantes ne recoivent pas les colonnes ajoutees apres
+-- coup : CREATE TABLE IF NOT EXISTS ne les voit pas.
+ALTER TABLE utilisateur
+  ADD COLUMN IF NOT EXISTS profil_complete BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- La liste des comptes a activer est la requete la plus frequente.
+CREATE INDEX IF NOT EXISTS utilisateur_statut_idx ON utilisateur (statut);
+CREATE INDEX IF NOT EXISTS utilisateur_role_idx   ON utilisateur_role (role);
+
+-- ------------------------------------------------------------
+-- 17. Espace benevole : profil, missions, taches, avis
+--
+-- Un benevole est un "utilisateur" portant le role benevole, plus une
+-- fiche de terrain : ce qu'il sait faire, quand il est libre, jusqu'ou
+-- il accepte de se deplacer.
+--
+-- Quatre raccords s'ecartent du modele fourni, faute de quoi rien ne
+-- se lierait a la base existante :
+--
+--   * projet_id est un INTEGER qui pointe "projects". Le modele
+--     annoncait un UUID vers une table "projet" qui n'existe pas ici :
+--     les projets sont en anglais et leur cle est un entier.
+--   * les validateurs HOPE (valide_par, encadreur_id, validee_par)
+--     pointent "admins", pas "utilisateur" : l'equipe HOPE a sa propre
+--     table, et un benevole ne valide pas ses propres heures.
+--   * date_naissance n'est pas repetee sur "benevole" : elle vit deja
+--     sur "utilisateur". Deux copies finiraient par diverger.
+--   * les places restantes ne sont pas stockees : elles se comptent
+--     depuis les inscriptions, seule source qui ne peut pas mentir.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS benevole (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  utilisateur_id      UUID NOT NULL UNIQUE REFERENCES utilisateur(id) ON DELETE CASCADE,
+  profession          VARCHAR(120),
+  -- Ex : {'traduction','informatique','cuisine'}
+  competences         TEXT[]      NOT NULL DEFAULT ARRAY[]::TEXT[],
+  -- Ex : {'malgache','francais','anglais'}
+  langues             TEXT[]      NOT NULL DEFAULT ARRAY[]::TEXT[],
+  -- Ex : {"mercredi":["matin"],"samedi":["journee"]}
+  disponibilites      JSONB       NOT NULL DEFAULT '{}'::JSONB,
+  -- Distance acceptee depuis son quartier.
+  rayon_km            SMALLINT,
+  accepte_terrain     BOOLEAN     NOT NULL DEFAULT TRUE,
+  accepte_distance    BOOLEAN     NOT NULL DEFAULT TRUE,
+  contact_urgence_nom VARCHAR(120),
+  contact_urgence_tel VARCHAR(20),
+  -- Exige pour les missions de terrain, pas pour celles a distance.
+  valide_par_hope     BOOLEAN     NOT NULL DEFAULT FALSE,
+  valide_le           TIMESTAMPTZ,
+  valide_par          INTEGER     REFERENCES admins(id) ON DELETE SET NULL,
+  benevole_depuis     DATE        NOT NULL DEFAULT CURRENT_DATE,
+  -- Reserve a l'equipe HOPE : jamais renvoye a l'espace benevole.
+  notes_internes      TEXT,
+  cree_le             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT benevole_rayon_positif CHECK (rayon_km IS NULL OR rayon_km >= 0)
+);
+
+CREATE TABLE IF NOT EXISTS mission (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  projet_id          INTEGER      NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  titre              VARCHAR(160) NOT NULL,
+  description        TEXT,
+  -- Ex : "Ankadifotsy, Antananarivo"
+  lieu_nom           VARCHAR(160),
+  latitude           NUMERIC(9,6),
+  longitude          NUMERIC(9,6),
+  format             VARCHAR(20)  NOT NULL,
+  date_debut         TIMESTAMPTZ  NOT NULL,
+  date_fin           TIMESTAMPTZ  NOT NULL,
+  -- Regle RRULE, ex : 'FREQ=WEEKLY;BYDAY=WE'
+  recurrence         VARCHAR(120),
+  places_total       SMALLINT     NOT NULL,
+  encadreur_id       INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  -- Ex : {'tenue confortable','bouteille d''eau'}
+  besoins_a_apporter TEXT[]       NOT NULL DEFAULT ARRAY[]::TEXT[],
+  statut             VARCHAR(20)  NOT NULL DEFAULT 'ouverte',
+  cree_le            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT mission_format_valide
+    CHECK (format IN ('presentiel', 'terrain', 'distance')),
+  CONSTRAINT mission_statut_valide
+    CHECK (statut IN ('brouillon', 'ouverte', 'complete', 'terminee', 'annulee')),
+  CONSTRAINT mission_places_positives CHECK (places_total > 0),
+  CONSTRAINT mission_periode_coherente CHECK (date_fin >= date_debut)
+);
+
+CREATE INDEX IF NOT EXISTS mission_statut_date_idx ON mission (statut, date_debut);
+CREATE INDEX IF NOT EXISTS mission_projet_idx      ON mission (projet_id);
+
+CREATE TABLE IF NOT EXISTS inscription_mission (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id       UUID         NOT NULL REFERENCES mission(id) ON DELETE CASCADE,
+  benevole_id      UUID         NOT NULL REFERENCES benevole(id) ON DELETE CASCADE,
+  statut           VARCHAR(20)  NOT NULL DEFAULT 'inscrit',
+  inscrit_le       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  annule_le        TIMESTAMPTZ,
+  motif_annulation TEXT,
+  -- Saisi par l'encadreur apres la mission.
+  heures_validees  NUMERIC(4,1),
+  valide_par       INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+
+  -- Un benevole ne s'inscrit qu'une fois a la meme mission.
+  UNIQUE (mission_id, benevole_id),
+
+  CONSTRAINT inscription_statut_valide
+    CHECK (statut IN ('inscrit', 'confirme', 'present', 'absent', 'annule')),
+  CONSTRAINT inscription_heures_positives
+    CHECK (heures_validees IS NULL OR heures_validees >= 0)
+);
+
+CREATE INDEX IF NOT EXISTS inscription_benevole_idx ON inscription_mission (benevole_id, statut);
+CREATE INDEX IF NOT EXISTS inscription_mission_idx  ON inscription_mission (mission_id, statut);
+
+CREATE TABLE IF NOT EXISTS tache (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  projet_id    INTEGER      NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  titre        VARCHAR(160) NOT NULL,
+  description  TEXT,
+  echeance     DATE,
+  statut       VARCHAR(20)  NOT NULL DEFAULT 'a_faire',
+  -- NULL : personne ne l'a prise.
+  benevole_id  UUID         REFERENCES benevole(id) ON DELETE SET NULL,
+  prise_le     TIMESTAMPTZ,
+  livree_le    TIMESTAMPTZ,
+  validee_par  INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  cree_le      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT tache_statut_valide
+    CHECK (statut IN ('a_faire', 'en_cours', 'livree')),
+
+  -- Une tache prise a forcement quelqu'un derriere, et inversement.
+  CONSTRAINT tache_prise_coherente
+    CHECK ((statut = 'a_faire' AND benevole_id IS NULL)
+        OR (statut <> 'a_faire' AND benevole_id IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS tache_benevole_idx ON tache (benevole_id, statut);
+CREATE INDEX IF NOT EXISTS tache_projet_idx   ON tache (projet_id, statut);
+
+CREATE TABLE IF NOT EXISTS avis_mission (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id  UUID        NOT NULL REFERENCES mission(id) ON DELETE CASCADE,
+  benevole_id UUID        NOT NULL REFERENCES benevole(id) ON DELETE CASCADE,
+  note        SMALLINT    NOT NULL CHECK (note BETWEEN 1 AND 5),
+  commentaire TEXT,
+  -- Moderation de l'equipe HOPE.
+  publie      BOOLEAN     NOT NULL DEFAULT TRUE,
+  cree_le     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (mission_id, benevole_id)
+);
+
+CREATE INDEX IF NOT EXISTS avis_mission_idx ON avis_mission (mission_id, publie);
+
+-- ------------------------------------------------------------
+-- 18. Espace bailleur : organisations, engagements, versements
+--
+-- Trois notions qu'il ne faut jamais confondre :
+--
+--   engagement  = ce qui est promis
+--   versement   = ce qui est reellement arrive
+--   affectation = la part attribuee a un projet
+--
+-- Le bailleur ne paie jamais dans l'application : les virements
+-- arrivent hors ligne et le back-office les saisit ensuite. Cet espace
+-- est donc en lecture seule sur les montants.
+--
+-- Quatre raccords s'ecartent du modele fourni, faute de quoi rien ne se
+-- lierait a la base existante :
+--
+--   * projet_id est un INTEGER vers "projects" : la table "projet"
+--     annoncee n'existe pas ici, et sa cle est un entier.
+--   * saisi_par et publie_par pointent "admins" : ce sont des gestes de
+--     back-office, et l'equipe HOPE a sa propre table.
+--   * le domaine d'un projet se lit dans project_categories, sa zone
+--     dans projects.location : il n'y a pas de colonne "domaine".
+--   * partenaire_depuis prend la date du jour par defaut, au lieu
+--     d'etre obligatoire : a l'inscription, personne ne la connait.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS bailleur (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  raison_sociale    VARCHAR(200) NOT NULL,
+  type_organisation VARCHAR(40)  NOT NULL,
+  secteur           VARCHAR(120),
+  pays              VARCHAR(80)  NOT NULL DEFAULT 'Madagascar',
+  adresse           TEXT,
+  site_web          TEXT,
+  logo_url          TEXT,
+  -- Numero fiscal, utile pour les justificatifs.
+  nif               VARCHAR(40),
+  partenaire_depuis DATE         NOT NULL DEFAULT CURRENT_DATE,
+  statut            VARCHAR(20)  NOT NULL DEFAULT 'prospect',
+  -- Le badge "Partenaire Or" de la maquette.
+  niveau            VARCHAR(20),
+  -- Reserve a l'equipe HOPE : jamais renvoye a l'espace bailleur.
+  notes_internes    TEXT,
+  cree_le           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT bailleur_type_valide
+    CHECK (type_organisation IN
+      ('fondation_privee', 'entreprise', 'agence_publique', 'ong', 'ambassade')),
+  CONSTRAINT bailleur_statut_valide
+    CHECK (statut IN ('prospect', 'actif', 'en_pause', 'termine')),
+  CONSTRAINT bailleur_niveau_valide
+    CHECK (niveau IS NULL OR niveau IN ('bronze', 'argent', 'or'))
+);
+
+-- Un bailleur n'est pas une personne : plusieurs employes peuvent se
+-- connecter, et les gens changent de poste. Toute requete de l'espace
+-- filtre donc sur bailleur_id, jamais sur utilisateur_id.
+CREATE TABLE IF NOT EXISTS bailleur_contact (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bailleur_id       UUID    NOT NULL REFERENCES bailleur(id) ON DELETE CASCADE,
+  -- NULL tant que la personne n'a pas de compte.
+  utilisateur_id    UUID    UNIQUE REFERENCES utilisateur(id) ON DELETE SET NULL,
+  fonction          VARCHAR(120),
+  contact_principal BOOLEAN NOT NULL DEFAULT FALSE,
+  peut_consulter    BOOLEAN NOT NULL DEFAULT TRUE,
+  peut_telecharger  BOOLEAN NOT NULL DEFAULT TRUE,
+  actif             BOOLEAN NOT NULL DEFAULT TRUE,
+  cree_le           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Un seul contact principal par organisation.
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_contact_principal
+  ON bailleur_contact (bailleur_id) WHERE contact_principal;
+
+CREATE TABLE IF NOT EXISTS engagement (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bailleur_id          UUID         NOT NULL REFERENCES bailleur(id) ON DELETE CASCADE,
+  -- Ex : "Financement — Education 2026"
+  intitule             VARCHAR(200) NOT NULL,
+  type_soutien         VARCHAR(30)  NOT NULL,
+  -- NULL pour un soutien en competences ou en materiel.
+  montant_engage       NUMERIC(14,2),
+  devise               CHAR(3)      NOT NULL DEFAULT 'MGA',
+  -- Pour les soutiens non financiers : 'session', 'kit', 'heure'...
+  unite                VARCHAR(40),
+  quantite_engagee     NUMERIC(10,2),
+  quantite_realisee    NUMERIC(10,2) NOT NULL DEFAULT 0,
+  -- Valeur estimee en Ar, pour les rapports.
+  valorisation         NUMERIC(14,2),
+  date_signature       DATE         NOT NULL,
+  date_debut           DATE         NOT NULL,
+  date_fin             DATE,
+  reference_convention VARCHAR(80),
+  convention_url       TEXT,
+  -- Le pendant, cote bailleur, du don non affecte : HOPE choisit alors
+  -- les projets.
+  affectation_libre    BOOLEAN      NOT NULL DEFAULT FALSE,
+  statut               VARCHAR(20)  NOT NULL DEFAULT 'en_cours',
+  cree_le              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT engagement_type_valide
+    CHECK (type_soutien IN ('financier', 'competences', 'materiel')),
+  CONSTRAINT engagement_statut_valide
+    CHECK (statut IN ('en_cours', 'finalise', 'suspendu', 'annule')),
+  CONSTRAINT engagement_periode_coherente
+    CHECK (date_fin IS NULL OR date_fin >= date_debut),
+  -- Un soutien financier porte un montant ; les autres une quantite.
+  CONSTRAINT engagement_mesure_presente
+    CHECK ((type_soutien = 'financier' AND montant_engage IS NOT NULL)
+        OR (type_soutien <> 'financier' AND quantite_engagee IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS engagement_bailleur_idx ON engagement (bailleur_id, statut);
+
+CREATE TABLE IF NOT EXISTS versement (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  engagement_id      UUID          NOT NULL REFERENCES engagement(id) ON DELETE CASCADE,
+  numero_tranche     SMALLINT,
+  montant            NUMERIC(14,2) NOT NULL,
+  devise             CHAR(3)       NOT NULL DEFAULT 'MGA',
+  date_prevue        DATE,
+  -- NULL : le versement est attendu, pas encore arrive.
+  date_recue         DATE,
+  moyen              VARCHAR(30),
+  reference_bancaire VARCHAR(80),
+  justificatif_url   TEXT,
+  -- Saisi par le back-office : le bailleur n'ecrit jamais ici.
+  saisi_par          INTEGER       REFERENCES admins(id) ON DELETE SET NULL,
+  statut             VARCHAR(20)   NOT NULL DEFAULT 'attendu',
+  cree_le            TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT versement_statut_valide
+    CHECK (statut IN ('attendu', 'recu', 'en_retard', 'annule')),
+  CONSTRAINT versement_moyen_valide
+    CHECK (moyen IS NULL OR moyen IN ('virement', 'cheque', 'especes', 'mobile_money')),
+  CONSTRAINT versement_montant_positif CHECK (montant > 0),
+  -- Un versement recu a forcement une date de reception.
+  CONSTRAINT versement_recu_date
+    CHECK (statut <> 'recu' OR date_recue IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS versement_engagement_idx ON versement (engagement_id, statut);
+
+-- La table centrale de la vue consolidee : un engagement peut nourrir
+-- plusieurs projets, et un projet recevoir plusieurs engagements.
+CREATE TABLE IF NOT EXISTS affectation (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  engagement_id    UUID          NOT NULL REFERENCES engagement(id) ON DELETE CASCADE,
+  projet_id        INTEGER       NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  montant          NUMERIC(14,2) NOT NULL,
+  date_affectation DATE          NOT NULL DEFAULT CURRENT_DATE,
+  commentaire      TEXT,
+
+  UNIQUE (engagement_id, projet_id),
+  CONSTRAINT affectation_montant_positif CHECK (montant > 0)
+);
+
+CREATE INDEX IF NOT EXISTS affectation_projet_idx ON affectation (projet_id);
+
+CREATE TABLE IF NOT EXISTS document_bailleur (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bailleur_id        UUID         NOT NULL REFERENCES bailleur(id) ON DELETE CASCADE,
+  -- NULL : document global, tous engagements confondus.
+  engagement_id      UUID         REFERENCES engagement(id) ON DELETE CASCADE,
+  -- NULL : tous domaines.
+  projet_id          INTEGER      REFERENCES projects(id) ON DELETE SET NULL,
+  type               VARCHAR(30)  NOT NULL,
+  titre              VARCHAR(200) NOT NULL,
+  periode_debut      DATE,
+  periode_fin        DATE,
+  fichier_url        TEXT         NOT NULL,
+  nb_pages           SMALLINT,
+  genere_auto        BOOLEAN      NOT NULL DEFAULT FALSE,
+  publie_le          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  publie_par         INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  -- Savoir si le rapport est reellement lu.
+  telecharge_le      TIMESTAMPTZ,
+  nb_telechargements INT          NOT NULL DEFAULT 0,
+
+  CONSTRAINT document_bailleur_type_valide
+    CHECK (type IN
+      ('rapport_impact', 'justificatif_financier', 'certificat', 'convention'))
+);
+
+CREATE INDEX IF NOT EXISTS document_bailleur_idx ON document_bailleur (bailleur_id, type);
+
+CREATE TABLE IF NOT EXISTS distinction (
+  code    VARCHAR(40) PRIMARY KEY,
+  libelle VARCHAR(80) NOT NULL,
+  -- Description de la condition, en clair.
+  regle   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS bailleur_distinction (
+  bailleur_id      UUID        NOT NULL REFERENCES bailleur(id) ON DELETE CASCADE,
+  distinction_code VARCHAR(40) NOT NULL REFERENCES distinction(code) ON DELETE CASCADE,
+  obtenue_le       DATE        NOT NULL DEFAULT CURRENT_DATE,
+
+  PRIMARY KEY (bailleur_id, distinction_code)
+);
+
+-- ------------------------------------------------------------
+-- Regle d'or contre le double comptage
+--
+-- La somme des affectations d'un engagement ne doit jamais depasser le
+-- montant engage. C'est exactement ce que veut dire "finances a ce jour
+-- sans double comptage".
+--
+-- Le controle est ici, en base, et non seulement dans le service : une
+-- correction faite a la main en SQL doit se heurter a la meme regle.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION verifier_affectation_engagement()
+RETURNS TRIGGER AS $$
+DECLARE
+  plafond NUMERIC(14,2);
+  deja    NUMERIC(14,2);
+BEGIN
+  SELECT montant_engage INTO plafond
+    FROM engagement WHERE id = NEW.engagement_id;
+
+  -- Un engagement en competences ou en materiel n'a pas de plafond
+  -- financier : rien a verifier.
+  IF plafond IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT COALESCE(SUM(montant), 0) INTO deja
+    FROM affectation
+   WHERE engagement_id = NEW.engagement_id
+     AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::UUID);
+
+  IF deja + NEW.montant > plafond THEN
+    RAISE EXCEPTION
+      'Affectation refusee : % + % depasse le montant engage de %',
+      deja, NEW.montant, plafond
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS affectation_plafond ON affectation;
+CREATE TRIGGER affectation_plafond
+  BEFORE INSERT OR UPDATE ON affectation
+  FOR EACH ROW EXECUTE FUNCTION verifier_affectation_engagement();
+
+-- ------------------------------------------------------------
+-- 19. Fil d'actualite et manifestations d'interet
+--
+-- Ces deux tables ne figuraient pas dans le modele fourni, mais le
+-- comportement decrit les suppose : un fil filtre par cible, et un
+-- bouton "Financer ce projet" qui ne debite rien.
+--
+-- Le bouton ne cree donc pas un engagement : il enregistre une
+-- intention et notifie l'equipe, qui prend contact hors ligne. La
+-- plateforme enregistre la relation, elle ne la remplace pas.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS publication (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type          VARCHAR(30)  NOT NULL DEFAULT 'actualite',
+  titre         VARCHAR(200) NOT NULL,
+  corps         TEXT,
+  projet_id     INTEGER      REFERENCES projects(id) ON DELETE SET NULL,
+  media_url     TEXT,
+  -- Cibles de diffusion : {'bailleurs'}, {'donateurs','bailleurs'}...
+  cibles        TEXT[]       NOT NULL DEFAULT ARRAY['bailleurs']::TEXT[],
+  -- Pour un appel a financement : la barre de collecte.
+  montant_cible NUMERIC(14,2),
+  publie_le     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  publie_par    INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+
+  CONSTRAINT publication_type_valide
+    CHECK (type IN ('actualite', 'appel_financement')),
+  -- Un appel a financement sans cible chiffree n'a pas de barre.
+  CONSTRAINT publication_appel_chiffre
+    CHECK (type <> 'appel_financement' OR montant_cible IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS publication_date_idx ON publication (publie_le DESC);
+
+CREATE TABLE IF NOT EXISTS manifestation_interet (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bailleur_id    UUID        NOT NULL REFERENCES bailleur(id) ON DELETE CASCADE,
+  publication_id UUID        REFERENCES publication(id) ON DELETE SET NULL,
+  projet_id      INTEGER     REFERENCES projects(id) ON DELETE SET NULL,
+  message        TEXT,
+  -- Qui a clique, pour que l'equipe sache a qui parler.
+  contact_id     UUID        REFERENCES bailleur_contact(id) ON DELETE SET NULL,
+  statut         VARCHAR(20) NOT NULL DEFAULT 'nouvelle',
+  cree_le        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT manifestation_statut_valide
+    CHECK (statut IN ('nouvelle', 'contactee', 'convertie', 'classee')),
+  -- Une seule manifestation vivante par bailleur et par publication.
+  UNIQUE (bailleur_id, publication_id)
+);
+
+-- ------------------------------------------------------------
+-- 20. Declencheurs updated_at
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$

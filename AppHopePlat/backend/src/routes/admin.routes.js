@@ -30,6 +30,7 @@ import {
   donors,
   expenses,
   fieldProofs,
+  funders,
   fund,
   impacts,
   messages,
@@ -37,6 +38,7 @@ import {
   projects,
   statistics,
   team,
+  volunteers,
 } from '../controllers/admin.controllers.js';
 
 const router = Router();
@@ -170,6 +172,17 @@ router.patch('/team/:id/password', exigerRole('ADMIN'), team.reinitialiserMotDeP
 
 // Le journal se lit ; personne ne l'ecrit a la main.
 router.get('/activity', team.journal);
+
+// --- Benevoles --------------------------------------------------------
+// Activer un compte ouvre un acces : c'est une ecriture, pas une lecture.
+router.get('/volunteers', volunteers.lister);
+router.post('/volunteers/:id/activate', exigerEcriture, volunteers.activer);
+router.patch('/volunteers/:id/status', exigerEcriture, volunteers.changerStatut);
+
+// --- Bailleurs --------------------------------------------------------
+router.get('/funders', funders.lister);
+router.post('/funders/:id/activate', exigerEcriture, funders.activer);
+router.patch('/funders/:id/status', exigerEcriture, funders.changerStatut);
 
 // --- Beneficiaires ----------------------------------------------------
 router.get('/beneficiaries', beneficiaries.lister);

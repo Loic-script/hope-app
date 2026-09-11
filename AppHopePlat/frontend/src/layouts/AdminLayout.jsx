@@ -6,12 +6,14 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext } fro
 import logoSurFondViolet from '../assets/LOGO_WORDMARK_SUR_FOND_VIOLET.png';
 import {
   IconeAccueil,
+  IconeBeneficiaires,
   IconeBudgets,
   IconeChevronBas,
   IconeChevronDroit,
   IconeCloche,
   IconeDeconnexion,
   IconeDonateurs,
+  IconeDons,
   IconeGraphique,
   IconeImpacts,
   IconeMessages,
@@ -24,12 +26,12 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les sept sections de travail, rangees en deux familles.
+ * Les neuf sections de travail, rangees en deux familles.
  *
  * "Pilotage" reunit ce que l'on fait -- ouvrir un projet, documenter le
  * terrain ; "Analyse" ce que l'on constate ensuite. Deux familles de
- * trois et quatre entrees se lisent d'un coup d'oeil la ou une liste de
- * sept demande d'etre parcourue.
+ * trois et six entrees se lisent mieux qu'une liste de neuf d'un seul
+ * tenant.
  *
  * Trois entrees n'y figurent pas, et c'est voulu :
  *   * Notifications et Messages sont des alertes, pas des destinations : la
@@ -52,6 +54,8 @@ const GROUPES = [
       { to: '/admin/impact', label: 'Impact', Icone: IconeImpacts },
       { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
       { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
+      { to: '/admin/volunteers', label: 'Bénévoles', Icone: IconeBeneficiaires },
+      { to: '/admin/funders', label: 'Bailleurs', Icone: IconeDons },
       { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
     ],
   },

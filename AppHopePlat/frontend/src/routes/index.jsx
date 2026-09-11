@@ -13,14 +13,43 @@ import ProjectDetailPage from '../pages/admin/ProjectDetailPage.jsx';
 import ProjectFormPage from '../pages/admin/ProjectFormPage.jsx';
 import ProjectsPage from '../pages/admin/ProjectsPage.jsx';
 import ProofsPage from '../pages/admin/ProofsPage.jsx';
+import Redirection from '../pages/Redirection.jsx';
+import Authentification from '../pages/Authentification.jsx';
+import BienvenueDonateur from '../pages/donateur/Bienvenue.jsx';
+import RequireDonateur from './RequireDonateur.jsx';
+import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
+import MesTaches from '../pages/benevole/MesTaches.jsx';
+import MissionDetail from '../pages/benevole/MissionDetail.jsx';
+import Missions from '../pages/benevole/Missions.jsx';
+import MonJournal from '../pages/benevole/MonJournal.jsx';
+import CompleterProfil from '../pages/benevole/CompleterProfil.jsx';
+import MonProfil from '../pages/benevole/MonProfil.jsx';
+import VueDensemble from '../pages/benevole/VueDensemble.jsx';
+import RequireBenevole from './RequireBenevole.jsx';
+import BailleurLayout from '../layouts/BailleurLayout.jsx';
+import ActualitesBailleur from '../pages/bailleur/Actualites.jsx';
+import DeclarerOrganisation from '../pages/bailleur/DeclarerOrganisation.jsx';
+import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
+import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
+import PreuvesBailleur from '../pages/bailleur/Preuves.jsx';
+import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
+import TableauDeBordBailleur from '../pages/bailleur/TableauDeBord.jsx';
+import RequireBailleur from './RequireBailleur.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
 import StatisticsPage from '../pages/admin/StatisticsPage.jsx';
+import FundersPage from '../pages/admin/FundersPage.jsx';
+import VolunteersPage from '../pages/admin/VolunteersPage.jsx';
 import RequireAuth from './RequireAuth.jsx';
 
 /**
  * Table de routage de l'application HOPE.
  *
- *   /admin/login   formulaire de connexion (seule route publique)
+ *   /                page d'entree : l'admin, ou les utilisateurs
+ *   /authentification connexion et inscription des utilisateurs
+ *   /donateur        espace donateur (page de bienvenue seulement)
+ *   /admin/login     connexion administrateur
+ *   /benevole/...    espace benevole : missions, taches, journal
+ *   /bailleur/...    espace partenaire : suivi des financements
  *   /admin/...     espace administrateur, protege par RequireAuth
  *
  * Les huit sections du menu : accueil, projets, impact, budget,
@@ -29,8 +58,56 @@ import RequireAuth from './RequireAuth.jsx';
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/admin" replace />} />
+      <Route path="/" element={<Redirection />} />
       <Route path="/admin/login" element={<AdminLogin />} />
+
+      {/* ----- Porte unique des utilisateurs ----- */}
+      <Route path="/authentification" element={<Authentification />} />
+
+      {/* ----- Espace donateur : une page de bienvenue, pour l instant ----- */}
+      <Route element={<RequireDonateur />}>
+        <Route path="/donateur" element={<BienvenueDonateur />} />
+      </Route>
+
+      {/*
+        * Les anciennes adresses d'acces par espace menent desormais a la
+        * porte unique. Les liens et favoris deja donnes continuent de
+        * fonctionner, et il n'y a plus deux facons de s'inscrire.
+        */}
+      <Route path="/benevole/login" element={<Navigate to="/authentification" replace />} />
+      <Route path="/benevole/inscription" element={<Navigate to="/authentification" replace />} />
+      <Route path="/bailleur/login" element={<Navigate to="/authentification" replace />} />
+      <Route path="/bailleur/inscription" element={<Navigate to="/authentification" replace />} />
+
+      <Route element={<RequireBailleur />}>
+        {/* Hors de la coquille a rail : il n'y a pas encore
+            d'organisation a afficher dedans. */}
+        <Route path="/bailleur/declarer-organisation" element={<DeclarerOrganisation />} />
+
+        <Route element={<BailleurLayout />}>
+          <Route path="/bailleur" element={<TableauDeBordBailleur />} />
+          <Route path="/bailleur/partenariat" element={<PartenariatBailleur />} />
+          <Route path="/bailleur/rapports" element={<RapportsBailleur />} />
+          <Route path="/bailleur/preuves" element={<PreuvesBailleur />} />
+          <Route path="/bailleur/actualites" element={<ActualitesBailleur />} />
+          <Route path="/bailleur/organisation" element={<OrganisationBailleur />} />
+        </Route>
+      </Route>
+
+      <Route element={<RequireBenevole />}>
+        {/* Hors de la coquille a onglets : on remplit sa fiche avant
+            d'entrer dans l'espace. */}
+        <Route path="/benevole/completer-profil" element={<CompleterProfil />} />
+
+        <Route element={<BenevoleLayout />}>
+          <Route path="/benevole" element={<VueDensemble />} />
+          <Route path="/benevole/missions" element={<Missions />} />
+          <Route path="/benevole/missions/:id" element={<MissionDetail />} />
+          <Route path="/benevole/taches" element={<MesTaches />} />
+          <Route path="/benevole/journal" element={<MonJournal />} />
+          <Route path="/benevole/profil" element={<MonProfil />} />
+        </Route>
+      </Route>
 
       <Route element={<RequireAuth />}>
         {/* Page de verification de bout en bout, conservee depuis l'etape 1. */}
@@ -51,6 +128,8 @@ export default function AppRoutes() {
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/donors" element={<DonorsPage />} />
           <Route path="/admin/messages" element={<MessagesPage />} />
+          <Route path="/admin/volunteers" element={<VolunteersPage />} />
+          <Route path="/admin/funders" element={<FundersPage />} />
           <Route path="/admin/statistics" element={<StatisticsPage />} />
           <Route path="/admin/settings" element={<SettingsPage />} />
         </Route>

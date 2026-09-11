@@ -3,8 +3,12 @@
  */
 import { Router } from 'express';
 
+import authRoutes from './auth.routes.js';
 import adminAuthRoutes from './adminAuth.routes.js';
 import adminRoutes from './admin.routes.js';
+import volunteerAuthRoutes from './volunteerAuth.routes.js';
+import volunteerSpaceRoutes from './volunteerSpace.routes.js';
+import funderRoutes from './funder.routes.js';
 
 const router = Router();
 
@@ -13,10 +17,25 @@ router.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'hope-api', timestamp: new Date().toISOString() });
 });
 
+// Authentification des utilisateurs : un seul formulaire pour les trois
+// types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.
+router.use('/', authRoutes);
+
 // Authentification : /login est public, /me et /logout sont proteges.
 router.use('/admin', adminAuthRoutes);
 
 // Espace administrateur : tout est protege par authenticateAdmin.
 router.use('/admin', adminRoutes);
+
+// Espace benevole : /inscription et /login sont publics...
+router.use('/benevole', volunteerAuthRoutes);
+
+// ...le reste de l'espace exige un jeton de benevole. Monte apres les
+// routes publiques : son verrou global ne doit pas les couvrir.
+router.use('/benevole', volunteerSpaceRoutes);
+
+// Espace bailleur : /inscription, /login et /types-organisation sont
+// publics, le reste exige un jeton de bailleur.
+router.use('/bailleur', funderRoutes);
 
 export default router;
