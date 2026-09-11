@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { BeneficiaireModale } from '../../components/admin/modales.jsx';
 import {
@@ -37,9 +37,20 @@ const FILTRES = [
  * administrateur : aucune route publique ne les sert.
  */
 export default function BeneficiariesPage() {
+  const [parametres, setParametres] = useSearchParams();
   const [recherche, setRecherche] = useState('');
   const [filtre, setFiltre] = useState('tous');
   const [modale, setModale] = useState({ ouverte: false, cible: null });
+
+  // Ouverture directe depuis l'action rapide de l'accueil. Le parametre
+  // est efface aussitot : un rafraichissement ne doit pas rouvrir le
+  // formulaire, et un retour arriere non plus.
+  useEffect(() => {
+    if (parametres.get('nouveau') === '1') {
+      setModale({ ouverte: true, cible: null });
+      setParametres({}, { replace: true });
+    }
+  }, [parametres, setParametres]);
 
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => beneficiaryService.lister(),
