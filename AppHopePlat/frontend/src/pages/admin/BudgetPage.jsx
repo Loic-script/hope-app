@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
-import { DepenseModale, InvestirModale } from '../../components/admin/modales.jsx';
+import { DepenseModale, DonModale, InvestirModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
   Chargement,
@@ -15,6 +15,7 @@ import {
 } from '../../components/admin/ui.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import * as catalogService from '../../services/catalog.service.js';
+import * as donorService from '../../services/donor.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
@@ -31,6 +32,7 @@ export default function BudgetPage() {
   const [parametres, setParametres] = useSearchParams();
   const [modaleOuverte, setModaleOuverte] = useState(false);
   const [depenseOuverte, setDepenseOuverte] = useState(false);
+  const [fondOuvert, setFondOuvert] = useState(false);
 
   const { donnees, chargement, erreur, recharger } = useChargement(() => fundService.etat(), []);
   /*
@@ -44,6 +46,11 @@ export default function BudgetPage() {
     []
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
+  // Un fonds s'alimente d'un don : il faut donc savoir de qui il vient.
+  const { donnees: donateurs, recharger: rechargerDonateurs } = useChargement(
+    () => donorService.lister({ pageSize: 200 }),
+    []
+  );
 
   // Ouvertures directes depuis les actions rapides de l'accueil.
   useEffect(() => {
@@ -67,6 +74,7 @@ export default function BudgetPage() {
   const projetsOuverts = (listeProjets?.items ?? []).filter(
     (projet) => projet.status === 'IN_PROGRESS'
   );
+  const listeDonateurs = donateurs?.items ?? [];
 
   return (
     <>
@@ -76,18 +84,23 @@ export default function BudgetPage() {
         actions={
           <>
             {/*
-              Enregistrer une depense, c'est sortir l'argent deja recu
-              par un projet -- une autre operation que d'y investir le
-              fonds HOPE, d'ou deux boutons et non un menu.
+              Alimenter le fonds et le repartir sont les deux mouvements
+              de cet ecran : l'argent qui entre, puis celui qui part vers
+              un projet. D'ou deux boutons cote a cote.
+
+              Le don s'ouvre sur "Non affecte (fonds HOPE)", qui est la
+              valeur par defaut du formulaire : c'est bien le fonds que
+              l'on alimente ici. L'affectation reste modifiable -- un don
+              recu pour un projet precis s'enregistre aussi bien d'ici.
             */}
             <button
               type="button"
               className="btn btn--neutre"
-              onClick={() => setDepenseOuverte(true)}
-              disabled={projetsOuverts.length === 0}
+              onClick={() => setFondOuvert(true)}
+              disabled={listeDonateurs.length === 0}
             >
               <IconePlus />
-              Enregistrer une dépense
+              Ajouter un fond
             </button>
             <button
               type="button"
@@ -274,6 +287,28 @@ export default function BudgetPage() {
         />
       </Panneau>
 
+      <DonModale
+        ouverte={fondOuvert}
+        donateurs={listeDonateurs}
+        projets={projets}
+        libelles={catalogue?.labels ?? {}}
+        moyensPaiement={catalogue?.paymentMethods ?? {}}
+        devises={catalogue?.currencies ?? ['MGA']}
+        onFermer={() => setFondOuvert(false)}
+        onEnregistre={() => {
+          setFondOuvert(false);
+          recharger();
+          rechargerProjets();
+          rechargerDonateurs();
+        }}
+      />
+
+      {/*
+        La depense n'a plus de bouton sur cet ecran, mais l'action rapide
+        de l'accueil ouvre toujours son formulaire ici : c'est la seule
+        page qui connaisse a la fois les projets et leurs fonds
+        disponibles.
+      */}
       <DepenseModale
         ouverte={depenseOuverte}
         projets={projetsOuverts}
