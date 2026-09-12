@@ -4,6 +4,8 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext } fro
 // Declinaison officielle pour fond sombre : les lettres y sont deja
 // blanches, contrairement au composant SVG qu'il fallait recolorer.
 import logoSurFondViolet from '../assets/LOGO_WORDMARK_SUR_FOND_VIOLET.png';
+// Replie, le rail n'a la place que du pictogramme.
+import pictogramme from '../assets/LOGO_PICTOGRAMME_FOND_VIOLET.png';
 import {
   IconeAccueil,
   IconeBeneficiaires,
@@ -108,6 +110,14 @@ const FENETRE_ARC = 5;
 /** En dessous de cette largeur, le menu prend la forme d'un arc. */
 const LARGEUR_ARC = '(max-width: 560px)';
 
+/**
+ * Ou l'on retient si le rail est replie.
+ *
+ * Un reglage d'affichage propre a la machine : il n'a rien a faire en
+ * base, et doit survivre au rechargement de la page.
+ */
+const CLE_RAIL = 'hope.admin.rail-replie';
+
 /** Distance a parcourir, en pixels, pour faire tourner l'arc d'un cran. */
 const PIXELS_PAR_CRAN = 62;
 
@@ -146,6 +156,27 @@ export default function AdminLayout() {
 
   const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
   const [menuOuvert, setMenuOuvert] = useState(false);
+
+  /*
+   * Rail replie ou deploye. Deploye par defaut : les noms se lisent sans
+   * avoir a survoler, et c'est la forme qui rend le menu lisible d'un
+   * coup d'oeil. Le repli existe pour rendre la largeur a qui en manque.
+   */
+  const [railReplie, setRailReplie] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem(CLE_RAIL) === '1'
+  );
+
+  function basculerRail() {
+    setRailReplie((replie) => {
+      const suivant = !replie;
+      try {
+        localStorage.setItem(CLE_RAIL, suivant ? '1' : '0');
+      } catch {
+        // Navigation privee : le reglage ne survivra pas, tant pis.
+      }
+      return suivant;
+    });
+  }
 
   /**
    * Rotation manuelle de l'arc, en crans, par rapport a la position ou
@@ -315,7 +346,15 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="admin">
+    /*
+      La largeur du rail descend en variable CSS : c'est elle qui decale
+      le bandeau et le contenu. Une classe suffirait, mais la variable
+      evite d'ecrire deux fois la meme mesure dans la feuille de style.
+    */
+    <div
+      className="admin"
+      style={{ '--admin-rail-actuel': railReplie ? 'var(--admin-rail-large)' : 'var(--admin-rail-ouvert)' }}
+    >
       {/*
         Rail vertical a gauche sur ecran large, arc en bas de l'ecran sur
         mobile : c'est la meme balise, seule sa mise en page change.
@@ -325,7 +364,30 @@ export default function AdminLayout() {
         icones. Dans les deux cas c'est l'aria-label du lien qui porte le
         nom pour les lecteurs d'ecran.
       */}
-      <aside className="lateral">
+      <aside className={`lateral${railReplie ? ' lateral--replie' : ''}`}>
+        {/*
+          La marque en tete du rail, et non plus au centre du bandeau :
+          c'est la colonne de gauche qui identifie l'espace, comme sur la
+          plupart des back-offices. Le bandeau garde son logo sur
+          telephone, ou le rail cede la place a l'arc.
+        */}
+        <div className="lateral__marque">
+          <Link className="lateral__logo" to="/admin" aria-label="HOPE — accueil administrateur">
+            <img src={railReplie ? pictogramme : logoSurFondViolet} alt="HOPE" />
+          </Link>
+          <button
+            type="button"
+            className="lateral__basculer"
+            onClick={basculerRail}
+            aria-label={railReplie ? 'Déployer le menu' : 'Replier le menu'}
+            aria-expanded={!railReplie}
+          >
+            <IconeChevronDroit />
+          </button>
+        </div>
+
+        <p className="lateral__espace">Espace administrateur</p>
+
         <nav
           className={`lateral__nav${enGlissement ? ' lateral__nav--glisse' : ''}`}
           aria-label="Navigation principale"
