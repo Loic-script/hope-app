@@ -627,16 +627,31 @@
       radial-gradient(120% 30% at 50% 0%, rgba(93, 86, 150, 0.5), transparent 72%),
       linear-gradient(180deg, var(--entete-fond-haut), var(--entete-fond-bas));
     box-shadow: 1px 0 0 rgba(255, 255, 255, 0.06);
-    /* Sur un ecran bas, les dix entrees defilent -- sans barre visible,
-       qui trahirait un debordement sur la plupart des ecrans. */
+    /* Sur un ecran bas, les dix entrees defilent. */
     overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-width: none;
     transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .lateral::-webkit-scrollbar {
-    display: none;
+  /*
+   * Le rail est sombre : la barre de la charte, prevue pour les fonds
+   * clairs, y disparaitrait. On redefinit donc ses deux teintes -- les
+   * variables pour les navigateurs WebKit, la propriete standard pour
+   * les autres, celle-ci ne se recalculant pas quand la variable change
+   * plus bas dans l'arbre.
+   */
+  .lateral {
+    --defilement-pouce: rgba(255, 255, 255, 0.2);
+    --defilement-pouce-survol: rgba(255, 255, 255, 0.36);
+  }
+
+  /* Firefox seulement : declarer "scrollbar-color" hors de cette
+     condition ferait basculer Chrome sur sa barre native pour le seul
+     rail, fleches comprises. */
+  @supports (scrollbar-width: thin) and (not selector(::-webkit-scrollbar)) {
+    .lateral {
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
   }
 
   /* --- La marque, en tete --- */

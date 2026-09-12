@@ -147,3 +147,86 @@ a {
   --voile-blanc: rgba(255, 255, 255, 0.945);
   --voile-bleu: rgba(134, 185, 222, 0.26);
 }
+
+/* ============================================================
+   Barres de defilement
+
+   Celle du navigateur est grise, large et etrangere a la charte.
+   On la ramene dans la palette : un pouce arrondi de la teinte des
+   bordures, qui passe au violet HOPE au survol, sur un rail
+   transparent.
+
+   Deux syntaxes existent, et il ne faut surtout pas les cumuler.
+   Chrome comprend les deux, mais des qu'il voit "scrollbar-color"
+   il bascule sur sa barre native et ignore les pseudo-elements --
+   barre qui, sous Linux, rajoute une fleche a chaque extremite.
+   On lui laisse donc les pseudo-elements, qui donnent le controle
+   complet, et on reserve la propriete standard a Firefox, seul a
+   ne pas connaitre ::-webkit-scrollbar.
+
+   Les teintes passent par des variables afin qu'une surface sombre
+   n'ait qu'a les redefinir -- voir le rail du menu.
+   ============================================================ */
+
+:root {
+  --defilement-largeur: 10px;
+  --defilement-pouce: #c6cee1;
+  --defilement-pouce-survol: var(--hope-violet);
+  --defilement-rail: transparent;
+}
+
+::-webkit-scrollbar {
+  width: var(--defilement-largeur);
+  height: var(--defilement-largeur);
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--defilement-rail);
+}
+
+/*
+ * La bordure transparente amincit le pouce sans toucher a la largeur de
+ * la barre : elle laisse 2 px de vide de chaque cote, ce que
+ * "background-clip: padding-box" rend visible.
+ */
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-color: var(--defilement-pouce);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--defilement-pouce-survol);
+  background-clip: padding-box;
+}
+
+/* Les fleches des extremites : une barre se traine, elle ne se clique
+   pas fleche par fleche. */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* L'angle entre deux barres : sans cela le navigateur y pose un carre gris. */
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/*
+ * Firefox. La condition ecarte Chrome, qui comprend "scrollbar-width"
+ * mais aussi ::-webkit-scrollbar : sans elle il prendrait cette branche
+ * et perdrait tout ce qui precede.
+ *
+ * "scrollbar-width" ne s'herite pas -- pose sur :root il ne toucherait
+ * que la barre de la page, pas celles du rail ni des tableaux larges --
+ * d'ou l'etoile. "scrollbar-color", lui, s'herite.
+ */
+@supports (scrollbar-width: thin) and (not selector(::-webkit-scrollbar)) {
+  * {
+    scrollbar-width: thin;
+  }
+
+  :root {
+    scrollbar-color: var(--defilement-pouce) var(--defilement-rail);
+  }
+}
