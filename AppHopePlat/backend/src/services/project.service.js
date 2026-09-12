@@ -22,8 +22,11 @@ import * as notificationRepository from '../repositories/notification.repository
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
 import * as mediaService from './media.service.js';
+// Le devis parle le vocabulaire des depenses : c'est ce qui permettra
+// de comparer le prevu au reel, poste par poste.
+import { CATEGORIES as CATEGORIES_DEPENSE } from './expense.service.js';
 
-import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
+import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, depuisBase, enCentimes, normaliserDevise, pourcentage } from '../shared/money.js';
 import {
   dateRequise,
@@ -79,6 +82,132 @@ function exigerProjetEnCours(projet) {
 }
 
 /** Valide et normalise les champs du formulaire de projet. */
+/**
+ * Nombre d'objectifs specifiques acceptes par projet.
+ *
+ * Dix : au-dela, ce ne sont plus des objectifs mais un plan d'action,
+ * et la liste cesse de se relire d'un coup d'oeil.
+ */
+export const MAX_OBJECTIFS = 10;
+
+/**
+ * Nettoie la liste des objectifs specifiques.
+ *
+ * Les lignes vides sont retirees plutot que refusees : le formulaire en
+ * laisse une derriere lui des qu'on clique "+ Ajouter" sans la remplir,
+ * et bloquer l'enregistrement pour cela serait penible.
+ *
+ * @param {unknown} valeur ce qu'a envoye le client
+ * @returns {string[]} libelles, dans l'ordre de saisie
+ */
+function preparerObjectifs(valeur) {
+  if (!Array.isArray(valeur)) {
+    throw new ErreurValidation('Les objectifs spécifiques doivent former une liste.', {
+      objectives: 'Format invalide',
+    });
+  }
+
+  const libelles = valeur
+    .map((element) => (typeof element === 'string' ? element : element?.label))
+    .map((libelle) => String(libelle ?? '').trim())
+    .filter((libelle) => libelle !== '');
+
+  if (libelles.length > MAX_OBJECTIFS) {
+    throw new ErreurValidation(
+      `Un projet ne peut pas porter plus de ${MAX_OBJECTIFS} objectifs spécifiques.`,
+      { objectives: 'Trop d’objectifs' }
+    );
+  }
+
+  for (const libelle of libelles) {
+    if (libelle.length > 300) {
+      throw new ErreurValidation('Un objectif spécifique ne peut pas dépasser 300 caractères.', {
+        objectives: 'Objectif trop long',
+      });
+    }
+  }
+
+  return libelles;
+}
+
+/**
+ * Nombre de postes acceptes dans un devis.
+ *
+ * Trente : de quoi detailler un projet de terrain sans transformer le
+ * formulaire en tableur.
+ */
+export const MAX_POSTES_DEVIS = 30;
+
+/**
+ * Nettoie et valide le devis.
+ *
+ * Comme pour les objectifs, une ligne entierement vide est ecartee sans
+ * bruit : le formulaire en laisse une derriere lui des qu'on clique
+ * "+ Ajouter un poste" sans la remplir. Une ligne commencee mais
+ * incomplete, elle, est refusee -- un poste sans montant fausserait le
+ * total en silence.
+ *
+ * @returns {{ label: string, category: string|null, amount: string,
+ *             centimes: number }[]}
+ */
+function preparerDevis(valeur) {
+  if (!Array.isArray(valeur)) {
+    throw new ErreurValidation('Le devis doit former une liste de postes.', {
+      quoteItems: 'Format invalide',
+    });
+  }
+
+  const lignes = valeur.filter((ligne) => {
+    const libelle = String(ligne?.label ?? '').trim();
+    const montant = String(ligne?.amount ?? '').trim();
+    return libelle !== '' || montant !== '';
+  });
+
+  if (lignes.length > MAX_POSTES_DEVIS) {
+    throw new ErreurValidation(`Un devis ne peut pas dépasser ${MAX_POSTES_DEVIS} postes.`, {
+      quoteItems: 'Trop de postes',
+    });
+  }
+
+  return lignes.map((ligne, rang) => {
+    const libelle = String(ligne?.label ?? '').trim();
+    if (libelle === '') {
+      throw new ErreurValidation(`Le poste ${rang + 1} du devis n’a pas d’intitulé.`, {
+        quoteItems: 'Intitulé manquant',
+      });
+    }
+    if (libelle.length > 200) {
+      throw new ErreurValidation(`L’intitulé du poste ${rang + 1} dépasse 200 caractères.`, {
+        quoteItems: 'Intitulé trop long',
+      });
+    }
+
+    // Le vocabulaire est celui des depenses : c'est ce qui permettra de
+    // comparer le prevu au reel, poste par poste.
+    const categorie = String(ligne?.category ?? '').trim();
+    if (categorie !== '' && !CATEGORIES_DEPENSE.includes(categorie)) {
+      throw new ErreurValidation(`La catégorie « ${categorie} » n’existe pas.`, {
+        quoteItems: 'Catégorie inconnue',
+      });
+    }
+
+    // Le controle d'absence est fait ici : enCentimes dirait "Le champ
+    // "le montant du poste 1" est obligatoire", ce qui se lit mal.
+    if (String(ligne?.amount ?? '').trim() === '') {
+      throw new ErreurValidation(`Le poste ${rang + 1} du devis n’a pas de montant.`, {
+        quoteItems: 'Montant manquant',
+      });
+    }
+    const centimes = enCentimes(ligne.amount, `montant du poste ${rang + 1}`);
+    return {
+      label: libelle,
+      category: categorie === '' ? null : categorie,
+      amount: centimesVersTexte(centimes),
+      centimes,
+    };
+  });
+}
+
 async function preparerDonnees(corps, { creation }) {
   const donnees = {};
 
@@ -123,8 +252,39 @@ async function preparerDonnees(corps, { creation }) {
       ? valeurParmi(corps.mediaType, 'mediaType', ['PHOTO', 'VIDEO'], { defaut: 'PHOTO' })
       : null;
   }
+  if (creation || corps.objectives !== undefined) {
+    donnees.objectives = preparerObjectifs(corps.objectives ?? []);
+  }
+  if (creation || corps.quoteItems !== undefined) {
+    donnees.quoteItems = preparerDevis(corps.quoteItems ?? []);
+  }
 
   return donnees;
+}
+
+/**
+ * Le budget necessaire, en centimes.
+ *
+ * Des qu'un devis porte au moins un poste, c'est leur somme qui fait
+ * foi : le champ saisi est alors ignore, et le formulaire le montre en
+ * lecture seule. Sans devis, on retombe sur la saisie directe -- celui
+ * qui connait deja le montant ne doit pas etre oblige de le detailler.
+ *
+ * @param {boolean} obligatoire a la creation, un projet sans devis doit
+ *        porter un montant : l'absence est alors une erreur, pas un
+ *        "on n'y touche pas".
+ * @returns {number|null} null quand rien ne permet de le determiner,
+ *          ce qui n'arrive qu'a la modification d'un projet sans devis
+ *          dont on ne touche pas au budget.
+ */
+function budgetNecessaire(devis, montantSaisi, { obligatoire = false } = {}) {
+  if (devis !== undefined && devis.length > 0) {
+    return devis.reduce((total, ligne) => total + ligne.centimes, 0);
+  }
+  if (obligatoire || montantSaisi !== undefined) {
+    return enCentimes(montantSaisi, 'requiredBudget');
+  }
+  return null;
 }
 
 /** Liste paginee et filtrable. */
@@ -199,7 +359,9 @@ export async function recupererApercu(id) {
 /** Cree un projet. Il demarre systematiquement en cours. */
 export async function creer(corps = {}, auteur = null) {
   const donnees = await preparerDonnees(corps, { creation: true });
-  const budget = enCentimes(corps.requiredBudget, 'requiredBudget');
+  const budget = budgetNecessaire(donnees.quoteItems, corps.requiredBudget, {
+    obligatoire: true,
+  });
 
   const projet = await projectRepository.creer({
     ...donnees,
@@ -240,18 +402,35 @@ export async function mettreAJour(id, corps = {}) {
     media_type: donnees.mediaType,
   };
 
-  // Le budget necessaire ne peut pas descendre sous ce qui est deja engage.
-  if (corps.requiredBudget !== undefined) {
-    const nouveau = enCentimes(corps.requiredBudget, 'requiredBudget');
+  /*
+   * Le budget necessaire ne peut pas descendre sous ce qui est deja
+   * engage. La regle vaut aussi quand le montant vient du devis : c'est
+   * alors le retrait d'un poste qui la declenche, et le message doit le
+   * dire, sinon on cherche l'erreur du cote du budget.
+   */
+  const nouveau = budgetNecessaire(donnees.quoteItems, corps.requiredBudget);
+  if (nouveau !== null) {
     const depense = depuisBase(existant.spentTotal);
+    const parLeDevis = donnees.quoteItems !== undefined && donnees.quoteItems.length > 0;
 
     if (nouveau < depense) {
       throw new ErreurRegleMetier(
-        `Le budget nécessaire ne peut pas être inférieur aux ${centimesVersTexte(depense)} déjà dépensés.`,
+        parLeDevis
+          ? `Le devis totalise ${centimesVersTexte(nouveau)}, moins que les ${centimesVersTexte(depense)} déjà dépensés. Retirez moins de postes, ou revoyez leurs montants.`
+          : `Le budget nécessaire ne peut pas être inférieur aux ${centimesVersTexte(depense)} déjà dépensés.`,
         'BUDGET_INFERIEUR_AUX_DEPENSES'
       );
     }
     colonnes.required_budget = centimesVersTexte(nouveau);
+  }
+
+  // Les objectifs ne sont pas une colonne : ils vivent dans leur propre
+  // table, et ne sont reecrits que si le client les a envoyes.
+  if (donnees.objectives !== undefined) {
+    await projectRepository.remplacerObjectifs(projectId, donnees.objectives);
+  }
+  if (donnees.quoteItems !== undefined) {
+    await projectRepository.remplacerDevis(projectId, donnees.quoteItems);
   }
 
   const misAJour = await projectRepository.mettreAJour(projectId, colonnes);

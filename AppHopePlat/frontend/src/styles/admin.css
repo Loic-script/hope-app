@@ -686,6 +686,151 @@
   border-color: #dda49d;
 }
 
+/* ------------------------------------------------------------------
+   Liste de champs repetables
+
+   Les objectifs specifiques d'un projet : une saisie par ligne, une
+   croix pour retirer la ligne, un bouton pour en ajouter une.
+   ------------------------------------------------------------------ */
+
+.liste-champs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.liste-champs__ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* La saisie prend toute la place laissee par la croix. min-width: 0 lui
+   permet de se replier sous sa largeur naturelle dans le flex. */
+.liste-champs__ligne input {
+  flex: 1;
+  min-width: 0;
+}
+
+.liste-champs__retirer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 9px;
+  background-color: var(--admin-surface);
+  color: var(--admin-texte-faible);
+  transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.liste-champs__retirer:hover:not(:disabled) {
+  color: var(--etat-rouge);
+  border-color: var(--etat-rouge);
+  background-color: var(--etat-rouge-fond);
+}
+
+.liste-champs__retirer svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ------------------------------------------------------------------
+   Devis d'un projet
+
+   Une ligne par poste : intitule, categorie, montant, et la croix qui
+   retire la ligne. Les trois saisies se partagent la largeur dans des
+   proportions fixes -- l'intitule est ce qu'on lit, le montant ce qu'on
+   verifie.
+   ------------------------------------------------------------------ */
+
+.devis {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.devis__ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* min-width: 0 sur chaque saisie : sans lui, aucune ne se replie sous sa
+   largeur naturelle et la ligne deborde du panneau. */
+.devis__ligne input,
+.devis__ligne select {
+  min-width: 0;
+}
+
+.devis__intitule {
+  flex: 3;
+}
+
+.devis__categorie {
+  flex: 1.4;
+}
+
+.devis__montant {
+  flex: 1.2;
+  text-align: right;
+}
+
+.devis__pied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.devis__total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* Le total sous le tableau de la fiche projet : hors du tableau, pour
+   ne pas se confondre avec une ligne de devis. */
+.devis__recapitulatif {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--admin-bordure);
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.devis__recapitulatif strong {
+  font-size: 17px;
+  color: var(--admin-texte);
+}
+
+.devis__total strong {
+  font-size: 16px;
+  color: var(--admin-texte);
+}
+
+/* Le budget calcule : gris comme un champ desactive, mais selectionnable
+   -- on doit pouvoir copier le montant. */
+.champ-admin input[readonly] {
+  background-color: var(--admin-surface-douce);
+  color: var(--admin-texte-doux);
+  cursor: default;
+}
+
 .champ-admin__message {
   margin-top: 6px;
   font-size: 12.5px;
@@ -859,6 +1004,14 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 20px;
+}
+
+/* Une precision posee sous un panneau : ni alerte, ni titre, juste une
+   phrase qui dit ou faire ce qu'on ne peut pas faire ici. */
+.mention-page {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
 }
 
 .carte-chiffre {

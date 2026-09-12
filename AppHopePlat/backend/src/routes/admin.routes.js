@@ -158,7 +158,7 @@ router.delete('/documents/:id', documents.supprimer);
 router.get('/field-proofs', fieldProofs.lister);
 router.post('/field-proofs', televerserPreuve, fieldProofs.creer);
 router.get('/field-proofs/:id', fieldProofs.recuperer);
-router.get('/field-proofs/:id/file', fieldProofs.telecharger);
+router.get('/field-proofs/:id/files/:fileId', fieldProofs.telecharger);
 router.delete('/field-proofs/:id', fieldProofs.supprimer);
 router.get('/projects/:projectId/field-proofs', fieldProofs.lister);
 

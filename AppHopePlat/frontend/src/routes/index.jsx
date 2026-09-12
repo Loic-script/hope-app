@@ -4,6 +4,7 @@ import AdminLayout from '../layouts/AdminLayout.jsx';
 import AdminLogin from '../pages/AdminLogin.jsx';
 import AdminLoginSuccess from '../pages/AdminLoginSuccess.jsx';
 import AdminHome from '../pages/admin/AdminHome.jsx';
+import BeneficiariesPage from '../pages/admin/BeneficiariesPage.jsx';
 import BudgetPage from '../pages/admin/BudgetPage.jsx';
 import DonorsPage from '../pages/admin/DonorsPage.jsx';
 import ImpactPage from '../pages/admin/ImpactPage.jsx';
@@ -12,6 +13,7 @@ import NotificationsPage from '../pages/admin/NotificationsPage.jsx';
 import ProjectDetailPage from '../pages/admin/ProjectDetailPage.jsx';
 import ProjectFormPage from '../pages/admin/ProjectFormPage.jsx';
 import ProjectsPage from '../pages/admin/ProjectsPage.jsx';
+import ProofDetailPage from '../pages/admin/ProofDetailPage.jsx';
 import ProofsPage from '../pages/admin/ProofsPage.jsx';
 import Redirection from '../pages/Redirection.jsx';
 import Authentification from '../pages/Authentification.jsx';
@@ -120,7 +122,10 @@ export default function AppRoutes() {
           <Route path="/admin/projects/new" element={<ProjectFormPage />} />
           <Route path="/admin/projects/:id" element={<ProjectDetailPage />} />
 
+          <Route path="/admin/beneficiaries" element={<BeneficiariesPage />} />
+
           <Route path="/admin/proofs" element={<ProofsPage />} />
+          <Route path="/admin/proofs/:id" element={<ProofDetailPage />} />
           <Route path="/admin/projects/:id/edit" element={<ProjectFormPage />} />
 
           <Route path="/admin/impact" element={<ImpactPage />} />

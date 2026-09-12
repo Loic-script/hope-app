@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { IconeCroix, IconePlus } from '../../components/admin/AdminIcons.jsx';
 import {
+  Champ,
   ChampMontant,
   ChampSelection,
   ChampTexte,
@@ -12,14 +14,56 @@ import { Alerte, Chargement, EntetePage, Panneau } from '../../components/admin/
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
+import * as fmt from '../../utils/format.js';
+
+/**
+ * Nombre d'objectifs specifiques acceptes, comme cote serveur.
+ *
+ * Dix : au-dela, ce ne sont plus des objectifs mais un plan d'action, et
+ * la liste cesse de se relire d'un coup d'oeil.
+ */
+const MAX_OBJECTIFS = 10;
+
+/** Nombre de postes acceptes dans un devis, comme cote serveur. */
+const MAX_POSTES_DEVIS = 30;
+
+/**
+ * Somme des postes du devis, en centimes.
+ *
+ * On travaille en centimes entiers et non en nombres a virgule : 0,1 +
+ * 0,2 ne fait pas 0,3 en flottant, et un total de budget ne doit pas
+ * deriver d'un centime. La saisie francaise est toleree -- espaces de
+ * milliers, virgule decimale -- comme cote serveur.
+ *
+ * @returns {number|null} null si un poste porte un montant illisible :
+ *          le total n'a alors pas de sens, et c'est le serveur qui dira
+ *          lequel est en cause.
+ */
+function totalDevisEnCentimes(postes) {
+  let total = 0;
+  for (const poste of postes) {
+    const texte = String(poste.amount ?? '').trim().replace(/\s/g, '').replace(',', '.');
+    if (texte === '') return null;
+    if (!/^\d+(\.\d{1,2})?$/.test(texte)) return null;
+    const [entiere, decimale = ''] = texte.split('.');
+    total += Number(entiere) * 100 + Number(decimale.padEnd(2, '0'));
+  }
+  return total;
+}
 
 const FORMULAIRE_VIDE = {
   name: '',
   description: '',
+  // Une ligne vide au depart : le champ doit se voir sans qu'il faille
+  // deviner qu'un bouton l'ouvre.
+  objectives: [''],
   categoryId: '',
   location: '',
   managerName: '',
   requiredBudget: '',
+  // Vide au depart : le devis est facultatif, et le budget se saisit
+  // directement tant qu'aucun poste n'est ouvert.
+  quoteItems: [],
   currency: 'MGA',
   beneficiaryProfile: '',
   beneficiaryTarget: '',
@@ -56,10 +100,17 @@ export default function ProjectFormPage() {
     setFormulaire({
       name: projet.name ?? '',
       description: projet.description ?? '',
+      objectives:
+        projet.objectives?.length > 0 ? projet.objectives.map((o) => o.label) : [''],
       categoryId: projet.categoryId ?? '',
       location: projet.location ?? '',
       managerName: projet.managerName ?? '',
       requiredBudget: projet.requiredBudget ?? '',
+      quoteItems: (projet.quoteItems ?? []).map((poste) => ({
+        label: poste.label ?? '',
+        category: poste.category ?? '',
+        amount: poste.amount ?? '',
+      })),
       currency: (projet.currency ?? 'MGA').trim(),
       beneficiaryProfile: projet.beneficiaryProfile ?? '',
       beneficiaryTarget: projet.beneficiaryTarget ?? '',
@@ -74,6 +125,75 @@ export default function ProjectFormPage() {
     setFormulaire((actuel) => ({ ...actuel, [champ]: valeur }));
   }
 
+  /* ---------- Les objectifs specifiques, ligne a ligne ---------- */
+
+  function modifierObjectif(rang, valeur) {
+    setFormulaire((actuel) => ({
+      ...actuel,
+      objectives: actuel.objectives.map((libelle, index) => (index === rang ? valeur : libelle)),
+    }));
+  }
+
+  function ajouterObjectif() {
+    setFormulaire((actuel) =>
+      actuel.objectives.length >= MAX_OBJECTIFS
+        ? actuel
+        : { ...actuel, objectives: [...actuel.objectives, ''] }
+    );
+  }
+
+  /** Retirer la derniere ligne la vide au lieu de la supprimer : le champ
+      ne doit jamais disparaitre completement. */
+  function retirerObjectif(rang) {
+    setFormulaire((actuel) => {
+      const restant = actuel.objectives.filter((_, index) => index !== rang);
+      return { ...actuel, objectives: restant.length > 0 ? restant : [''] };
+    });
+  }
+
+  /* ---------- Le devis, poste a poste ---------- */
+
+  function modifierPoste(rang, champ, valeur) {
+    setFormulaire((actuel) => ({
+      ...actuel,
+      quoteItems: actuel.quoteItems.map((poste, index) =>
+        index === rang ? { ...poste, [champ]: valeur } : poste
+      ),
+    }));
+  }
+
+  function ajouterPoste() {
+    setFormulaire((actuel) =>
+      actuel.quoteItems.length >= MAX_POSTES_DEVIS
+        ? actuel
+        : { ...actuel, quoteItems: [...actuel.quoteItems, { label: '', category: '', amount: '' }] }
+    );
+  }
+
+  /* Retirer le dernier poste rend la main a la saisie directe : le
+     budget redevient modifiable, avec la derniere valeur calculee. */
+  function retirerPoste(rang) {
+    setFormulaire((actuel) => ({
+      ...actuel,
+      quoteItems: actuel.quoteItems.filter((_, index) => index !== rang),
+    }));
+  }
+
+  /*
+   * Des qu'un poste existe, le budget n'est plus saisi mais calcule.
+   * C'est le meme arbitrage que cote serveur, et le champ passe en
+   * lecture seule pour qu'aucun des deux chiffres ne puisse contredire
+   * l'autre.
+   */
+  const devisOuvert = formulaire.quoteItems.length > 0;
+  const totalDevis = devisOuvert ? totalDevisEnCentimes(formulaire.quoteItems) : null;
+  /* En lecture seule, le montant est mis en forme comme le total juste
+     au-dessus : c'est un affichage, plus une saisie. Modifiable, il
+     reste la chaine brute que l'on tape. */
+  const budgetAffiche = devisOuvert
+    ? (totalDevis === null ? '' : fmt.montant((totalDevis / 100).toFixed(2), formulaire.currency))
+    : formulaire.requiredBudget;
+
   async function enregistrer(evenement) {
     evenement.preventDefault();
 
@@ -87,6 +207,12 @@ export default function ProjectFormPage() {
       beneficiaryTarget: formulaire.beneficiaryTarget === '' ? null : Number(formulaire.beneficiaryTarget),
       mediaUrl: formulaire.mediaUrl || null,
       mediaType: formulaire.mediaUrl ? formulaire.mediaType : null,
+      // Le serveur ecarte lui aussi les lignes vides ; on les retire ici
+      // pour ne pas envoyer du vide qu'il devra nettoyer.
+      objectives: formulaire.objectives.map((o) => o.trim()).filter(Boolean),
+      // Le serveur recalcule le total a partir des postes : le montant
+      // envoye ci-dessus ne sert que lorsqu'il n'y en a aucun.
+      quoteItems: formulaire.quoteItems,
     };
 
     await soumettre(
@@ -146,6 +272,66 @@ export default function ProjectFormPage() {
               disabled={envoi}
             />
 
+            {/*
+              Les objectifs specifiques : ce que le projet doit avoir
+              accompli. "Ouvrir une cantine" est le projet ; "servir un
+              repas chaud a 200 eleves" en est un objectif.
+
+              Une ligne par objectif plutot qu'un texte libre : on les
+              relit point par point, et chacun pourra plus tard porter
+              son indicateur.
+            */}
+            <Champ
+              label="Objectifs spécifiques"
+              id="objective-0"
+              aide={`Un objectif par ligne, ${MAX_OBJECTIFS} au maximum. Ce que le projet doit avoir accompli, pas ce qu’il est.`}
+              pleineLargeur
+            >
+              <ul className="liste-champs">
+                {formulaire.objectives.map((libelle, rang) => (
+                  // L'index sert de cle faute de mieux : ces lignes n'ont
+                  // pas d'identite tant qu'elles ne sont pas enregistrees,
+                  // et elles ne se reordonnent pas.
+                  // eslint-disable-next-line react/no-array-index-key
+                  <li className="liste-champs__ligne" key={rang}>
+                    <input
+                      id={`objective-${rang}`}
+                      type="text"
+                      value={libelle}
+                      onChange={(e) => modifierObjectif(rang, e.target.value)}
+                      placeholder={
+                        rang === 0
+                          ? 'Servir un repas chaud par jour à 200 élèves'
+                          : 'Objectif suivant…'
+                      }
+                      maxLength={300}
+                      disabled={envoi}
+                      aria-label={`Objectif spécifique ${rang + 1}`}
+                    />
+                    <button
+                      type="button"
+                      className="liste-champs__retirer"
+                      onClick={() => retirerObjectif(rang)}
+                      disabled={envoi}
+                      aria-label={`Retirer l’objectif ${rang + 1}`}
+                    >
+                      <IconeCroix />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                className="btn btn--neutre btn--petit"
+                onClick={ajouterObjectif}
+                disabled={envoi || formulaire.objectives.length >= MAX_OBJECTIFS}
+              >
+                <IconePlus />
+                Ajouter un objectif
+              </button>
+            </Champ>
+
             <ChampSelection
               label="Catégorie"
               id="categoryId"
@@ -176,15 +362,120 @@ export default function ProjectFormPage() {
               disabled={envoi}
             />
 
+            {/*
+              Le devis : d'ou vient le budget necessaire.
+
+              Il est facultatif. Sans poste, le montant se saisit
+              directement -- celui qui le connait deja n'a pas a le
+              detailler. Des qu'un poste existe, c'est la somme qui fait
+              foi, et le champ du dessous passe en lecture seule : deux
+              chiffres modifiables pour la meme chose finiraient par se
+              contredire.
+            */}
+            <Champ
+              label="Devis"
+              id="poste-0-label"
+              aide={
+                devisOuvert
+                  ? `${formulaire.quoteItems.length} poste(s) sur ${MAX_POSTES_DEVIS}. La catégorie reprend celle des dépenses : elle permettra de comparer le prévu au réel.`
+                  : 'Détaillez le budget poste par poste, ou saisissez directement le montant ci-dessous.'
+              }
+              pleineLargeur
+            >
+              {devisOuvert && (
+                <ul className="devis">
+                  {formulaire.quoteItems.map((poste, rang) => (
+                    // L'index sert de cle faute de mieux : ces lignes n'ont
+                    // pas d'identite tant qu'elles ne sont pas enregistrees.
+                    // eslint-disable-next-line react/no-array-index-key
+                    <li className="devis__ligne" key={rang}>
+                      <input
+                        id={`poste-${rang}-label`}
+                        type="text"
+                        className="devis__intitule"
+                        value={poste.label}
+                        onChange={(e) => modifierPoste(rang, 'label', e.target.value)}
+                        placeholder="Fournitures scolaires"
+                        maxLength={200}
+                        disabled={envoi}
+                        aria-label={`Intitulé du poste ${rang + 1}`}
+                      />
+                      <select
+                        className="devis__categorie"
+                        value={poste.category}
+                        onChange={(e) => modifierPoste(rang, 'category', e.target.value)}
+                        disabled={envoi}
+                        aria-label={`Catégorie du poste ${rang + 1}`}
+                      >
+                        <option value="">Catégorie…</option>
+                        {(catalogue?.expenseCategories ?? []).map((categorie) => (
+                          <option value={categorie} key={categorie}>
+                            {categorie}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        className="devis__montant"
+                        value={poste.amount}
+                        onChange={(e) => modifierPoste(rang, 'amount', e.target.value)}
+                        placeholder="0"
+                        disabled={envoi}
+                        aria-label={`Montant du poste ${rang + 1}`}
+                      />
+                      <button
+                        type="button"
+                        className="liste-champs__retirer"
+                        onClick={() => retirerPoste(rang)}
+                        disabled={envoi}
+                        aria-label={`Retirer le poste ${rang + 1}`}
+                      >
+                        <IconeCroix />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="devis__pied">
+                <button
+                  type="button"
+                  className="btn btn--neutre btn--petit"
+                  onClick={ajouterPoste}
+                  disabled={envoi || formulaire.quoteItems.length >= MAX_POSTES_DEVIS}
+                >
+                  <IconePlus />
+                  {devisOuvert ? 'Ajouter un poste' : 'Détailler en postes'}
+                </button>
+
+                {devisOuvert && (
+                  <p className="devis__total">
+                    Total du devis
+                    <strong>
+                      {totalDevis === null
+                        ? '—'
+                        : fmt.montant((totalDevis / 100).toFixed(2), formulaire.currency)}
+                    </strong>
+                  </p>
+                )}
+              </div>
+            </Champ>
+
             <ChampMontant
               label="Budget nécessaire"
               id="requiredBudget"
               obligatoire
-              required
-              value={formulaire.requiredBudget}
+              required={!devisOuvert}
+              readOnly={devisOuvert}
+              value={budgetAffiche}
               onChange={(e) => modifier('requiredBudget', e.target.value)}
               disabled={envoi}
-              aide="Ce dont le projet a besoin au total. Les dons affectés et les investissements du fonds HOPE viendront le couvrir."
+              aide={
+                devisOuvert
+                  ? `Calculé à partir de ${formulaire.quoteItems.length} poste(s). Retirez-les tous pour le saisir directement.`
+                  : 'Ce dont le projet a besoin au total. Les dons affectés et les investissements du fonds HOPE viendront le couvrir.'
+              }
             />
 
             <ChampSelection

@@ -81,6 +81,61 @@ CREATE INDEX IF NOT EXISTS projects_status_idx   ON projects (status);
 CREATE INDEX IF NOT EXISTS projects_category_idx ON projects (category_id);
 
 -- ------------------------------------------------------------
+-- 2 bis. Objectifs specifiques d'un projet
+--
+--    "Ouvrir une cantine" est le projet ; "servir un repas chaud par
+--    jour a 200 eleves" et "former quatre cuisinieres" en sont les
+--    objectifs specifiques. Une ligne par objectif plutot qu'un texte
+--    unique : c'est une liste qu'on relit point par point, et chaque
+--    point pourra plus tard porter son etat ou son indicateur.
+--
+--    "position" fixe l'ordre de saisie, qui est celui de lecture.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_objectives (
+  id         SERIAL       PRIMARY KEY,
+  project_id INTEGER      NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  label      VARCHAR(300) NOT NULL,
+  position   SMALLINT     NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  CONSTRAINT project_objectives_libelle_non_vide CHECK (BTRIM(label) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS project_objectives_projet_idx
+  ON project_objectives (project_id, position);
+
+-- ------------------------------------------------------------
+-- 2 ter. Devis d'un projet
+--
+--    D'ou vient le budget necessaire. Une ligne par poste : "Fournitures
+--    scolaires, 1 200 000 Ar". Quand il y a au moins une ligne, le
+--    required_budget du projet n'est plus saisi mais calcule -- leur
+--    somme. Sans ligne, il reste saisi a la main : celui qui connait
+--    deja le montant ne doit pas etre oblige de le detailler.
+--
+--    "category" reprend le vocabulaire des depenses, ce qui permettra
+--    de comparer le prevu au reel poste par poste. Elle reste
+--    facultative : un devis approximatif vaut mieux que pas de devis.
+--
+--    Le devis ne touche pas au circuit de l'argent. Ce n'est pas un
+--    budget qui vit sa vie a cote des dons, des investissements et des
+--    depenses : c'est la facon d'arriver a un chiffre.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_quote_items (
+  id         SERIAL        PRIMARY KEY,
+  project_id INTEGER       NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  label      VARCHAR(200)  NOT NULL,
+  category   VARCHAR(60),
+  amount     NUMERIC(14,2) NOT NULL,
+  position   SMALLINT      NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  CONSTRAINT project_quote_items_montant_positif CHECK (amount > 0),
+  CONSTRAINT project_quote_items_libelle_non_vide CHECK (BTRIM(label) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS project_quote_items_projet_idx
+  ON project_quote_items (project_id, position);
+
+-- ------------------------------------------------------------
 -- 3. Donateurs
 --
 --    Tout don est rattache a un donateur. Le donateur devient
@@ -381,23 +436,76 @@ CREATE TABLE IF NOT EXISTS field_proofs (
   admin_id    INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
   proof_type  VARCHAR(20)  NOT NULL DEFAULT 'PHOTO',
   description TEXT         NOT NULL,
-  file_name   VARCHAR(255),
-  file_path   TEXT,
-  mime_type   VARCHAR(120),
-  file_size   INTEGER,
   occurred_on DATE         NOT NULL DEFAULT CURRENT_DATE,
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   CONSTRAINT field_proofs_type_valide
-    CHECK (proof_type IN ('PHOTO', 'DOCUMENT', 'TESTIMONY')),
-  -- Une photo ou un document portent forcement un fichier ; un
-  -- temoignage se suffit de son texte.
-  CONSTRAINT field_proofs_fichier_coherent
-    CHECK (proof_type = 'TESTIMONY' OR file_path IS NOT NULL)
+    CHECK (proof_type IN ('PHOTO', 'VIDEO', 'DOCUMENT', 'TESTIMONY'))
 );
+
+-- VIDEO ajoute apres coup : le schema doit rester rejouable sur une base
+-- existante comme sur une base neuve.
+ALTER TABLE field_proofs DROP CONSTRAINT IF EXISTS field_proofs_type_valide;
+ALTER TABLE field_proofs ADD  CONSTRAINT field_proofs_type_valide
+  CHECK (proof_type IN ('PHOTO', 'VIDEO', 'DOCUMENT', 'TESTIMONY'));
 
 CREATE INDEX IF NOT EXISTS field_proofs_project_idx ON field_proofs (project_id);
 CREATE INDEX IF NOT EXISTS field_proofs_date_idx    ON field_proofs (created_at DESC);
+
+-- ------------------------------------------------------------
+-- 14 bis. Les fichiers d'une preuve
+--
+--    Une action se montre rarement en une seule image : la remise de
+--    fournitures, c'est le carton ouvert, les enfants, la signature du
+--    registre. Le fichier n'est donc plus une colonne de la preuve mais
+--    une ligne a part, et une preuve en porte autant qu'il en faut.
+--
+--    "position" fixe l'ordre d'affichage : la premiere image est celle
+--    qui represente la preuve dans les listes.
+--
+--    L'unicite de file_path n'est pas cosmetique : elle rend la reprise
+--    ci-dessous rejouable, le schema etant joue a chaque migration.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS field_proof_files (
+  id          SERIAL       PRIMARY KEY,
+  proof_id    INTEGER      NOT NULL REFERENCES field_proofs(id) ON DELETE CASCADE,
+  file_name   VARCHAR(255) NOT NULL,
+  file_path   TEXT         NOT NULL UNIQUE,
+  mime_type   VARCHAR(120),
+  file_size   INTEGER,
+  position    SMALLINT     NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS field_proof_files_preuve_idx
+  ON field_proof_files (proof_id, position);
+
+-- Reprise des fichiers portes par field_proofs avant que la preuve
+-- puisse en avoir plusieurs, puis retrait des colonnes devenues fausses.
+-- Le test d'existence rend le bloc sans effet sur une base deja migree
+-- comme sur une base neuve.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_name = 'field_proofs' AND column_name = 'file_path'
+  ) THEN
+    INSERT INTO field_proof_files (proof_id, file_name, file_path, mime_type, file_size)
+    SELECT id, COALESCE(file_name, file_path), file_path, mime_type, file_size
+      FROM field_proofs
+     WHERE file_path IS NOT NULL
+    ON CONFLICT (file_path) DO NOTHING;
+
+    -- "au moins un fichier" porte sur plusieurs lignes : un CHECK ne
+    -- sait pas l'exprimer, c'est le service qui s'en charge desormais.
+    ALTER TABLE field_proofs DROP CONSTRAINT IF EXISTS field_proofs_fichier_coherent;
+    ALTER TABLE field_proofs
+      DROP COLUMN file_name,
+      DROP COLUMN file_path,
+      DROP COLUMN mime_type,
+      DROP COLUMN file_size;
+  END IF;
+END $$;
 
 -- ------------------------------------------------------------
 -- 15. Journal d'activite

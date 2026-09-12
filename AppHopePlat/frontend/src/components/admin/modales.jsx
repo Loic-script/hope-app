@@ -21,6 +21,7 @@ import * as documentService from '../../services/document.service.js';
 import * as donationService from '../../services/donation.service.js';
 import * as donorService from '../../services/donor.service.js';
 import * as expenseService from '../../services/expense.service.js';
+import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as impactService from '../../services/impact.service.js';
 import * as messageService from '../../services/message.service.js';
@@ -666,9 +667,22 @@ const DEPENSE_VIDE = {
   expenseDate: '',
 };
 
+/**
+ * Enregistre une depense.
+ *
+ * Deux chemins y menent. Depuis la fiche d'un projet, celui-ci est deja
+ * connu. Depuis le budget, il faut le choisir : seuls les projets en
+ * cours sont proposes -- le service refuse les autres -- et chaque
+ * option porte ses fonds disponibles, qui sont la vraie contrainte.
+ *
+ * @param {{ ouverte, projet?: object|null, projets?: object[],
+ *           depense?: object|null, categories: string[], onFermer,
+ *           onEnregistre }} props
+ */
 export function DepenseModale({
   ouverte,
-  projet,
+  projet = null,
+  projets = [],
   depense = null,
   categories = [],
   onFermer,
@@ -676,11 +690,18 @@ export function DepenseModale({
 }) {
   const edition = Boolean(depense);
   const [formulaire, setFormulaire] = useState(DEPENSE_VIDE);
+  const [projectId, setProjectId] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  // Le projet designe : celui qu'on a fixe, ou celui qu'on vient de
+  // choisir. C'est lui qui porte les fonds disponibles affiches.
+  const projetChoisi =
+    projet ?? projets.find((element) => String(element.id) === String(projectId)) ?? null;
 
   useEffect(() => {
     if (!ouverte) return;
     setErreur('');
+    setProjectId(projet?.id ?? depense?.projectId ?? '');
     setFormulaire(
       depense
         ? {
@@ -699,11 +720,15 @@ export function DepenseModale({
   }
 
   async function enregistrer() {
+    if (!edition && !projectId) {
+      setErreur('Choisissez le projet sur lequel imputer cette dépense.');
+      return;
+    }
     await soumettre(
       () =>
         edition
           ? expenseService.mettreAJour(depense.id, formulaire)
-          : expenseService.creer({ ...formulaire, projectId: projet.id }),
+          : expenseService.creer({ ...formulaire, projectId: Number(projectId) }),
       { onSucces: onEnregistre }
     );
   }
@@ -713,8 +738,8 @@ export function DepenseModale({
       ouverte={ouverte}
       titre={edition ? 'Modifier la dépense' : 'Enregistrer une dépense'}
       sousTitre={
-        projet
-          ? `Fonds disponibles sur « ${projet.name} » : ${fmt.montant(projet.availableFunds, projet.currency)}`
+        projetChoisi
+          ? `Fonds disponibles sur « ${projetChoisi.name} » : ${fmt.montant(projetChoisi.availableFunds, projetChoisi.currency)}`
           : undefined
       }
       onFermer={onFermer}
@@ -724,6 +749,26 @@ export function DepenseModale({
       libelleValider={edition ? 'Enregistrer' : 'Enregistrer la dépense'}
       large
     >
+      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis un
+          projet, et jamais en modification : une depense ne change pas
+          de projet, on l'annule et on la ressaisit. */}
+      {!projet && !edition && (
+        <ChampSelection
+          label="Projet concerné"
+          id="depense-projet"
+          obligatoire
+          vide="Choisir un projet…"
+          options={projets.map((element) => ({
+            valeur: element.id,
+            label: `${element.reference} · ${element.name} — ${fmt.montant(element.availableFunds, element.currency)} disponibles`,
+          }))}
+          value={projectId}
+          onChange={(e) => setProjectId(e.target.value)}
+          disabled={envoi}
+          pleineLargeur
+        />
+      )}
+
       <div className="formulaire-grille">
         <ChampMontant
           label="Montant"
@@ -1483,6 +1528,172 @@ export function NouveauMessageModale({ ouverte, comptes = [], onFermer, onEnregi
           disabled={envoi}
           rows={6}
         />
+      </div>
+    </ModaleFormulaire>
+  );
+}
+
+/* ==================================================================
+   Publier une preuve terrain
+   ================================================================== */
+
+/**
+ * Un temoignage se suffit de son texte ; les deux autres portent un
+ * fichier. C'est une regle metier et non un libelle : elle reste ici,
+ * la ou les noms des trois types viennent du catalogue.
+ */
+const TYPES_PREUVE_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
+
+/**
+ * Publie une preuve depuis la fiche d'un projet.
+ *
+ * Deux chemins y menent. Depuis la fiche d'un projet, celui-ci est deja
+ * connu et le champ ne s'affiche pas : inutile de faire redesigner ce
+ * qu'on vient de designer. Depuis l'ecran Preuves terrain, il faut le
+ * choisir.
+ *
+ * @param {{ ouverte, projet?: object|null, projets?: object[],
+ *           libelles: object, onFermer, onEnregistre }} props
+ */
+export function PreuveModale({
+  ouverte,
+  projet = null,
+  projets = [],
+  libelles = {},
+  onFermer,
+  onEnregistre,
+}) {
+  const [projectId, setProjectId] = useState('');
+  const [type, setType] = useState('PHOTO');
+  const [description, setDescription] = useState('');
+  const [dateAction, setDateAction] = useState('');
+  const [fichiers, setFichiers] = useState([]);
+  const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  useEffect(() => {
+    if (!ouverte) return;
+    setErreur('');
+    setProjectId(projet?.id ?? '');
+    setType('PHOTO');
+    setDescription('');
+    setDateAction(fmt.aujourdhui());
+    setFichiers([]);
+  }, [ouverte, projet, setErreur]);
+
+  const fichierRequis = TYPES_PREUVE_AVEC_FICHIER.has(type);
+
+  async function enregistrer() {
+    if (!projectId) {
+      setErreur('Choisissez le projet que cette preuve documente.');
+      return;
+    }
+    if (fichierRequis && fichiers.length === 0) {
+      setErreur(
+        {
+          PHOTO: 'Une preuve photo doit porter au moins une image.',
+          VIDEO: 'Une preuve vidéo doit porter au moins une vidéo.',
+        }[type] ?? 'Une preuve de type document doit porter au moins un fichier.'
+      );
+      return;
+    }
+
+    await soumettre(
+      () =>
+        fieldProofService.publier({
+          projectId: Number(projectId),
+          proofType: type,
+          description,
+          occurredOn: dateAction || undefined,
+          files: fichiers,
+        }),
+      { onSucces: onEnregistre }
+    );
+  }
+
+  return (
+    <ModaleFormulaire
+      ouverte={ouverte}
+      titre="Ajouter une preuve terrain"
+      sousTitre={
+        projet
+          ? `${projet.name} — une photo et deux lignes suffisent.`
+          : 'Une photo et deux lignes suffisent.'
+      }
+      onFermer={onFermer}
+      onSoumettre={enregistrer}
+      envoi={envoi}
+      erreur={erreur}
+      libelleValider="Publier la preuve"
+    >
+      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis un
+          projet : inutile de faire redesigner ce qu'on vient de designer. */}
+      {!projet && (
+        <ChampSelection
+          label="Projet concerné"
+          id="preuve-projet"
+          obligatoire
+          vide="Choisir un projet…"
+          options={projets.map((element) => ({
+            valeur: element.id,
+            label: `${element.reference} · ${element.name}`,
+          }))}
+          value={projectId}
+          onChange={(e) => setProjectId(e.target.value)}
+          disabled={envoi}
+          pleineLargeur
+        />
+      )}
+
+      <ChampTexteLong
+        label="Description courte"
+        id="preuve-description"
+        obligatoire
+        required
+        rows={3}
+        placeholder="Ex. Fournitures scolaires remises à Tsinjo ce matin."
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        disabled={envoi}
+      />
+
+      <div className="formulaire-grille">
+        <ChampSelection
+          label="Type de preuve"
+          id="preuve-type"
+          obligatoire
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          options={optionsDepuisLibelles(libelles)}
+          disabled={envoi}
+        />
+
+        <ChampTexte
+          label="Date de l’action"
+          id="preuve-date"
+          type="date"
+          max={fmt.aujourdhui()}
+          aide="Le jour où l’action a eu lieu, pas celui de la publication."
+          value={dateAction}
+          onChange={(e) => setDateAction(e.target.value)}
+          disabled={envoi}
+        />
+
+        <Champ
+          label={fichierRequis ? 'Fichiers' : 'Fichiers (facultatif)'}
+          id="preuve-fichier"
+          obligatoire={fichierRequis}
+          aide="Plusieurs fichiers possibles, douze au plus. Photos : JPG, PNG, WEBP (10 Mo). Vidéos : MP4, MOV, WEBM (50 Mo). Document : PDF."
+          pleineLargeur
+        >
+          <input
+            id="preuve-fichier"
+            type="file"
+            multiple
+            accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.pdf"
+            onChange={(e) => setFichiers([...(e.target.files ?? [])])}
+            disabled={envoi}
+          />
+        </Champ>
       </div>
     </ModaleFormulaire>
   );

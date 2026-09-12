@@ -6,6 +6,7 @@ import {
   IconeChevronDroit,
   IconeDepenses,
   IconeDonateurs,
+  IconeDons,
   IconeGraphique,
   IconePlus,
   IconeProjets,
@@ -28,6 +29,19 @@ import * as fmt from '../../utils/format.js';
 
 import photoBandeau from '../../assets/hope-bandeau.jpg';
 import silhouette from '../../assets/hope-madagascar.png';
+
+/**
+ * Les quatre gestes du quotidien.
+ *
+ * Chacun ouvre directement le formulaire, les ecrans concernes sachant
+ * lire le parametre qui le declenche.
+ */
+const RACCOURCIS = [
+  { to: '/admin/projects/new', label: 'Créer un projet', Icone: IconeProjets },
+  { to: '/admin/budget?depense=1', label: 'Enregistrer une dépense', Icone: IconeDepenses },
+  { to: '/admin/beneficiaries?nouveau=1', label: 'Ajouter un bénéficiaire', Icone: IconeBeneficiaires },
+  { to: '/admin/donors?don=1', label: 'Affecter un don', Icone: IconeDons },
+];
 
 /** Couleur de la pastille du fil d'activite selon la nature de l'ecriture. */
 const TEINTES_ACTIVITE = {
@@ -143,7 +157,27 @@ export default function AdminHome() {
               </Panneau>
             </div>
             <div className="accueil__pile">
-             
+              {/*
+                Les quatre gestes du quotidien, a portee de clic depuis
+                l'accueil. Chacun mene la ou l'action se fait, et non a une
+                page d'ou il faudrait encore la chercher -- d'ou les
+                parametres "?don=1" et "?nouveau=1", que les deux ecrans
+                concernes savent lire.
+
+                La depense fait exception : elle appartient toujours a un
+                projet, et il faut donc en designer un d'abord.
+              */}
+              <Panneau titre="Actions rapides" serre>
+                <div className="actions-rapides">
+                  {RACCOURCIS.map(({ to, label, Icone }) => (
+                    <Link className="action-rapide" to={to} key={to}>
+                      <Icone />
+                      {label}
+                      <IconeChevronDroit className="action-rapide__chevron" />
+                    </Link>
+                  ))}
+                </div>
+              </Panneau>
 
               <section className="carte-mission">
                 <p className="carte-mission__label">Notre mission</p>

@@ -43,6 +43,24 @@ const AGREGATS = `
     SELECT MAX(created_at) AS derniere
       FROM field_proofs WHERE project_id = p.id
   ) preuve ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT json_agg(
+             json_build_object('id', o.id, 'label', o.label, 'position', o.position)
+             ORDER BY o.position, o.id
+           ) AS liste
+      FROM project_objectives o
+     WHERE o.project_id = p.id
+  ) objectifs ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT json_agg(
+             json_build_object(
+               'id', q.id, 'label', q.label, 'category', q.category,
+               'amount', q.amount, 'position', q.position
+             ) ORDER BY q.position, q.id
+           ) AS liste
+      FROM project_quote_items q
+     WHERE q.project_id = p.id
+  ) devis ON TRUE
 `;
 
 const COLONNES = `
@@ -67,7 +85,12 @@ const COLONNES = `
   -- de creation quand il n'a jamais eu de preuve : reprocher un silence
   -- a un projet cree hier n'aurait pas de sens.
   FLOOR(EXTRACT(EPOCH FROM (NOW() - COALESCE(preuve.derniere, p.created_at))) / 86400)::int
-    AS days_since_proof
+    AS days_since_proof,
+  -- Les objectifs specifiques et le devis, agreges plutot que joints :
+  -- une seconde requete par projet ferait vingt allers-retours sur la
+  -- liste.
+  COALESCE(objectifs.liste, '[]'::json) AS objectives,
+  COALESCE(devis.liste, '[]'::json)     AS quote_items
 `;
 
 /**
@@ -204,7 +227,52 @@ export async function creer(donnees, client = null) {
     ],
     client
   );
-  return trouverParId(resultat.rows[0].id, client);
+  const projetId = resultat.rows[0].id;
+  await remplacerObjectifs(projetId, donnees.objectives ?? [], client);
+  await remplacerDevis(projetId, donnees.quoteItems ?? [], client);
+  return trouverParId(projetId, client);
+}
+
+/**
+ * Reecrit le devis d'un projet.
+ *
+ * Meme principe que les objectifs : la liste arrive entiere du
+ * formulaire, l'ordre en fait partie, et une poignee de postes ne
+ * justifie pas de comparer les anciens aux nouveaux.
+ *
+ * @param {{ label: string, category: string|null, amount: string }[]} lignes
+ *        montants deja normalises en texte NUMERIC par le service
+ */
+export async function remplacerDevis(projetId, lignes, client = null) {
+  await query('DELETE FROM project_quote_items WHERE project_id = $1', [projetId], client);
+
+  for (const [rang, ligne] of lignes.entries()) {
+    await query(
+      `INSERT INTO project_quote_items (project_id, label, category, amount, position)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [projetId, ligne.label, ligne.category ?? null, ligne.amount, rang],
+      client
+    );
+  }
+}
+
+/**
+ * Reecrit la liste des objectifs d'un projet.
+ *
+ * Effacer puis reinserer plutot que reconcilier ligne a ligne : la liste
+ * arrive entiere du formulaire, l'ordre en fait partie, et une poignee
+ * d'objectifs ne justifie pas de comparer les anciens aux nouveaux.
+ */
+export async function remplacerObjectifs(projetId, objectifs, client = null) {
+  await query('DELETE FROM project_objectives WHERE project_id = $1', [projetId], client);
+
+  for (const [rang, libelle] of objectifs.entries()) {
+    await query(
+      'INSERT INTO project_objectives (project_id, label, position) VALUES ($1, $2, $3)',
+      [projetId, libelle, rang],
+      client
+    );
+  }
 }
 
 export async function mettreAJour(id, colonnes, client = null) {

@@ -94,6 +94,15 @@ export const LIBELLES = {
     INVESTMENT: 'Investissement',
   },
   mediaType: { PHOTO: 'Photo', VIDEO: 'Vidéo' },
+
+  // Nature d'une preuve terrain. Elle manquait ici : chaque ecran qui en
+  // affichait recopiait les trois libelles pour son propre compte.
+  proofType: {
+    PHOTO: 'Photo',
+    VIDEO: 'Vidéo',
+    DOCUMENT: 'Document',
+    TESTIMONY: 'Témoignage',
+  },
 };
 
 /** Tout ce dont le frontend a besoin pour ses formulaires. */

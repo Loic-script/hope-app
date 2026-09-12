@@ -184,9 +184,18 @@ export function televerserMedia(req, res, suite) {
     if (erreur instanceof multer.MulterError) {
       if (erreur.code === 'LIMIT_FILE_SIZE') {
         suite(
-          new ErreurValidation('Le fichier dépasse la taille maximale de 50 Mo.', {
-            file: 'Fichier trop volumineux',
+          new ErreurValidation('Un fichier dépasse la taille maximale de 50 Mo.', {
+            files: 'Fichier trop volumineux',
           })
+        );
+        return;
+      }
+      if (erreur.code === 'LIMIT_FILE_COUNT') {
+        suite(
+          new ErreurValidation(
+            `Une preuve ne peut pas porter plus de ${MAX_FICHIERS_PREUVE} fichiers.`,
+            { files: 'Trop de fichiers' }
+          )
         );
         return;
       }
@@ -210,18 +219,50 @@ export function televerserMedia(req, res, suite) {
 /** backend/uploads/preuves */
 export const DOSSIER_PREUVES = path.resolve(dossierCourant, '..', '..', 'uploads', 'preuves');
 
-/** Types acceptes : une preuve est une photo, parfois un document scanne. */
+/**
+ * Types acceptes : une preuve est une photo, une video, parfois un
+ * document scanne.
+ *
+ * quicktime est le type que produit un iPhone (.mov) : l'omettre
+ * reviendrait a refuser les videos de la moitie des telephones.
+ */
 const PREUVES_ACCEPTEES = new Map([
   ['image/jpeg', '.jpg'],
   ['image/png', '.png'],
   ['image/webp', '.webp'],
+  ['video/mp4', '.mp4'],
+  ['video/quicktime', '.mov'],
+  ['video/webm', '.webm'],
   ['application/pdf', '.pdf'],
 ]);
 
-const EXTENSIONS_PREUVES = new Set(['.jpg', '.jpeg', '.png', '.webp', '.pdf']);
+const EXTENSIONS_PREUVES = new Set([
+  '.jpg', '.jpeg', '.png', '.webp', '.mp4', '.mov', '.webm', '.pdf',
+]);
 
-/** 10 Mo : une photo de terrain prise au telephone tient largement dedans. */
+/**
+ * Deux plafonds, et non un seul.
+ *
+ * 10 Mo suffisent largement a une photo prise au telephone ; une video
+ * de terrain d'une minute en fait couramment trente. Aligner les deux
+ * sur la valeur haute laisserait passer des photos de 50 Mo, aligner
+ * sur la basse interdirait toute video.
+ *
+ * multer ne connait qu'une limite : on lui donne la plus haute, et le
+ * service redescend au plafond du type une fois le fichier ecrit.
+ */
 export const TAILLE_MAXIMALE_PREUVE = 10 * 1024 * 1024;
+export const TAILLE_MAXIMALE_VIDEO = 50 * 1024 * 1024;
+
+/** Nombre de fichiers acceptes par preuve. */
+export const MAX_FICHIERS_PREUVE = 12;
+
+/** Plafond applicable a un fichier, d'apres son type MIME. */
+export function plafondPreuve(mimeType) {
+  return String(mimeType ?? '').startsWith('video/')
+    ? TAILLE_MAXIMALE_VIDEO
+    : TAILLE_MAXIMALE_PREUVE;
+}
 
 fs.mkdirSync(DOSSIER_PREUVES, { recursive: true });
 
@@ -242,9 +283,10 @@ function filtrerPreuve(_req, fichier, suite) {
 
   if (!PREUVES_ACCEPTEES.has(fichier.mimetype) || !EXTENSIONS_PREUVES.has(extension)) {
     suite(
-      new ErreurValidation('Format non accepté. Photos : JPG, PNG, WEBP. Document : PDF.', {
-        file: 'Format non accepté',
-      })
+      new ErreurValidation(
+        'Format non accepté. Photos : JPG, PNG, WEBP. Vidéos : MP4, MOV, WEBM. Document : PDF.',
+        { file: 'Format non accepté' }
+      )
     );
     return;
   }
@@ -254,17 +296,21 @@ function filtrerPreuve(_req, fichier, suite) {
 const televerseurPreuve = multer({
   storage: stockagePreuve,
   fileFilter: filtrerPreuve,
-  limits: { fileSize: TAILLE_MAXIMALE_PREUVE, files: 1 },
+  // La plus haute des deux limites : le service applique ensuite celle
+  // du type. Sans cela, multer couperait toute video a 10 Mo.
+  limits: { fileSize: TAILLE_MAXIMALE_VIDEO, files: MAX_FICHIERS_PREUVE },
 });
 
 /**
- * Middleware acceptant un fichier facultatif sous le champ "file".
+ * Middleware acceptant un lot de fichiers facultatifs sous "files".
  *
- * Facultatif : un temoignage se suffit de son texte, la contrainte
- * field_proofs_fichier_coherent verifie le reste cote base.
+ * Facultatif : un temoignage se suffit de son texte. C'est le service
+ * qui exige au moins un fichier pour les trois autres natures -- "au
+ * moins un" porte sur plusieurs lignes, une contrainte CHECK ne saurait
+ * pas l'exprimer.
  */
 export function televerserPreuve(req, res, suite) {
-  televerseurPreuve.single('file')(req, res, (erreur) => {
+  televerseurPreuve.array('files', MAX_FICHIERS_PREUVE)(req, res, (erreur) => {
     if (!erreur) {
       suite();
       return;
@@ -273,9 +319,18 @@ export function televerserPreuve(req, res, suite) {
     if (erreur instanceof multer.MulterError) {
       if (erreur.code === 'LIMIT_FILE_SIZE') {
         suite(
-          new ErreurValidation('Le fichier dépasse la taille maximale de 10 Mo.', {
-            file: 'Fichier trop volumineux',
+          new ErreurValidation('Un fichier dépasse la taille maximale de 50 Mo.', {
+            files: 'Fichier trop volumineux',
           })
+        );
+        return;
+      }
+      if (erreur.code === 'LIMIT_FILE_COUNT') {
+        suite(
+          new ErreurValidation(
+            `Une preuve ne peut pas porter plus de ${MAX_FICHIERS_PREUVE} fichiers.`,
+            { files: 'Trop de fichiers' }
+          )
         );
         return;
       }

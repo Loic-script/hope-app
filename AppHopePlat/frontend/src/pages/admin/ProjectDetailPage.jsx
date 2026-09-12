@@ -9,6 +9,7 @@ import {
   ImpactModale,
   InvestirModale,
   JustificatifModale,
+  PreuveModale,
   RattachementModale,
   TerminerProjetModale,
 } from '../../components/admin/modales.jsx';
@@ -24,12 +25,14 @@ import {
   Progression,
   Tableau,
 } from '../../components/admin/ui.jsx';
+import VignettePreuve from '../../components/admin/VignettePreuve.jsx';
 import { urlMedia } from '../../services/api.js';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as documentService from '../../services/document.service.js';
 import * as expenseService from '../../services/expense.service.js';
+import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as impactService from '../../services/impact.service.js';
 import * as projectService from '../../services/project.service.js';
@@ -56,6 +59,15 @@ export default function ProjectDetailPage() {
     [id]
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
+  /*
+   * Les preuves ne viennent pas de l'apercu : celui-ci alimente les six
+   * onglets d'un seul appel, et rien ne sert d'aller chercher des images
+   * pour six visiteurs sur sept qui n'ouvriront jamais l'onglet Impact.
+   */
+  const { donnees: preuves, recharger: rechargerPreuves } = useChargement(
+    () => fieldProofService.listerParProjet(id),
+    [id]
+  );
   const { donnees: fonds, recharger: rechargerFonds } = useChargement(() => fundService.etat(), []);
   const { donnees: tousBeneficiaires, recharger: rechargerBeneficiaires } = useChargement(
     () => beneficiaryService.lister({ status: 'ACTIVE' }),
@@ -68,8 +80,9 @@ export default function ProjectDetailPage() {
     recharger();
     rechargerFonds();
     rechargerBeneficiaires();
+    rechargerPreuves();
     fermer();
-  }, [recharger, rechargerFonds, rechargerBeneficiaires]);
+  }, [recharger, rechargerFonds, rechargerBeneficiaires, rechargerPreuves]);
 
   function changerOnglet(cle) {
     setOngletActif(cle);
@@ -77,6 +90,11 @@ export default function ProjectDetailPage() {
   }
 
   const libelles = catalogue?.labels ?? {};
+  const listePreuves = preuves?.items ?? [];
+  // Meme mise en forme que l'ecran Impact : sans elle, le tableau affiche
+  // "people_with_water_access" au lieu de "Personnes ayant acces a l'eau".
+  const libelleIndicateur = (code) =>
+    fmt.libelleIndicateur(code, catalogue?.indicators ?? []);
   const projet = donnees?.project;
   const finance = donnees?.finance;
 
@@ -111,6 +129,9 @@ export default function ProjectDetailPage() {
   }
   async function supprimerImpact() {
     await soumettre(() => impactService.supprimer(modale.cible.id), { onSucces: rechargerTout });
+  }
+  async function supprimerPreuve() {
+    await soumettre(() => fieldProofService.supprimer(modale.cible.id), { onSucces: rechargerTout });
   }
   async function ouvrirJustificatif(document) {
     setErreur('');
@@ -264,6 +285,63 @@ export default function ProjectDetailPage() {
           {projet.description && (
             <Panneau titre="Description">
               <p className="bloc-texte">{projet.description}</p>
+            </Panneau>
+          )}
+
+          {/*
+            Le devis : d'ou vient le budget necessaire. Il n'apparait que
+            s'il existe -- un projet dont le montant a ete saisi
+            directement n'a rien a montrer ici.
+          */}
+          {projet.quoteItems?.length > 0 && (
+            <Panneau
+              titre="Devis"
+              sousTitre={`${projet.quoteItems.length} poste(s) — c’est leur somme qui fait le budget nécessaire`}
+              serre
+            >
+              <Tableau
+                lignes={projet.quoteItems}
+                cleLigne={(poste) => poste.id}
+                colonnes={[
+                  { cle: 'label', titre: 'Poste' },
+                  {
+                    cle: 'category',
+                    titre: 'Catégorie',
+                    rendu: (poste) => poste.category ?? '—',
+                  },
+                  {
+                    cle: 'amount',
+                    titre: 'Montant',
+                    aligne: 'droite',
+                    rendu: (poste) => (
+                      <strong>{fmt.montant(poste.amount, projet.currency)}</strong>
+                    ),
+                  },
+                ]}
+              />
+              <p className="devis__recapitulatif">
+                Total
+                <strong>{fmt.montant(projet.requiredBudget, projet.currency)}</strong>
+              </p>
+            </Panneau>
+          )}
+
+          {/*
+            Les objectifs specifiques : ce que le projet doit avoir
+            accompli. Ils suivent la description, qui dit ce qu'il est.
+          */}
+          {projet.objectives?.length > 0 && (
+            <Panneau
+              titre="Objectifs spécifiques"
+              sousTitre={`${projet.objectives.length} objectif(s)`}
+            >
+              <ol className="objectifs">
+                {projet.objectives.map((objectif) => (
+                  <li className="objectifs__ligne" key={objectif.id}>
+                    {objectif.label}
+                  </li>
+                ))}
+              </ol>
             </Panneau>
           )}
 
@@ -758,7 +836,11 @@ export default function ProjectDetailPage() {
             <Panneau titre="Cumul par indicateur" serre>
               <Tableau
                 colonnes={[
-                  { cle: 'indicator', titre: 'Indicateur' },
+                  {
+                    cle: 'indicator',
+                    titre: 'Indicateur',
+                    rendu: (l) => libelleIndicateur(l.indicator),
+                  },
                   {
                     cle: 'total',
                     titre: 'Total',
@@ -809,7 +891,11 @@ export default function ProjectDetailPage() {
                     </div>
                   ),
                 },
-                { cle: 'indicator', titre: 'Indicateur' },
+                {
+                  cle: 'indicator',
+                  titre: 'Indicateur',
+                  rendu: (i) => libelleIndicateur(i.indicator),
+                },
                 {
                   cle: 'value',
                   titre: 'Valeur',
@@ -871,6 +957,83 @@ export default function ProjectDetailPage() {
               }
             />
           </Panneau>
+
+          {/*
+            Les preuves ferment l'onglet, apres les chiffres : un impact
+            dit COMBIEN, une preuve montre QUE c'est arrive. L'ordre suit
+            la lecture -- le total, puis le detail, puis ce qui l'atteste.
+
+            A ne pas confondre avec les justificatifs de l'onglet du meme
+            nom : ceux-la prouvent une depense, ceux-ci une action.
+          */}
+          <Panneau
+            titre="Preuves terrain"
+            sousTitre="Une photo et deux lignes suffisent — c’est ce que verra le donateur."
+            actions={
+              !archive && (
+                <button
+                  type="button"
+                  className="btn btn--principal"
+                  onClick={() => ouvrir('preuve')}
+                >
+                  <IconePlus />
+                  Ajouter une preuve
+                </button>
+              )
+            }
+          >
+            {listePreuves.length === 0 ? (
+              <EtatVide
+                titre="Aucune preuve pour ce projet"
+                texte="Publiez la première : c’est elle qui montrera au donateur ce que son don a permis."
+                action={
+                  !archive && (
+                    <button
+                      type="button"
+                      className="btn btn--principal"
+                      onClick={() => ouvrir('preuve')}
+                    >
+                      <IconePlus />
+                      Ajouter une preuve
+                    </button>
+                  )
+                }
+              />
+            ) : (
+              <ul className="preuves">
+                {listePreuves.map((preuve) => (
+                  <li className="preuve preuve--cliquable" key={preuve.id}>
+                    <VignettePreuve preuve={preuve} />
+
+                    <div className="preuve__corps">
+                      <p className="preuve__projet">
+                        <Badge valeur={preuve.proofType} libelles={libelles.proofType ?? {}} />
+                      </p>
+                      <p className="preuve__description">
+                        <Link className="preuve__lien" to={`/admin/proofs/${preuve.id}`}>
+                          {preuve.description}
+                        </Link>
+                      </p>
+                      <p className="preuve__signature">
+                        {fmt.date(preuve.occurredOn)} · ajouté par{' '}
+                        {preuve.authorLog ?? 'compte supprimé'}
+                      </p>
+                    </div>
+
+                    {!archive && (
+                      <button
+                        type="button"
+                        className="btn btn--neutre btn--petit preuve__action"
+                        onClick={() => ouvrir('supprimerPreuve', preuve)}
+                      >
+                        Supprimer
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panneau>
         </>
       )}
 
@@ -897,6 +1060,14 @@ export default function ProjectDetailPage() {
         depense={modale.cible}
         depenses={donnees.expenses}
         libelles={libelles}
+        onFermer={fermer}
+        onEnregistre={rechargerTout}
+      />
+
+      <PreuveModale
+        ouverte={modale.nom === 'preuve'}
+        projet={projet}
+        libelles={libelles.proofType ?? {}}
         onFermer={fermer}
         onEnregistre={rechargerTout}
       />
@@ -980,6 +1151,23 @@ export default function ProjectDetailPage() {
         onConfirmer={supprimerJustificatif}
         envoi={envoi}
         erreur={erreurAction}
+        libelleConfirmer="Supprimer"
+        danger
+      />
+
+      <ModaleConfirmation
+        ouverte={modale.nom === 'supprimerPreuve'}
+        titre="Supprimer cette preuve ?"
+        message={
+          modale.cible
+            ? `« ${fmt.tronquer(modale.cible.description, 90)} » sera retirée, ainsi que son fichier.`
+            : ''
+        }
+        onFermer={fermer}
+        onConfirmer={supprimerPreuve}
+        envoi={envoi}
+        erreur={erreurAction}
+        libelleValider="Supprimer"
         libelleConfirmer="Supprimer"
         danger
       />
