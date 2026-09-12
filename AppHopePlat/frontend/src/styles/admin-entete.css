@@ -641,11 +641,12 @@
 
   /* --- La marque, en tete --- */
 
+  /* Le logo occupe la tete a lui seul, centre : la poignee de repli a
+     quitte cette bande pour le bord droit du rail. */
   .lateral__marque {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: center;
     height: var(--admin-entete-hauteur);
     flex: none;
     margin-bottom: 6px;
@@ -671,32 +672,50 @@
     object-position: top;
   }
 
+  /*
+   * La poignee de repli, a cheval sur le bord droit du rail et a
+   * mi-hauteur. Elle est fixee a la fenetre et non au rail : celui-ci
+   * masque ce qui deborde de sa largeur, et la poignee y serait rognee
+   * de moitie. Elle suit donc le bord par la meme variable.
+   */
   .lateral__basculer {
+    position: fixed;
+    top: 50%;
+    left: calc(var(--admin-rail-actuel) - 13px);
+    z-index: 55;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    flex: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -13px;
     border: 0;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
-    transition: background-color 0.16s ease, color 0.16s ease;
+    border-radius: 50%;
+    background-color: var(--entete-fond-bas);
+    box-shadow: 0 2px 10px rgba(20, 25, 38, 0.38);
+    color: rgba(255, 255, 255, 0.75);
+    transition:
+      left 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.16s ease,
+      color 0.16s ease;
   }
 
   .lateral__basculer:hover {
-    background-color: rgba(255, 255, 255, 0.16);
+    background-color: var(--hope-violet);
     color: #ffffff;
   }
 
   .lateral__basculer svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     /* Deploye, la fleche pointe vers la gauche : c'est ce qu'elle va
-       faire. Repliee, elle repointe vers la droite. */
+       faire. Replie, elle repointe vers la droite. */
     transform: rotate(180deg);
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .lateral__basculer--replie svg {
+    transform: none;
   }
 
   /* L'etiquette de l'espace, sous la marque. */
@@ -886,22 +905,10 @@
     pointer-events: none;
   }
 
-  .lateral--replie .lateral__marque {
-    justify-content: center;
-    flex-direction: column;
-    gap: 4px;
-    height: auto;
-    padding-top: 12px;
-  }
-
   .lateral--replie .lateral__logo img {
     width: 40px;
     height: 25px;
     object-fit: contain;
-  }
-
-  .lateral--replie .lateral__basculer svg {
-    transform: none;
   }
 
   .lateral--replie .lateral__libelle {

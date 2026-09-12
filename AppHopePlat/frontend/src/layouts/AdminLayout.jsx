@@ -375,15 +375,6 @@ export default function AdminLayout() {
           <Link className="lateral__logo" to="/admin" aria-label="HOPE — accueil administrateur">
             <img src={railReplie ? pictogramme : logoSurFondViolet} alt="HOPE" />
           </Link>
-          <button
-            type="button"
-            className="lateral__basculer"
-            onClick={basculerRail}
-            aria-label={railReplie ? 'Déployer le menu' : 'Replier le menu'}
-            aria-expanded={!railReplie}
-          >
-            <IconeChevronDroit />
-          </button>
         </div>
 
         <p className="lateral__espace">Espace administrateur</p>
@@ -507,6 +498,27 @@ export default function AdminLayout() {
           </div>
         )}
       </aside>
+
+      {/*
+        La poignee qui replie le rail. Elle est posee a cheval sur son
+        bord droit, a mi-hauteur -- la ou la main la cherche -- et non
+        dans la tete, qui revient tout entiere au logo.
+
+        Hors du rail dans le DOM : celui-ci masque ce qui deborde de sa
+        largeur, et la poignee y serait rognee de moitie. Elle suit donc
+        le bord par la meme variable de largeur.
+      */}
+      {!enArc && (
+        <button
+          type="button"
+          className={`lateral__basculer${railReplie ? ' lateral__basculer--replie' : ''}`}
+          onClick={basculerRail}
+          aria-label={railReplie ? 'Déployer le menu' : 'Replier le menu'}
+          aria-expanded={!railReplie}
+        >
+          <IconeChevronDroit />
+        </button>
+      )}
 
       <header className="entete">
         {/* ---------- Marque au centre, alertes et profil a droite ---------- */}
