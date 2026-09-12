@@ -13,6 +13,7 @@ import {
   IconeCloche,
   IconeDeconnexion,
   IconeDonateurs,
+  IconeDons,
   IconeGraphique,
   IconeMessages,
   IconeParametres,
@@ -24,13 +25,13 @@ import * as authService from '../services/auth.service.js';
 import { initiales } from '../utils/format.js';
 
 /**
- * Les huit sections de travail, rangees en trois familles.
+ * Les dix sections de travail, rangees en trois familles.
  *
  * L'ordre suit celui du travail : "Pilotage" ce que l'on fait -- ouvrir
  * un projet, enregistrer les personnes accompagnees, documenter le
  * terrain ; "Communaute" les echanges avec ceux qui soutiennent HOPE ;
  * "Analyse" ce que l'on constate ensuite. Trois familles courtes se
- * lisent d'un coup d'oeil la ou une liste de huit demande d'etre
+ * lisent d'un coup d'oeil la ou une liste de dix demande d'etre
  * parcourue.
  *
  * Messages n'est plus dans le bandeau : repondre a un donateur est un
@@ -69,6 +70,8 @@ const GROUPES = [
     entrees: [
       { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
       { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
+      { to: '/admin/volunteers', label: 'Bénévoles', Icone: IconeBeneficiaires },
+      { to: '/admin/funders', label: 'Bailleurs', Icone: IconeDons },
       { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
     ],
   },

@@ -1,0 +1,15 @@
+/* ============================================================
+   HOPE - Espace benevole : regles partagees
+
+   Les pages d'acces du benevole ont ete remplacees par la porte unique
+   des utilisateurs (authentification.css) : ce fichier ne garde que ce
+   qui sert encore, une fois entre dans l'espace.
+   ============================================================ */
+
+/* Message d'erreur attache a un champ.
+   Egalement redefini dans authentification.css, qui charge apres. */
+.champ__erreur {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--hope-erreur);
+}

@@ -1,0 +1,80 @@
+/* ============================================================
+   HOPE - Page d'entree
+
+   Son titre, et les deux portes : l'administration et le benevolat.
+   ============================================================ */
+
+.redirection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px;
+  background-color: var(--hope-fond-panneau);
+}
+
+.redirection__titre {
+  font-size: clamp(24px, 5vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: var(--hope-violet);
+}
+
+.redirection__choix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.redirection__lien {
+  padding: 13px 34px;
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ffffff;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.redirection__lien:hover {
+  background-color: var(--hope-orange-fonce);
+  transform: translateY(-1px);
+}
+
+.redirection__lien:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 3px;
+}
+
+/* Les deux autres portes : meme forme, teintes de la marque. */
+.redirection__lien--benevole {
+  background-color: var(--hope-violet);
+}
+
+.redirection__lien--benevole:hover {
+  background-color: var(--hope-violet-fonce);
+}
+
+/* Le bailleur est un partenaire institutionnel : le bleu de la charte,
+   avec un texte sombre, le bleu clair ne portant pas le blanc. */
+.redirection__lien--bailleur {
+  background-color: var(--hope-bleu);
+  color: var(--hope-texte);
+}
+
+.redirection__lien--bailleur:hover {
+  background-color: #6ba6d0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .redirection__lien {
+    transition: none;
+  }
+}

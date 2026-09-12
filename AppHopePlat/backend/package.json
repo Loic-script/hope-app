@@ -16,7 +16,9 @@
     "db:reset": "node src/scripts/resetData.js",
     "db:setup": "npm run db:init && npm run db:migrate && npm run db:seed && npm run db:categories",
     "test:api": "node src/scripts/testAuthFlow.js",
-    "test:admin": "node src/scripts/testAdminFlow.js"
+    "test:admin": "node src/scripts/testAdminFlow.js",
+    "db:seed-volunteers": "node src/scripts/seedVolunteerData.js",
+    "db:seed-funders": "node src/scripts/seedFunderData.js"
   },
   "engines": {
     "node": ">=18"

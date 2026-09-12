@@ -24,6 +24,8 @@ import * as notificationService from '../services/notification.service.js';
 import * as projectService from '../services/project.service.js';
 import * as statisticsService from '../services/statistics.service.js';
 import * as teamService from '../services/team.service.js';
+import * as funderAccountService from '../services/funderAccount.service.js';
+import * as volunteerService from '../services/volunteer.service.js';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
@@ -155,6 +157,36 @@ export const team = {
   ),
   changerSonMotDePasse: gerer((req) => teamService.changerSonMotDePasse(req.admin, req.body)),
   journal: gerer((req) => teamService.journal(req.query)),
+};
+
+/* ================================================================
+   Benevoles
+
+   Ils s'inscrivent eux-memes, mais n'entrent pas seuls : leur compte
+   reste "en_attente" jusqu'a ce qu'un administrateur l'active.
+   ================================================================ */
+
+/**
+ * Comptes bailleurs.
+ *
+ * Meme geste que pour les benevoles : ils s'inscrivent seuls, mais
+ * l'acces s'ouvre ici. Activer un bailleur fait aussi passer son
+ * organisation de "prospect" a "actif".
+ */
+export const funders = {
+  lister: gerer((req) => funderAccountService.lister(req.query)),
+  activer: gerer((req) => funderAccountService.activer(req.params.id, req.admin)),
+  changerStatut: gerer((req) =>
+    funderAccountService.changerStatut(req.params.id, req.body, req.admin)
+  ),
+};
+
+export const volunteers = {
+  lister: gerer((req) => volunteerService.lister(req.query)),
+  activer: gerer((req) => volunteerService.activer(req.params.id, req.admin)),
+  changerStatut: gerer((req) =>
+    volunteerService.changerStatut(req.params.id, req.body, req.admin)
+  ),
 };
 
 /* ================================================================

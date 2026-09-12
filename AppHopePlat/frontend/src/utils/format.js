@@ -93,6 +93,41 @@ export function dateLongue(valeur) {
   return converti.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+/**
+ * Date et heure : "mer. 12 mars, 14:00".
+ *
+ * Utile pour les missions, qui commencent a une heure precise. Le jour
+ * de la semaine est repris : c'est souvent lui qui decide si l'on est
+ * disponible.
+ */
+export function dateHeure(valeur) {
+  if (!valeur) return '—';
+  const converti = new Date(valeur);
+  if (Number.isNaN(converti.getTime())) return '—';
+
+  const jour = converti.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+  });
+  const heure = converti.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${jour}, ${heure}`;
+}
+
+/** Plage horaire d'une meme journee : "14:00 – 17:00". */
+export function plageHoraire(debut, fin) {
+  if (!debut || !fin) return '';
+  const a = new Date(debut);
+  const b = new Date(fin);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return '';
+
+  const format = { hour: '2-digit', minute: '2-digit' };
+  return `${a.toLocaleTimeString('fr-FR', format)} – ${b.toLocaleTimeString('fr-FR', format)}`;
+}
+
 /** Duree ecoulee : "Il y a 2 heures", "Il y a 3 jours". */
 export function depuis(valeur) {
   if (!valeur) return '';
