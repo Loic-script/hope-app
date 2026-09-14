@@ -117,6 +117,35 @@ export function dateHeure(valeur) {
   return `${jour}, ${heure}`;
 }
 
+/**
+ * Jour du mois, seul : "16".
+ *
+ * Sert la pastille de date des cartes de mission, qui empile le
+ * quantieme et le mois sur deux lignes.
+ */
+export function jourDuMois(valeur) {
+  if (!valeur) return '';
+  const converti = versDate(valeur);
+  if (Number.isNaN(converti.getTime())) return '';
+  return String(converti.getDate());
+}
+
+/** Mois abrege : "sept." -- le compagnon de jourDuMois(). */
+export function moisCourt(valeur) {
+  if (!valeur) return '';
+  const converti = versDate(valeur);
+  if (Number.isNaN(converti.getTime())) return '';
+  return converti.toLocaleDateString('fr-FR', { month: 'short' });
+}
+
+/** Heure seule : "18:00". */
+export function heure(valeur) {
+  if (!valeur) return '—';
+  const converti = new Date(valeur);
+  if (Number.isNaN(converti.getTime())) return '—';
+  return converti.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
 /** Plage horaire d'une meme journee : "14:00 – 17:00". */
 export function plageHoraire(debut, fin) {
   if (!debut || !fin) return '';

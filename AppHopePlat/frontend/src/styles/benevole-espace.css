@@ -179,6 +179,7 @@
 .pastille--bleu  { background-color: #e4eefc; color: #2d80e6; }
 .pastille--vert  { background-color: #e2f4ea; color: #2c8f63; }
 .pastille--rouge { background-color: var(--hope-erreur-fond); color: #a8271a; }
+.pastille--orange { background-color: #fdf1de; color: #b5731a; }
 
 /* ============================================================
    5. Cartes de mission
@@ -993,5 +994,611 @@
   .dispo__moment,
   .filtres-benevole__onglet {
     transition: none;
+  }
+}
+
+
+/* ============================================================
+   9. Vue d'ensemble
+
+   La page d'accueil de l'espace ne liste pas, elle met en avant : une
+   mission, une tache. Ses couleurs sont les quatre de la charte --
+   violet, bleu, orange, jaune -- prelevees dans le logo lui-meme, et
+   rien d'autre.
+   ============================================================ */
+
+.accueil-benevole {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- L'en-tete : surtitre, titre, et l'action principale --- */
+
+.accueil-benevole__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/*
+ * Le surtitre, precede de son trait jaune.
+ *
+ * Le meme motif qu'a l'accueil de l'administrateur : un trait de couleur
+ * puis une ligne en petites capitales, qui situe la page avant que le
+ * titre ne s'adresse a la personne.
+ */
+.surtitre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.surtitre__trait {
+  width: 26px;
+  height: 3px;
+  border-radius: 3px;
+  background-color: var(--hope-jaune);
+}
+
+/* Sur fond violet, le surtitre s'eclaircit et son trait passe a l'orange,
+   qui tient mieux la lumiere que le jaune sur ce fond-la. */
+.surtitre--clair {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.surtitre--clair .surtitre__trait {
+  background-color: var(--hope-orange);
+}
+
+.accueil-benevole__titre {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.accueil-benevole__accroche {
+  margin-top: 4px;
+  font-size: 14.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Boutons et liens, aux couleurs de la charte --- */
+
+.bouton-hope {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 19px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background-color: var(--hope-violet);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(93, 86, 150, 0.28);
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.bouton-hope:hover,
+.bouton-hope:focus-visible {
+  background-color: var(--hope-violet-fonce);
+  box-shadow: 0 10px 24px rgba(74, 68, 121, 0.34);
+}
+
+.bouton-hope:active {
+  transform: translateY(1px);
+}
+
+.bouton-hope svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+/* La declinaison creuse : une action secondaire, qui ne doit pas
+   disputer l'attention a l'action principale de la page. */
+.bouton-hope--creux {
+  background-color: transparent;
+  border-color: var(--hope-violet);
+  color: var(--hope-violet);
+  box-shadow: none;
+}
+
+.bouton-hope--creux:hover,
+.bouton-hope--creux:focus-visible {
+  background-color: #efeefa;
+  box-shadow: none;
+}
+
+.lien-hope {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--hope-violet);
+}
+
+.lien-hope svg {
+  width: 15px;
+  height: 15px;
+}
+
+.lien-hope--fleche {
+  text-decoration: none;
+  color: var(--hope-jaune);
+}
+
+.lien-hope--fleche:hover {
+  text-decoration: underline;
+}
+
+/* --- Le carre d'icone, decline dans les quatre couleurs --- */
+
+.carre-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+
+.carre-icone svg {
+  width: 21px;
+  height: 21px;
+}
+
+.carre-icone--violet { background-color: #eceafa; color: var(--hope-violet); }
+.carre-icone--bleu   { background-color: var(--hope-bleu-clair); color: #3d7fab; }
+.carre-icone--orange { background-color: #fbeed8; color: #b5731a; }
+.carre-icone--jaune  { background-color: #fbf6da; color: #96801f; }
+
+/* --- Les trois reperes --- */
+
+.reperes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.repere {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--admin-bordure);
+  border-left: 4px solid var(--hope-violet);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.repere--violet { border-left-color: var(--hope-violet); }
+.repere--bleu   { border-left-color: var(--hope-bleu); }
+.repere--orange { border-left-color: var(--hope-orange); }
+.repere--jaune  { border-left-color: var(--hope-jaune); }
+
+.repere__corps {
+  min-width: 0;
+}
+
+/* Le nombre et son libelle sur la meme ligne de base : lus ensemble,
+   ils forment une phrase -- "1 mission a venir". */
+.repere__tete {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.repere__valeur {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.repere__libelle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.repere__detail {
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Les deux paires de blocs --- */
+
+/*
+ * Deux colonnes inegales : la mission occupe les deux tiers, la tache
+ * le reste. C'est la mission qu'on vient verifier en premier, et elle
+ * seule porte une image.
+ */
+.accueil-benevole__paire {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* --- La mission mise en avant --- */
+
+.mission-phare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.mission-phare__corps {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+}
+
+.mission-phare__haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.mission-phare__intitule {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mission-phare__projet {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.mission-phare__titre {
+  margin-top: 5px;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.mission-phare__texte {
+  margin-top: 6px;
+  max-width: 46ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+/* La date en pastille, puis les trois faits : quand, a quelle heure, ou. */
+.mission-phare__quand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.jour {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  padding: 9px 0;
+  border-radius: 13px;
+  background-color: #eceafa;
+  color: var(--hope-violet);
+}
+
+.jour strong {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.jour em {
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mission-phare__faits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.mission-phare__faits > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.mission-phare__faits dt {
+  display: flex;
+  flex: none;
+  color: var(--admin-texte-faible);
+}
+
+.mission-phare__faits svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mission-phare__faits dd {
+  overflow: hidden;
+  margin: 0;
+  font-size: 13.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mission-phare__actions,
+.tache-active__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  /* Colle les actions au bas du bloc : les deux colonnes de la paire
+     terminent alors sur la meme ligne. */
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.mission-phare__vide,
+.tache-active__vide {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}
+
+.mission-phare__image {
+  position: relative;
+  min-height: 200px;
+}
+
+.mission-phare__image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- La tache en cours --- */
+
+.tache-active,
+.journal-apercu {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.tache-active__haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tache-active__intitule,
+.journal-apercu__titre {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.tache-active__compte {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: var(--hope-jaune);
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a681a;
+}
+
+.tache-active__ligne {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.tache-active__titre {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.tache-active__projet {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--hope-violet);
+}
+
+.tache-active__texte {
+  margin-top: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+.tache-active__echeance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--admin-bordure);
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.tache-active__echeance svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--admin-texte-faible);
+}
+
+/* --- L'invitation, et l'apercu du journal --- */
+
+.accueil-benevole__paire--basse {
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+}
+
+/*
+ * Le seul bloc de la page a fond plein.
+ *
+ * Il n'informe pas, il propose : le violet le distingue des panneaux
+ * blancs qui, eux, rendent compte.
+ */
+.invitation {
+  display: grid;
+  grid-template-columns: minmax(0, 0.52fr) minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: var(--admin-rayon);
+  background: linear-gradient(135deg, var(--hope-violet) 0%, var(--hope-violet-fonce) 100%);
+  box-shadow: var(--admin-ombre);
+}
+
+.invitation__image {
+  position: relative;
+  min-height: 168px;
+}
+
+.invitation__image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.invitation__corps {
+  padding: 22px 24px;
+  color: #ffffff;
+}
+
+.invitation__titre {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.invitation__compte {
+  margin: 7px 0 14px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.journal-apercu__accroche {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.journal-apercu__chiffres {
+  display: flex;
+  gap: 26px;
+  margin: 18px 0 auto;
+  padding: 14px 0;
+  border-top: 1px solid var(--admin-bordure);
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.journal-apercu__chiffres p {
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.journal-apercu__chiffres strong {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--admin-texte);
+}
+
+.journal-apercu .bouton-hope {
+  align-self: flex-start;
+  margin-top: 18px;
+}
+
+/* --- Petits ecrans : tout se met en colonne --- */
+
+@media (max-width: 1180px) {
+  .accueil-benevole__paire,
+  .accueil-benevole__paire--basse {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 780px) {
+  /* L'image passe au-dessus du texte plutot que de le comprimer. */
+  .mission-phare,
+  .invitation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mission-phare__image {
+    order: -1;
+    min-height: 150px;
+  }
+
+  .accueil-benevole__titre {
+    font-size: 24px;
+  }
+
+  .mission-phare__quand {
+    align-items: flex-start;
   }
 }

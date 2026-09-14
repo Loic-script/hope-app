@@ -289,3 +289,21 @@ export const IconeActualites = creerIcone(
     <path d="M7.2 14.4v3.4a1.6 1.6 0 0 0 3.2 0v-1.6" />
   </>
 );
+
+/** Un calendrier : la date d'une mission. */
+export const IconeCalendrier = creerIcone(
+  'IconeCalendrier',
+  <>
+    <rect x="3.4" y="5.2" width="17.2" height="15.4" rx="2" />
+    <path d="M3.4 9.8h17.2M8.4 3.4v3.6M15.6 3.4v3.6" />
+  </>
+);
+
+/** Un reperage sur une carte : le lieu d'une mission. */
+export const IconeLieu = creerIcone(
+  'IconeLieu',
+  <>
+    <path d="M12 21.2s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" />
+    <circle cx="12" cy="10.2" r="2.6" />
+  </>
+);

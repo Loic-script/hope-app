@@ -15,8 +15,17 @@
    ============================================================ */
 
 :root {
-  --entete-fond-haut: #242b3e;
-  --entete-fond-bas: #2a3145;
+  /*
+   * Le fond du rail : le violet de la charte, assombri.
+   *
+   * Il etait bleu-gris (#242b3e), une couleur qui n'appartenait a aucune
+   * des quatre de la charte. Ces deux tons-ci descendent de
+   * --hope-violet, echantillonne dans le logo lui-meme : le rail tient
+   * donc la couleur de la marque, et la pastille de l'entree active --
+   * ce meme violet, en clair -- s'y detache au lieu d'y jurer.
+   */
+  --entete-fond-haut: #2c2748;
+  --entete-fond-bas: #342e58;
   --entete-texte: rgba(255, 255, 255, 0.66);
   --entete-survol: rgba(255, 255, 255, 0.1);
   --entete-separateur: rgba(255, 255, 255, 0.12);
@@ -121,6 +130,44 @@
 .entete__marque {
   grid-column: 2;
   text-decoration: none;
+}
+
+/*
+ * Le fil d'Ariane : "Mon espace / Vue d'ensemble".
+ *
+ * Il occupe la colonne de gauche, restee vide depuis que la marque est
+ * passee dans le rail. Le rail dit ou l'on va, le fil dit ou l'on est --
+ * en toutes lettres, la ou le rail n'a qu'une pastille de couleur.
+ */
+.entete__fil {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 13.5px;
+  white-space: nowrap;
+  color: var(--admin-texte-faible);
+}
+
+.entete__fil a {
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--admin-texte-doux);
+  transition: color 0.16s ease;
+}
+
+.entete__fil a:hover,
+.entete__fil a:focus-visible {
+  color: var(--hope-violet);
+}
+
+/* La page courante : c'est elle qu'on lit, pas le chemin pour y venir. */
+.entete__fil-ici {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  color: var(--admin-texte);
 }
 
 /*

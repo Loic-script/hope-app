@@ -198,6 +198,9 @@ export default function CoqueEspace({
     exact ? emplacement.pathname === to : emplacement.pathname.startsWith(to)
   );
 
+  /** L'entree active, telle que le fil d'Ariane la nomme. */
+  const entreeActive = rangActif >= 0 ? navigation[rangActif] : null;
+
   /*
    * Ce qui occupe le sommet de l'arc : l'entree active, decalee de la
    * rotation manuelle eventuelle.
@@ -463,6 +466,24 @@ export default function CoqueEspace({
       <header className="entete">
         {/* ---------- Marque au centre, alertes et profil a droite ---------- */}
         <div className="entete__barre">
+          {/*
+            Le fil d'Ariane occupe la colonne de gauche, vide jusqu'ici
+            sur ecran large. Il ne remplace pas le menu : il dit ou l'on
+            se trouve, ce que le rail ne fait que par une pastille de
+            couleur. Absent de l'arc, ou la marque tient le centre.
+          */}
+          {!enArc && (
+            <nav className="entete__fil" aria-label="Fil d'Ariane">
+              <Link to={accueil}>Mon espace</Link>
+              {entreeActive && (
+                <>
+                  <span aria-hidden="true">/</span>
+                  <span className="entete__fil-ici">{entreeActive.label}</span>
+                </>
+              )}
+            </nav>
+          )}
+
           <Link className="entete__marque" to={accueil} aria-label={`HOPE — ${espace}`}>
             <img className="entete__logo" src={logoSurFondBlanc} alt="HOPE" />
           </Link>
