@@ -670,29 +670,6 @@
    8. Journal d'heures
    ============================================================ */
 
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-}
-
-.badge-benevole {
-  padding: 8px 14px;
-  border: 1px dashed var(--admin-bordure-forte);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--admin-texte-faible);
-}
-
-/* Un badge obtenu se voit du premier coup d'oeil ; les autres restent
-   affiches, ils montrent ce qui est atteignable. */
-.badge-benevole--obtenu {
-  border-style: solid;
-  border-color: var(--hope-orange);
-  background-color: #fdf4e3;
-  color: #8a5c12;
-}
 
 /* ============================================================
    9. Listes simples
@@ -1600,4 +1577,135 @@
   .mission-phare__quand {
     align-items: flex-start;
   }
+}
+
+
+/* ============================================================
+   10. Journal d'heures
+
+   Les paliers de reconnaissance, et le pied du tableau.
+   ============================================================ */
+
+.journal {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.journal .reperes {
+  margin-top: 2px;
+}
+
+/* Le compte a droite du titre de bloc : "3 sur 5 atteints". */
+.bloc__sous-titre {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+/*
+ * Un palier par ligne, et non des pastilles alignees.
+ *
+ * Les pastilles ne disaient qu'une chose -- obtenu, ou pas -- la ou le
+ * benevole veut savoir ce qui lui manque. Chaque ligne porte donc son
+ * avancement et son reste a parcourir.
+ */
+.paliers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.palier {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+}
+
+/*
+ * La marque de gauche : une coche si le palier est atteint, son
+ * pourcentage sinon. Un pourcentage vaut mieux qu'un cadenas -- il dit
+ * ou l'on en est, pas seulement qu'on n'y est pas.
+ */
+.palier__marque {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #eef1f6;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-texte-doux);
+}
+
+.palier__marque svg {
+  width: 19px;
+  height: 19px;
+}
+
+.palier__corps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.palier__libelle {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.palier__etat {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* La jauge du palier : fine, elle complete le pourcentage sans
+   reclamer l'attention que prendrait une barre pleine. */
+.palier__jauge {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background-color: #eef1f6;
+}
+
+.palier__plein {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--hope-bleu);
+  transition: width 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+/* Atteint : le violet de la marque, comme partout ailleurs ou quelque
+   chose est acquis. */
+.palier--obtenu {
+  border-color: #d9d4f2;
+  background-color: #f6f5fd;
+}
+
+.palier--obtenu .palier__marque {
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.palier--obtenu .palier__etat {
+  font-weight: 600;
+  color: var(--hope-violet-lisible);
+}
+
+/* Le pied du tableau : le total des heures. */
+.table tfoot td {
+  padding-top: 13px;
+  border-top: 2px solid var(--admin-bordure);
+  font-weight: 700;
 }

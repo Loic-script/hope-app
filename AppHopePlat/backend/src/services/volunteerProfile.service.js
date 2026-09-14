@@ -226,9 +226,18 @@ export async function journal(utilisateurId) {
   const heures = Number(totaux.heuresDonnees ?? 0);
   const missions = Number(totaux.missionsRealisees ?? 0);
 
+  /*
+   * Les paliers sortent avec le badge.
+   *
+   * Sans eux, l'ecran ne peut dire qu'une chose -- obtenu, ou pas -- la
+   * ou le benevole veut savoir ce qui lui manque encore. Ce sont des
+   * constantes publiques, rien de sensible.
+   */
   const badges = BADGES.map((badge) => ({
     cle: badge.cle,
     libelle: badge.libelle,
+    heures: badge.heures ?? null,
+    missions: badge.missions ?? null,
     obtenu:
       (badge.heures === undefined || heures >= badge.heures) &&
       (badge.missions === undefined || missions >= badge.missions),
