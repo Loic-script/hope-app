@@ -76,7 +76,7 @@ export default function Authentification() {
 
         <div className="illustration__principal">
           <h1 className="illustration__titre">
-            Rejoindre
+            REJOINDRE
             <br />
             HOPE
           </h1>

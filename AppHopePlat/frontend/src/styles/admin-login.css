@@ -111,12 +111,18 @@
  * -- #90c7f3 en tenait lieu, sans en etre.
  */
 .illustration__barre {
-  margin: 22px 0 24px;
-  gap: 14px;
+  margin: 22px 0 26px;
+  /*
+   * Les proportions du bandeau du site : un soleil qui fait plus de la
+   * moitie de la longueur de la barre, et un ecart large. A 30 px il
+   * paraissait une vignette posee a cote ; a 54 il fait partie du
+   * meme signe.
+   */
   --trait-largeur: 92px;
   --trait-epaisseur: 6px;
   --trait-couleur: var(--hope-bleu);
-  --trait-soleil: 30px;
+  --trait-soleil: 54px;
+  --trait-ecart: 20px;
 }
 
 .illustration__sous-titre {

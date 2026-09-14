@@ -261,15 +261,26 @@ a {
 
 .trait-hope {
   display: inline-flex;
-  align-items: center;
+  /*
+   * Cale en haut, et non au milieu.
+   *
+   * Le fichier reserve au-dessus de sa coupole la place des rayons :
+   * centrer la barre sur la boite entiere la posait trop haut, a hauteur
+   * des rayons plutot que du disque. Elle est ramenee sur l'axe du
+   * disque, qui occupe les 46 derniers pour cent de la hauteur -- d'ou
+   * le 0,526, qui vaut 0,683 (le rapport du fichier) fois 0,77 (le
+   * milieu du disque, compte depuis le haut).
+   */
+  align-items: flex-start;
   flex: none;
-  gap: 7px;
+  gap: var(--trait-ecart, 7px);
 }
 
 .trait-hope::before {
   content: '';
   width: var(--trait-largeur, 26px);
   height: var(--trait-epaisseur, 3px);
+  margin-top: calc(var(--trait-soleil, 17px) * 0.526 - var(--trait-epaisseur, 3px) / 2);
   border-radius: 999px;
   background-color: var(--trait-couleur, var(--hope-orange));
 }

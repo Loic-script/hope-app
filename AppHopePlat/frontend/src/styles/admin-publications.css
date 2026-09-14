@@ -228,10 +228,9 @@
  * C'est le fichier de la charte, et non plus un demi-disque dessine en
  * CSS : le meme soleil que celui des surtitres, avec ses rayons.
  *
- * Retourne, en revanche. Le fichier est dessine coupole en haut et
- * rayons vers le bas -- c'est ainsi qu'il accompagne les surtitres. Ici
- * il se leve sur une ligne d'horizon : la coupole doit reposer dessus et
- * les rayons monter.
+ * Le fichier a ete remis a l'endroit une fois pour toutes -- coupole en
+ * bas, rayons au-dessus, comme le pictogramme officiel -- et n'a donc
+ * plus a etre retourne ici.
  *
  * Le clamp le maintient entier dans le rail : a 0 comme a 100 %, il ne
  * sort ni a gauche ni a droite.
@@ -251,7 +250,6 @@
   width: 24px;
   height: 17px;
   background: url('../assets/soleil.svg') center / contain no-repeat;
-  transform: scaleY(-1);
   transition: left 0.9s cubic-bezier(0.22, 0.75, 0.3, 1);
   transition-delay: calc(var(--rang, 0) * 90ms);
 }
