@@ -916,15 +916,20 @@
    * couleur devient le seul indice de famille, et compte donc double.
    */
   /*
-   * Le disque blanc sur lequel l'icone est posee, repris du jeu
+   * Le disque sur lequel l'icone est posee, repris du jeu
    * d'illustrations HOPE.
    *
-   * Blanc plein, et non un simple contour : c'est lui qui detache
-   * l'icone du rail, dont le fond est sombre. Les rayons de soleil du
-   * jeu d'illustrations ne sont pas repris : sur dix entrees empilees,
-   * ils faisaient une haie de hachures. L'icone y prend une
-   * declinaison foncee de sa couleur de famille -- la charte est claire,
-   * et son jaune ne donne que 1,29 de contraste sur du blanc.
+   * C'est lui qui porte la couleur de la famille, et le pictogramme qui
+   * s'y detache -- l'inverse du premier essai, ou l'icone etait coloree
+   * sur un disque blanc. A contraste egal, la couleur se voit beaucoup
+   * mieux en aplat de 30 px qu'en silhouette de 17 : c'est elle qui doit
+   * occuper la surface. L'encre du pictogramme est choisie pour chaque
+   * disque, dans la coque -- voir TEINTES.
+   *
+   * Plein, et non un simple contour : c'est lui qui detache l'icone du
+   * rail, dont le fond est sombre. Les rayons de soleil du jeu
+   * d'illustrations ne sont pas repris : sur dix entrees empilees, ils
+   * faisaient une haie de hachures.
    */
   .lateral__icone {
     position: relative;
@@ -935,14 +940,14 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background-color: #ffffff;
+    background-color: var(--teinte-famille, #ffffff);
     transition: background-color 0.18s ease;
   }
 
   .lateral__lien svg {
     width: 17px;
     height: 17px;
-    color: var(--teinte-famille, currentColor);
+    color: var(--encre-famille, currentColor);
     transition: color 0.18s ease;
   }
 
@@ -973,10 +978,8 @@
   }
 
   /*
-   * L'icone garde sa couleur partout, page courante comprise.
-   *
-   * Elle passait au blanc au survol, du temps ou elle etait posee a meme
-   * le rail. Sur un disque blanc, ce blanc-la l'effacerait.
+   * L'encre ne change nulle part, page courante et survol compris : elle
+   * est choisie pour le disque qui la porte, et celui-ci ne bouge pas.
    */
 
   /* Le pied du rail n'appartient a aucune famille : la deconnexion garde

@@ -68,25 +68,29 @@ const SEUIL_GLISSEMENT = 6;
 
 /**
  * Les quatre couleurs de la charte, dans l'ordre ou les familles du menu
- * se les partagent.
+ * se les partagent. Une famille, une couleur : c'est elle qui distingue
+ * les groupes d'un coup d'oeil, la ou l'intitule demande de lire.
  *
- * Les valeurs de la charte telles quelles, relevees dans le logo :
- * jaune #f5e389, bleu #86b9de, orange #e09735, violet #5d5696.
+ * Chacune vient par paire : la couleur du disque, et l'encre du
+ * pictogramme pose dessus.
  *
- * Elles sont claires, et le disque qui les porte est blanc : sur ce
- * fond-la, le jaune donne 1,29 de contraste et le bleu 2,1, quand il en
- * faut 3 pour une forme. C'est un choix assume, et non un oubli -- les
- * declinaisons foncees restent disponibles en --hope-*-lisible dans
- * theme.css si le rendu se revele trop pale a l'usage.
+ * L'encre n'est pas blanche partout, et ce n'est pas une fantaisie. Le
+ * contraste est un rapport entre deux luminosites : l'inverser ne le
+ * change pas. Une icone blanche sur un disque jaune se lit aussi mal
+ * qu'une icone jaune sur un disque blanc -- 1,29 dans les deux sens,
+ * quand il en faut 3 pour une forme.
  *
- * Une famille, une couleur : c'est elle qui distingue les groupes d'un
- * coup d'oeil, la ou l'intitule demande de lire.
+ * Sur les trois couleurs claires, l'encre est donc le violet fonce de la
+ * charte : 6,78 sur le jaune, 4,18 sur le bleu, 3,61 sur l'orange. C'est
+ * aussi le motif du jeu d'illustrations HOPE, ou le pictogramme violet
+ * est cercle de jaune. Seul le disque violet, sur lequel le violet ne
+ * dirait rien, prend l'encre blanche -- 6,49.
  */
 const TEINTES = [
-  'var(--hope-jaune)',
-  'var(--hope-bleu)',
-  'var(--hope-orange)',
-  'var(--hope-violet)',
+  { fond: 'var(--hope-jaune)', encre: 'var(--hope-violet-lisible)' },
+  { fond: 'var(--hope-bleu)', encre: 'var(--hope-violet-lisible)' },
+  { fond: 'var(--hope-orange)', encre: 'var(--hope-violet-lisible)' },
+  { fond: 'var(--hope-violet)', encre: '#ffffff' },
 ];
 
 /**
@@ -365,7 +369,10 @@ export default function CoqueEspace({
             <div
               className="lateral__groupe"
               key={groupe.titre ?? `groupe-${rangGroupe}`}
-              style={{ '--teinte-famille': TEINTES[rangGroupe % TEINTES.length] }}
+              style={{
+                '--teinte-famille': TEINTES[rangGroupe % TEINTES.length].fond,
+                '--encre-famille': TEINTES[rangGroupe % TEINTES.length].encre,
+              }}
             >
               {groupe.titre && (
                 <p className="lateral__section" aria-hidden="true">
