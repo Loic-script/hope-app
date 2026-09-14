@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import HopeLogo from '../components/HopeLogo.jsx';
-// Le pictogramme officiel, declinaison pour fond violet : ses couleurs
-// conviennent au panneau sombre.
-import pictogramme from '../assets/LOGO_PICTOGRAMME_FOND_VIOLET.png';
 import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
 import photoHope from '../assets/hope-couverture.jpg';
 import {
@@ -62,23 +59,12 @@ export default function Authentification() {
         className="connexion__illustration connexion__illustration--utilisateur"
         style={{ '--photo-hope': `url(${photoHope})` }}
       >
-        <div className="illustration__accroche">
-          <p>
-            Des enfants
-            d’aujourd’hui,
-            <br />
-            un meilleur
-            demain
-          </p>
-        </div>
-
-        <img className="illustration__soleil" src={pictogramme} alt="" aria-hidden="true" />
-
         <div className="illustration__principal">
+          <p className="illustration__surtitre">Rejoindre HOPE</p>
           <h1 className="illustration__titre">
-            REJOINDRE
+            Des enfants d’aujourd’hui,
             <br />
-            HOPE
+            un meilleur demain
           </h1>
           <div className="trait-hope trait-hope--renverse illustration__barre" aria-hidden="true" />
           <p className="illustration__sous-titre">

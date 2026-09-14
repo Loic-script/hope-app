@@ -43,8 +43,9 @@
  * produisait la bande violette unie sous la photo.
  *
  * Contraste du texte blanc mesure sur le rendu : 8,0:1 sur le titre, le
- * sous-titre et la signature, 5,1:1 sur l'accroche haute -- tous au-dessus
- * du seuil AA (4,5:1), les trois premiers au-dessus de AAA (7:1).
+ * sous-titre et la signature -- au-dessus du seuil AA (4,5:1) et meme de
+ * AAA (7:1). Le surtitre, en haut, est le moins couvert par le voile :
+ * c'est lui qu'il faudra remesurer si le degrade change.
  */
 .connexion__illustration::before {
   content: '';
@@ -61,71 +62,50 @@
   );
 }
 
-/* Accroche manuscrite en haut a gauche. */
-.illustration__accroche {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  max-width: 340px;
-}
-
 /*
- * Plus petite et plus legere qu'avant, parce que la lettre a change.
+ * Le surtitre : le nom de l'espace, au-dessus de la phrase.
  *
- * Caveat a une petite hauteur d'oeil : 38 px y donnaient deux lignes
- * discretes. Poppins, a la meme mesure, en donne quatre et pese autant
- * que le titre, dont l'accroche n'est que la voix d'a cote. Vingt-six
- * pixels en 500 lui rendent sa place.
+ * C'est lui qui portait le titre jusqu'ici -- "Rejoindre HOPE" en tres
+ * gros, la phrase releguee en haut du panneau. L'ordre s'inverse : la
+ * phrase prend la vedette, le nom de l'espace passe en tete, petit et
+ * espace, comme les surtitres de la charte.
  */
-.illustration__accroche p {
-  font-size: 26px;
-  font-weight: 500;
-  line-height: 1.3;
+.illustration__surtitre {
+  margin-bottom: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
   text-shadow: 0 2px 10px rgba(53, 51, 67, 0.35);
 }
 
-/* Le pictogramme fait 1,61:1 : on pilote la largeur, la hauteur suit.
-   L'ombre portee reste : le logo est pose sur une photo, et sans elle
-   ses aplats clairs se perdraient sur un fond clair. */
-.illustration__soleil {
-  display: block;
-  width: 64px;
-  height: auto;
-  flex: none;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 2px 6px rgba(53, 51, 67, 0.35));
-}
-
-/* Bloc principal, pousse vers le bas du panneau. */
+/* Bloc principal, en tete du panneau. */
 .illustration__principal {
-  margin-top: auto;
   max-width: 520px;
 }
 
 .illustration__titre {
-  font-size: clamp(38px, 3.8vw, 56px);
-  font-weight: 800;
-  line-height: 1.06;
+  /* Plus mesure qu'avant : le titre est maintenant une phrase de deux
+     lignes, et non deux mots. A 56 px elle prendrait la moitie du
+     panneau. */
+  font-size: clamp(30px, 2.9vw, 42px);
+  font-weight: 700;
+  line-height: 1.16;
   letter-spacing: -0.01em;
   text-shadow: 0 3px 18px rgba(53, 51, 67, 0.28);
 }
 
 /*
- * La barre sous "Rejoindre HOPE", et son soleil.
+ * La barre sous le titre, et son soleil.
  *
- * Le motif commun, a l'echelle du bandeau : une barre de 92 px sur 6, et
- * un soleil de 30 plutot que de 17. La couleur est le bleu de la charte
- * -- #90c7f3 en tenait lieu, sans en etre.
+ * Le motif commun, a l'echelle du bandeau : une barre de 124 px sur 6 et
+ * un soleil de 54, contre 26 sur 3 et 17 ailleurs. La couleur est le
+ * bleu de la charte -- #90c7f3 en tenait lieu, sans en etre.
  */
 .illustration__barre {
   margin: 22px 0 26px;
-  /*
-   * Les proportions du bandeau du site : un soleil qui fait plus de la
-   * moitie de la longueur de la barre, et un ecart large. A 30 px il
-   * paraissait une vignette posee a cote ; a 54 il fait partie du
-   * meme signe.
-   */
-  --trait-largeur: 92px;
+  --trait-largeur: 124px;
   --trait-epaisseur: 6px;
   --trait-couleur: var(--hope-bleu);
   --trait-soleil: 54px;
@@ -139,12 +119,14 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
-/* Pied du panneau : silhouette de Madagascar et signature manuscrite. */
+/* La devise tient le fond du panneau : "auto" pousse au-dessus d'elle
+   tout l'espace disponible, quelle que soit la hauteur de l'ecran. */
 .illustration__pied {
   display: flex;
   align-items: center;
   gap: 26px;
-  margin-top: clamp(72px, 16vh, 180px);
+  margin-top: auto;
+  padding-top: 56px;
 }
 
 .illustration__madagascar {
@@ -613,10 +595,6 @@
     padding: 38px 32px 32px;
   }
 
-  .illustration__accroche p {
-    font-size: 32px;
-  }
-
   .illustration__sous-titre {
     font-size: 17px;
   }
@@ -643,10 +621,6 @@
       rgba(90, 82, 146, 0.72) 55%,
       rgba(93, 86, 150, 0.95) 100%
     );
-  }
-
-  .illustration__accroche {
-    display: none;
   }
 
   .illustration__titre {

@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import HopeLogo from '../components/HopeLogo.jsx';
-// Le pictogramme officiel remplace le soleil dessine : declinaison
-// pour fond violet, dont les couleurs conviennent au panneau sombre.
-import pictogramme from '../assets/LOGO_PICTOGRAMME_FOND_VIOLET.png';
 import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
 import {
   IconeAlerte,
@@ -101,22 +98,12 @@ export default function AdminLogin() {
         className="connexion__illustration"
         style={{ '--photo-hope': `url(${photoHope})` }}
       >
-        <div className="illustration__accroche">
-          <p>
-            Des enfants
-            d’aujourd’hui,
-            <br />
-            un meilleur
-            demain
-          </p>
-        </div>
-          <img className="illustration__soleil" src={pictogramme} alt="" aria-hidden="true" />
-
         <div className="illustration__principal">
+          <p className="illustration__surtitre">Espace administrateur</p>
           <h1 className="illustration__titre">
-            Espace
+            Des enfants d’aujourd’hui,
             <br />
-            Administrateur
+            un meilleur demain
           </h1>
           <div className="trait-hope trait-hope--renverse illustration__barre" aria-hidden="true" />
           <p className="illustration__sous-titre">
