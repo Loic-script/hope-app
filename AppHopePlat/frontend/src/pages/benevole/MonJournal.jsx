@@ -50,7 +50,7 @@ export default function MonJournal() {
             badge{obtenus.length > 1 ? 's' : ''} sur {badges.length}
           </p>
         </article>
-        <article className="chiffre chiffre--vert">
+        <article className="chiffre chiffre--valide">
           <p className="chiffre__valeur">
             {donnees?.benevoleDepuis ? fmt.date(donnees.benevoleDepuis) : '—'}
           </p>

@@ -66,6 +66,24 @@ const PIXELS_PAR_CRAN = 62;
 const SEUIL_GLISSEMENT = 6;
 
 /**
+ * Les quatre couleurs de la charte, dans l'ordre ou les familles du menu
+ * se les partagent.
+ *
+ * Elles sont relevees dans le logo : violet #5d5696, bleu #86b9de,
+ * orange #e09735, jaune #f5e389. Le violet est eclairci pour le rail,
+ * qui est deja sombre et violet -- tel quel, il s'y perdrait.
+ *
+ * Une famille, une couleur : c'est elle qui distingue les groupes d'un
+ * coup d'oeil, la ou l'intitule demande de lire.
+ */
+const TEINTES = [
+  'var(--hope-jaune)',
+  'var(--hope-bleu)',
+  'var(--hope-orange)',
+  'color-mix(in srgb, var(--hope-violet) 42%, #ffffff)',
+];
+
+/**
  * Place d'une entree sur l'arc, relative au centre.
  *
  * Le calcul est circulaire : l'entree qui suit la derniere revient a la
@@ -338,7 +356,11 @@ export default function CoqueEspace({
             positionnees par rapport au repere du <nav>.
           */}
           {groupes.map((groupe, rangGroupe) => (
-            <div className="lateral__groupe" key={groupe.titre ?? `groupe-${rangGroupe}`}>
+            <div
+              className="lateral__groupe"
+              key={groupe.titre ?? `groupe-${rangGroupe}`}
+              style={{ '--teinte-famille': TEINTES[rangGroupe % TEINTES.length] }}
+            >
               {groupe.titre && (
                 <p className="lateral__section" aria-hidden="true">
                   {groupe.titre}

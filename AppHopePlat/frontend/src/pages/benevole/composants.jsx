@@ -61,8 +61,8 @@ export function teinteInscription(statut) {
   return (
     {
       inscrit: 'bleu',
-      confirme: 'vert',
-      present: 'vert',
+      confirme: 'valide',
+      present: 'valide',
       absent: 'rouge',
       annule: 'gris',
     }[statut] ?? 'gris'

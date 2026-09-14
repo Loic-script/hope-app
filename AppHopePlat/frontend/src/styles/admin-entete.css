@@ -887,9 +887,40 @@
       color 0.2s ease;
   }
 
+  /*
+   * L'icone porte la couleur de sa famille.
+   *
+   * Les dix icones etaient du meme blanc grise : elles se distinguaient
+   * par leur dessin seul, et il faut regarder un dessin pour le
+   * reconnaitre. Une couleur par famille se voit sans etre lue, et
+   * double le decoupage que les intitules annoncent.
+   *
+   * La teinte descend du groupe, pose par la coque en
+   * --teinte-famille. Le repli ne change rien : icones seules, la
+   * couleur devient le seul indice de famille, et compte donc double.
+   */
   .lateral__lien svg {
     width: 20px;
     height: 20px;
+    color: var(--teinte-famille, currentColor);
+    transition: color 0.18s ease;
+  }
+
+  /*
+   * Sauf sur la page courante et au survol : le fond y est violet plein
+   * ou eclairci, et une icone de couleur y perdrait son contraste. Elle
+   * repasse au blanc du libelle, avec lequel elle fait alors bloc.
+   */
+  .lateral__lien--actif svg,
+  .lateral__lien:hover svg,
+  .lateral__lien:focus-visible svg {
+    color: currentColor;
+  }
+
+  /* Le pied du rail n'appartient a aucune famille : la deconnexion garde
+     la couleur de son libelle, qui vire au rouge au survol. */
+  .lateral__lien--sortie svg {
+    color: currentColor;
   }
 
   .lateral__lien:hover,
