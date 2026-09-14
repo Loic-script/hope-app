@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
-// Declinaison officielle pour fond sombre : les lettres y sont deja
-// blanches, contrairement au composant SVG qu'il fallait recolorer.
+// Deux declinaisons officielles : celle sur fond sombre pour le rail,
+// celle sur fond blanc pour le bandeau, qui est clair.
 import logoSurFondViolet from '../assets/LOGO_WORDMARK_SUR_FOND_VIOLET.png';
+import logoSurFondBlanc from '../assets/LOGO_WORDMARK_SUR_FOND_BLANC.png';
 // Replie, le rail n'a la place que du pictogramme.
 import pictogramme from '../assets/LOGO_PICTOGRAMME_FOND_VIOLET.png';
 import {
@@ -524,7 +525,7 @@ export default function AdminLayout() {
         {/* ---------- Marque au centre, alertes et profil a droite ---------- */}
         <div className="entete__barre">
           <Link className="entete__marque" to="/admin" aria-label="HOPE — accueil administrateur">
-            <img className="entete__logo" src={logoSurFondViolet} alt="HOPE" />
+            <img className="entete__logo" src={logoSurFondBlanc} alt="HOPE" />
           </Link>
 
           <div className="entete__actions">

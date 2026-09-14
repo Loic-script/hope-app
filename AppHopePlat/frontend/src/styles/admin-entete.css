@@ -83,12 +83,24 @@
    1. Bandeau : marque, navigation, alertes, profil
    ============================================================ */
 
+/*
+ * Le bandeau est clair, le rail sombre.
+ *
+ * Deux bandes sombres cote a cote se confondaient : le rail portant
+ * desormais la marque et la navigation, c'est lui qui doit tenir la
+ * couleur. Le bandeau rejoint donc la surface des panneaux, et se
+ * detache du contenu par un simple filet plutot que par une ombre --
+ * il n'a plus a paraitre au-dessus de quoi que ce soit.
+ *
+ * Les variables --entete-fond-* restent celles du rail, qui les emploie
+ * toujours : les changer ici l'aurait eclairci lui aussi.
+ */
 .entete {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: linear-gradient(180deg, var(--entete-fond-haut), var(--entete-fond-bas));
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 20px rgba(36, 43, 62, 0.16);
+  background-color: var(--admin-surface);
+  box-shadow: inset 0 -1px 0 var(--admin-bordure);
 }
 
 /*
@@ -112,22 +124,18 @@
 }
 
 /*
- * Le fichier porte deja les bonnes couleurs pour un fond sombre : rien a
- * recolorer ici, contrairement au composant SVG.
+ * Le logo du bandeau ne sert plus que sur telephone, ou le rail cede la
+ * place a l'arc. Le bandeau etant clair, c'est la declinaison sur fond
+ * blanc qui est chargee -- celle sur fond violet y poserait un
+ * rectangle sombre.
  *
- * Il inclut en revanche la signature "for a better life", qui ne ferait
- * que 4,5 px de haut a cette taille -- illisible, et 19 % de hauteur
- * volee au mot. On la recadre donc : le cadre impose un rapport de
- * 2,63:1 la ou l'image en fait 2,21, et object-position: top laisse la
- * signature deborder par le bas. Un recadrage plutot qu'un second
- * fichier a maintenir.
+ * La signature "for a better life" est conservee : le fichier entier,
+ * sans recadrage.
  */
 .entete__logo {
   display: block;
-  width: 100px;
-  height: 38px;
-  object-fit: cover;
-  object-position: top;
+  width: 104px;
+  height: auto;
 }
 
 /* --- Actions de droite --- */
@@ -148,14 +156,14 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  color: var(--entete-texte);
+  color: var(--admin-texte-doux);
   transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .entete__action:hover,
 .entete__action:focus-visible {
-  color: #ffffff;
-  background-color: var(--entete-survol);
+  color: var(--hope-violet);
+  background-color: var(--admin-surface-douce);
 }
 
 .entete__action svg {
@@ -169,7 +177,9 @@
   right: 9px;
   width: 8px;
   height: 8px;
-  border: 2px solid var(--entete-fond-haut);
+  /* Le liseré reprend le fond du bandeau, qui est clair depuis qu'il a
+     laissé la couleur au rail. */
+  border: 2px solid var(--admin-surface);
   border-radius: 50%;
   background-color: var(--hope-orange);
 }
@@ -180,7 +190,7 @@
   position: relative;
   margin-left: 8px;
   padding-left: 16px;
-  border-left: 1px solid var(--entete-separateur);
+  border-left: 1px solid var(--admin-bordure);
 }
 
 .profil__bouton {
@@ -192,13 +202,13 @@
   border-radius: 999px;
   background: none;
   font-family: inherit;
-  color: #ffffff;
+  color: var(--admin-texte);
   transition: background-color 0.18s ease;
 }
 
 .profil__bouton:hover,
 .profil__bouton[aria-expanded='true'] {
-  background-color: var(--entete-survol);
+  background-color: var(--admin-surface-douce);
 }
 
 .profil__avatar {
@@ -226,16 +236,19 @@
   font-weight: 600;
 }
 
+/* --admin-texte-doux et non --admin-texte-faible : sur le blanc du
+   bandeau, le second ne donne que 2,86 de contraste, sous le seuil de
+   4,5 exige pour un texte de cette taille. */
 .profil__role {
   display: block;
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--admin-texte-doux);
 }
 
 .profil__chevron {
   width: 15px;
   height: 15px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--admin-texte-faible);
   transition: transform 0.2s ease;
 }
 
@@ -658,12 +671,14 @@
 
   /* Le logo occupe la tete a lui seul, centre : la poignee de repli a
      quitte cette bande pour le bord droit du rail. */
+  /* La bande s'ajuste au logo plutot que l'inverse : celui-ci porte
+     desormais sa signature, et une hauteur fixe la rognerait. */
   .lateral__marque {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: var(--admin-entete-hauteur);
     flex: none;
+    padding: 14px 0 10px;
     margin-bottom: 6px;
   }
 
@@ -675,16 +690,15 @@
   }
 
   /*
-   * Le fichier inclut la signature "for a better life", illisible a
-   * cette taille et 19 % de hauteur volee au mot. On la recadre donc,
-   * comme le faisait le bandeau.
+   * Le fichier entier, signature "for a better life" comprise. Elle
+   * commande la taille : a 108 px de large elle tombait sous 5 px et
+   * devenait illisible, ce qui avait conduit a la recadrer. A 168 px --
+   * la largeur que laisse le rail deploye -- elle se lit.
    */
   .lateral__logo img {
     display: block;
-    width: 108px;
-    height: 40px;
-    object-fit: cover;
-    object-position: top;
+    width: 168px;
+    height: auto;
   }
 
   /*
