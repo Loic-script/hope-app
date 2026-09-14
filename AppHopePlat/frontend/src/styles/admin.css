@@ -67,13 +67,8 @@
   color: var(--admin-texte-doux);
 }
 
-.page-entete__fil::before {
-  content: '';
-  width: 26px;
-  height: 3px;
-  border-radius: 3px;
-  background-color: var(--hope-orange);
-}
+/* La barre et son soleil sont maintenant une balise, .trait-hope, posee
+   par EntetePage : un pseudo-element ne peut pas en porter deux. */
 
 .page-entete__fil a {
   color: inherit;
@@ -1212,11 +1207,8 @@
 }
 
 .carte-mission__trait {
-  width: 46px;
-  height: 3px;
   margin-top: 16px;
-  border-radius: 3px;
-  background-color: var(--hope-orange);
+  --trait-largeur: 46px;
 }
 
 .carte-mission img {

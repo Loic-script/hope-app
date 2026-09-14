@@ -57,6 +57,9 @@ export function EntetePage({ fil = [], titre, accroche, actions, retour = true }
         <div className="page-entete__intitule">
         {fil.length > 0 && (
           <nav className="page-entete__fil" aria-label="Fil d'Ariane">
+            {/* La barre et son soleil : le motif qui ouvre les surtitres
+                de la charte. Purement decoratif. */}
+            <span className="trait-hope" aria-hidden="true" />
             {fil.map((etape, index) => (
               <span key={`${etape.label}-${index}`}>
                 {etape.to ? <Link to={etape.to}>{etape.label}</Link> : etape.label}

@@ -276,6 +276,7 @@ export default function AdminLogin() {
         </div>
 
         <p className="connexion__signature">Ensemble pour un avenir meilleur</p>
+        <span className="trait-hope trait-hope--centre" aria-hidden="true" />
       </section>
     </div>
   );

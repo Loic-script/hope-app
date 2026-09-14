@@ -245,3 +245,46 @@ a {
     scrollbar-color: var(--defilement-pouce) var(--defilement-rail);
   }
 }
+
+/* ============================================================
+   Le trait de la charte
+
+   Une barre courte, et le soleil du logo a sa droite. Le motif ouvre les
+   surtitres, les fils d'Ariane et les cartes : partout ou une ligne en
+   petites capitales annonce ce qui suit.
+
+   Deux pseudo-elements plutot qu'une image unique : la barre reste une
+   couleur CSS -- orange par defaut, jaune ou autre par
+   --trait-couleur -- tandis que le soleil garde les siennes, qui sont
+   celles du logo et ne se declinent pas.
+   ============================================================ */
+
+.trait-hope {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 7px;
+}
+
+.trait-hope::before {
+  content: '';
+  width: var(--trait-largeur, 26px);
+  height: 3px;
+  border-radius: 3px;
+  background-color: var(--trait-couleur, var(--hope-orange));
+}
+
+.trait-hope::after {
+  content: '';
+  width: 17px;
+  height: 12px;
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+}
+
+/* Centre sous un texte, et non en tete de ligne : la barre et le soleil
+   se serrent alors autour de l'axe. */
+.trait-hope--centre {
+  display: flex;
+  justify-content: center;
+  margin: 12px auto 0;
+}

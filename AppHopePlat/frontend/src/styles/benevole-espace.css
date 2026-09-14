@@ -1042,11 +1042,10 @@
   color: var(--admin-texte-doux);
 }
 
+/* Le trait du surtitre est le motif commun -- barre et soleil -- en
+   jaune plutot qu'en orange. */
 .surtitre__trait {
-  width: 26px;
-  height: 3px;
-  border-radius: 3px;
-  background-color: var(--hope-jaune);
+  --trait-couleur: var(--hope-jaune);
 }
 
 /* Sur fond violet, le surtitre s'eclaircit et son trait passe a l'orange,
@@ -1056,7 +1055,7 @@
 }
 
 .surtitre--clair .surtitre__trait {
-  background-color: var(--hope-orange);
+  --trait-couleur: var(--hope-orange);
 }
 
 .accueil-benevole__titre {

@@ -569,15 +569,8 @@
   color: var(--hope-violet-2);
 }
 
-.connexion__signature::after {
-  content: '';
-  display: block;
-  width: 62px;
-  height: 3px;
-  margin: 12px auto 0;
-  border-radius: 3px;
-  background-color: var(--hope-orange);
-}
+/* La barre sous la signature est devenue .trait-hope--centre, posee
+   dans la page : elle porte aussi le soleil. */
 
 /* ------------------------------------------------------------
    Adaptations mobiles et tablettes

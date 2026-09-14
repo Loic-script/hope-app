@@ -71,7 +71,7 @@ export default function VueDensemble() {
       <header className="accueil-benevole__entete">
         <div>
           <p className="surtitre">
-            <span className="surtitre__trait" aria-hidden="true" />
+            <span className="trait-hope surtitre__trait" aria-hidden="true" />
             Votre espace bénévole
           </p>
           <h1 className="accueil-benevole__titre">
@@ -265,7 +265,7 @@ export default function VueDensemble() {
           </div>
           <div className="invitation__corps">
             <p className="surtitre surtitre--clair">
-              <span className="surtitre__trait" aria-hidden="true" />
+              <span className="trait-hope surtitre__trait" aria-hidden="true" />
               Envie de participer davantage ?
             </p>
             <h2 className="invitation__titre">Une mission pour chaque engagement.</h2>

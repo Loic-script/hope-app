@@ -106,7 +106,10 @@ export default function AdminHome() {
     <>
       {/* ---------- Bandeau de bienvenue ---------- */}
       <section className="accueil__bandeau" style={{ '--photo-bandeau': `url(${photoBandeau})` }}>
-        <p className="page-entete__fil">Accueil</p>
+        <p className="page-entete__fil">
+          <span className="trait-hope" aria-hidden="true" />
+          Accueil
+        </p>
         <h1 className="accueil__salutation">Bienvenue, {admin?.adminLog ?? 'AdminHope'}</h1>
         <p className="accueil__accroche">
           Suivez les dons reçus, décidez de leur emploi et mesurez ce qu’ils changent pour les
@@ -190,7 +193,7 @@ export default function AdminHome() {
                   Chaque don suivi jusqu’à son impact, c’est un enfant scolarisé, une mère
                   autonome, une famille qui tient debout.
                 </p>
-                <div className="carte-mission__trait" />
+                <div className="trait-hope carte-mission__trait" />
                 <img src={silhouette} alt="" aria-hidden="true" />
               </section>
             </div>
