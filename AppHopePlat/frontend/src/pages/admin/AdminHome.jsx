@@ -107,8 +107,8 @@ export default function AdminHome() {
       {/* ---------- Bandeau de bienvenue ---------- */}
       <section className="accueil__bandeau" style={{ '--photo-bandeau': `url(${photoBandeau})` }}>
         <p className="page-entete__fil">
-          <span className="trait-hope" aria-hidden="true" />
           Accueil
+          <span className="trait-hope" aria-hidden="true" />
         </p>
         <h1 className="accueil__salutation">Bienvenue, {admin?.adminLog ?? 'AdminHope'}</h1>
         <p className="accueil__accroche">

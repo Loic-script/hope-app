@@ -67,8 +67,18 @@
   color: var(--admin-texte-doux);
 }
 
-/* La barre et son soleil sont maintenant une balise, .trait-hope, posee
-   par EntetePage : un pseudo-element ne peut pas en porter deux. */
+/*
+ * La barre et son soleil sont une balise, .trait-hope, posee par
+ * EntetePage. Elle ferme la ligne plutot que de l'ouvrir : le nom de la
+ * page vient en premier, et le motif le prolonge.
+ *
+ * En bleu ici, et non en orange : l'orange est la couleur de l'action
+ * dans cet espace -- boutons, montants manquants -- et un surtitre
+ * n'appelle a rien.
+ */
+.page-entete__fil .trait-hope {
+  --trait-couleur: var(--hope-bleu);
+}
 
 .page-entete__fil a {
   color: inherit;
