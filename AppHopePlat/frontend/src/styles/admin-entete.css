@@ -795,7 +795,6 @@
   .lateral__section {
     display: flex;
     align-items: center;
-    gap: 7px;
     height: 17px;
     margin: 0 0 4px;
     padding-left: 15px;
@@ -807,14 +806,6 @@
     overflow: hidden;
     color: rgba(255, 255, 255, 0.42);
     transition: opacity 0.2s ease;
-  }
-
-  /* L'embleme echappe a la casse et a l'interlettrage de l'intitule :
-     une majuscule forcee ne lui ferait rien, l'espacement si. */
-  .lateral__embleme {
-    font-size: 12px;
-    line-height: 1;
-    letter-spacing: normal;
   }
 
   /*
@@ -957,7 +948,11 @@
 
   .lateral--replie .lateral__libelle {
     position: absolute;
-    left: calc(100% + 14px);
+    /* "bottom" vient de l'infobulle de l'arc, qui se pose au-dessus du
+       bouton. Le laisser en place avec "top" ecraserait la bulle entre
+       deux bords contradictoires : le texte tomberait hors du fond. */
+    bottom: auto;
+    left: calc(100% + 22px);
     top: 50%;
     z-index: 60;
     padding: 7px 12px;
@@ -977,6 +972,12 @@
   .lateral--replie .lateral__lien:focus-visible .lateral__libelle {
     opacity: 1;
     visibility: visible;
+    /* Le rail deplie annule la transformation au survol -- le libelle y
+       est du texte en ligne. Cette regle-la est plus specifique que
+       celle du rail replie : sans ce rappel, la bulle perd son
+       recentrage au moment meme ou elle apparait, et tombe d'une
+       demi-hauteur sous l'entree survolee. */
+    transform: translateY(-50%);
     transition-delay: 0.1s;
   }
 

@@ -58,7 +58,6 @@ const GROUPES = [
   },
   {
     titre: 'Gestion des projets',
-    embleme: '📁',
     entrees: [
       { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
       { to: '/admin/beneficiaries', label: 'Bénéficiaires', Icone: IconeBeneficiaires },
@@ -67,7 +66,6 @@ const GROUPES = [
   },
   {
     titre: 'Communauté & contacts',
-    embleme: '👥',
     entrees: [
       // "compteur" designe la cle des pastilles renvoyees par
       // /admin/badges : l'entree porte alors son nombre de non-lus.
@@ -79,7 +77,6 @@ const GROUPES = [
   },
   {
     titre: 'Finances & analyse',
-    embleme: '📊',
     entrees: [
       { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
       { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
@@ -405,7 +402,6 @@ export default function AdminLayout() {
             <div className="lateral__groupe" key={groupe.titre ?? 'accueil'}>
               {groupe.titre && (
                 <p className="lateral__section" aria-hidden="true">
-                  <span className="lateral__embleme">{groupe.embleme}</span>
                   {groupe.titre}
                 </p>
               )}
