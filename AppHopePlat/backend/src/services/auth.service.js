@@ -29,7 +29,12 @@ import {
   TYPES_A_VALIDER,
   TYPES_UTILISATEUR,
 } from '../shared/audiences.js';
-import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
+import {
+  ErreurAuthentification,
+  ErreurIntrouvable,
+  ErreurRegleMetier,
+  ErreurValidation,
+} from '../shared/errors.js';
 
 /**
  * Hash factice compare lorsque le courriel est inconnu : le refus coute
@@ -63,19 +68,41 @@ function versUtilisateurPublic(compte, type) {
   };
 }
 
-/** Signe un jeton pour l'espace correspondant au type. */
-function signerJeton(compte, type) {
+/**
+ * Signe un jeton pour l'espace correspondant au type.
+ *
+ * @param {object} options.duree duree de validite ; celle de la
+ *        configuration par defaut, plus courte pour une consultation
+ *        depuis l'espace administrateur.
+ * @param {object} options.pour l'administrateur au nom de qui le jeton
+ *        est emis, le cas echeant. Il voyage dans le jeton afin qu'une
+ *        session de consultation reste identifiable a la lecture.
+ */
+function signerJeton(compte, type, { duree = config.jwt.expiresIn, pour = null } = {}) {
   return jwt.sign(
-    { utilisateurId: compte.id, email: compte.email, type },
+    {
+      utilisateurId: compte.id,
+      email: compte.email,
+      type,
+      ...(pour ? { consultePar: pour } : {}),
+    },
     config.jwt.secret,
     {
       subject: String(compte.id),
-      expiresIn: config.jwt.expiresIn,
+      expiresIn: duree,
       issuer: EMETTEUR,
       audience: AUDIENCE_PAR_TYPE[type],
     }
   );
 }
+
+/**
+ * Duree d'une session de consultation.
+ *
+ * Trente minutes : de quoi faire le tour d'un espace, pas de quoi
+ * laisser trainer un acces. Un jeton ordinaire vit bien plus longtemps.
+ */
+const DUREE_CONSULTATION = '30m';
 
 /**
  * Inscription.
@@ -220,6 +247,55 @@ export async function connecter({ email, motDePasse } = {}) {
     // Le donateur n'a pas de formulaire de completion : il entre
     // directement dans son espace.
     completionRequise: !profilComplete && type !== 'donateur',
+  };
+}
+
+/**
+ * Ouvre une session de consultation sur l'espace d'un utilisateur.
+ *
+ * L'administrateur voit alors l'espace tel que son occupant le voit.
+ * C'est un pouvoir reel : la route qui y mene est reservee au role
+ * ADMIN, le jeton ne vaut que trente minutes, et il porte le nom de
+ * l'administrateur qui l'a demande -- une session de consultation reste
+ * ainsi reconnaissable a la lecture du jeton.
+ *
+ * Aucun mot de passe n'est demande et aucun n'est revele : le compte
+ * consulte garde le sien, et l'administrateur n'apprend rien qu'il ne
+ * puisse deja lire depuis son espace.
+ *
+ * @param {string} utilisateurId identifiant du compte a consulter
+ * @param {{ adminLog?: string }} admin celui qui consulte
+ */
+export async function consulterEspace(utilisateurId, admin = null) {
+  const compte = await volunteerRepository.trouverParId(utilisateurId);
+  if (!compte) throw new ErreurIntrouvable('Le compte', utilisateurId);
+
+  const type = typeDuCompte(compte);
+  if (!type) {
+    throw new ErreurRegleMetier(
+      'Ce compte n’est rattaché à aucun espace : il n’y a rien à consulter.',
+      'ROLE_MANQUANT'
+    );
+  }
+
+  // Un compte suspendu ou en attente n'a pas d'espace ouvert : le
+  // consulter montrerait un ecran que son occupant ne voit pas.
+  if (compte.statut !== 'actif') {
+    throw new ErreurRegleMetier(
+      `Ce compte est « ${compte.statut} » : son espace n’est pas ouvert.`,
+      'COMPTE_INACTIF'
+    );
+  }
+
+  return {
+    token: signerJeton(compte, type, {
+      duree: DUREE_CONSULTATION,
+      pour: admin?.adminLog ?? null,
+    }),
+    expiresIn: DUREE_CONSULTATION,
+    type,
+    espace: ESPACE_PAR_TYPE[type],
+    utilisateur: versUtilisateurPublic(compte, type),
   };
 }
 

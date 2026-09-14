@@ -39,6 +39,7 @@ import {
   statistics,
   team,
   volunteers,
+  consultation,
 } from '../controllers/admin.controllers.js';
 
 const router = Router();
@@ -180,6 +181,16 @@ router.post('/volunteers/:id/activate', exigerEcriture, volunteers.activer);
 router.patch('/volunteers/:id/status', exigerEcriture, volunteers.changerStatut);
 
 // --- Bailleurs --------------------------------------------------------
+/*
+ * Consulter l'espace d'un utilisateur.
+ *
+ * Reserve au role ADMIN et non a l'ecriture : entrer chez quelqu'un est
+ * plus lourd que de modifier une fiche, et un coordinateur n'a pas a
+ * pouvoir le faire. POST bien qu'on ne cree rien de durable -- la
+ * requete ouvre une session, ce qui n'est pas une lecture.
+ */
+router.post('/consulter/:id', exigerRole('ADMIN'), consultation.ouvrir);
+
 router.get('/funders', funders.lister);
 router.post('/funders/:id/activate', exigerEcriture, funders.activer);
 router.patch('/funders/:id/status', exigerEcriture, funders.changerStatut);

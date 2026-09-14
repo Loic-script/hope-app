@@ -21,11 +21,15 @@ import * as impactService from '../services/impact.service.js';
 import * as mediaService from '../services/media.service.js';
 import * as messageService from '../services/message.service.js';
 import * as notificationService from '../services/notification.service.js';
+import * as activityLogRepository from '../repositories/activityLog.repository.js';
 import * as projectService from '../services/project.service.js';
 import * as statisticsService from '../services/statistics.service.js';
 import * as teamService from '../services/team.service.js';
 import * as funderAccountService from '../services/funderAccount.service.js';
 import * as volunteerService from '../services/volunteer.service.js';
+// La consultation d'un espace reutilise la mecanique de jeton de
+// l'authentification : c'est la meme session, emise autrement.
+import * as authService from '../services/auth.service.js';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
@@ -196,6 +200,31 @@ export const volunteers = {
    prouvent une action. Meme traitement du fichier, servi derriere le
    jeton et jamais en acces libre.
    ================================================================ */
+
+/**
+ * Consultation de l'espace d'un utilisateur depuis l'espace admin.
+ *
+ * Rend un jeton de courte duree pour l'espace du compte designe, et
+ * depose la trace de l'operation dans le journal : consulter l'espace
+ * de quelqu'un n'est pas un acte anodin, il doit rester lisible apres
+ * coup.
+ */
+export const consultation = {
+  ouvrir: gerer(async (req) => {
+    const session = await authService.consulterEspace(req.params.id, req.admin);
+
+    await activityLogRepository.deposer(req.admin, {
+      action: 'CONSULT',
+      entityType: 'UTILISATEUR',
+      // entity_id est un entier ; l'identifiant d'un utilisateur est un
+      // UUID. Il vit donc dans le libelle, qui le porte en clair.
+      entityId: null,
+      label: `a consulté l’espace ${session.type} de « ${session.utilisateur.prenom} ${session.utilisateur.nom} »`,
+    });
+
+    return session;
+  }),
+};
 
 export const fieldProofs = {
   // Deux chemins mènent ici : /field-proofs?projectId=1 et

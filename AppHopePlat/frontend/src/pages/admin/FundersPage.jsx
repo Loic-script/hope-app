@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   Alerte,
@@ -11,6 +12,7 @@ import {
   Tableau,
 } from '../../components/admin/ui.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
+import * as consultationService from '../../services/consultation.service.js';
 import * as funderService from '../../services/funder.service.js';
 import * as fmt from '../../utils/format.js';
 
@@ -48,6 +50,7 @@ const TYPES = {
  * partenaire.
  */
 export default function FundersPage() {
+  const navigate = useNavigate();
   const [filtre, setFiltre] = useState('');
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => funderService.lister(filtre ? { statut: filtre } : {}),
@@ -60,6 +63,19 @@ export default function FundersPage() {
 
   function agir(action) {
     soumettre(action, { onSucces: recharger });
+  }
+
+  /*
+   * Ouvre l'espace du compte sous son identite.
+   *
+   * On navigue dans le meme onglet : chaque espace range son jeton dans
+   * sa propre cle, si bien que la session d'administration reste intacte
+   * et qu'un retour a /admin ne redemande pas de connexion.
+   */
+  function ouvrirEspace(compte) {
+    soumettre(() => consultationService.consulter(compte.id), {
+      onSucces: (session) => navigate(session.espace),
+    });
   }
 
   const onglets = [
@@ -125,6 +141,20 @@ export default function FundersPage() {
       titre: '',
       rendu: (compte) => (
         <div className="tableau__actions">
+            {/*
+              Consulter, c'est ouvrir l'espace du compte et le voir tel
+              que son occupant le voit. Seul un compte actif en a un.
+            */}
+            {compte.statut === 'actif' && (
+              <button
+                type="button"
+                className="btn btn--neutre btn--petit"
+                disabled={envoi}
+                onClick={() => ouvrirEspace(compte)}
+              >
+                Consulter
+              </button>
+            )}
           {compte.statut !== 'actif' && (
             <button
               type="button"
