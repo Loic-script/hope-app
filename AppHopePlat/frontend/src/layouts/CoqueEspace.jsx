@@ -70,19 +70,18 @@ const SEUIL_GLISSEMENT = 6;
  * Les quatre couleurs de la charte, dans l'ordre ou les familles du menu
  * se les partagent.
  *
- * Elles sont relevees dans le logo : violet #5d5696, bleu #86b9de,
- * orange #e09735, jaune #f5e389. Le violet est fortement eclairci : le
- * rail est lui-meme violet, et cette couleur-la doit s'en detacher
- * autant que les trois autres, qui n'ont pas ce probleme.
+ * Ce sont les declinaisons foncees : l'icone est posee sur un disque
+ * blanc, et la charte telle quelle n'y tient pas -- son jaune donne 1,29
+ * de contraste sur du blanc. Voir --hope-*-lisible dans theme.css.
  *
  * Une famille, une couleur : c'est elle qui distingue les groupes d'un
  * coup d'oeil, la ou l'intitule demande de lire.
  */
 const TEINTES = [
-  'var(--hope-jaune)',
-  'var(--hope-bleu)',
-  'var(--hope-orange)',
-  'color-mix(in srgb, var(--hope-violet) 26%, #ffffff)',
+  'var(--hope-jaune-lisible)',
+  'var(--hope-bleu-lisible)',
+  'var(--hope-orange-lisible)',
+  'var(--hope-violet-lisible)',
 ];
 
 /**

@@ -17,6 +17,21 @@
   --hope-blanc: #ffffff;
   --hope-texte: #353343;
 
+  /*
+   * Les quatre couleurs, assombries juste assez pour se lire sur du
+   * blanc.
+   *
+   * La charte est claire : posee sur du blanc, elle ne tient pas. Le
+   * jaune y plafonne a 1,29 de contraste, le bleu a 2,1, l'orange a
+   * 2,43 -- il en faut 4,5 pour du texte, 3 pour un trait. Ces
+   * quatre-ci tiennent entre 5,17 et 8,77, et restent reconnaissables :
+   * c'est la meme teinte, plus sombre.
+   */
+  --hope-violet-lisible: #4a4479;
+  --hope-bleu-lisible: #2b6484;
+  --hope-orange-lisible: #8a5c12;
+  --hope-jaune-lisible: #7f6c19;
+
   /* --- Nuances derivees --- */
   --hope-texte-doux: #6b6880;
   --hope-fond-panneau: #e9f1fe;
