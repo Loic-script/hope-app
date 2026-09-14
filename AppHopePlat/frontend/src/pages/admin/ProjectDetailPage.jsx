@@ -98,6 +98,49 @@ export default function ProjectDetailPage() {
   const projet = donnees?.project;
   const finance = donnees?.finance;
 
+  /*
+   * Le tableau du budget : une ligne par categorie, prevu et reel.
+   *
+   * Les deux sources sont reunies ici plutot qu'en base : le devis dit ce
+   * qui etait prevu, les depenses ce qui a eu lieu, et une categorie peut
+   * n'exister que d'un cote. Une depense hors budget doit se voir -- c'est
+   * meme le premier interet de la colonne.
+   *
+   * "prevu" vaut null, et non zero, quand la categorie ne figure pas au
+   * devis : un zero laisserait croire a une enveloppe vide, alors qu'il
+   * n'y avait pas d'enveloppe du tout.
+   */
+  const lignesBudget = useMemo(() => {
+    const lignes = new Map();
+
+    for (const poste of projet?.quoteItems ?? []) {
+      const categorie = poste.category ?? '—';
+      const prevu = Number(poste.amount ?? 0);
+      const existante = lignes.get(categorie);
+      // Deux postes de meme categorie ne peuvent plus etre saisis, mais
+      // les devis d'avant en contiennent : on les additionne.
+      lignes.set(categorie, {
+        categorie,
+        prevu: (existante?.prevu ?? 0) + prevu,
+        reel: existante?.reel ?? 0,
+      });
+    }
+
+    for (const depense of projet?.spendByCategory ?? []) {
+      const categorie = depense.category ?? '—';
+      const existante = lignes.get(categorie);
+      lignes.set(categorie, {
+        categorie,
+        prevu: existante?.prevu ?? null,
+        reel: Number(depense.amount ?? 0),
+      });
+    }
+
+    return [...lignes.values()]
+      .map((ligne) => ({ ...ligne, depasse: ligne.prevu !== null && ligne.reel > ligne.prevu }))
+      .sort((a, b) => a.categorie.localeCompare(b.categorie, 'fr'));
+  }, [projet]);
+
   const beneficiairesDisponibles = useMemo(() => {
     const rattaches = new Set((donnees?.beneficiaries ?? []).map((b) => b.beneficiaryId));
     return (tousBeneficiaires?.items ?? []).filter((b) => !rattaches.has(b.id));
@@ -289,32 +332,44 @@ export default function ProjectDetailPage() {
           )}
 
           {/*
-            Le devis : d'ou vient le budget necessaire. Il n'apparait que
-            s'il existe -- un projet dont le montant a ete saisi
-            directement n'a rien a montrer ici.
+            Le budget, categorie par categorie : ce qui etait prevu, et ce
+            qui a ete depense. Il n'apparait que s'il y a quelque chose a
+            montrer -- un projet dont le montant a ete saisi directement,
+            et ou rien n'a encore ete depense, n'a pas de tableau.
           */}
-          {projet.quoteItems?.length > 0 && (
+          {lignesBudget.length > 0 && (
             <Panneau
-              titre="Devis"
-              sousTitre={`${projet.quoteItems.length} poste(s) — c’est leur somme qui fait le budget nécessaire`}
+              titre="Budget"
+              sousTitre={`${lignesBudget.length} catégorie(s) — le prévu vient du devis, la réalité des dépenses enregistrées`}
               serre
             >
               <Tableau
-                lignes={projet.quoteItems}
-                cleLigne={(poste) => poste.id}
+                lignes={lignesBudget}
+                cleLigne={(ligne) => ligne.categorie}
                 colonnes={[
-                  { cle: 'label', titre: 'Poste' },
+                  { cle: 'categorie', titre: 'Catégorie' },
                   {
-                    cle: 'category',
-                    titre: 'Catégorie',
-                    rendu: (poste) => poste.category ?? '—',
+                    cle: 'prevu',
+                    titre: 'Prévu',
+                    aligne: 'droite',
+                    rendu: (ligne) =>
+                      ligne.prevu === null ? (
+                        // Depense dans une categorie que le budget n'avait
+                        // pas prevue : le tiret le dit, un zero laisserait
+                        // croire a une enveloppe vide.
+                        <span className="budget__hors">—</span>
+                      ) : (
+                        <strong>{fmt.montant(ligne.prevu, projet.currency)}</strong>
+                      ),
                   },
                   {
-                    cle: 'amount',
-                    titre: 'Montant',
+                    cle: 'reel',
+                    titre: 'Réalité',
                     aligne: 'droite',
-                    rendu: (poste) => (
-                      <strong>{fmt.montant(poste.amount, projet.currency)}</strong>
+                    rendu: (ligne) => (
+                      <span className={ligne.depasse ? 'budget__depasse' : undefined}>
+                        {ligne.reel > 0 ? fmt.montant(ligne.reel, projet.currency) : '—'}
+                      </span>
                     ),
                   },
                 ]}
@@ -322,6 +377,9 @@ export default function ProjectDetailPage() {
               <p className="devis__recapitulatif">
                 Total
                 <strong>{fmt.montant(projet.requiredBudget, projet.currency)}</strong>
+                <span className="devis__reel">
+                  dépensé {fmt.montant(projet.spentTotal ?? 0, projet.currency)}
+                </span>
               </p>
             </Panneau>
           )}

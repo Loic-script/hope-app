@@ -788,6 +788,27 @@
   text-align: right;
 }
 
+/* Une categorie depensee sans avoir ete budgetee : le tiret se distingue
+   d'un montant, sans crier. */
+.budget__hors {
+  color: var(--admin-texte-faible);
+}
+
+/* Depassement : la couleur d'alerte de l'espace, celle des montants
+   manquants. */
+.budget__depasse {
+  font-weight: 700;
+  color: var(--hope-erreur);
+}
+
+/* Le reel, a cote du total prevu : plus discret que lui, car c'est le
+   budget qui est la reference du panneau. */
+.devis__reel {
+  margin-left: 14px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
 .devis__pied {
   display: flex;
   align-items: center;

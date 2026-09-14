@@ -61,6 +61,30 @@ const AGREGATS = `
       FROM project_quote_items q
      WHERE q.project_id = p.id
   ) devis ON TRUE
+  /*
+   * Ce qui a reellement ete depense, categorie par categorie.
+   *
+   * Agrege a part du devis, et non greffe sur chaque poste : une depense
+   * faite dans une categorie que le budget n'avait pas prevue doit
+   * apparaitre elle aussi. Greffee sur les postes, elle serait restee
+   * invisible, et la colonne des reels n'aurait pas totalise le compte
+   * du projet.
+   *
+   * Meme filtre que le total du projet : une depense annulee n'a pas eu
+   * lieu.
+   */
+  LEFT JOIN LATERAL (
+    SELECT json_agg(
+             json_build_object('category', d.category, 'amount', d.total)
+             ORDER BY d.category
+           ) AS liste
+      FROM (
+        SELECT e.category, SUM(e.amount) AS total
+          FROM expenses e
+         WHERE e.project_id = p.id AND e.status <> 'CANCELLED'
+         GROUP BY e.category
+      ) d
+  ) depenses ON TRUE
 `;
 
 const COLONNES = `
@@ -90,7 +114,8 @@ const COLONNES = `
   -- une seconde requete par projet ferait vingt allers-retours sur la
   -- liste.
   COALESCE(objectifs.liste, '[]'::json) AS objectives,
-  COALESCE(devis.liste, '[]'::json)     AS quote_items
+  COALESCE(devis.liste, '[]'::json)     AS quote_items,
+  COALESCE(depenses.liste, '[]'::json)  AS spend_by_category
 `;
 
 /**
