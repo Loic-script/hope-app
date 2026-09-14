@@ -12,196 +12,17 @@
    marque tient le role principal, l'orange reste reserve a l'action.
    ============================================================ */
 
-:root {
-  --bailleur-rail: 268px;
-  --bailleur-fond: #f4f6fb;
-}
-
-.bailleur {
-  display: grid;
-  grid-template-columns: var(--bailleur-rail) minmax(0, 1fr);
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bailleur-fond);
-  color: var(--admin-texte);
-}
-
 /* ============================================================
-   1. Le rail de gauche
+   1. La coque
+
+   Le rail de cet espace a disparu : l'ossature vient desormais de
+   CoqueEspace, la meme que l'administrateur, et ses regles vivent dans
+   admin-entete.css. Ne restent ici que les ecrans.
+
+   Ce qui disait le partenaire -- raison sociale, niveau, fonction, date
+   d'entree -- tenait dans le rail. Le bandeau en garde l'essentiel : la
+   raison sociale et le niveau. Le reste se lit sur Mon organisation.
    ============================================================ */
-
-.rail {
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  padding: 22px 18px 18px;
-  background: linear-gradient(180deg, #2b2452 0%, #241f45 100%);
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.rail__marque {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.rail__logo {
-  display: block;
-  width: 104px;
-  height: 40px;
-  /* Le fichier inclut la signature, illisible a cette taille : on la
-     laisse deborder par le bas plutot que de maintenir un second
-     fichier. */
-  object-fit: cover;
-  object-position: top;
-}
-
-.rail__espace {
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.rail__organisation {
-  padding: 18px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.rail__raison {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: #ffffff;
-}
-
-.rail__type {
-  margin-top: 3px;
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.rail__niveau {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-
-/* Le niveau est la seule touche doree de l'interface : il doit se
-   remarquer sans clignoter. */
-.rail__niveau--or {
-  background-color: rgba(224, 151, 53, 0.2);
-  color: #f0c078;
-  box-shadow: inset 0 0 0 1px rgba(240, 192, 120, 0.45);
-}
-
-.rail__niveau--argent {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.82);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
-}
-
-.rail__niveau--bronze {
-  background-color: rgba(196, 128, 84, 0.2);
-  color: #d9a583;
-  box-shadow: inset 0 0 0 1px rgba(217, 165, 131, 0.4);
-}
-
-.rail__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 18px 0;
-  overflow-y: auto;
-}
-
-.rail__lien {
-  position: relative;
-  padding: 11px 14px;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  color: rgba(255, 255, 255, 0.66);
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-
-.rail__lien:hover {
-  background-color: rgba(255, 255, 255, 0.07);
-  color: #ffffff;
-}
-
-.rail__lien--actif {
-  background-color: rgba(255, 255, 255, 0.12);
-  font-weight: 600;
-  color: #ffffff;
-}
-
-/* Le trait de l'entree active, sur son bord gauche. */
-.rail__lien--actif::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background-color: var(--hope-orange);
-}
-
-.rail__pied {
-  margin-top: auto;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.rail__personne {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.rail__fonction,
-.rail__depuis {
-  margin-top: 2px;
-  font-size: 12px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.rail__sortie {
-  width: 100%;
-  margin-top: 14px;
-  padding: 9px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 9px;
-  background: none;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-
-.rail__sortie:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.bailleur__contenu {
-  min-width: 0;
-  padding: 30px 34px 60px;
-}
 
 /* ============================================================
    2. En-tete de page et panneaux
@@ -1237,78 +1058,13 @@
    12. Petits ecrans
 
    L'espace est concu pour le bureau, mais il doit rester consultable
-   sur un ecran etroit : le rail passe alors en bandeau horizontal.
+   sur un ecran etroit. Le menu, lui, se debrouille seul : la coque le
+   fait passer en arc sous 560 px.
    ============================================================ */
 
 @media (max-width: 1080px) {
   .deux-colonnes {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .bailleur {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .rail {
-    position: static;
-    height: auto;
-    padding: 16px 18px;
-  }
-
-  .rail__marque,
-  .rail__organisation {
-    padding-bottom: 14px;
-  }
-
-  .rail__nav {
-    flex-direction: row;
-    gap: 4px;
-    padding: 14px 0 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .rail__nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .rail__lien {
-    flex: none;
-    white-space: nowrap;
-  }
-
-  .rail__lien--actif::before {
-    left: 14px;
-    right: 14px;
-    top: auto;
-    bottom: 0;
-    width: auto;
-    height: 3px;
-    border-radius: 3px 3px 0 0;
-  }
-
-  .rail__pied {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    margin-top: 14px;
-  }
-
-  .rail__sortie {
-    width: auto;
-    margin-top: 0;
-    margin-left: auto;
-  }
-
-  .rail__depuis {
-    flex-basis: 100%;
-  }
-
-  .bailleur__contenu {
-    padding: 22px 18px 48px;
   }
 }
 
@@ -1342,7 +1098,6 @@
   .quantite__plein,
   .collecte__plein,
   .bouton-bailleur,
-  .rail__lien,
   .onglets-bailleur__bouton {
     transition: none;
   }

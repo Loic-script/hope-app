@@ -6,153 +6,13 @@
    telephone, et n'a pas la densite d'un ecran de pilotage.
    ============================================================ */
 
-.benevole {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--admin-fond);
-  color: var(--admin-texte);
-}
-
 /* ============================================================
-   1. Bandeau et menu
+   1. La coque
+
+   Le bandeau et les onglets de cet espace ont disparu : l'ossature
+   vient desormais de CoqueEspace, la meme que l'administrateur, et ses
+   regles vivent dans admin-entete.css. Ne restent ici que les ecrans.
    ============================================================ */
-
-.benevole__entete {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: linear-gradient(180deg, #242b3e, #2a3145);
-  box-shadow: 0 6px 20px rgba(36, 43, 62, 0.16);
-}
-
-.benevole__barre {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 12px 26px;
-}
-
-.benevole__logo {
-  display: block;
-  width: 100px;
-  height: 38px;
-  /* Le fichier inclut la signature, illisible a cette taille : on la
-     laisse deborder par le bas plutot que de maintenir un second
-     fichier. */
-  object-fit: cover;
-  object-position: top;
-}
-
-.benevole__identite {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.benevole__avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex: none;
-  border-radius: 50%;
-  background-color: var(--hope-violet);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.benevole__qui {
-  line-height: 1.25;
-}
-
-.benevole__nom {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.benevole__role {
-  display: block;
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.benevole__sortie {
-  padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  background: none;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-
-.benevole__sortie:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.benevole__menu {
-  display: flex;
-  gap: 4px;
-  padding: 0 26px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.benevole__menu::-webkit-scrollbar {
-  display: none;
-}
-
-.benevole__lien {
-  position: relative;
-  flex: none;
-  padding: 11px 15px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.66);
-  transition: color 0.18s ease;
-}
-
-.benevole__lien:hover {
-  color: #ffffff;
-}
-
-.benevole__lien--actif {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-/* Le trait de l'onglet actif, sous le libelle. */
-.benevole__lien--actif::after {
-  content: '';
-  position: absolute;
-  left: 15px;
-  right: 15px;
-  bottom: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background-color: var(--hope-orange);
-}
-
-.benevole__contenu {
-  flex: 1;
-  min-width: 0;
-  width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 26px 26px 60px;
-}
 
 /* ============================================================
    2. En-tete de page, blocs, etats
@@ -1113,19 +973,6 @@
 }
 
 @media (max-width: 620px) {
-  .benevole__barre,
-  .benevole__menu {
-    padding-inline: 16px;
-  }
-
-  .benevole__contenu {
-    padding: 18px 16px 48px;
-  }
-
-  .benevole__qui {
-    display: none;
-  }
-
   .page-benevole__titre,
   .mission__titre {
     font-size: 22px;

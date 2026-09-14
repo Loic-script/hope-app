@@ -1,5 +1,8 @@
 /**
- * Jeu d'icones de l'espace administrateur.
+ * Jeu d'icones des espaces connectes.
+ *
+ * Ne sert plus au seul administrateur : le benevole et le bailleur
+ * partagent desormais la meme coque, donc le meme trace.
  *
  * Toutes les icones partagent le meme trace : contour de 1,7 px, coins
  * arrondis, viewBox 24x24, couleur heritee via currentColor. L'interface
@@ -233,5 +236,56 @@ export const IconeGraphique = creerIcone(
     <rect x="5.4" y="11" width="3.4" height="7" rx="1" />
     <rect x="10.6" y="6.6" width="3.4" height="11.4" rx="1" />
     <rect x="15.8" y="13.4" width="3.4" height="4.6" rx="1" />
+  </>
+);
+
+// --- Propres aux espaces benevole et bailleur -------------------------
+
+/** Une seule silhouette : le compte de celui qui regarde, et non un groupe. */
+export const IconePersonne = creerIcone(
+  'IconePersonne',
+  <>
+    <circle cx="12" cy="8" r="3.6" />
+    <path d="M4.8 20.6a7.2 7.2 0 0 1 14.4 0" />
+  </>
+);
+
+/** Une liste cochee : ce qu'il reste a faire. */
+export const IconeTaches = creerIcone(
+  'IconeTaches',
+  <>
+    <path d="M9 4.4H7a1.6 1.6 0 0 0-1.6 1.6v13.2A1.6 1.6 0 0 0 7 20.8h10a1.6 1.6 0 0 0 1.6-1.6V6A1.6 1.6 0 0 0 17 4.4h-2" />
+    <rect x="9" y="2.8" width="6" height="3.2" rx="1.1" />
+    <path d="m8.8 12.4 1.9 1.9 3.9-3.9" />
+  </>
+);
+
+/** Une horloge : les heures que le benevole consigne. */
+export const IconeJournal = creerIcone(
+  'IconeJournal',
+  <>
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M12 7.2V12l3.2 1.9" />
+  </>
+);
+
+/** Un batiment : l'organisation, par opposition a la personne. */
+export const IconeOrganisation = creerIcone(
+  'IconeOrganisation',
+  <>
+    <path d="M4.2 20.6V5.4a1.4 1.4 0 0 1 1.4-1.4h7a1.4 1.4 0 0 1 1.4 1.4v15.2" />
+    <path d="M14 10.4h4.4a1.4 1.4 0 0 1 1.4 1.4v8.8" />
+    <path d="M3 20.6h18" />
+    <path d="M7.2 7.8h3.6M7.2 11.6h3.6M7.2 15.4h3.6" />
+  </>
+);
+
+/** Un porte-voix : les nouvelles que HOPE adresse a ses partenaires. */
+export const IconeActualites = creerIcone(
+  'IconeActualites',
+  <>
+    <path d="M4 9.6h3.2L15.6 5v14l-8.4-4.6H4a1.4 1.4 0 0 1-1.4-1.4v-2a1.4 1.4 0 0 1 1.4-1.4Z" />
+    <path d="M19 9.4a3.6 3.6 0 0 1 0 5.2" />
+    <path d="M7.2 14.4v3.4a1.6 1.6 0 0 0 3.2 0v-1.6" />
   </>
 );
