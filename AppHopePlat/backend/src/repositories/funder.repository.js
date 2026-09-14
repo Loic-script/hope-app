@@ -521,11 +521,26 @@ export async function prochainNumeroCertificat(client = null) {
  */
 export async function listerPreuves(bailleurId, client = null) {
   const resultat = await query(
+    /*
+     * Le fichier ne vit plus dans field_proofs.
+     *
+     * Une preuve peut en porter plusieurs depuis que field_proof_files
+     * existe ; les quatre colonnes de fichier ont quitte la table mere.
+     * On reprend ici celui qui la represente -- le premier par position,
+     * comme dans les listes de l'administration.
+     */
     `SELECT f.id, f.proof_type, f.description, f.occurred_on,
-            f.file_name, f.mime_type, f.created_at,
+            fichier.file_name, fichier.mime_type, f.created_at,
             p.id AS projet_id, p.name AS projet_nom, p.location
        FROM field_proofs f
        JOIN projects p ON p.id = f.project_id
+       LEFT JOIN LATERAL (
+         SELECT ff.file_name, ff.mime_type
+           FROM field_proof_files ff
+          WHERE ff.proof_id = f.id
+          ORDER BY ff.position, ff.id
+          LIMIT 1
+       ) fichier ON TRUE
       WHERE p.id IN (
         SELECT DISTINCT a.projet_id
           FROM affectation a
