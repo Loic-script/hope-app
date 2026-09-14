@@ -103,12 +103,20 @@
   text-shadow: 0 3px 18px rgba(53, 51, 67, 0.28);
 }
 
+/*
+ * La barre sous "Rejoindre HOPE", et son soleil.
+ *
+ * Le motif commun, a l'echelle du bandeau : une barre de 92 px sur 6, et
+ * un soleil de 30 plutot que de 17. La couleur est le bleu de la charte
+ * -- #90c7f3 en tenait lieu, sans en etre.
+ */
 .illustration__barre {
-  width: 92px;
-  height: 6px;
   margin: 22px 0 24px;
-  border-radius: 3px;
-  background-color: #90c7f3;
+  gap: 14px;
+  --trait-largeur: 92px;
+  --trait-epaisseur: 6px;
+  --trait-couleur: var(--hope-bleu);
+  --trait-soleil: 30px;
 }
 
 .illustration__sous-titre {

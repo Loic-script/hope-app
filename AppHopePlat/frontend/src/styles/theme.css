@@ -269,15 +269,21 @@ a {
 .trait-hope::before {
   content: '';
   width: var(--trait-largeur, 26px);
-  height: 3px;
-  border-radius: 3px;
+  height: var(--trait-epaisseur, 3px);
+  border-radius: 999px;
   background-color: var(--trait-couleur, var(--hope-orange));
 }
 
+/*
+ * Le soleil, a l'echelle de la barre. Sa hauteur est calculee et non
+ * choisie : le fichier fait 34,85 sur 23,81, soit un rapport de 0,683.
+ * L'ecrire a la main donnerait un soleil ecrase des qu'on change sa
+ * largeur.
+ */
 .trait-hope::after {
   content: '';
-  width: 17px;
-  height: 12px;
+  width: var(--trait-soleil, 17px);
+  height: calc(var(--trait-soleil, 17px) * 0.683);
   background: url('../assets/soleil.svg') center / contain no-repeat;
 }
 
