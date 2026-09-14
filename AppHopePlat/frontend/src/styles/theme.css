@@ -298,6 +298,30 @@ a {
   background: url('../assets/soleil.svg') center / contain no-repeat;
 }
 
+/*
+ * L'ordre inverse : le soleil ouvre, la barre suit.
+ *
+ * Et le soleil est retourne avec -- coupole en haut, rayons vers le bas.
+ * Les deux vont ensemble : le motif se lit du soleil vers la barre, et
+ * la coupole doit rester du cote ou le regard entre.
+ *
+ * Le calage de la barre suit le meme retournement. La coupole occupe
+ * desormais le haut du cadre, d'ou le 0,157 au lieu du 0,526 : c'est
+ * 0,683 (le rapport du fichier) fois 0,23 (le milieu de la coupole,
+ * compte depuis le haut).
+ */
+.trait-hope--renverse {
+  flex-direction: row-reverse;
+}
+
+.trait-hope--renverse::after {
+  transform: scaleY(-1);
+}
+
+.trait-hope--renverse::before {
+  margin-top: calc(var(--trait-soleil, 17px) * 0.157 - var(--trait-epaisseur, 3px) / 2);
+}
+
 /* Centre sous un texte, et non en tete de ligne : la barre et le soleil
    se serrent alors autour de l'axe. */
 .trait-hope--centre {

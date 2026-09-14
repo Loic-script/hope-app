@@ -118,7 +118,7 @@ export default function AdminLogin() {
             <br />
             Administrateur
           </h1>
-          <div className="trait-hope illustration__barre" aria-hidden="true" />
+          <div className="trait-hope trait-hope--renverse illustration__barre" aria-hidden="true" />
           <p className="illustration__sous-titre">
             Gérez vos dons, vos projets et suivez concrètement notre impact à Madagascar.
           </p>
