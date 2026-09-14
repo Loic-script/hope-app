@@ -70,18 +70,23 @@ const SEUIL_GLISSEMENT = 6;
  * Les quatre couleurs de la charte, dans l'ordre ou les familles du menu
  * se les partagent.
  *
- * Ce sont les declinaisons foncees : l'icone est posee sur un disque
- * blanc, et la charte telle quelle n'y tient pas -- son jaune donne 1,29
- * de contraste sur du blanc. Voir --hope-*-lisible dans theme.css.
+ * Les valeurs de la charte telles quelles, relevees dans le logo :
+ * jaune #f5e389, bleu #86b9de, orange #e09735, violet #5d5696.
+ *
+ * Elles sont claires, et le disque qui les porte est blanc : sur ce
+ * fond-la, le jaune donne 1,29 de contraste et le bleu 2,1, quand il en
+ * faut 3 pour une forme. C'est un choix assume, et non un oubli -- les
+ * declinaisons foncees restent disponibles en --hope-*-lisible dans
+ * theme.css si le rendu se revele trop pale a l'usage.
  *
  * Une famille, une couleur : c'est elle qui distingue les groupes d'un
  * coup d'oeil, la ou l'intitule demande de lire.
  */
 const TEINTES = [
-  'var(--hope-jaune-lisible)',
-  'var(--hope-bleu-lisible)',
-  'var(--hope-orange-lisible)',
-  'var(--hope-violet-lisible)',
+  'var(--hope-jaune)',
+  'var(--hope-bleu)',
+  'var(--hope-orange)',
+  'var(--hope-violet)',
 ];
 
 /**
