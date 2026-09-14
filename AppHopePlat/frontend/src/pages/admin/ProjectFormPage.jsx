@@ -107,6 +107,9 @@ export default function ProjectFormPage() {
       managerName: projet.managerName ?? '',
       requiredBudget: projet.requiredBudget ?? '',
       quoteItems: (projet.quoteItems ?? []).map((poste) => ({
+        // L'intitule n'a plus de champ, mais il est renvoye tel quel :
+        // un devis saisi avant garde le sien plutot que de le perdre a
+        // la premiere modification du projet.
         label: poste.label ?? '',
         category: poste.category ?? '',
         amount: poste.amount ?? '',
@@ -166,7 +169,7 @@ export default function ProjectFormPage() {
     setFormulaire((actuel) =>
       actuel.quoteItems.length >= MAX_POSTES_DEVIS
         ? actuel
-        : { ...actuel, quoteItems: [...actuel.quoteItems, { label: '', category: '', amount: '' }] }
+        : { ...actuel, quoteItems: [...actuel.quoteItems, { category: '', amount: '' }] }
     );
   }
 
@@ -377,7 +380,7 @@ export default function ProjectFormPage() {
               id="poste-0-label"
               aide={
                 devisOuvert
-                  ? `${formulaire.quoteItems.length} poste(s) sur ${MAX_POSTES_DEVIS}. La catégorie reprend celle des dépenses : elle permettra de comparer le prévu au réel.`
+                  ? `${formulaire.quoteItems.length} poste(s) sur ${MAX_POSTES_DEVIS}. Une catégorie par poste, sans doublon : c'est elle qui le nomme, et qui permettra de comparer le prévu au réel.`
                   : 'Détaillez le budget poste par poste, ou saisissez directement le montant ci-dessous.'
               }
               pleineLargeur
@@ -389,17 +392,6 @@ export default function ProjectFormPage() {
                     // pas d'identite tant qu'elles ne sont pas enregistrees.
                     // eslint-disable-next-line react/no-array-index-key
                     <li className="devis__ligne" key={rang}>
-                      <input
-                        id={`poste-${rang}-label`}
-                        type="text"
-                        className="devis__intitule"
-                        value={poste.label}
-                        onChange={(e) => modifierPoste(rang, 'label', e.target.value)}
-                        placeholder="Fournitures scolaires"
-                        maxLength={200}
-                        disabled={envoi}
-                        aria-label={`Intitulé du poste ${rang + 1}`}
-                      />
                       <select
                         className="devis__categorie"
                         value={poste.category}

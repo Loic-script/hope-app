@@ -145,7 +145,7 @@ export const MAX_POSTES_DEVIS = 30;
  * bruit : le formulaire en laisse une derriere lui des qu'on clique
  * "+ Ajouter un poste" sans la remplir. Une ligne commencee mais
  * incomplete, elle, est refusee -- un poste sans montant fausserait le
- * total en silence.
+ * total en silence, et un poste sans categorie n'aurait pas de nom.
  *
  * @returns {{ label: string, category: string|null, amount: string,
  *             centimes: number }[]}
@@ -158,9 +158,9 @@ function preparerDevis(valeur) {
   }
 
   const lignes = valeur.filter((ligne) => {
-    const libelle = String(ligne?.label ?? '').trim();
+    const categorie = String(ligne?.category ?? '').trim();
     const montant = String(ligne?.amount ?? '').trim();
-    return libelle !== '' || montant !== '';
+    return categorie !== '' || montant !== '';
   });
 
   if (lignes.length > MAX_POSTES_DEVIS) {
@@ -169,25 +169,47 @@ function preparerDevis(valeur) {
     });
   }
 
+  const vues = new Set();
+
   return lignes.map((ligne, rang) => {
-    const libelle = String(ligne?.label ?? '').trim();
-    if (libelle === '') {
-      throw new ErreurValidation(`Le poste ${rang + 1} du devis n’a pas d’intitulé.`, {
-        quoteItems: 'Intitulé manquant',
+    /*
+     * La categorie identifie le poste.
+     *
+     * Le devis n'a plus d'intitule libre : deux champs suffisent, une
+     * categorie et un montant. Elle devient donc obligatoire, la ou elle
+     * etait facultative -- un poste sans categorie n'aurait plus de nom
+     * du tout.
+     *
+     * Le vocabulaire reste celui des depenses : c'est ce qui permet de
+     * comparer le prevu au reel, poste par poste.
+     */
+    const categorie = String(ligne?.category ?? '').trim();
+    if (categorie === '') {
+      throw new ErreurValidation(`Le poste ${rang + 1} du devis n’a pas de catégorie.`, {
+        quoteItems: 'Catégorie manquante',
       });
     }
+    if (!CATEGORIES_DEPENSE.includes(categorie)) {
+      throw new ErreurValidation(`La catégorie « ${categorie} » n’existe pas.`, {
+        quoteItems: 'Catégorie inconnue',
+      });
+    }
+    // Deux postes de la meme categorie ne se distinguent plus l'un de
+    // l'autre : ils doivent etre additionnes, pas listes deux fois.
+    if (vues.has(categorie)) {
+      throw new ErreurValidation(
+        `La catégorie « ${categorie} » figure deux fois : additionnez les montants.`,
+        { quoteItems: 'Catégorie en double' }
+      );
+    }
+    vues.add(categorie);
+
+    // L'intitule reste en base -- les devis saisis avant gardent le leur.
+    // A defaut, c'est la categorie qui le tient.
+    const libelle = String(ligne?.label ?? '').trim() || categorie;
     if (libelle.length > 200) {
       throw new ErreurValidation(`L’intitulé du poste ${rang + 1} dépasse 200 caractères.`, {
         quoteItems: 'Intitulé trop long',
-      });
-    }
-
-    // Le vocabulaire est celui des depenses : c'est ce qui permettra de
-    // comparer le prevu au reel, poste par poste.
-    const categorie = String(ligne?.category ?? '').trim();
-    if (categorie !== '' && !CATEGORIES_DEPENSE.includes(categorie)) {
-      throw new ErreurValidation(`La catégorie « ${categorie} » n’existe pas.`, {
-        quoteItems: 'Catégorie inconnue',
       });
     }
 
@@ -201,7 +223,7 @@ function preparerDevis(valeur) {
     const centimes = enCentimes(ligne.amount, `montant du poste ${rang + 1}`);
     return {
       label: libelle,
-      category: categorie === '' ? null : categorie,
+      category: categorie,
       amount: centimesVersTexte(centimes),
       centimes,
     };

@@ -776,12 +776,11 @@
   min-width: 0;
 }
 
-.devis__intitule {
-  flex: 3;
-}
-
+/* Deux champs par poste depuis que l'intitule libre a disparu : la
+   categorie le nomme. Elle prend donc la largeur que l'intitule avait,
+   le montant gardant la sienne. */
 .devis__categorie {
-  flex: 1.4;
+  flex: 3;
 }
 
 .devis__montant {
