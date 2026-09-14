@@ -1,12 +1,12 @@
 import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
-  IconeAccueil,
-  IconeJournal,
-  IconePersonne,
-  IconeProjets,
-  IconeTaches,
-} from '../components/admin/AdminIcons.jsx';
+  PleineAccueil,
+  PleineJournal,
+  PleinePersonne,
+  PleineProjets,
+  PleineTaches,
+} from '../components/IconesPleines.jsx';
 import * as benevoleService from '../services/benevole.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
@@ -22,19 +22,19 @@ import CoqueEspace from './CoqueEspace.jsx';
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/benevole', label: 'Vue d’ensemble', Icone: IconeAccueil, exact: true }],
+    entrees: [{ to: '/benevole', label: 'Vue d’ensemble', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Mon engagement',
     entrees: [
-      { to: '/benevole/missions', label: 'Missions', Icone: IconeProjets },
-      { to: '/benevole/taches', label: 'Mes tâches', Icone: IconeTaches },
-      { to: '/benevole/journal', label: 'Mon journal', Icone: IconeJournal },
+      { to: '/benevole/missions', label: 'Missions', Icone: PleineProjets },
+      { to: '/benevole/taches', label: 'Mes tâches', Icone: PleineTaches },
+      { to: '/benevole/journal', label: 'Mon journal', Icone: PleineJournal },
     ],
   },
   {
     titre: 'Mon compte',
-    entrees: [{ to: '/benevole/profil', label: 'Mon profil', Icone: IconePersonne }],
+    entrees: [{ to: '/benevole/profil', label: 'Mon profil', Icone: PleinePersonne }],
   },
 ];
 

@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
+import { IconeParametres } from '../components/admin/AdminIcons.jsx';
 import {
-  IconeAccueil,
-  IconeBeneficiaires,
-  IconeBudgets,
-  IconeDonateurs,
-  IconeDons,
-  IconeGraphique,
-  IconeMessages,
-  IconeParametres,
-  IconePreuves,
-  IconeProjets,
-} from '../components/admin/AdminIcons.jsx';
+  PleineAccueil,
+  PleineBudget,
+  PleineDonateurs,
+  PleineDons,
+  PleineFamille,
+  PleineGraphique,
+  PleineGroupe,
+  PleineMessages,
+  PleinePreuves,
+  PleineProjets,
+} from '../components/IconesPleines.jsx';
 import { api } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
@@ -44,14 +45,14 @@ const GROUPES = [
   {
     // Sans intitule : une seule entree, et rien a nommer au-dessus.
     titre: null,
-    entrees: [{ to: '/admin', label: 'Accueil', Icone: IconeAccueil, exact: true }],
+    entrees: [{ to: '/admin', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Gestion des projets',
     entrees: [
-      { to: '/admin/projects', label: 'Projets', Icone: IconeProjets },
-      { to: '/admin/beneficiaries', label: 'Bénéficiaires', Icone: IconeBeneficiaires },
-      { to: '/admin/proofs', label: 'Preuves terrain', Icone: IconePreuves },
+      { to: '/admin/projects', label: 'Projets', Icone: PleineProjets },
+      { to: '/admin/beneficiaries', label: 'Bénéficiaires', Icone: PleineFamille },
+      { to: '/admin/proofs', label: 'Preuves terrain', Icone: PleinePreuves },
     ],
   },
   {
@@ -59,17 +60,17 @@ const GROUPES = [
     entrees: [
       // "compteur" designe la cle des pastilles renvoyees par
       // /admin/badges : l'entree porte alors son nombre de non-lus.
-      { to: '/admin/messages', label: 'Messages', Icone: IconeMessages, compteur: 'messages' },
-      { to: '/admin/donors', label: 'Donateurs', Icone: IconeDonateurs },
-      { to: '/admin/volunteers', label: 'Bénévoles', Icone: IconeBeneficiaires },
-      { to: '/admin/funders', label: 'Bailleurs', Icone: IconeDons },
+      { to: '/admin/messages', label: 'Messages', Icone: PleineMessages, compteur: 'messages' },
+      { to: '/admin/donors', label: 'Donateurs', Icone: PleineDonateurs },
+      { to: '/admin/volunteers', label: 'Bénévoles', Icone: PleineGroupe },
+      { to: '/admin/funders', label: 'Bailleurs', Icone: PleineDons },
     ],
   },
   {
     titre: 'Finances & analyse',
     entrees: [
-      { to: '/admin/budget', label: 'Budget', Icone: IconeBudgets },
-      { to: '/admin/statistics', label: 'Statistiques', Icone: IconeGraphique },
+      { to: '/admin/budget', label: 'Budget', Icone: PleineBudget },
+      { to: '/admin/statistics', label: 'Statistiques', Icone: PleineGraphique },
     ],
   },
 ];

@@ -8,9 +8,19 @@ import {
   IconeJournal,
   IconeLieu,
   IconePlus,
-  IconeProjets,
-  IconeTaches,
 } from '../../components/admin/AdminIcons.jsx';
+/*
+ * Les carres de couleur portent des icones pleines, comme le menu : a
+ * cette taille et sur un fond teinte, un contour de 1,7 px ne pese rien.
+ * Les trois reperes de la mission -- date, heure, lieu -- restent au
+ * trait : ils accompagnent du texte gris, et ne doivent pas le dominer.
+ */
+import {
+  PleineCalendrier,
+  PleineJournal,
+  PleineProjets,
+  PleineTaches,
+} from '../../components/IconesPleines.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
@@ -83,7 +93,7 @@ export default function VueDensemble() {
         <Repere
           valeur={aVenir.length}
           libelle={aVenir.length > 1 ? 'Missions à venir' : 'Mission à venir'}
-          Icone={IconeCalendrier}
+          Icone={PleineCalendrier}
           teinte="violet"
           detail={
             prochaine
@@ -94,7 +104,7 @@ export default function VueDensemble() {
         <Repere
           valeur={enCours.length}
           libelle={enCours.length > 1 ? 'Tâches en cours' : 'Tâche en cours'}
-          Icone={IconeTaches}
+          Icone={PleineTaches}
           teinte="bleu"
           detail={
             tache?.echeance
@@ -105,7 +115,7 @@ export default function VueDensemble() {
         <Repere
           valeur={chiffres?.missionsOuvertes}
           libelle="Missions ouvertes"
-          Icone={IconeProjets}
+          Icone={PleineProjets}
           teinte="orange"
           detail="Découvrez où apporter votre aide"
         />
@@ -202,7 +212,7 @@ export default function VueDensemble() {
             <>
               <div className="tache-active__ligne">
                 <span className="carre-icone carre-icone--violet" aria-hidden="true">
-                  <IconeTaches />
+                  <PleineTaches />
                 </span>
                 <div>
                   <h3 className="tache-active__titre">{tache.titre}</h3>
@@ -278,7 +288,7 @@ export default function VueDensemble() {
         <section className="journal-apercu">
           <div className="tache-active__ligne">
             <span className="carre-icone carre-icone--bleu" aria-hidden="true">
-              <IconeJournal />
+              <PleineJournal />
             </span>
             <div>
               <h2 className="journal-apercu__titre">Mon journal</h2>

@@ -13,6 +13,7 @@ import {
   IconeCloche,
   IconeDeconnexion,
 } from '../components/admin/AdminIcons.jsx';
+import { PleineDeconnexion } from '../components/IconesPleines.jsx';
 import { initiales } from '../utils/format.js';
 
 /**
@@ -70,8 +71,9 @@ const SEUIL_GLISSEMENT = 6;
  * se les partagent.
  *
  * Elles sont relevees dans le logo : violet #5d5696, bleu #86b9de,
- * orange #e09735, jaune #f5e389. Le violet est eclairci pour le rail,
- * qui est deja sombre et violet -- tel quel, il s'y perdrait.
+ * orange #e09735, jaune #f5e389. Le violet est fortement eclairci : le
+ * rail est lui-meme violet, et cette couleur-la doit s'en detacher
+ * autant que les trois autres, qui n'ont pas ce probleme.
  *
  * Une famille, une couleur : c'est elle qui distingue les groupes d'un
  * coup d'oeil, la ou l'intitule demande de lire.
@@ -80,7 +82,7 @@ const TEINTES = [
   'var(--hope-jaune)',
   'var(--hope-bleu)',
   'var(--hope-orange)',
-  'color-mix(in srgb, var(--hope-violet) 42%, #ffffff)',
+  'color-mix(in srgb, var(--hope-violet) 26%, #ffffff)',
 ];
 
 /**
@@ -455,7 +457,7 @@ export default function CoqueEspace({
               onClick={onDeconnexion}
               aria-label="Se déconnecter"
             >
-              <IconeDeconnexion />
+              <PleineDeconnexion />
               <span className="lateral__libelle" aria-hidden="true">
                 Se déconnecter
               </span>

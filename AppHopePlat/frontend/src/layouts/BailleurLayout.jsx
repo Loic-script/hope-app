@@ -1,13 +1,13 @@
 import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
-  IconeAccueil,
-  IconeActualites,
-  IconeDons,
-  IconeGraphique,
-  IconeOrganisation,
-  IconePreuves,
-} from '../components/admin/AdminIcons.jsx';
+  PleineAccueil,
+  PleineActualites,
+  PleineDons,
+  PleineGraphique,
+  PleineOrganisation,
+  PleinePreuves,
+} from '../components/IconesPleines.jsx';
 import * as bailleurService from '../services/bailleur.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
@@ -23,26 +23,26 @@ import CoqueEspace from './CoqueEspace.jsx';
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/bailleur', label: 'Tableau de bord', Icone: IconeAccueil, exact: true }],
+    entrees: [{ to: '/bailleur', label: 'Tableau de bord', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Notre partenariat',
     entrees: [
-      { to: '/bailleur/partenariat', label: 'Partenariat', Icone: IconeDons },
-      { to: '/bailleur/rapports', label: 'Rapports', Icone: IconeGraphique },
+      { to: '/bailleur/partenariat', label: 'Partenariat', Icone: PleineDons },
+      { to: '/bailleur/rapports', label: 'Rapports', Icone: PleineGraphique },
     ],
   },
   {
     titre: 'Sur le terrain',
     entrees: [
-      { to: '/bailleur/preuves', label: 'Preuves terrain', Icone: IconePreuves },
-      { to: '/bailleur/actualites', label: 'Actualités', Icone: IconeActualites },
+      { to: '/bailleur/preuves', label: 'Preuves terrain', Icone: PleinePreuves },
+      { to: '/bailleur/actualites', label: 'Actualités', Icone: PleineActualites },
     ],
   },
   {
     titre: 'Mon compte',
     entrees: [
-      { to: '/bailleur/organisation', label: 'Mon organisation', Icone: IconeOrganisation },
+      { to: '/bailleur/organisation', label: 'Mon organisation', Icone: PleineOrganisation },
     ],
   },
 ];
