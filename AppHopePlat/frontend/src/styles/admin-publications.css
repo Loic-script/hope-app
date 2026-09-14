@@ -238,7 +238,15 @@
  */
 .jauge__soleil {
   position: absolute;
-  bottom: 1px;
+  /*
+   * Mesure, et non estimee. Le fichier laisse du vide sous la coupole --
+   * la place des rayons, qui passent au-dessus une fois l'image
+   * retournee. A "bottom: 1px", la coupole traversait donc toute la
+   * barre et s'arretait a son bord inferieur. Ces 6 px la remontent
+   * jusqu'a son bord superieur, moins 1 px de chevauchement : sans ce
+   * pixel, un liseré du fond apparaissait entre les deux.
+   */
+  bottom: 6px;
   left: clamp(0px, calc(var(--position, 0%) - 12px), calc(100% - 24px));
   width: 24px;
   height: 17px;
