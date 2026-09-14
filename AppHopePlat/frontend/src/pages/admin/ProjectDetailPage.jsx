@@ -137,9 +137,30 @@ export default function ProjectDetailPage() {
     }
 
     return [...lignes.values()]
-      .map((ligne) => ({ ...ligne, depasse: ligne.prevu !== null && ligne.reel > ligne.prevu }))
+      .map((ligne) => ({
+        ...ligne,
+        // Le reste de l'enveloppe. Sans enveloppe, tout ce qui est sorti
+        // est un depassement : le reste est alors negatif.
+        reste: (ligne.prevu ?? 0) - ligne.reel,
+        depasse: ligne.prevu !== null && ligne.reel > ligne.prevu,
+      }))
       .sort((a, b) => a.categorie.localeCompare(b.categorie, 'fr'));
   }, [projet]);
+
+  /**
+   * Les trois totaux du budget.
+   *
+   * Sommes des lignes, et non des champs du projet : le budget
+   * necessaire enregistre peut avoir ete saisi a la main, sans devis, et
+   * ne couvrirait alors aucune des categories du tableau. Additionner ce
+   * qu'on affiche garantit que la colonne et son total disent la meme
+   * chose.
+   */
+  const totauxBudget = useMemo(() => {
+    const prevu = lignesBudget.reduce((somme, l) => somme + (l.prevu ?? 0), 0);
+    const reel = lignesBudget.reduce((somme, l) => somme + l.reel, 0);
+    return { prevu, reel, reste: prevu - reel };
+  }, [lignesBudget]);
 
   const beneficiairesDisponibles = useMemo(() => {
     const rattaches = new Set((donnees?.beneficiaries ?? []).map((b) => b.beneficiaryId));
@@ -340,7 +361,7 @@ export default function ProjectDetailPage() {
           {lignesBudget.length > 0 && (
             <Panneau
               titre="Budget"
-              sousTitre={`${lignesBudget.length} catégorie(s) — le prévu vient du devis, la réalité des dépenses enregistrées`}
+              sousTitre={`${lignesBudget.length} catégorie(s) — le budget vient du devis, la dépense des écritures enregistrées`}
               serre
             >
               <Tableau
@@ -350,7 +371,7 @@ export default function ProjectDetailPage() {
                   { cle: 'categorie', titre: 'Catégorie' },
                   {
                     cle: 'prevu',
-                    titre: 'Prévu',
+                    titre: 'Budget nécessaire',
                     aligne: 'droite',
                     rendu: (ligne) =>
                       ligne.prevu === null ? (
@@ -364,7 +385,7 @@ export default function ProjectDetailPage() {
                   },
                   {
                     cle: 'reel',
-                    titre: 'Réalité',
+                    titre: 'Dépensé',
                     aligne: 'droite',
                     rendu: (ligne) => (
                       <span className={ligne.depasse ? 'budget__depasse' : undefined}>
@@ -372,15 +393,40 @@ export default function ProjectDetailPage() {
                       </span>
                     ),
                   },
+                  {
+                    // Ce qui reste de l'enveloppe. Negatif, c'est un
+                    // depassement : la couleur le dit, et le signe aussi.
+                    cle: 'reste',
+                    titre: 'Reste',
+                    aligne: 'droite',
+                    rendu: (ligne) => (
+                      <strong className={ligne.reste < 0 ? 'budget__depasse' : undefined}>
+                        {fmt.montant(ligne.reste, projet.currency)}
+                      </strong>
+                    ),
+                  },
                 ]}
               />
-              <p className="devis__recapitulatif">
-                Total
-                <strong>{fmt.montant(projet.requiredBudget, projet.currency)}</strong>
-                <span className="devis__reel">
-                  dépensé {fmt.montant(projet.spentTotal ?? 0, projet.currency)}
-                </span>
-              </p>
+              {/*
+                Les trois totaux, dans l'ordre des colonnes : ce qu'il
+                faut, ce qui est sorti, ce qui reste. Ce reste est celui du
+                budget, et non de la tresorerie -- l'argent disponible est
+                une autre affaire, et il a son propre panneau.
+              */}
+              <dl className="budget__totaux">
+                <div>
+                  <dt>Budget nécessaire</dt>
+                  <dd>{fmt.montant(totauxBudget.prevu, projet.currency)}</dd>
+                </div>
+                <div>
+                  <dt>Dépense totale</dt>
+                  <dd>{fmt.montant(totauxBudget.reel, projet.currency)}</dd>
+                </div>
+                <div className={totauxBudget.reste < 0 ? 'budget__totaux--depasse' : undefined}>
+                  <dt>Reste</dt>
+                  <dd>{fmt.montant(totauxBudget.reste, projet.currency)}</dd>
+                </div>
+              </dl>
             </Panneau>
           )}
 
@@ -599,12 +645,18 @@ export default function ProjectDetailPage() {
                 rendu: (d) => (
                   <div>
                     <div className="table__principal">{fmt.tronquer(d.description, 60)}</div>
-                    <div className="table__secondaire">
-                      {d.category ?? 'Non classée'}
-                      {d.supplier ? ` · ${d.supplier}` : ''}
-                    </div>
+                    {d.supplier && <div className="table__secondaire">{d.supplier}</div>}
                   </div>
                 ),
+              },
+              {
+                // Sortie de la ligne secondaire de la description, ou elle
+                // se lisait mal : c'est elle qui rapproche la depense du
+                // budget, elle merite sa colonne.
+                cle: 'category',
+                titre: 'Catégorie',
+                rendu: (d) =>
+                  d.category ?? <span className="budget__hors">Non classée</span>,
               },
               {
                 cle: 'amount',

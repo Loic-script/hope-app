@@ -801,12 +801,42 @@
   color: var(--hope-erreur);
 }
 
-/* Le reel, a cote du total prevu : plus discret que lui, car c'est le
-   budget qui est la reference du panneau. */
-.devis__reel {
-  margin-left: 14px;
-  font-weight: 600;
+/*
+ * Les trois totaux du budget, en pied de panneau.
+ *
+ * Cote a cote et non empiles : ils se lisent ensemble -- ce qu'il faut,
+ * ce qui est sorti, ce qui reste -- et la soustraction doit se voir.
+ */
+.budget__totaux {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px 34px;
+  margin: 0;
+  padding: 15px 18px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.budget__totaux > div {
+  text-align: right;
+}
+
+.budget__totaux dt {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--admin-texte-doux);
+}
+
+.budget__totaux dd {
+  margin: 3px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.budget__totaux--depasse dd {
+  color: var(--hope-erreur);
 }
 
 .devis__pied {
