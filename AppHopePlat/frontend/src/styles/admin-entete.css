@@ -602,6 +602,17 @@
   cursor: default;
 }
 
+/*
+ * L'entourage de l'icone n'existe que dans le rail.
+ *
+ * Sur l'arc, chaque entree est deja une pastille ronde : un cercle dans
+ * un cercle ne dirait rien de plus. "display: contents" efface donc la
+ * balise, et l'icone se pose comme avant, sans repere intermediaire.
+ */
+.lateral__icone {
+  display: contents;
+}
+
 /* Infobulle AU-DESSUS du bouton : sur un arc horizontal, la sortir sur
    le cote recouvrirait l'entree voisine. */
 .lateral__libelle {
@@ -844,7 +855,8 @@
     align-items: center;
     height: 17px;
     margin: 0 0 4px;
-    padding-left: 15px;
+    /* Aligne sur le bord gauche de l'entourage, et non plus de l'icone. */
+    padding-left: 12px;
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.09em;
@@ -859,20 +871,24 @@
    * L'entree du rail : une ligne, l'icone puis le nom.
    *
    * Le calage horizontal n'est pas cosmetique. Rail replie, 11 px de
-   * marge interieure plus 16 px de retrait posent le centre de l'icone
-   * a 37 px du bord -- l'axe exact du rail. L'icone ne bouge donc pas
-   * d'un pixel au repli : seul le nom s'en va.
+   * marge interieure du menu, plus 11 px de retrait de l'entree, plus la
+   * moitie des 30 px de l'entourage, posent son centre a 37 px du bord --
+   * l'axe exact du rail, large de 74. L'icone ne bouge donc pas d'un
+   * pixel au repli : seul le nom s'en va.
+   *
+   * Ces 11 px de retrait etaient 16 avant que l'icone ne prenne son
+   * cercle : le calcul doit suivre la largeur de ce qui vient en tete.
    */
   .lateral__lien {
     position: relative;
     top: auto;
     left: auto;
     justify-content: flex-start;
-    gap: 13px;
+    gap: 9px;
     width: auto;
     height: 46px;
     margin: 0;
-    padding: 0 16px;
+    padding: 0 11px;
     border-radius: 14px;
     background: none;
     box-shadow: none;
@@ -899,11 +915,57 @@
    * --teinte-famille. Le repli ne change rien : icones seules, la
    * couleur devient le seul indice de famille, et compte donc double.
    */
+  /*
+   * Le cercle autour de l'icone, repris du jeu d'illustrations HOPE, ou
+   * chaque pictogramme est cercle d'un halo.
+   *
+   * Il tient la couleur de la famille, comme l'icone : un trait a 45 %
+   * et un fond a 12 %, assez pour dessiner le cercle sans faire une
+   * seconde pastille a cote de celle de la page courante.
+   */
+  .lateral__icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border: 2px solid color-mix(in srgb, var(--teinte-famille, #ffffff) 45%, transparent);
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--teinte-famille, #ffffff) 12%, transparent);
+    transition: border-color 0.18s ease, background-color 0.18s ease;
+  }
+
   .lateral__lien svg {
-    width: 20px;
-    height: 20px;
+    width: 17px;
+    height: 17px;
     color: var(--teinte-famille, currentColor);
     transition: color 0.18s ease;
+  }
+
+  /*
+   * Page courante et survol : l'icone passe au blanc (regle plus bas),
+   * son cercle doit suivre. Une teinte de famille sur un fond violet
+   * plein s'y eteindrait.
+   */
+  .lateral__lien--actif .lateral__icone,
+  .lateral__lien:hover .lateral__icone,
+  .lateral__lien:focus-visible .lateral__icone {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.16);
+  }
+
+  /* Le pied n'appartient a aucune famille : son cercle suit la couleur
+     du libelle, qui vire au rouge au survol. */
+  .lateral__lien--sortie .lateral__icone {
+    border-color: color-mix(in srgb, currentColor 38%, transparent);
+    background-color: transparent;
+  }
+
+  .lateral__lien--sortie:hover .lateral__icone,
+  .lateral__lien--sortie:focus-visible .lateral__icone {
+    border-color: color-mix(in srgb, currentColor 55%, transparent);
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
   }
 
   /*

@@ -398,7 +398,15 @@ export default function CoqueEspace({
                       (surLArc ? '' : ' lateral__lien--horschamp')
                     }
                   >
-                    <Icone />
+                    {/*
+                      L'icone dans son cercle. Le cercle est dans le DOM
+                      et non dessine en CSS sur le lien : replie, le rail
+                      centre l'icone sur son axe, et un entourage pose
+                      par-dessus se serait decale avec elle.
+                    */}
+                    <span className="lateral__icone" aria-hidden="true">
+                      <Icone />
+                    </span>
                     <span className="lateral__libelle" aria-hidden="true">
                       {label}
                     </span>
@@ -457,7 +465,9 @@ export default function CoqueEspace({
               onClick={onDeconnexion}
               aria-label="Se déconnecter"
             >
-              <PleineDeconnexion />
+              <span className="lateral__icone" aria-hidden="true">
+                <PleineDeconnexion />
+              </span>
               <span className="lateral__libelle" aria-hidden="true">
                 Se déconnecter
               </span>
