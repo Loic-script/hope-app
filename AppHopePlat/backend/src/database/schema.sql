@@ -1058,6 +1058,66 @@ CREATE TABLE IF NOT EXISTS manifestation_interet (
 -- ------------------------------------------------------------
 -- 20. Declencheurs updated_at
 -- ------------------------------------------------------------
+/* ================================================================
+   Notifications et messages des espaces utilisateurs
+
+   L'administrateur avait les siens depuis le debut ; le benevole et le
+   bailleur n'avaient rien. Ces deux tables leur servent a tous les deux
+   -- et au donateur le jour ou son espace existera -- puisqu'elles ne
+   connaissent que "utilisateur", sans distinguer le role.
+
+   Elles ne remplacent pas les tables du back-office :
+     * "notifications" reste le fil d'alertes de l'equipe, indexe sur les
+       dons, les projets et les messages recus ;
+     * "messages" reste le courrier venu du site public, rattache aux
+       anciens comptes donateurs.
+   Les deux mondes n'ont ni les memes cles ni les memes destinataires.
+   ================================================================ */
+
+CREATE TABLE IF NOT EXISTS notification_utilisateur (
+  id             BIGSERIAL PRIMARY KEY,
+  utilisateur_id UUID         NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  type           VARCHAR(40)  NOT NULL,
+  titre          VARCHAR(160) NOT NULL,
+  corps          TEXT,
+  -- Chemin interne vers ce dont la notification parle : "/benevole/taches".
+  -- Jamais une URL externe, que rien ne validerait.
+  lien           VARCHAR(200),
+  lu             BOOLEAN      NOT NULL DEFAULT FALSE,
+  cree_le        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Le fil se lit toujours de la meme facon : les miennes, les non lues
+-- d'abord, la plus recente en tete.
+CREATE INDEX IF NOT EXISTS notification_utilisateur_idx
+  ON notification_utilisateur (utilisateur_id, lu, cree_le DESC);
+
+CREATE TABLE IF NOT EXISTS message_utilisateur (
+  id             BIGSERIAL PRIMARY KEY,
+  utilisateur_id UUID         NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  sujet          VARCHAR(160) NOT NULL,
+  corps          TEXT         NOT NULL,
+  statut         VARCHAR(20)  NOT NULL DEFAULT 'envoye',
+  reponse        TEXT,
+  repondu_le     TIMESTAMPTZ,
+  repondu_par    INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  -- Faux tant que l'utilisateur n'a pas ouvert la reponse : c'est ce
+  -- drapeau qui alimente la pastille de son menu.
+  reponse_lue    BOOLEAN      NOT NULL DEFAULT TRUE,
+  cree_le        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT message_utilisateur_statut_valide
+    CHECK (statut IN ('envoye', 'repondu', 'clos')),
+  -- Un message repondu porte sa reponse, et reciproquement : sans cette
+  -- regle, un statut mis a jour sans texte laisserait un fil muet.
+  CONSTRAINT message_utilisateur_reponse_coherente
+    CHECK ((statut = 'repondu') = (reponse IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS message_utilisateur_idx
+  ON message_utilisateur (utilisateur_id, cree_le DESC);
+
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -1073,7 +1133,8 @@ BEGIN
   FOREACH cible IN ARRAY ARRAY[
     'project_categories', 'projects', 'donors', 'donor_accounts', 'donations',
     'investments', 'expenses', 'supporting_documents', 'beneficiaries',
-    'project_beneficiaries', 'impacts', 'messages', 'field_proofs'
+    'project_beneficiaries', 'impacts', 'messages', 'field_proofs',
+    'message_utilisateur'
   ]
   LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', cible || '_updated_at', cible);

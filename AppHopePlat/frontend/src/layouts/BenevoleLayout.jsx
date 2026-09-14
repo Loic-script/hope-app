@@ -1,13 +1,17 @@
-import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
   PleineAccueil,
   PleineJournal,
+  PleineMessages,
   PleinePersonne,
   PleineProjets,
   PleineTaches,
 } from '../components/IconesPleines.jsx';
+import { apiBenevole } from '../services/apiBenevole.js';
 import * as benevoleService from '../services/benevole.service.js';
+import * as espaceService from '../services/espace.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
@@ -34,7 +38,12 @@ const GROUPES = [
   },
   {
     titre: 'Mon compte',
-    entrees: [{ to: '/benevole/profil', label: 'Mon profil', Icone: PleinePersonne }],
+    entrees: [
+      // "compteur" designe la cle des pastilles renvoyees par
+      // /espace/badges : l'entree porte alors ses reponses non lues.
+      { to: '/benevole/messages', label: 'Messages', Icone: PleineMessages, compteur: 'messages' },
+      { to: '/benevole/profil', label: 'Mon profil', Icone: PleinePersonne },
+    ],
   },
 ];
 
@@ -53,6 +62,22 @@ const GROUPES = [
 export default function BenevoleLayout() {
   const { benevole } = useOutletContext();
   const navigate = useNavigate();
+  const emplacement = useLocation();
+
+  const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
+
+  /** Recharge les pastilles : a chaque changement de page, et sur demande. */
+  const rafraichirCompteurs = useCallback(async () => {
+    try {
+      setCompteurs(await espaceService.badges(apiBenevole));
+    } catch {
+      // Un echec de compteur ne doit jamais bloquer la navigation.
+    }
+  }, []);
+
+  useEffect(() => {
+    rafraichirCompteurs();
+  }, [emplacement.pathname, rafraichirCompteurs]);
 
   async function seDeconnecter() {
     await benevoleService.deconnecter();
@@ -69,8 +94,10 @@ export default function BenevoleLayout() {
       cleRail="hope.benevole.rail-replie"
       identite={{ nom, role: 'Bénévole' }}
       onDeconnexion={seDeconnecter}
+      compteurs={compteurs}
+      notifications={{ to: '/benevole/notifications', cle: 'notifications' }}
     >
-      <Outlet context={{ benevole }} />
+      <Outlet context={{ benevole, api: apiBenevole, rafraichirCompteurs }} />
     </CoqueEspace>
   );
 }

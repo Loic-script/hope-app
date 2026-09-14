@@ -1,14 +1,18 @@
-import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
   PleineAccueil,
   PleineActualites,
   PleineDons,
   PleineGraphique,
+  PleineMessages,
   PleineOrganisation,
   PleinePreuves,
 } from '../components/IconesPleines.jsx';
+import { apiBailleur } from '../services/apiBailleur.js';
 import * as bailleurService from '../services/bailleur.service.js';
+import * as espaceService from '../services/espace.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
@@ -42,6 +46,7 @@ const GROUPES = [
   {
     titre: 'Mon compte',
     entrees: [
+      { to: '/bailleur/messages', label: 'Messages', Icone: PleineMessages, compteur: 'messages' },
       { to: '/bailleur/organisation', label: 'Mon organisation', Icone: PleineOrganisation },
     ],
   },
@@ -63,6 +68,22 @@ const NIVEAUX = { bronze: 'Partenaire Bronze', argent: 'Partenaire Argent', or: 
 export default function BailleurLayout() {
   const { bailleur } = useOutletContext();
   const navigate = useNavigate();
+  const emplacement = useLocation();
+
+  const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
+
+  /** Recharge les pastilles : a chaque changement de page, et sur demande. */
+  const rafraichirCompteurs = useCallback(async () => {
+    try {
+      setCompteurs(await espaceService.badges(apiBailleur));
+    } catch {
+      // Un echec de compteur ne doit jamais bloquer la navigation.
+    }
+  }, []);
+
+  useEffect(() => {
+    rafraichirCompteurs();
+  }, [emplacement.pathname, rafraichirCompteurs]);
 
   async function seDeconnecter() {
     await bailleurService.deconnecter();
@@ -88,8 +109,10 @@ export default function BailleurLayout() {
         role: NIVEAUX[bailleur?.niveau] ?? bailleur?.typeLibelle ?? 'Partenaire',
       }}
       onDeconnexion={seDeconnecter}
+      compteurs={compteurs}
+      notifications={{ to: '/bailleur/notifications', cle: 'notifications' }}
     >
-      <Outlet context={{ bailleur }} />
+      <Outlet context={{ bailleur, api: apiBailleur, rafraichirCompteurs }} />
     </CoqueEspace>
   );
 }

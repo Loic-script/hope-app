@@ -9,6 +9,7 @@ import adminRoutes from './admin.routes.js';
 import volunteerAuthRoutes from './volunteerAuth.routes.js';
 import volunteerSpaceRoutes from './volunteerSpace.routes.js';
 import funderRoutes from './funder.routes.js';
+import espaceRoutes from './espace.routes.js';
 
 const router = Router();
 
@@ -37,5 +38,9 @@ router.use('/benevole', volunteerSpaceRoutes);
 // Espace bailleur : /inscription, /login et /types-organisation sont
 // publics, le reste exige un jeton de bailleur.
 router.use('/bailleur', funderRoutes);
+
+// Notifications et messages, communs a tous les espaces utilisateurs :
+// le benevole et le bailleur y lisent les leurs avec leur propre jeton.
+router.use('/espace', espaceRoutes);
 
 export default router;

@@ -20,6 +20,8 @@ import Authentification from '../pages/Authentification.jsx';
 import BienvenueDonateur from '../pages/donateur/Bienvenue.jsx';
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
+import MessagesEspace from '../pages/espace/MessagesEspace.jsx';
+import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
 import MissionDetail from '../pages/benevole/MissionDetail.jsx';
 import Missions from '../pages/benevole/Missions.jsx';
@@ -93,6 +95,8 @@ export default function AppRoutes() {
           <Route path="/bailleur/preuves" element={<PreuvesBailleur />} />
           <Route path="/bailleur/actualites" element={<ActualitesBailleur />} />
           <Route path="/bailleur/organisation" element={<OrganisationBailleur />} />
+          <Route path="/bailleur/notifications" element={<NotificationsEspace />} />
+          <Route path="/bailleur/messages" element={<MessagesEspace />} />
         </Route>
       </Route>
 
@@ -108,6 +112,10 @@ export default function AppRoutes() {
           <Route path="/benevole/taches" element={<MesTaches />} />
           <Route path="/benevole/journal" element={<MonJournal />} />
           <Route path="/benevole/profil" element={<MonProfil />} />
+          {/* Communs aux espaces : le meme ecran, servi par le client
+              axios que la coque fournit. */}
+          <Route path="/benevole/notifications" element={<NotificationsEspace />} />
+          <Route path="/benevole/messages" element={<MessagesEspace />} />
         </Route>
       </Route>
 
