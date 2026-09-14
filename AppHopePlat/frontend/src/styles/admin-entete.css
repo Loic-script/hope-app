@@ -871,26 +871,24 @@
    * L'entree du rail : une ligne, l'icone puis le nom.
    *
    * Le calage horizontal n'est pas cosmetique. Rail replie, 11 px de
-   * marge interieure du menu, plus 12 px de retrait de l'entree, plus la
-   * moitie des 28 px de l'entourage, posent son centre a 37 px du bord --
+   * marge interieure du menu, plus 11 px de retrait de l'entree, plus la
+   * moitie des 30 px du disque, posent son centre a 37 px du bord --
    * l'axe exact du rail, large de 74. L'icone ne bouge donc pas d'un
    * pixel au repli : seul le nom s'en va.
    *
-   * Ces 12 px de retrait etaient 16 avant que l'icone ne prenne son
-   * cercle : le calcul doit suivre la largeur de ce qui vient en tete.
+   * Ces 11 px de retrait etaient 16 avant que l'icone ne prenne son
+   * disque : le calcul doit suivre la largeur de ce qui vient en tete.
    */
   .lateral__lien {
     position: relative;
     top: auto;
     left: auto;
     justify-content: flex-start;
-    /* Large : le rayon de droite deborde de 10 px sur l'interstice, et
-       le nom venait s'y coller. */
-    gap: 16px;
+    gap: 12px;
     width: auto;
-    height: 50px;
+    height: 46px;
     margin: 0;
-    padding: 0 12px;
+    padding: 0 11px;
     border-radius: 14px;
     background: none;
     box-shadow: none;
@@ -922,7 +920,9 @@
    * d'illustrations HOPE.
    *
    * Blanc plein, et non un simple contour : c'est lui qui detache
-   * l'icone du rail, dont le fond est sombre. L'icone y prend une
+   * l'icone du rail, dont le fond est sombre. Les rayons de soleil du
+   * jeu d'illustrations ne sont pas repris : sur dix entrees empilees,
+   * ils faisaient une haie de hachures. L'icone y prend une
    * declinaison foncee de sa couleur de famille -- la charte est claire,
    * et son jaune ne donne que 1,29 de contraste sur du blanc.
    */
@@ -939,41 +939,9 @@
     transition: background-color 0.18s ease;
   }
 
-  /*
-   * Les huit rayons du soleil, autour du cercle.
-   *
-   * C'est le motif du jeu d'illustrations HOPE, et celui du logo : un
-   * pictogramme cercle, et le soleil autour. Le cercle et les rayons
-   * sont oranges pour tout le monde -- c'est la marque, elle ne se
-   * decline pas par famille ; seule l'icone au centre garde sa couleur.
-   *
-   * Dessines par un masque plutot qu'en image de fond : la couleur reste
-   * alors une propriete CSS, donc une variable de la charte, au lieu
-   * d'etre figee dans le fichier SVG.
-   *
-   * Le carre fait 48 px pour 30 px de disque : 9 px de debord de chaque
-   * cote, dont 2,5 de vide avant le premier rayon. Colles au disque, les
-   * rayons dessinaient un engrenage. L'entree est montee a 50 px de haut
-   * pour les loger.
-   */
-  .lateral__icone::after {
-    content: '';
-    position: absolute;
-    inset: -9px;
-    pointer-events: none;
-    background-color: var(--hope-orange);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cg%20stroke%3D%22%23000%22%20stroke-width%3D%222.7%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2224.00%22%20y1%3D%226.60%22%20x2%3D%2224.00%22%20y2%3D%221.40%22%2F%3E%3Cline%20x1%3D%2236.30%22%20y1%3D%2211.70%22%20x2%3D%2239.98%22%20y2%3D%228.02%22%2F%3E%3Cline%20x1%3D%2241.40%22%20y1%3D%2224.00%22%20x2%3D%2246.60%22%20y2%3D%2224.00%22%2F%3E%3Cline%20x1%3D%2236.30%22%20y1%3D%2236.30%22%20x2%3D%2239.98%22%20y2%3D%2239.98%22%2F%3E%3Cline%20x1%3D%2224.00%22%20y1%3D%2241.40%22%20x2%3D%2224.00%22%20y2%3D%2246.60%22%2F%3E%3Cline%20x1%3D%2211.70%22%20y1%3D%2236.30%22%20x2%3D%228.02%22%20y2%3D%2239.98%22%2F%3E%3Cline%20x1%3D%226.60%22%20y1%3D%2224.00%22%20x2%3D%221.40%22%20y2%3D%2224.00%22%2F%3E%3Cline%20x1%3D%2211.70%22%20y1%3D%2211.70%22%20x2%3D%228.02%22%20y2%3D%228.02%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cg%20stroke%3D%22%23000%22%20stroke-width%3D%222.7%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2224.00%22%20y1%3D%226.60%22%20x2%3D%2224.00%22%20y2%3D%221.40%22%2F%3E%3Cline%20x1%3D%2236.30%22%20y1%3D%2211.70%22%20x2%3D%2239.98%22%20y2%3D%228.02%22%2F%3E%3Cline%20x1%3D%2241.40%22%20y1%3D%2224.00%22%20x2%3D%2246.60%22%20y2%3D%2224.00%22%2F%3E%3Cline%20x1%3D%2236.30%22%20y1%3D%2236.30%22%20x2%3D%2239.98%22%20y2%3D%2239.98%22%2F%3E%3Cline%20x1%3D%2224.00%22%20y1%3D%2241.40%22%20x2%3D%2224.00%22%20y2%3D%2246.60%22%2F%3E%3Cline%20x1%3D%2211.70%22%20y1%3D%2236.30%22%20x2%3D%228.02%22%20y2%3D%2239.98%22%2F%3E%3Cline%20x1%3D%226.60%22%20y1%3D%2224.00%22%20x2%3D%221.40%22%20y2%3D%2224.00%22%2F%3E%3Cline%20x1%3D%2211.70%22%20y1%3D%2211.70%22%20x2%3D%228.02%22%20y2%3D%228.02%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    transition: background-color 0.18s ease;
-  }
-
   .lateral__lien svg {
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
     color: var(--teinte-famille, currentColor);
     transition: color 0.18s ease;
   }
@@ -992,16 +960,10 @@
   /* Le pied n'appartient a aucune famille : son cercle suit la couleur
      du libelle, qui vire au rouge au survol. */
   /* La deconnexion n'est pas une entree de la marque : pas de disque
-     blanc, pas de soleil, un simple contour a la couleur du libelle. */
+     blanc, un simple contour a la couleur du libelle. */
   .lateral__lien--sortie .lateral__icone {
     border: 2px solid color-mix(in srgb, currentColor 38%, transparent);
     background-color: transparent;
-  }
-
-  /* Pas de soleil sur la deconnexion : le motif dit "HOPE", et quitter
-     l'espace n'est pas une action de la marque. */
-  .lateral__lien--sortie .lateral__icone::after {
-    display: none;
   }
 
   .lateral__lien--sortie:hover .lateral__icone,
