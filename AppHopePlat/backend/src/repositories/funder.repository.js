@@ -539,25 +539,28 @@ export async function prochainNumeroCertificat(client = null) {
 export async function listerPreuves(bailleurId, client = null) {
   const resultat = await query(
     /*
-     * Le fichier ne vit plus dans field_proofs.
+     * Les fichiers viennent avec.
      *
-     * Une preuve peut en porter plusieurs depuis que field_proof_files
-     * existe ; les quatre colonnes de fichier ont quitte la table mere.
-     * On reprend ici celui qui la represente -- le premier par position,
-     * comme dans les listes de l'administration.
+     * Une preuve en porte plusieurs depuis que field_proof_files existe.
+     * L'espace en montrait le premier, et seulement son nom ; il les
+     * affiche maintenant, comme le back-office -- d'ou l'agregat plutot
+     * qu'un LATERAL limite a une ligne.
      */
-    `SELECT f.id, f.proof_type, f.description, f.occurred_on,
-            fichier.file_name, fichier.mime_type, f.created_at,
-            p.id AS projet_id, p.name AS projet_nom, p.location
+    `SELECT f.id, f.proof_type, f.description, f.occurred_on, f.created_at,
+            p.id AS projet_id, p.name AS projet_nom, p.reference AS projet_reference,
+            p.location,
+            COALESCE((
+              SELECT json_agg(
+                       json_build_object(
+                         'id', ff.id, 'fileName', ff.file_name,
+                         'mimeType', ff.mime_type, 'fileSize', ff.file_size
+                       ) ORDER BY ff.position, ff.id
+                     )
+                FROM field_proof_files ff
+               WHERE ff.proof_id = f.id
+            ), '[]'::json) AS files
        FROM field_proofs f
        JOIN projects p ON p.id = f.project_id
-       LEFT JOIN LATERAL (
-         SELECT ff.file_name, ff.mime_type
-           FROM field_proof_files ff
-          WHERE ff.proof_id = f.id
-          ORDER BY ff.position, ff.id
-          LIMIT 1
-       ) fichier ON TRUE
       WHERE p.id IN (
         SELECT DISTINCT a.projet_id
           FROM affectation a
@@ -570,6 +573,31 @@ export async function listerPreuves(bailleurId, client = null) {
     client
   );
   return versListe(resultat.rows);
+}
+
+/**
+ * Cette preuve porte-t-elle sur un projet que ce bailleur finance ?
+ *
+ * Pose avant de servir un fichier : sans elle, un identifiant devine
+ * ouvrirait les images d'un projet finance par quelqu'un d'autre.
+ */
+export async function preuveEstVisible(bailleurId, preuveId, client = null) {
+  const resultat = await query(
+    `SELECT 1
+       FROM field_proofs f
+       JOIN projects p ON p.id = f.project_id
+      WHERE f.id = $2
+        AND p.id IN (
+          SELECT DISTINCT a.projet_id
+            FROM affectation a
+            JOIN engagement e ON e.id = a.engagement_id
+           WHERE e.bailleur_id = $1
+        )
+      LIMIT 1`,
+    [bailleurId, preuveId],
+    client
+  );
+  return resultat.rowCount > 0;
 }
 
 /* ================================================================

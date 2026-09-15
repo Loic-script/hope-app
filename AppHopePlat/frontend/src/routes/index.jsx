@@ -37,6 +37,7 @@ import ActualitesBailleur from '../pages/bailleur/Actualites.jsx';
 import DeclarerOrganisation from '../pages/bailleur/DeclarerOrganisation.jsx';
 import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
 import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
+import PreuveBailleurDetail from '../pages/bailleur/PreuveDetail.jsx';
 import PreuvesBailleur from '../pages/bailleur/Preuves.jsx';
 import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
 import TableauDeBordBailleur from '../pages/bailleur/TableauDeBord.jsx';
@@ -95,6 +96,7 @@ export default function AppRoutes() {
           <Route path="/bailleur/partenariat" element={<PartenariatBailleur />} />
           <Route path="/bailleur/rapports" element={<RapportsBailleur />} />
           <Route path="/bailleur/preuves" element={<PreuvesBailleur />} />
+          <Route path="/bailleur/preuves/:id" element={<PreuveBailleurDetail />} />
           <Route path="/bailleur/actualites" element={<ActualitesBailleur />} />
           <Route path="/bailleur/organisation" element={<OrganisationBailleur />} />
           <Route path="/bailleur/notifications" element={<NotificationsEspace />} />

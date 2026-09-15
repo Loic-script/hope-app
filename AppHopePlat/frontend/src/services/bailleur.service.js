@@ -6,6 +6,7 @@
  * lectures, plus deux ecritures -- la fiche de contact et la
  * manifestation d'interet.
  */
+import { URL_API } from './api.js';
 import {
   apiBailleur,
   CLE_BAILLEUR,
@@ -131,6 +132,29 @@ export async function genererCertificat() {
 export async function preuves() {
   const { data } = await apiBailleur.get('/bailleur/preuves');
   return data.items ?? [];
+}
+
+/**
+ * Le fichier d'une preuve, sous forme d'URL locale.
+ *
+ * Il est servi derriere le jeton : une balise <img src="..."> ne peut
+ * pas l'atteindre, elle ne porte pas d'en-tete Authorization. On passe
+ * donc par un blob, que l'appelant libere avec URL.revokeObjectURL --
+ * sinon le navigateur garde chaque image en memoire.
+ *
+ * @returns {Promise<string|null>} null si le fichier n'est pas servi
+ */
+export async function urlDuFichierPreuve(preuve, fichier = null) {
+  const cible = fichier ?? preuve?.files?.[0] ?? null;
+  if (!preuve?.id || !cible?.id) return null;
+
+  const reponse = await fetch(
+    `${URL_API}/bailleur/preuves/${preuve.id}/fichiers/${cible.id}`,
+    { headers: { Authorization: `Bearer ${lireJeton()}` } }
+  );
+  if (!reponse.ok) return null;
+
+  return URL.createObjectURL(await reponse.blob());
 }
 
 /** GET /api/bailleur/fil */

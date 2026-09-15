@@ -443,8 +443,12 @@
   opacity: 0.75;
 }
 
+/* Aussi porte par un lien -- "Toutes les preuves" -- d'ou le
+   soulignement retire et l'alignement du texte. */
 .bouton-bailleur {
+  display: inline-block;
   padding: 11px 20px;
+  text-decoration: none;
   border: 0;
   border-radius: 10px;
   background-color: var(--hope-orange);

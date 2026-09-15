@@ -1,18 +1,30 @@
+import { Link } from 'react-router-dom';
+
+import { Vignette } from '../../components/preuves/MediasPreuve.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import { EntetePage, Panneau, Pastille } from './composants.jsx';
 
-/** Les trois natures de preuve. */
-const TYPES = { PHOTO: 'Photo', DOCUMENT: 'Document', TESTIMONY: 'Témoignage' };
+/** Les natures de preuve, et la teinte de leur pastille. */
+export const TYPES = {
+  PHOTO: 'Photo',
+  VIDEO: 'Vidéo',
+  DOCUMENT: 'Document',
+  TESTIMONY: 'Témoignage',
+};
 
 /**
  * Preuves terrain des projets finances.
  *
- * Elles ne sont pas saisies ici : elles remontent du back-office et
- * sont filtrees par les affectations du bailleur. Le fichier lui-meme
- * reste derriere le jeton de l'espace administrateur ; cet ecran en
- * montre la fiche, pas le contenu.
+ * Elles ne sont pas saisies ici : elles remontent du back-office et sont
+ * filtrees par les affectations du bailleur -- un partenaire voit ce que
+ * ses projets ont produit, pas ceux des autres.
+ *
+ * L'ecran montrait la fiche d'une preuve sans jamais son contenu : le
+ * nom du fichier, et rien de plus. Il montre desormais les images
+ * elles-memes, comme le back-office, puisque c'est precisement ce qu'un
+ * bailleur vient chercher.
  */
 export default function Preuves() {
   const { donnees, chargement, erreur } = useChargement(() => service.preuves(), []);
@@ -51,30 +63,49 @@ export default function Preuves() {
             titre={projet}
             sousTitre={`${preuves.length} preuve${preuves.length > 1 ? 's' : ''}`}
           >
-            <ul className="liste-preuves">
+            <ul className="preuves">
               {preuves.map((preuve) => (
-                <li key={preuve.id} className="preuve-part">
-                  <div className="preuve-part__haut">
-                    <Pastille teinte={preuve.proofType === 'TESTIMONY' ? 'violet' : 'bleu'}>
-                      {TYPES[preuve.proofType] ?? preuve.proofType}
-                    </Pastille>
-                    <span className="preuve-part__date">
-                      {fmt.date(preuve.occurredOn ?? preuve.createdAt)}
-                    </span>
-                  </div>
-
-                  {preuve.description && <p className="preuve-part__texte">{preuve.description}</p>}
-
-                  <p className="preuve-part__meta">
-                    {preuve.location && <>{preuve.location} · </>}
-                    {preuve.fileName ?? 'Sans fichier joint'}
-                  </p>
-                </li>
+                <LignePreuve key={preuve.id} preuve={preuve} />
               ))}
             </ul>
           </Panneau>
         ))
       )}
     </>
+  );
+}
+
+/**
+ * Une preuve dans la liste.
+ *
+ * Le lien de la description s'etire sur toute la ligne via son ::after :
+ * la vignette ouvre la lecture elle aussi, sans qu'il faille viser le
+ * texte.
+ */
+function LignePreuve({ preuve }) {
+  return (
+    <li className="preuve preuve--cliquable">
+      <Vignette preuve={preuve} charger={service.urlDuFichierPreuve} />
+
+      <div className="preuve__corps">
+        <p className="preuve__projet">
+          <Pastille teinte={preuve.proofType === 'TESTIMONY' ? 'violet' : 'bleu'}>
+            {TYPES[preuve.proofType] ?? preuve.proofType}
+          </Pastille>
+        </p>
+        <p className="preuve__description">
+          <Link className="preuve__lien" to={`/bailleur/preuves/${preuve.id}`}>
+            {preuve.description}
+          </Link>
+        </p>
+        <p className="preuve__signature">
+          {fmt.date(preuve.occurredOn ?? preuve.createdAt)}
+          {preuve.location ? ` · ${preuve.location}` : ''}
+          {preuve.files?.length > 0
+            ? ` · ${preuve.files.length} fichier${preuve.files.length > 1 ? 's' : ''}`
+            : ''}
+        </p>
+      </div>
+    </li>
   );
 }
