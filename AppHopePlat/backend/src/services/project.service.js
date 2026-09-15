@@ -237,6 +237,11 @@ async function preparerDonnees(corps, { creation }) {
   if (creation || corps.name !== undefined) {
     donnees.name = texteRequis(corps.name, 'name', { max: 200 });
   }
+  if (creation || corps.descriptionTitre !== undefined) {
+    donnees.descriptionTitre = texteFacultatif(corps.descriptionTitre, 'descriptionTitre', {
+      max: 160,
+    });
+  }
   if (creation || corps.description !== undefined) {
     donnees.description = texteFacultatif(corps.description, 'description', { max: 5000 });
   }
@@ -424,6 +429,7 @@ export async function mettreAJour(id, corps = {}) {
   const colonnes = {
     category_id: donnees.categoryId,
     name: donnees.name,
+    description_titre: donnees.descriptionTitre,
     description: donnees.description,
     location: donnees.location,
     manager_name: donnees.managerName,

@@ -362,9 +362,12 @@ export default function ProjectDetailPage() {
             </dl>
           </Panneau>
 
-          {projet.description && (
+          {(projet.description || projet.descriptionTitre) && (
             <Panneau titre="Description">
-              <p className="bloc-texte">{projet.description}</p>
+              {projet.descriptionTitre && (
+                <p className="bloc-texte__titre">{projet.descriptionTitre}</p>
+              )}
+              {projet.description && <p className="bloc-texte">{projet.description}</p>}
             </Panneau>
           )}
 

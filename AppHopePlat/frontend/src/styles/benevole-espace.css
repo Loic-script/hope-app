@@ -2126,6 +2126,16 @@
   color: var(--hope-violet);
 }
 
+/* Le titre de la description : il annonce le paragraphe, sous le nom du
+   projet qui le domine. Plus petit que le titre, plus fort que le texte. */
+.tete-projet__annonce {
+  margin: 12px 0 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hope-violet-lisible);
+}
+
 /* Les objectifs specifiques : ce que le projet doit avoir change. */
 .tete-projet__objectifs {
   margin: 14px 0 0;

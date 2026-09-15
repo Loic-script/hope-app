@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS projects (
   reference           VARCHAR(30)   NOT NULL UNIQUE,
   category_id         INTEGER       REFERENCES project_categories(id) ON DELETE SET NULL,
   name                VARCHAR(200)  NOT NULL,
+  -- Le titre de la description, et non celui du projet : une phrase qui
+  -- annonce ce que le texte raconte, ecrite par l'equipe.
+  description_titre   VARCHAR(160),
   description         TEXT,
   location            VARCHAR(160),
   manager_name        VARCHAR(160),
@@ -1320,6 +1323,15 @@ $$;
  * par HOPE.
  */
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS photo_url VARCHAR(255);
+
+/*
+ * Le titre de la description d'un projet.
+ *
+ * Distinct du nom du projet : celui-ci designe, celui-la annonce. Une
+ * fiche ouvrait sur un paragraphe sans en-tete, et rien ne disait en une
+ * ligne ce que le projet allait raconter.
+ */
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS description_titre VARCHAR(160);
 
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$

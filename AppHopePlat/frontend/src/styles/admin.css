@@ -1395,6 +1395,17 @@
   white-space: pre-wrap;
 }
 
+/* Le titre de la description : il annonce le paragraphe qui suit, et se
+   tient donc au-dessus de lui sans faire concurrence au nom du projet,
+   qui est plus haut et plus gros. */
+.bloc-texte__titre {
+  margin-bottom: 8px;
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hope-violet-lisible);
+}
+
 /* ============================================================
    13. Adaptation aux petits ecrans
    ============================================================ */

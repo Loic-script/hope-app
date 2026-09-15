@@ -77,6 +77,11 @@ export default function ProjetDetail() {
               {projet.location}
             </p>
           )}
+          {/* Le titre de la description annonce le texte ; sans lui, le
+              paragraphe tient seul, comme avant. */}
+          {projet.descriptionTitre && (
+            <p className="tete-projet__annonce">{projet.descriptionTitre}</p>
+          )}
           {projet.description && (
             <p className="accueil-benevole__accroche">{projet.description}</p>
           )}

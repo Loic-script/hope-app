@@ -88,7 +88,8 @@ const AGREGATS = `
 `;
 
 const COLONNES = `
-  p.id, p.reference, p.category_id, p.name, p.description, p.location,
+  p.id, p.reference, p.category_id, p.name,
+  p.description_titre, p.description, p.location,
   p.manager_name, p.start_date, p.required_budget, p.currency,
   p.beneficiary_profile, p.beneficiary_target, p.status, p.media_url,
   p.media_type, p.outcome, p.completed_at, p.archived_at,
@@ -197,7 +198,7 @@ export async function compter(filtres = {}, client = null) {
  */
 export async function listerPourBenevole(client = null) {
   const resultat = await query(
-    `SELECT p.id, p.reference, p.name, p.description, p.location,
+    `SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
             p.media_url, p.media_type, p.status, p.created_at,
             c.name AS category_name,
             COALESCE(t.libres, 0)      AS taches_libres,
@@ -230,7 +231,7 @@ export async function listerPourBenevole(client = null) {
 /** Un projet, pour l'espace benevole : les memes champs que la liste. */
 export async function trouverPourBenevole(id, client = null) {
   const resultat = await query(
-    `SELECT p.id, p.reference, p.name, p.description, p.location,
+    `SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
             p.media_url, p.media_type, p.status, p.created_at,
             c.name AS category_name,
             COALESCE(o.liste, '[]'::json) AS objectives
@@ -294,15 +295,16 @@ export async function genererReference(client = null) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO projects
-       (reference, category_id, name, description, location, manager_name,
-        start_date, required_budget, currency, beneficiary_profile,
+       (reference, category_id, name, description_titre, description, location,
+        manager_name, start_date, required_budget, currency, beneficiary_profile,
         beneficiary_target, status, media_url, media_type)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'IN_PROGRESS', $12, $13)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'IN_PROGRESS', $13, $14)
      RETURNING id`,
     [
       donnees.reference,
       donnees.categoryId,
       donnees.name,
+      donnees.descriptionTitre,
       donnees.description,
       donnees.location,
       donnees.managerName,

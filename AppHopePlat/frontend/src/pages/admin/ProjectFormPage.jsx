@@ -53,6 +53,7 @@ function totalDevisEnCentimes(postes) {
 
 const FORMULAIRE_VIDE = {
   name: '',
+  descriptionTitre: '',
   description: '',
   // Une ligne vide au depart : le champ doit se voir sans qu'il faille
   // deviner qu'un bouton l'ouvre.
@@ -99,6 +100,7 @@ export default function ProjectFormPage() {
     if (!projet) return;
     setFormulaire({
       name: projet.name ?? '',
+      descriptionTitre: projet.descriptionTitre ?? '',
       description: projet.description ?? '',
       objectives:
         projet.objectives?.length > 0 ? projet.objectives.map((o) => o.label) : [''],
@@ -203,6 +205,7 @@ export default function ProjectFormPage() {
     const charge = {
       ...formulaire,
       categoryId: formulaire.categoryId === '' ? null : Number(formulaire.categoryId),
+      descriptionTitre: formulaire.descriptionTitre || null,
       description: formulaire.description || null,
       location: formulaire.location || null,
       managerName: formulaire.managerName || null,
@@ -261,6 +264,22 @@ export default function ProjectFormPage() {
               onChange={(e) => modifier('name', e.target.value)}
               placeholder="Soutien scolaire Antananarivo"
               maxLength={200}
+              disabled={envoi}
+              pleineLargeur
+            />
+
+            {/*
+              Le titre de la description, et non un second nom de projet :
+              le nom designe, ce titre annonce ce que le paragraphe
+              raconte. Facultatif -- une fiche sans lui reste lisible.
+            */}
+            <ChampTexte
+              label="Titre de la description"
+              id="descriptionTitre"
+              value={formulaire.descriptionTitre}
+              onChange={(e) => modifier('descriptionTitre', e.target.value)}
+              placeholder="Des soins gratuits pour 350 familles"
+              maxLength={160}
               disabled={envoi}
               pleineLargeur
             />
