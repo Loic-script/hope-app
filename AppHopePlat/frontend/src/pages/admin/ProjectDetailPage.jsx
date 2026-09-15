@@ -218,6 +218,92 @@ export default function ProjectDetailPage() {
   const enCours = projet.status === 'IN_PROGRESS';
   const archive = projet.status === 'ARCHIVED';
 
+  /*
+   * Une mesure appartient a l'un des deux tableaux selon qu'elle nomme
+   * un objectif. Le partage se fait ici, et non en base : c'est la meme
+   * table, et une mesure passe de l'un a l'autre en changeant d'objectif.
+   */
+  const impactsGeneraux = donnees.impacts.filter((impact) => !impact.objectiveId);
+  const impactsParObjectif = donnees.impacts.filter((impact) => impact.objectiveId);
+
+  /**
+   * Les colonnes d'un tableau de mesures.
+   *
+   * Les deux tableaux montrent les memes lignes ; seule la colonne de
+   * l'objectif distingue celui du bas. Une fabrique plutot qu'une copie :
+   * elles doivent rester identiques.
+   */
+  function colonnesImpact({ objectif }) {
+    return [
+      {
+        cle: 'title',
+        titre: 'Impact',
+        rendu: (i) => (
+          <div>
+            <div className="table__principal">{i.title}</div>
+            {i.description && (
+              <div className="table__secondaire">{fmt.tronquer(i.description, 70)}</div>
+            )}
+          </div>
+        ),
+      },
+      ...(objectif
+        ? [
+            {
+              cle: 'objectiveLabel',
+              titre: 'Objectif',
+              rendu: (i) => <span className="table__principal">{i.objectiveLabel}</span>,
+            },
+          ]
+        : []),
+      {
+        cle: 'indicator',
+        titre: 'Indicateur',
+        rendu: (i) => libelleIndicateur(i.indicator),
+      },
+      {
+        cle: 'value',
+        titre: 'Valeur',
+        aligne: 'droite',
+        rendu: (i) => (
+          <strong>
+            {fmt.nombre(i.value)} {i.unit ?? ''}
+          </strong>
+        ),
+      },
+      {
+        cle: 'beneficiaryName',
+        titre: 'Bénéficiaire',
+        rendu: (i) => i.beneficiaryName ?? 'Collectif',
+      },
+      { cle: 'measuredAt', titre: 'Mesuré le', rendu: (i) => fmt.date(i.measuredAt) },
+      {
+        cle: 'actions',
+        titre: 'Actions',
+        aligne: 'droite',
+        rendu: (impact) =>
+          archive ? null : (
+            <div className="cellule-actions">
+              <button
+                type="button"
+                className="lien-action"
+                onClick={() => ouvrir(objectif ? 'impactObjectif' : 'impactGeneral', impact)}
+              >
+                Modifier
+              </button>
+              <button
+                type="button"
+                className="lien-action lien-action--danger"
+                onClick={() => ouvrir('supprimerImpact', impact)}
+              >
+                Supprimer
+              </button>
+            </div>
+          ),
+      },
+    ];
+  }
+
   const ONGLETS = [
     { cle: 'general', label: 'Vue générale' },
     {
@@ -956,42 +1042,75 @@ export default function ProjectDetailPage() {
       {ongletActif === 'impact' && (
         <>
           {/*
-            Les deux tableaux ne disent pas la meme chose. Celui-ci
-            cumule tout ce qui a ete mesure : c'est l'impact du projet tel
-            que sa description l'annonce. Celui du dessous detaille chaque
-            mesure et l'objectif qu'elle documente.
+            Les totaux, en tete : ils additionnent tout ce qui a ete
+            mesure, general et par objectif. C'est un resume, pas une
+            liste -- les deux tableaux qui suivent, eux, s'editent.
           */}
           {donnees.impactSummary.length > 0 && (
-            <Panneau
-              titre="Impact général du projet"
-              sousTitre="Le total de chaque indicateur, tous objectifs confondus"
-              serre
-            >
-              <Tableau
-                colonnes={[
-                  {
-                    cle: 'indicator',
-                    titre: 'Indicateur',
-                    rendu: (l) => libelleIndicateur(l.indicator),
-                  },
-                  {
-                    cle: 'total',
-                    titre: 'Total',
-                    aligne: 'droite',
-                    rendu: (l) => `${fmt.nombre(l.total)} ${l.unit ?? ''}`.trim(),
-                  },
-                  {
-                    cle: 'entriesCount',
-                    titre: 'Mesures',
-                    aligne: 'droite',
-                    rendu: (l) => fmt.nombre(l.entriesCount),
-                  },
-                ]}
-                lignes={donnees.impactSummary}
-                cleLigne={(l) => l.indicator}
-              />
-            </Panneau>
+            <div className="cartes-chiffres">
+              {donnees.impactSummary.map((ligne) => (
+                <div className="carte-chiffre" key={`${ligne.indicator}|${ligne.unit ?? ''}`}>
+                  <div>
+                    <p className="carte-chiffre__libelle">{libelleIndicateur(ligne.indicator)}</p>
+                    <p className="carte-chiffre__variation">
+                      {fmt.nombre(ligne.entriesCount)} mesure(s)
+                    </p>
+                  </div>
+                  <p className="carte-chiffre__valeur">
+                    {fmt.nombre(ligne.total)} {ligne.unit ?? ''}
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
+
+          {/*
+            Deux tableaux, deux questions. Celui-ci porte ce que le projet
+            a produit dans son ensemble -- ce que sa description annonce.
+            Celui du dessous detaille objectif par objectif. Une mesure
+            appartient a l'un ou a l'autre selon qu'elle nomme un
+            objectif, et se modifie des deux cotes de la meme facon.
+          */}
+          <Panneau
+            titre="Impact général du projet"
+            sousTitre="Ce que le projet a produit dans son ensemble, sans se rattacher à un objectif précis"
+            actions={
+              !archive && (
+                <button
+                  type="button"
+                  className="btn btn--principal"
+                  onClick={() => ouvrir('impactGeneral')}
+                >
+                  <IconePlus />
+                  Ajouter un impact général
+                </button>
+              )
+            }
+            serre
+          >
+            <Tableau
+              lignes={impactsGeneraux}
+              colonnes={colonnesImpact({ objectif: false })}
+              vide={
+                <EtatVide
+                  titre="Aucun impact général"
+                  texte="Chiffrez ce que le projet a permis de changer dans son ensemble : personnes aidées, matériel distribué, services rendus."
+                  action={
+                    !archive && (
+                      <button
+                        type="button"
+                        className="btn btn--principal"
+                        onClick={() => ouvrir('impactGeneral')}
+                      >
+                        <IconePlus />
+                        Ajouter un impact général
+                      </button>
+                    )
+                  }
+                />
+              }
+            />
+          </Panneau>
 
           <Panneau
             titre="Mesures par objectif"
@@ -1001,101 +1120,35 @@ export default function ProjectDetailPage() {
                 <button
                   type="button"
                   className="btn btn--principal"
-                  onClick={() => ouvrir('impact')}
+                  onClick={() => ouvrir('impactObjectif')}
                 >
                   <IconePlus />
-                  Ajouter un impact
+                  Ajouter une mesure
                 </button>
               )
             }
             serre
           >
             <Tableau
-              lignes={donnees.impacts}
-              colonnes={[
-                {
-                  cle: 'title',
-                  titre: 'Impact',
-                  rendu: (i) => (
-                    <div>
-                      <div className="table__principal">{i.title}</div>
-                      {i.description && (
-                        <div className="table__secondaire">{fmt.tronquer(i.description, 70)}</div>
-                      )}
-                    </div>
-                  ),
-                },
-                {
-                  cle: 'objectiveLabel',
-                  titre: 'Objectif',
-                  // Une mesure sans objectif porte sur le projet entier :
-                  // elle compte dans le cumul general, et le dit.
-                  rendu: (i) =>
-                    i.objectiveLabel ? (
-                      <span className="table__principal">{i.objectiveLabel}</span>
-                    ) : (
-                      <span className="table__secondaire">Projet entier</span>
-                    ),
-                },
-                {
-                  cle: 'indicator',
-                  titre: 'Indicateur',
-                  rendu: (i) => libelleIndicateur(i.indicator),
-                },
-                {
-                  cle: 'value',
-                  titre: 'Valeur',
-                  aligne: 'droite',
-                  rendu: (i) => (
-                    <strong>
-                      {fmt.nombre(i.value)} {i.unit ?? ''}
-                    </strong>
-                  ),
-                },
-                {
-                  cle: 'beneficiaryName',
-                  titre: 'Bénéficiaire',
-                  rendu: (i) => i.beneficiaryName ?? 'Collectif',
-                },
-                { cle: 'measuredAt', titre: 'Mesuré le', rendu: (i) => fmt.date(i.measuredAt) },
-                {
-                  cle: 'actions',
-                  titre: 'Actions',
-                  aligne: 'droite',
-                  rendu: (impact) =>
-                    archive ? null : (
-                      <div className="cellule-actions">
-                        <button
-                          type="button"
-                          className="lien-action"
-                          onClick={() => ouvrir('impact', impact)}
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          type="button"
-                          className="lien-action lien-action--danger"
-                          onClick={() => ouvrir('supprimerImpact', impact)}
-                        >
-                          Supprimer
-                        </button>
-                      </div>
-                    ),
-                },
-              ]}
+              lignes={impactsParObjectif}
+              colonnes={colonnesImpact({ objectif: true })}
               vide={
                 <EtatVide
-                  titre="Aucun impact mesuré"
-                  texte="Chiffrez ce que le projet a permis de changer : personnes aidées, matériel distribué, services rendus."
+                  titre="Aucune mesure par objectif"
+                  texte={
+                    (projet.objectives?.length ?? 0) === 0
+                      ? 'Ce projet n’a pas encore d’objectifs spécifiques : ajoutez-en depuis « Modifier le projet ».'
+                      : 'Rattachez une mesure à l’un des objectifs du projet pour suivre ce que chacun a produit.'
+                  }
                   action={
-                    !archive && (
+                    !archive && (projet.objectives?.length ?? 0) > 0 && (
                       <button
                         type="button"
                         className="btn btn--principal"
-                        onClick={() => ouvrir('impact')}
+                        onClick={() => ouvrir('impactObjectif')}
                       >
                         <IconePlus />
-                        Ajouter un impact
+                        Ajouter une mesure
                       </button>
                     )
                   }
@@ -1234,8 +1287,11 @@ export default function ProjectDetailPage() {
         onEnregistre={rechargerTout}
       />
 
+      {/* Une seule fenetre pour les deux tableaux : ce qui change est la
+          portee de la mesure -- le projet entier, ou un objectif. */}
       <ImpactModale
-        ouverte={modale.nom === 'impact'}
+        ouverte={modale.nom === 'impactGeneral' || modale.nom === 'impactObjectif'}
+        portee={modale.nom === 'impactObjectif' ? 'objectif' : 'general'}
         projet={projet}
         impact={modale.cible}
         indicateurs={catalogue?.indicators ?? []}

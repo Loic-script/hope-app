@@ -1284,6 +1284,11 @@ export function ImpactModale({
   indicateurs = [],
   objectifs = null,
   beneficiaires = [],
+  // 'general' : la mesure porte sur le projet entier, et le choix de
+  // l'objectif n'a pas lieu d'etre. 'objectif' : elle en documente un,
+  // et il faut le nommer. null : les deux sont possibles, comme sur
+  // l'ecran Impact qui ne sait pas d'ou vient la mesure.
+  portee = null,
   onFermer,
   onEnregistre,
 }) {
@@ -1301,6 +1306,10 @@ export function ImpactModale({
    */
   const [objectifsCharges, setObjectifsCharges] = useState([]);
   const objectifsDuProjet = objectifs ?? objectifsCharges;
+
+  // Le choix n'apparait que s'il y a quelque chose a choisir, et que la
+  // mesure n'est pas declaree generale d'avance.
+  const choisirObjectif = portee !== 'general' && objectifsDuProjet.length > 0;
 
   useEffect(() => {
     if (!ouverte || objectifs || !projectId) {
@@ -1366,7 +1375,10 @@ export function ImpactModale({
       projectId: Number(projectId),
       description: formulaire.description || null,
       unit: formulaire.unit || null,
-      objectiveId: formulaire.objectiveId === '' ? null : Number(formulaire.objectiveId),
+      objectiveId:
+        portee === 'general' || formulaire.objectiveId === ''
+          ? null
+          : Number(formulaire.objectiveId),
       beneficiaryId: formulaire.beneficiaryId === '' ? null : Number(formulaire.beneficiaryId),
     };
 
@@ -1379,8 +1391,18 @@ export function ImpactModale({
   return (
     <ModaleFormulaire
       ouverte={ouverte}
-      titre={edition ? 'Modifier l’impact' : 'Enregistrer un impact'}
-      sousTitre="Un impact chiffre ce que le projet a permis de changer."
+      titre={
+        edition
+          ? 'Modifier la mesure'
+          : portee === 'objectif'
+            ? 'Mesurer un objectif'
+            : 'Enregistrer un impact général'
+      }
+      sousTitre={
+        portee === 'objectif'
+          ? 'Ce que cet objectif spécifique a permis de changer, en chiffres.'
+          : 'Ce que le projet a permis de changer dans son ensemble, en chiffres.'
+      }
       onFermer={onFermer}
       onSoumettre={enregistrer}
       envoi={envoi}
@@ -1418,19 +1440,25 @@ export function ImpactModale({
           peut porter sur le projet entier -- elle rejoint alors le
           cumul general sans se ranger sous un point precis.
         */}
-        {objectifsDuProjet.length > 0 && (
+        {choisirObjectif && (
           <ChampSelection
             label="Objectif spécifique mesuré"
             id="impact-objectif"
+            obligatoire={portee === 'objectif'}
+            required={portee === 'objectif'}
             value={formulaire.objectiveId}
             onChange={(e) => modifier('objectiveId', e.target.value)}
             options={objectifsDuProjet.map((objectif, rang) => ({
               valeur: objectif.id,
               label: `${rang + 1}. ${objectif.label}`,
             }))}
-            vide="Impact général du projet"
+            vide={portee === 'objectif' ? 'Choisir un objectif' : 'Impact général du projet'}
             disabled={envoi}
-            aide="Laissez vide si la mesure porte sur le projet entier."
+            aide={
+              portee === 'objectif'
+                ? 'La mesure sera rangée sous cet objectif.'
+                : 'Laissez vide si la mesure porte sur le projet entier.'
+            }
             pleineLargeur
           />
         )}
