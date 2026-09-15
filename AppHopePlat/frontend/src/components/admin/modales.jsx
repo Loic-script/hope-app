@@ -1372,6 +1372,21 @@ export function ImpactModale({
   async function enregistrer() {
     const mesureObjectif = portee === 'objectif';
 
+    /*
+     * Une mesure d'objectif sans objectif n'a pas d'indicateur -- c'est
+     * l'objectif qui le donne. Le serveur repondrait que le champ
+     * "indicator" manque, ce qui ne veut rien dire pour qui remplit ce
+     * formulaire : on le dit ici, dans ses mots.
+     */
+    if (mesureObjectif && !formulaire.objectiveId) {
+      setErreur(
+        objectifsDuProjet.length === 0
+          ? 'Ce projet n’a pas encore d’objectifs spécifiques. Ajoutez-en depuis « Modifier le projet », puis revenez mesurer celui que vous voulez suivre.'
+          : 'Choisissez l’objectif que cette mesure documente.'
+      );
+      return;
+    }
+
     const charge = {
       ...formulaire,
       projectId: Number(projectId),

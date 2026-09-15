@@ -1124,7 +1124,11 @@ export default function ProjectDetailPage() {
             titre="Mesures par objectif"
             sousTitre="Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente"
             actions={
-              !archive && (
+              /* Un projet sans objectifs n'a rien a mesurer ici : le
+                 bouton ouvrirait un formulaire dont le champ principal
+                 serait vide. L'etat vide dit ou les ajouter. */
+              !archive &&
+              (projet.objectives?.length ?? 0) > 0 && (
                 <button
                   type="button"
                   className="btn btn--principal"
