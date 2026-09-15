@@ -42,6 +42,12 @@ export async function messages(api) {
   return data.items ?? [];
 }
 
+/** POST /api/espace/messages/:id/reponse — repondre dans un fil ouvert. */
+export async function repondre(api, id, corps) {
+  const { data } = await api.post(`/espace/messages/${id}/reponse`, { corps });
+  return data.entree;
+}
+
 /** POST /api/espace/messages */
 export async function envoyerMessage(api, corps) {
   const { data } = await api.post('/espace/messages', corps);

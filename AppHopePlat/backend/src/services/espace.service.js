@@ -7,7 +7,11 @@
  * d'utilisateur, deja verifie par le middleware.
  */
 import * as espaceRepository from '../repositories/espace.repository.js';
-import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
+import {
+  ErreurIntrouvable,
+  ErreurRegleMetier,
+  ErreurValidation,
+} from '../shared/errors.js';
 
 /** Longueurs acceptees, alignees sur les colonnes de la base. */
 const SUJET_MAX = 160;
@@ -67,6 +71,83 @@ export function listerMessages(utilisateurId) {
   return espaceRepository.listerMessages(utilisateurId);
 }
 
+/**
+ * Verifie le texte d'une prise de parole.
+ *
+ * Meme regle a l'ouverture d'un fil et a la reponse : ce qui est trop
+ * court pour etre compris ne doit pas partir.
+ */
+function corpsValide(valeur, champ = 'corps') {
+  const corps = String(valeur ?? '').trim();
+  if (corps === '') throw new ErreurValidation('Le message est vide.', { [champ]: 'Champ obligatoire' });
+  if (corps.length < CORPS_MIN) {
+    throw new ErreurValidation(`Le message est trop court.`, {
+      [champ]: `${CORPS_MIN} caractères au minimum`,
+    });
+  }
+  if (corps.length > CORPS_MAX) {
+    throw new ErreurValidation('Le message est trop long.', {
+      [champ]: `${CORPS_MAX} caractères au maximum`,
+    });
+  }
+  return corps;
+}
+
+/**
+ * Repond dans un fil existant.
+ *
+ * Le fil doit appartenir a celui qui parle : sans cette verification, un
+ * identifiant devine suffirait a s'inviter dans la conversation d'un
+ * autre. Un fil clos n'accepte plus rien.
+ */
+export async function repondre(utilisateurId, filId, corpsRequete = {}) {
+  const fil = await espaceRepository.trouverFil(filId);
+  if (!fil || fil.utilisateurId !== utilisateurId) {
+    throw new ErreurIntrouvable('Le message', filId);
+  }
+  if (fil.statut === 'clos') {
+    throw new ErreurRegleMetier(
+      'Cette conversation est close. Ouvrez-en une nouvelle.',
+      'FIL_CLOS'
+    );
+  }
+
+  return espaceRepository.ajouterEntree({
+    filId: fil.id,
+    auteur: 'utilisateur',
+    corps: corpsValide(corpsRequete.corps),
+  });
+}
+
+/* ================================================================
+   Cote equipe : lire et repondre a tous les fils
+   ================================================================ */
+
+/** Tous les fils des espaces, pour la messagerie de l'administration. */
+export function listerTousLesFils() {
+  return espaceRepository.listerTousLesFils();
+}
+
+/** Repond a un fil au nom de HOPE, et marque comme lu ce qu'il portait. */
+export async function repondreDepuisHope(filId, corpsRequete = {}, adminId = null) {
+  const fil = await espaceRepository.trouverFil(filId);
+  if (!fil) throw new ErreurIntrouvable('Le message', filId);
+
+  const entree = await espaceRepository.ajouterEntree({
+    filId: fil.id,
+    auteur: 'hope',
+    corps: corpsValide(corpsRequete.corps),
+    adminId,
+  });
+  await espaceRepository.marquerFilLuParHope(fil.id);
+  return entree;
+}
+
+/** Ouvrir un fil cote equipe vaut lecture de ce que l'utilisateur y a dit. */
+export async function marquerFilLuParHope(filId) {
+  return { marquees: await espaceRepository.marquerFilLuParHope(filId) };
+}
+
 /** Envoie un message a l'equipe HOPE. */
 export async function envoyerMessage(utilisateurId, corpsRequete = {}) {
   const sujet = String(corpsRequete.sujet ?? '').trim();
@@ -84,7 +165,7 @@ export async function envoyerMessage(utilisateurId, corpsRequete = {}) {
     throw new ErreurValidation('Le message est incomplet.', details);
   }
 
-  return espaceRepository.creerMessage({ utilisateurId, sujet, corps });
+  return espaceRepository.creerFil({ utilisateurId, sujet, corps });
 }
 
 /**

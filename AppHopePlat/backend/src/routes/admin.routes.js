@@ -34,6 +34,7 @@ import {
   fund,
   impacts,
   messages,
+  messagesEspaces,
   notifications,
   projects,
   statistics,
@@ -102,6 +103,12 @@ router.get('/projects/:projectId/impacts', impacts.listerParProjet);
 router.get('/projects/:projectId/tasks', tasks.listerParProjet);
 router.post('/projects/:projectId/tasks', exigerEcriture, tasks.creer);
 router.delete('/tasks/:id', exigerEcriture, tasks.supprimer);
+
+// Le courrier des espaces benevole et bailleur, distinct de celui des
+// donateurs : autre table, autres destinataires.
+router.get('/espace-messages', messagesEspaces.lister);
+router.post('/espace-messages/:id/reponse', exigerEcriture, messagesEspaces.repondre);
+router.patch('/espace-messages/:id/lu', messagesEspaces.marquerLu);
 
 // --- 2. Impact --------------------------------------------------------
 router.get('/impacts', impacts.lister);

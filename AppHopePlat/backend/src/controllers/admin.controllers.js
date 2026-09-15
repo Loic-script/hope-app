@@ -10,6 +10,7 @@ import path from 'node:path';
 
 import * as beneficiaryService from '../services/beneficiary.service.js';
 import * as taskService from '../services/task.service.js';
+import * as espaceService from '../services/espace.service.js';
 import * as catalogService from '../services/catalog.service.js';
 import * as dashboardService from '../services/dashboard.service.js';
 import * as documentService from '../services/document.service.js';
@@ -326,6 +327,22 @@ export const tasks = {
     statut: 201,
   }),
   supprimer: gerer((req) => taskService.supprimer(req.params.id)),
+};
+
+/**
+ * Les messages venus des espaces benevole et bailleur.
+ *
+ * Table differente de "messages", qui porte le courrier du site public
+ * rattache aux comptes donateurs : ni les memes cles, ni les memes
+ * destinataires. Deux boites, donc, et deux listes.
+ */
+export const messagesEspaces = {
+  lister: gerer(() => espaceService.listerTousLesFils().then((items) => ({ items }))),
+  repondre: gerer(
+    (req) => espaceService.repondreDepuisHope(req.params.id, req.body, req.admin?.id ?? null),
+    { statut: 201 }
+  ),
+  marquerLu: gerer((req) => espaceService.marquerFilLuParHope(req.params.id)),
 };
 
 export const impacts = {

@@ -1118,6 +1118,67 @@ CREATE TABLE IF NOT EXISTS message_utilisateur (
 CREATE INDEX IF NOT EXISTS message_utilisateur_idx
   ON message_utilisateur (utilisateur_id, cree_le DESC);
 
+/*
+ * Les messages du fil.
+ *
+ * "message_utilisateur" portait au depart le message ET sa reponse, en
+ * deux colonnes : un aller, un retour, et fin de la conversation. Des
+ * que le benevole doit pouvoir repondre a la reponse, ce modele ne tient
+ * plus -- le fil devient une suite, et chaque prise de parole une ligne.
+ *
+ * Le fil garde le sujet et le statut ; les paroles vivent ici.
+ */
+CREATE TABLE IF NOT EXISTS message_entree (
+  id       BIGSERIAL   PRIMARY KEY,
+  fil_id   BIGINT      NOT NULL REFERENCES message_utilisateur(id) ON DELETE CASCADE,
+  -- Qui parle. "hope" couvre toute l'equipe ; admin_id dit qui, quand on
+  -- le sait, sans que la lecture en depende.
+  auteur   VARCHAR(12) NOT NULL,
+  corps    TEXT        NOT NULL,
+  admin_id INTEGER     REFERENCES admins(id) ON DELETE SET NULL,
+  -- Lu par l'autre bout. C'est ce drapeau qui allume les pastilles, des
+  -- deux cotes.
+  lu       BOOLEAN     NOT NULL DEFAULT FALSE,
+  cree_le  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT message_entree_auteur_valide CHECK (auteur IN ('utilisateur', 'hope'))
+);
+
+CREATE INDEX IF NOT EXISTS message_entree_idx ON message_entree (fil_id, cree_le);
+
+/*
+ * Reprise des fils ecrits avant le decoupage : le corps devient la
+ * premiere parole, la reponse la seconde. Les quatre colonnes qui les
+ * portaient s'en vont ensuite, ainsi que la contrainte qui liait le
+ * statut a la presence d'une reponse.
+ */
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_name = 'message_utilisateur' AND column_name = 'corps'
+  ) THEN
+    INSERT INTO message_entree (fil_id, auteur, corps, lu, cree_le)
+    SELECT id, 'utilisateur', corps, TRUE, cree_le
+      FROM message_utilisateur;
+
+    INSERT INTO message_entree (fil_id, auteur, corps, admin_id, lu, cree_le)
+    SELECT id, 'hope', reponse, repondu_par, reponse_lue,
+           COALESCE(repondu_le, updated_at)
+      FROM message_utilisateur
+     WHERE reponse IS NOT NULL;
+
+    ALTER TABLE message_utilisateur
+      DROP CONSTRAINT IF EXISTS message_utilisateur_reponse_coherente,
+      DROP COLUMN corps,
+      DROP COLUMN reponse,
+      DROP COLUMN repondu_le,
+      DROP COLUMN repondu_par,
+      DROP COLUMN reponse_lue;
+  END IF;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN

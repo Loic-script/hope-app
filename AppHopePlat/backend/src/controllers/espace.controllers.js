@@ -64,6 +64,20 @@ export async function envoyerMessage(req, res, next) {
   }
 }
 
+/** POST /api/espace/messages/:id/reponse */
+export async function repondre(req, res, next) {
+  try {
+    const entree = await espaceService.repondre(
+      req.utilisateurId,
+      req.params.id,
+      req.body ?? {}
+    );
+    res.status(201).json({ success: true, entree });
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
 /** GET /api/espace/badges */
 export async function badges(req, res, next) {
   try {

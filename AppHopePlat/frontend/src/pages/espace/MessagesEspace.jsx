@@ -14,9 +14,9 @@ import * as fmt from '../../utils/format.js';
  * meme chose vue des deux bouts -- il n'y avait pas de raison qu'ils se
  * ressemblent si peu.
  *
- * Un fil porte un message et sa reponse, pas davantage : c'est ce que la
- * table dit, et l'ecran ne promet rien de plus. Une nouvelle question
- * ouvre un nouveau fil, par le bouton "+" de la liste.
+ * Un fil est une vraie conversation : chaque prise de parole est une
+ * ligne, et les deux bouts peuvent repondre. Une nouvelle question ouvre
+ * un nouveau fil, par le bouton "Ecrire" de la liste.
  */
 export default function MessagesEspace() {
   const { api, rafraichirCompteurs } = useOutletContext();
@@ -32,6 +32,8 @@ export default function MessagesEspace() {
   const [corps, setCorps] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [details, setDetails] = useState({});
+  // La reponse dans un fil ouvert, distincte de la composition.
+  const [reponse, setReponse] = useState('');
 
   const charger = useCallback(async () => {
     try {
@@ -71,6 +73,21 @@ export default function MessagesEspace() {
       if (!e.response?.data?.details) {
         setErreur(e.response?.data?.message ?? 'L’envoi a échoué.');
       }
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  async function repondre(evenement) {
+    evenement.preventDefault();
+    if (reponse.trim() === '') return;
+    setEnvoi(true);
+    try {
+      await service.repondre(api, actif, reponse);
+      setReponse('');
+      await charger();
+    } catch (e) {
+      setErreur(e.response?.data?.message ?? 'L’envoi a échoué.');
     } finally {
       setEnvoi(false);
     }
@@ -144,7 +161,7 @@ export default function MessagesEspace() {
                     (message.id === actif ? ' conversation--active' : '') +
                     // Une reponse non lue met le fil en avant, comme un
                     // message non lu cote administration.
-                    (message.reponse && !message.reponseLue ? ' conversation--nouvelle' : '')
+                    (message.nonLus > 0 ? ' conversation--nouvelle' : '')
                   }
                   onClick={() => {
                     setActif(message.id);
@@ -162,14 +179,15 @@ export default function MessagesEspace() {
                       <span className="conversation__temps">{fmt.depuis(message.creeLe)}</span>
                     </span>
                     <span className="conversation__extrait">
-                      {message.reponse ? `HOPE : ${message.reponse}` : message.corps}
+                      {derniere(message)?.auteur === 'hope' ? 'HOPE : ' : ''}
+                      {derniere(message)?.corps ?? ''}
                     </span>
                     <span className="conversation__ligne">
                       <span className="conversation__courriel">
                         {message.statut === 'repondu' ? 'Répondu' : 'En attente'}
                       </span>
-                      {message.reponse && !message.reponseLue && (
-                        <span className="conversation__pastille">1</span>
+                      {message.nonLus > 0 && (
+                        <span className="conversation__pastille">{message.nonLus}</span>
                       )}
                     </span>
                   </span>
@@ -260,7 +278,8 @@ export default function MessagesEspace() {
                   <div style={{ minWidth: 0 }}>
                     <p className="echange__nom">{ouvert.sujet}</p>
                     <p className="echange__courriel">
-                      Envoyé le {fmt.date(ouvert.creeLe)}
+                      Ouvert le {fmt.date(ouvert.creeLe)} · {ouvert.entrees.length} message
+                      {ouvert.entrees.length > 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
@@ -276,35 +295,58 @@ export default function MessagesEspace() {
 
               <div className="echange__fil">
                 {/* Le mien a droite, celui de HOPE a gauche : l'inverse de
-                    l'ecran d'administration, ou c'est HOPE qui ecrit. */}
-                {/* Pas de sujet dans la bulle : l'en-tete du volet le
-                    porte deja, juste au-dessus. */}
-                <Bulle
-                  sens="envoyee"
-                  contenu={ouvert.corps}
-                  horodatage={ouvert.creeLe}
-                  legende="Vous"
-                />
-                {ouvert.reponse ? (
+                    l'ecran d'administration, ou c'est HOPE qui ecrit. Pas
+                    de sujet dans les bulles : l'en-tete du volet le porte
+                    deja, juste au-dessus. */}
+                {ouvert.entrees.map((entree) => (
                   <Bulle
-                    sens="recue"
-                    contenu={ouvert.reponse}
-                    horodatage={ouvert.reponduLe}
-                    legende={ouvert.reponduPar ?? 'Équipe HOPE'}
+                    key={entree.id}
+                    sens={entree.auteur === 'hope' ? 'recue' : 'envoyee'}
+                    contenu={entree.corps}
+                    horodatage={entree.creeLe}
+                    legende={
+                      entree.auteur === 'hope' ? (entree.auteurNom ?? 'Équipe HOPE') : 'Vous'
+                    }
                   />
-                ) : (
+                ))}
+                {ouvert.statut === 'envoye' && (
                   <p className="echange__attente">
                     L’équipe n’a pas encore répondu. Vous serez prévenu ici, et par une
                     notification.
                   </p>
                 )}
               </div>
+
+              {/* La conversation continue : on repond dans le fil, comme
+                  l'equipe le fait de son cote. */}
+              <form className="reponse" onSubmit={repondre}>
+                <textarea
+                  value={reponse}
+                  onChange={(e) => setReponse(e.target.value)}
+                  placeholder="Écrire une réponse…"
+                  disabled={envoi}
+                  aria-label="Votre réponse"
+                  rows={2}
+                />
+                <button
+                  type="submit"
+                  className="btn btn--principal"
+                  disabled={envoi || reponse.trim() === ''}
+                >
+                  {envoi ? 'Envoi…' : 'Envoyer'}
+                </button>
+              </form>
             </>
           )}
         </section>
       </div>
     </>
   );
+}
+
+/** La derniere parole d'un fil : celle qui le resume dans la liste. */
+function derniere(fil) {
+  return fil.entrees?.[fil.entrees.length - 1] ?? null;
 }
 
 /** Une bulle du fil : la mienne, ou celle de HOPE. */

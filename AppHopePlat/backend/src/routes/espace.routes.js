@@ -25,5 +25,6 @@ router.patch('/notifications/:id/lue', espace.marquerLue);
 
 router.get('/messages', espace.listerMessages);
 router.post('/messages', espace.envoyerMessage);
+router.post('/messages/:id/reponse', espace.repondre);
 
 export default router;

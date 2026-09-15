@@ -77,43 +77,147 @@ export async function creerNotification(
 
 /* ================================================================
    Messages
+
+   Un fil porte un sujet ; les paroles vivent dans message_entree, une
+   ligne par prise de parole. Le statut du fil suit celui qui a parle en
+   dernier : "envoye" quand c'est l'utilisateur -- l'equipe lui doit une
+   reponse -- "repondu" quand c'est HOPE.
    ================================================================ */
 
-/** Les messages d'un utilisateur, avec la reponse de l'equipe. */
+/** Les entrees d'un fil, agregees en une colonne JSON. */
+const ENTREES = `
+  COALESCE((
+    SELECT json_agg(
+             json_build_object(
+               'id', e.id, 'auteur', e.auteur, 'corps', e.corps,
+               'lu', e.lu, 'creeLe', e.cree_le,
+               'auteurNom', a.admin_log
+             ) ORDER BY e.cree_le, e.id
+           )
+      FROM message_entree e
+      LEFT JOIN admins a ON a.id = e.admin_id
+     WHERE e.fil_id = m.id
+  ), '[]'::json) AS entrees
+`;
+
+/** Les fils d'un utilisateur, le plus recemment anime en tete. */
 export async function listerMessages(utilisateurId, client = null) {
   const resultat = await query(
-    `SELECT m.id, m.sujet, m.corps, m.statut, m.reponse, m.repondu_le,
-            m.reponse_lue, m.cree_le,
-            a.admin_log AS repondu_par
+    `SELECT m.id, m.sujet, m.statut, m.cree_le, m.updated_at,
+            ${ENTREES},
+            (SELECT COUNT(*)::int FROM message_entree e
+              WHERE e.fil_id = m.id AND e.auteur = 'hope' AND e.lu = FALSE) AS non_lus
        FROM message_utilisateur m
-       LEFT JOIN admins a ON a.id = m.repondu_par
       WHERE m.utilisateur_id = $1
-      ORDER BY m.cree_le DESC`,
+      ORDER BY m.updated_at DESC`,
     [utilisateurId],
     client
   );
   return versListe(resultat.rows);
 }
 
-/** Envoie un message a l'equipe. */
-export async function creerMessage({ utilisateurId, sujet, corps }, client = null) {
+/**
+ * Tous les fils, cote equipe.
+ *
+ * Le nom et le role viennent avec : la messagerie de l'administration
+ * doit dire qui ecrit, et a quel titre.
+ */
+export async function listerTousLesFils(client = null) {
   const resultat = await query(
-    `INSERT INTO message_utilisateur (utilisateur_id, sujet, corps)
-     VALUES ($1, $2, $3)
-     RETURNING id, sujet, corps, statut, reponse, repondu_le, reponse_lue, cree_le`,
-    [utilisateurId, sujet, corps],
+    `SELECT m.id, m.sujet, m.statut, m.cree_le, m.updated_at,
+            m.utilisateur_id,
+            u.prenom, u.nom, u.email, u.photo_url,
+            r.role,
+            ${ENTREES},
+            (SELECT COUNT(*)::int FROM message_entree e
+              WHERE e.fil_id = m.id AND e.auteur = 'utilisateur' AND e.lu = FALSE) AS non_lus
+       FROM message_utilisateur m
+       JOIN utilisateur u ON u.id = m.utilisateur_id
+       LEFT JOIN LATERAL (
+         SELECT role FROM utilisateur_role WHERE utilisateur_id = u.id LIMIT 1
+       ) r ON TRUE
+      ORDER BY m.updated_at DESC`,
+    [],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
+/** Un fil, sans ses entrees : de quoi verifier a qui il appartient. */
+export async function trouverFil(id, client = null) {
+  const resultat = await query(
+    `SELECT id, utilisateur_id, sujet, statut FROM message_utilisateur WHERE id = $1`,
+    [id],
     client
   );
   return versObjet(resultat.rows[0]);
 }
 
-/** Marque les reponses comme lues : la pastille du menu s'eteint. */
+/** Ouvre un fil et y depose la premiere parole. */
+export async function creerFil({ utilisateurId, sujet, corps }, client = null) {
+  const fil = await query(
+    `INSERT INTO message_utilisateur (utilisateur_id, sujet, statut)
+     VALUES ($1, $2, 'envoye')
+     RETURNING id`,
+    [utilisateurId, sujet],
+    client
+  );
+  const id = fil.rows[0].id;
+  await ajouterEntree({ filId: id, auteur: 'utilisateur', corps }, client);
+  return versObjet({ id, sujet, statut: 'envoye' });
+}
+
+/**
+ * Ajoute une parole au fil, et remonte celui-ci.
+ *
+ * Le statut suit l'auteur : une parole de l'utilisateur remet le fil en
+ * attente, une parole de HOPE le declare repondu. Sans cette mise a
+ * jour, un fil relance resterait marque "repondu" et se perdrait au bas
+ * de la liste de l'equipe.
+ */
+export async function ajouterEntree({ filId, auteur, corps, adminId = null }, client = null) {
+  const resultat = await query(
+    `INSERT INTO message_entree (fil_id, auteur, corps, admin_id)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, auteur, corps, lu, cree_le`,
+    [filId, auteur, corps, adminId],
+    client
+  );
+
+  await query(
+    `UPDATE message_utilisateur
+        SET statut = $2, updated_at = NOW()
+      WHERE id = $1`,
+    [filId, auteur === 'hope' ? 'repondu' : 'envoye'],
+    client
+  );
+
+  return versObjet(resultat.rows[0]);
+}
+
+/** Marque comme lues les paroles de HOPE adressees a cet utilisateur. */
 export async function marquerReponsesLues(utilisateurId, client = null) {
   const resultat = await query(
-    `UPDATE message_utilisateur
-        SET reponse_lue = TRUE
-      WHERE utilisateur_id = $1 AND reponse_lue = FALSE`,
+    `UPDATE message_entree e
+        SET lu = TRUE
+       FROM message_utilisateur m
+      WHERE e.fil_id = m.id
+        AND m.utilisateur_id = $1
+        AND e.auteur = 'hope'
+        AND e.lu = FALSE`,
     [utilisateurId],
+    client
+  );
+  return resultat.rowCount;
+}
+
+/** Marque comme lues les paroles de l'utilisateur dans un fil, cote equipe. */
+export async function marquerFilLuParHope(filId, client = null) {
+  const resultat = await query(
+    `UPDATE message_entree
+        SET lu = TRUE
+      WHERE fil_id = $1 AND auteur = 'utilisateur' AND lu = FALSE`,
+    [filId],
     client
   );
   return resultat.rowCount;
@@ -135,8 +239,11 @@ export async function compteurs(utilisateurId, client = null) {
     `SELECT
        (SELECT COUNT(*)::int FROM notification_utilisateur
          WHERE utilisateur_id = $1 AND lu = FALSE)          AS notifications,
-       (SELECT COUNT(*)::int FROM message_utilisateur
-         WHERE utilisateur_id = $1 AND reponse_lue = FALSE) AS messages`,
+       (SELECT COUNT(*)::int
+          FROM message_entree e
+          JOIN message_utilisateur m ON m.id = e.fil_id
+         WHERE m.utilisateur_id = $1
+           AND e.auteur = 'hope' AND e.lu = FALSE)        AS messages`,
     [utilisateurId],
     client
   );
