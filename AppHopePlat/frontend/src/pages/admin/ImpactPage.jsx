@@ -299,7 +299,11 @@ export default function ImpactPage() {
       {ongletActif === 'mesures' && (
         <>
           {indicateursCumules.length > 0 && (
-            <Panneau titre="Cumul par indicateur" serre>
+            <Panneau
+              titre="Impact général"
+              sousTitre="Le total de chaque indicateur, tous projets et tous objectifs confondus"
+              serre
+            >
               <Tableau
                 colonnes={[
                   {

@@ -5,15 +5,17 @@ import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
 const COLONNES = `
-  i.id, i.project_id, i.beneficiary_id, i.title, i.description, i.indicator,
-  i.value, i.unit, i.measured_at, i.created_at, i.updated_at,
+  i.id, i.project_id, i.objective_id, i.beneficiary_id, i.title, i.description,
+  i.indicator, i.value, i.unit, i.measured_at, i.created_at, i.updated_at,
   p.name AS project_name,
+  o.label AS objective_label,
   CASE WHEN b.id IS NULL THEN NULL
        ELSE TRIM(CONCAT_WS(' ', b.first_name, b.last_name)) END AS beneficiary_name
 `;
 
 const JOINTURES = `
   JOIN projects p ON p.id = i.project_id
+  LEFT JOIN project_objectives o ON o.id = i.objective_id
   LEFT JOIN beneficiaries b ON b.id = i.beneficiary_id
 `;
 
@@ -61,12 +63,13 @@ export async function trouverParId(id, client = null) {
 
 export async function creer(donnees, client = null) {
   const resultat = await query(
-    `INSERT INTO impacts (project_id, beneficiary_id, title, description,
-                          indicator, value, unit, measured_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, CURRENT_DATE))
+    `INSERT INTO impacts (project_id, objective_id, beneficiary_id, title,
+                          description, indicator, value, unit, measured_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, CURRENT_DATE))
      RETURNING id`,
     [
       donnees.projectId,
+      donnees.objectiveId,
       donnees.beneficiaryId,
       donnees.title,
       donnees.description,
@@ -92,7 +95,12 @@ export async function supprimer(id, client = null) {
   return resultat.rowCount > 0;
 }
 
-/** Cumul par indicateur pour un projet (25 enfants scolarises, 12 meres formees...). */
+/**
+ * Cumul par indicateur pour un projet (25 enfants scolarises...).
+ *
+ * C'est l'impact general du projet : il repond a ce que la description
+ * annonce, tous objectifs confondus.
+ */
 export async function syntheseParProjet(projectId, client = null) {
   const resultat = await query(
     `SELECT indicator, unit,

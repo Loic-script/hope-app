@@ -369,6 +369,11 @@ CREATE TABLE IF NOT EXISTS project_beneficiaries (
 CREATE TABLE IF NOT EXISTS impacts (
   id             SERIAL        PRIMARY KEY,
   project_id     INTEGER       NOT NULL REFERENCES projects(id)      ON DELETE CASCADE,
+  -- L'objectif specifique que cette mesure documente. Facultatif : une
+  -- mesure peut porter sur le projet entier plutot que sur un point
+  -- precis. SET NULL, car retirer un objectif ne doit pas effacer ce
+  -- qui a ete mesure.
+  objective_id   INTEGER       REFERENCES project_objectives(id)     ON DELETE SET NULL,
   beneficiary_id INTEGER       REFERENCES beneficiaries(id)          ON DELETE SET NULL,
   title          VARCHAR(200)  NOT NULL,
   description    TEXT,
@@ -1332,6 +1337,17 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS photo_url VARCHAR(255);
  * ligne ce que le projet allait raconter.
  */
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS description_titre VARCHAR(160);
+
+/*
+ * L'objectif specifique qu'une mesure d'impact documente.
+ *
+ * Les deux tableaux de l'onglet Impact ne disaient pas la meme chose et
+ * portaient pourtant le meme contenu : le cumul par indicateur repond a
+ * la description du projet, chaque mesure repond a un objectif. Encore
+ * fallait-il pouvoir dire lequel.
+ */
+ALTER TABLE impacts ADD COLUMN IF NOT EXISTS objective_id INTEGER
+  REFERENCES project_objectives(id) ON DELETE SET NULL;
 
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$

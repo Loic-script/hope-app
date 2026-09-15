@@ -1272,6 +1272,7 @@ const IMPACT_VIDE = {
   value: '',
   unit: '',
   measuredAt: '',
+  objectiveId: '',
   beneficiaryId: '',
 };
 
@@ -1281,6 +1282,7 @@ export function ImpactModale({
   projets = [],
   impact = null,
   indicateurs = [],
+  objectifs = null,
   beneficiaires = [],
   onFermer,
   onEnregistre,
@@ -1289,6 +1291,39 @@ export function ImpactModale({
   const [formulaire, setFormulaire] = useState(IMPACT_VIDE);
   const [projectId, setProjectId] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  /*
+   * Les objectifs du projet mesure.
+   *
+   * La fiche projet les a deja et les passe ; l'ecran Impact, lui, ne
+   * sait de quel projet il s'agit qu'une fois celui-ci choisi, et va
+   * alors les chercher.
+   */
+  const [objectifsCharges, setObjectifsCharges] = useState([]);
+  const objectifsDuProjet = objectifs ?? objectifsCharges;
+
+  useEffect(() => {
+    if (!ouverte || objectifs || !projectId) {
+      setObjectifsCharges([]);
+      return undefined;
+    }
+
+    let annule = false;
+    projectService
+      .recuperer(projectId)
+      .then((projetLu) => {
+        if (!annule) setObjectifsCharges(projetLu?.objectives ?? []);
+      })
+      .catch(() => {
+        // Sans objectifs, la mesure reste generale : ce n'est pas une
+        // raison d'empecher de l'enregistrer.
+        if (!annule) setObjectifsCharges([]);
+      });
+
+    return () => {
+      annule = true;
+    };
+  }, [ouverte, objectifs, projectId]);
 
   useEffect(() => {
     if (!ouverte) return;
@@ -1303,6 +1338,7 @@ export function ImpactModale({
             value: impact.value ?? '',
             unit: impact.unit ?? '',
             measuredAt: impact.measuredAt ? impact.measuredAt.slice(0, 10) : '',
+            objectiveId: impact.objectiveId ?? '',
             beneficiaryId: impact.beneficiaryId ?? '',
           }
         : { ...IMPACT_VIDE, measuredAt: fmt.aujourdhui() }
@@ -1330,6 +1366,7 @@ export function ImpactModale({
       projectId: Number(projectId),
       description: formulaire.description || null,
       unit: formulaire.unit || null,
+      objectiveId: formulaire.objectiveId === '' ? null : Number(formulaire.objectiveId),
       beneficiaryId: formulaire.beneficiaryId === '' ? null : Number(formulaire.beneficiaryId),
     };
 
@@ -1372,6 +1409,28 @@ export function ImpactModale({
             options={projets.map((element) => ({ valeur: element.id, label: element.name }))}
             vide="Choisir un projet"
             disabled={envoi || edition}
+            pleineLargeur
+          />
+        )}
+
+        {/*
+          L'objectif que la mesure documente. Facultatif : une mesure
+          peut porter sur le projet entier -- elle rejoint alors le
+          cumul general sans se ranger sous un point precis.
+        */}
+        {objectifsDuProjet.length > 0 && (
+          <ChampSelection
+            label="Objectif spécifique mesuré"
+            id="impact-objectif"
+            value={formulaire.objectiveId}
+            onChange={(e) => modifier('objectiveId', e.target.value)}
+            options={objectifsDuProjet.map((objectif, rang) => ({
+              valeur: objectif.id,
+              label: `${rang + 1}. ${objectif.label}`,
+            }))}
+            vide="Impact général du projet"
+            disabled={envoi}
+            aide="Laissez vide si la mesure porte sur le projet entier."
             pleineLargeur
           />
         )}

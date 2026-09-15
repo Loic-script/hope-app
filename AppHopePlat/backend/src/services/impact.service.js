@@ -8,7 +8,7 @@ import * as impactRepository from '../repositories/impact.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as beneficiaryRepository from '../repositories/beneficiary.repository.js';
 
-import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
+import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import {
   dateFacultative,
   identifiantFacultatif,
@@ -57,6 +57,29 @@ export async function recupererParId(id) {
 }
 
 /** Valide les references vers le projet et le beneficiaire. */
+/**
+ * Verifie qu'un objectif appartient bien au projet mesure.
+ *
+ * Sans cette verification, une mesure pourrait se rattacher a l'objectif
+ * d'un autre projet : le tableau la rangerait sous un intitule qui n'a
+ * rien a voir avec elle.
+ *
+ * @returns {Promise<number|null>} l'identifiant retenu, ou null
+ */
+async function objectifDuProjet(projectId, valeur) {
+  const objectiveId = identifiantFacultatif(valeur, 'objectiveId');
+  if (objectiveId === null) return null;
+
+  const projet = await projectRepository.trouverParId(projectId);
+  const connu = (projet?.objectives ?? []).some((objectif) => objectif.id === objectiveId);
+  if (!connu) {
+    throw new ErreurValidation('Cet objectif n’appartient pas au projet.', {
+      objectiveId: 'Objectif inconnu pour ce projet',
+    });
+  }
+  return objectiveId;
+}
+
 async function verifierReferences(projectId, beneficiaryId) {
   const projet = await projectRepository.trouverParId(projectId);
   if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
@@ -83,6 +106,7 @@ export async function creer(corps = {}) {
 
   return impactRepository.creer({
     projectId,
+    objectiveId: await objectifDuProjet(projectId, corps.objectiveId),
     beneficiaryId,
     title: texteRequis(corps.title, 'title', { max: 200 }),
     description: texteFacultatif(corps.description, 'description', { max: 5000 }),
@@ -110,6 +134,9 @@ export async function mettreAJour(id, corps = {}) {
   if (corps.unit !== undefined) colonnes.unit = texteFacultatif(corps.unit, 'unit', { max: 60 });
   if (corps.measuredAt !== undefined) {
     colonnes.measured_at = dateFacultative(corps.measuredAt, 'measuredAt');
+  }
+  if (corps.objectiveId !== undefined) {
+    colonnes.objective_id = await objectifDuProjet(existant.projectId, corps.objectiveId);
   }
   if (corps.beneficiaryId !== undefined) {
     const beneficiaryId = identifiantFacultatif(corps.beneficiaryId, 'beneficiaryId');

@@ -955,8 +955,18 @@ export default function ProjectDetailPage() {
       {/* ================= Impact ================= */}
       {ongletActif === 'impact' && (
         <>
+          {/*
+            Les deux tableaux ne disent pas la meme chose. Celui-ci
+            cumule tout ce qui a ete mesure : c'est l'impact du projet tel
+            que sa description l'annonce. Celui du dessous detaille chaque
+            mesure et l'objectif qu'elle documente.
+          */}
           {donnees.impactSummary.length > 0 && (
-            <Panneau titre="Cumul par indicateur" serre>
+            <Panneau
+              titre="Impact général du projet"
+              sousTitre="Le total de chaque indicateur, tous objectifs confondus"
+              serre
+            >
               <Tableau
                 colonnes={[
                   {
@@ -984,7 +994,8 @@ export default function ProjectDetailPage() {
           )}
 
           <Panneau
-            titre="Impacts mesurés"
+            titre="Mesures par objectif"
+            sousTitre="Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente"
             actions={
               !archive && (
                 <button
@@ -1013,6 +1024,18 @@ export default function ProjectDetailPage() {
                       )}
                     </div>
                   ),
+                },
+                {
+                  cle: 'objectiveLabel',
+                  titre: 'Objectif',
+                  // Une mesure sans objectif porte sur le projet entier :
+                  // elle compte dans le cumul general, et le dit.
+                  rendu: (i) =>
+                    i.objectiveLabel ? (
+                      <span className="table__principal">{i.objectiveLabel}</span>
+                    ) : (
+                      <span className="table__secondaire">Projet entier</span>
+                    ),
                 },
                 {
                   cle: 'indicator',
@@ -1216,6 +1239,7 @@ export default function ProjectDetailPage() {
         projet={projet}
         impact={modale.cible}
         indicateurs={catalogue?.indicators ?? []}
+        objectifs={projet.objectives ?? []}
         beneficiaires={donnees.beneficiaries}
         onFermer={fermer}
         onEnregistre={rechargerTout}
