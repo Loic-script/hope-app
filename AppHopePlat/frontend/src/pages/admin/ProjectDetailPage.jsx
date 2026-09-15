@@ -226,6 +226,9 @@ export default function ProjectDetailPage() {
   const impactsGeneraux = donnees.impacts.filter((impact) => !impact.objectiveId);
   const impactsParObjectif = donnees.impacts.filter((impact) => impact.objectiveId);
 
+  // Sans objectifs, il n'y a rien a mesurer objectif par objectif.
+  const sansObjectifs = (projet.objectives?.length ?? 0) === 0;
+
   /**
    * Les colonnes d'un tableau de mesures.
    *
@@ -1124,15 +1127,20 @@ export default function ProjectDetailPage() {
             titre="Mesures par objectif"
             sousTitre="Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente"
             actions={
-              /* Un projet sans objectifs n'a rien a mesurer ici : le
-                 bouton ouvrirait un formulaire dont le champ principal
-                 serait vide. L'etat vide dit ou les ajouter. */
-              !archive &&
-              (projet.objectives?.length ?? 0) > 0 && (
+              /* Un projet sans objectifs n'a rien a mesurer ici. Le
+                 bouton reste en place -- le faire disparaitre laisse
+                 chercher -- mais inactif, et il dit pourquoi. */
+              !archive && (
                 <button
                   type="button"
                   className="btn btn--principal"
                   onClick={() => ouvrir('impactObjectif')}
+                  disabled={sansObjectifs}
+                  title={
+                    sansObjectifs
+                      ? 'Ce projet n’a pas encore d’objectifs spécifiques : ajoutez-en depuis « Modifier le projet ».'
+                      : undefined
+                  }
                 >
                   <IconePlus />
                   Ajouter une mesure
@@ -1148,12 +1156,17 @@ export default function ProjectDetailPage() {
                 <EtatVide
                   titre="Aucune mesure par objectif"
                   texte={
-                    (projet.objectives?.length ?? 0) === 0
-                      ? 'Ce projet n’a pas encore d’objectifs spécifiques : ajoutez-en depuis « Modifier le projet ».'
+                    sansObjectifs
+                      ? 'Ce projet n’a pas encore d’objectifs spécifiques : ce sont eux que les mesures documentent.'
                       : 'Rattachez une mesure à l’un des objectifs du projet pour suivre ce que chacun a produit.'
                   }
                   action={
-                    !archive && (projet.objectives?.length ?? 0) > 0 && (
+                    archive ? null : sansObjectifs ? (
+                      // La suite est ailleurs : autant y mener.
+                      <Link className="btn btn--principal" to={`/admin/projects/${projet.id}/edit`}>
+                        Ajouter des objectifs
+                      </Link>
+                    ) : (
                       <button
                         type="button"
                         className="btn btn--principal"
