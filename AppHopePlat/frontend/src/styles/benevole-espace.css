@@ -1800,89 +1800,47 @@
   box-shadow: inset 3px 0 0 var(--hope-violet);
 }
 
-/* --- La correspondance --- */
-
-/* Le fil a gauche, le formulaire a droite -- et le formulaire suit le
-   defilement : on ecrit en relisant ce qu'on a deja envoye. */
-.accueil-benevole__paire--messages {
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  align-items: start;
-}
-
-.bloc--collant {
-  position: sticky;
-  top: calc(var(--admin-entete-hauteur) + 18px);
-}
-
-.fil-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.echange + .echange {
-  padding-top: 18px;
-  border-top: 1px solid var(--admin-bordure);
-}
-
-.echange__tete {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-
-.echange__intitule {
-  flex: 1;
-  min-width: 0;
-}
-
-.echange__sujet {
-  font-size: 15.5px;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.echange__date {
-  margin-top: 2px;
-  font-size: 12.5px;
-  color: var(--admin-texte-faible);
-}
-
-.echange__corps {
-  margin-top: 11px;
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--admin-texte-doux);
-}
+/* --- La composition d'un message --- */
 
 /*
- * La reponse, decalee et bordee : c'est l'autre voix du fil. Sans ce
- * decrochement, les deux textes se lisaient comme un seul.
+ * L'ecran reprend la messagerie de l'administration : les fils a gauche,
+ * l'echange a droite. Ses regles vivent dans admin-messerie.css, chargee
+ * pour tous les espaces. Ne restent ici que le volet de composition et
+ * ses champs, qui n'existent pas cote equipe -- c'est le benevole qui
+ * ouvre le fil, pas elle.
  */
-.echange__reponse {
-  margin-top: 12px;
-  padding: 13px 15px;
-  border-left: 3px solid var(--hope-violet);
-  border-radius: 0 var(--admin-rayon) var(--admin-rayon) 0;
-  background-color: #f6f5fd;
-  font-size: 14px;
-  line-height: 1.55;
+
+.composition {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 20px 22px;
 }
 
-.echange__signature {
-  margin-bottom: 5px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--hope-violet-lisible);
+/* La zone de texte prend toute la hauteur restante du volet : le champ
+   de saisie doit ressembler a l'echange qu'il remplacera. */
+.champ-espace--extensible {
+  flex: 1;
+  min-height: 0;
 }
 
+.champ-espace--extensible textarea {
+  flex: 1;
+  min-height: 140px;
+  resize: none;
+}
+
+.composition__pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Le fil des bulles reste lisible quand la reponse n'est pas venue. */
 .echange__attente {
-  margin-top: 12px;
+  margin-top: 10px;
   font-size: 13px;
   font-style: italic;
   color: var(--admin-texte-faible);
@@ -2258,4 +2216,79 @@
   .tache-projet {
     flex-wrap: wrap;
   }
+}
+
+
+/* ============================================================
+   14. La photo de profil
+   ============================================================ */
+
+.photo-profil {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  grid-column: 1 / -1;
+  padding-bottom: 6px;
+}
+
+/*
+ * L'apercu, ou les initiales a defaut. Le meme disque violet que
+ * l'avatar du bandeau : ce qu'on regle ici, c'est ce qu'on verra la.
+ */
+.photo-profil__apercu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.photo-profil__apercu img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-profil__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  min-width: 0;
+}
+
+/*
+ * Le bouton est un <label> : cliquer dessus ouvre le selecteur de
+ * fichier sans qu'aucun script n'ait a le declencher, et le clavier y
+ * arrive par le champ qu'il porte.
+ */
+.photo-profil__choisir {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.photo-profil__choisir input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-profil__choisir:focus-within {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.photo-profil__aide {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
 }

@@ -118,6 +118,27 @@ export async function mettreAJourProfil(corps) {
   return data;
 }
 
+/**
+ * POST /api/benevole/profil/photo
+ *
+ * Televerse la photo et rend son adresse. Le rattachement au compte se
+ * fait ensuite par la mise a jour du profil : deux etapes, comme pour
+ * les medias de projet cote administration.
+ */
+export async function televerserPhoto(fichier) {
+  const formulaire = new FormData();
+  formulaire.append('file', fichier);
+
+  // Le client pose "application/json" par defaut. Laisse tel quel, cet
+  // en-tete arrive sans la frontiere du multipart, et multer ne trouve
+  // aucun fichier a lire. Le mettre a undefined laisse le navigateur
+  // ecrire le sien -- le meme detour que cote administration.
+  const { data } = await apiBenevole.post('/benevole/profil/photo', formulaire, {
+    headers: { 'Content-Type': undefined },
+  });
+  return data;
+}
+
 /** GET /api/benevole/journal */
 export async function journal() {
   const { data } = await apiBenevole.get('/benevole/journal');

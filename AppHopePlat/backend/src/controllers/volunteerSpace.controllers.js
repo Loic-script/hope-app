@@ -9,6 +9,7 @@ import * as missionService from '../services/mission.service.js';
 import * as taskService from '../services/task.service.js';
 import * as volunteerProjectsService from '../services/volunteerProjects.service.js';
 import * as volunteerProfileService from '../services/volunteerProfile.service.js';
+import * as mediaService from '../services/media.service.js';
 
 import { gerer } from './handler.js';
 
@@ -71,4 +72,8 @@ export const profil = {
   recuperer: gerer((req) => volunteerProfileService.recuperer(req.benevole.id)),
   mettreAJour: gerer((req) => volunteerProfileService.mettreAJour(req.benevole.id, req.body)),
   journal: gerer((req) => volunteerProfileService.journal(req.benevole.id)),
+  // Le meme service que les medias de projet : un fichier ecrit par
+  // multer, une adresse rendue. C'est la mise a jour du profil qui la
+  // rattache ensuite au compte.
+  televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
 };

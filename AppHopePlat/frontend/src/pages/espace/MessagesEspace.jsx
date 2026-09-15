@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
+import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import { PleineMessages } from '../../components/IconesPleines.jsx';
 import * as service from '../../services/espace.service.js';
 import * as fmt from '../../utils/format.js';
@@ -8,10 +9,14 @@ import * as fmt from '../../utils/format.js';
 /**
  * La correspondance avec l'equipe HOPE, commune aux espaces.
  *
- * Un fil par sujet : le message envoye, et la reponse quand elle vient.
- * Pas de conversation a plusieurs tours -- l'equipe repond une fois, et
- * un nouveau sujet ouvre un nouveau fil. C'est ce que la table dit, et
- * l'ecran ne promet rien de plus.
+ * Meme ossature que la messagerie de l'administration : les fils a
+ * gauche, l'echange a droite, en bulles. Les deux ecrans montrent la
+ * meme chose vue des deux bouts -- il n'y avait pas de raison qu'ils se
+ * ressemblent si peu.
+ *
+ * Un fil porte un message et sa reponse, pas davantage : c'est ce que la
+ * table dit, et l'ecran ne promet rien de plus. Une nouvelle question
+ * ouvre un nouveau fil, par le bouton "+" de la liste.
  */
 export default function MessagesEspace() {
   const { api, rafraichirCompteurs } = useOutletContext();
@@ -19,17 +24,24 @@ export default function MessagesEspace() {
   const [items, setItems] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
+  const [actif, setActif] = useState(null);
 
+  // La composition : ouverte par le "+", et au premier message.
+  const [compose, setCompose] = useState(false);
   const [sujet, setSujet] = useState('');
   const [corps, setCorps] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [details, setDetails] = useState({});
-  const [succes, setSucces] = useState(null);
 
   const charger = useCallback(async () => {
     try {
-      setItems(await service.messages(api));
+      const liste = await service.messages(api);
+      setItems(liste);
       setErreur(null);
+      // On garde le fil ouvert s'il existe encore ; sinon le plus recent.
+      setActif((courant) =>
+        liste.some((m) => m.id === courant) ? courant : (liste[0]?.id ?? null)
+      );
       // La lecture eteint la pastille cote serveur : le menu doit le savoir.
       rafraichirCompteurs?.();
     } catch (e) {
@@ -47,142 +59,263 @@ export default function MessagesEspace() {
     evenement.preventDefault();
     setEnvoi(true);
     setDetails({});
-    setSucces(null);
     try {
-      await service.envoyerMessage(api, { sujet, corps });
+      const cree = await service.envoyerMessage(api, { sujet, corps });
       setSujet('');
       setCorps('');
-      setSucces('Message envoyé. L’équipe vous répondra ici même.');
+      setCompose(false);
       await charger();
+      if (cree?.id) setActif(cree.id);
     } catch (e) {
       setDetails(e.response?.data?.details ?? {});
-      setErreur(
-        e.response?.data?.details
-          ? null
-          : (e.response?.data?.message ?? 'L’envoi a échoué.')
-      );
+      if (!e.response?.data?.details) {
+        setErreur(e.response?.data?.message ?? 'L’envoi a échoué.');
+      }
     } finally {
       setEnvoi(false);
     }
   }
 
   const attente = items.filter((m) => m.statut === 'envoye').length;
+  const ouvert = items.find((m) => m.id === actif) ?? null;
+
+  function ouvrirComposition() {
+    setCompose(true);
+    setActif(null);
+    setDetails({});
+  }
 
   return (
-    <div className="accueil-benevole">
-      <header>
+    <>
+      <header className="page-benevole__entete">
         <p className="surtitre">
           <span className="trait-hope surtitre__trait" aria-hidden="true" />
           Écrire à HOPE
         </p>
-        <h1 className="accueil-benevole__titre">Messages</h1>
-        <p className="accueil-benevole__accroche">
+        <h1 className="page-benevole__titre">Messages</h1>
+        <p className="page-benevole__accroche">
           Une question, une disponibilité, un document à demander : l’équipe répond ici.
         </p>
       </header>
 
       {erreur && <p className="alerte-benevole">{erreur}</p>}
 
-      <div className="accueil-benevole__paire accueil-benevole__paire--messages">
-        {/* ---------- Le fil ---------- */}
-        <section className="bloc">
-          <div className="bloc__entete">
-            <h2 className="bloc__titre">Mes messages</h2>
-            {items.length > 0 && (
-              <p className="bloc__sous-titre">
-                {attente > 0
-                  ? `${attente} en attente de réponse`
-                  : 'Tous ont une réponse'}
+      <div className="messagerie">
+        {/* ================= Les fils ================= */}
+        <section className="messagerie__volet">
+          <div className="conversations__entete">
+            <div>
+              <p className="conversations__titre">Mes messages</p>
+              <p className="conversations__compte">
+                {items.length === 0
+                  ? 'Aucun pour l’instant'
+                  : attente > 0
+                    ? `${attente} en attente de réponse`
+                    : 'Tous ont une réponse'}
               </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn--principal btn--petit"
+              onClick={ouvrirComposition}
+            >
+              <IconePlus />
+              Écrire
+            </button>
+          </div>
+
+          <div className="conversations__liste">
+            {chargement ? (
+              <div className="echange__vide">Chargement…</div>
+            ) : items.length === 0 ? (
+              <div className="etat-vide">
+                <p className="etat-vide__titre">Aucun message</p>
+                <p className="etat-vide__texte">
+                  Le bouton « Écrire » ouvre un premier échange avec l’équipe.
+                </p>
+              </div>
+            ) : (
+              items.map((message) => (
+                <button
+                  type="button"
+                  key={message.id}
+                  className={
+                    'conversation' +
+                    (message.id === actif ? ' conversation--active' : '') +
+                    // Une reponse non lue met le fil en avant, comme un
+                    // message non lu cote administration.
+                    (message.reponse && !message.reponseLue ? ' conversation--nouvelle' : '')
+                  }
+                  onClick={() => {
+                    setActif(message.id);
+                    setCompose(false);
+                  }}
+                  aria-current={message.id === actif}
+                >
+                  <span className="conversation__avatar" aria-hidden="true">
+                    <PleineMessages />
+                  </span>
+
+                  <span className="conversation__corps">
+                    <span className="conversation__ligne">
+                      <span className="conversation__nom">{message.sujet}</span>
+                      <span className="conversation__temps">{fmt.depuis(message.creeLe)}</span>
+                    </span>
+                    <span className="conversation__extrait">
+                      {message.reponse ? `HOPE : ${message.reponse}` : message.corps}
+                    </span>
+                    <span className="conversation__ligne">
+                      <span className="conversation__courriel">
+                        {message.statut === 'repondu' ? 'Répondu' : 'En attente'}
+                      </span>
+                      {message.reponse && !message.reponseLue && (
+                        <span className="conversation__pastille">1</span>
+                      )}
+                    </span>
+                  </span>
+                </button>
+              ))
             )}
           </div>
+        </section>
 
-          {chargement ? (
-            <p className="bloc__vide">Chargement…</p>
-          ) : items.length === 0 ? (
-            <p className="bloc__vide">
-              Vous n’avez encore rien envoyé. Le formulaire ci-contre ouvre un premier
-              échange.
-            </p>
-          ) : (
-            <ul className="fil-messages">
-              {items.map((m) => (
-                <li key={m.id} className="echange">
-                  <div className="echange__tete">
-                    <span className="carre-icone carre-icone--violet" aria-hidden="true">
-                      <PleineMessages />
-                    </span>
-                    <div className="echange__intitule">
-                      <h3 className="echange__sujet">{m.sujet}</h3>
-                      <p className="echange__date">Envoyé {fmt.depuis(m.creeLe)}</p>
-                    </div>
-                    <span
-                      className={`pastille pastille--${m.statut === 'repondu' ? 'valide' : 'orange'}`}
-                    >
-                      {m.statut === 'repondu' ? 'Répondu' : 'En attente'}
-                    </span>
-                  </div>
-
-                  <p className="echange__corps">{m.corps}</p>
-
-                  {m.reponse ? (
-                    <div className="echange__reponse">
-                      <p className="echange__signature">
-                        Réponse de {m.reponduPar ?? 'l’équipe HOPE'}
-                        {m.reponduLe ? ` · ${fmt.date(m.reponduLe)}` : ''}
-                      </p>
-                      <p>{m.reponse}</p>
-                    </div>
-                  ) : (
-                    <p className="echange__attente">
-                      L’équipe n’a pas encore répondu. Vous serez prévenu ici.
+        {/* ================= L'echange, ou la composition ================= */}
+        <section className="messagerie__volet">
+          {compose ? (
+            <>
+              <header className="echange__entete">
+                <div className="echange__identite">
+                  <span className="conversation__avatar" aria-hidden="true">
+                    <IconePlus />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <p className="echange__nom">Nouveau message</p>
+                    <p className="echange__courriel">
+                      L’équipe HOPE vous répondra dans ce même fil.
                     </p>
+                  </div>
+                </div>
+              </header>
+
+              <form className="composition" onSubmit={envoyer}>
+                <label className="champ-espace">
+                  <span className="champ-espace__label">Sujet</span>
+                  <input
+                    type="text"
+                    value={sujet}
+                    maxLength={160}
+                    onChange={(e) => setSujet(e.target.value)}
+                    placeholder="Disponibilité, document, question…"
+                    disabled={envoi}
+                  />
+                  {details.sujet && (
+                    <span className="champ-espace__erreur">{details.sujet}</span>
                   )}
-                </li>
-              ))}
-            </ul>
+                </label>
+
+                <label className="champ-espace champ-espace--extensible">
+                  <span className="champ-espace__label">Votre message</span>
+                  <textarea
+                    value={corps}
+                    maxLength={4000}
+                    onChange={(e) => setCorps(e.target.value)}
+                    placeholder="Dites-nous en quelques lignes ce dont vous avez besoin."
+                    disabled={envoi}
+                  />
+                  {details.corps && (
+                    <span className="champ-espace__erreur">{details.corps}</span>
+                  )}
+                </label>
+
+                <div className="composition__pied">
+                  {items.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn--neutre"
+                      onClick={() => setCompose(false)}
+                      disabled={envoi}
+                    >
+                      Annuler
+                    </button>
+                  )}
+                  <button type="submit" className="btn btn--principal" disabled={envoi}>
+                    {envoi ? 'Envoi…' : 'Envoyer'}
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : !ouvert ? (
+            <div className="echange__vide">
+              {items.length === 0
+                ? 'Écrivez à l’équipe : votre échange s’affichera ici.'
+                : 'Sélectionnez un message dans la liste.'}
+            </div>
+          ) : (
+            <>
+              <header className="echange__entete">
+                <div className="echange__identite">
+                  <span className="conversation__avatar" aria-hidden="true">
+                    <PleineMessages />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <p className="echange__nom">{ouvert.sujet}</p>
+                    <p className="echange__courriel">
+                      Envoyé le {fmt.date(ouvert.creeLe)}
+                    </p>
+                  </div>
+                </div>
+
+                <span
+                  className={`pastille pastille--${
+                    ouvert.statut === 'repondu' ? 'valide' : 'orange'
+                  }`}
+                >
+                  {ouvert.statut === 'repondu' ? 'Répondu' : 'En attente'}
+                </span>
+              </header>
+
+              <div className="echange__fil">
+                {/* Le mien a droite, celui de HOPE a gauche : l'inverse de
+                    l'ecran d'administration, ou c'est HOPE qui ecrit. */}
+                {/* Pas de sujet dans la bulle : l'en-tete du volet le
+                    porte deja, juste au-dessus. */}
+                <Bulle
+                  sens="envoyee"
+                  contenu={ouvert.corps}
+                  horodatage={ouvert.creeLe}
+                  legende="Vous"
+                />
+                {ouvert.reponse ? (
+                  <Bulle
+                    sens="recue"
+                    contenu={ouvert.reponse}
+                    horodatage={ouvert.reponduLe}
+                    legende={ouvert.reponduPar ?? 'Équipe HOPE'}
+                  />
+                ) : (
+                  <p className="echange__attente">
+                    L’équipe n’a pas encore répondu. Vous serez prévenu ici, et par une
+                    notification.
+                  </p>
+                )}
+              </div>
+            </>
           )}
         </section>
-
-        {/* ---------- Le formulaire ---------- */}
-        <section className="bloc bloc--collant">
-          <div className="bloc__entete">
-            <h2 className="bloc__titre">Nouveau message</h2>
-          </div>
-
-          <form onSubmit={envoyer} className="formulaire-espace">
-            <label className="champ-espace">
-              <span className="champ-espace__label">Sujet</span>
-              <input
-                type="text"
-                value={sujet}
-                maxLength={160}
-                onChange={(e) => setSujet(e.target.value)}
-                placeholder="Disponibilité, document, question…"
-              />
-              {details.sujet && <span className="champ-espace__erreur">{details.sujet}</span>}
-            </label>
-
-            <label className="champ-espace">
-              <span className="champ-espace__label">Votre message</span>
-              <textarea
-                rows={7}
-                value={corps}
-                maxLength={4000}
-                onChange={(e) => setCorps(e.target.value)}
-                placeholder="Dites-nous en quelques lignes ce dont vous avez besoin."
-              />
-              {details.corps && <span className="champ-espace__erreur">{details.corps}</span>}
-            </label>
-
-            {succes && <p className="succes-benevole">{succes}</p>}
-
-            <button type="submit" className="bouton-hope" disabled={envoi}>
-              {envoi ? 'Envoi…' : 'Envoyer'}
-            </button>
-          </form>
-        </section>
       </div>
-    </div>
+    </>
+  );
+}
+
+/** Une bulle du fil : la mienne, ou celle de HOPE. */
+function Bulle({ sens, sujet, contenu, horodatage, legende }) {
+  return (
+    <article className={`bulle bulle--${sens}`}>
+      {sujet && <p className="bulle__sujet">{sujet}</p>}
+      <div className="bulle__contenu">{contenu}</div>
+      <p className="bulle__meta">
+        {legende} · {fmt.date(horodatage)} · {fmt.depuis(horodatage)}
+      </p>
+    </article>
   );
 }

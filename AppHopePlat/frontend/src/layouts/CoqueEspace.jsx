@@ -14,6 +14,7 @@ import {
   IconeDeconnexion,
 } from '../components/admin/AdminIcons.jsx';
 import { PleineDeconnexion } from '../components/IconesPleines.jsx';
+import { urlMedia } from '../services/api.js';
 import { initiales } from '../utils/format.js';
 
 /**
@@ -113,7 +114,7 @@ function placeSurLArc(rang, centre, total) {
  * @param {string} props.espace        intitule affiche sous le logo
  * @param {string} props.accueil       route du logo, et page d'entree
  * @param {string} props.cleRail       ou retenir le repli, propre a l'espace
- * @param {object} props.identite      { nom, role } de la personne connectee
+ * @param {object} props.identite      { nom, role, photoUrl } de la personne connectee
  * @param {Function} props.onDeconnexion
  * @param {object} [props.compteurs]   pastilles, par cle d'entree
  * @param {object} [props.notifications] { to, cle } ou null s'il n'y en a pas
@@ -559,8 +560,14 @@ export default function CoqueEspace({
                 aria-expanded={menuOuvert}
                 aria-haspopup="menu"
               >
+                {/* La photo si le compte en a une, ses initiales sinon.
+                    Le disque est le meme dans les deux cas. */}
                 <span className="profil__avatar" aria-hidden="true">
-                  {initiales(identite?.nom)}
+                  {identite?.photoUrl ? (
+                    <img src={urlMedia(identite.photoUrl)} alt="" />
+                  ) : (
+                    initiales(identite?.nom)
+                  )}
                 </span>
                 <span className="profil__identite">
                   <span className="profil__nom">{identite?.nom}</span>

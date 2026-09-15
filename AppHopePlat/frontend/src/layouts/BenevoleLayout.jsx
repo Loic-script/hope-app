@@ -97,7 +97,7 @@ export default function BenevoleLayout() {
       espace="Espace bénévole"
       accueil="/benevole"
       cleRail="hope.benevole.rail-replie"
-      identite={{ nom, role: 'Bénévole' }}
+      identite={{ nom, role: 'Bénévole', photoUrl: benevole?.photoUrl }}
       onDeconnexion={seDeconnecter}
       compteurs={compteurs}
       notifications={{ to: '/benevole/notifications', cle: 'notifications' }}

@@ -15,6 +15,7 @@ import {
   projets,
   taches,
 } from '../controllers/volunteerSpace.controllers.js';
+import { televerserMedia } from '../middleware/upload.middleware.js';
 import { authenticateVolunteer } from '../middleware/volunteerAuth.middleware.js';
 
 const router = Router();
@@ -54,5 +55,7 @@ router.post('/profil/completer', profil.completer);
 router.get('/profil', profil.recuperer);
 router.patch('/profil', profil.mettreAJour);
 router.get('/journal', profil.journal);
+// La photo de profil : televersee ici, rattachee par un PATCH du profil.
+router.post('/profil/photo', televerserMedia, profil.televerserPhoto);
 
 export default router;

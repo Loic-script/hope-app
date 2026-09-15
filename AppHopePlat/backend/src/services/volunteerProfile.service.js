@@ -160,6 +160,25 @@ function booleen(valeur) {
  * ils relevent de l'equipe HOPE. Un benevole qui pourrait se valider
  * lui-meme rendrait la validation sans objet.
  */
+/**
+ * Verifie l'adresse d'une photo de profil.
+ *
+ * Elle doit venir du dossier des medias de HOPE : c'est le televersement
+ * de l'espace qui la produit. Une chaine vide efface la photo.
+ */
+function photoValide(valeur) {
+  if (valeur === undefined) return undefined;
+  if (valeur === null || String(valeur).trim() === '') return null;
+
+  const adresse = String(valeur).trim();
+  if (!adresse.startsWith('/media/')) {
+    throw new ErreurValidation('La photo doit être téléversée depuis votre espace.', {
+      photoUrl: 'Adresse non acceptée',
+    });
+  }
+  return adresse;
+}
+
 export async function mettreAJour(utilisateurId, corps = {}) {
   const fiche = await profileRepository.garantir(utilisateurId);
   if (!fiche) throw new ErreurIntrouvable('Le profil bénévole', utilisateurId);
@@ -199,6 +218,10 @@ export async function mettreAJour(utilisateurId, corps = {}) {
   const colonnesCompte = {
     adresse: texte(corps.adresse, 'adresse', 255),
     telephone: texte(corps.telephone, 'telephone', 20),
+    // La photo de profil. Seule une adresse servie par HOPE est acceptee :
+    // une adresse exterieure ferait charger au navigateur une image dont
+    // personne ici ne repond, et suivrait le benevole d'un site a l'autre.
+    photo_url: photoValide(corps.photoUrl),
     date_de_naissance: corps.dateDeNaissance === undefined
       ? undefined
       : (corps.dateDeNaissance || null),
