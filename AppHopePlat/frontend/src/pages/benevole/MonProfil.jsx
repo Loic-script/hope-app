@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
@@ -185,7 +186,10 @@ export default function MonProfil() {
           <div className="photo-profil">
             <span className="photo-profil__apercu" aria-hidden="true">
               {champs.photoUrl ? (
-                <img src={urlMedia(champs.photoUrl)} alt="" />
+                <PhotoAgrandissable
+                  src={urlMedia(champs.photoUrl)}
+                  alt={`Photo de ${donnees.prenom} ${donnees.nom}`}
+                />
               ) : (
                 fmt.initiales(`${donnees.prenom} ${donnees.nom}`)
               )}

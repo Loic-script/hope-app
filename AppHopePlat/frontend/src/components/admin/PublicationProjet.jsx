@@ -10,6 +10,7 @@ import {
 } from './AdminIcons.jsx';
 import { urlMedia } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
+import { PhotoAgrandissable } from '../VisionneuseImage.jsx';
 
 /**
  * Jauge horizon : la part financee du projet.
@@ -80,11 +81,11 @@ function Visuel({ projet }) {
 
   if (adresse) {
     return (
-      <img
+      <PhotoAgrandissable
         className="publication__photo"
         src={adresse}
         alt={`Projet ${projet.name}`}
-        loading="lazy"
+        legende={projet.name}
       />
     );
   }

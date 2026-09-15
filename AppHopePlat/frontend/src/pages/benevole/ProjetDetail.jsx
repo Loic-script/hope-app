@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { PleineCalendrier, PleineLieu, PleineTaches } from '../../components/IconesPleines.jsx';
+import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
@@ -57,7 +58,11 @@ export default function ProjetDetail() {
       <section className="tete-projet">
         {projet.mediaUrl && (
           <div className="tete-projet__image">
-            <img src={urlMedia(projet.mediaUrl)} alt="" />
+            <PhotoAgrandissable
+              src={urlMedia(projet.mediaUrl)}
+              alt={projet.name}
+              legende={projet.name}
+            />
           </div>
         )}
         <div className="tete-projet__corps">

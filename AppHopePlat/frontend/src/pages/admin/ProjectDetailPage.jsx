@@ -27,6 +27,7 @@ import {
   Tableau,
 } from '../../components/admin/ui.jsx';
 import VignettePreuve from '../../components/admin/VignettePreuve.jsx';
+import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { urlMedia } from '../../services/api.js';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
@@ -475,7 +476,12 @@ export default function ProjectDetailPage() {
               projet.mediaType === 'VIDEO' ? (
                 <video className="media-projet" src={urlMedia(projet.mediaUrl)} controls />
               ) : (
-                <img className="media-projet" src={urlMedia(projet.mediaUrl)} alt={projet.name} />
+                <PhotoAgrandissable
+                  className="media-projet"
+                  src={urlMedia(projet.mediaUrl)}
+                  alt={projet.name}
+                  legende={projet.name}
+                />
               )
             ) : (
               <div className="media-projet media-projet--absente">

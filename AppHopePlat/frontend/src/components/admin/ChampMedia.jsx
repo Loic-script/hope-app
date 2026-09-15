@@ -5,6 +5,7 @@ import { ChampTexte } from './forms.jsx';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
+import { PhotoAgrandissable } from '../VisionneuseImage.jsx';
 
 /**
  * Choix de la photo ou de la video qui illustre un projet.
@@ -164,7 +165,7 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
             {type === 'VIDEO' ? (
               <video src={apercu} controls preload="metadata" />
             ) : (
-              <img src={apercu} alt="Aperçu du média du projet" />
+              <PhotoAgrandissable src={apercu} alt="Aperçu du média du projet" />
             )}
             <figcaption>
               <span>{type === 'VIDEO' ? 'Vidéo' : 'Photo'} rattachée au projet</span>
