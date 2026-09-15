@@ -487,6 +487,24 @@ export async function profil(bailleurId) {
  * l'organisation, ni son niveau, ni les droits de consultation ne sont
  * modifiables ici : ils relevent de HOPE.
  */
+/**
+ * Verifie l'adresse d'une photo de profil.
+ *
+ * Elle doit venir du dossier des medias de HOPE : c'est le televersement
+ * de l'espace qui la produit. Une chaine vide efface la photo.
+ */
+function photoValide(valeur) {
+  if (valeur === null || String(valeur).trim() === '') return null;
+
+  const adresse = String(valeur).trim();
+  if (!adresse.startsWith('/media/')) {
+    throw new ErreurValidation('La photo doit être téléversée depuis votre espace.', {
+      photoUrl: 'Adresse non acceptée',
+    });
+  }
+  return adresse;
+}
+
 export async function mettreAJourContact(contactId, corps = {}) {
   const texte = (valeur, max) => {
     if (valeur === undefined) return undefined;
@@ -503,6 +521,15 @@ export async function mettreAJourContact(contactId, corps = {}) {
   await funderRepository.mettreAJourContact(contactId, {
     fonction: texte(corps.fonction, 120),
   });
+
+  /*
+   * La photo vit sur le compte, pas sur la fiche de contact : c'est la
+   * personne qu'on voit dans les conversations, pas son role dans
+   * l'organisation. Meme colonne que pour un benevole.
+   */
+  if (corps.photoUrl !== undefined) {
+    await funderRepository.mettreAJourPhoto(contactId, photoValide(corps.photoUrl));
+  }
 
   return { success: true, message: 'Votre fiche est à jour.' };
 }

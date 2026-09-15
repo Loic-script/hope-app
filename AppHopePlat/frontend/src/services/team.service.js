@@ -40,3 +40,28 @@ export async function journal(limit = 30) {
   const { data } = await api.get('/admin/activity', { params: { limit } });
   return data;
 }
+
+/**
+ * POST /api/admin/me/photo
+ *
+ * Televerse la photo et rend son adresse ; le PATCH ci-dessous la
+ * rattache au compte. Deux etapes, comme pour les medias de projet.
+ */
+export async function televerserPhoto(fichier) {
+  const formulaire = new FormData();
+  formulaire.append('file', fichier);
+
+  // Le client pose "application/json" par defaut : cet en-tete arrive
+  // alors sans la frontiere du multipart, et multer ne trouve aucun
+  // fichier a lire.
+  const { data } = await api.post('/admin/me/photo', formulaire, {
+    headers: { 'Content-Type': undefined },
+  });
+  return data;
+}
+
+/** PATCH /api/admin/me/photo — rattache la photo au compte connecte. */
+export async function changerSaPhoto(photoUrl) {
+  const { data } = await api.patch('/admin/me/photo', { photoUrl });
+  return data.photoUrl ?? null;
+}

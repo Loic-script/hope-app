@@ -15,6 +15,7 @@ function versAdmin(ligne) {
   return {
     id: ligne.id,
     adminLog: ligne.admin_log,
+    photoUrl: ligne.photo_url,
     passwordHash: ligne.password_hash,
     fullName: ligne.full_name,
     role: ligne.role,
@@ -27,13 +28,19 @@ function versAdmin(ligne) {
 
 /** Colonnes exposables : jamais password_hash. */
 const COLONNES = `
-  id, admin_log, full_name, role, status, last_login_at, created_at, updated_at
+  id, admin_log, full_name, role, status, photo_url,
+  last_login_at, created_at, updated_at
 `;
 
 /**
  * Recherche un compte par son identifiant de connexion.
  * Retourne le hash : cette methode est reservee au service d'authentification.
  */
+/** Pose ou retire la photo de profil d'un administrateur. */
+export async function mettreAJourPhoto(id, photoUrl, client = null) {
+  await query('UPDATE admins SET photo_url = $2 WHERE id = $1', [id, photoUrl], client);
+}
+
 export async function trouverParLogin(adminLog) {
   const resultat = await query(
     `SELECT ${COLONNES}, password_hash FROM admins WHERE admin_log = $1 LIMIT 1`,

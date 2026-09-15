@@ -162,6 +162,10 @@ export const team = {
     teamService.reinitialiserMotDePasse(req.params.id, req.body, req.admin)
   ),
   changerSonMotDePasse: gerer((req) => teamService.changerSonMotDePasse(req.admin, req.body)),
+  changerSaPhoto: gerer((req) => teamService.changerSaPhoto(req.admin.id, req.body)),
+  // Le meme service que les medias de projet : un fichier ecrit par
+  // multer, une adresse rendue.
+  televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
   journal: gerer((req) => teamService.journal(req.query)),
 };
 

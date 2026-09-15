@@ -73,6 +73,7 @@ function versBailleurPublic(fiche) {
     prenom: fiche.prenom,
     email: fiche.email,
     telephone: fiche.telephone,
+    photoUrl: fiche.photoUrl,
     fonction: fiche.fonction,
     contactPrincipal: fiche.contactPrincipal,
     peutConsulter: fiche.peutConsulter,

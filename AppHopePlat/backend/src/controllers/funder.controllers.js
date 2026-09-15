@@ -7,6 +7,7 @@
  */
 import * as funderAuthService from '../services/funderAuth.service.js';
 import * as funderService from '../services/funder.service.js';
+import * as mediaService from '../services/media.service.js';
 
 import { gerer } from './handler.js';
 
@@ -104,4 +105,6 @@ export const espace = {
   mettreAJourContact: gerer((req) =>
     funderService.mettreAJourContact(req.bailleur.contactId, req.body)
   ),
+  // Le fichier seul : c'est la mise a jour de la fiche qui le rattache.
+  televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
 };

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import { IconePlus, IconeRecherche } from '../../components/admin/AdminIcons.jsx';
+import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { urlMedia } from '../../services/api.js';
 import * as service from '../../services/conversation.service.js';
 import * as fmt from '../../utils/format.js';
@@ -320,7 +321,7 @@ export default function Conversations() {
             <>
               <header className="echange__entete">
                 <div className="echange__identite">
-                  <Pastille personne={interlocuteurs[0]} />
+                  <Pastille personne={interlocuteurs[0]} agrandissable />
                   <div style={{ minWidth: 0 }}>
                     <p className="echange__nom">{nommer(interlocuteurs)}</p>
                     <p className="echange__courriel">
@@ -337,17 +338,38 @@ export default function Conversations() {
                     Rien encore. Écrivez le premier message.
                   </div>
                 ) : (
-                  ouvert.messages.map((message) => (
-                    <article
-                      key={message.id}
-                      className={`bulle bulle--${estDeMoi(message, moi) ? 'envoyee' : 'recue'}`}
-                    >
-                      <div className="bulle__contenu">{message.corps}</div>
-                      <p className="bulle__meta">
-                        {message.auteurNom} · {fmt.depuis(message.creeLe)}
-                      </p>
-                    </article>
-                  ))
+                  ouvert.messages.map((message, rang) => {
+                    const mien = estDeMoi(message, moi);
+                    // Dans une salve du meme auteur, la photo ne se
+                    // repete pas : elle ne marque que le dernier
+                    // message, et les precedents gardent sa place en
+                    // creux pour rester alignes.
+                    const suivant = ouvert.messages[rang + 1];
+                    const finDeSalve =
+                      !suivant ||
+                      suivant.auteurType !== message.auteurType ||
+                      String(suivant.auteurId) !== String(message.auteurId);
+
+                    return (
+                      <div
+                        key={message.id}
+                        className={`bulle-rang bulle-rang--${mien ? 'envoyee' : 'recue'}`}
+                      >
+                        {!mien && (
+                          <PastilleBulle
+                            message={message}
+                            visible={finDeSalve}
+                          />
+                        )}
+                        <article className={`bulle bulle--${mien ? 'envoyee' : 'recue'}`}>
+                          <div className="bulle__contenu">{message.corps}</div>
+                          <p className="bulle__meta">
+                            {message.auteurNom} · {fmt.depuis(message.creeLe)}
+                          </p>
+                        </article>
+                      </div>
+                    );
+                  })
                 )}
               </div>
 
@@ -377,19 +399,58 @@ export default function Conversations() {
 }
 
 /**
- * La pastille d'une personne : sa photo, ou ses initiales.
+ * La pastille d'une personne : sa photo, ou ses initiales a defaut.
  *
- * Les membres de l'equipe n'ont pas de photo -- la table "admins" n'en
- * porte pas -- et gardent donc toujours leurs initiales.
+ * "agrandissable" n'est pas toujours possible : dans la liste, la
+ * pastille est deja au creux d'un bouton, et un bouton dans un bouton
+ * n'est pas du HTML valide. On ne l'ouvre donc qu'en tete de fil.
  */
-function Pastille({ personne }) {
+function Pastille({ personne, agrandissable = false }) {
   if (!personne) return <span className="conversation__avatar" aria-hidden="true" />;
+
+  if (personne.photoUrl && agrandissable) {
+    return (
+      <span className="conversation__avatar">
+        <PhotoAgrandissable
+          src={urlMedia(personne.photoUrl)}
+          alt={personne.nom ?? ''}
+          className="photo-voir--pastille"
+        />
+      </span>
+    );
+  }
+
   return (
     <span className="conversation__avatar" aria-hidden="true">
       {personne.photoUrl ? (
         <img src={urlMedia(personne.photoUrl)} alt="" />
       ) : (
         fmt.initiales(personne.nom)
+      )}
+    </span>
+  );
+}
+
+/**
+ * La photo de l'auteur, a cote de sa bulle.
+ *
+ * "visible" a faux garde la place sans rien montrer : sans ce creux,
+ * les bulles d'une meme salve se decaleraient les unes par rapport aux
+ * autres.
+ */
+function PastilleBulle({ message, visible }) {
+  if (!visible) return <span className="bulle__avatar bulle__avatar--creux" aria-hidden="true" />;
+
+  return (
+    <span className="bulle__avatar">
+      {message.auteurPhoto ? (
+        <PhotoAgrandissable
+          src={urlMedia(message.auteurPhoto)}
+          alt={message.auteurNom ?? ''}
+          className="photo-voir--pastille"
+        />
+      ) : (
+        <span aria-hidden="true">{fmt.initiales(message.auteurNom)}</span>
       )}
     </span>
   );

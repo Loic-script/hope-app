@@ -37,7 +37,7 @@ const PARTICIPANTS = `
                'type', CASE WHEN p.admin_id IS NULL THEN 'utilisateur' ELSE 'admin' END,
                'id', COALESCE(p.utilisateur_id::text, p.admin_id::text),
                'nom', COALESCE(TRIM(u.prenom || ' ' || u.nom), a.admin_log),
-               'photoUrl', u.photo_url,
+               'photoUrl', COALESCE(u.photo_url, a.photo_url),
                'role', COALESCE(r.role, 'equipe')
              ) ORDER BY p.rejoint_le, p.id
            )
@@ -125,7 +125,7 @@ export async function messages(conversationId, client = null) {
             CASE WHEN m.admin_id IS NULL THEN 'utilisateur' ELSE 'admin' END AS auteur_type,
             COALESCE(m.utilisateur_id::text, m.admin_id::text) AS auteur_id,
             COALESCE(TRIM(u.prenom || ' ' || u.nom), a.admin_log) AS auteur_nom,
-            u.photo_url AS auteur_photo
+            COALESCE(u.photo_url, a.photo_url) AS auteur_photo
        FROM conversation_message m
        LEFT JOIN utilisateur u ON u.id = m.utilisateur_id
        LEFT JOIN admins a ON a.id = m.admin_id
@@ -262,7 +262,7 @@ export async function annuaire(acteur, client = null) {
 
       UNION ALL
 
-      SELECT 'admin' AS type, a.id::text, a.admin_log, NULL, NULL, 'equipe'
+      SELECT 'admin' AS type, a.id::text, a.admin_log, NULL, a.photo_url, 'equipe'
         FROM admins a
        WHERE ($2::int IS NULL OR a.id <> $2::int)
 

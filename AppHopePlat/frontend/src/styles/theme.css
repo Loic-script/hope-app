@@ -457,6 +457,13 @@ a {
   transform: translate(-50%, 0);
 }
 
+/* Sur une pastille de 30 ou 40 pixels, l'etiquette deborderait de tous
+   les cotes : le curseur et le libelle accessible suffisent a dire que
+   la photo s'ouvre. */
+.photo-voir--pastille .photo-voir__indice {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .visionneuse,
   .photo-voir__indice {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
+import ChampPhotoProfil from '../../components/ChampPhotoProfil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
@@ -33,9 +34,6 @@ export default function MonProfil() {
 
   const [champs, setChamps] = useState(null);
   const [envoi, setEnvoi] = useState(false);
-  // Le televersement a son propre etat : il part avant l'enregistrement
-  // du formulaire, et doit pouvoir echouer seul.
-  const [photoEnCours, setPhotoEnCours] = useState(false);
   const [refus, setRefus] = useState('');
   const [succes, setSucces] = useState('');
 
@@ -58,33 +56,6 @@ export default function MonProfil() {
       photoUrl: donnees.photoUrl ?? '',
     });
   }, [donnees]);
-
-  /**
-   * Choisir une photo l'envoie aussitot.
-   *
-   * L'adresse rendue entre dans le formulaire ; elle ne sera rattachee
-   * au compte qu'a l'enregistrement. Un televersement abandonne laisse
-   * donc un fichier orphelin, comme cote administration -- c'est le
-   * prix d'un apercu immediat.
-   */
-  async function choisirPhoto(evenement) {
-    const fichier = evenement.target.files?.[0];
-    if (!fichier) return;
-
-    setPhotoEnCours(true);
-    setRefus('');
-    setSucces('');
-    try {
-      const media = await service.televerserPhoto(fichier);
-      modifier('photoUrl', media.url);
-    } catch (echec) {
-      setRefus(messageErreur(echec, 'Le téléversement a échoué.'));
-    } finally {
-      setPhotoEnCours(false);
-      // Sans cela, rechoisir le meme fichier n'emettrait aucun evenement.
-      evenement.target.value = '';
-    }
-  }
 
   function modifier(nom, valeur) {
     setChamps((precedents) => ({ ...precedents, [nom]: valeur }));
@@ -178,50 +149,18 @@ export default function MonProfil() {
           <legend>Identité</legend>
 
           {/*
-            La photo : un apercu, un bouton, et de quoi la retirer. Elle
-            n'est pas obligatoire -- l'espace affiche les initiales a
-            defaut, et personne ne doit se sentir tenu de montrer son
-            visage pour aider.
+            La photo n'est pas obligatoire : l'espace affiche les
+            initiales a defaut, et personne ne doit se sentir tenu de
+            montrer son visage pour aider.
           */}
-          <div className="photo-profil">
-            <span className="photo-profil__apercu" aria-hidden="true">
-              {champs.photoUrl ? (
-                <PhotoAgrandissable
-                  src={urlMedia(champs.photoUrl)}
-                  alt={`Photo de ${donnees.prenom} ${donnees.nom}`}
-                />
-              ) : (
-                fmt.initiales(`${donnees.prenom} ${donnees.nom}`)
-              )}
-            </span>
-
-            <div className="photo-profil__actions">
-              <label className="btn btn--neutre photo-profil__choisir">
-                {photoEnCours ? 'Envoi…' : champs.photoUrl ? 'Changer la photo' : 'Ajouter une photo'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={choisirPhoto}
-                  disabled={envoi || photoEnCours}
-                />
-              </label>
-
-              {champs.photoUrl && (
-                <button
-                  type="button"
-                  className="lien-action lien-action--danger"
-                  onClick={() => modifier('photoUrl', '')}
-                  disabled={envoi || photoEnCours}
-                >
-                  Retirer
-                </button>
-              )}
-
-              <p className="photo-profil__aide">
-                Une image — JPEG, PNG ou WebP. Elle n’est visible que par l’équipe HOPE.
-              </p>
-            </div>
-          </div>
+          <ChampPhotoProfil
+            valeur={champs.photoUrl}
+            nom={`${donnees.prenom} ${donnees.nom}`}
+            televerser={service.televerserPhoto}
+            onChange={(url) => modifier('photoUrl', url)}
+            disabled={envoi}
+            aide="Une image — JPEG, PNG ou WebP. Elle n’est visible que par l’équipe HOPE."
+          />
 
           <p className="profil-benevole__fixe">
             <span>Nom</span>

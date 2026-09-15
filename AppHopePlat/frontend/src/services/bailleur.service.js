@@ -161,3 +161,22 @@ export async function mettreAJourContact(corps) {
   const { data } = await apiBailleur.patch('/bailleur/profil/contact', corps);
   return data;
 }
+
+/**
+ * POST /api/bailleur/profil/photo
+ *
+ * Televerse la photo et rend son adresse ; c'est la mise a jour de la
+ * fiche de contact qui la rattache ensuite au compte.
+ */
+export async function televerserPhoto(fichier) {
+  const formulaire = new FormData();
+  formulaire.append('file', fichier);
+
+  // Le client pose "application/json" par defaut, et cet en-tete arrive
+  // alors sans la frontiere du multipart : multer ne trouve plus rien a
+  // lire. Le mettre a undefined laisse le navigateur ecrire le sien.
+  const { data } = await apiBailleur.post('/bailleur/profil/photo', formulaire, {
+    headers: { 'Content-Type': undefined },
+  });
+  return data;
+}

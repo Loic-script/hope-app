@@ -18,6 +18,7 @@ import {
   exigerOrganisation,
 } from '../middleware/funderAuth.middleware.js';
 import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
+import { televerserMedia } from '../middleware/upload.middleware.js';
 
 const router = Router();
 
@@ -68,5 +69,8 @@ router.post('/interet', funder.espace.manifesterUnInteret);
 
 router.get('/profil', funder.espace.profil);
 router.patch('/profil/contact', funder.espace.mettreAJourContact);
+
+// La photo de contact : televersee ici, rattachee par le PATCH ci-dessus.
+router.post('/profil/photo', televerserMedia, funder.espace.televerserPhoto);
 
 export default router;

@@ -66,7 +66,7 @@ const NIVEAUX = { bronze: 'Partenaire Bronze', argent: 'Partenaire Argent', or: 
  * GET /api/bailleur/me arrive par le contexte.
  */
 export default function BailleurLayout() {
-  const { bailleur } = useOutletContext();
+  const { bailleur, rafraichir } = useOutletContext();
   const navigate = useNavigate();
   const emplacement = useLocation();
 
@@ -107,6 +107,9 @@ export default function BailleurLayout() {
       identite={{
         nom: nom || 'Organisation',
         role: NIVEAUX[bailleur?.niveau] ?? bailleur?.typeLibelle ?? 'Partenaire',
+        // La photo est celle de la personne connectee, pas un logo :
+        // c'est elle qui ecrit dans la messagerie.
+        photoUrl: bailleur?.photoUrl,
       }}
       onDeconnexion={seDeconnecter}
       compteurs={compteurs}
@@ -115,6 +118,9 @@ export default function BailleurLayout() {
       <Outlet
         context={{
           bailleur,
+          // La fiche de contact s'en sert apres avoir change la photo :
+          // le bandeau la relit du serveur plutot que de la deviner.
+          rafraichirBailleur: rafraichir,
           api: apiBailleur,
           rafraichirCompteurs,
           racineConversations: '/espace',

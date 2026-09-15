@@ -1311,6 +1311,16 @@ BEGIN
 END;
 $$;
 
+/*
+ * La photo des membres de l'equipe.
+ *
+ * "utilisateur" en portait une depuis le debut ; "admins" non, et les
+ * conversations montraient donc des initiales d'un cote et des visages
+ * de l'autre. La meme colonne, au meme format : un chemin /media servi
+ * par HOPE.
+ */
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS photo_url VARCHAR(255);
+
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN

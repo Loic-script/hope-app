@@ -74,7 +74,7 @@ export async function trouverParUtilisateur(utilisateurId, client = null) {
             c.peut_consulter,
             c.peut_telecharger,
             c.actif             AS contact_actif,
-            u.nom, u.prenom, u.email, u.telephone
+            u.nom, u.prenom, u.email, u.telephone, u.photo_url
        FROM bailleur_contact c
        JOIN bailleur    b ON b.id = c.bailleur_id
        JOIN utilisateur u ON u.id = c.utilisateur_id
@@ -104,6 +104,23 @@ export async function mettreAJourOrganisationParUtilisateur(
 }
 
 /** Met a jour la fiche de contact d'une personne. */
+/**
+ * Pose la photo sur le compte rattache a ce contact.
+ *
+ * On passe par le contact plutot que par l'utilisateur : c'est son
+ * identifiant que porte le jeton du bailleur.
+ */
+export async function mettreAJourPhoto(contactId, photoUrl, client = null) {
+  await query(
+    `UPDATE utilisateur u
+        SET photo_url = $2
+       FROM bailleur_contact c
+      WHERE c.id = $1 AND u.id = c.utilisateur_id`,
+    [contactId, photoUrl],
+    client
+  );
+}
+
 export async function mettreAJourContact(contactId, colonnes, client = null) {
   const { clause, valeurs, vide } = construireSet(colonnes, 2);
   if (vide) return;
@@ -119,7 +136,7 @@ export async function mettreAJourContact(contactId, colonnes, client = null) {
 export async function listerContacts(bailleurId, client = null) {
   const resultat = await query(
     `SELECT c.id, c.fonction, c.contact_principal, c.actif,
-            u.nom, u.prenom, u.email
+            u.nom, u.prenom, u.email, u.photo_url
        FROM bailleur_contact c
        LEFT JOIN utilisateur u ON u.id = c.utilisateur_id
       WHERE c.bailleur_id = $1

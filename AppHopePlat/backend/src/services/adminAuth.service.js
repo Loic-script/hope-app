@@ -31,6 +31,7 @@ function versAdminPublic(admin) {
     adminLog: admin.adminLog,
     fullName: admin.fullName ?? admin.adminLog,
     role: admin.role,
+    photoUrl: admin.photoUrl ?? null,
   };
 }
 

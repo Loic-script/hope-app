@@ -301,16 +301,73 @@
 
 /* --- Bulles --- */
 
+/* La photo de l'auteur et sa bulle tiennent sur une meme ligne : c'est
+   le rang qui porte l'alignement, la bulle ne fait que se dimensionner.
+   Aligne en bas, comme dans une messagerie : la photo accompagne la fin
+   de la salve, pas son debut. */
+.bulle-rang {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.bulle-rang--recue {
+  margin-right: auto;
+  max-width: 88%;
+}
+
+.bulle-rang--envoyee {
+  margin-left: auto;
+  max-width: 76%;
+}
+
+.bulle__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  /* La bulle porte 5px de meta sous elle : sans ce recul, la photo
+     flotterait sous le texte qu'elle accompagne. */
+  margin-bottom: 22px;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.bulle__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Le creux garde la place de la photo dans une salve, sans la repeter. */
+.bulle__avatar--creux {
+  background: none;
+}
+
 .bulle {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Hors d'un rang -- l'ancienne messagerie des fils HOPE -- la bulle
+   garde son propre alignement. */
+.echange__fil > .bulle {
   max-width: 76%;
   margin-bottom: 16px;
 }
 
-.bulle--recue {
+.echange__fil > .bulle--recue {
   margin-right: auto;
 }
 
-.bulle--envoyee {
+.echange__fil > .bulle--envoyee {
   margin-left: auto;
 }
 

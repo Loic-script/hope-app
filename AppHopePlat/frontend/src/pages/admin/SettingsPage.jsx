@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
+import ChampPhotoProfil from '../../components/ChampPhotoProfil.jsx';
 import {
   ChampSelection,
   ChampTexte,
@@ -30,7 +31,7 @@ const COMPTE_VIDE = { adminLog: '', fullName: '', role: 'COORDINATOR', password:
  * Parametres : le compte administrateur et les donnees de reference.
  */
 export default function SettingsPage() {
-  const { admin } = useOutletContext();
+  const { admin, rafraichirAdmin } = useOutletContext();
   const [modaleOuverte, setModaleOuverte] = useState(false);
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
@@ -41,6 +42,20 @@ export default function SettingsPage() {
   );
 
   const { envoi, erreur: erreurAction, setErreur, soumettre } = useSoumission();
+
+  /**
+   * La photo du compte.
+   *
+   * Elle s'enregistre seule, sans bouton : le champ ne fait rien d'autre
+   * ici, et un "Enregistrer" pour un seul reglage aurait ete un pas de
+   * plus pour rien. Elle apparait ensuite partout ou l'equipe prend la
+   * parole -- le bandeau, et les conversations.
+   */
+  async function poserPhoto(url) {
+    await soumettre(() => teamService.changerSaPhoto(url), {
+      onSucces: () => rafraichirAdmin?.(),
+    });
+  }
 
   // --- Equipe et journal ---------------------------------------------
   const estAdministrateur = admin?.role === 'ADMIN';
@@ -146,6 +161,15 @@ export default function SettingsPage() {
           </button>
         }
       >
+        <ChampPhotoProfil
+          valeur={admin?.photoUrl ?? ''}
+          nom={admin?.fullName ?? admin?.adminLog}
+          televerser={teamService.televerserPhoto}
+          onChange={poserPhoto}
+          disabled={envoi}
+          aide="Une image — JPEG, PNG ou WebP. Elle accompagne vos réponses dans la messagerie."
+        />
+
         <dl className="fiche">
           <LigneFiche terme="Nom affiché">{admin?.fullName ?? admin?.adminLog}</LigneFiche>
           <LigneFiche terme="Identifiant">{admin?.adminLog}</LigneFiche>

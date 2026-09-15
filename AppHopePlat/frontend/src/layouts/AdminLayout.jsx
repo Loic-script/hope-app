@@ -97,7 +97,7 @@ const ENTREES_PROFIL = [{ to: '/admin/settings', label: 'Paramètres', Icone: Ic
  * GET /api/admin/me arrive par le contexte et redescend vers les pages.
  */
 export default function AdminLayout() {
-  const { admin } = useOutletContext();
+  const { admin, rafraichir } = useOutletContext();
   const navigate = useNavigate();
   const emplacement = useLocation();
 
@@ -128,7 +128,11 @@ export default function AdminLayout() {
       espace="Espace administrateur"
       accueil="/admin"
       cleRail="hope.admin.rail-replie"
-      identite={{ nom: admin?.adminLog ?? 'AdminHope', role: 'Administrateur' }}
+      identite={{
+        nom: admin?.adminLog ?? 'AdminHope',
+        role: 'Administrateur',
+        photoUrl: admin?.photoUrl,
+      }}
       onDeconnexion={seDeconnecter}
       compteurs={compteurs}
       notifications={{ to: '/admin/notifications', cle: 'notifications' }}
@@ -137,6 +141,8 @@ export default function AdminLayout() {
       <Outlet
         context={{
           admin,
+          // Les parametres s'en servent apres un changement de photo.
+          rafraichirAdmin: rafraichir,
           rafraichirCompteurs,
           // La messagerie commune est le meme ecran dans les trois
           // espaces : elle prend son client et sa racine du contexte.

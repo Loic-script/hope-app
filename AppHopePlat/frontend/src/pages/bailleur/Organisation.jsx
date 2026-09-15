@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
+import ChampPhotoProfil from '../../components/ChampPhotoProfil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
@@ -16,17 +17,19 @@ import { EntetePage, Panneau, Pastille } from './composants.jsx';
  * ecriture que l'espace lui autorise sur ses donnees.
  */
 export default function Organisation() {
-  const { bailleur } = useOutletContext();
+  const { bailleur, rafraichirBailleur } = useOutletContext();
   const { donnees, chargement, erreur, recharger } = useChargement(() => service.profil(), []);
 
   const [fonction, setFonction] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
   const [succes, setSucces] = useState('');
 
   useEffect(() => {
     setFonction(bailleur?.fonction ?? '');
-  }, [bailleur?.fonction]);
+    setPhotoUrl(bailleur?.photoUrl ?? '');
+  }, [bailleur?.fonction, bailleur?.photoUrl]);
 
   async function enregistrer(evenement) {
     evenement.preventDefault();
@@ -34,8 +37,13 @@ export default function Organisation() {
     setRefus('');
     setSucces('');
     try {
-      await service.mettreAJourContact({ fonction });
+      // La photo part avec le reste : televersee, elle n'est rattachee
+      // au compte qu'ici. Sans ce champ, elle disparaitrait au
+      // rechargement.
+      await service.mettreAJourContact({ fonction, photoUrl });
       setSucces('Votre fiche est à jour.');
+      // Le bandeau porte la photo : il doit relire la fiche.
+      rafraichirBailleur?.();
       recharger();
     } catch (echec) {
       setRefus(messageErreur(echec, 'La modification n’a pas pu être enregistrée.'));
@@ -87,6 +95,17 @@ export default function Organisation() {
 
         <Panneau titre="Ma fiche de contact">
           <form className="formulaire-bailleur" onSubmit={enregistrer}>
+            {/* La photo se voit partout ou ce contact prend la parole :
+                l'en-tete de l'espace, et ses messages. */}
+            <ChampPhotoProfil
+              valeur={photoUrl}
+              nom={`${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim()}
+              televerser={service.televerserPhoto}
+              onChange={setPhotoUrl}
+              disabled={envoi}
+              aide="Une image — JPEG, PNG ou WebP. Elle accompagne vos messages à l’équipe."
+            />
+
             <dl className="fiche-part">
               <Ligne terme="Nom" valeur={`${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim()} />
               <Ligne terme="Adresse électronique" valeur={bailleur?.email} />
@@ -104,7 +123,7 @@ export default function Organisation() {
                 disabled={envoi}
               />
               <span className="champ-bailleur__aide">
-                C’est la seule information que vous pouvez modifier ici.
+                Le reste de la fiche est tenu par l’équipe HOPE.
               </span>
             </div>
 

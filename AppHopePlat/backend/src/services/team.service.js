@@ -176,6 +176,30 @@ export async function reinitialiserMotDePasse(id, corps = {}, auteur = null) {
  * L'ancien est exige meme si la session est valide : sans cela, un poste
  * laisse ouvert quelques minutes suffirait a s'approprier le compte.
  */
+/**
+ * Pose ou retire la photo de profil d'un membre de l'equipe.
+ *
+ * Seule une adresse servie par HOPE est acceptee : une adresse
+ * exterieure ferait charger au navigateur une image dont personne ici ne
+ * repond.
+ */
+export async function changerSaPhoto(adminId, corps = {}) {
+  const valeur = corps.photoUrl;
+  let photo = null;
+
+  if (valeur !== null && String(valeur ?? '').trim() !== '') {
+    photo = String(valeur).trim();
+    if (!photo.startsWith('/media/')) {
+      throw new ErreurValidation('La photo doit être téléversée depuis votre espace.', {
+        photoUrl: 'Adresse non acceptée',
+      });
+    }
+  }
+
+  await adminRepository.mettreAJourPhoto(adminId, photo);
+  return { success: true, photoUrl: photo };
+}
+
 export async function changerSonMotDePasse(admin, corps = {}) {
   const actuel = typeof corps.currentPassword === 'string' ? corps.currentPassword : '';
   const nouveau = verifierMotDePasse(corps.newPassword, 'newPassword');

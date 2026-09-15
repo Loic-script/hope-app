@@ -56,6 +56,9 @@ router.use(authenticateAdmin);
  * ci-dessous : elle repond, et la requete n'atteint jamais le verrou.
  */
 router.post('/me/password', team.changerSonMotDePasse);
+// Sa photo de profil : televersee, puis rattachee au compte.
+router.post('/me/photo', televerserMedia, team.televerserPhoto);
+router.patch('/me/photo', team.changerSaPhoto);
 
 /*
  * SECURITE : toute ecriture exige au moins le role coordinateur.

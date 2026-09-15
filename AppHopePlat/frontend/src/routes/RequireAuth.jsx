@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import * as authService from '../services/auth.service.js';
@@ -17,33 +17,34 @@ export default function RequireAuth() {
   const [etat, setEtat] = useState('verification');
   const [admin, setAdmin] = useState(null);
 
-  useEffect(() => {
-    let annule = false;
-
-    async function verifier() {
-      if (!authService.lireJeton()) {
-        if (!annule) setEtat('refuse');
-        return;
-      }
-
-      try {
-        const profil = await authService.recupererProfil();
-        if (annule) return;
-        setAdmin(profil);
-        setEtat('authentifie');
-      } catch {
-        if (annule) return;
-        authService.effacerSession();
-        setEtat('refuse');
-      }
+  /**
+   * Relit le profil aupres du backend.
+   *
+   * Expose aux pages : les parametres l'appellent apres un changement de
+   * photo, pour que le bandeau montre la nouvelle sans attendre une
+   * reconnexion.
+   */
+  const rafraichir = useCallback(async () => {
+    if (!authService.lireJeton()) {
+      setEtat('refuse');
+      return null;
     }
 
-    verifier();
-
-    return () => {
-      annule = true;
-    };
+    try {
+      const profil = await authService.recupererProfil();
+      setAdmin(profil);
+      setEtat('authentifie');
+      return profil;
+    } catch {
+      authService.effacerSession();
+      setEtat('refuse');
+      return null;
+    }
   }, []);
+
+  useEffect(() => {
+    rafraichir();
+  }, [rafraichir]);
 
   if (etat === 'verification') {
     return (
@@ -58,5 +59,5 @@ export default function RequireAuth() {
     return <Navigate to="/admin/login" replace state={{ depuis: emplacement.pathname }} />;
   }
 
-  return <Outlet context={{ admin }} />;
+  return <Outlet context={{ admin, rafraichir }} />;
 }
