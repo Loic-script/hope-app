@@ -11,6 +11,7 @@
  */
 import { transaction } from '../config/database.js';
 import * as projectRepository from '../repositories/project.repository.js';
+import * as taskRepository from '../repositories/task.repository.js';
 import * as categoryRepository from '../repositories/projectCategory.repository.js';
 import * as donationRepository from '../repositories/donation.repository.js';
 import * as investmentRepository from '../repositories/investment.repository.js';
@@ -342,16 +343,25 @@ export async function recupererApercu(id) {
   const projet = await projectRepository.trouverParId(projectId);
   if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
 
-  const [dons, investissements, depenses, justificatifs, beneficiaires, impacts, syntheseImpacts] =
-    await Promise.all([
-      donationRepository.lister({ projectId, limite: 200 }),
-      investmentRepository.listerParProjet(projectId),
-      expenseRepository.lister({ projectId, limite: 200 }),
-      documentRepository.lister({ projectId }),
-      beneficiaryRepository.listerParProjet(projectId),
-      impactRepository.lister({ projectId }),
-      impactRepository.syntheseParProjet(projectId),
-    ]);
+  const [
+    dons,
+    investissements,
+    depenses,
+    justificatifs,
+    beneficiaires,
+    impacts,
+    syntheseImpacts,
+    taches,
+  ] = await Promise.all([
+    donationRepository.lister({ projectId, limite: 200 }),
+    investmentRepository.listerParProjet(projectId),
+    expenseRepository.lister({ projectId, limite: 200 }),
+    documentRepository.lister({ projectId }),
+    beneficiaryRepository.listerParProjet(projectId),
+    impactRepository.lister({ projectId }),
+    impactRepository.syntheseParProjet(projectId),
+    taskRepository.lister({ projetId: projectId }),
+  ]);
 
   const enrichi = enrichir(projet);
 
@@ -375,6 +385,7 @@ export async function recupererApercu(id) {
     beneficiaries: beneficiaires,
     impacts,
     impactSummary: syntheseImpacts,
+    tasks: taches,
   };
 }
 

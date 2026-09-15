@@ -1956,3 +1956,306 @@
     position: static;
   }
 }
+
+
+/* ============================================================
+   12. Projets
+
+   L'entree de l'espace : ce que HOPE mene, et ce qu'il y a a y faire.
+   ============================================================ */
+
+.projets-benevole {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte-projet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.carte-projet:hover,
+/* Le lien etire porte le focus : c'est la carte entiere qui doit le
+   montrer, sinon rien ne bouge au clavier. */
+.carte-projet:has(:focus-visible) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(36, 43, 62, 0.14);
+}
+
+/* --- L'image de couverture --- */
+
+/* "flex: none" : sans lui, la colonne etire l'image pour remplir la
+   carte la plus haute de la rangee, et le rapport 16/9 saute d'une carte
+   a l'autre. */
+.carte-projet__image {
+  position: relative;
+  flex: none;
+  aspect-ratio: 16 / 9;
+  background-color: #eceafa;
+}
+
+.carte-projet__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sans image, le pictogramme du projet plutot qu'un rectangle vide. */
+.carte-projet__sans-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--hope-violet);
+  opacity: 0.35;
+}
+
+.carte-projet__sans-image svg {
+  width: 44px;
+  height: 44px;
+}
+
+.carte-projet__categorie {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.94);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hope-violet-lisible);
+}
+
+/* --- Le corps --- */
+
+.carte-projet__corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px 18px 18px;
+}
+
+.carte-projet__titre {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/*
+ * Le lien du titre couvre la carte entiere : tout le rectangle devient
+ * cliquable, sans qu'un <div onClick> vienne exclure le clavier.
+ */
+.carte-projet__titre a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.carte-projet__titre a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.carte-projet {
+  position: relative;
+}
+
+.carte-projet__lieu {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.carte-projet__texte {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 9px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+/* Les deux comptes, colles au bas de la carte : les cartes d'une meme
+   rangee alignent alors leur pied, quelle que soit la longueur du
+   resume. */
+.carte-projet__compte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.carte-projet__compte span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carte-projet__compte svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Ce qui attend quelqu'un se distingue de ce qui est a zero. */
+.carte-projet__vif {
+  font-weight: 700;
+  color: var(--hope-violet-lisible);
+}
+
+/* ============================================================
+   13. Un projet en particulier
+   ============================================================ */
+
+.tete-projet {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.tete-projet__image {
+  position: relative;
+  min-height: 220px;
+}
+
+.tete-projet__image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tete-projet__corps {
+  padding: 22px 24px;
+}
+
+.tete-projet__lieu {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 6px 0 10px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.tete-projet__lieu svg {
+  width: 16px;
+  height: 16px;
+  color: var(--hope-violet);
+}
+
+/* Les objectifs specifiques : ce que le projet doit avoir change. */
+.tete-projet__objectifs {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Les taches du projet --- */
+
+.taches-projet {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tache-projet {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 2px;
+}
+
+.tache-projet + .tache-projet {
+  border-top: 1px solid var(--admin-bordure);
+}
+
+/* Deja prise : la ligne s'efface un peu, elle n'attend plus personne. */
+.tache-projet--prise {
+  opacity: 0.66;
+}
+
+.tache-projet__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.tache-projet__titre {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.tache-projet__texte {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.tache-projet__faits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 8px;
+}
+
+.tache-projet__echeance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.tache-projet__echeance svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tache-projet .bouton-hope {
+  flex: none;
+}
+
+@media (max-width: 860px) {
+  /* L'image passe au-dessus plutot que de comprimer le texte. */
+  .tete-projet {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tete-projet__image {
+    min-height: 170px;
+  }
+
+  .tache-projet {
+    flex-wrap: wrap;
+  }
+}

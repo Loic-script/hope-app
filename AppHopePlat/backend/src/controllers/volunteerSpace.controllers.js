@@ -7,6 +7,7 @@
  */
 import * as missionService from '../services/mission.service.js';
 import * as taskService from '../services/task.service.js';
+import * as volunteerProjectsService from '../services/volunteerProjects.service.js';
 import * as volunteerProfileService from '../services/volunteerProfile.service.js';
 
 import { gerer } from './handler.js';
@@ -38,6 +39,19 @@ export const missions = {
   laisserUnAvis: gerer(
     (req) => missionService.laisserUnAvis(req.params.id, req.benevole.id, req.body),
     { statut: 201 }
+  ),
+};
+
+/**
+ * Les projets, autour desquels l'espace s'organise desormais.
+ *
+ * La fiche du benevole est passee au detail : elle sert a marquer les
+ * missions ou il est deja inscrit, pas a filtrer ce qu'il voit.
+ */
+export const projets = {
+  lister: gerer(() => volunteerProjectsService.lister()),
+  recuperer: gerer(async (req) =>
+    volunteerProjectsService.recupererParId(req.params.id, await ficheDe(req))
   ),
 };
 

@@ -15,6 +15,67 @@ import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../share
 
 const STATUTS = ['a_faire', 'en_cours', 'livree'];
 
+/* ================================================================
+   Cote administration : creer et retirer les taches d'un projet
+   ================================================================ */
+
+/** Les taches d'un projet, pour la fiche projet du back-office. */
+export async function listerParProjet(projetId) {
+  return taskRepository.lister({ projetId });
+}
+
+/**
+ * Cree une tache sur un projet.
+ *
+ * Elle nait libre : c'est ce qui la rend visible a tous les benevoles.
+ * L'echeance est facultative -- toutes les taches n'en ont pas -- mais
+ * si elle est donnee, elle doit etre une date.
+ */
+export async function creerPourProjet(projetId, corps = {}) {
+  const titre = String(corps.titre ?? '').trim();
+  const description = String(corps.description ?? '').trim();
+  const echeance = String(corps.echeance ?? '').trim();
+
+  const details = {};
+  if (titre === '') details.titre = 'Champ obligatoire';
+  else if (titre.length > 160) details.titre = '160 caractères au maximum';
+  if (echeance !== '' && Number.isNaN(new Date(echeance).getTime())) {
+    details.echeance = 'Date invalide';
+  }
+  if (Object.keys(details).length > 0) {
+    throw new ErreurValidation('La tâche est incomplète.', details);
+  }
+
+  return taskRepository.creer({
+    projetId,
+    titre,
+    description: description === '' ? null : description,
+    echeance: echeance === '' ? null : echeance,
+  });
+}
+
+/**
+ * Retire une tache.
+ *
+ * Seulement si personne ne l'a prise : effacer sous les pieds d'un
+ * benevole qui travaille dessus lui ferait perdre son travail sans un
+ * mot. Il faut alors attendre qu'il la relache.
+ */
+export async function supprimer(id) {
+  const tache = await taskRepository.trouverParId(id);
+  if (!tache) throw new ErreurIntrouvable('La tâche', id);
+
+  if (tache.benevoleId) {
+    throw new ErreurRegleMetier(
+      'Cette tâche est prise par un bénévole : elle ne peut pas être supprimée.',
+      'TACHE_PRISE'
+    );
+  }
+
+  await taskRepository.supprimer(id);
+  return { id };
+}
+
 /** Les taches libres, que n'importe quel benevole peut prendre. */
 export async function listerLibres() {
   const items = await taskRepository.lister({ libres: true });

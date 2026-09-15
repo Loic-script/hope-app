@@ -17,6 +17,7 @@ import {
 } from './forms.jsx';
 import { useSoumission } from '../../hooks/useChargement.js';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
+import * as taskService from '../../services/task.service.js';
 import * as documentService from '../../services/document.service.js';
 import * as donationService from '../../services/donation.service.js';
 import * as donorService from '../../services/donor.service.js';
@@ -1173,6 +1174,86 @@ export function RattachementModale({ ouverte, projet, beneficiaires = [], onFerm
           type="date"
           value={joinedAt}
           onChange={(e) => setJoinedAt(e.target.value)}
+          disabled={envoi}
+        />
+      </div>
+    </ModaleFormulaire>
+  );
+}
+
+/* ==================================================================
+   Tache de projet
+   ================================================================== */
+
+/**
+ * Poser une tache sur un projet.
+ *
+ * Elle nait libre : aucun champ ne designe de benevole, et c'est
+ * volontaire. Une tache attribuee d'office n'est pas du benevolat --
+ * c'est celui qui la prend qui s'y engage.
+ */
+export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
+  const [titre, setTitre] = useState('');
+  const [description, setDescription] = useState('');
+  const [echeance, setEcheance] = useState('');
+  const { envoi, erreur, setErreur, soumettre } = useSoumission();
+
+  useEffect(() => {
+    if (!ouverte) return;
+    setErreur('');
+    setTitre('');
+    setDescription('');
+    setEcheance('');
+  }, [ouverte, setErreur]);
+
+  async function enregistrer() {
+    await soumettre(
+      () => taskService.creer(projet.id, { titre, description, echeance }),
+      { onSucces: onEnregistre }
+    );
+  }
+
+  return (
+    <ModaleFormulaire
+      ouverte={ouverte}
+      titre="Ajouter une tâche"
+      sousTitre={projet ? `Projet : ${projet.name}` : undefined}
+      onFermer={onFermer}
+      onSoumettre={enregistrer}
+      envoi={envoi}
+      erreur={erreur}
+      libelleValider="Ajouter"
+    >
+      <div className="formulaire-grille">
+        <ChampTexte
+          label="Intitulé"
+          id="tache-titre"
+          obligatoire
+          required
+          maxLength={160}
+          value={titre}
+          onChange={(e) => setTitre(e.target.value)}
+          placeholder="Préparer 30 kits de fournitures"
+          disabled={envoi}
+          pleineLargeur
+        />
+        <ChampTexteLong
+          label="Ce qu’il y a à faire"
+          id="tache-description"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          aide="Assez precis pour qu’un bénévole sache s’il peut la prendre."
+          placeholder="Composer les kits : cahiers, stylos, ardoise, règle."
+          disabled={envoi}
+        />
+        <ChampTexte
+          label="Échéance"
+          id="tache-echeance"
+          type="date"
+          value={echeance}
+          onChange={(e) => setEcheance(e.target.value)}
+          aide="Facultative."
           disabled={envoi}
         />
       </div>

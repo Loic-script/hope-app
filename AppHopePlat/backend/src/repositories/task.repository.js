@@ -59,6 +59,36 @@ export async function lister(filtres = {}, client = null) {
   return versListe(resultat.rows);
 }
 
+/**
+ * Cree une tache, libre par defaut.
+ *
+ * Aucun benevole n'est attribue a la creation : la base l'impose pour le
+ * statut "a_faire", et c'est ce qui rend la tache visible a tous dans
+ * l'espace benevole. C'est celui qui la prend qui s'y inscrit.
+ */
+export async function creer({ projetId, titre, description = null, echeance = null }, client = null) {
+  const resultat = await query(
+    `INSERT INTO tache (projet_id, titre, description, echeance)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id`,
+    [projetId, titre, description, echeance],
+    client
+  );
+  return trouverParId(resultat.rows[0].id, client);
+}
+
+/**
+ * Supprime une tache.
+ *
+ * Refuse si quelqu'un l'a prise : effacer sous les pieds d'un benevole
+ * qui travaille dessus lui ferait perdre son travail sans un mot. La
+ * regle est appliquee par le service, qui sait dire pourquoi.
+ */
+export async function supprimer(id, client = null) {
+  const resultat = await query('DELETE FROM tache WHERE id = $1 RETURNING id', [id], client);
+  return resultat.rowCount > 0;
+}
+
 export async function trouverParId(id, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES}

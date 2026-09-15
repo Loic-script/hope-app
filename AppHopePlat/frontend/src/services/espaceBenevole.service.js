@@ -16,6 +16,18 @@ export async function apercu() {
 
 /* ------------------------------- Missions ------------------------------ */
 
+/** GET /api/benevole/projets — ce que HOPE mene, et ce qu'il y a a y faire. */
+export async function listerProjets() {
+  const { data } = await apiBenevole.get('/benevole/projets');
+  return data.items ?? [];
+}
+
+/** GET /api/benevole/projets/:id — le projet, ses taches, ses missions. */
+export async function recupererProjet(id) {
+  const { data } = await apiBenevole.get(`/benevole/projets/${id}`);
+  return data;
+}
+
 /**
  * GET /api/benevole/missions
  * @param {{ format?: string, statut?: string, aVenir?: boolean, search?: string }} filtres

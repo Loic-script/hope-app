@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import * as beneficiaryService from '../services/beneficiary.service.js';
+import * as taskService from '../services/task.service.js';
 import * as catalogService from '../services/catalog.service.js';
 import * as dashboardService from '../services/dashboard.service.js';
 import * as documentService from '../services/document.service.js';
@@ -310,6 +311,21 @@ export const beneficiaries = {
   mettreAJourRattachement: gerer((req) =>
     beneficiaryService.mettreAJourRattachement(req.params.id, req.body)
   ),
+};
+
+/**
+ * Les taches d'un projet, cote equipe.
+ *
+ * L'administrateur les cree et les retire ; ce sont les benevoles qui
+ * les prennent, depuis leur espace. Aucune route ici ne les attribue :
+ * une tache imposee n'est pas du benevolat.
+ */
+export const tasks = {
+  listerParProjet: gerer((req) => taskService.listerParProjet(req.params.projectId)),
+  creer: gerer((req) => taskService.creerPourProjet(req.params.projectId, req.body), {
+    statut: 201,
+  }),
+  supprimer: gerer((req) => taskService.supprimer(req.params.id)),
 };
 
 export const impacts = {

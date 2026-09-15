@@ -15,9 +15,14 @@ import * as espaceService from '../services/espace.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
- * Les cinq ecrans de l'espace benevole, dans l'ordre du parcours :
- * on regarde ce qui se passe, on choisit une mission, on suit ses
- * taches, on compte ses heures, on tient son profil a jour.
+ * Les ecrans de l'espace benevole, dans l'ordre du parcours : on
+ * regarde ce qui se passe, on ouvre un projet et on y prend une tache
+ * ou une mission, on suit ses taches, on compte ses heures, on tient
+ * son profil a jour.
+ *
+ * "Missions" a cede sa place a "Projets". La liste plate des missions
+ * ne disait pas a quoi elles servaient ; elle reste accessible depuis
+ * chaque projet, et depuis les notifications qui y renvoient.
  *
  * Meme decoupage que chez l'administrateur : l'entree d'accueil seule en
  * tete, puis des familles nommees. Deux ici -- ce que le benevole donne
@@ -31,7 +36,7 @@ const GROUPES = [
   {
     titre: 'Mon engagement',
     entrees: [
-      { to: '/benevole/missions', label: 'Missions', Icone: PleineProjets },
+      { to: '/benevole/projets', label: 'Projets', Icone: PleineProjets },
       { to: '/benevole/taches', label: 'Mes tâches', Icone: PleineTaches },
       { to: '/benevole/journal', label: 'Mon journal', Icone: PleineJournal },
     ],

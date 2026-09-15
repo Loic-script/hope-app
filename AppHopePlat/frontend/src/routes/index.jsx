@@ -25,6 +25,8 @@ import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
 import MissionDetail from '../pages/benevole/MissionDetail.jsx';
 import Missions from '../pages/benevole/Missions.jsx';
+import ProjetDetail from '../pages/benevole/ProjetDetail.jsx';
+import ProjetsBenevole from '../pages/benevole/Projets.jsx';
 import MonJournal from '../pages/benevole/MonJournal.jsx';
 import CompleterProfil from '../pages/benevole/CompleterProfil.jsx';
 import MonProfil from '../pages/benevole/MonProfil.jsx';
@@ -107,6 +109,11 @@ export default function AppRoutes() {
 
         <Route element={<BenevoleLayout />}>
           <Route path="/benevole" element={<VueDensemble />} />
+          {/* L'entree de l'espace : ce que HOPE mene, puis ce qu'il y a
+              a y faire. Les missions restent accessibles depuis un
+              projet et depuis les notifications. */}
+          <Route path="/benevole/projets" element={<ProjetsBenevole />} />
+          <Route path="/benevole/projets/:id" element={<ProjetDetail />} />
           <Route path="/benevole/missions" element={<Missions />} />
           <Route path="/benevole/missions/:id" element={<MissionDetail />} />
           <Route path="/benevole/taches" element={<MesTaches />} />

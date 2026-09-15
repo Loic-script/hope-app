@@ -37,6 +37,7 @@ import {
   notifications,
   projects,
   statistics,
+  tasks,
   team,
   volunteers,
   consultation,
@@ -96,6 +97,11 @@ router.delete('/projects/:id', exigerRole('ADMIN'), projects.supprimer);
 router.get('/projects/:projectId/beneficiaries', beneficiaries.listerParProjet);
 router.post('/projects/:projectId/beneficiaries', beneficiaries.rattacherAuProjet);
 router.get('/projects/:projectId/impacts', impacts.listerParProjet);
+
+// Les taches du projet : l'equipe les pose, les benevoles les prennent.
+router.get('/projects/:projectId/tasks', tasks.listerParProjet);
+router.post('/projects/:projectId/tasks', exigerEcriture, tasks.creer);
+router.delete('/tasks/:id', exigerEcriture, tasks.supprimer);
 
 // --- 2. Impact --------------------------------------------------------
 router.get('/impacts', impacts.lister);

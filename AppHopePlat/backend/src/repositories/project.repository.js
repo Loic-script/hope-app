@@ -184,6 +184,70 @@ export async function compter(filtres = {}, client = null) {
   return resultat.rows[0].total;
 }
 
+/**
+ * Les projets tels que l'espace benevole les montre.
+ *
+ * Une selection etroite, et voulue : ni budget, ni dons, ni depenses. Un
+ * benevole vient voir ou il peut aider, pas ce que le projet coute --
+ * et ces montants ne lui sont pas destines.
+ *
+ * Les deux comptes disent ce qu'il y a a prendre : des taches libres,
+ * des missions ouvertes a venir. Un projet sans ni l'une ni l'autre
+ * reste dans la liste, mais il le dit.
+ */
+export async function listerPourBenevole(client = null) {
+  const resultat = await query(
+    `SELECT p.id, p.reference, p.name, p.description, p.location,
+            p.media_url, p.media_type, p.status, p.created_at,
+            c.name AS category_name,
+            COALESCE(t.libres, 0)      AS taches_libres,
+            COALESCE(t.total, 0)       AS taches_total,
+            COALESCE(m.ouvertes, 0)    AS missions_ouvertes
+       FROM projects p
+       LEFT JOIN project_categories c ON c.id = p.category_id
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*) FILTER (WHERE statut = 'a_faire' AND benevole_id IS NULL)::int AS libres,
+                COUNT(*)::int AS total
+           FROM tache WHERE projet_id = p.id
+       ) t ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS ouvertes
+           FROM mission
+          WHERE projet_id = p.id AND statut = 'ouverte' AND date_debut >= NOW()
+       ) m ON TRUE
+      WHERE p.archived_at IS NULL
+      ORDER BY
+        -- Ce qui attend quelqu'un d'abord : un projet ou il y a a faire
+        -- doit se voir avant celui qui n'a rien a proposer.
+        (COALESCE(t.libres, 0) + COALESCE(m.ouvertes, 0)) DESC,
+        p.created_at DESC`,
+    [],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
+/** Un projet, pour l'espace benevole : les memes champs que la liste. */
+export async function trouverPourBenevole(id, client = null) {
+  const resultat = await query(
+    `SELECT p.id, p.reference, p.name, p.description, p.location,
+            p.media_url, p.media_type, p.status, p.created_at,
+            c.name AS category_name,
+            COALESCE(o.liste, '[]'::json) AS objectives
+       FROM projects p
+       LEFT JOIN project_categories c ON c.id = p.category_id
+       LEFT JOIN LATERAL (
+         SELECT json_agg(json_build_object('id', o.id, 'label', o.label)
+                ORDER BY o.position, o.id) AS liste
+           FROM project_objectives o WHERE o.project_id = p.id
+       ) o ON TRUE
+      WHERE p.id = $1 AND p.archived_at IS NULL`,
+    [id],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
 export async function trouverParId(id, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES} FROM projects p ${AGREGATS} WHERE p.id = $1`,

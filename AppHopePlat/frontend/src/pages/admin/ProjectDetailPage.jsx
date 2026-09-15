@@ -7,6 +7,7 @@ import {
   BeneficiaireModale,
   DepenseModale,
   ImpactModale,
+  TacheModale,
   InvestirModale,
   JustificatifModale,
   PreuveModale,
@@ -32,6 +33,7 @@ import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as documentService from '../../services/document.service.js';
 import * as expenseService from '../../services/expense.service.js';
+import * as taskService from '../../services/task.service.js';
 import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as impactService from '../../services/impact.service.js';
@@ -45,6 +47,9 @@ import * as fmt from '../../utils/format.js';
  * onglets. Chaque action recharge cette vue pour que les totaux restent
  * coherents.
  */
+/** Statut d'une tache, tel qu'il s'affiche. */
+const STATUTS_TACHE = { a_faire: 'À faire', en_cours: 'En cours', livree: 'Livrée' };
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const [parametres, setParametres] = useSearchParams();
@@ -191,6 +196,9 @@ export default function ProjectDetailPage() {
   async function supprimerJustificatif() {
     await soumettre(() => documentService.supprimer(modale.cible.id), { onSucces: rechargerTout });
   }
+  async function supprimerTache() {
+    await soumettre(() => taskService.supprimer(modale.cible.id), { onSucces: rechargerTout });
+  }
   async function supprimerImpact() {
     await soumettre(() => impactService.supprimer(modale.cible.id), { onSucces: rechargerTout });
   }
@@ -217,7 +225,14 @@ export default function ProjectDetailPage() {
       compteur: donnees.donations.length + donnees.investments.length,
     },
     { cle: 'depenses', label: 'Dépenses', compteur: donnees.expenses.length },
-    { cle: 'justificatifs', label: 'Justificatifs', compteur: donnees.documents.length },
+    {
+      // Les justificatifs ne sont plus un onglet : ils se rattachent a
+      // une depense, et c'est en face d'elle qu'on les ajoute et qu'on
+      // les ouvre, dans l'onglet Depenses.
+      cle: 'taches',
+      label: 'Tâches à faire',
+      compteur: (donnees.tasks ?? []).length,
+    },
     { cle: 'beneficiaires', label: 'Bénéficiaires', compteur: donnees.beneficiaries.length },
     { cle: 'impact', label: 'Impact', compteur: donnees.impacts.length },
   ];
@@ -745,105 +760,94 @@ export default function ProjectDetailPage() {
       )}
 
       {/* ================= Justificatifs ================= */}
-      {ongletActif === 'justificatifs' && (
+      {/* ================= Taches ================= */}
+      {ongletActif === 'taches' && (
         <Panneau
-          titre="Justificatifs"
-          sousTitre="Factures, reçus, preuves bancaires et contrats prouvant chaque dépense."
+          titre="Tâches à faire"
+          sousTitre="Ce que les bénévoles peuvent prendre en charge sur ce projet."
           serre
           actions={
-            <button
-              type="button"
-              className="btn btn--principal btn--petit"
-              onClick={() => ouvrir('justificatif', null)}
-              disabled={donnees.expenses.length === 0}
-              title={
-                donnees.expenses.length === 0
-                  ? 'Enregistrez d’abord une dépense : un justificatif se rattache toujours à l’une d’elles.'
-                  : undefined
-              }
-            >
-              <IconePlus />
-              Ajouter un justificatif
-            </button>
+            !archive &&
+            enCours && (
+              <button
+                type="button"
+                className="btn btn--principal btn--petit"
+                onClick={() => ouvrir('tache')}
+              >
+                <IconePlus />
+                Ajouter une tâche
+              </button>
+            )
           }
         >
           <Tableau
-            lignes={donnees.documents}
+            lignes={donnees.tasks ?? []}
             colonnes={[
               {
-                cle: 'fileName',
-                titre: 'Document',
-                rendu: (doc) => (
+                cle: 'titre',
+                titre: 'Tâche',
+                rendu: (tache) => (
                   <div>
-                    <div className="table__principal">{doc.fileName}</div>
-                    <div className="table__secondaire">{fmt.tailleFichier(doc.fileSize)}</div>
+                    <div className="table__principal">{tache.titre}</div>
+                    {tache.description && (
+                      <div className="table__secondaire">
+                        {fmt.tronquer(tache.description, 80)}
+                      </div>
+                    )}
                   </div>
                 ),
               },
               {
-                cle: 'documentType',
-                titre: 'Type',
-                rendu: (doc) => (
-                  <Badge
-                    valeur={doc.documentType}
-                    libelles={libelles.documentType}
-                    couleur="violet"
-                  />
+                cle: 'echeance',
+                titre: 'Échéance',
+                rendu: (tache) =>
+                  tache.echeance ? (
+                    fmt.date(tache.echeance)
+                  ) : (
+                    <span className="budget__hors">—</span>
+                  ),
+              },
+              {
+                cle: 'statut',
+                titre: 'Statut',
+                rendu: (tache) => (
+                  <Badge valeur={tache.statut} libelles={STATUTS_TACHE} couleur={
+                    { a_faire: 'ambre', en_cours: 'violet', livree: 'vert' }[tache.statut]
+                  } />
                 ),
               },
               {
-                cle: 'expenseDescription',
-                titre: 'Dépense justifiée',
-                rendu: (doc) => (
-                  <div>
-                    <div>{fmt.tronquer(doc.expenseDescription, 50)}</div>
-                    <div className="table__secondaire">
-                      {fmt.montant(doc.expenseAmount, doc.expenseCurrency)}
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                cle: 'authorName',
-                titre: 'Ajouté par',
-                rendu: (doc) => doc.authorName ?? doc.authorLog ?? '—',
-              },
-              { cle: 'reference', titre: 'Référence', rendu: (doc) => doc.reference ?? '—' },
-              {
-                cle: 'issuedAt',
-                titre: 'Date',
-                rendu: (doc) => fmt.date(doc.issuedAt ?? doc.createdAt),
+                // Qui l'a prise. Rien tant qu'elle est libre : c'est
+                // justement ce qui la rend disponible.
+                cle: 'benevoleId',
+                titre: 'Bénévole',
+                rendu: (tache) =>
+                  tache.benevoleId ? (
+                    <span>Prise{tache.priseLe ? ` le ${fmt.date(tache.priseLe)}` : ''}</span>
+                  ) : (
+                    <span className="budget__hors">Libre</span>
+                  ),
               },
               {
                 cle: 'actions',
                 titre: 'Actions',
                 aligne: 'droite',
-                rendu: (doc) => (
-                  <div className="cellule-actions">
+                rendu: (tache) =>
+                  archive || tache.benevoleId ? null : (
                     <button
                       type="button"
-                      className="lien-action"
-                      onClick={() => ouvrirJustificatif(doc)}
+                      className="lien-action lien-action--danger"
+                      onClick={() => ouvrir('supprimerTache', tache)}
                     >
-                      Ouvrir
+                      Supprimer
                     </button>
-                    {!archive && (
-                      <button
-                        type="button"
-                        className="lien-action lien-action--danger"
-                        onClick={() => ouvrir('supprimerDocument', doc)}
-                      >
-                        Supprimer
-                      </button>
-                    )}
-                  </div>
-                ),
+                  ),
               },
             ]}
             vide={
               <EtatVide
-                titre="Aucun justificatif"
-                texte="Ajoutez-en depuis l’onglet Dépenses, en face de la dépense concernée."
+                titre="Aucune tâche"
+                texte="Ajoutez-en une : elle apparaîtra aussitôt dans l’espace bénévole, et n’importe quel bénévole pourra la prendre."
               />
             }
           />
@@ -1208,6 +1212,13 @@ export default function ProjectDetailPage() {
         onEnregistre={rechargerTout}
       />
 
+      <TacheModale
+        ouverte={modale.nom === 'tache'}
+        projet={projet}
+        onFermer={fermer}
+        onEnregistre={rechargerTout}
+      />
+
       <TerminerProjetModale
         ouverte={modale.nom === 'terminer'}
         projet={projet}
@@ -1250,6 +1261,22 @@ export default function ProjectDetailPage() {
         envoi={envoi}
         erreur={erreurAction}
         libelleConfirmer="Annuler la dépense"
+        danger
+      />
+
+      <ModaleConfirmation
+        ouverte={modale.nom === 'supprimerTache'}
+        titre="Supprimer cette tâche ?"
+        message={
+          modale.cible
+            ? `« ${modale.cible.titre} » disparaîtra de l’espace bénévole. Personne ne l’a prise, rien ne sera perdu.`
+            : ''
+        }
+        onFermer={fermer}
+        onConfirmer={supprimerTache}
+        envoi={envoi}
+        erreur={erreurAction}
+        libelleConfirmer="Supprimer"
         danger
       />
 

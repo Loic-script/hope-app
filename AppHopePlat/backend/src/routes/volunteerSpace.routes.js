@@ -9,7 +9,12 @@
  */
 import { Router } from 'express';
 
-import { missions, profil, taches } from '../controllers/volunteerSpace.controllers.js';
+import {
+  missions,
+  profil,
+  projets,
+  taches,
+} from '../controllers/volunteerSpace.controllers.js';
 import { authenticateVolunteer } from '../middleware/volunteerAuth.middleware.js';
 
 const router = Router();
@@ -18,6 +23,12 @@ router.use(authenticateVolunteer);
 
 // --- Vue d'ensemble ---------------------------------------------------
 router.get('/apercu', missions.apercu);
+
+// --- Projets ----------------------------------------------------------
+// Ce que HOPE mene, et ce qu'il y a a y faire. C'est l'entree de
+// l'espace : les missions et les taches y sont rattachees.
+router.get('/projets', projets.lister);
+router.get('/projets/:id', projets.recuperer);
 
 // --- Missions ---------------------------------------------------------
 // "/missions/miennes" avant "/missions/:id" : sinon "miennes" serait

@@ -1,0 +1,180 @@
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+
+import { PleineCalendrier, PleineLieu, PleineTaches } from '../../components/IconesPleines.jsx';
+import { useChargement } from '../../hooks/useChargement.js';
+import { messageErreur, urlMedia } from '../../services/api.js';
+import * as service from '../../services/espaceBenevole.service.js';
+import * as fmt from '../../utils/format.js';
+import { CarteMission, STATUTS_TACHE } from './composants.jsx';
+
+/**
+ * Un projet, et tout ce qu'un benevole peut y faire.
+ *
+ * La page reunit ce qui etait disperse : les taches d'un cote, les
+ * missions de l'autre, sans qu'on sache a quel projet elles se
+ * rattachaient. Ici le projet vient d'abord, et les deux listes en
+ * decoulent.
+ */
+export default function ProjetDetail() {
+  const { id } = useParams();
+  const { donnees, chargement, erreur, recharger } = useChargement(
+    () => service.recupererProjet(id),
+    [id]
+  );
+
+  const [envoi, setEnvoi] = useState(false);
+  const [refus, setRefus] = useState('');
+
+  async function agir(action) {
+    setEnvoi(true);
+    setRefus('');
+    try {
+      await action();
+      recharger();
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Action impossible pour le moment.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  if (chargement && !donnees) return <p className="bloc__vide">Chargement du projet…</p>;
+  if (erreur) return <p className="alerte-benevole">{erreur}</p>;
+  if (!donnees) return null;
+
+  const { project: projet, tasks: taches, missions } = donnees;
+  const libres = taches.filter((t) => t.statut === 'a_faire' && !t.benevoleId);
+  const prises = taches.filter((t) => t.statut !== 'a_faire' || t.benevoleId);
+
+  return (
+    <div className="accueil-benevole">
+      <p className="fil-retour">
+        <Link to="/benevole/projets">← Tous les projets</Link>
+      </p>
+
+      {/* ---------- La tete du projet ---------- */}
+      <section className="tete-projet">
+        {projet.mediaUrl && (
+          <div className="tete-projet__image">
+            <img src={urlMedia(projet.mediaUrl)} alt="" />
+          </div>
+        )}
+        <div className="tete-projet__corps">
+          <p className="surtitre">
+            <span className="trait-hope surtitre__trait" aria-hidden="true" />
+            {projet.categoryName ?? 'Projet'}
+          </p>
+          <h1 className="accueil-benevole__titre">{projet.name}</h1>
+          {projet.location && (
+            <p className="tete-projet__lieu">
+              <PleineLieu />
+              {projet.location}
+            </p>
+          )}
+          {projet.description && (
+            <p className="accueil-benevole__accroche">{projet.description}</p>
+          )}
+
+          {projet.objectives?.length > 0 && (
+            <ul className="tete-projet__objectifs">
+              {projet.objectives.map((objectif) => (
+                <li key={objectif.id}>{objectif.label}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {refus && <p className="alerte-benevole">{refus}</p>}
+
+      {/* ---------- Les taches ---------- */}
+      <section className="bloc">
+        <div className="bloc__entete">
+          <h2 className="bloc__titre">Tâches à faire</h2>
+          <p className="bloc__sous-titre">
+            {libres.length > 0
+              ? `${libres.length} à prendre sur ${taches.length}`
+              : `${taches.length} au total`}
+          </p>
+        </div>
+
+        {taches.length === 0 ? (
+          <p className="bloc__vide">
+            Aucune tâche sur ce projet pour l’instant. L’équipe en publiera au fil des
+            besoins.
+          </p>
+        ) : (
+          <ul className="taches-projet">
+            {[...libres, ...prises].map((tache) => (
+              <li
+                key={tache.id}
+                className={`tache-projet${tache.benevoleId ? ' tache-projet--prise' : ''}`}
+              >
+                <span className="carre-icone carre-icone--bleu" aria-hidden="true">
+                  <PleineTaches />
+                </span>
+
+                <div className="tache-projet__corps">
+                  <p className="tache-projet__titre">{tache.titre}</p>
+                  {tache.description && (
+                    <p className="tache-projet__texte">{tache.description}</p>
+                  )}
+                  <p className="tache-projet__faits">
+                    <span className={`pastille pastille--${
+                      { a_faire: 'orange', en_cours: 'bleu', livree: 'valide' }[tache.statut]
+                    }`}>
+                      {STATUTS_TACHE[tache.statut]}
+                    </span>
+                    {tache.echeance && (
+                      <span className="tache-projet__echeance">
+                        <PleineCalendrier />À rendre le {fmt.date(tache.echeance)}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/*
+                  Seules les taches libres proposent une action. Celles
+                  qui sont prises le sont peut-etre par quelqu'un
+                  d'autre : "Mes tâches" est l'ecran ou l'on agit sur les
+                  siennes.
+                */}
+                {!tache.benevoleId && (
+                  <button
+                    type="button"
+                    className="bouton-hope bouton-hope--creux"
+                    disabled={envoi}
+                    onClick={() => agir(() => service.prendreTache(tache.id))}
+                  >
+                    Prendre
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ---------- Les missions ---------- */}
+      <section className="bloc">
+        <div className="bloc__entete">
+          <h2 className="bloc__titre">Missions</h2>
+          <Link className="bloc__lien" to="/benevole/missions">
+            Toutes les missions
+          </Link>
+        </div>
+
+        {missions.length === 0 ? (
+          <p className="bloc__vide">Aucune mission prévue sur ce projet.</p>
+        ) : (
+          <div className="cartes">
+            {missions.map((mission) => (
+              <CarteMission key={mission.id} mission={mission} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
