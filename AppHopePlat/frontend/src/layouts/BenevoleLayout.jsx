@@ -102,7 +102,14 @@ export default function BenevoleLayout() {
       compteurs={compteurs}
       notifications={{ to: '/benevole/notifications', cle: 'notifications' }}
     >
-      <Outlet context={{ benevole, api: apiBenevole, rafraichirCompteurs }} />
+      <Outlet
+        context={{
+          benevole,
+          api: apiBenevole,
+          rafraichirCompteurs,
+          racineConversations: '/espace',
+        }}
+      />
     </CoqueEspace>
   );
 }

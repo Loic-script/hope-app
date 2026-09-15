@@ -21,6 +21,7 @@ import {
   televerserPreuve,
 } from '../middleware/upload.middleware.js';
 
+import { conversations } from '../controllers/conversation.controllers.js';
 import {
   beneficiaries,
   catalog,
@@ -106,6 +107,13 @@ router.delete('/tasks/:id', exigerEcriture, tasks.supprimer);
 
 // Le courrier des espaces benevole et bailleur, distinct de celui des
 // donateurs : autre table, autres destinataires.
+// Les conversations : l'equipe y est un participant comme un autre.
+router.get('/conversations/annuaire', conversations.annuaire);
+router.get('/conversations', conversations.lister);
+router.post('/conversations', conversations.ouvrir);
+router.get('/conversations/:id', conversations.recuperer);
+router.post('/conversations/:id/messages', conversations.ecrire);
+
 router.get('/espace-messages', messagesEspaces.lister);
 router.post('/espace-messages/:id/reponse', exigerEcriture, messagesEspaces.repondre);
 router.patch('/espace-messages/:id/lu', messagesEspaces.marquerLu);

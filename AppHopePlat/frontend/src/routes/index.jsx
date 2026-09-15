@@ -20,7 +20,7 @@ import Authentification from '../pages/Authentification.jsx';
 import BienvenueDonateur from '../pages/donateur/Bienvenue.jsx';
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
-import MessagesEspace from '../pages/espace/MessagesEspace.jsx';
+import ConversationsEspace from '../pages/espace/Conversations.jsx';
 import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
 import MissionDetail from '../pages/benevole/MissionDetail.jsx';
@@ -98,7 +98,7 @@ export default function AppRoutes() {
           <Route path="/bailleur/actualites" element={<ActualitesBailleur />} />
           <Route path="/bailleur/organisation" element={<OrganisationBailleur />} />
           <Route path="/bailleur/notifications" element={<NotificationsEspace />} />
-          <Route path="/bailleur/messages" element={<MessagesEspace />} />
+          <Route path="/bailleur/messages" element={<ConversationsEspace />} />
         </Route>
       </Route>
 
@@ -122,7 +122,7 @@ export default function AppRoutes() {
           {/* Communs aux espaces : le meme ecran, servi par le client
               axios que la coque fournit. */}
           <Route path="/benevole/notifications" element={<NotificationsEspace />} />
-          <Route path="/benevole/messages" element={<MessagesEspace />} />
+          <Route path="/benevole/messages" element={<ConversationsEspace />} />
         </Route>
       </Route>
 
@@ -148,6 +148,9 @@ export default function AppRoutes() {
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/donors" element={<DonorsPage />} />
           <Route path="/admin/messages" element={<MessagesPage />} />
+          {/* La messagerie commune : l'equipe y est un participant
+              comme un autre. Le courrier des donateurs garde son ecran. */}
+          <Route path="/admin/conversations" element={<ConversationsEspace />} />
           <Route path="/admin/volunteers" element={<VolunteersPage />} />
           <Route path="/admin/funders" element={<FundersPage />} />
           <Route path="/admin/statistics" element={<StatisticsPage />} />

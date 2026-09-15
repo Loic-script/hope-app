@@ -362,7 +362,7 @@ export const notifications = {
   lister: gerer((req) => notificationService.lister(req.query)),
   marquerLue: gerer((req) => notificationService.marquerLue(req.params.id)),
   toutMarquerLu: gerer(() => notificationService.toutMarquerLu()),
-  compteurs: gerer(() => notificationService.compteurs()),
+  compteurs: gerer((req) => notificationService.compteurs(req.admin)),
 };
 
 export const messages = {

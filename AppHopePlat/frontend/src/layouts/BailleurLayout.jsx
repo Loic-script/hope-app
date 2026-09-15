@@ -112,7 +112,14 @@ export default function BailleurLayout() {
       compteurs={compteurs}
       notifications={{ to: '/bailleur/notifications', cle: 'notifications' }}
     >
-      <Outlet context={{ bailleur, api: apiBailleur, rafraichirCompteurs }} />
+      <Outlet
+        context={{
+          bailleur,
+          api: apiBailleur,
+          rafraichirCompteurs,
+          racineConversations: '/espace',
+        }}
+      />
     </CoqueEspace>
   );
 }

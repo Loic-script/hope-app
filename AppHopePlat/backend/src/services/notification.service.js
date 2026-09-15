@@ -5,6 +5,7 @@
  * sienne au moment de l'evenement (un don encaisse, un projet termine, un
  * investissement, un message recu). Ce service ne fait que les servir.
  */
+import * as conversationRepository from '../repositories/conversation.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
 import * as messageRepository from '../repositories/message.repository.js';
 
@@ -45,10 +46,15 @@ export function compterNonLues() {
  * Compteurs affiches en pastille dans la barre laterale.
  * Volontairement leger : appele a chaque changement de page.
  */
-export async function compteurs() {
-  const [notifications, messages] = await Promise.all([
+export async function compteurs(admin = null) {
+  const [notifications, messages, conversations] = await Promise.all([
     notificationRepository.compterNonLues(),
     messageRepository.compterNonLus(),
+    // La messagerie commune : propre a l'administrateur connecte, la ou
+    // les deux autres comptes sont ceux de l'equipe entiere.
+    admin?.id
+      ? conversationRepository.compterNonLues({ type: 'admin', id: admin.id })
+      : Promise.resolve(0),
   ]);
-  return { notifications, messages };
+  return { notifications, messages, conversations };
 }

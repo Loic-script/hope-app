@@ -1179,6 +1179,138 @@ BEGIN
 END;
 $$;
 
+/* ================================================================
+   Conversations entre personnes
+
+   La messagerie precedente n'avait qu'un destinataire : HOPE. Un
+   benevole ecrivait a l'equipe, l'equipe repondait, et deux benevoles
+   d'une meme mission n'avaient aucun moyen de se parler.
+
+   Ici une conversation reunit des participants, et chacun peut y
+   ecrire. Le modele ne connait pas les roles : un administrateur y est
+   un participant comme un autre.
+
+   Deux tables d'identite coexistent dans HOPE -- "utilisateur" pour ceux
+   qui s'inscrivent, "admins" pour l'equipe. Un participant porte donc
+   l'une OU l'autre, jamais les deux, et une contrainte le verifie. Les
+   fondre en une seule table aurait touche l'authentification des quatre
+   espaces ; ce n'est pas le moment.
+   ================================================================ */
+
+CREATE TABLE IF NOT EXISTS conversation (
+  id      BIGSERIAL    PRIMARY KEY,
+  -- Facultatif : les conversations ouvertes depuis l'annuaire n'en ont
+  -- pas. Il ne survit que des anciens fils adresses a l'equipe.
+  sujet   VARCHAR(160),
+  cree_le TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  maj_le  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS conversation_maj_idx ON conversation (maj_le DESC);
+
+CREATE TABLE IF NOT EXISTS conversation_participant (
+  id              BIGSERIAL   PRIMARY KEY,
+  conversation_id BIGINT      NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
+  utilisateur_id  UUID        REFERENCES utilisateur(id) ON DELETE CASCADE,
+  admin_id        INTEGER     REFERENCES admins(id) ON DELETE CASCADE,
+  -- Jusqu'ou cette personne a lu. Un horodatage plutot qu'un drapeau par
+  -- message : le non-lu se compte alors d'une comparaison, et rien n'est
+  -- a mettre a jour message par message.
+  lu_jusqu_a      TIMESTAMPTZ,
+  rejoint_le      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT participant_une_seule_identite CHECK (
+    (utilisateur_id IS NOT NULL AND admin_id IS NULL) OR
+    (utilisateur_id IS NULL AND admin_id IS NOT NULL)
+  )
+);
+
+-- Une personne ne figure qu'une fois dans une conversation. Deux index
+-- partiels plutot qu'une contrainte unique : la colonne inutilisee vaut
+-- NULL, et NULL n'entre pas dans une unicite composee.
+CREATE UNIQUE INDEX IF NOT EXISTS participant_utilisateur_unique
+  ON conversation_participant (conversation_id, utilisateur_id)
+  WHERE utilisateur_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS participant_admin_unique
+  ON conversation_participant (conversation_id, admin_id)
+  WHERE admin_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS participant_utilisateur_idx
+  ON conversation_participant (utilisateur_id);
+CREATE INDEX IF NOT EXISTS participant_admin_idx
+  ON conversation_participant (admin_id);
+
+CREATE TABLE IF NOT EXISTS conversation_message (
+  id              BIGSERIAL   PRIMARY KEY,
+  conversation_id BIGINT      NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
+  -- L'auteur, dans l'une des deux tables d'identite. Mis a NULL si le
+  -- compte disparait : le message reste, la conversation garde son sens.
+  utilisateur_id  UUID        REFERENCES utilisateur(id) ON DELETE SET NULL,
+  admin_id        INTEGER     REFERENCES admins(id) ON DELETE SET NULL,
+  corps           TEXT        NOT NULL,
+  cree_le         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT message_une_seule_identite CHECK (
+    (utilisateur_id IS NOT NULL AND admin_id IS NULL) OR
+    (utilisateur_id IS NULL AND admin_id IS NOT NULL)
+  )
+);
+
+CREATE INDEX IF NOT EXISTS conversation_message_idx
+  ON conversation_message (conversation_id, cree_le);
+
+/*
+ * Reprise des fils adresses a l'equipe.
+ *
+ * Chaque fil devient une conversation entre son auteur et
+ * l'administrateur qui lui avait repondu -- a defaut, le premier de la
+ * table : il faut bien quelqu'un en face pour que la conversation existe.
+ */
+DO $$
+DECLARE
+  premier_admin INTEGER;
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'message_utilisateur')
+     AND NOT EXISTS (SELECT 1 FROM conversation) THEN
+
+    SELECT id INTO premier_admin FROM admins ORDER BY id LIMIT 1;
+
+    INSERT INTO conversation (id, sujet, cree_le, maj_le)
+    SELECT id, sujet, cree_le, updated_at FROM message_utilisateur;
+    PERFORM setval(
+      'conversation_id_seq',
+      COALESCE((SELECT MAX(id) FROM conversation), 1)
+    );
+
+    -- L'auteur du fil.
+    INSERT INTO conversation_participant (conversation_id, utilisateur_id, lu_jusqu_a)
+    SELECT id, utilisateur_id, updated_at FROM message_utilisateur;
+
+    -- L'equipe, en la personne de qui a repondu.
+    INSERT INTO conversation_participant (conversation_id, admin_id)
+    SELECT m.id,
+           COALESCE(
+             (SELECT e.admin_id FROM message_entree e
+               WHERE e.fil_id = m.id AND e.admin_id IS NOT NULL
+               ORDER BY e.cree_le LIMIT 1),
+             premier_admin
+           )
+      FROM message_utilisateur m
+     WHERE premier_admin IS NOT NULL;
+
+    INSERT INTO conversation_message
+      (conversation_id, utilisateur_id, admin_id, corps, cree_le)
+    SELECT e.fil_id,
+           CASE WHEN e.auteur = 'utilisateur' THEN m.utilisateur_id END,
+           CASE WHEN e.auteur = 'hope' THEN COALESCE(e.admin_id, premier_admin) END,
+           e.corps, e.cree_le
+      FROM message_entree e
+      JOIN message_utilisateur m ON m.id = e.fil_id
+     WHERE e.auteur = 'utilisateur' OR premier_admin IS NOT NULL;
+  END IF;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION definir_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN

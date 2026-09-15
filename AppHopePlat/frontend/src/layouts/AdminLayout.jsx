@@ -61,6 +61,14 @@ const GROUPES = [
       // "compteur" designe la cle des pastilles renvoyees par
       // /admin/badges : l'entree porte alors son nombre de non-lus.
       { to: '/admin/messages', label: 'Messages', Icone: PleineMessages, compteur: 'messages' },
+      {
+        // La messagerie commune, distincte du courrier des donateurs :
+        // ici l'equipe parle avec les benevoles et les partenaires.
+        to: '/admin/conversations',
+        label: 'Conversations',
+        Icone: PleineGroupe,
+        compteur: 'conversations',
+      },
       { to: '/admin/donors', label: 'Donateurs', Icone: PleineDonateurs },
       { to: '/admin/volunteers', label: 'Bénévoles', Icone: PleineGroupe },
       { to: '/admin/funders', label: 'Bailleurs', Icone: PleineDons },
@@ -93,7 +101,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
+  const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0, conversations: 0 });
 
   /** Recharge les pastilles : a chaque changement de page, et sur demande. */
   const rafraichirCompteurs = useCallback(async () => {
@@ -126,7 +134,16 @@ export default function AdminLayout() {
       notifications={{ to: '/admin/notifications', cle: 'notifications' }}
       entreesProfil={ENTREES_PROFIL}
     >
-      <Outlet context={{ admin, rafraichirCompteurs }} />
+      <Outlet
+        context={{
+          admin,
+          rafraichirCompteurs,
+          // La messagerie commune est le meme ecran dans les trois
+          // espaces : elle prend son client et sa racine du contexte.
+          api,
+          racineConversations: '/admin',
+        }}
+      />
     </CoqueEspace>
   );
 }

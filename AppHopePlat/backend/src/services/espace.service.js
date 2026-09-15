@@ -6,6 +6,7 @@
  * lequel des deux l'appelle -- il ne recoit qu'un identifiant
  * d'utilisateur, deja verifie par le middleware.
  */
+import * as conversationRepository from '../repositories/conversation.repository.js';
 import * as espaceRepository from '../repositories/espace.repository.js';
 import {
   ErreurIntrouvable,
@@ -183,6 +184,12 @@ export async function marquerReponsesLues(utilisateurId) {
    Pastilles
    ================================================================ */
 
-export function compteurs(utilisateurId) {
-  return espaceRepository.compteurs(utilisateurId);
+export async function compteurs(utilisateurId) {
+  const [base, conversations] = await Promise.all([
+    espaceRepository.compteurs(utilisateurId),
+    conversationRepository.compterNonLues({ type: 'utilisateur', id: utilisateurId }),
+  ]);
+  // "messages" designe desormais les conversations non lues : c'est la
+  // meme pastille, sur la meme entree de menu.
+  return { ...base, messages: conversations };
 }

@@ -7,6 +7,7 @@
  */
 import { Router } from 'express';
 
+import { conversations } from '../controllers/conversation.controllers.js';
 import * as espace from '../controllers/espace.controllers.js';
 import { authenticateEspace } from '../middleware/espaceAuth.middleware.js';
 
@@ -22,6 +23,18 @@ router.get('/notifications', espace.listerNotifications);
 // un identifiant.
 router.patch('/notifications/lues', espace.marquerToutLu);
 router.patch('/notifications/:id/lue', espace.marquerLue);
+
+/*
+ * Les conversations : tout le monde ecrit a tout le monde. Montees
+ * avant l'ancienne messagerie, qui ne servait qu'a ecrire a l'equipe.
+ * "annuaire" avant ":id" : sinon Express le lirait comme un
+ * identifiant.
+ */
+router.get('/conversations/annuaire', conversations.annuaire);
+router.get('/conversations', conversations.lister);
+router.post('/conversations', conversations.ouvrir);
+router.get('/conversations/:id', conversations.recuperer);
+router.post('/conversations/:id/messages', conversations.ecrire);
 
 router.get('/messages', espace.listerMessages);
 router.post('/messages', espace.envoyerMessage);
