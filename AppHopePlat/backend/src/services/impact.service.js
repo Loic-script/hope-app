@@ -64,20 +64,37 @@ export async function recupererParId(id) {
  * d'un autre projet : le tableau la rangerait sous un intitule qui n'a
  * rien a voir avec elle.
  *
- * @returns {Promise<number|null>} l'identifiant retenu, ou null
+ * @returns {Promise<{id: number, label: string}|null>} l'objectif retenu
  */
 async function objectifDuProjet(projectId, valeur) {
   const objectiveId = identifiantFacultatif(valeur, 'objectiveId');
   if (objectiveId === null) return null;
 
   const projet = await projectRepository.trouverParId(projectId);
-  const connu = (projet?.objectives ?? []).some((objectif) => objectif.id === objectiveId);
-  if (!connu) {
+  const objectif = (projet?.objectives ?? []).find((element) => element.id === objectiveId);
+  if (!objectif) {
     throw new ErreurValidation('Cet objectif n’appartient pas au projet.', {
       objectiveId: 'Objectif inconnu pour ce projet',
     });
   }
-  return objectiveId;
+  return objectif;
+}
+
+/**
+ * L'indicateur d'une mesure.
+ *
+ * Mesurer un objectif ne demande plus de code d'indicateur : l'objectif
+ * dit deja ce qu'on compte, et le saisir une seconde fois n'apportait
+ * rien. On reprend donc son intitule, tronque a la longueur de la
+ * colonne. Une mesure generale, elle, garde son indicateur propre --
+ * c'est lui qui la range dans les totaux du projet.
+ */
+function indicateurDeLaMesure(corps, objectif) {
+  const saisi = String(corps.indicator ?? '').trim();
+  if (saisi !== '') return texteRequis(corps.indicator, 'indicator', { max: 120 });
+  if (objectif) return objectif.label.slice(0, 120);
+
+  return texteRequis(corps.indicator, 'indicator', { max: 120 });
 }
 
 async function verifierReferences(projectId, beneficiaryId) {
@@ -104,13 +121,15 @@ export async function creer(corps = {}) {
 
   await verifierReferences(projectId, beneficiaryId);
 
+  const objectif = await objectifDuProjet(projectId, corps.objectiveId);
+
   return impactRepository.creer({
     projectId,
-    objectiveId: await objectifDuProjet(projectId, corps.objectiveId),
+    objectiveId: objectif?.id ?? null,
     beneficiaryId,
     title: texteRequis(corps.title, 'title', { max: 200 }),
     description: texteFacultatif(corps.description, 'description', { max: 5000 }),
-    indicator: texteRequis(corps.indicator, 'indicator', { max: 120 }),
+    indicator: indicateurDeLaMesure(corps, objectif),
     value: nombreRequis(corps.value, 'value'),
     unit: texteFacultatif(corps.unit, 'unit', { max: 60 }),
     measuredAt: dateFacultative(corps.measuredAt, 'measuredAt'),
@@ -136,7 +155,13 @@ export async function mettreAJour(id, corps = {}) {
     colonnes.measured_at = dateFacultative(corps.measuredAt, 'measuredAt');
   }
   if (corps.objectiveId !== undefined) {
-    colonnes.objective_id = await objectifDuProjet(existant.projectId, corps.objectiveId);
+    const objectif = await objectifDuProjet(existant.projectId, corps.objectiveId);
+    colonnes.objective_id = objectif?.id ?? null;
+    // Changer d'objectif change ce qu'on compte : l'intitule suit, sauf
+    // si la mesure porte son propre indicateur.
+    if (objectif && corps.indicator === undefined) {
+      colonnes.indicator = objectif.label.slice(0, 120);
+    }
   }
   if (corps.beneficiaryId !== undefined) {
     const beneficiaryId = identifiantFacultatif(corps.beneficiaryId, 'beneficiaryId');

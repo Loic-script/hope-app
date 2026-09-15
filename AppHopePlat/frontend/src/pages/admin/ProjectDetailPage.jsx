@@ -247,6 +247,9 @@ export default function ProjectDetailPage() {
           </div>
         ),
       },
+      // Mesurer un objectif ne demande ni indicateur ni beneficiaire :
+      // l'objectif dit ce qu'on compte, et la mesure est collective. Les
+      // deux colonnes n'auraient rien montre que l'on puisse changer.
       ...(objectif
         ? [
             {
@@ -255,12 +258,13 @@ export default function ProjectDetailPage() {
               rendu: (i) => <span className="table__principal">{i.objectiveLabel}</span>,
             },
           ]
-        : []),
-      {
-        cle: 'indicator',
-        titre: 'Indicateur',
-        rendu: (i) => libelleIndicateur(i.indicator),
-      },
+        : [
+            {
+              cle: 'indicator',
+              titre: 'Indicateur',
+              rendu: (i) => libelleIndicateur(i.indicator),
+            },
+          ]),
       {
         cle: 'value',
         titre: 'Valeur',
@@ -271,11 +275,15 @@ export default function ProjectDetailPage() {
           </strong>
         ),
       },
-      {
-        cle: 'beneficiaryName',
-        titre: 'Bénéficiaire',
-        rendu: (i) => i.beneficiaryName ?? 'Collectif',
-      },
+      ...(objectif
+        ? []
+        : [
+            {
+              cle: 'beneficiaryName',
+              titre: 'Bénéficiaire',
+              rendu: (i) => i.beneficiaryName ?? 'Collectif',
+            },
+          ]),
       { cle: 'measuredAt', titre: 'Mesuré le', rendu: (i) => fmt.date(i.measuredAt) },
       {
         cle: 'actions',

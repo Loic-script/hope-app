@@ -1370,11 +1370,17 @@ export function ImpactModale({
   }
 
   async function enregistrer() {
+    const mesureObjectif = portee === 'objectif';
+
     const charge = {
       ...formulaire,
       projectId: Number(projectId),
       description: formulaire.description || null,
       unit: formulaire.unit || null,
+      // Champs retires du formulaire de l'objectif : on ne les envoie
+      // pas plutot que d'envoyer du vide, pour que le serveur deduise
+      // l'indicateur de l'objectif et laisse la mesure collective.
+      ...(mesureObjectif ? { indicator: undefined, beneficiaryId: null } : {}),
       objectiveId:
         portee === 'general' || formulaire.objectiveId === ''
           ? null
@@ -1475,34 +1481,43 @@ export function ImpactModale({
           pleineLargeur
         />
 
-        <ChampSelection
-          label="Indicateur courant"
-          id="impact-indicateur-suggere"
-          value={
-            indicateurs.some((element) => element.code === formulaire.indicator)
-              ? formulaire.indicator
-              : ''
-          }
-          onChange={(e) => choisirIndicateur(e.target.value)}
-          options={indicateurs.map((element) => ({
-            valeur: element.code,
-            label: `${element.label} (${element.code})`,
-          }))}
-          vide="Indicateur personnalisé"
-          disabled={envoi}
-          aide="Sélectionnez un indicateur courant ou saisissez le vôtre ci-dessous."
-        />
+        {/*
+          L'indicateur ne se saisit que pour une mesure generale : quand
+          la mesure documente un objectif, c'est l'objectif qui dit ce
+          qu'on compte, et le serveur reprend son intitule.
+        */}
+        {portee !== 'objectif' && (
+          <>
+            <ChampSelection
+              label="Indicateur courant"
+              id="impact-indicateur-suggere"
+              value={
+                indicateurs.some((element) => element.code === formulaire.indicator)
+                  ? formulaire.indicator
+                  : ''
+              }
+              onChange={(e) => choisirIndicateur(e.target.value)}
+              options={indicateurs.map((element) => ({
+                valeur: element.code,
+                label: `${element.label} (${element.code})`,
+              }))}
+              vide="Indicateur personnalisé"
+              disabled={envoi}
+              aide="Sélectionnez un indicateur courant ou saisissez le vôtre ci-dessous."
+            />
 
-        <ChampTexte
-          label="Code de l’indicateur"
-          id="impact-indicateur"
-          obligatoire
-          required
-          value={formulaire.indicator}
-          onChange={(e) => modifier('indicator', e.target.value)}
-          placeholder="children_enrolled"
-          disabled={envoi}
-        />
+            <ChampTexte
+              label="Code de l’indicateur"
+              id="impact-indicateur"
+              obligatoire
+              required
+              value={formulaire.indicator}
+              onChange={(e) => modifier('indicator', e.target.value)}
+              placeholder="children_enrolled"
+              disabled={envoi}
+            />
+          </>
+        )}
 
         <ChampTexte
           label="Valeur"
@@ -1535,7 +1550,7 @@ export function ImpactModale({
           disabled={envoi}
         />
 
-        {beneficiaires.length > 0 && (
+        {portee !== 'objectif' && beneficiaires.length > 0 && (
           <ChampSelection
             label="Bénéficiaire concerné"
             id="impact-beneficiaire"
