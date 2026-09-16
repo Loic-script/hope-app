@@ -5,11 +5,6 @@
  * metier ici. req.bailleur est pose par authenticateFunder et porte
  * l'organisation resolue depuis le compte connecte.
  */
-import fs from 'node:fs';
-import path from 'node:path';
-
-import { DOSSIER_PREUVES } from '../middleware/upload.middleware.js';
-import { ErreurIntrouvable } from '../shared/errors.js';
 import * as funderAuthService from '../services/funderAuth.service.js';
 import * as funderService from '../services/funder.service.js';
 import * as mediaService from '../services/media.service.js';
@@ -99,7 +94,6 @@ export const espace = {
     (req) => funderService.genererCertificat(req.bailleur.bailleurId, req.bailleur),
     { statut: 201 }
   ),
-  preuves: gerer((req) => funderService.preuves(req.bailleur.bailleurId)),
   fil: gerer((req) => funderService.fil(req.bailleur.bailleurId)),
   manifesterUnInteret: gerer(
     (req) =>
@@ -112,31 +106,4 @@ export const espace = {
   ),
   // Le fichier seul : c'est la mise a jour de la fiche qui le rattache.
   televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
-
-  /**
-   * Sert un fichier de preuve, si le bailleur finance le projet.
-   *
-   * Repond le fichier lui-meme, comme cote administration : l'espace
-   * montrait jusqu'ici le nom du fichier sans jamais l'ouvrir.
-   */
-  telechargerPreuve: gerer(async (req, res) => {
-    const fichier = await funderService.fichierDePreuve(
-      req.bailleur.bailleurId,
-      req.params.id,
-      req.params.fileId
-    );
-
-    // basename() neutralise toute tentative de remontee de repertoire.
-    const cheminAbsolu = path.join(DOSSIER_PREUVES, path.basename(fichier.filePath));
-    if (!fs.existsSync(cheminAbsolu)) {
-      throw new ErreurIntrouvable('Le fichier de la preuve', req.params.fileId);
-    }
-
-    res.setHeader('Content-Type', fichier.mimeType ?? 'application/octet-stream');
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="${encodeURIComponent(fichier.fileName ?? 'preuve')}"`
-    );
-    res.sendFile(cheminAbsolu);
-  }),
 };

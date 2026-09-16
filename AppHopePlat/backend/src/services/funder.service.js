@@ -18,7 +18,6 @@ import path from 'node:path';
 
 import { transaction } from '../config/database.js';
 import * as funderRepository from '../repositories/funder.repository.js';
-import * as fieldProofService from './fieldProof.service.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { LIBELLES_TYPE, TYPES_ORGANISATION } from './funderAuth.service.js';
 import { DOSSIER_JUSTIFICATIFS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
@@ -325,34 +324,8 @@ function construireCertificat(donnees) {
 }
 
 /* ================================================================
-   Preuves terrain et fil d'actualite
+   Fil d'actualite
    ================================================================ */
-
-/** Les preuves des projets finances, remontees du back-office. */
-export async function preuves(bailleurId) {
-  const items = await funderRepository.listerPreuves(bailleurId);
-  return { items };
-}
-
-/**
- * Un fichier de preuve, pour l'espace bailleur.
- *
- * L'appartenance est verifiee ici, et non dans la route : c'est la seule
- * chose qui separe les images d'un projet finance de celles d'un projet
- * voisin. Un refus se dit "introuvable" -- repondre "interdit"
- * confirmerait que la preuve existe.
- */
-export async function fichierDePreuve(bailleurId, preuveId, fichierId) {
-  const numero = Number(preuveId);
-  if (!Number.isInteger(numero) || numero <= 0) {
-    throw new ErreurIntrouvable('La preuve', preuveId);
-  }
-
-  const visible = await funderRepository.preuveEstVisible(bailleurId, numero);
-  if (!visible) throw new ErreurIntrouvable('La preuve', preuveId);
-
-  return fieldProofService.recupererFichier(numero, fichierId);
-}
 
 /** Le fil, filtre sur la cible "bailleurs". */
 export async function fil(bailleurId) {

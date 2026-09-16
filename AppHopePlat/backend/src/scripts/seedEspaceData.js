@@ -45,9 +45,9 @@ const NOTIFICATIONS = {
       lien: '/benevole/profil', heures: 240, lu: true },
   ],
   bailleur: [
-    { type: 'preuve', titre: 'Trois preuves terrain publiées',
-      corps: 'Cantines scolaires de Fianarantsoa — photos du service de midi.',
-      lien: '/bailleur/preuves', heures: 5, lu: false },
+    { type: 'rapport', titre: 'De nouveaux justificatifs sont disponibles',
+      corps: 'Cantines scolaires de Fianarantsoa — factures du trimestre.',
+      lien: '/bailleur/rapports', heures: 5, lu: false },
     { type: 'rapport', titre: 'Votre rapport trimestriel est disponible',
       corps: 'Emploi des fonds au 30 septembre, avec le détail par projet.',
       lien: '/bailleur/rapports', heures: 30, lu: false },

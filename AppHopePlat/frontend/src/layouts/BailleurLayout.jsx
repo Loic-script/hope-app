@@ -8,7 +8,6 @@ import {
   PleineGraphique,
   PleineMessages,
   PleineOrganisation,
-  PleinePreuves,
 } from '../components/IconesPleines.jsx';
 import { apiBailleur } from '../services/apiBailleur.js';
 import * as bailleurService from '../services/bailleur.service.js';
@@ -16,9 +15,12 @@ import * as espaceService from '../services/espace.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
- * Les six ecrans de l'espace, dans l'ordre de la lecture : ce que
- * l'argent a produit, ce qui a ete promis, les pieces, les preuves, les
- * nouvelles, puis l'organisation.
+ * Les ecrans de l'espace, dans l'ordre de la lecture : ce que l'argent a
+ * produit, ce qui a ete promis, les pieces, les nouvelles, puis
+ * l'organisation.
+ *
+ * Les preuves terrain n'y figurent plus : ce sont souvent des photos de
+ * beneficiaires, et l'equipe les garde dans son back-office.
  *
  * Regroupes comme ailleurs : le tableau de bord seul en tete, puis ce
  * qui lie le bailleur a HOPE, ce qui se passe sur le terrain, et ce qui
@@ -39,7 +41,6 @@ const GROUPES = [
   {
     titre: 'Sur le terrain',
     entrees: [
-      { to: '/bailleur/preuves', label: 'Preuves terrain', Icone: PleinePreuves },
       { to: '/bailleur/actualites', label: 'Actualités', Icone: PleineActualites },
     ],
   },

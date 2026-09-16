@@ -62,11 +62,6 @@ router.get('/documents', funder.espace.documents);
 router.post('/documents/:id/telechargement', funder.espace.telecharger);
 router.post('/certificat', funder.espace.certificat);
 
-router.get('/preuves', funder.espace.preuves);
-// Le fichier d'une preuve : le service verifie que le projet est bien
-// finance par ce bailleur avant de l'ouvrir.
-router.get('/preuves/:id/fichiers/:fileId', funder.espace.telechargerPreuve);
-
 router.get('/fil', funder.espace.fil);
 router.post('/interet', funder.espace.manifesterUnInteret);
 

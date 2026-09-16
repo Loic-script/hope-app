@@ -6,7 +6,6 @@ import {
   PleineDons,
   PleineJournal,
   PleinePersonne,
-  PleinePreuves,
   PleineTaches,
 } from '../../components/IconesPleines.jsx';
 import * as service from '../../services/espace.service.js';
@@ -26,7 +25,6 @@ const ALLURE = {
   tache: { Icone: PleineTaches, teinte: 'bleu' },
   journal: { Icone: PleineJournal, teinte: 'violet' },
   profil: { Icone: PleinePersonne, teinte: 'jaune' },
-  preuve: { Icone: PleinePreuves, teinte: 'bleu' },
   rapport: { Icone: PleineCalendrier, teinte: 'violet' },
   versement: { Icone: PleineDons, teinte: 'orange' },
   actualite: { Icone: PleineDons, teinte: 'orange' },
