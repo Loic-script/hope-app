@@ -9,6 +9,7 @@
  * en meme temps ne doivent pas se croire tous les deux dessus.
  */
 import { transaction } from '../config/database.js';
+import { plafondPreuve } from '../middleware/upload.middleware.js';
 import * as profileRepository from '../repositories/volunteerProfile.repository.js';
 import * as taskRepository from '../repositories/task.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
@@ -157,8 +158,61 @@ export async function relacher(id, utilisateurId) {
   });
 }
 
-/** Le benevole declare la tache livree. */
-export async function livrer(id, utilisateurId) {
+/** Nombre de fichiers qu'une livraison peut porter. */
+const MAX_FICHIERS_LIVRAISON = 6;
+
+/**
+ * Verifie les fichiers d'une livraison.
+ *
+ * Le televersement accepte aussi le PDF, parce qu'il sert aux preuves
+ * terrain ; une livraison, elle, se prouve par ce qu'on a vu : une photo
+ * ou une video. Le plafond depend du type -- multer ne connait que le
+ * plus haut des deux.
+ */
+function verifierFichiersLivraison(fichiers) {
+  if (fichiers.length === 0) {
+    throw new ErreurValidation('Joignez au moins une photo ou une vidéo de ce que vous avez fait.', {
+      files: 'Preuve obligatoire',
+    });
+  }
+  if (fichiers.length > MAX_FICHIERS_LIVRAISON) {
+    throw new ErreurValidation(`Une livraison porte au plus ${MAX_FICHIERS_LIVRAISON} fichiers.`, {
+      files: 'Trop de fichiers',
+    });
+  }
+
+  for (const fichier of fichiers) {
+    const type = String(fichier.mimetype ?? '');
+    if (!type.startsWith('image/') && !type.startsWith('video/')) {
+      throw new ErreurValidation(
+        `« ${fichier.originalname} » n’est ni une photo ni une vidéo.`,
+        { files: 'Photo ou vidéo attendue' }
+      );
+    }
+
+    const plafond = plafondPreuve(type);
+    if (fichier.size > plafond) {
+      throw new ErreurValidation(
+        `« ${fichier.originalname} » dépasse la taille maximale de ${Math.round(plafond / (1024 * 1024))} Mo.`,
+        { files: 'Fichier trop volumineux' }
+      );
+    }
+  }
+}
+
+/**
+ * Le benevole declare la tache livree, preuve a l'appui.
+ *
+ * Les fichiers et le changement de statut vont ensemble, dans la meme
+ * transaction : une tache livree sans preuve, ou une preuve sans tache
+ * livree, serait un etat que l'ecran ne sait pas montrer.
+ *
+ * @param {Array<object>} fichiers ceux que multer a deja ecrits sur le
+ *        disque. En cas de refus, c'est le controleur qui les efface.
+ */
+export async function livrer(id, utilisateurId, fichiers = []) {
+  verifierFichiersLivraison(fichiers);
+
   return transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
 
@@ -172,6 +226,43 @@ export async function livrer(id, utilisateurId) {
       throw new ErreurRegleMetier('Cette tâche est déjà livrée.', 'TACHE_LIVREE');
     }
 
+    await taskRepository.ajouterFichiers(
+      id,
+      fichiers.map((fichier) => ({
+        nomFichier: String(fichier.originalname ?? 'preuve').slice(0, 255),
+        chemin: fichier.filename,
+        typeMime: fichier.mimetype,
+        taille: fichier.size,
+      })),
+      client
+    );
+
     return taskRepository.livrer(id, client);
   });
+}
+
+/**
+ * Un fichier de livraison, pour le servir.
+ *
+ * Avec un utilisateur : seul le benevole qui porte la tache y accede. Un
+ * refus se dit "introuvable" -- repondre "interdit" confirmerait que la
+ * tache d'un autre a une preuve. Sans utilisateur, c'est l'equipe.
+ *
+ * @param {string|null} utilisateurId
+ */
+export async function fichierDeLivraison(tacheId, fichierId, utilisateurId = null) {
+  const numero = Number(fichierId);
+  if (!Number.isInteger(numero) || numero <= 0) {
+    throw new ErreurIntrouvable('Le fichier', fichierId);
+  }
+
+  const fichier = await taskRepository.trouverFichier(tacheId, numero).catch(() => null);
+  if (!fichier) throw new ErreurIntrouvable('Le fichier', fichierId);
+
+  if (utilisateurId !== null) {
+    const fiche = await profileRepository.garantir(utilisateurId);
+    if (fichier.benevoleId !== fiche.id) throw new ErreurIntrouvable('Le fichier', fichierId);
+  }
+
+  return fichier;
 }

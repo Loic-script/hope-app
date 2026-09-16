@@ -34,6 +34,7 @@ import * as volunteerService from '../services/volunteer.service.js';
 import * as authService from '../services/auth.service.js';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
+import { envoyerFichierLivraison } from './fichierLivraison.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
 
@@ -331,6 +332,11 @@ export const tasks = {
     statut: 201,
   }),
   supprimer: gerer((req) => taskService.supprimer(req.params.id)),
+  // La preuve jointe par le benevole, pour valider la livraison.
+  fichier: gerer(async (req, res) => {
+    const fichier = await taskService.fichierDeLivraison(req.params.id, req.params.fileId);
+    envoyerFichierLivraison(res, fichier);
+  }),
 };
 
 /**

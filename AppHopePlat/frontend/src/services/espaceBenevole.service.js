@@ -4,7 +4,8 @@
  * Tout passe par apiBenevole : ces routes exigent le jeton du benevole,
  * pas celui de l'administrateur.
  */
-import { apiBenevole } from './apiBenevole.js';
+import { URL_API } from './api.js';
+import { apiBenevole, CLE_JETON_BENEVOLE, lireStockage } from './apiBenevole.js';
 
 /* ---------------------------- Vue d'ensemble --------------------------- */
 
@@ -54,10 +55,45 @@ export async function relacherTache(id) {
   return data;
 }
 
-/** POST /api/benevole/taches/:id/livrer */
-export async function livrerTache(id) {
-  const { data } = await apiBenevole.post(`/benevole/taches/${id}/livrer`);
+/**
+ * POST /api/benevole/taches/:id/livrer
+ *
+ * Livrer, c'est joindre sa preuve : les photos et videos partent avec la
+ * declaration, dans la meme requete. Le serveur refuse une livraison
+ * sans elles.
+ *
+ * @param {File[]} fichiers
+ */
+export async function livrerTache(id, fichiers = []) {
+  const formulaire = new FormData();
+  for (const fichier of fichiers) formulaire.append('files', fichier);
+
+  // Le client pose "application/json" par defaut : l'en-tete arriverait
+  // sans la frontiere du multipart, et multer ne trouverait rien a lire.
+  const { data } = await apiBenevole.post(`/benevole/taches/${id}/livrer`, formulaire, {
+    headers: { 'Content-Type': undefined },
+    // Une video d'une minute depasse vite les dix secondes par defaut.
+    timeout: 120000,
+  });
   return data;
+}
+
+/**
+ * Un fichier de sa livraison, sous forme d'URL locale.
+ *
+ * Servi derriere le jeton : une balise <img src> ne peut pas l'atteindre.
+ * L'appelant libere l'URL avec URL.revokeObjectURL.
+ *
+ * @returns {Promise<string|null>}
+ */
+export async function urlDuFichierTache(tache, fichier) {
+  if (!tache?.id || !fichier?.id) return null;
+
+  const reponse = await fetch(`${URL_API}/benevole/taches/${tache.id}/fichiers/${fichier.id}`, {
+    headers: { Authorization: `Bearer ${lireStockage(CLE_JETON_BENEVOLE)}` },
+  });
+  if (!reponse.ok) return null;
+  return URL.createObjectURL(await reponse.blob());
 }
 
 /* --------------------------- Profil et journal ------------------------- */

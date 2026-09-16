@@ -51,7 +51,7 @@ const TABLES_ATTENDUES = {
     'activity_log',
   ],
   'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role'],
-  'Espace benevole': ['benevole', 'mission', 'inscription_mission', 'tache', 'avis_mission'],
+  'Espace benevole': ['benevole', 'mission', 'inscription_mission', 'tache', 'tache_fichier', 'avis_mission'],
   'Espace bailleur': [
     'bailleur',
     'bailleur_contact',

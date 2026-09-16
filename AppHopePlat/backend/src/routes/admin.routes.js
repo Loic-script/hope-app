@@ -107,6 +107,7 @@ router.get('/projects/:projectId/impacts', impacts.listerParProjet);
 router.get('/projects/:projectId/tasks', tasks.listerParProjet);
 router.post('/projects/:projectId/tasks', exigerEcriture, tasks.creer);
 router.delete('/tasks/:id', exigerEcriture, tasks.supprimer);
+router.get('/tasks/:id/files/:fileId', tasks.fichier);
 
 // Le courrier des espaces benevole et bailleur, distinct de celui des
 // donateurs : autre table, autres destinataires.

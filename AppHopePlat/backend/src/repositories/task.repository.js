@@ -13,7 +13,17 @@ const COLONNES = `
   t.id, t.projet_id, t.titre, t.description, t.echeance, t.statut,
   t.benevole_id, t.prise_le, t.livree_le, t.validee_par, t.cree_le,
   p.name      AS projet_nom,
-  p.reference AS projet_reference
+  p.reference AS projet_reference,
+  COALESCE((
+    SELECT json_agg(
+             json_build_object(
+               'id', f.id, 'fileName', f.nom_fichier,
+               'mimeType', f.type_mime, 'fileSize', f.taille
+             ) ORDER BY f.position, f.id
+           )
+      FROM tache_fichier f
+     WHERE f.tache_id = t.id
+  ), '[]'::json) AS files
 `;
 
 /**
@@ -145,6 +155,37 @@ export async function livrer(id, client = null) {
     client
   );
   return trouverParId(id, client);
+}
+
+/**
+ * Joint les fichiers de la livraison a la tache.
+ *
+ * Appelee dans la meme transaction que la livraison : une tache ne doit
+ * pas passer "livree" sans sa preuve, ni une preuve rester sans tache.
+ */
+export async function ajouterFichiers(tacheId, fichiers, client = null) {
+  for (const [rang, fichier] of fichiers.entries()) {
+    await query(
+      `INSERT INTO tache_fichier (tache_id, nom_fichier, chemin, type_mime, taille, position)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [tacheId, fichier.nomFichier, fichier.chemin, fichier.typeMime, fichier.taille, rang],
+      client
+    );
+  }
+}
+
+/** Un fichier de livraison, avec de quoi le servir. */
+export async function trouverFichier(tacheId, fichierId, client = null) {
+  const resultat = await query(
+    `SELECT f.id, f.tache_id, f.nom_fichier AS file_name, f.chemin AS file_path,
+            f.type_mime AS mime_type, t.benevole_id
+       FROM tache_fichier f
+       JOIN tache t ON t.id = f.tache_id
+      WHERE f.tache_id = $1 AND f.id = $2`,
+    [tacheId, fichierId],
+    client
+  );
+  return versObjet(resultat.rows[0]);
 }
 
 /** Compteurs des trois colonnes de "Mes taches". */

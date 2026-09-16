@@ -34,6 +34,7 @@ import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as documentService from '../../services/document.service.js';
 import * as expenseService from '../../services/expense.service.js';
+import { Carrousel } from '../../components/preuves/MediasPreuve.jsx';
 import * as taskService from '../../services/task.service.js';
 import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fundService from '../../services/fund.service.js';
@@ -57,6 +58,8 @@ export default function ProjectDetailPage() {
   const [ongletActif, setOngletActif] = useState(parametres.get('onglet') ?? 'general');
 
   const [modale, setModale] = useState({ nom: null, cible: null });
+  // La preuve d'une tache livree, ouverte en grand.
+  const [preuveTache, setPreuveTache] = useState(null);
   const ouvrir = (nom, cible = null) => setModale({ nom, cible });
   const fermer = () => setModale({ nom: null, cible: null });
 
@@ -935,6 +938,24 @@ export default function ProjectDetailPage() {
                   ),
               },
               {
+                // La preuve jointe a la livraison : c'est sur elle que
+                // l'equipe juge qu'une tache est vraiment faite.
+                cle: 'files',
+                titre: 'Preuve',
+                rendu: (tache) =>
+                  tache.files?.length > 0 ? (
+                    <button
+                      type="button"
+                      className="lien-action"
+                      onClick={() => setPreuveTache({ tache, rang: 0 })}
+                    >
+                      Voir ({tache.files.length})
+                    </button>
+                  ) : (
+                    <span className="budget__hors">—</span>
+                  ),
+              },
+              {
                 cle: 'actions',
                 titre: 'Actions',
                 aligne: 'droite',
@@ -1311,6 +1332,16 @@ export default function ProjectDetailPage() {
         onFermer={fermer}
         onEnregistre={rechargerTout}
       />
+
+      {preuveTache && (
+        <Carrousel
+          preuve={{ ...preuveTache.tache, description: preuveTache.tache.titre }}
+          charger={taskService.urlDuFichier}
+          rang={preuveTache.rang}
+          onRang={(rang) => setPreuveTache((actuel) => ({ ...actuel, rang }))}
+          onFermer={() => setPreuveTache(null)}
+        />
+      )}
 
       {/* Une seule fenetre pour les deux tableaux : ce qui change est la
           portee de la mesure -- le projet entier, ou un objectif. */}

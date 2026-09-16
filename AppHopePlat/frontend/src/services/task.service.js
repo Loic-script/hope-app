@@ -4,7 +4,8 @@
  * L'equipe les pose et les retire ; ce sont les benevoles qui les
  * prennent, depuis leur propre espace et leur propre service.
  */
-import { api } from './api.js';
+import { api, URL_API } from './api.js';
+import { lireJeton } from './auth.service.js';
 
 /** GET /api/admin/projects/:id/tasks */
 export async function listerParProjet(projetId) {
@@ -22,4 +23,20 @@ export async function creer(projetId, tache) {
 export async function supprimer(id) {
   const { data } = await api.delete(`/admin/tasks/${id}`);
   return data;
+}
+
+/**
+ * Un fichier joint par le benevole a sa livraison, sous forme d'URL
+ * locale -- le fichier est servi derriere le jeton de l'equipe.
+ *
+ * @returns {Promise<string|null>}
+ */
+export async function urlDuFichier(tache, fichier) {
+  if (!tache?.id || !fichier?.id) return null;
+
+  const reponse = await fetch(`${URL_API}/admin/tasks/${tache.id}/files/${fichier.id}`, {
+    headers: { Authorization: `Bearer ${lireJeton()}` },
+  });
+  if (!reponse.ok) return null;
+  return URL.createObjectURL(await reponse.blob());
 }

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 
+import { Carrousel } from '../../components/preuves/MediasPreuve.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 import { STATUTS_TACHE } from './composants.jsx';
+import { DetailTacheModale, LivraisonModale } from './ModalesTache.jsx';
 
 /**
  * Mes taches, en trois colonnes : a faire, en cours, livree.
@@ -22,6 +24,13 @@ export default function MesTaches() {
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
 
+  // Les trois fenetres : lire une tache libre, livrer la sienne, revoir
+  // la preuve d'une tache livree.
+  const [enLecture, setEnLecture] = useState(null);
+  const [aLivrer, setALivrer] = useState(null);
+  const [preuve, setPreuve] = useState(null);
+
+  /** @returns {Promise<boolean>} vrai si l'action a abouti */
   async function agir(action) {
     setEnvoi(true);
     setRefus('');
@@ -29,8 +38,10 @@ export default function MesTaches() {
       await action();
       miennes.recharger();
       libres.recharger();
+      return true;
     } catch (echec) {
       setRefus(messageErreur(echec, 'Action impossible pour le moment.'));
+      return false;
     } finally {
       setEnvoi(false);
     }
@@ -59,6 +70,7 @@ export default function MesTaches() {
           compteur={aPrendre.length}
           vide="Toutes les tâches sont prises. Revenez plus tard."
           taches={aPrendre}
+          onOuvrir={setEnLecture}
           rendreActions={(tache) => (
             <button
               type="button"
@@ -83,7 +95,7 @@ export default function MesTaches() {
                 type="button"
                 className="btn btn--principal btn--petit"
                 disabled={envoi}
-                onClick={() => agir(() => service.livrerTache(tache.id))}
+                onClick={() => setALivrer(tache)}
               >
                 Marquer livrée
               </button>
@@ -106,16 +118,60 @@ export default function MesTaches() {
           vide="Rien de livré pour l’instant."
           taches={taches.filter((t) => t.statut === 'livree')}
           rendreActions={(tache) => (
-            <span className="carte-tache__fait">Livrée le {fmt.date(tache.livreeLe)}</span>
+            <>
+              <span className="carte-tache__fait">Livrée le {fmt.date(tache.livreeLe)}</span>
+              {/* Les taches livrees avant la preuve obligatoire n'en ont pas. */}
+              {tache.files?.length > 0 && (
+                <button
+                  type="button"
+                  className="lien-action carte-tache__preuve"
+                  onClick={() => setPreuve({ tache, rang: 0 })}
+                >
+                  Voir la preuve ({tache.files.length})
+                </button>
+              )}
+            </>
           )}
         />
       </div>
+
+      {enLecture && (
+        <DetailTacheModale
+          tache={enLecture}
+          envoi={envoi}
+          onFermer={() => setEnLecture(null)}
+          onPrendre={async (tache) => {
+            if (await agir(() => service.prendreTache(tache.id))) setEnLecture(null);
+          }}
+        />
+      )}
+
+      {aLivrer && (
+        <LivraisonModale
+          tache={aLivrer}
+          onFermer={() => setALivrer(null)}
+          onLivree={() => {
+            setALivrer(null);
+            miennes.recharger();
+          }}
+        />
+      )}
+
+      {preuve && (
+        <Carrousel
+          preuve={{ ...preuve.tache, description: preuve.tache.titre }}
+          charger={service.urlDuFichierTache}
+          rang={preuve.rang}
+          onRang={(rang) => setPreuve((actuel) => ({ ...actuel, rang }))}
+          onFermer={() => setPreuve(null)}
+        />
+      )}
     </>
   );
 }
 
 /** Une colonne du tableau des taches. */
-function Colonne({ titre, sousTitre, compteur, vide, taches, rendreActions }) {
+function Colonne({ titre, sousTitre, compteur, vide, taches, rendreActions, onOuvrir = null }) {
   return (
     <section className="colonne-taches">
       <h2 className="colonne-taches__titre">
@@ -128,23 +184,48 @@ function Colonne({ titre, sousTitre, compteur, vide, taches, rendreActions }) {
         <p className="colonne-taches__vide">{vide}</p>
       ) : (
         taches.map((tache) => (
-          <CarteTache key={tache.id} tache={tache} actions={rendreActions(tache)} />
+          <CarteTache
+            key={tache.id}
+            tache={tache}
+            actions={rendreActions(tache)}
+            onOuvrir={onOuvrir}
+          />
         ))
       )}
     </section>
   );
 }
 
-/** Une tache en carte, avec ses actions. */
-function CarteTache({ tache, actions }) {
+/**
+ * Une tache en carte, avec ses actions.
+ *
+ * Ouvrable, toute la carte repond au clic : le titre est un bouton dont
+ * la zone s'etire sur la carte entiere. Les actions passent au-dessus et
+ * gardent leur propre clic -- "Prendre cette tache" ne doit pas ouvrir
+ * la fenetre au passage.
+ */
+function CarteTache({ tache, actions, onOuvrir = null }) {
   // Une echeance depassee sur une tache non livree merite d'etre vue.
   const enRetard =
     tache.echeance && tache.statut !== 'livree' && new Date(tache.echeance) < new Date();
 
   return (
-    <article className="carte-tache">
+    <article className={`carte-tache${onOuvrir ? ' carte-tache--ouvrable' : ''}`}>
       <p className="carte-tache__projet">{tache.projetNom}</p>
-      <h3 className="carte-tache__titre">{tache.titre}</h3>
+      <h3 className="carte-tache__titre">
+        {onOuvrir ? (
+          <button
+            type="button"
+            className="carte-tache__ouvrir"
+            onClick={() => onOuvrir(tache)}
+            aria-haspopup="dialog"
+          >
+            {tache.titre}
+          </button>
+        ) : (
+          tache.titre
+        )}
+      </h3>
       {tache.description && <p className="carte-tache__texte">{tache.description}</p>}
 
       <div className="carte-tache__pied">

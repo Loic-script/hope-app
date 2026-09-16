@@ -751,6 +751,31 @@ CREATE TABLE IF NOT EXISTS tache (
 CREATE INDEX IF NOT EXISTS tache_benevole_idx ON tache (benevole_id, statut);
 CREATE INDEX IF NOT EXISTS tache_projet_idx   ON tache (projet_id, statut);
 
+/*
+ * La preuve d'une tache livree : les photos et videos que le benevole
+ * joint en la declarant faite.
+ *
+ * Rattachee a la tache et non publiee comme preuve terrain : ce que
+ * voient les donateurs reste un choix de l'equipe. Elle sert d'abord a
+ * valider la livraison.
+ *
+ * Les colonnes sont nommees comme celles de la tache ; l'API les
+ * expose sous la forme des fichiers de preuve (fileName, mimeType...),
+ * pour que les memes composants de lecture servent aux deux.
+ */
+CREATE TABLE IF NOT EXISTS tache_fichier (
+  id           SERIAL       PRIMARY KEY,
+  tache_id     UUID         NOT NULL REFERENCES tache(id) ON DELETE CASCADE,
+  nom_fichier  VARCHAR(255) NOT NULL,
+  chemin       VARCHAR(500) NOT NULL,
+  type_mime    VARCHAR(100) NOT NULL,
+  taille       INTEGER      NOT NULL,
+  position     SMALLINT     NOT NULL DEFAULT 0,
+  cree_le      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS tache_fichier_tache_idx ON tache_fichier (tache_id, position);
+
 CREATE TABLE IF NOT EXISTS avis_mission (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   mission_id  UUID        NOT NULL REFERENCES mission(id) ON DELETE CASCADE,

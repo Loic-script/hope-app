@@ -10,7 +10,7 @@
 import { Router } from 'express';
 
 import { profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
-import { televerserMedia } from '../middleware/upload.middleware.js';
+import { televerserMedia, televerserPreuve } from '../middleware/upload.middleware.js';
 import { authenticateVolunteer } from '../middleware/volunteerAuth.middleware.js';
 
 const router = Router();
@@ -31,7 +31,9 @@ router.get('/taches/libres', taches.libres);
 router.get('/taches', taches.miennes);
 router.post('/taches/:id/prendre', taches.prendre);
 router.post('/taches/:id/relacher', taches.relacher);
-router.post('/taches/:id/livrer', taches.livrer);
+// Livrer, c'est joindre la preuve : photos et videos sous "files".
+router.post('/taches/:id/livrer', televerserPreuve, taches.livrer);
+router.get('/taches/:id/fichiers/:fileId', taches.fichier);
 
 // --- Profil et journal ------------------------------------------------
 // Completion apres la premiere connexion : meme contenu que la mise a

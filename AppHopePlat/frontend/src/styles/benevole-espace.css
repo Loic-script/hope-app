@@ -271,6 +271,336 @@
   color: #4a4479;
 }
 
+.carte-tache__preuve {
+  font-size: 12.5px;
+}
+
+/* --- Carte ouvrable ---
+   Le titre est un bouton ; son ::after couvre la carte entiere, si bien
+   que tout clic sur la carte l'ouvre. Les actions passent au-dessus pour
+   garder leur propre clic. */
+
+.carte-tache--ouvrable {
+  position: relative;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.carte-tache--ouvrable:hover,
+.carte-tache--ouvrable:has(.carte-tache__ouvrir:focus-visible) {
+  border-color: color-mix(in srgb, var(--hope-violet) 45%, var(--admin-bordure));
+  box-shadow: 0 6px 18px rgba(92, 84, 150, 0.12);
+}
+
+.carte-tache__ouvrir {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.carte-tache__ouvrir::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.carte-tache__ouvrir:focus-visible {
+  outline: none;
+}
+
+.carte-tache--ouvrable:hover .carte-tache__ouvrir {
+  color: var(--hope-violet);
+}
+
+.carte-tache--ouvrable .carte-tache__actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   Fenetre : le detail d'une tache et de son projet
+   ============================================================ */
+
+.detail-tache__texte {
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.detail-tache__texte--vide {
+  color: var(--admin-texte-faible);
+}
+
+.detail-tache__echeance {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background-color: var(--admin-surface-douce);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.detail-tache__echeance svg {
+  width: 15px;
+  height: 15px;
+  color: var(--hope-violet);
+}
+
+.detail-tache__echeance--retard {
+  background-color: var(--hope-erreur-fond);
+  color: var(--hope-erreur);
+}
+
+.detail-tache__echeance--retard svg {
+  color: var(--hope-erreur);
+}
+
+.detail-projet {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.detail-projet__surtitre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.detail-projet__attente {
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+.detail-projet__grille {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Sans image, le texte prend toute la largeur. */
+.detail-projet__grille:not(:has(.detail-projet__image)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.detail-projet__image {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  border-radius: 11px;
+  background-color: var(--admin-surface-douce);
+}
+
+.detail-projet__categorie {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.detail-projet__nom {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.detail-projet__lieu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.detail-projet__lieu svg {
+  width: 15px;
+  height: 15px;
+  color: var(--hope-violet);
+}
+
+.detail-projet__annonce {
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hope-violet-lisible);
+}
+
+.detail-projet__description {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+  white-space: pre-wrap;
+}
+
+.detail-projet__intertitre {
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.detail-projet__objectifs {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .detail-projet__grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   Fenetre : livrer une tache, preuve a l'appui
+   ============================================================ */
+
+.livraison__consigne {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+.livraison__depot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 28px 18px;
+  border: 2px dashed var(--admin-bordure-forte);
+  border-radius: 12px;
+  background-color: var(--admin-surface-douce);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.livraison__depot:hover,
+.livraison__depot--survol,
+.livraison__depot:has(input:focus-visible) {
+  border-color: var(--hope-violet);
+  background-color: color-mix(in srgb, var(--hope-violet) 6%, var(--admin-surface));
+}
+
+.livraison__depot--plein {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* Le champ reste dans le document -- le clavier et les lecteurs d'ecran
+   le trouvent -- mais la zone entiere en tient lieu a l'ecran. */
+.livraison__depot input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.livraison__depot-titre {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.livraison__depot-aide {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.livraison__fichiers {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.livraison__fichier {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+}
+
+.livraison__apercu {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 8px;
+  background-color: #1f1b33;
+}
+
+.livraison__apercu img,
+.livraison__apercu video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.livraison__lecture {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.livraison__infos {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.livraison__nom {
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.livraison__taille {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
 /* ============================================================
    9. Listes simples
    ============================================================ */
