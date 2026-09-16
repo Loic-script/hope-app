@@ -20,7 +20,7 @@ import { transaction } from '../config/database.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { LIBELLES_TYPE, TYPES_ORGANISATION } from './funderAuth.service.js';
-import { DOSSIER_JUSTIFICATIFS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
+import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 
 /** Types de document, et leurs libelles. */
@@ -249,9 +249,12 @@ export async function genererCertificat(bailleurId, bailleur) {
     domaines: domaines.map((d) => d.domaine),
   });
 
-  await fs.mkdir(DOSSIER_JUSTIFICATIFS, { recursive: true });
+  // Dans le dossier que sert /media, et nulle part ailleurs : ecrit parmi
+  // les justificatifs, le certificat avait une adresse qui ne menait a
+  // rien, et "Telecharger" ouvrait une page d'erreur.
+  await fs.mkdir(DOSSIER_MEDIAS, { recursive: true });
   const nomDisque = `certificat-${reference}.pdf`;
-  await fs.writeFile(path.join(DOSSIER_JUSTIFICATIFS, nomDisque), pdf);
+  await fs.writeFile(path.join(DOSSIER_MEDIAS, nomDisque), pdf);
 
   const document = await funderRepository.creerDocument(bailleurId, {
     type: 'certificat',

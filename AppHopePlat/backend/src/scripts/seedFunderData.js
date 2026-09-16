@@ -20,6 +20,7 @@ import path from 'node:path';
 import { fermerPool, query } from '../config/database.js';
 import { DOSSIER_MEDIAS } from '../middleware/upload.middleware.js';
 import * as funderAuthService from '../services/funderAuth.service.js';
+import { installerDocumentsDemo } from './documentsBailleurDemo.js';
 import { poserMedia } from './mediasDemo.js';
 
 const FORCER = process.argv.includes('--force');
@@ -55,7 +56,9 @@ async function vider() {
     const fichiers = await fs.readdir(DOSSIER_MEDIAS);
     await Promise.all(
       fichiers
-        .filter((nom) => nom.startsWith('publication-'))
+        // Visuels des publications, et PDF des documents et certificats :
+        // leurs lignes viennent d'etre videes.
+        .filter((nom) => /^(publication|document|certificat)-/.test(nom))
         .map((nom) => fs.unlink(path.join(DOSSIER_MEDIAS, nom)))
     );
   } catch (erreur) {
@@ -330,39 +333,16 @@ async function installer() {
   });
 
   // --- Documents ------------------------------------------------------
-  const DOCUMENTS = [
-    [fondation, education, 'rapport_impact', 'Rapport d’impact — Éducation, 1er semestre 2026',
-     jour(-180), jour(-90), 14],
-    [fondation, education, 'justificatif_financier', 'Justificatif financier — tranche 1',
-     jour(-250), jour(-200), 6],
-    [fondation, sante, 'justificatif_financier', 'Justificatif financier — Santé, tranche 1',
-     jour(-140), jour(-100), 5],
-    [fondation, education, 'convention', 'Convention de partenariat CONV-AOI-2026-01',
-     null, null, 9],
-    [fondation, null, 'rapport_impact', 'Rapport annuel HOPE 2025', jour(-420), jour(-55), 32],
-    [entreprise, eau, 'rapport_impact', 'Rapport d’impact — Accès à l’eau, Mahajanga',
-     jour(-270), jour(-40), 11],
-    [entreprise, eau, 'justificatif_financier', 'Justificatif financier — versement unique',
-     jour(-270), jour(-260), 4],
-    [entreprise, materiel, 'convention', 'Convention de don matériel RSE-TLM-2026-03',
-     null, null, 7],
-  ];
-
-  for (const [bailleurId, engagementId, type, titre, debut, fin, pages] of DOCUMENTS) {
-    await query(
-      `INSERT INTO document_bailleur
-         (bailleur_id, engagement_id, type, titre, periode_debut, periode_fin,
-          fichier_url, nb_pages, publie_par, publie_le)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-      [
-        bailleurId, engagementId, type, titre, debut, fin,
-        // Les fichiers ne sont pas produits ici : l'espace montre la
-        // fiche et compte les telechargements.
-        `/media/document-${type}-${Math.random().toString(16).slice(2, 10)}.pdf`,
-        pages, adminId, jour(-30),
-      ]
-    );
-  }
+  //
+  // Rapports d'impact, justificatifs, conventions et un certificat, chacun
+  // avec son vrai PDF. Le catalogue vit dans documentsBailleurDemo.js, que
+  // "npm run db:seed-rapports" rejoue aussi sans toucher aux comptes.
+  const documents = await installerDocumentsDemo((sql, valeurs) => query(sql, valeurs), {
+    fondation: { id: fondation, education, sante, formation },
+    telma: { id: entreprise, eau, materiel },
+    projet,
+    adminId,
+  });
 
   // --- Fil d'actualite -------------------------------------------------
   const PUBLICATIONS = [
@@ -423,7 +403,7 @@ async function installer() {
   return {
     bailleurs: BAILLEURS.length,
     engagements: 5,
-    documents: DOCUMENTS.length,
+    documents,
     publications: PUBLICATIONS.length,
   };
 }

@@ -140,7 +140,9 @@ export default function Rapports() {
                       </>
                     )}
                     Publié le {fmt.date(document.publieLe)}
-                    {document.nbPages && ` · ${document.nbPages} pages`}
+                    {document.nbPages &&
+                      ` · ${document.nbPages} page${document.nbPages > 1 ? 's' : ''}`}
+                    {document.projetNom && ` · ${document.projetNom}`}
                     {document.engagementIntitule && ` · ${document.engagementIntitule}`}
                   </p>
 

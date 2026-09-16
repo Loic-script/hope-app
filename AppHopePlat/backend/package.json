@@ -19,7 +19,8 @@
     "test:admin": "node src/scripts/testAdminFlow.js",
     "db:seed-volunteers": "node src/scripts/seedVolunteerData.js",
     "db:seed-funders": "node src/scripts/seedFunderData.js",
-    "db:seed-espace": "node src/scripts/seedEspaceData.js"
+    "db:seed-espace": "node src/scripts/seedEspaceData.js",
+    "db:seed-rapports": "node src/scripts/seedRapportsBailleur.js"
   },
   "engines": {
     "node": ">=18"
