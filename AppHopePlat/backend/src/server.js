@@ -4,6 +4,7 @@
  * Verifie d'abord que PostgreSQL repond : mieux vaut refuser de demarrer que
  * servir une API incapable d'authentifier qui que ce soit.
  */
+
 import { config } from './config/env.js';
 import { creerApplication } from './app.js';
 import { fermerPool, verifierConnexion } from './config/database.js';
