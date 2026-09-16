@@ -8,7 +8,6 @@ import BeneficiariesPage from '../pages/admin/BeneficiariesPage.jsx';
 import BudgetPage from '../pages/admin/BudgetPage.jsx';
 import DonorsPage from '../pages/admin/DonorsPage.jsx';
 import ImpactPage from '../pages/admin/ImpactPage.jsx';
-import MessagesPage from '../pages/admin/MessagesPage.jsx';
 import NotificationsPage from '../pages/admin/NotificationsPage.jsx';
 import ProjectDetailPage from '../pages/admin/ProjectDetailPage.jsx';
 import ProjectFormPage from '../pages/admin/ProjectFormPage.jsx';
@@ -101,6 +100,9 @@ export default function AppRoutes() {
           <Route path="/bailleur/organisation" element={<OrganisationBailleur />} />
           <Route path="/bailleur/notifications" element={<NotificationsEspace />} />
           <Route path="/bailleur/messages" element={<ConversationsEspace />} />
+          {/* La conversation a son adresse : sur un telephone,
+              c'est une page a elle, et le lien se partage. */}
+          <Route path="/bailleur/messages/:id" element={<ConversationsEspace />} />
         </Route>
       </Route>
 
@@ -125,6 +127,9 @@ export default function AppRoutes() {
               axios que la coque fournit. */}
           <Route path="/benevole/notifications" element={<NotificationsEspace />} />
           <Route path="/benevole/messages" element={<ConversationsEspace />} />
+          {/* La conversation a son adresse : sur un telephone,
+              c'est une page a elle, et le lien se partage. */}
+          <Route path="/benevole/messages/:id" element={<ConversationsEspace />} />
         </Route>
       </Route>
 
@@ -149,10 +154,12 @@ export default function AppRoutes() {
           <Route path="/admin/budget" element={<BudgetPage />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/donors" element={<DonorsPage />} />
-          <Route path="/admin/messages" element={<MessagesPage />} />
           {/* La messagerie commune : l'equipe y est un participant
               comme un autre. Le courrier des donateurs garde son ecran. */}
           <Route path="/admin/conversations" element={<ConversationsEspace />} />
+          {/* La conversation a son adresse : sur un telephone,
+              c'est une page a elle, et le lien se partage. */}
+          <Route path="/admin/conversations/:id" element={<ConversationsEspace />} />
           <Route path="/admin/volunteers" element={<VolunteersPage />} />
           <Route path="/admin/funders" element={<FundersPage />} />
           <Route path="/admin/statistics" element={<StatisticsPage />} />

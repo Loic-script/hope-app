@@ -108,6 +108,10 @@ export default function BenevoleLayout() {
           api: apiBenevole,
           rafraichirCompteurs,
           racineConversations: '/espace',
+          // Le chemin de la messagerie dans CET espace : l'ecran est
+          // partage par les trois, et c'est lui qui construit le lien
+          // vers une conversation.
+          cheminMessages: '/benevole/messages',
         }}
       />
     </CoqueEspace>

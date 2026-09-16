@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 
-import { IconePlus, IconeRecherche } from '../../components/admin/AdminIcons.jsx';
+import {
+  IconeChevronGauche,
+  IconePlus,
+  IconeRecherche,
+} from '../../components/admin/AdminIcons.jsx';
 import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { urlMedia } from '../../services/api.js';
 import * as service from '../../services/conversation.service.js';
@@ -29,12 +33,28 @@ const ROLES = {
 };
 
 export default function Conversations() {
-  const { api, racineConversations: racine, rafraichirCompteurs } = useOutletContext();
+  const {
+    api,
+    racineConversations: racine,
+    cheminMessages,
+    rafraichirCompteurs,
+  } = useOutletContext();
+
+  /*
+   * La conversation ouverte est dans l'adresse, pas dans un etat local.
+   *
+   * Elle a donc sa propre page : sur un telephone, la boite et le fil
+   * ne se disputent plus le meme ecran, le lien se partage, et le
+   * bouton Retour du navigateur ramene a la liste au lieu de quitter
+   * la messagerie.
+   */
+  const { id: idUrl } = useParams();
+  const navigate = useNavigate();
+  const actif = idUrl ? Number(idUrl) : null;
 
   const [fils, setFils] = useState([]);
   // Qui je suis, dit par le serveur : lui seul le sait de facon sure.
   const [moi, setMoi] = useState(null);
-  const [actif, setActif] = useState(null);
   const [ouvert, setOuvert] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -54,9 +74,6 @@ export default function Conversations() {
       setMoi(identite);
       setFils(liste);
       setErreur(null);
-      setActif((courant) =>
-        liste.some((c) => c.id === courant) ? courant : (liste[0]?.id ?? null)
-      );
       rafraichirCompteurs?.();
     } catch (e) {
       setErreur(e.response?.data?.message ?? 'Impossible de charger vos conversations.');
@@ -110,6 +127,27 @@ export default function Conversations() {
     }
   }
 
+  /**
+   * Entree envoie, Maj+Entree passe a la ligne.
+   *
+   * C'est la convention de toutes les messageries, et le champ fait
+   * deux lignes : personne ne va chercher le bouton pour une reponse
+   * de trois mots.
+   *
+   * isComposing protege les saisies a composition -- accents composes,
+   * claviers asiatiques -- dont la validation passe aussi par Entree :
+   * sans ce garde-fou, le message partirait au milieu d'un mot.
+   */
+  function surTouche(evenement) {
+    if (
+      evenement.key === 'Enter' &&
+      !evenement.shiftKey &&
+      !evenement.nativeEvent.isComposing
+    ) {
+      envoyer(evenement);
+    }
+  }
+
   async function ouvrirAnnuaire() {
     setAnnuaireOuvert(true);
     setFiltreAnnuaire('');
@@ -125,7 +163,7 @@ export default function Conversations() {
       const id = await service.ouvrir(api, racine, { type: personne.type, id: personne.id });
       setAnnuaireOuvert(false);
       await charger();
-      setActif(id);
+      navigate(`${cheminMessages}/${id}`);
     } catch (e) {
       setErreur(e.response?.data?.message ?? 'La conversation n’a pas pu être ouverte.');
     }
@@ -151,7 +189,14 @@ export default function Conversations() {
 
   return (
     <>
-      <header className="page-benevole__entete">
+      {/* Sur telephone, un fil ouvert prend la page : le grand titre
+          cede ses 150 px au chat, et l'entete du fil dit deja a qui
+          l'on parle. Au-dela, le titre reste -- la place ne manque pas. */}
+      <header
+        className={`page-benevole__entete${
+          actif ? ' page-benevole__entete--fil-ouvert' : ''
+        }`}
+      >
         <p className="surtitre">
           <span className="trait-hope surtitre__trait" aria-hidden="true" />
           Se parler
@@ -164,9 +209,11 @@ export default function Conversations() {
 
       {erreur && <p className="alerte-benevole">{erreur}</p>}
 
-      <div className="messagerie">
+      {/* Sur un telephone, un seul volet a la fois : c'est cette classe
+          qui dit lequel. Au-dela, les deux restent cote a cote. */}
+      <div className={`messagerie${actif || annuaireOuvert ? ' messagerie--fil-ouvert' : ''}`}>
         {/* ================= Les conversations ================= */}
-        <section className="messagerie__volet">
+        <section className="messagerie__volet messagerie__volet--liste">
           <div className="conversations__entete">
             <div>
               <p className="conversations__titre">Conversations</p>
@@ -223,7 +270,7 @@ export default function Conversations() {
                       (fil.id === actif ? ' conversation--active' : '') +
                       (fil.nonLus > 0 ? ' conversation--nouvelle' : '')
                     }
-                    onClick={() => setActif(fil.id)}
+                    onClick={() => navigate(`${cheminMessages}/${fil.id}`)}
                     aria-current={fil.id === actif}
                   >
                     <Pastille personne={gens[0]} />
@@ -255,7 +302,7 @@ export default function Conversations() {
         </section>
 
         {/* ================= Le fil, ou l'annuaire ================= */}
-        <section className="messagerie__volet">
+        <section className="messagerie__volet messagerie__volet--fil">
           {annuaireOuvert ? (
             <>
               <header className="echange__entete">
@@ -321,6 +368,16 @@ export default function Conversations() {
             <>
               <header className="echange__entete">
                 <div className="echange__identite">
+                  {/* Le retour a la boite. Il ne parait que sur
+                      telephone : ailleurs la liste est deja a gauche,
+                      et un bouton de retour n'y mene nulle part. */}
+                  <Link
+                    to={cheminMessages}
+                    className="echange__retour"
+                    aria-label="Retour aux conversations"
+                  >
+                    <IconeChevronGauche />
+                  </Link>
                   <Pastille personne={interlocuteurs[0]} agrandissable />
                   <div style={{ minWidth: 0 }}>
                     <p className="echange__nom">{nommer(interlocuteurs)}</p>
@@ -377,6 +434,7 @@ export default function Conversations() {
                 <textarea
                   value={brouillon}
                   onChange={(e) => setBrouillon(e.target.value)}
+                  onKeyDown={surTouche}
                   placeholder="Écrire un message…"
                   disabled={envoi}
                   aria-label="Votre message"

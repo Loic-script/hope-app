@@ -59,7 +59,9 @@ function destination(notification) {
     return `/admin/projects/${projectId}?onglet=impact`;
   }
   if (type === 'MESSAGE') {
-    return donorAccountId ? `/admin/messages?compte=${donorAccountId}` : '/admin/messages';
+    // Le courrier des donateurs a rejoint la messagerie commune : il
+    // n'y a plus qu'un seul endroit ou lire ce qu'on nous ecrit.
+    return '/admin/conversations';
   }
   if (type === 'DONATION') {
     return projectId ? `/admin/projects/${projectId}?onglet=financement` : '/admin/donors?onglet=dons';

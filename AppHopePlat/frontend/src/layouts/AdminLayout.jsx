@@ -10,7 +10,6 @@ import {
   PleineFamille,
   PleineGraphique,
   PleineGroupe,
-  PleineMessages,
   PleinePreuves,
   PleineProjets,
 } from '../components/IconesPleines.jsx';
@@ -58,12 +57,12 @@ const GROUPES = [
   {
     titre: 'Communauté & contacts',
     entrees: [
-      // "compteur" designe la cle des pastilles renvoyees par
-      // /admin/badges : l'entree porte alors son nombre de non-lus.
-      { to: '/admin/messages', label: 'Messages', Icone: PleineMessages, compteur: 'messages' },
       {
-        // La messagerie commune, distincte du courrier des donateurs :
-        // ici l'equipe parle avec les benevoles et les partenaires.
+        // La messagerie de l'equipe : elle parle ici avec les
+        // benevoles, les partenaires et les donateurs.
+        //
+        // "compteur" designe la cle des pastilles renvoyees par
+        // /admin/badges : l'entree porte alors son nombre de non-lus.
         to: '/admin/conversations',
         label: 'Conversations',
         Icone: PleineGroupe,
@@ -148,6 +147,10 @@ export default function AdminLayout() {
           // espaces : elle prend son client et sa racine du contexte.
           api,
           racineConversations: '/admin',
+          // Le chemin de la messagerie dans CET espace : l'ecran est
+          // partage par les trois, et c'est lui qui construit le lien
+          // vers une conversation.
+          cheminMessages: '/admin/conversations',
         }}
       />
     </CoqueEspace>

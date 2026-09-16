@@ -299,6 +299,17 @@
   color: var(--admin-texte-faible);
 }
 
+/*
+ * Le retour a la boite de messages.
+ *
+ * Invisible sur grand ecran : la liste y est deja a gauche, et un
+ * bouton de retour n'aurait nulle part ou mener. Il n'apparait qu'au
+ * moment ou le fil prend l'ecran a lui seul.
+ */
+.echange__retour {
+  display: none;
+}
+
 /* --- Bulles --- */
 
 /* La photo de l'auteur et sa bulle tiennent sur une meme ligne : c'est
@@ -317,8 +328,13 @@
   max-width: 88%;
 }
 
+/* La ligne est poussee a droite, mais elle mesure jusqu'a 76 % de la
+   largeur : sans justify-content, une bulle courte se posait a SON bord
+   gauche, donc au milieu de l'echange. C'est la bulle qu'on veut a
+   droite, pas seulement la ligne qui la porte. */
 .bulle-rang--envoyee {
   margin-left: auto;
+  justify-content: flex-end;
   max-width: 76%;
 }
 
@@ -462,21 +478,88 @@
    ============================================================ */
 
 @media (max-width: 1024px) {
+  /*
+   * Un volet a la fois.
+   *
+   * Les deux empiles, la boite et le fil se disputaient le meme ecran :
+   * il fallait defiler longuement pour atteindre le champ de saisie, et
+   * la liste restait au-dessus sans servir. La conversation ayant son
+   * adresse, elle peut prendre la page entiere -- et le retour se fait
+   * par le chevron de l'entete, ou par le bouton du navigateur.
+   */
   .messagerie {
     grid-template-columns: minmax(0, 1fr);
-    height: auto;
+    /* Toute la hauteur utile : le champ de saisie se pose en bas du
+       fil, la ou le pouce l'attend, et non apres un long defilement. */
+    height: calc(100vh - var(--admin-entete-hauteur) - 150px);
+    min-height: 420px;
   }
 
-  .messagerie__volet {
-    min-height: 340px;
+  .messagerie--fil-ouvert .messagerie__volet--liste,
+  .messagerie:not(.messagerie--fil-ouvert) .messagerie__volet--fil {
+    display: none;
   }
 
   .conversations__liste {
-    max-height: 320px;
+    max-height: none;
   }
 
-  .echange__fil {
-    min-height: 260px;
+  .echange__retour {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    /* Un recul a gauche pour que la cible tienne les 44 px
+       recommandes sans decaler la pastille qui la suit. */
+    margin-left: -6px;
+    border-radius: 50%;
+    color: var(--admin-texte-doux);
+  }
+
+  .echange__retour:hover {
+    background-color: var(--admin-fond);
+    color: var(--admin-texte);
+  }
+
+  .echange__retour svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/*
+ * Sous 561 px, la navigation devient un arc de boutons flottants, fixe
+ * au bas de la fenetre. La messagerie occupant toute la hauteur utile,
+ * son champ de saisie et son bouton Envoyer passaient dessous : on ne
+ * pouvait plus repondre. L'arc a donc sa place reservee ici.
+ *
+ * dvh plutot que vh : sur un telephone, la barre d'adresse se replie
+ * en defilant, et 100vh vaut la hauteur barre depliee -- le bas de la
+ * conversation tombait alors hors de l'ecran.
+ */
+@media (max-width: 560px) {
+  .messagerie {
+    /* --admin-arc-hauteur mesure la bande, pas la courbe : l'arc bombe
+       vers le haut et s'etend d'une trentaine de pixels de plus. On
+       reprend donc le meme degagement que .admin__contenu applique en
+       bas de page -- la hauteur de l'arc plus 56 px.
+       Les 60 px restants sont le titre de page et les marges ; le grand
+       titre disparait quand un fil est ouvert (regle ci-dessous). */
+    height: calc(
+      100vh - var(--admin-entete-hauteur) - var(--admin-arc-hauteur) - 56px - 60px
+    );
+    height: calc(
+      100dvh - var(--admin-entete-hauteur) - var(--admin-arc-hauteur) - 56px - 60px
+    );
+    /* Pas de plancher : sur un ecran court, mieux vaut un fil ramasse
+       qu'un bouton Envoyer sous les boutons de navigation. */
+    min-height: 0;
+  }
+
+  .page-benevole__entete--fil-ouvert {
+    display: none;
   }
 }
 
