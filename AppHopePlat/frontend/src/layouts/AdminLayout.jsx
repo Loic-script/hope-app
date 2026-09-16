@@ -151,6 +151,7 @@ export default function AdminLayout() {
           // partage par les trois, et c'est lui qui construit le lien
           // vers une conversation.
           cheminMessages: '/admin/conversations',
+          titreMessagerie: 'Conversations',
         }}
       />
     </CoqueEspace>

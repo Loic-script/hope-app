@@ -128,6 +128,7 @@ export default function BailleurLayout() {
           // partage par les trois, et c'est lui qui construit le lien
           // vers une conversation.
           cheminMessages: '/bailleur/messages',
+          titreMessagerie: 'Messages',
         }}
       />
     </CoqueEspace>

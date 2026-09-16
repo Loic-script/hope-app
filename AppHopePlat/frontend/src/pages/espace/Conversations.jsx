@@ -37,6 +37,11 @@ export default function Conversations() {
     api,
     racineConversations: racine,
     cheminMessages,
+    // Le titre suit l'entree du menu de chaque espace : "Conversations"
+    // pour l'equipe et les benevoles, "Messages" pour les bailleurs. Un
+    // menu et un titre qui ne disent pas la meme chose font douter
+    // d'etre au bon endroit.
+    titreMessagerie = 'Messages',
     rafraichirCompteurs,
   } = useOutletContext();
 
@@ -201,7 +206,7 @@ export default function Conversations() {
           <span className="trait-hope surtitre__trait" aria-hidden="true" />
           Se parler
         </p>
-        <h1 className="page-benevole__titre">Messages</h1>
+        <h1 className="page-benevole__titre">{titreMessagerie}</h1>
         <p className="page-benevole__accroche">
           Écrivez à l’équipe, à un bénévole, à un partenaire : tout le monde se joint ici.
         </p>
