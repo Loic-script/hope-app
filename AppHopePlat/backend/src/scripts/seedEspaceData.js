@@ -114,7 +114,35 @@ const MESSAGES = {
 
 async function vider() {
   console.log('[HOPE] --force : suppression des notifications et des messages...');
-  await query('TRUNCATE notification_utilisateur, message_utilisateur');
+  // message_entree pointe sur message_utilisateur : un TRUNCATE qui
+  // laisserait la table enfant de cote serait refuse. Les trois partent
+  // donc dans le meme ordre, ce que PostgreSQL accepte.
+  await query('TRUNCATE notification_utilisateur, message_utilisateur, message_entree');
+
+  // Les conversations des espaces s'en vont avec les fils dont elles
+  // sont le miroir. Deux cas, et deux seulement :
+  //
+  //   * celles qui n'ont plus aucun participant utilisateur : le compte
+  //     a ete supprime par un reseed precedent, et plus personne ne
+  //     peut les ouvrir ;
+  //   * celles des benevoles et bailleurs que ce script ressert juste
+  //     apres -- sans quoi leurs conversations s'empileraient a chaque
+  //     passage.
+  //
+  // Les conversations ouvertes entre administrateurs ne sont pas
+  // touchees : elles n'appartiennent pas au jeu de demonstration.
+  const efface = await query(
+    `DELETE FROM conversation c
+      WHERE NOT EXISTS (
+              SELECT 1 FROM conversation_participant p
+               WHERE p.conversation_id = c.id AND p.utilisateur_id IS NOT NULL)
+         OR EXISTS (
+              SELECT 1 FROM conversation_participant p
+                JOIN utilisateur_role r ON r.utilisateur_id = p.utilisateur_id
+               WHERE p.conversation_id = c.id
+                 AND r.role IN ('benevole', 'bailleur'))`
+  );
+  console.log(`[HOPE] --force : ${efface.rowCount} conversation(s) des espaces effacee(s).`);
 }
 
 async function installer() {
@@ -154,25 +182,100 @@ async function installer() {
     }
 
     for (const m of MESSAGES[compte.role] ?? []) {
-      await query(
+      // Un fil porte le sujet ; les paroles vivent dans message_entree,
+      // une ligne chacune. Le statut suit celui qui a parle en dernier,
+      // et updated_at porte l'ordre de la liste : sans lui, un fil
+      // anime hier remonterait apres un fil mort depuis un mois.
+      const envoiLe = ilYA(m.heures);
+      const reponseLe = m.reponse ? ilYA(m.reponseHeures) : null;
+
+      const fil = await query(
         `INSERT INTO message_utilisateur
-           (utilisateur_id, sujet, corps, statut, reponse, repondu_le,
-            repondu_par, reponse_lue, cree_le)
-         VALUES ($1, $2, $3,
-                 CASE WHEN $4::TEXT IS NULL THEN 'envoye' ELSE 'repondu' END,
-                 $4::TEXT,
-                 CASE WHEN $4::TEXT IS NULL THEN NULL ELSE $5::TIMESTAMPTZ END,
-                 CASE WHEN $4::TEXT IS NULL THEN NULL ELSE $6::INTEGER END,
-                 $7, $8)`,
+           (utilisateur_id, sujet, statut, cree_le, updated_at)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id`,
         [
-          compte.id, m.sujet, m.corps, m.reponse ?? null,
-          m.reponse ? ilYA(m.reponseHeures) : null, repondant,
-          // Sans reponse, il n'y a rien a lire : le drapeau reste vrai,
-          // sinon la pastille compterait un message qui n'existe pas.
-          m.reponse ? (m.reponseLue ?? true) : true,
-          ilYA(m.heures),
+          compte.id,
+          m.sujet,
+          m.reponse ? 'repondu' : 'envoye',
+          envoiLe,
+          reponseLe ?? envoiLe,
         ]
       );
+      const filId = fil.rows[0].id;
+
+      // La parole de l'utilisateur. Sans reponse, elle reste non lue :
+      // c'est elle qui allume la pastille de la messagerie de l'equipe,
+      // et un message en attente doit se voir.
+      await query(
+        `INSERT INTO message_entree (fil_id, auteur, corps, lu, cree_le)
+         VALUES ($1, 'utilisateur', $2, $3, $4)`,
+        [filId, m.corps, m.reponse !== null && m.reponse !== undefined, envoiLe]
+      );
+
+      if (m.reponse) {
+        // Celle de HOPE. "lu" dit si l'utilisateur l'a ouverte : c'est
+        // ce drapeau qui alimente la pastille de son propre menu.
+        await query(
+          `INSERT INTO message_entree
+             (fil_id, auteur, corps, admin_id, lu, cree_le)
+           VALUES ($1, 'hope', $2, $3, $4, $5)`,
+          [filId, m.reponse, repondant, m.reponseLue ?? true, reponseLe]
+        );
+      }
+
+      // ---- La meme discussion, dans le modele "conversation" ----
+      //
+      // Les deux modeles cohabitent : le fil, adresse a l'equipe, et la
+      // conversation, ouverte avec n'importe qui de la plateforme. Le
+      // schema sait recopier les fils en conversations, mais une seule
+      // fois -- au premier passage ou la table est vide. Un reseed des
+      // espaces refait donc les fils sans refaire les conversations, et
+      // l'ecran Messages se retrouve vide.
+      //
+      // Le seed ecrit donc les deux. C'est un peu plus long ici, et
+      // l'ecran montre ce qu'il doit montrer a chaque passage.
+      const conversation = await query(
+        `INSERT INTO conversation (sujet, cree_le, maj_le)
+         VALUES ($1, $2, $3) RETURNING id`,
+        [m.sujet, envoiLe, reponseLe ?? envoiLe]
+      );
+      const conversationId = conversation.rows[0].id;
+
+      // L'utilisateur a lu jusqu'a sa propre parole : la reponse de
+      // HOPE reste donc non lue quand elle ne l'est pas.
+      await query(
+        `INSERT INTO conversation_participant
+           (conversation_id, utilisateur_id, lu_jusqu_a)
+         VALUES ($1, $2, $3)`,
+        [conversationId, compte.id, m.reponse && !(m.reponseLue ?? true) ? envoiLe : (reponseLe ?? envoiLe)]
+      );
+
+      if (repondant !== null) {
+        await query(
+          `INSERT INTO conversation_participant
+             (conversation_id, admin_id, lu_jusqu_a)
+           VALUES ($1, $2, $3)`,
+          [conversationId, repondant, reponseLe ?? envoiLe]
+        );
+      }
+
+      await query(
+        `INSERT INTO conversation_message
+           (conversation_id, utilisateur_id, corps, cree_le)
+         VALUES ($1, $2, $3, $4)`,
+        [conversationId, compte.id, m.corps, envoiLe]
+      );
+
+      if (m.reponse && repondant !== null) {
+        await query(
+          `INSERT INTO conversation_message
+             (conversation_id, admin_id, corps, cree_le)
+           VALUES ($1, $2, $3, $4)`,
+          [conversationId, repondant, m.reponse, reponseLe]
+        );
+      }
+
       messages += 1;
     }
   }

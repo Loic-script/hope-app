@@ -1258,11 +1258,32 @@ CREATE TABLE IF NOT EXISTS conversation_message (
   corps           TEXT        NOT NULL,
   cree_le         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-  CONSTRAINT message_une_seule_identite CHECK (
-    (utilisateur_id IS NOT NULL AND admin_id IS NULL) OR
-    (utilisateur_id IS NULL AND admin_id IS NOT NULL)
-  )
+  -- Ce qu'il faut interdire, c'est qu'un message ait DEUX auteurs.
+  --
+  -- La regle etait d'abord "exactement une identite". Elle ne pouvait
+  -- pas tenir avec le ON DELETE SET NULL ci-dessus : supprimer un
+  -- compte qui avait ecrit mettait ses deux colonnes a NULL et heurtait
+  -- la contrainte, si bien qu'aucun compte ayant parle n'etait plus
+  -- supprimable. Les deux colonnes a NULL sont donc admises : c'est la
+  -- trace d'un compte efface, et elle s'affiche "Compte supprimé".
+  --
+  -- La presence d'un auteur a l'ecriture reste garantie par le service,
+  -- seule voie d'insertion.
+  CONSTRAINT message_jamais_deux_auteurs
+    CHECK (utilisateur_id IS NULL OR admin_id IS NULL)
 );
+
+-- Les bases creees avant ce raisonnement portent encore l'ancienne
+-- regle : CREATE TABLE IF NOT EXISTS ne les voit pas.
+ALTER TABLE conversation_message
+  DROP CONSTRAINT IF EXISTS message_une_seule_identite;
+
+ALTER TABLE conversation_message
+  DROP CONSTRAINT IF EXISTS message_jamais_deux_auteurs;
+
+ALTER TABLE conversation_message
+  ADD CONSTRAINT message_jamais_deux_auteurs
+    CHECK (utilisateur_id IS NULL OR admin_id IS NULL);
 
 CREATE INDEX IF NOT EXISTS conversation_message_idx
   ON conversation_message (conversation_id, cree_le);
@@ -1376,3 +1397,44 @@ BEGIN
   END LOOP;
 END;
 $$;
+
+-- ------------------------------------------------------------
+-- 21. Rattrapage des comptes anterieurs a profil_complete
+--
+-- La colonne utilisateur.profil_complete est arrivee apres les premiers
+-- comptes, avec DEFAULT FALSE : les benevoles et bailleurs deja en base
+-- se verraient donc redemander un formulaire qu'ils ont deja rempli.
+--
+-- On ne peut pas deviner l'intention, mais on peut lire le fait : si la
+-- fiche propre au role existe, le formulaire a bien ete rempli. Le
+-- rattrapage ne remet jamais un marqueur a FALSE -- un benevole qui n'a
+-- declare aucune competence reste complet -- et ne touche donc qu'aux
+-- comptes restes a FALSE. Il est ainsi sans effet au second passage.
+--
+-- Le donateur n'a pas de formulaire : son compte n'entre pas ici.
+-- ------------------------------------------------------------
+UPDATE utilisateur u
+   SET profil_complete = TRUE
+ WHERE u.profil_complete = FALSE
+   AND (
+     EXISTS (SELECT 1 FROM benevole b WHERE b.utilisateur_id = u.id)
+     OR EXISTS (SELECT 1 FROM bailleur_contact c WHERE c.utilisateur_id = u.id)
+   );
+
+-- Le cas inverse : un compte marque complet dont la fiche a disparu.
+-- Une remise a zero du jeu de demonstration vide "bailleur" en cascade
+-- sans toucher aux comptes qui n'en font pas partie ; leur marqueur
+-- resterait a TRUE et ils entreraient dans un espace sans organisation.
+-- On leur redemande donc leur formulaire, ce qui est la verite.
+--
+-- Le donateur n'entre pas ici : il n'a pas de fiche, et son marqueur ne
+-- commande aucun formulaire.
+UPDATE utilisateur u
+   SET profil_complete = FALSE
+ WHERE u.profil_complete = TRUE
+   AND EXISTS (
+     SELECT 1 FROM utilisateur_role r
+      WHERE r.utilisateur_id = u.id
+        AND r.role IN ('benevole', 'bailleur'))
+   AND NOT EXISTS (SELECT 1 FROM benevole b WHERE b.utilisateur_id = u.id)
+   AND NOT EXISTS (SELECT 1 FROM bailleur_contact c WHERE c.utilisateur_id = u.id);

@@ -124,7 +124,10 @@ export async function messages(conversationId, client = null) {
     `SELECT m.id, m.corps, m.cree_le,
             CASE WHEN m.admin_id IS NULL THEN 'utilisateur' ELSE 'admin' END AS auteur_type,
             COALESCE(m.utilisateur_id::text, m.admin_id::text) AS auteur_id,
-            COALESCE(TRIM(u.prenom || ' ' || u.nom), a.admin_log) AS auteur_nom,
+            -- Un compte supprime laisse ses deux identites a NULL. Sans
+            -- ce dernier repli, la bulle s'afficherait sans aucun nom.
+            COALESCE(TRIM(u.prenom || ' ' || u.nom), a.admin_log,
+                     'Compte supprimé') AS auteur_nom,
             COALESCE(u.photo_url, a.photo_url) AS auteur_photo
        FROM conversation_message m
        LEFT JOIN utilisateur u ON u.id = m.utilisateur_id
