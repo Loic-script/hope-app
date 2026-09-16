@@ -84,6 +84,7 @@ const COLONNES_ATTENDUES = [
   ['utilisateur', 'profil_complete'],
   ['admins', 'photo_url'],
   ['projects', 'description_titre'],
+  ['projects', 'project_type'],
   ['impacts', 'objective_id'],
 ];
 

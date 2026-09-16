@@ -95,6 +95,12 @@ export const LIBELLES = {
   },
   mediaType: { PHOTO: 'Photo', VIDEO: 'Vidéo' },
 
+  // Ce qu'un projet sert : la mission de HOPE, ou HOPE elle-meme.
+  projectType: {
+    HOPE: 'Projet HOPE',
+    INTERNAL: 'Projet interne',
+  },
+
   // Nature d'une preuve terrain. Elle manquait ici : chaque ecran qui en
   // affichait recopiait les trois libelles pour son propre compte.
   proofType: {

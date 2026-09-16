@@ -88,7 +88,7 @@ const AGREGATS = `
 `;
 
 const COLONNES = `
-  p.id, p.reference, p.category_id, p.name,
+  p.id, p.reference, p.category_id, p.name, p.project_type,
   p.description_titre, p.description, p.location,
   p.manager_name, p.start_date, p.required_budget, p.currency,
   p.beneficiary_profile, p.beneficiary_target, p.status, p.media_url,
@@ -120,7 +120,7 @@ const COLONNES = `
 `;
 
 /**
- * @param {{ statut?: string, categorieId?: number, recherche?: string,
+ * @param {{ statut?: string, categorieId?: number, type?: string, recherche?: string,
  *           inclureArchives?: boolean, limite?: number, decalage?: number }} filtres
  */
 export async function lister(filtres = {}, client = null) {
@@ -136,6 +136,10 @@ export async function lister(filtres = {}, client = null) {
   if (filtres.categorieId) {
     valeurs.push(filtres.categorieId);
     conditions.push(`p.category_id = $${valeurs.length}`);
+  }
+  if (filtres.type) {
+    valeurs.push(filtres.type);
+    conditions.push(`p.project_type = $${valeurs.length}`);
   }
   if (filtres.recherche) {
     valeurs.push(`%${filtres.recherche}%`);
@@ -173,6 +177,10 @@ export async function compter(filtres = {}, client = null) {
   if (filtres.categorieId) {
     valeurs.push(filtres.categorieId);
     conditions.push(`category_id = $${valeurs.length}`);
+  }
+  if (filtres.type) {
+    valeurs.push(filtres.type);
+    conditions.push(`project_type = $${valeurs.length}`);
   }
   if (filtres.recherche) {
     valeurs.push(`%${filtres.recherche}%`);
@@ -288,15 +296,16 @@ export async function genererReference(client = null) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO projects
-       (reference, category_id, name, description_titre, description, location,
-        manager_name, start_date, required_budget, currency, beneficiary_profile,
-        beneficiary_target, status, media_url, media_type)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'IN_PROGRESS', $13, $14)
+       (reference, category_id, name, project_type, description_titre, description,
+        location, manager_name, start_date, required_budget, currency,
+        beneficiary_profile, beneficiary_target, status, media_url, media_type)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'IN_PROGRESS', $14, $15)
      RETURNING id`,
     [
       donnees.reference,
       donnees.categoryId,
       donnees.name,
+      donnees.projectType,
       donnees.descriptionTitre,
       donnees.description,
       donnees.location,

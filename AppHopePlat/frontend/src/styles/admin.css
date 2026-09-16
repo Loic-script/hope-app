@@ -482,6 +482,34 @@
   box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
 }
 
+/* Une liste deroulante dans la barre : meme hauteur et meme trait que la
+   recherche, pour que les deux se lisent comme une seule rangee. */
+.outils__selection {
+  height: 36px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  background-color: var(--admin-surface);
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--admin-texte);
+}
+
+.outils__selection:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+/* L'etiquette d'un projet, sous son nom. Toujours sur sa propre ligne :
+   posee a cote, elle passait a la ligne des qu'un nom etait long, avec
+   un retrait qui ne s'alignait sur rien. display: table la garde a la
+   largeur de son texte. */
+.table__etiquette {
+  display: table;
+  margin: 5px 0 3px;
+}
+
 /* Filtres par onglets : Tous | Actifs | Termines | Archives */
 .filtres {
   display: flex;
@@ -649,6 +677,101 @@
   font-size: 12.5px;
   line-height: 1.45;
   color: var(--admin-texte-doux);
+}
+
+/* --- Choix du type de projet ---
+   Deux cartes cliquables. Le bouton radio reste dans le document -- le
+   clavier et les lecteurs d'ecran le trouvent -- mais la carte entiere
+   en tient lieu a l'ecran. */
+
+.choix-type {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choix-type__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.choix-type__option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 14px 44px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  background-color: var(--admin-surface);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.choix-type__option:hover {
+  border-color: color-mix(in srgb, var(--hope-violet) 45%, var(--admin-bordure-forte));
+}
+
+/* Le rond, dessine : celui du navigateur ne suit pas la charte. */
+.choix-type__option::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--admin-bordure-forte);
+  border-radius: 50%;
+  background-color: var(--admin-surface);
+  box-sizing: border-box;
+}
+
+.choix-type__option--actif {
+  border-color: var(--hope-violet);
+  background-color: color-mix(in srgb, var(--hope-violet) 5%, var(--admin-surface));
+  box-shadow: 0 0 0 1px var(--hope-violet);
+}
+
+.choix-type__option--actif::before {
+  border: 5px solid var(--hope-violet);
+}
+
+.choix-type__option:has(input:focus-visible) {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.choix-type__option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.choix-type__libelle {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.choix-type__aide {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+}
+
+.choix-type:disabled .choix-type__option {
+  cursor: default;
+  opacity: 0.7;
+}
+
+@media (max-width: 640px) {
+  .choix-type__options {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .champ-admin input,

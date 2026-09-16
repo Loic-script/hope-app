@@ -446,6 +446,13 @@ export default function ProjectDetailPage() {
           <Panneau titre="Informations du projet">
             <dl className="fiche">
               <LigneFiche terme="Identifiant">{projet.reference}</LigneFiche>
+              <LigneFiche terme="Type">
+                <Badge
+                  valeur={projet.projectType}
+                  libelles={libelles.projectType}
+                  couleur={projet.projectType === 'INTERNAL' ? 'violet' : 'bleu'}
+                />
+              </LigneFiche>
               <LigneFiche terme="Catégorie">{projet.categoryName}</LigneFiche>
               <LigneFiche terme="Statut">
                 <Badge valeur={projet.status} libelles={libelles.projectStatus} />

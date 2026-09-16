@@ -51,7 +51,29 @@ function totalDevisEnCentimes(postes) {
   return total;
 }
 
+/**
+ * Les deux types de projet, avec ce qu'ils recouvrent.
+ *
+ * La phrase compte autant que le nom : "interne" seul ne dit pas si l'on
+ * parle d'un projet de l'equipe ou d'un projet discret.
+ */
+const TYPES_PROJET = [
+  {
+    valeur: 'HOPE',
+    libelle: 'Projet HOPE',
+    aide: 'La mission de HOPE, pour ses bénéficiaires.',
+  },
+  {
+    valeur: 'INTERNAL',
+    libelle: 'Projet interne',
+    aide: 'Faire évoluer HOPE : outils, formation de l’équipe, organisation.',
+  },
+];
+
 const FORMULAIRE_VIDE = {
+  // Projet HOPE par defaut : c'est le cas le plus courant, et celui de
+  // tous les projets crees avant que le choix n'existe.
+  projectType: 'HOPE',
   name: '',
   descriptionTitre: '',
   description: '',
@@ -99,6 +121,7 @@ export default function ProjectFormPage() {
   useEffect(() => {
     if (!projet) return;
     setFormulaire({
+      projectType: projet.projectType ?? 'HOPE',
       name: projet.name ?? '',
       descriptionTitre: projet.descriptionTitre ?? '',
       description: projet.description ?? '',
@@ -255,6 +278,36 @@ export default function ProjectFormPage() {
           {erreur && <Alerte>{erreur}</Alerte>}
 
           <div className="formulaire-grille" style={{ marginTop: erreur ? '18px' : 0 }}>
+            {/*
+              Le type d'abord : il dit a quoi sert le projet, avant meme
+              son nom. Deux cartes plutot qu'une liste : le choix se lit
+              d'un coup d'oeil, avec ce que chaque type recouvre.
+            */}
+            <fieldset className="choix-type" disabled={envoi}>
+              <legend className="champ-admin__label">Type de projet</legend>
+              <div className="choix-type__options">
+                {TYPES_PROJET.map((type) => (
+                  <label
+                    key={type.valeur}
+                    className={
+                      'choix-type__option' +
+                      (formulaire.projectType === type.valeur ? ' choix-type__option--actif' : '')
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="projectType"
+                      value={type.valeur}
+                      checked={formulaire.projectType === type.valeur}
+                      onChange={() => modifier('projectType', type.valeur)}
+                    />
+                    <span className="choix-type__libelle">{type.libelle}</span>
+                    <span className="choix-type__aide">{type.aide}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <ChampTexte
               label="Nom du projet"
               id="name"

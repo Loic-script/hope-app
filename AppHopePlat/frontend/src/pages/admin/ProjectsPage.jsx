@@ -19,6 +19,13 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
+/** Le filtre par type, a cote de celui des statuts. */
+const TYPES = [
+  { valeur: 'TOUS', label: 'Tous les types' },
+  { valeur: 'HOPE', label: 'Projets HOPE' },
+  { valeur: 'INTERNAL', label: 'Projets internes' },
+];
+
 const FILTRES = [
   { valeur: 'TOUS', label: 'Tous' },
   { valeur: 'IN_PROGRESS', label: 'En cours' },
@@ -39,6 +46,7 @@ export default function ProjectsPage() {
   const [recherche, setRecherche] = useState(parametres.get('search') ?? '');
   const [rechercheAppliquee, setRechercheAppliquee] = useState(parametres.get('search') ?? '');
   const [statut, setStatut] = useState(parametres.get('status') ?? 'TOUS');
+  const [type, setType] = useState(parametres.get('projectType') ?? 'TOUS');
   const [modale, setModale] = useState({ nom: null, cible: null });
 
   const ouvrir = (nom, cible = null) => setModale({ nom, cible });
@@ -53,22 +61,25 @@ export default function ProjectsPage() {
     const nouveaux = {};
     if (rechercheAppliquee) nouveaux.search = rechercheAppliquee;
     if (statut !== 'TOUS') nouveaux.status = statut;
+    if (type !== 'TOUS') nouveaux.projectType = type;
     setParametres(nouveaux, { replace: true });
-  }, [rechercheAppliquee, statut, setParametres]);
+  }, [rechercheAppliquee, statut, type, setParametres]);
 
   const { donnees, chargement, erreur, recharger } = useChargement(
     () =>
       projectService.lister({
         search: rechercheAppliquee || undefined,
         status: statut === 'TOUS' ? undefined : statut,
+        projectType: type === 'TOUS' ? undefined : type,
         includeArchived: statut === 'TOUS' ? true : undefined,
         pageSize: 100,
       }),
-    [rechercheAppliquee, statut]
+    [rechercheAppliquee, statut, type]
   );
 
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
   const libelles = catalogue?.labels?.projectStatus ?? {};
+  const libellesType = catalogue?.labels?.projectType ?? {};
 
   const { envoi, erreur: erreurAction, setErreur, soumettre } = useSoumission();
 
@@ -122,6 +133,20 @@ export default function ProjectsPage() {
           filtreActif={statut}
           onFiltre={setStatut}
           compteur={donnees ? `${fmt.nombre(donnees.total ?? projets.length)} projet(s)` : undefined}
+          actions={
+            <select
+              className="outils__selection"
+              value={type}
+              onChange={(evenement) => setType(evenement.target.value)}
+              aria-label="Filtrer par type de projet"
+            >
+              {TYPES.map((option) => (
+                <option key={option.valeur} value={option.valeur}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          }
         />
 
         <Tableau
@@ -136,6 +161,13 @@ export default function ProjectsPage() {
                   <Link className="table__lien" to={`/admin/projects/${projet.id}`}>
                     {projet.name}
                   </Link>
+                  {/* Seul le projet interne porte l'etiquette : les projets
+                      HOPE sont la regle, les marquer tous ferait du bruit. */}
+                  {projet.projectType === 'INTERNAL' && (
+                    <span className="badge badge--violet table__etiquette">
+                      {libellesType.INTERNAL ?? 'Projet interne'}
+                    </span>
+                  )}
                   <div className="table__secondaire">
                     {projet.reference} · {projet.categoryName ?? 'Sans catégorie'}
                     {projet.location ? ` · ${projet.location}` : ''}

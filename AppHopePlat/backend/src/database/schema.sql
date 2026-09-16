@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS projects (
   reference           VARCHAR(30)   NOT NULL UNIQUE,
   category_id         INTEGER       REFERENCES project_categories(id) ON DELETE SET NULL,
   name                VARCHAR(200)  NOT NULL,
+  -- HOPE : la mission, pour les beneficiaires. INTERNAL : faire evoluer
+  -- HOPE elle-meme -- outils, formation de l'equipe, organisation.
+  project_type        VARCHAR(20)   NOT NULL DEFAULT 'HOPE',
   -- Le titre de la description, et non celui du projet : une phrase qui
   -- annonce ce que le texte raconte, ecrite par l'equipe.
   description_titre   VARCHAR(160),
@@ -1383,6 +1386,24 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS photo_url VARCHAR(255);
  * ligne ce que le projet allait raconter.
  */
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS description_titre VARCHAR(160);
+
+/*
+ * Le type d'un projet : la mission de HOPE, ou HOPE elle-meme.
+ *
+ * Les projets existants sont tous des projets de terrain : ils prennent
+ * la valeur par defaut. La contrainte est posee a part, et seulement si
+ * elle manque -- PostgreSQL n'a pas de ADD CONSTRAINT IF NOT EXISTS.
+ */
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS project_type VARCHAR(20) NOT NULL DEFAULT 'HOPE';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'projects_type_valide') THEN
+    ALTER TABLE projects
+      ADD CONSTRAINT projects_type_valide CHECK (project_type IN ('HOPE', 'INTERNAL'));
+  END IF;
+END
+$$;
 
 /*
  * L'objectif specifique qu'une mesure d'impact documente.

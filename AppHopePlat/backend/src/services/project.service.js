@@ -41,6 +41,9 @@ import {
 
 export const STATUTS = ['IN_PROGRESS', 'COMPLETED', 'ARCHIVED'];
 
+/** HOPE : la mission. INTERNAL : faire evoluer HOPE elle-meme. */
+export const TYPES = ['HOPE', 'INTERNAL'];
+
 /**
  * Ajoute les indicateurs derives d'un projet.
  *
@@ -237,6 +240,13 @@ async function preparerDonnees(corps, { creation }) {
   if (creation || corps.name !== undefined) {
     donnees.name = texteRequis(corps.name, 'name', { max: 200 });
   }
+  // Un projet sans type choisi est un projet de terrain : c'est le cas
+  // de tous ceux qui existaient avant que le choix n'existe.
+  if (creation || corps.projectType !== undefined) {
+    donnees.projectType = valeurParmi(corps.projectType, 'projectType', TYPES, {
+      defaut: 'HOPE',
+    });
+  }
   if (creation || corps.descriptionTitre !== undefined) {
     donnees.descriptionTitre = texteFacultatif(corps.descriptionTitre, 'descriptionTitre', {
       max: 160,
@@ -322,6 +332,7 @@ export async function lister(requete = {}) {
   const filtres = {
     statut: requete.status ? valeurParmi(requete.status, 'status', STATUTS) : null,
     categorieId: identifiantFacultatif(requete.categoryId, 'categoryId'),
+    type: requete.projectType ? valeurParmi(requete.projectType, 'projectType', TYPES) : null,
     recherche: texteFacultatif(requete.search, 'search', { max: 120 }),
     inclureArchives: requete.includeArchived === 'true' || requete.includeArchived === true,
     limite: taille,
@@ -429,6 +440,7 @@ export async function mettreAJour(id, corps = {}) {
   const colonnes = {
     category_id: donnees.categoryId,
     name: donnees.name,
+    project_type: donnees.projectType,
     description_titre: donnees.descriptionTitre,
     description: donnees.description,
     location: donnees.location,
