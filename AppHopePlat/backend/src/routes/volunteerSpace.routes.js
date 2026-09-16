@@ -9,12 +9,7 @@
  */
 import { Router } from 'express';
 
-import {
-  missions,
-  profil,
-  projets,
-  taches,
-} from '../controllers/volunteerSpace.controllers.js';
+import { profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
 import { televerserMedia } from '../middleware/upload.middleware.js';
 import { authenticateVolunteer } from '../middleware/volunteerAuth.middleware.js';
 
@@ -23,23 +18,13 @@ const router = Router();
 router.use(authenticateVolunteer);
 
 // --- Vue d'ensemble ---------------------------------------------------
-router.get('/apercu', missions.apercu);
+router.get('/apercu', taches.apercu);
 
 // --- Projets ----------------------------------------------------------
 // Ce que HOPE mene, et ce qu'il y a a y faire. C'est l'entree de
-// l'espace : les missions et les taches y sont rattachees.
+// l'espace : les taches y sont rattachees.
 router.get('/projets', projets.lister);
 router.get('/projets/:id', projets.recuperer);
-
-// --- Missions ---------------------------------------------------------
-// "/missions/miennes" avant "/missions/:id" : sinon "miennes" serait
-// lu comme un identifiant de mission.
-router.get('/missions/miennes', missions.mesMissions);
-router.get('/missions', missions.lister);
-router.get('/missions/:id', missions.recuperer);
-router.post('/missions/:id/inscription', missions.sInscrire);
-router.delete('/missions/:id/inscription', missions.seDesinscrire);
-router.post('/missions/:id/avis', missions.laisserUnAvis);
 
 // --- Taches -----------------------------------------------------------
 router.get('/taches/libres', taches.libres);

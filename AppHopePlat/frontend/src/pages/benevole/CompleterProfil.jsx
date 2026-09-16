@@ -17,9 +17,9 @@ const MOMENTS = [
  * Completion du profil, a la premiere connexion d'un benevole.
  *
  * L'inscription commune aux trois types ne recueille que l'etat civil.
- * Ce qui sert a proposer les bonnes missions -- ce qu'on sait faire,
- * quand on est libre, jusqu'ou on se deplace -- est demande ici, une
- * fois, et modifiable ensuite depuis "Mon profil".
+ * Ce qui sert a confier les bonnes taches -- ce qu'on sait faire, quand
+ * on est libre, jusqu'ou on se deplace -- est demande ici, une fois, et
+ * modifiable ensuite depuis "Mon profil".
  */
 export default function CompleterProfil() {
   // La garde nous a laisses passer : c'est elle qui nous renverra vers
@@ -34,8 +34,6 @@ export default function CompleterProfil() {
     rayonKm: '',
     adresse: '',
     dateDeNaissance: '',
-    accepteTerrain: true,
-    accepteDistance: true,
     contactUrgenceNom: '',
     contactUrgenceTel: '',
   });
@@ -89,7 +87,7 @@ export default function CompleterProfil() {
           <HopeLogo />
           <h1 className="completion__titre">Complétez votre profil</h1>
           <p className="completion__accroche">
-            Ces informations aident l’équipe à vous proposer les missions qui vous
+            Ces informations aident l’équipe à vous proposer les tâches qui vous
             correspondent. Vous pourrez les modifier à tout moment.
           </p>
         </header>
@@ -192,30 +190,6 @@ export default function CompleterProfil() {
               disabled={envoi}
               aide="En kilomètres."
             />
-
-            <label className="completion__case">
-              <input
-                type="checkbox"
-                checked={champs.accepteTerrain}
-                onChange={(e) => modifier('accepteTerrain', e.target.checked)}
-                disabled={envoi}
-              />
-              J’accepte les missions de terrain
-            </label>
-            <label className="completion__case">
-              <input
-                type="checkbox"
-                checked={champs.accepteDistance}
-                onChange={(e) => modifier('accepteDistance', e.target.checked)}
-                disabled={envoi}
-              />
-              J’accepte les missions à distance
-            </label>
-
-            <p className="completion__note">
-              Les missions de terrain demandent en plus une validation de votre profil par
-              l’équipe HOPE.
-            </p>
           </fieldset>
 
           <fieldset className="completion__groupe">

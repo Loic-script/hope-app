@@ -55,7 +55,7 @@ export async function marquerToutLu(utilisateurId) {
 /**
  * Depose une notification.
  *
- * Exportee pour que les autres services s'en servent : une mission
+ * Exportee pour que les autres services s'en servent : une tache prise
  * annulee, une tache validee, un versement enregistre. Rien ne
  * l'appelle encore ailleurs, et c'est volontaire -- chaque evenement
  * demande sa propre decision de formulation.

@@ -22,8 +22,6 @@ import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
 import ConversationsEspace from '../pages/espace/Conversations.jsx';
 import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
-import MissionDetail from '../pages/benevole/MissionDetail.jsx';
-import Missions from '../pages/benevole/Missions.jsx';
 import ProjetDetail from '../pages/benevole/ProjetDetail.jsx';
 import ProjetsBenevole from '../pages/benevole/Projets.jsx';
 import MonJournal from '../pages/benevole/MonJournal.jsx';
@@ -54,7 +52,7 @@ import RequireAuth from './RequireAuth.jsx';
  *   /authentification connexion et inscription des utilisateurs
  *   /donateur        espace donateur (page de bienvenue seulement)
  *   /admin/login     connexion administrateur
- *   /benevole/...    espace benevole : missions, taches, journal
+ *   /benevole/...    espace benevole : projets, taches, journal
  *   /bailleur/...    espace partenaire : suivi des financements
  *   /admin/...     espace administrateur, protege par RequireAuth
  *
@@ -113,13 +111,19 @@ export default function AppRoutes() {
 
         <Route element={<BenevoleLayout />}>
           <Route path="/benevole" element={<VueDensemble />} />
-          {/* L'entree de l'espace : ce que HOPE mene, puis ce qu'il y a
-              a y faire. Les missions restent accessibles depuis un
-              projet et depuis les notifications. */}
+          {/* L'entree de l'espace : ce que HOPE mene, puis les taches
+              qu'il y a a y prendre. */}
           <Route path="/benevole/projets" element={<ProjetsBenevole />} />
           <Route path="/benevole/projets/:id" element={<ProjetDetail />} />
-          <Route path="/benevole/missions" element={<Missions />} />
-          <Route path="/benevole/missions/:id" element={<MissionDetail />} />
+          {/* Les missions ont ete retirees : l'espace ne propose plus que
+              des taches. Les anciennes adresses -- dans un favori, ou dans
+              une notification deja envoyee -- menent aux taches plutot
+              qu'a une page blanche. */}
+          <Route path="/benevole/missions" element={<Navigate to="/benevole/taches" replace />} />
+          <Route
+            path="/benevole/missions/:id"
+            element={<Navigate to="/benevole/taches" replace />}
+          />
           <Route path="/benevole/taches" element={<MesTaches />} />
           <Route path="/benevole/journal" element={<MonJournal />} />
           <Route path="/benevole/profil" element={<MonProfil />} />

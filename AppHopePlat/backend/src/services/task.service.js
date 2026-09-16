@@ -77,6 +77,11 @@ export async function supprimer(id) {
 }
 
 /** Les taches libres, que n'importe quel benevole peut prendre. */
+/** Les chiffres de la vue d'ensemble de l'espace benevole. */
+export async function apercu() {
+  return taskRepository.apercu();
+}
+
 export async function listerLibres() {
   const items = await taskRepository.lister({ libres: true });
   return { items };

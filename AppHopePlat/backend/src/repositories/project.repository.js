@@ -192,9 +192,8 @@ export async function compter(filtres = {}, client = null) {
  * benevole vient voir ou il peut aider, pas ce que le projet coute --
  * et ces montants ne lui sont pas destines.
  *
- * Les deux comptes disent ce qu'il y a a prendre : des taches libres,
- * des missions ouvertes a venir. Un projet sans ni l'une ni l'autre
- * reste dans la liste, mais il le dit.
+ * Les comptes disent ce qu'il y a a prendre : des taches libres. Un
+ * projet sans tache libre reste dans la liste, mais il le dit.
  */
 export async function listerPourBenevole(client = null) {
   const resultat = await query(
@@ -202,8 +201,7 @@ export async function listerPourBenevole(client = null) {
             p.media_url, p.media_type, p.status, p.created_at,
             c.name AS category_name,
             COALESCE(t.libres, 0)      AS taches_libres,
-            COALESCE(t.total, 0)       AS taches_total,
-            COALESCE(m.ouvertes, 0)    AS missions_ouvertes
+            COALESCE(t.total, 0)       AS taches_total
        FROM projects p
        LEFT JOIN project_categories c ON c.id = p.category_id
        LEFT JOIN LATERAL (
@@ -211,16 +209,11 @@ export async function listerPourBenevole(client = null) {
                 COUNT(*)::int AS total
            FROM tache WHERE projet_id = p.id
        ) t ON TRUE
-       LEFT JOIN LATERAL (
-         SELECT COUNT(*)::int AS ouvertes
-           FROM mission
-          WHERE projet_id = p.id AND statut = 'ouverte' AND date_debut >= NOW()
-       ) m ON TRUE
       WHERE p.archived_at IS NULL
       ORDER BY
         -- Ce qui attend quelqu'un d'abord : un projet ou il y a a faire
         -- doit se voir avant celui qui n'a rien a proposer.
-        (COALESCE(t.libres, 0) + COALESCE(m.ouvertes, 0)) DESC,
+        COALESCE(t.libres, 0) DESC,
         p.created_at DESC`,
     [],
     client

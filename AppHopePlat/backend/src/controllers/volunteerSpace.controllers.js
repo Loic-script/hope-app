@@ -5,7 +5,6 @@
  * metier ici. req.benevole est pose par authenticateVolunteer et porte
  * l'identifiant du compte utilisateur.
  */
-import * as missionService from '../services/mission.service.js';
 import * as taskService from '../services/task.service.js';
 import * as volunteerProjectsService from '../services/volunteerProjects.service.js';
 import * as volunteerProfileService from '../services/volunteerProfile.service.js';
@@ -13,50 +12,14 @@ import * as mediaService from '../services/media.service.js';
 
 import { gerer } from './handler.js';
 
-/**
- * Identifiant de la fiche benevole liee au compte connecte.
- *
- * Les listes de missions s'en servent pour marquer celles ou le
- * benevole est deja inscrit.
- */
-async function ficheDe(req) {
-  const profil = await volunteerProfileService.recuperer(req.benevole.id);
-  return profil.id;
-}
-
-export const missions = {
-  apercu: gerer(() => missionService.apercu()),
-  lister: gerer(async (req) => missionService.lister(req.query, await ficheDe(req))),
-  recuperer: gerer(async (req) =>
-    missionService.recupererParId(req.params.id, await ficheDe(req))
-  ),
-  mesMissions: gerer(async (req) => missionService.mesMissions(await ficheDe(req))),
-  sInscrire: gerer((req) => missionService.sInscrire(req.params.id, req.benevole.id), {
-    statut: 201,
-  }),
-  seDesinscrire: gerer((req) =>
-    missionService.seDesinscrire(req.params.id, req.benevole.id, req.body)
-  ),
-  laisserUnAvis: gerer(
-    (req) => missionService.laisserUnAvis(req.params.id, req.benevole.id, req.body),
-    { statut: 201 }
-  ),
-};
-
-/**
- * Les projets, autour desquels l'espace s'organise desormais.
- *
- * La fiche du benevole est passee au detail : elle sert a marquer les
- * missions ou il est deja inscrit, pas a filtrer ce qu'il voit.
- */
+/** Les projets, autour desquels l'espace s'organise. */
 export const projets = {
   lister: gerer(() => volunteerProjectsService.lister()),
-  recuperer: gerer(async (req) =>
-    volunteerProjectsService.recupererParId(req.params.id, await ficheDe(req))
-  ),
+  recuperer: gerer((req) => volunteerProjectsService.recupererParId(req.params.id)),
 };
 
 export const taches = {
+  apercu: gerer(() => taskService.apercu()),
   libres: gerer(() => taskService.listerLibres()),
   miennes: gerer((req) => taskService.mesTaches(req.benevole.id, req.query)),
   prendre: gerer((req) => taskService.prendre(req.params.id, req.benevole.id)),

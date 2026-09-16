@@ -7,15 +7,13 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
-import { CarteMission, STATUTS_TACHE } from './composants.jsx';
+import { STATUTS_TACHE } from './composants.jsx';
 
 /**
  * Un projet, et tout ce qu'un benevole peut y faire.
  *
- * La page reunit ce qui etait disperse : les taches d'un cote, les
- * missions de l'autre, sans qu'on sache a quel projet elles se
- * rattachaient. Ici le projet vient d'abord, et les deux listes en
- * decoulent.
+ * Le projet vient d'abord -- ce qu'il est, ou il se mene, ce qu'il vise
+ * -- et ses taches en decoulent : on sait a quoi sert celle qu'on prend.
  */
 export default function ProjetDetail() {
   const { id } = useParams();
@@ -44,7 +42,7 @@ export default function ProjetDetail() {
   if (erreur) return <p className="alerte-benevole">{erreur}</p>;
   if (!donnees) return null;
 
-  const { project: projet, tasks: taches, missions } = donnees;
+  const { project: projet, tasks: taches } = donnees;
   const libres = taches.filter((t) => t.statut === 'a_faire' && !t.benevoleId);
   const prises = taches.filter((t) => t.statut !== 'a_faire' || t.benevoleId);
 
@@ -163,26 +161,6 @@ export default function ProjetDetail() {
               </li>
             ))}
           </ul>
-        )}
-      </section>
-
-      {/* ---------- Les missions ---------- */}
-      <section className="bloc">
-        <div className="bloc__entete">
-          <h2 className="bloc__titre">Missions</h2>
-          <Link className="bloc__lien" to="/benevole/missions">
-            Toutes les missions
-          </Link>
-        </div>
-
-        {missions.length === 0 ? (
-          <p className="bloc__vide">Aucune mission prévue sur ce projet.</p>
-        ) : (
-          <div className="cartes">
-            {missions.map((mission) => (
-              <CarteMission key={mission.id} mission={mission} />
-            ))}
-          </div>
         )}
       </section>
     </div>

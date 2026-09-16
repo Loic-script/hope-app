@@ -8,9 +8,8 @@ import * as service from '../../services/espaceBenevole.service.js';
 /**
  * Les projets de HOPE, vus par un benevole.
  *
- * L'espace montrait une liste plate de missions : des creneaux, sans
- * dire a quoi ils servaient. Il montre desormais ce que HOPE mene
- * reellement, chaque projet portant ses taches et ses missions.
+ * L'espace montre ce que HOPE mene reellement : des projets, chacun
+ * portant les taches qu'un benevole peut prendre.
  *
  * Rien de financier ici : un benevole vient voir ou il peut aider, pas
  * ce que le projet coute. L'API ne renvoie d'ailleurs aucun montant.
@@ -66,7 +65,6 @@ export default function Projets() {
  */
 function CarteProjet({ projet }) {
   const libre = projet.tachesLibres > 0;
-  const missions = projet.missionsOuvertes > 0;
 
   return (
     <article className="carte-projet">
@@ -98,10 +96,9 @@ function CarteProjet({ projet }) {
             {projet.tachesLibres} tâche{projet.tachesLibres > 1 ? 's' : ''} libre
             {projet.tachesLibres > 1 ? 's' : ''}
           </span>
-          <span className={missions ? 'carte-projet__vif' : undefined}>
-            {projet.missionsOuvertes} mission{projet.missionsOuvertes > 1 ? 's' : ''} ouverte
-            {projet.missionsOuvertes > 1 ? 's' : ''}
-          </span>
+          {/* Le total situe le libre : "2 libres" ne dit pas si le
+              projet en compte trois ou trente. */}
+          <span>{projet.tachesTotal} au total</span>
         </p>
       </div>
     </article>

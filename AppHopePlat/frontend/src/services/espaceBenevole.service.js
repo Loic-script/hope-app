@@ -14,7 +14,7 @@ export async function apercu() {
   return data;
 }
 
-/* ------------------------------- Missions ------------------------------ */
+/* ------------------------------- Projets ------------------------------- */
 
 /** GET /api/benevole/projets — ce que HOPE mene, et ce qu'il y a a y faire. */
 export async function listerProjets() {
@@ -22,53 +22,9 @@ export async function listerProjets() {
   return data.items ?? [];
 }
 
-/** GET /api/benevole/projets/:id — le projet, ses taches, ses missions. */
+/** GET /api/benevole/projets/:id — le projet et ses taches. */
 export async function recupererProjet(id) {
   const { data } = await apiBenevole.get(`/benevole/projets/${id}`);
-  return data;
-}
-
-/**
- * GET /api/benevole/missions
- * @param {{ format?: string, statut?: string, aVenir?: boolean, search?: string }} filtres
- */
-export async function listerMissions(filtres = {}) {
-  const { data } = await apiBenevole.get('/benevole/missions', { params: filtres });
-  return data.items ?? [];
-}
-
-/** GET /api/benevole/missions/:id */
-export async function recupererMission(id) {
-  const { data } = await apiBenevole.get(`/benevole/missions/${id}`);
-  return data;
-}
-
-/** GET /api/benevole/missions/miennes */
-export async function mesMissions() {
-  const { data } = await apiBenevole.get('/benevole/missions/miennes');
-  return data.items ?? [];
-}
-
-/** POST /api/benevole/missions/:id/inscription */
-export async function sInscrire(id) {
-  const { data } = await apiBenevole.post(`/benevole/missions/${id}/inscription`);
-  return data;
-}
-
-/** DELETE /api/benevole/missions/:id/inscription */
-export async function seDesinscrire(id, motif = '') {
-  const { data } = await apiBenevole.delete(`/benevole/missions/${id}/inscription`, {
-    data: { motif },
-  });
-  return data;
-}
-
-/** POST /api/benevole/missions/:id/avis */
-export async function laisserUnAvis(id, { note, commentaire }) {
-  const { data } = await apiBenevole.post(`/benevole/missions/${id}/avis`, {
-    note,
-    commentaire,
-  });
   return data;
 }
 

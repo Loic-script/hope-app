@@ -291,7 +291,7 @@ export const IconeActualites = creerIcone(
   </>
 );
 
-/** Un calendrier : la date d'une mission. */
+/** Un calendrier : une echeance, une date. */
 export const IconeCalendrier = creerIcone(
   'IconeCalendrier',
   <>
@@ -300,7 +300,7 @@ export const IconeCalendrier = creerIcone(
   </>
 );
 
-/** Un reperage sur une carte : le lieu d'une mission. */
+/** Un reperage sur une carte : le lieu d'un projet. */
 export const IconeLieu = creerIcone(
   'IconeLieu',
   <>

@@ -1,20 +1,4 @@
 /* ============================================================
-   HOPE - Espace benevole connecte
-
-   Meme palette que l'espace administrateur, mais une respiration plus
-   large : un benevole vient occasionnellement, souvent depuis un
-   telephone, et n'a pas la densite d'un ecran de pilotage.
-   ============================================================ */
-
-/* ============================================================
-   1. La coque
-
-   Le bandeau et les onglets de cet espace ont disparu : l'ossature
-   vient desormais de CoqueEspace, la meme que l'administrateur, et ses
-   regles vivent dans admin-entete.css. Ne restent ici que les ecrans.
-   ============================================================ */
-
-/* ============================================================
    2. En-tete de page, blocs, etats
    ============================================================ */
 
@@ -148,24 +132,8 @@
 }
 
 /* ============================================================
-   4. Etiquettes et pastilles
+   4. Pastilles
    ============================================================ */
-
-.etiquette {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.etiquette--presentiel { background-color: #dbeaf5; color: #2b6484; }
-.etiquette--distance   { background-color: #eceafa; color: #4a4479; }
-/* Terrain est le seul format qui demande une validation prealable :
-   il est mis en avant. */
-.etiquette--terrain    { background-color: #fdf1de; color: #8a5c12; }
 
 .pastille {
   display: inline-block;
@@ -180,369 +148,6 @@
 .pastille--valide { background-color: #eceafa; color: #4a4479; }
 .pastille--rouge { background-color: var(--hope-erreur-fond); color: #a8271a; }
 .pastille--orange { background-color: #fdf1de; color: #8a5c12; }
-
-/* ============================================================
-   5. Cartes de mission
-   ============================================================ */
-
-.cartes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
-  gap: 14px;
-}
-
-.carte-mission-benevole {
-  display: flex;
-  flex-direction: column;
-  padding: 18px;
-  border: 1px solid var(--admin-bordure);
-  border-radius: var(--admin-rayon);
-  background-color: var(--admin-surface);
-  box-shadow: var(--admin-ombre);
-  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.carte-mission-benevole:hover {
-  border-color: var(--hope-bleu);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(36, 43, 62, 0.09);
-}
-
-.carte-mission-benevole__haut {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 11px;
-}
-
-.carte-mission-benevole__titre {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.carte-mission-benevole__titre a {
-  color: var(--admin-texte);
-  text-decoration: none;
-}
-
-.carte-mission-benevole__titre a:hover {
-  color: var(--hope-violet);
-}
-
-.carte-mission-benevole__projet {
-  margin-top: 4px;
-  font-size: 12.5px;
-  color: var(--hope-violet);
-}
-
-.carte-mission-benevole__faits {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-top: 14px;
-  padding-top: 13px;
-  border-top: 1px solid var(--admin-bordure);
-}
-
-.carte-mission-benevole__faits > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.carte-mission-benevole__faits dt {
-  flex: none;
-  font-size: 12px;
-  color: var(--admin-texte-faible);
-}
-
-.carte-mission-benevole__faits dd {
-  font-size: 13px;
-  font-weight: 600;
-  text-align: right;
-}
-
-.carte-mission-benevole__complet {
-  color: var(--hope-orange-fonce);
-}
-
-/* ============================================================
-   6. Detail d'une mission
-   ============================================================ */
-
-.mission__etiquettes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.mission__titre {
-  font-size: 27px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-.mission__projet {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--admin-texte-doux);
-}
-
-.mission__corps {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 20px;
-  align-items: start;
-  margin-top: 22px;
-}
-
-.mission__principal,
-.mission__action {
-  padding: 20px;
-  border: 1px solid var(--admin-bordure);
-  border-radius: var(--admin-rayon);
-  background-color: var(--admin-surface);
-  box-shadow: var(--admin-ombre);
-}
-
-/* Le panneau d'action suit la lecture : sur une fiche longue, le
-   bouton d'inscription ne doit pas filer hors de l'ecran. */
-.mission__action {
-  position: sticky;
-  top: 132px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.mission__action .btn {
-  width: 100%;
-  justify-content: center;
-}
-
-.mission__description {
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: var(--admin-texte);
-}
-
-.mission__faits {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 14px;
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--admin-bordure);
-}
-
-.mission__fait dt {
-  font-size: 12px;
-  color: var(--admin-texte-faible);
-}
-
-.mission__fait dd {
-  margin-top: 3px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.mission__sous-titre {
-  margin-bottom: 10px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.mission__besoins {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--admin-bordure);
-}
-
-.mission__besoins ul {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--admin-texte-doux);
-}
-
-.mission__note {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--admin-bordure);
-}
-
-.mission__note strong {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--hope-orange-fonce);
-}
-
-.mission__note span {
-  font-size: 12.5px;
-  color: var(--admin-texte-faible);
-}
-
-.mission__etat {
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: #4a4479;
-}
-
-.mission__empechement,
-.mission__note-terrain {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--admin-texte-doux);
-}
-
-/* --- Retrait d'une inscription --- */
-
-.desinscription {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.desinscription__label {
-  font-size: 12.5px;
-  color: var(--admin-texte-doux);
-}
-
-.desinscription__saisie {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--admin-bordure-forte);
-  border-radius: 9px;
-  font-family: inherit;
-  font-size: 13.5px;
-  resize: vertical;
-}
-
-.desinscription__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.desinscription__actions .btn {
-  width: auto;
-}
-
-/* --- Avis --- */
-
-.mission__avis {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--admin-bordure);
-}
-
-.mission__avis-vide {
-  font-size: 13.5px;
-  color: var(--admin-texte-faible);
-}
-
-.avis-liste {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.avis {
-  padding: 13px 15px;
-  border-radius: 10px;
-  background-color: var(--admin-surface-douce);
-}
-
-.avis__haut {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
-.avis__auteur {
-  font-size: 12.5px;
-  color: var(--admin-texte-faible);
-}
-
-.avis__texte {
-  margin-top: 7px;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--admin-texte);
-}
-
-.etoiles {
-  font-size: 14px;
-  letter-spacing: 1px;
-  color: var(--hope-orange);
-}
-
-.etoiles__vides {
-  color: #dfe4f1;
-}
-
-.avis-formulaire {
-  margin-top: 18px;
-  padding: 16px;
-  border: 1px dashed var(--admin-bordure-forte);
-  border-radius: 10px;
-}
-
-.avis-formulaire__titre {
-  margin-bottom: 10px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.avis-formulaire__notes {
-  display: flex;
-  gap: 3px;
-  margin-bottom: 11px;
-}
-
-.avis-formulaire__note {
-  padding: 0 2px;
-  border: 0;
-  background: none;
-  font-size: 25px;
-  line-height: 1;
-  color: #dfe4f1;
-  transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.avis-formulaire__note--pleine {
-  color: var(--hope-orange);
-}
-
-.avis-formulaire__note:hover {
-  transform: scale(1.12);
-}
-
-.avis-formulaire__saisie {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--admin-bordure-forte);
-  border-radius: 9px;
-  font-family: inherit;
-  font-size: 13.5px;
-  resize: vertical;
-}
-
-.avis-formulaire .btn {
-  margin-top: 11px;
-}
 
 /* ============================================================
    7. Taches
@@ -667,11 +272,6 @@
 }
 
 /* ============================================================
-   8. Journal d'heures
-   ============================================================ */
-
-
-/* ============================================================
    9. Listes simples
    ============================================================ */
 
@@ -705,71 +305,6 @@
 
 .liste-simple__date {
   font-size: 12.5px;
-  color: var(--admin-texte-doux);
-}
-
-/* ============================================================
-   10. Filtres de la liste des missions
-   ============================================================ */
-
-.filtres-benevole {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.filtres-benevole__onglets {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background-color: #e7ecf5;
-}
-
-.filtres-benevole__onglet {
-  padding: 8px 15px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--admin-texte-doux);
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-
-.filtres-benevole__onglet--actif {
-  background-color: var(--admin-surface);
-  font-weight: 600;
-  color: var(--hope-violet);
-  box-shadow: var(--admin-ombre);
-}
-
-.filtres-benevole__droite {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-}
-
-.filtres-benevole__recherche {
-  width: 260px;
-  max-width: 100%;
-  padding: 9px 13px;
-  border: 1px solid var(--admin-bordure-forte);
-  border-radius: 9px;
-  font-family: inherit;
-  font-size: 13.5px;
-}
-
-.filtres-benevole__case {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13.5px;
   color: var(--admin-texte-doux);
 }
 
@@ -934,16 +469,8 @@
    ============================================================ */
 
 @media (max-width: 900px) {
-  .mission__corps {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
-  /* Le panneau d'action passe au-dessus : sur un telephone, l'action
-     doit venir avant la lecture du detail. */
-  .mission__action {
-    position: static;
-    order: -1;
-  }
+  
 
   .colonnes-taches {
     grid-template-columns: minmax(0, 1fr);
@@ -951,13 +478,8 @@
 }
 
 @media (max-width: 620px) {
-  .page-benevole__titre,
-  .mission__titre {
+  .page-benevole__titre{
     font-size: 22px;
-  }
-
-  .filtres-benevole__recherche {
-    width: 100%;
   }
 
   .dispo__nom {
@@ -966,20 +488,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .carte-mission-benevole,
-  .avis-formulaire__note,
-  .dispo__moment,
-  .filtres-benevole__onglet {
+    .dispo__moment{
     transition: none;
   }
 }
 
-
 /* ============================================================
    9. Vue d'ensemble
 
-   La page d'accueil de l'espace ne liste pas, elle met en avant : une
-   mission, une tache. Ses couleurs sont les quatre de la charte --
+   La page d'accueil de l'espace ne liste pas, elle met en avant : la
+   tache a rendre, la tache a prendre. Ses couleurs sont les quatre de la charte --
    violet, bleu, orange, jaune -- prelevees dans le logo lui-meme, et
    rien d'autre.
    ============================================================ */
@@ -1174,7 +692,7 @@
 }
 
 /* Le nombre et son libelle sur la meme ligne de base : lus ensemble,
-   ils forment une phrase -- "1 mission a venir". */
+   ils forment une phrase -- "2 taches en cours". */
 .repere__tete {
   display: flex;
   align-items: baseline;
@@ -1205,9 +723,9 @@
 /* --- Les deux paires de blocs --- */
 
 /*
- * Deux colonnes inegales : la mission occupe les deux tiers, la tache
- * le reste. C'est la mission qu'on vient verifier en premier, et elle
- * seule porte une image.
+ * Deux colonnes inegales : la tache prioritaire occupe les deux tiers,
+ * la tache a prendre le reste. C'est la premiere qu'on vient verifier,
+ * et elle seule porte une image.
  */
 .accueil-benevole__paire {
   display: grid;
@@ -1216,9 +734,9 @@
   align-items: stretch;
 }
 
-/* --- La mission mise en avant --- */
+/* --- La tache mise en avant --- */
 
-.mission-phare {
+.tache-phare {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
   overflow: hidden;
@@ -1228,13 +746,13 @@
   box-shadow: var(--admin-ombre);
 }
 
-.mission-phare__corps {
+.tache-phare__corps {
   display: flex;
   flex-direction: column;
   padding: 20px 22px;
 }
 
-.mission-phare__haut {
+.tache-phare__haut {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1242,12 +760,12 @@
   margin-bottom: 14px;
 }
 
-.mission-phare__intitule {
+.tache-phare__intitule {
   font-size: 17px;
   font-weight: 700;
 }
 
-.mission-phare__projet {
+.tache-phare__projet {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1255,14 +773,14 @@
   color: var(--hope-violet);
 }
 
-.mission-phare__titre {
+.tache-phare__titre {
   margin-top: 5px;
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.mission-phare__texte {
+.tache-phare__texte {
   margin-top: 6px;
   max-width: 46ch;
   font-size: 14px;
@@ -1271,7 +789,7 @@
 }
 
 /* La date en pastille, puis les trois faits : quand, a quelle heure, ou. */
-.mission-phare__quand {
+.tache-phare__quand {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -1305,7 +823,7 @@
   text-transform: uppercase;
 }
 
-.mission-phare__faits {
+.tache-phare__faits {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1313,25 +831,25 @@
   margin: 0;
 }
 
-.mission-phare__faits > div {
+.tache-phare__faits > div {
   display: flex;
   align-items: center;
   gap: 9px;
   min-width: 0;
 }
 
-.mission-phare__faits dt {
+.tache-phare__faits dt {
   display: flex;
   flex: none;
   color: var(--admin-texte-faible);
 }
 
-.mission-phare__faits svg {
+.tache-phare__faits svg {
   width: 16px;
   height: 16px;
 }
 
-.mission-phare__faits dd {
+.tache-phare__faits dd {
   overflow: hidden;
   margin: 0;
   font-size: 13.5px;
@@ -1339,7 +857,7 @@
   white-space: nowrap;
 }
 
-.mission-phare__actions,
+.tache-phare__actions,
 .tache-active__actions {
   display: flex;
   flex-wrap: wrap;
@@ -1351,7 +869,7 @@
   padding-top: 18px;
 }
 
-.mission-phare__vide,
+.tache-phare__vide,
 .tache-active__vide {
   display: flex;
   flex: 1;
@@ -1364,12 +882,12 @@
   color: var(--admin-texte-doux);
 }
 
-.mission-phare__image {
+.tache-phare__image {
   position: relative;
   min-height: 200px;
 }
 
-.mission-phare__image img {
+.tache-phare__image img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1560,12 +1078,12 @@
 
 @media (max-width: 780px) {
   /* L'image passe au-dessus du texte plutot que de le comprimer. */
-  .mission-phare,
+  .tache-phare,
   .invitation {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .mission-phare__image {
+  .tache-phare__image {
     order: -1;
     min-height: 150px;
   }
@@ -1574,14 +1092,13 @@
     font-size: 24px;
   }
 
-  .mission-phare__quand {
+  .tache-phare__quand {
     align-items: flex-start;
   }
 }
 
-
 /* ============================================================
-   10. Journal d'heures
+   10. Journal
 
    Les paliers de reconnaissance, et le pied du tableau.
    ============================================================ */
@@ -1709,7 +1226,6 @@
   border-top: 2px solid var(--admin-bordure);
   font-weight: 700;
 }
-
 
 /* ============================================================
    11. Notifications et messages
@@ -1914,7 +1430,6 @@
     position: static;
   }
 }
-
 
 /* ============================================================
    12. Projets
@@ -2227,7 +1742,6 @@
     flex-wrap: wrap;
   }
 }
-
 
 /* ============================================================
    14. La photo de profil

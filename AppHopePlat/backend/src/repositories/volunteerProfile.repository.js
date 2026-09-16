@@ -84,39 +84,41 @@ export async function mettreAJourCompte(utilisateurId, colonnes, client = null) 
 }
 
 /**
- * Journal d'heures d'un benevole.
+ * Journal d'un benevole : ce qu'il a livre.
  *
- * Seules les missions ou sa presence a ete constatee comptent : une
- * inscription ne vaut pas une participation.
+ * L'espace ne propose plus que des taches. Le journal compte donc les
+ * taches livrees, et non plus des heures : une tache ne porte pas de
+ * duree, et en inventer une ferait mentir l'attestation qu'on en tire.
+ *
+ * Une tache livree garde son benevole (tache_prise_coherente) : c'est
+ * ce qui permet de la lui attribuer ici.
  */
 export async function journal(benevoleId, client = null) {
   const resultat = await query(
-    `SELECT COALESCE(SUM(i.heures_validees), 0)                     AS heures_donnees,
-            COUNT(*) FILTER (WHERE i.statut = 'present')::int        AS missions_realisees,
-            COUNT(*) FILTER (WHERE i.statut = 'annule')::int         AS missions_annulees,
-            COUNT(*)::int                                            AS inscriptions_total,
-            MIN(m.date_debut) FILTER (WHERE i.statut = 'present')    AS premiere_mission,
-            MAX(m.date_debut) FILTER (WHERE i.statut = 'present')    AS derniere_mission
-       FROM inscription_mission i
-       JOIN mission m ON m.id = i.mission_id
-      WHERE i.benevole_id = $1`,
+    `SELECT COUNT(*) FILTER (WHERE statut = 'livree')::int                  AS taches_livrees,
+            COUNT(*) FILTER (WHERE statut = 'en_cours')::int                AS taches_en_cours,
+            COUNT(DISTINCT projet_id) FILTER (WHERE statut = 'livree')::int AS projets_aides,
+            MIN(livree_le) FILTER (WHERE statut = 'livree')                 AS premiere_livraison,
+            MAX(livree_le) FILTER (WHERE statut = 'livree')                 AS derniere_livraison
+       FROM tache
+      WHERE benevole_id = $1`,
     [benevoleId],
     client
   );
   return versObjet(resultat.rows[0]);
 }
 
-/** Detail du journal : une ligne par mission effectuee. */
+/** Detail du journal : une ligne par tache livree, la plus recente en tete. */
 export async function lignesDuJournal(benevoleId, client = null) {
   const resultat = await query(
-    `SELECT m.id AS mission_id, m.titre, m.date_debut, m.format,
-            i.heures_validees, i.statut,
+    `SELECT t.id, t.titre, t.prise_le, t.livree_le,
+            (t.validee_par IS NOT NULL) AS validee,
+            p.id   AS projet_id,
             p.name AS projet_nom
-       FROM inscription_mission i
-       JOIN mission m ON m.id = i.mission_id
-       LEFT JOIN projects p ON p.id = m.projet_id
-      WHERE i.benevole_id = $1 AND i.statut = 'present'
-      ORDER BY m.date_debut DESC`,
+       FROM tache t
+       LEFT JOIN projects p ON p.id = t.projet_id
+      WHERE t.benevole_id = $1 AND t.statut = 'livree'
+      ORDER BY t.livree_le DESC NULLS LAST`,
     [benevoleId],
     client
   );

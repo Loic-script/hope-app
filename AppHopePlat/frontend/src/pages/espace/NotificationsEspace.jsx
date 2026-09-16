@@ -7,7 +7,6 @@ import {
   PleineJournal,
   PleinePersonne,
   PleinePreuves,
-  PleineProjets,
   PleineTaches,
 } from '../../components/IconesPleines.jsx';
 import * as service from '../../services/espace.service.js';
@@ -24,7 +23,6 @@ import * as fmt from '../../utils/format.js';
 
 /** Une icone par type d'evenement, dans la couleur qui lui va. */
 const ALLURE = {
-  mission: { Icone: PleineProjets, teinte: 'violet' },
   tache: { Icone: PleineTaches, teinte: 'bleu' },
   journal: { Icone: PleineJournal, teinte: 'violet' },
   profil: { Icone: PleinePersonne, teinte: 'jaune' },
@@ -117,8 +115,8 @@ export default function NotificationsEspace() {
           <p className="bloc__vide">Chargement…</p>
         ) : items.length === 0 ? (
           <p className="bloc__vide">
-            Aucune notification pour l’instant. Elles arriveront ici dès qu’une mission,
-            une tâche ou un document vous concernera.
+            Aucune notification pour l’instant. Elles arriveront ici dès qu’une tâche
+            ou un document vous concernera.
           </p>
         ) : (
           <ul className="fil-notifs">

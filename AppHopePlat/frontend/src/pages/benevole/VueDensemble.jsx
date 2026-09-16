@@ -1,70 +1,62 @@
 import { Link, useOutletContext } from 'react-router-dom';
 
 import photoInvitation from '../../assets/hope-children.jpg';
-import photoMission from '../../assets/hope-couverture.jpg';
+import photoTache from '../../assets/hope-couverture.jpg';
 import {
   IconeCalendrier,
   IconeChevronDroit,
   IconeJournal,
-  IconeLieu,
   IconePlus,
 } from '../../components/admin/AdminIcons.jsx';
 /*
  * Les carres de couleur portent des icones pleines, comme le menu : a
  * cette taille et sur un fond teinte, un contour de 1,7 px ne pese rien.
- * Les trois reperes de la mission -- date, heure, lieu -- restent au
+ * Les reperes de la tache -- echeance, prise en charge -- restent au
  * trait : ils accompagnent du texte gris, et ne doivent pas le dominer.
  */
-import {
-  PleineCalendrier,
-  PleineJournal,
-  PleineProjets,
-  PleineTaches,
-} from '../../components/IconesPleines.jsx';
+import { PleineJournal, PleineProjets, PleineTaches } from '../../components/IconesPleines.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
-import { FORMATS, Pastille, STATUTS_INSCRIPTION, teinteInscription } from './composants.jsx';
+
+/** Du plus urgent au moins urgent ; une tache sans echeance passe en dernier. */
+function parEcheance(a, b) {
+  if (!a.echeance) return 1;
+  if (!b.echeance) return -1;
+  return new Date(a.echeance) - new Date(b.echeance);
+}
+
+/** "1 tâche", "3 tâches" : le pluriel suit le nombre. */
+function pluriel(nombre, singulier, plurielForme = `${singulier}s`) {
+  return `${nombre} ${nombre > 1 ? plurielForme : singulier}`;
+}
 
 /**
  * Vue d'ensemble de l'espace benevole.
  *
  * La page ne liste pas : elle met en avant. Ce qu'un benevole vient
- * verifier, c'est sa prochaine mission et la tache qu'il a prise -- deux
- * elements, pas deux listes. Le reste de l'espace a ses propres ecrans,
- * et chaque bloc y renvoie.
+ * verifier, c'est la tache qu'il doit rendre en premier, et celle qu'il
+ * pourrait prendre ensuite -- deux elements, pas deux listes. Le reste de
+ * l'espace a ses propres ecrans, et chaque bloc y renvoie.
  *
- * Les trois reperes du haut parlent de lui d'abord : sa mission a venir,
- * sa tache en cours, et seulement ensuite ce que HOPE propose a tous.
+ * Les trois reperes du haut parlent de lui d'abord : ce qu'il a en cours,
+ * ce qu'il a deja livre, et seulement ensuite ce qui attend quelqu'un.
  */
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
 
   const { donnees: chiffres } = useChargement(() => service.apercu(), []);
-  const { donnees: miennes } = useChargement(() => service.mesMissions(), []);
   const { donnees: taches } = useChargement(() => service.mesTaches(), []);
+  const { donnees: libres } = useChargement(() => service.tachesLibres(), []);
   const { donnees: journal } = useChargement(() => service.journal(), []);
 
-  // Les inscriptions encore actives, du plus proche au plus lointain.
-  const aVenir = (miennes ?? [])
-    .filter(
-      (m) =>
-        ['inscrit', 'confirme'].includes(m.inscriptionStatut) &&
-        new Date(m.dateDebut) >= new Date()
-    )
-    .sort((a, b) => new Date(a.dateDebut) - new Date(b.dateDebut));
-
   const enCours = (taches?.items ?? []).filter((t) => t.statut === 'en_cours');
+  const prioritaire = [...enCours].sort(parEcheance)[0];
+  const aPrendre = [...(libres ?? [])].sort(parEcheance)[0];
 
-  // La plus urgente d'abord : c'est celle-la qu'on met en avant.
-  const tachesTriees = [...enCours].sort((a, b) => {
-    if (!a.echeance) return 1;
-    if (!b.echeance) return -1;
-    return new Date(a.echeance) - new Date(b.echeance);
-  });
-
-  const prochaine = aVenir[0];
-  const tache = tachesTriees[0];
+  const nbLibres = chiffres?.tachesLibres ?? 0;
+  const nbProjets = chiffres?.projetsEnAttente ?? 0;
+  const nbLivrees = journal?.tachesLivrees ?? 0;
 
   return (
     <div className="accueil-benevole">
@@ -78,178 +70,174 @@ export default function VueDensemble() {
             Bonjour, {benevole?.prenom ?? 'bénévole'}
           </h1>
           <p className="accueil-benevole__accroche">
-            Votre prochaine mission et vos tâches, au même endroit.
+            Vos tâches, et ce que vous avez déjà livré, au même endroit.
           </p>
         </div>
 
-        <Link className="bouton-hope" to="/benevole/missions">
+        <Link className="bouton-hope" to="/benevole/taches">
           <IconePlus />
-          Trouver une mission
+          Prendre une tâche
         </Link>
       </header>
 
       {/* ---------- Trois reperes ---------- */}
       <div className="reperes">
         <Repere
-          valeur={aVenir.length}
-          libelle={aVenir.length > 1 ? 'Missions à venir' : 'Mission à venir'}
-          Icone={PleineCalendrier}
+          valeur={enCours.length}
+          libelle={enCours.length > 1 ? 'Tâches en cours' : 'Tâche en cours'}
+          Icone={PleineTaches}
           teinte="violet"
           detail={
-            prochaine
-              ? fmt.dateLongue(prochaine.dateDebut)
+            prioritaire?.echeance
+              ? `La prochaine à rendre le ${fmt.date(prioritaire.echeance)}`
               : 'Aucune pour le moment'
           }
         />
         <Repere
-          valeur={enCours.length}
-          libelle={enCours.length > 1 ? 'Tâches en cours' : 'Tâche en cours'}
-          Icone={PleineTaches}
+          valeur={nbLivrees}
+          libelle={nbLivrees > 1 ? 'Tâches livrées' : 'Tâche livrée'}
+          Icone={PleineJournal}
           teinte="bleu"
           detail={
-            tache?.echeance
-              ? `À rendre le ${fmt.date(tache.echeance)}`
-              : `${chiffres?.tachesLibres ?? 0} à prendre`
+            journal?.derniereLivraison
+              ? `La dernière le ${fmt.date(journal.derniereLivraison)}`
+              : 'Pas encore'
           }
         />
         <Repere
-          valeur={chiffres?.missionsOuvertes}
-          libelle="Missions ouvertes"
+          valeur={nbLibres}
+          libelle={nbLibres > 1 ? 'Tâches à prendre' : 'Tâche à prendre'}
           Icone={PleineProjets}
           teinte="orange"
-          detail="Découvrez où apporter votre aide"
+          detail={nbProjets > 0 ? `Sur ${pluriel(nbProjets, 'projet')}` : 'Tout est pris'}
         />
       </div>
 
-      {/* ---------- La mission, et la tache ---------- */}
+      {/* ---------- La tache a rendre, et celle a prendre ---------- */}
       <div className="accueil-benevole__paire">
-        <section className="mission-phare">
-          <div className="mission-phare__corps">
-            <div className="mission-phare__haut">
-              <h2 className="mission-phare__intitule">Ma prochaine mission</h2>
-              {prochaine && (
-                <Pastille
-                  valeur={prochaine.inscriptionStatut}
-                  libelles={STATUTS_INSCRIPTION}
-                  teinte={teinteInscription(prochaine.inscriptionStatut)}
-                />
-              )}
+        <section className="tache-phare">
+          <div className="tache-phare__corps">
+            <div className="tache-phare__haut">
+              <h2 className="tache-phare__intitule">Ma tâche prioritaire</h2>
+              {prioritaire && <span className="pastille pastille--orange">En cours</span>}
             </div>
 
-            {prochaine ? (
+            {prioritaire ? (
               <>
-                <p className="mission-phare__projet">{prochaine.projetNom}</p>
-                <h3 className="mission-phare__titre">{prochaine.titre}</h3>
-                {prochaine.description && (
-                  <p className="mission-phare__texte">{prochaine.description}</p>
+                <p className="tache-phare__projet">{prioritaire.projetNom}</p>
+                <h3 className="tache-phare__titre">{prioritaire.titre}</h3>
+                {prioritaire.description && (
+                  <p className="tache-phare__texte">{prioritaire.description}</p>
                 )}
 
-                <div className="mission-phare__quand">
-                  <span className="jour">
-                    <strong>{fmt.jourDuMois(prochaine.dateDebut)}</strong>
-                    <em>{fmt.moisCourt(prochaine.dateDebut)}</em>
-                  </span>
-                  <dl className="mission-phare__faits">
+                <div className="tache-phare__quand">
+                  {/* La pastille de date n'a de sens qu'avec une echeance :
+                      sans elle, les faits suffisent. */}
+                  {prioritaire.echeance && (
+                    <span className="jour">
+                      <strong>{fmt.jourDuMois(prioritaire.echeance)}</strong>
+                      <em>{fmt.moisCourt(prioritaire.echeance)}</em>
+                    </span>
+                  )}
+                  <dl className="tache-phare__faits">
                     <div>
                       <dt aria-hidden="true"><IconeCalendrier /></dt>
-                      <dd>{fmt.dateLongue(prochaine.dateDebut)}</dd>
+                      <dd>
+                        {prioritaire.echeance
+                          ? `À rendre le ${fmt.dateLongue(prioritaire.echeance)}`
+                          : 'Sans échéance'}
+                      </dd>
                     </div>
-                    <div>
-                      <dt aria-hidden="true"><IconeJournal /></dt>
-                      <dd>{fmt.heure(prochaine.dateDebut)}</dd>
-                    </div>
-                    <div>
-                      <dt aria-hidden="true"><IconeLieu /></dt>
-                      <dd>{prochaine.lieuNom ?? FORMATS[prochaine.format] ?? '—'}</dd>
-                    </div>
+                    {prioritaire.priseLe && (
+                      <div>
+                        <dt aria-hidden="true"><IconeJournal /></dt>
+                        <dd>Prise le {fmt.dateLongue(prioritaire.priseLe)}</dd>
+                      </div>
+                    )}
                   </dl>
                 </div>
 
-                <div className="mission-phare__actions">
-                  <Link className="bouton-hope" to={`/benevole/missions/${prochaine.id}`}>
-                    Voir ma mission
+                <div className="tache-phare__actions">
+                  <Link className="bouton-hope" to="/benevole/taches">
+                    Ouvrir mes tâches
                     <IconeChevronDroit />
                   </Link>
-                  <Link className="lien-hope" to="/benevole/missions">
-                    Toutes mes missions
-                  </Link>
+                  {prioritaire.projetId && (
+                    <Link className="lien-hope" to={`/benevole/projets/${prioritaire.projetId}`}>
+                      Voir le projet
+                    </Link>
+                  )}
                 </div>
               </>
             ) : (
-              <div className="mission-phare__vide">
+              <div className="tache-phare__vide">
                 <p>
-                  Vous n’êtes inscrit à aucune mission pour l’instant.
-                  {chiffres?.missionsOuvertes
-                    ? ` ${chiffres.missionsOuvertes} sont ouvertes.`
-                    : ''}
+                  Aucune tâche en cours.{' '}
+                  {nbLibres > 0
+                    ? `${pluriel(nbLibres, 'tâche')} ${nbLibres > 1 ? 'attendent' : 'attend'} un volontaire.`
+                    : 'Toutes les tâches sont prises pour le moment.'}
                 </p>
-                <Link className="bouton-hope" to="/benevole/missions">
-                  Parcourir les missions
+                <Link className="bouton-hope" to="/benevole/taches">
+                  Prendre une tâche
                   <IconeChevronDroit />
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Decorative : la mission est deja decrite en toutes lettres. */}
-          <div className="mission-phare__image">
-            <img src={photoMission} alt="" />
+          {/* Decorative : la tache est deja decrite en toutes lettres. */}
+          <div className="tache-phare__image">
+            <img src={photoTache} alt="" />
           </div>
         </section>
 
         <section className="tache-active">
           <div className="tache-active__haut">
             <h2 className="tache-active__intitule">
-              Ma tâche en cours
-              {enCours.length > 0 && (
-                <span className="tache-active__compte">{enCours.length}</span>
-              )}
+              À prendre
+              {nbLibres > 0 && <span className="tache-active__compte">{nbLibres}</span>}
             </h2>
-            {tache && <span className="pastille pastille--orange">En cours</span>}
+            {aPrendre && <span className="pastille pastille--bleu">Libre</span>}
           </div>
 
-          {tache ? (
+          {aPrendre ? (
             <>
               <div className="tache-active__ligne">
                 <span className="carre-icone carre-icone--violet" aria-hidden="true">
                   <PleineTaches />
                 </span>
                 <div>
-                  <h3 className="tache-active__titre">{tache.titre}</h3>
-                  <p className="tache-active__projet">{tache.projetNom}</p>
+                  <h3 className="tache-active__titre">{aPrendre.titre}</h3>
+                  <p className="tache-active__projet">{aPrendre.projetNom}</p>
                 </div>
               </div>
 
-              {tache.description && (
-                <p className="tache-active__texte">{tache.description}</p>
+              {aPrendre.description && (
+                <p className="tache-active__texte">{aPrendre.description}</p>
               )}
 
-              {tache.echeance && (
+              {aPrendre.echeance && (
                 <p className="tache-active__echeance">
                   <IconeCalendrier />
-                  À rendre le {fmt.date(tache.echeance)}
+                  À rendre le {fmt.date(aPrendre.echeance)}
                 </p>
               )}
 
               <div className="tache-active__actions">
                 <Link className="bouton-hope bouton-hope--creux" to="/benevole/taches">
-                  Ouvrir la tâche
+                  La prendre
                   <IconeChevronDroit />
                 </Link>
                 <Link className="lien-hope" to="/benevole/taches">
-                  Voir mes tâches
+                  Toutes les tâches à prendre
                 </Link>
               </div>
             </>
           ) : (
             <div className="tache-active__vide">
-              <p>
-                Rien en cours. {chiffres?.tachesLibres ?? 0} tâche
-                {(chiffres?.tachesLibres ?? 0) > 1 ? 's attendent' : ' attend'} un
-                volontaire.
-              </p>
-              <Link className="bouton-hope bouton-hope--creux" to="/benevole/taches">
-                Prendre une tâche
+              <p>Toutes les tâches ont trouvé un volontaire. Merci à tous.</p>
+              <Link className="bouton-hope bouton-hope--creux" to="/benevole/projets">
+                Voir les projets
                 <IconeChevronDroit />
               </Link>
             </div>
@@ -268,18 +256,13 @@ export default function VueDensemble() {
               <span className="trait-hope surtitre__trait" aria-hidden="true" />
               Envie de participer davantage ?
             </p>
-            <h2 className="invitation__titre">Une mission pour chaque engagement.</h2>
+            <h2 className="invitation__titre">Une tâche pour chaque savoir-faire.</h2>
             <p className="invitation__compte">
-              {chiffres?.missionsOuvertes ?? 0} mission
-              {(chiffres?.missionsOuvertes ?? 0) > 1 ? 's' : ''} ouverte
-              {(chiffres?.missionsOuvertes ?? 0) > 1 ? 's' : ''}
-              {' · '}
-              {chiffres?.tachesLibres ?? 0} tâche
-              {(chiffres?.tachesLibres ?? 0) > 1 ? 's' : ''} disponible
-              {(chiffres?.tachesLibres ?? 0) > 1 ? 's' : ''}
+              {pluriel(nbLibres, 'tâche')} à prendre
+              {nbProjets > 0 && ` · sur ${pluriel(nbProjets, 'projet')}`}
             </p>
-            <Link className="lien-hope lien-hope--fleche" to="/benevole/missions">
-              Explorer les possibilités
+            <Link className="lien-hope lien-hope--fleche" to="/benevole/projets">
+              Explorer les projets
               <IconeChevronDroit />
             </Link>
           </div>
@@ -292,20 +275,18 @@ export default function VueDensemble() {
             </span>
             <div>
               <h2 className="journal-apercu__titre">Mon journal</h2>
-              <p className="journal-apercu__accroche">Le compte de ce que vous avez donné.</p>
+              <p className="journal-apercu__accroche">Le compte de ce que vous avez livré.</p>
             </div>
           </div>
 
           <div className="journal-apercu__chiffres">
             <p>
-              <strong>
-                {fmt.nombre(journal?.heuresDonnees ?? 0, (journal?.heuresDonnees ?? 0) % 1 === 0 ? 0 : 1)}
-              </strong>
-              heures données
+              <strong>{nbLivrees}</strong>
+              {nbLivrees > 1 ? 'tâches livrées' : 'tâche livrée'}
             </p>
             <p>
-              <strong>{journal?.missionsRealisees ?? 0}</strong>
-              missions réalisées
+              <strong>{journal?.projetsAides ?? 0}</strong>
+              {(journal?.projetsAides ?? 0) > 1 ? 'projets soutenus' : 'projet soutenu'}
             </p>
           </div>
 
@@ -322,8 +303,8 @@ export default function VueDensemble() {
 /**
  * Un repere du haut : un nombre, ce qu'il compte, et une precision.
  *
- * La precision n'est pas un ornement : "1 mission a venir" ne dit pas
- * quand, et c'est justement ce qu'on vient verifier.
+ * La precision n'est pas un ornement : "2 taches en cours" ne dit pas
+ * laquelle presse, et c'est justement ce qu'on vient verifier.
  */
 function Repere({ valeur, libelle, detail, Icone, teinte }) {
   return (

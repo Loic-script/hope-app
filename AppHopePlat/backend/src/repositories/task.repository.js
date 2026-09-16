@@ -164,3 +164,25 @@ export async function compterParStatut(benevoleId, client = null) {
   }
   return compteurs;
 }
+
+/**
+ * Les chiffres de la vue d'ensemble benevole.
+ *
+ * L'espace ne proposant plus que des taches, ce sont elles qui disent ce
+ * qui se passe : ce qui attend quelqu'un, ce qui avance, ce qui a abouti
+ * ce mois-ci, et combien de benevoles y prennent part.
+ */
+export async function apercu(client = null) {
+  const resultat = await query(
+    `SELECT COUNT(*) FILTER (WHERE statut = 'a_faire')::int                     AS taches_libres,
+            COUNT(*) FILTER (WHERE statut = 'en_cours')::int                    AS taches_en_cours,
+            COUNT(*) FILTER (WHERE statut = 'livree'
+                               AND livree_le >= NOW() - INTERVAL '30 days')::int AS taches_livrees_mois,
+            COUNT(DISTINCT benevole_id) FILTER (WHERE statut = 'en_cours')::int  AS benevoles_mobilises,
+            COUNT(DISTINCT projet_id) FILTER (WHERE statut = 'a_faire')::int     AS projets_en_attente
+       FROM tache`,
+    [],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}

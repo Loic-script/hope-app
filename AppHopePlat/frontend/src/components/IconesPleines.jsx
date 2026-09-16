@@ -175,13 +175,13 @@ export const PleineOrganisation = creerIcone(
 
 /* --- Reperes de date et de lieu, hors menu -------------------------- */
 
-/** Le calendrier : la date d'une mission. */
+/** Le calendrier : une echeance, une date. */
 export const PleineCalendrier = creerIcone(
   'PleineCalendrier',
   <path d="M8.4 2.4a1 1 0 0 1 1 1v1.1h5.2V3.4a1 1 0 1 1 2 0v1.1h1.2a2.4 2.4 0 0 1 2.4 2.4v11.8a2.4 2.4 0 0 1-2.4 2.4H6.2a2.4 2.4 0 0 1-2.4-2.4V6.9a2.4 2.4 0 0 1 2.4-2.4h1.2V3.4a1 1 0 0 1 1-1ZM5.8 9.5v9.2a.4.4 0 0 0 .4.4h11.6a.4.4 0 0 0 .4-.4V9.5Z" />
 );
 
-/** Le reperage sur une carte : le lieu d'une mission. */
+/** Le reperage sur une carte : le lieu d'un projet. */
 export const PleineLieu = creerIcone(
   'PleineLieu',
   <path d="M12 2.3a7.6 7.6 0 0 0-7.6 7.6c0 5.5 6.72 11.1 7 11.34a.93.93 0 0 0 1.2 0c.28-.24 7-5.84 7-11.34A7.6 7.6 0 0 0 12 2.3Zm0 5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z" />

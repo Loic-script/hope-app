@@ -9,14 +9,14 @@ import {
 import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
-import { EtiquetteFormat } from './composants.jsx';
 
 /**
- * Mon journal d'heures.
+ * Mon journal.
  *
- * Seules les missions ou la presence a ete constatee comptent : une
- * inscription ne vaut pas une participation, et le compteur doit rester
- * une reconnaissance sincere.
+ * Le compte de ce que le benevole a livre a HOPE : ses taches terminees,
+ * et les projets qu'elles ont servis. Une tache ne porte pas de duree ;
+ * le journal compte donc ce qui a ete fait, et non des heures qu'il
+ * faudrait inventer.
  *
  * L'ecran ne se contente pas d'afficher des totaux : il dit d'ou ils
  * viennent -- depuis quand, la derniere fois, ce qu'il manque pour le
@@ -29,11 +29,12 @@ export default function MonJournal() {
     return <p className="bloc__vide">Chargement de votre journal…</p>;
   }
 
-  const heures = donnees?.heuresDonnees ?? 0;
-  const missions = donnees?.missionsRealisees ?? 0;
+  const taches = donnees?.tachesLivrees ?? 0;
+  const projets = donnees?.projetsAides ?? 0;
   const badges = donnees?.badges ?? [];
   const lignes = donnees?.lignes ?? [];
   const obtenus = badges.filter((b) => b.obtenu);
+  const enAttente = lignes.filter((l) => !l.validee).length;
 
   // Le premier palier non atteint : c'est lui qui donne un cap.
   const prochain = badges.find((b) => !b.obtenu);
@@ -47,9 +48,9 @@ export default function MonJournal() {
           <span className="trait-hope surtitre__trait" aria-hidden="true" />
           Mon engagement
         </p>
-        <h1 className="page-benevole__titre">Mon journal d’heures</h1>
+        <h1 className="page-benevole__titre">Mon journal</h1>
         <p className="page-benevole__accroche">
-          Le compte de ce que vous avez donné à HOPE.
+          Le compte de ce que vous avez livré à HOPE.
         </p>
       </header>
 
@@ -57,23 +58,23 @@ export default function MonJournal() {
 
       <div className="reperes">
         <Repere
-          valeur={fmt.nombre(heures, heures % 1 === 0 ? 0 : 1)}
-          libelle={heures > 1 ? 'Heures données' : 'Heure donnée'}
+          valeur={taches}
+          libelle={taches > 1 ? 'Tâches livrées' : 'Tâche livrée'}
           detail={
-            missions > 0
-              ? `Sur ${missions} mission${missions > 1 ? 's' : ''}`
-              : 'Aucune heure constatée'
+            donnees?.derniereLivraison
+              ? `La dernière le ${fmt.date(donnees.derniereLivraison)}`
+              : 'Aucune pour le moment'
           }
           Icone={PleineJournal}
           teinte="violet"
         />
         <Repere
-          valeur={missions}
-          libelle={missions > 1 ? 'Missions réalisées' : 'Mission réalisée'}
+          valeur={projets}
+          libelle={projets > 1 ? 'Projets soutenus' : 'Projet soutenu'}
           detail={
-            donnees?.derniereMission
-              ? `La dernière le ${fmt.date(donnees.derniereMission)}`
-              : 'Aucune pour le moment'
+            (donnees?.tachesEnCours ?? 0) > 0
+              ? `${donnees.tachesEnCours} tâche${donnees.tachesEnCours > 1 ? 's' : ''} en cours`
+              : 'Rien en cours'
           }
           Icone={PleineProjets}
           teinte="orange"
@@ -109,7 +110,7 @@ export default function MonJournal() {
 
         <ul className="paliers">
           {badges.map((badge) => (
-            <Palier key={badge.cle} badge={badge} heures={heures} missions={missions} />
+            <Palier key={badge.cle} badge={badge} taches={taches} projets={projets} />
           ))}
         </ul>
       </section>
@@ -117,58 +118,67 @@ export default function MonJournal() {
       {/* ---------- Le detail ---------- */}
       <section className="bloc">
         <div className="bloc__entete">
-          <h2 className="bloc__titre">Missions effectuées</h2>
+          <h2 className="bloc__titre">Tâches livrées</h2>
           {lignes.length > 0 && (
             <p className="bloc__sous-titre">
-              {lignes.length} ligne{lignes.length > 1 ? 's' : ''}
+              {enAttente > 0
+                ? `${enAttente} en attente de validation`
+                : 'Toutes validées par HOPE'}
             </p>
           )}
         </div>
 
         {lignes.length === 0 ? (
           <p className="bloc__vide">
-            Aucune mission encore validée. Vos heures apparaîtront ici dès qu’un encadrant
-            aura constaté votre présence.{' '}
-            <Link to="/benevole/missions">Voir les missions ouvertes</Link>
+            Aucune tâche livrée pour l’instant. Elles apparaîtront ici dès que vous en
+            aurez terminé une.{' '}
+            <Link to="/benevole/taches">Voir les tâches à prendre</Link>
           </p>
         ) : (
           <div className="table-enveloppe">
             <table className="table">
               <thead>
                 <tr>
-                  <th>Mission</th>
+                  <th>Tâche</th>
                   <th>Projet</th>
-                  <th>Format</th>
-                  <th>Date</th>
-                  <th className="table__nombre">Heures</th>
+                  <th>Prise le</th>
+                  <th>Livrée le</th>
+                  <th>Validation</th>
                 </tr>
               </thead>
               <tbody>
                 {lignes.map((ligne) => (
-                  <tr key={ligne.missionId}>
+                  <tr key={ligne.id}>
+                    <td>{ligne.titre}</td>
                     <td>
-                      <Link className="table__lien" to={`/benevole/missions/${ligne.missionId}`}>
-                        {ligne.titre}
-                      </Link>
+                      {ligne.projetId ? (
+                        <Link className="table__lien" to={`/benevole/projets/${ligne.projetId}`}>
+                          {ligne.projetNom}
+                        </Link>
+                      ) : (
+                        '—'
+                      )}
                     </td>
-                    <td>{ligne.projetNom ?? '—'}</td>
+                    <td>{fmt.date(ligne.priseLe)}</td>
+                    <td>{fmt.date(ligne.livreeLe)}</td>
                     <td>
-                      <EtiquetteFormat format={ligne.format} />
-                    </td>
-                    <td>{fmt.date(ligne.dateDebut)}</td>
-                    <td className="table__nombre">
-                      {ligne.heuresValidees === null ? '—' : fmt.nombre(ligne.heuresValidees, 1)}
+                      {/* Une livraison n'est reconnue qu'une fois relue par
+                          l'equipe : l'ecran le dit, plutot que de laisser
+                          croire que tout est acquis. */}
+                      <span className={`pastille pastille--${ligne.validee ? 'valide' : 'orange'}`}>
+                        {ligne.validee ? 'Validée' : 'En attente'}
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
               {/* Le total au pied : c'est le chiffre que le benevole vient
-                  verifier, et il ne doit pas etre a recalculer de tete. */}
+                  verifier, et il ne doit pas etre a recompter de tete. */}
               <tfoot>
                 <tr>
                   <td colSpan={4}>Total</td>
-                  <td className="table__nombre">
-                    {fmt.nombre(heures, heures % 1 === 0 ? 0 : 1)} h
+                  <td>
+                    {taches} tâche{taches > 1 ? 's' : ''}
                   </td>
                 </tr>
               </tfoot>
@@ -186,22 +196,22 @@ export default function MonJournal() {
  * Non atteint, il dit ce qui manque plutot que de rester ferme : c'est
  * la seule chose qui en fasse un objectif et non un reproche.
  */
-function Palier({ badge, heures, missions }) {
+function Palier({ badge, taches, projets }) {
   const manques = [];
-  if (badge.heures && heures < badge.heures) {
-    const reste = badge.heures - heures;
-    manques.push(`${fmt.nombre(reste, reste % 1 === 0 ? 0 : 1)} h`);
+  if (badge.taches && taches < badge.taches) {
+    const reste = badge.taches - taches;
+    manques.push(`${reste} tâche${reste > 1 ? 's' : ''}`);
   }
-  if (badge.missions && missions < badge.missions) {
-    const reste = badge.missions - missions;
-    manques.push(`${reste} mission${reste > 1 ? 's' : ''}`);
+  if (badge.projets && projets < badge.projets) {
+    const reste = badge.projets - projets;
+    manques.push(`${reste} projet${reste > 1 ? 's' : ''}`);
   }
 
   // L'avancement du palier : la plus basse des deux conditions, car
   // c'est elle qui retient le badge.
   const parts = [];
-  if (badge.heures) parts.push(Math.min(1, heures / badge.heures));
-  if (badge.missions) parts.push(Math.min(1, missions / badge.missions));
+  if (badge.taches) parts.push(Math.min(1, taches / badge.taches));
+  if (badge.projets) parts.push(Math.min(1, projets / badge.projets));
   const avancement = parts.length ? Math.min(...parts) : 0;
 
   return (

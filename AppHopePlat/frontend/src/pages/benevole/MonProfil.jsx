@@ -18,13 +18,13 @@ const MOMENTS = [
 /**
  * Mon profil de benevole.
  *
- * Ce qui se saisit ici sert a proposer les bonnes missions : ce que
- * l'on sait faire, quand on est libre, jusqu'ou l'on se deplace.
+ * Ce qui se saisit ici sert a confier les bonnes taches : ce que l'on
+ * sait faire, quand on est libre, jusqu'ou l'on se deplace.
  *
  * Deux informations sont affichees sans etre modifiables : le nom et
- * la validation par HOPE. La premiere identifie, la seconde ouvre les
- * missions de terrain -- si le benevole pouvait la cocher lui-meme,
- * elle ne vaudrait plus rien.
+ * la validation par HOPE. La premiere identifie, la seconde atteste que
+ * l'equipe a verifie le profil -- si le benevole pouvait la cocher
+ * lui-meme, elle ne vaudrait plus rien.
  */
 export default function MonProfil() {
   const { donnees, chargement, erreur, recharger } = useChargement(
@@ -46,8 +46,6 @@ export default function MonProfil() {
       langues: (donnees.langues ?? []).join(', '),
       disponibilites: donnees.disponibilites ?? {},
       rayonKm: donnees.rayonKm ?? '',
-      accepteTerrain: donnees.accepteTerrain ?? true,
-      accepteDistance: donnees.accepteDistance ?? true,
       contactUrgenceNom: donnees.contactUrgenceNom ?? '',
       contactUrgenceTel: donnees.contactUrgenceTel ?? '',
       adresse: donnees.adresse ?? '',
@@ -89,8 +87,6 @@ export default function MonProfil() {
         langues: champs.langues,
         disponibilites: champs.disponibilites,
         rayonKm: champs.rayonKm === '' ? null : champs.rayonKm,
-        accepteTerrain: champs.accepteTerrain,
-        accepteDistance: champs.accepteDistance,
         contactUrgenceNom: champs.contactUrgenceNom,
         contactUrgenceTel: champs.contactUrgenceTel,
         adresse: champs.adresse,
@@ -119,7 +115,7 @@ export default function MonProfil() {
       <header className="page-benevole__entete">
         <h1 className="page-benevole__titre">Mon profil</h1>
         <p className="page-benevole__accroche">
-          Ces informations aident l’équipe à vous proposer les missions qui vous
+          Ces informations aident l’équipe à vous proposer les tâches qui vous
           correspondent.
         </p>
       </header>
@@ -129,16 +125,16 @@ export default function MonProfil() {
           <>
             <strong>Profil validé par HOPE</strong>
             <span>
-              Vous avez accès aux missions de terrain
-              {donnees.valideLe && ` — depuis le ${fmt.date(donnees.valideLe)}`}.
+              L’équipe HOPE a vérifié votre profil
+              {donnees.valideLe && ` le ${fmt.date(donnees.valideLe)}`}.
             </span>
           </>
         ) : (
           <>
             <strong>Profil en cours de validation</strong>
             <span>
-              Les missions à distance et en présentiel vous sont ouvertes. Les missions de
-              terrain attendent la validation de l’équipe.
+              L’équipe HOPE vérifie votre profil. Toutes les tâches vous sont déjà
+              ouvertes.
             </span>
           </>
         )}
@@ -263,23 +259,6 @@ export default function MonProfil() {
             onChange={(v) => modifier('rayonKm', v)}
             aide="En kilomètres."
           />
-
-          <label className="profil-benevole__case">
-            <input
-              type="checkbox"
-              checked={champs.accepteTerrain}
-              onChange={(e) => modifier('accepteTerrain', e.target.checked)}
-            />
-            J’accepte les missions de terrain
-          </label>
-          <label className="profil-benevole__case">
-            <input
-              type="checkbox"
-              checked={champs.accepteDistance}
-              onChange={(e) => modifier('accepteDistance', e.target.checked)}
-            />
-            J’accepte les missions à distance
-          </label>
         </fieldset>
 
         <fieldset className="profil-benevole__groupe">

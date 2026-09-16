@@ -28,20 +28,20 @@ function ilYA(heures) {
  */
 const NOTIFICATIONS = {
   benevole: [
-    { type: 'mission', titre: 'Votre inscription est confirmée',
-      corps: 'Traduction des supports pédagogiques — l’encadrante vous attend mardi à 19:00.',
-      lien: '/benevole/missions', heures: 3, lu: false },
+    { type: 'tache', titre: 'Votre livraison a été validée',
+      corps: 'Relire les bulletins du premier trimestre — merci, la coordinatrice a tout repris.',
+      lien: '/benevole/journal', heures: 3, lu: false },
     { type: 'tache', titre: 'Une tâche vous a été attribuée',
       corps: 'Consolider le tableur des repas du trimestre, à rendre sous cinq jours.',
       lien: '/benevole/taches', heures: 20, lu: false },
-    { type: 'journal', titre: 'Vos heures ont été validées',
-      corps: '6 heures constatées sur « Mise à jour du tableur des repas servis ».',
+    { type: 'journal', titre: 'Nouveau badge : 5 tâches livrées',
+      corps: 'Votre journal compte désormais cinq tâches livrées. Merci pour votre constance.',
       lien: '/benevole/journal', heures: 52, lu: false },
-    { type: 'mission', titre: 'Nouvelle mission près de chez vous',
-      corps: 'Création du jardin potager de l’école, à Fianarantsoa, dans seize jours.',
-      lien: '/benevole/missions', heures: 96, lu: true },
+    { type: 'tache', titre: 'De nouvelles tâches à prendre',
+      corps: 'Cantines scolaires de Fianarantsoa : dessiner le plan du futur potager.',
+      lien: '/benevole/taches', heures: 96, lu: true },
     { type: 'profil', titre: 'Profil validé par HOPE',
-      corps: 'Vous avez désormais accès aux missions de terrain.',
+      corps: 'Votre profil est complet et validé : toutes les tâches vous sont ouvertes.',
       lien: '/benevole/profil', heures: 240, lu: true },
   ],
   bailleur: [
@@ -66,20 +66,20 @@ const MESSAGES = {
     {
       sujet: 'Disponibilité pour les samedis de novembre',
       corps:
-        'Bonjour, je peux prendre les samedis matin à partir du 8 novembre. Y a-t-il des missions de soutien scolaire ce jour-là ? Merci.',
+        'Bonjour, je peux me libérer les samedis matin à partir du 8 novembre. Y a-t-il des tâches de soutien scolaire à prendre ? Merci.',
       heures: 8,
       reponse:
-        'Bonjour, merci pour votre disponibilité. Nous ouvrons deux créneaux le samedi matin à Ankadifotsy à partir du 8 ; ils apparaîtront dans vos missions la semaine prochaine.',
+        'Bonjour, merci pour votre disponibilité. Deux tâches de soutien scolaire à Ankadifotsy seront publiées la semaine prochaine ; vous les trouverez dans « Tâches à prendre ».',
       reponseHeures: 5,
       reponseLue: false,
     },
     {
       sujet: 'Attestation de bénévolat',
       corps:
-        'Mon employeur me demande une attestation des heures effectuées cette année. Pouvez-vous me l’établir ?',
+        'Mon employeur me demande une attestation de mon engagement cette année. Pouvez-vous me l’établir ?',
       heures: 340,
       reponse:
-        'C’est fait, l’attestation part par courriel aujourd’hui. Elle reprend les heures validées de votre journal, arrêtées à hier.',
+        'C’est fait, l’attestation part par courriel aujourd’hui. Elle reprend les tâches validées de votre journal, arrêtées à hier.',
       reponseHeures: 336,
       reponseLue: true,
     },

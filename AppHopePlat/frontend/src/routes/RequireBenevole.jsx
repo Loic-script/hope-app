@@ -66,8 +66,8 @@ export default function RequireBenevole() {
 
   /*
    * Premiere connexion : le compte existe, la fiche de terrain est
-   * vide. On passe par le formulaire avant l'espace -- sans quoi les
-   * missions proposees le seraient au hasard.
+   * vide. On passe par le formulaire avant l'espace -- sans quoi
+   * l'equipe ne saurait pas quelles taches lui confier.
    *
    * La condition exclut la page de completion elle-meme : sinon elle se
    * redirigerait vers elle-meme sans fin.

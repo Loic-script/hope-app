@@ -21,17 +21,21 @@ const JOURS = [
 const MOMENTS = ['matin', 'apres-midi', 'soir', 'journee'];
 
 /**
- * Paliers de reconnaissance du journal d'heures.
+ * Paliers de reconnaissance du journal.
  *
- * Ils ne sont pas stockes : un badge se deduit du total, et une table
- * de badges se desynchroniserait a la premiere correction d'heures.
+ * Ils ne sont pas stockes : un badge se deduit des totaux, et une table
+ * de badges se desynchroniserait a la premiere tache relachee.
+ *
+ * Deux mesures, et deux seulement : le nombre de taches livrees, et le
+ * nombre de projets differents soutenus -- aider sur plusieurs fronts
+ * compte autant que beaucoup aider au meme endroit.
  */
 const BADGES = [
-  { cle: 'premiere-mission', libelle: 'Première mission', missions: 1 },
-  { cle: 'dix-heures', libelle: '10 heures données', heures: 10 },
-  { cle: 'cinq-missions', libelle: '5 missions', missions: 5 },
-  { cle: 'cinquante-heures', libelle: '50 heures données', heures: 50 },
-  { cle: 'pilier', libelle: 'Pilier HOPE', missions: 20, heures: 100 },
+  { cle: 'premiere-tache', libelle: 'Première tâche livrée', taches: 1 },
+  { cle: 'cinq-taches', libelle: '5 tâches livrées', taches: 5 },
+  { cle: 'trois-projets', libelle: '3 projets soutenus', projets: 3 },
+  { cle: 'quinze-taches', libelle: '15 tâches livrées', taches: 15 },
+  { cle: 'pilier', libelle: 'Pilier HOPE', taches: 30, projets: 5 },
 ];
 
 /** Retire de la fiche ce qui ne doit pas sortir vers le benevole. */
@@ -246,8 +250,8 @@ export async function journal(utilisateurId) {
     profileRepository.lignesDuJournal(fiche.id),
   ]);
 
-  const heures = Number(totaux.heuresDonnees ?? 0);
-  const missions = Number(totaux.missionsRealisees ?? 0);
+  const taches = Number(totaux.tachesLivrees ?? 0);
+  const projets = Number(totaux.projetsAides ?? 0);
 
   /*
    * Les paliers sortent avec le badge.
@@ -259,20 +263,19 @@ export async function journal(utilisateurId) {
   const badges = BADGES.map((badge) => ({
     cle: badge.cle,
     libelle: badge.libelle,
-    heures: badge.heures ?? null,
-    missions: badge.missions ?? null,
+    taches: badge.taches ?? null,
+    projets: badge.projets ?? null,
     obtenu:
-      (badge.heures === undefined || heures >= badge.heures) &&
-      (badge.missions === undefined || missions >= badge.missions),
+      (badge.taches === undefined || taches >= badge.taches) &&
+      (badge.projets === undefined || projets >= badge.projets),
   }));
 
   return {
-    heuresDonnees: heures,
-    missionsRealisees: missions,
-    missionsAnnulees: Number(totaux.missionsAnnulees ?? 0),
-    inscriptionsTotal: Number(totaux.inscriptionsTotal ?? 0),
-    premiereMission: totaux.premiereMission,
-    derniereMission: totaux.derniereMission,
+    tachesLivrees: taches,
+    tachesEnCours: Number(totaux.tachesEnCours ?? 0),
+    projetsAides: projets,
+    premiereLivraison: totaux.premiereLivraison,
+    derniereLivraison: totaux.derniereLivraison,
     benevoleDepuis: fiche.benevoleDepuis,
     badges,
     lignes,
