@@ -837,6 +837,31 @@
   color: var(--admin-texte-faible);
 }
 
+/*
+ * Le visuel de la publication.
+ *
+ * aspect-ratio fixe la hauteur avant le chargement de l'image : sans
+ * elle, la carte grandirait d'un coup et le fil se reorganiserait sous
+ * le curseur du lecteur. Le fond sert d'attente, puis ne se voit plus.
+ *
+ * object-fit: cover accepte n'importe quel cadrage source -- portrait
+ * ou panoramique -- sans deformer personne.
+ */
+.actu__visuel {
+  margin-bottom: 14px;
+  overflow: hidden;
+  border-radius: 10px;
+  aspect-ratio: 16 / 7;
+  background-color: var(--admin-fond);
+}
+
+.actu__visuel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .actu__titre {
   font-size: 17px;
   font-weight: 700;

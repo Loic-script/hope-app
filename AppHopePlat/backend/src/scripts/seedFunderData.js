@@ -14,8 +14,13 @@
  * Le script suppose que les projets existent : lancer d'abord
  * "npm run db:seed-demo -- --force".
  */
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import { fermerPool, query } from '../config/database.js';
+import { DOSSIER_MEDIAS } from '../middleware/upload.middleware.js';
 import * as funderAuthService from '../services/funderAuth.service.js';
+import { poserMedia } from './mediasDemo.js';
 
 const FORCER = process.argv.includes('--force');
 
@@ -42,6 +47,20 @@ async function vider() {
   console.log('[HOPE] --force : suppression des donnees de l espace bailleur...');
   await query(`TRUNCATE ${TABLES.join(', ')} CASCADE`);
   await query(`DELETE FROM utilisateur WHERE email LIKE '%@bailleur.hope.example'`);
+
+  // Les visuels des publications n'ont plus de ligne en base. Sans ce
+  // menage, chaque passage en laisserait une copie de plus sur le
+  // disque, que rien ne viendrait jamais reclamer.
+  try {
+    const fichiers = await fs.readdir(DOSSIER_MEDIAS);
+    await Promise.all(
+      fichiers
+        .filter((nom) => nom.startsWith('publication-'))
+        .map((nom) => fs.unlink(path.join(DOSSIER_MEDIAS, nom)))
+    );
+  } catch (erreur) {
+    if (erreur.code !== 'ENOENT') throw erreur;
+  }
 }
 
 /** Les distinctions du referentiel, et leur regle en clair. */
@@ -95,12 +114,13 @@ const BAILLEURS = [
 ];
 
 async function installer() {
-  const projets = await query('SELECT id, name FROM projects ORDER BY id');
+  const projets = await query('SELECT id, name, media_url FROM projects ORDER BY id');
   if (projets.rowCount === 0) {
     throw new Error('Aucun projet en base. Lancez d abord : npm run db:seed-demo -- --force');
   }
 
   const parNom = new Map(projets.rows.map((p) => [p.name, p.id]));
+  const visuelParNom = new Map(projets.rows.map((p) => [p.name, p.media_url]));
 
   /** Identifiant d'un projet par son nom. Sans repli : un nom errone
    *  rattacherait le financement au mauvais projet sans qu'on le voie. */
@@ -352,6 +372,10 @@ async function installer() {
       corps:
         'Les écolages du premier trimestre sont réglés et les kits distribués. Les 100 enfants du programme ont fait leur rentrée.',
       projet: 'Soutien scolaire Antananarivo',
+      // Une photo propre a l'annonce, et non celle du projet : une salle
+      // de classe malgache le jour de la rentree dit la nouvelle mieux
+      // que le visuel generique du programme.
+      media: 'rentree.jpg',
       publieLe: jour(-12),
     },
     {
@@ -375,13 +399,23 @@ async function installer() {
   ];
 
   for (const p of PUBLICATIONS) {
+    // Une publication illustree se lit ; une liste de titres se
+    // survole. A defaut de visuel propre, elle reprend celui de son
+    // projet : le bailleur reconnait alors le programme d'un coup
+    // d'oeil, d'une carte a l'autre.
+    const media = p.media
+      ? (await poserMedia(p.media, 'publication')).mediaUrl
+      : (p.projet ? visuelParNom.get(p.projet) ?? null : null);
+
     await query(
       `INSERT INTO publication
-         (type, titre, corps, projet_id, cibles, montant_cible, publie_le, publie_par)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+         (type, titre, corps, projet_id, cibles, montant_cible, publie_le,
+          publie_par, media_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
         p.type, p.titre, p.corps ?? null, p.projet ? projet(p.projet) : null,
         ['bailleurs', 'donateurs'], p.montantCible ?? null, p.publieLe, adminId,
+        media,
       ]
     );
   }

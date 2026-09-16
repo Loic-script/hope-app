@@ -32,15 +32,15 @@ const COLONNES = `
   last_login_at, created_at, updated_at
 `;
 
-/**
- * Recherche un compte par son identifiant de connexion.
- * Retourne le hash : cette methode est reservee au service d'authentification.
- */
 /** Pose ou retire la photo de profil d'un administrateur. */
 export async function mettreAJourPhoto(id, photoUrl, client = null) {
   await query('UPDATE admins SET photo_url = $2 WHERE id = $1', [id, photoUrl], client);
 }
 
+/**
+ * Recherche un compte par son identifiant de connexion.
+ * Retourne le hash : cette methode est reservee au service d'authentification.
+ */
 export async function trouverParLogin(adminLog) {
   const resultat = await query(
     `SELECT ${COLONNES}, password_hash FROM admins WHERE admin_log = $1 LIMIT 1`,

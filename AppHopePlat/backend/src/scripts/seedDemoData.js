@@ -18,17 +18,15 @@
  * Il passe par les services : les memes regles metier que l'API
  * s'appliquent, controles de solde compris.
  */
-import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { fermerPool, query } from '../config/database.js';
 import {
   DOSSIER_JUSTIFICATIFS,
   DOSSIER_MEDIAS,
-  PREFIXE_MEDIAS,
 } from '../middleware/upload.middleware.js';
+import { poserMedia } from './mediasDemo.js';
 
 import * as catalogService from '../services/catalog.service.js';
 import * as projectService from '../services/project.service.js';
@@ -117,48 +115,6 @@ function construirePdfDemo(titre) {
   return Buffer.from(pdf, 'latin1');
 }
 
-/** Dossier des visuels livres avec le script. */
-const DOSSIER_MEDIAS_DEMO = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  'medias-demo'
-);
-
-/** Nature du media deduite de son extension. */
-const NATURES = new Map([
-  ['.jpg', 'PHOTO'],
-  ['.png', 'PHOTO'],
-  ['.webp', 'PHOTO'],
-  ['.mp4', 'VIDEO'],
-  ['.webm', 'VIDEO'],
-]);
-
-/**
- * Copie un visuel de demonstration dans le dossier des medias et renvoie de
- * quoi illustrer un projet.
- *
- * On imite ce qu'aurait produit un televersement reel : le fichier recoit un
- * nom genere, jamais celui d'origine, et le projet ne garde qu'une adresse.
- *
- * @param {string} nomSource fichier present dans medias-demo/
- * @returns {Promise<{ mediaUrl: string, mediaType: 'PHOTO'|'VIDEO' }>}
- */
-async function poserMedia(nomSource) {
-  await fs.mkdir(DOSSIER_MEDIAS, { recursive: true });
-
-  const extension = path.extname(nomSource).toLowerCase();
-  const identifiant = crypto.randomBytes(16).toString('hex');
-  const nomDisque = `projet-${Date.now()}-${identifiant}${extension}`;
-
-  await fs.copyFile(
-    path.join(DOSSIER_MEDIAS_DEMO, nomSource),
-    path.join(DOSSIER_MEDIAS, nomDisque)
-  );
-
-  return {
-    mediaUrl: `${PREFIXE_MEDIAS}/${nomDisque}`,
-    mediaType: NATURES.get(extension) ?? 'PHOTO',
-  };
-}
 
 /** Ecrit le PDF puis enregistre le justificatif correspondant. */
 async function ajouterJustificatif(expenseId, { titre, nomAffiche, type, reference }) {
@@ -230,8 +186,6 @@ async function installerDonneesDemo(categoriesParNom) {
     ...(await poserMedia('formation.jpg')),
   });
 
-  // Ce projet reste volontairement sans visuel : l'accueil doit aussi
-  // montrer l'invitation a en ajouter un.
   const alimentation = await projectService.creer({
     name: 'Cantines scolaires de Fianarantsoa',
     description: 'Un repas chaud par jour et jardins potagers communautaires dans quatre écoles.',
@@ -242,6 +196,7 @@ async function installerDonneesDemo(categoriesParNom) {
     requiredBudget: '4000000',
     beneficiaryProfile: 'Élèves des écoles primaires publiques',
     beneficiaryTarget: 200,
+    ...(await poserMedia('cantine.jpg')),
   });
 
   const puits = await projectService.creer({

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { useChargement } from '../../hooks/useChargement.js';
-import { messageErreur } from '../../services/api.js';
+import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import { EntetePage, Pastille } from './composants.jsx';
@@ -82,6 +82,12 @@ function Carte({ publication, onInteret }) {
         </Pastille>
         <span className="actu__date">{fmt.date(publication.publieLe)}</span>
       </div>
+
+      {publication.mediaUrl && (
+        <div className="actu__visuel">
+          <img src={urlMedia(publication.mediaUrl)} alt="" loading="lazy" />
+        </div>
+      )}
 
       <h2 className="actu__titre">{publication.titre}</h2>
       {publication.projetNom && (
