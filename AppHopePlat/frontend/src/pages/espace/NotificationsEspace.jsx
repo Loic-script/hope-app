@@ -8,6 +8,7 @@ import {
   PleinePersonne,
   PleineTaches,
 } from '../../components/IconesPleines.jsx';
+import NotificationMessages from '../../components/messagerie/NotificationMessages.jsx';
 import * as service from '../../services/espace.service.js';
 import * as fmt from '../../utils/format.js';
 
@@ -32,7 +33,7 @@ const ALLURE = {
 const PAR_DEFAUT = { Icone: PleineCalendrier, teinte: 'bleu' };
 
 export default function NotificationsEspace() {
-  const { api, rafraichirCompteurs } = useOutletContext();
+  const { api, rafraichirCompteurs, racineConversations, cheminMessages } = useOutletContext();
 
   const [items, setItems] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -107,6 +108,8 @@ export default function NotificationsEspace() {
       </header>
 
       {erreur && <p className="alerte-benevole">{erreur}</p>}
+
+      <NotificationMessages api={api} racine={racineConversations} cheminMessages={cheminMessages} />
 
       <section className="bloc">
         {chargement ? (

@@ -119,11 +119,13 @@ router.get('/tasks/:id/files/:fileId', tasks.fichier);
 // Le courrier des espaces benevole et bailleur, distinct de celui des
 // donateurs : autre table, autres destinataires.
 // Les conversations : l'equipe y est un participant comme un autre.
-router.get('/conversations/annuaire', conversations.annuaire);
+router.get('/conversations/joignables', conversations.joignables);
+router.get('/conversations/non-lus', conversations.nonLus);
 router.get('/conversations', conversations.lister);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
-router.post('/conversations/:id/messages', conversations.ecrire);
+router.post('/conversations/:id/lu', conversations.marquerLu);
+router.post('/conversations/:id/messages', conversations.envoyer);
 
 router.get('/espace-messages', messagesEspaces.lister);
 router.post('/espace-messages/:id/reponse', exigerEcriture, messagesEspaces.repondre);

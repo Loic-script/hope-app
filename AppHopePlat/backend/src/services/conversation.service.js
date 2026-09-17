@@ -1,26 +1,81 @@
 /**
- * Service des conversations.
+ * Service de la messagerie.
  *
- * Tout le monde ecrit a tout le monde : benevole, bailleur, donateur,
- * equipe. Le service ne raisonne que sur un "acteur" -- { type, id } --
- * deja etabli par le middleware de l'espace d'ou vient la demande.
+ * Il ne raisonne que sur un "acteur" -- { type: 'utilisateur' | 'admin',
+ * id } -- etabli par le verrou de l'espace d'ou vient la demande, jamais
+ * par le corps de la requete.
  *
- * Il n'y a donc pas de regle de role ici, et c'est voulu : la seule
- * barriere est l'appartenance a la conversation.
+ * Une regle domine toutes les autres : la participation seule donne
+ * acces a un fil, a ses messages et a ses pieces. Un fil auquel on ne
+ * participe pas repond "introuvable", et non "interdit" -- repondre
+ * "interdit" confirmerait qu'il existe.
  */
 import { transaction } from '../config/database.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 
-const CORPS_MAX = 4000;
-const CORPS_MIN = 1;
+/** Longueur maximale d'un message. */
+export const CORPS_MAX = 4000;
 
-/** Verifie le texte d'un message. */
-function corpsValide(valeur) {
-  const corps = String(valeur ?? '').trim();
-  if (corps.length < CORPS_MIN) {
-    throw new ErreurValidation('Le message est vide.', { corps: 'Champ obligatoire' });
-  }
+/** Libelles des roles de l'equipe, comme ailleurs dans l'administration. */
+const ROLES_EQUIPE = { ADMIN: 'Administrateur', COORDINATOR: 'Coordinateur', VIEWER: 'Lecture seule' };
+
+/** Libelles des roles d'utilisateur. */
+const ROLES = { bailleur: 'Bailleur', benevole: 'Bénévole', donateur: 'Donateur' };
+
+/** Le nom sous lequel l'equipe apparait a un utilisateur. */
+export const NOM_EQUIPE = 'Équipe HOPE';
+
+/* ================================================================
+   Outils
+   ================================================================ */
+
+/** Deux acteurs designent-ils la meme personne ? */
+export function memeActeur(a, b) {
+  return Boolean(a && b) && a.type === b.type && String(a.id) === String(b.id);
+}
+
+/**
+ * Un identifiant de base rendu en nombre.
+ *
+ * Les colonnes BIGSERIAL arrivent de pg sous forme de texte ("27") : le
+ * client, qui les compare a Number(?t=), ne retrouverait jamais le fil.
+ * Nos volumes restent tres loin de la limite des entiers surs.
+ */
+const nombre = (valeur) => (valeur === null || valeur === undefined ? null : Number(valeur));
+
+/** Les pieces d'un message, identifiants en nombres. */
+const pieces = (liste) => (liste ?? []).map((piece) => ({ ...piece, id: nombre(piece.id) }));
+
+/** Un identifiant de fil ou de message : entier positif, sinon introuvable. */
+function identifiant(valeur, quoi) {
+  const nombre = Number(valeur);
+  if (!Number.isSafeInteger(nombre) || nombre <= 0) throw new ErreurIntrouvable(quoi, valeur);
+  return nombre;
+}
+
+/** Un UUID bien forme -- sans quoi PostgreSQL leverait une erreur de syntaxe. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Lit la designation d'une personne venue du client.
+ *
+ * @returns {{type: string, id: string|number}}
+ */
+export function acteurValide(valeur, champ = 'cible') {
+  const type = String(valeur?.type ?? '').trim();
+  const id = String(valeur?.id ?? '').trim();
+
+  if (type === 'admin' && /^\d+$/.test(id)) return { type, id: Number(id) };
+  if (type === 'utilisateur' && UUID.test(id)) return { type, id };
+  if (type === 'equipe') return { type, id: 'equipe' };
+
+  throw new ErreurValidation('Destinataire invalide.', { [champ]: 'Valeur non acceptée' });
+}
+
+/** Verifie un texte de message. Vide accepte : les pieces peuvent suffire. */
+export function corpsValide(valeur) {
+  const corps = String(valeur ?? '').replace(/\r\n/g, '\n').trim();
   if (corps.length > CORPS_MAX) {
     throw new ErreurValidation('Le message est trop long.', {
       corps: `${CORPS_MAX} caractères au maximum`,
@@ -29,87 +84,394 @@ function corpsValide(valeur) {
   return corps;
 }
 
-/** Verifie la designation d'un destinataire. */
-function acteurValide(valeur, champ = 'destinataire') {
-  const type = String(valeur?.type ?? '').trim();
-  const id = String(valeur?.id ?? '').trim();
-
-  if (!['utilisateur', 'admin'].includes(type) || id === '') {
-    throw new ErreurValidation('Destinataire invalide.', { [champ]: 'Valeur non acceptée' });
+/** Le sous-titre d'une personne : organisation · fonction, ou son role. */
+export function sousTitre(personne) {
+  if (!personne) return '';
+  if (personne.role === 'equipe') {
+    return [NOM_EQUIPE, ROLES_EQUIPE[personne.roleEquipe]].filter(Boolean).join(' · ');
   }
-  return { type, id: type === 'admin' ? Number(id) : id };
+  if (personne.role === 'bailleur') {
+    const morceaux = [personne.entreprise, personne.fonction].filter(Boolean);
+    return morceaux.length > 0 ? morceaux.join(' · ') : ROLES.bailleur;
+  }
+  if (personne.role === 'benevole') {
+    return [ROLES.benevole, personne.fonction].filter(Boolean).join(' · ');
+  }
+  return ROLES[personne.role] ?? 'Membre';
 }
 
-/** Les conversations de l'acteur. */
-export function lister(acteur) {
-  return conversationRepository.lister(acteur);
-}
-
-/** L'annuaire : qui peut-on joindre. */
-export function annuaire(acteur) {
-  return conversationRepository.annuaire(acteur);
-}
-
-/** Le nombre de conversations qui portent du non-lu. */
-export function compterNonLues(acteur) {
-  return conversationRepository.compterNonLues(acteur);
+/** Ce qu'une personne montre d'elle dans une liste. */
+function resume(personne) {
+  return {
+    type: personne.type,
+    id: String(personne.id),
+    nom: personne.nom,
+    prenom: personne.prenom,
+    photoUrl: personne.photoUrl ?? null,
+    role: personne.role,
+    sousTitre: sousTitre(personne),
+    entreprise: personne.entreprise ?? null,
+    entrepriseId: personne.entrepriseId ?? null,
+  };
 }
 
 /**
- * Une conversation et ses messages.
+ * Comment un fil se presente a celui qui le regarde.
  *
- * L'ouvrir vaut lecture : la pastille s'eteint ici, et non sur un bouton
- * que personne ne cliquerait.
+ * - individuel : chacun voit l'autre personne ;
+ * - assistance : l'utilisateur voit l'equipe, l'equipe voit l'utilisateur ;
+ * - groupe : son nom et le nombre de participants.
+ */
+export function presenter(fil, acteur) {
+  const participants = fil.participants ?? [];
+  const autres = participants.filter((p) => !memeActeur(p, acteur));
+
+  if (fil.type === 'groupe') {
+    return {
+      nom: fil.nom,
+      sousTitre: `${participants.length} participant${participants.length > 1 ? 's' : ''}`,
+      photoUrl: null,
+      interlocuteur: null,
+    };
+  }
+
+  if (fil.assistance) {
+    if (acteur.type === 'utilisateur') {
+      return { nom: NOM_EQUIPE, sousTitre: 'Assistance', photoUrl: null, interlocuteur: null, equipe: true };
+    }
+    const utilisateur = participants.find((p) => p.type === 'utilisateur');
+    if (!utilisateur) {
+      return { nom: 'Compte supprimé', sousTitre: 'Assistance', photoUrl: null, interlocuteur: null };
+    }
+    return {
+      nom: utilisateur.nom,
+      sousTitre: [sousTitre(utilisateur), 'Assistance'].filter(Boolean).join(' · '),
+      photoUrl: utilisateur.photoUrl ?? null,
+      interlocuteur: resume(utilisateur),
+    };
+  }
+
+  const autre = autres[0];
+  if (!autre) {
+    // L'autre personne a quitte ou son compte a disparu.
+    return { nom: 'Compte supprimé', sousTitre: '', photoUrl: null, interlocuteur: null };
+  }
+  return {
+    nom: autre.nom,
+    sousTitre: sousTitre(autre),
+    photoUrl: autre.photoUrl ?? null,
+    interlocuteur: resume(autre),
+  };
+}
+
+/** Un message, tel que le client le recoit. */
+export function presenterMessage(message, acteur) {
+  const supprime = Boolean(message.supprimeLe);
+  return {
+    id: nombre(message.id),
+    texte: supprime ? '' : message.corps,
+    creeLe: message.creeLe,
+    modifieLe: message.modifieLe ?? null,
+    supprime,
+    transfere: Boolean(message.transfere),
+    auteur: {
+      type: message.auteurType,
+      id: message.auteurId,
+      nom: message.auteurNom,
+      photoUrl: message.auteurPhoto ?? null,
+    },
+    estDeMoi: memeActeur({ type: message.auteurType, id: message.auteurId }, acteur),
+    pieces: supprime ? [] : pieces(message.pieces),
+  };
+}
+
+/**
+ * Charge un fil et verifie que l'acteur y participe.
+ *
+ * La seule porte d'entree : toutes les actions sur un fil passent par
+ * ici avant de toucher a quoi que ce soit.
+ */
+export async function filAccessible(acteur, id, client = null) {
+  const conversationId = identifiant(id, 'La conversation');
+  const participe = await conversationRepository.estParticipant(acteur, conversationId, client);
+  if (!participe) throw new ErreurIntrouvable('La conversation', id);
+
+  const fil = await conversationRepository.trouver(conversationId, client);
+  if (!fil) throw new ErreurIntrouvable('La conversation', id);
+  return fil;
+}
+
+/** Le nom qu'un acteur signe : copie dans chaque message qu'il ecrit. */
+export async function nomDe(acteur, client = null) {
+  const personne = await conversationRepository.personne(acteur, client);
+  return personne?.nom ?? 'Compte supprimé';
+}
+
+/* ================================================================
+   Lecture
+   ================================================================ */
+
+/** Les fils de l'acteur, et le total de ses non-lus. */
+export async function lister(acteur) {
+  // L'equipe voit tous les fils d'assistance : elle y est inscrite ici si
+  // un compte d'administrateur a ete cree depuis.
+  if (acteur.type === 'admin') await conversationRepository.rattacherEquipeAuxAssistances();
+
+  const fils = await conversationRepository.lister(acteur);
+  const items = fils.map((fil) => ({
+    id: nombre(fil.id),
+    type: fil.type,
+    assistance: fil.assistance,
+    ...presenter(fil, acteur),
+    creeLe: fil.creeLe,
+    derniereActivite: fil.derniereActivite,
+    nonLus: fil.nonLus,
+    dernier: fil.dernier
+      ? {
+          ...fil.dernier,
+          id: nombre(fil.dernier.id),
+          estDeMoi: memeActeur({ type: fil.dernier.auteurType, id: fil.dernier.auteurId }, acteur),
+          corps: fil.dernier.supprime ? '' : fil.dernier.corps,
+          pieces: fil.dernier.supprime ? [] : pieces(fil.dernier.pieces),
+        }
+      : null,
+  }));
+
+  return { items, nonLus: items.reduce((total, fil) => total + fil.nonLus, 0) };
+}
+
+/**
+ * Un fil et ses messages.
+ *
+ * L'ouvrir ne le marque PAS lu : c'est le navigateur qui le dit, une
+ * fois le fil affiche. Un prechargement, ou un telephone qui choisit un
+ * fil par defaut sans le montrer, ne doit rien marquer.
  */
 export async function recuperer(acteur, id) {
-  const conversation = await conversationRepository.trouver(acteur, id);
-  if (!conversation) throw new ErreurIntrouvable('La conversation', id);
+  const fil = await filAccessible(acteur, id);
+  const [liste, luLe] = await Promise.all([
+    conversationRepository.messages(fil.id),
+    conversationRepository.luLe(acteur, fil.id),
+  ]);
 
-  const liste = await conversationRepository.messages(conversation.id);
-  await conversationRepository.marquerLue(acteur, conversation.id);
-
-  return { conversation, messages: liste };
+  return {
+    conversation: {
+      id: nombre(fil.id),
+      type: fil.type,
+      assistance: fil.assistance,
+      creeLe: fil.creeLe,
+      luLe,
+      ...presenter(fil, acteur),
+      participants: (fil.participants ?? []).map((p) => ({
+        ...resume(p),
+        fonction: p.fonction ?? null,
+        email: p.email ?? null,
+        telephone: p.telephone ?? null,
+        siteWeb: p.siteWeb ?? null,
+        ajouteLe: p.ajouteLe,
+        estMoi: memeActeur(p, acteur),
+      })),
+    },
+    messages: liste.map((message) => presenterMessage(message, acteur)),
+  };
 }
 
 /**
- * Ouvre une conversation avec quelqu'un, ou retrouve celle qui existe.
+ * Marque un fil lu, jusqu'au dernier message affiche.
  *
- * Ecrire deux fois a la meme personne doit continuer le meme fil : une
- * seconde conversation a deux avec les memes participants serait un
- * doublon que personne ne saurait departager.
+ * Le message designe doit appartenir au fil : le depot l'impose, et un
+ * identifiant etranger revient a "maintenant".
  */
-export async function ouvrir(acteur, corpsRequete = {}) {
-  const destinataire = acteurValide(corpsRequete.destinataire);
-  const corps = corpsRequete.corps === undefined ? null : corpsValide(corpsRequete.corps);
+export async function marquerLu(acteur, id, corps = {}) {
+  const fil = await filAccessible(acteur, id);
 
-  if (destinataire.type === acteur.type && String(destinataire.id) === String(acteur.id)) {
-    throw new ErreurValidation('On ne s’écrit pas à soi-même.', {
-      destinataire: 'Choisissez quelqu’un d’autre',
+  let messageId = null;
+  if (corps.jusquAuMessage !== undefined && corps.jusquAuMessage !== null) {
+    messageId = Number(corps.jusquAuMessage);
+    if (!Number.isSafeInteger(messageId) || messageId <= 0) {
+      throw new ErreurValidation('Message invalide.', { jusquAuMessage: 'Identifiant attendu' });
+    }
+  }
+
+  await conversationRepository.marquerLu(acteur, fil.id, messageId);
+  const reste = await conversationRepository.nonLus(acteur);
+  return { id: nombre(fil.id), total: reste.total, dernierFil: nombre(reste.dernierFil) };
+}
+
+/** Le total des non-lus et le fil du plus recent : la pastille et la notification. */
+export async function nonLus(acteur) {
+  const { total, dernierFil } = await conversationRepository.nonLus(acteur);
+  return { total, dernierFil: nombre(dernierFil) };
+}
+
+/**
+ * Les personnes joignables.
+ *
+ * Chacune dit si un echange individuel existe deja avec elle : la
+ * recherche ne propose sous "Nouvelle conversation" que celles avec qui
+ * rien n'existe encore.
+ */
+export async function joignables(acteur) {
+  const [personnes, fils] = await Promise.all([
+    conversationRepository.joignables(acteur),
+    conversationRepository.lister(acteur),
+  ]);
+
+  // Qui a deja un fil a deux avec moi : l'autre d'un individuel, ou
+  // l'utilisateur d'un fil d'assistance vu depuis l'equipe.
+  const dejaJoints = new Map();
+  let filEquipe = null;
+  for (const fil of fils) {
+    if (fil.type !== 'individuel') continue;
+    if (fil.assistance && acteur.type === 'utilisateur') {
+      // La liste est triee par activite : le premier est le plus recent.
+      filEquipe ??= fil.id;
+      continue;
+    }
+    const autre = fil.assistance
+      ? fil.participants.find((p) => p.type === 'utilisateur')
+      : fil.participants.find((p) => !memeActeur(p, acteur));
+    if (autre) dejaJoints.set(`${autre.type}:${autre.id}`, fil.id);
+  }
+
+  const items = personnes.map((personne) => ({
+    ...resume(personne),
+    filId: nombre(dejaJoints.get(`${personne.type}:${personne.id}`) ?? null),
+  }));
+
+  if (acteur.type === 'utilisateur') {
+    items.unshift({
+      type: 'equipe',
+      id: 'equipe',
+      nom: NOM_EQUIPE,
+      prenom: NOM_EQUIPE,
+      photoUrl: null,
+      role: 'equipe',
+      sousTitre: 'Assistance',
+      entreprise: null,
+      entrepriseId: null,
+      filId: nombre(filEquipe),
     });
   }
 
-  return transaction(async (client) => {
-    let id = await conversationRepository.trouverEntre(acteur, destinataire, client);
-    if (!id) {
-      id = await conversationRepository.creer([acteur, destinataire], client);
-    }
-    if (corps) {
-      await conversationRepository.ajouterMessage({ conversationId: id, acteur, corps }, client);
-    }
-    return { id };
-  });
+  return { items };
 }
 
-/** Ecrit dans une conversation dont on fait partie. */
-export async function ecrire(acteur, id, corpsRequete = {}) {
-  const conversation = await conversationRepository.trouver(acteur, id);
-  if (!conversation) throw new ErreurIntrouvable('La conversation', id);
+/* ================================================================
+   Retrouver ou creer
+   ================================================================ */
 
-  const message = await conversationRepository.ajouterMessage({
-    conversationId: conversation.id,
-    acteur,
-    corps: corpsValide(corpsRequete.corps),
+/**
+ * Le fil avec une personne : retrouve, ou cree.
+ *
+ * - un utilisateur qui vise l'equipe, ou l'equipe qui vise un
+ *   utilisateur : le fil d'assistance de cet utilisateur ;
+ * - deux utilisateurs, ou deux membres de l'equipe : un fil individuel.
+ *
+ * Un verrou par paire met en file deux demandes simultanees : la seconde
+ * trouve ce que la premiere a cree, au lieu d'en creer un double.
+ *
+ * @returns {Promise<{id: number, cree: boolean}>}
+ */
+export async function filAvec(acteur, cible, client) {
+  if (memeActeur(acteur, cible)) {
+    throw new ErreurValidation('On ne s’écrit pas à soi-même.', { cible: 'Choisissez quelqu’un d’autre' });
+  }
+
+  // L'assistance : un utilisateur face a l'equipe.
+  const utilisateurDAssistance =
+    acteur.type === 'utilisateur' && cible.type === 'equipe'
+      ? acteur
+      : acteur.type === 'admin' && cible.type === 'utilisateur'
+        ? cible
+        : null;
+
+  if (cible.type === 'equipe' && acteur.type !== 'utilisateur') {
+    throw new ErreurValidation('Destinataire invalide.', { cible: 'Valeur non acceptée' });
+  }
+
+  if (utilisateurDAssistance) {
+    await conversationRepository.verrouiller(`assistance:${utilisateurDAssistance.id}`, client);
+    const existant = await conversationRepository.trouverAssistance(utilisateurDAssistance.id, client);
+    if (existant) {
+      if (acteur.type === 'admin') await conversationRepository.ajouterParticipants(existant, [acteur], null, client);
+      return { id: nombre(existant), cree: false };
+    }
+
+    const id = await conversationRepository.creerFil({ assistance: true }, client);
+    const equipe = await conversationRepository.equipeActive(client);
+    await conversationRepository.ajouterParticipants(id, [utilisateurDAssistance, ...equipe], null, client);
+    // Celui qui ouvre le fil depuis l'equipe y figure, meme s'il n'est pas
+    // compte parmi les actifs au moment precis de la creation.
+    if (acteur.type === 'admin') await conversationRepository.ajouterParticipants(id, [acteur], null, client);
+    return { id: nombre(id), cree: true };
+  }
+
+  // Deux personnes du meme cote : un fil individuel.
+  const cle = [`${acteur.type}:${acteur.id}`, `${cible.type}:${cible.id}`].sort().join('|');
+  await conversationRepository.verrouiller(`individuel:${cle}`, client);
+
+  const existant = await conversationRepository.trouverIndividuel(acteur, cible, client);
+  if (existant) return { id: nombre(existant), cree: false };
+
+  const id = await conversationRepository.creerFil({}, client);
+  await conversationRepository.ajouterParticipants(id, [acteur, cible], null, client);
+  return { id: nombre(id), cree: true };
+}
+
+/**
+ * La cible est-elle joignable par cet acteur ?
+ *
+ * Proposer une personne dans l'annuaire ne suffit pas : la requete peut
+ * viser n'importe quel identifiant. On revérifie donc ici.
+ */
+export async function verifierJoignable(acteur, cible, client = null) {
+  if (cible.type === 'equipe') {
+    if (acteur.type !== 'utilisateur') {
+      throw new ErreurValidation('Destinataire invalide.', { cible: 'Valeur non acceptée' });
+    }
+    return;
+  }
+
+  const personnes = await conversationRepository.joignables(acteur, client);
+  const trouve = personnes.some((p) => p.type === cible.type && String(p.id) === String(cible.id));
+  if (!trouve) throw new ErreurIntrouvable('La personne', cible.id);
+}
+
+/** Ouvre le fil avec une personne, ou retrouve celui qui existe. */
+export async function ouvrir(acteur, corps = {}) {
+  const cible = acteurValide(corps.cible);
+  await verifierJoignable(acteur, cible);
+
+  return transaction((client) => filAvec(acteur, cible, client));
+}
+
+/* ================================================================
+   Ecriture
+   ================================================================ */
+
+/**
+ * Envoie un message dans un fil dont on fait partie.
+ *
+ * Ecrire vaut lecture : ce qu'on vient de dire, et tout ce qui precedait,
+ * est lu par son auteur.
+ */
+export async function envoyer(acteur, id, corps = {}) {
+  const fil = await filAccessible(acteur, id);
+  const texte = corpsValide(corps.corps);
+  if (texte === '') {
+    throw new ErreurValidation('Le message est vide.', { corps: 'Écrivez un message ou joignez un fichier' });
+  }
+
+  const message = await transaction(async (client) => {
+    const cree = await conversationRepository.ajouterMessage(
+      { conversationId: fil.id, acteur, auteurNom: await nomDe(acteur, client), corps: texte },
+      client
+    );
+    await conversationRepository.marquerLu(acteur, fil.id, cree.id, client);
+    return cree;
   });
-  await conversationRepository.marquerLue(acteur, conversation.id);
-  return message;
+
+  const complet = await conversationRepository.trouverMessage(message.id);
+  return presenterMessage(complet, acteur);
 }

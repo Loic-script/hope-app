@@ -27,14 +27,16 @@ router.patch('/notifications/:id/lue', espace.marquerLue);
 /*
  * Les conversations : tout le monde ecrit a tout le monde. Montees
  * avant l'ancienne messagerie, qui ne servait qu'a ecrire a l'equipe.
- * "annuaire" avant ":id" : sinon Express le lirait comme un
- * identifiant.
+ * "joignables" et "non-lus" avant ":id" : sinon Express les lirait
+ * comme des identifiants.
  */
-router.get('/conversations/annuaire', conversations.annuaire);
+router.get('/conversations/joignables', conversations.joignables);
+router.get('/conversations/non-lus', conversations.nonLus);
 router.get('/conversations', conversations.lister);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
-router.post('/conversations/:id/messages', conversations.ecrire);
+router.post('/conversations/:id/lu', conversations.marquerLu);
+router.post('/conversations/:id/messages', conversations.envoyer);
 
 router.get('/messages', espace.listerMessages);
 router.post('/messages', espace.envoyerMessage);

@@ -14,6 +14,7 @@ import {
   EtatVide,
   Panneau,
 } from '../../components/admin/ui.jsx';
+import NotificationMessages from '../../components/messagerie/NotificationMessages.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as notificationService from '../../services/notification.service.js';
 import * as fmt from '../../utils/format.js';
@@ -77,7 +78,7 @@ function destination(notification) {
  *     <HOPE|projet> ».
  */
 export default function NotificationsPage() {
-  const { rafraichirCompteurs } = useOutletContext();
+  const { rafraichirCompteurs, api, racineConversations, cheminMessages } = useOutletContext();
   const [filtre, setFiltre] = useState('TOUTES');
 
   const { donnees, chargement, erreur, recharger } = useChargement(
@@ -149,6 +150,8 @@ export default function NotificationsPage() {
 
       {erreur && <Alerte>{erreur}</Alerte>}
       {erreurAction && <Alerte>{erreurAction}</Alerte>}
+
+      <NotificationMessages api={api} racine={racineConversations} cheminMessages={cheminMessages} />
 
       <Panneau serre>
         <BarreOutils

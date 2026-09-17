@@ -1378,6 +1378,120 @@ BEGIN
 END;
 $$;
 
+/* ================================================================
+ * Messagerie complete : groupes, assistance, pieces jointes
+ * ================================================================ */
+
+/*
+ * Le fil.
+ *
+ * "individuel" reunit deux personnes, "groupe" en reunit davantage.
+ * Le nom et la photo n'existent que pour un groupe : un fil individuel
+ * montre a chacun l'autre personne, et ne stocke donc rien.
+ *
+ * "assistance" marque le fil entre un utilisateur et l'equipe : chaque
+ * administrateur actif y participe, et l'utilisateur y voit "l'equipe"
+ * plutot qu'une personne.
+ */
+ALTER TABLE conversation ADD COLUMN IF NOT EXISTS type VARCHAR(12) NOT NULL DEFAULT 'individuel';
+ALTER TABLE conversation ADD COLUMN IF NOT EXISTS nom VARCHAR(80);
+ALTER TABLE conversation ADD COLUMN IF NOT EXISTS photo_fichier VARCHAR(80);
+ALTER TABLE conversation ADD COLUMN IF NOT EXISTS assistance BOOLEAN NOT NULL DEFAULT FALSE;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'conversation_type_valide') THEN
+    ALTER TABLE conversation
+      ADD CONSTRAINT conversation_type_valide CHECK (type IN ('individuel', 'groupe'));
+  END IF;
+  -- Un groupe se nomme ; un fil individuel ne porte pas de nom, puisque
+  -- chacun y voit l'autre.
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'conversation_nom_de_groupe') THEN
+    ALTER TABLE conversation
+      ADD CONSTRAINT conversation_nom_de_groupe
+        CHECK ((type = 'groupe' AND nom IS NOT NULL AND BTRIM(nom) <> '')
+            OR (type = 'individuel' AND nom IS NULL));
+  END IF;
+END
+$$;
+
+/*
+ * Les anciens fils "ecrire a HOPE" etaient adresses a l'equipe, pas a une
+ * personne : ils portaient un sujet. Ils deviennent des fils d'assistance
+ * -- une seule fois, et le reste de l'equipe y est inscrit comme lecteur a
+ * jour, pour ne pas lui faire lire comme neuf un historique deja traite.
+ */
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM conversation WHERE sujet IS NOT NULL AND assistance = FALSE) THEN
+    UPDATE conversation SET assistance = TRUE WHERE sujet IS NOT NULL;
+
+    INSERT INTO conversation_participant (conversation_id, admin_id, lu_jusqu_a)
+    SELECT c.id, a.id, NOW()
+      FROM conversation c
+      CROSS JOIN admins a
+     WHERE c.assistance
+       AND a.status = 'ACTIVE'
+       AND NOT EXISTS (
+         SELECT 1 FROM conversation_participant p
+          WHERE p.conversation_id = c.id AND p.admin_id = a.id
+       );
+  END IF;
+END
+$$;
+
+/*
+ * Le message.
+ *
+ * - auteur_nom : le nom affiche, copie a l'ecriture. Il survit au compte,
+ *   et un groupe relu dans un an dit encore qui parlait.
+ * - corps peut etre vide quand le message porte des pieces jointes ; il
+ *   est aussi vide une fois le message supprime.
+ * - supprime_le : suppression logique. La bulle garde sa place dans le
+ *   fil, son contenu et ses pieces disparaissent.
+ */
+ALTER TABLE conversation_message ADD COLUMN IF NOT EXISTS auteur_nom VARCHAR(160);
+ALTER TABLE conversation_message ADD COLUMN IF NOT EXISTS modifie_le TIMESTAMPTZ;
+ALTER TABLE conversation_message ADD COLUMN IF NOT EXISTS supprime_le TIMESTAMPTZ;
+ALTER TABLE conversation_message ADD COLUMN IF NOT EXISTS transfere BOOLEAN NOT NULL DEFAULT FALSE;
+
+UPDATE conversation_message m
+   SET auteur_nom = COALESCE(
+         (SELECT TRIM(u.prenom || ' ' || u.nom) FROM utilisateur u WHERE u.id = m.utilisateur_id),
+         (SELECT a.admin_log FROM admins a WHERE a.id = m.admin_id),
+         'Compte supprimé'
+       )
+ WHERE auteur_nom IS NULL;
+
+/*
+ * La piece jointe.
+ *
+ * "fichier" est le nom sur le disque : un UUID, jamais le nom d'origine.
+ * Le dossier est prive -- rien ne le sert directement, seule la route de
+ * lecture controlee y accede, apres verification de la participation.
+ */
+CREATE TABLE IF NOT EXISTS conversation_piece (
+  id          BIGSERIAL    PRIMARY KEY,
+  message_id  BIGINT       NOT NULL REFERENCES conversation_message(id) ON DELETE CASCADE,
+  nom_origine VARCHAR(255) NOT NULL,
+  type        VARCHAR(8)   NOT NULL,
+  type_mime   VARCHAR(80)  NOT NULL,
+  fichier     VARCHAR(80)  NOT NULL UNIQUE,
+  taille      INTEGER      NOT NULL,
+  position    SMALLINT     NOT NULL DEFAULT 0,
+  cree_le     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT conversation_piece_type_valide CHECK (type IN ('image', 'video', 'pdf')),
+  CONSTRAINT conversation_piece_taille_positive CHECK (taille > 0)
+);
+
+CREATE INDEX IF NOT EXISTS conversation_piece_message_idx
+  ON conversation_piece (message_id, position);
+
+-- Le non-lu se compte sur les messages recents, non supprimes, d'un fil.
+CREATE INDEX IF NOT EXISTS conversation_message_vivants_idx
+  ON conversation_message (conversation_id, cree_le) WHERE supprime_le IS NULL;
+
 /*
  * La photo des membres de l'equipe.
  *

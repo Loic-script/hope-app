@@ -68,7 +68,7 @@ const TABLES_ATTENDUES = {
     'message_utilisateur',
     'message_entree',
   ],
-  'Conversations': ['conversation', 'conversation_participant', 'conversation_message'],
+  'Conversations': ['conversation', 'conversation_participant', 'conversation_message', 'conversation_piece'],
 };
 
 /**
@@ -85,6 +85,9 @@ const COLONNES_ATTENDUES = [
   ['admins', 'photo_url'],
   ['projects', 'description_titre'],
   ['projects', 'project_type'],
+  ['conversation', 'type'],
+  ['conversation', 'assistance'],
+  ['conversation_message', 'supprime_le'],
   ['impacts', 'objective_id'],
   ['document_bailleur', 'contenu'],
 ];

@@ -1,0 +1,765 @@
+/* ============================================================
+   HOPE - Messagerie
+
+   Deux volets sur grand ecran : la liste des conversations a gauche,
+   le fil a droite. Sur telephone, un volet a la fois : la liste, puis
+   le fil en plein ecran par-dessus la barre superieure.
+
+   Les couleurs sont celles de la plateforme : le violet de la charte
+   pour ses propres messages, les gris de l'administration pour les
+   autres.
+   ============================================================ */
+
+.msg-page__entete {
+  margin-bottom: 18px;
+}
+
+.msg {
+  display: grid;
+  grid-template-columns: minmax(290px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  height: calc(100vh - var(--admin-entete-hauteur) - 170px);
+  height: calc(100dvh - var(--admin-entete-hauteur) - 170px);
+  min-height: 480px;
+}
+
+.msg-liste,
+.msg-fil {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+/* --- Boutons-icones ----------------------------------------------- */
+
+.msg-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+}
+
+.msg-icone:hover {
+  background-color: var(--admin-fond);
+  color: var(--admin-texte);
+}
+
+.msg-icone:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.msg-icone svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- Avatars ------------------------------------------------------- */
+
+.msg-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.msg-avatar--petite {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.msg-avatar--moyenne {
+  width: 42px;
+  height: 42px;
+  font-size: 14px;
+}
+
+.msg-avatar--grande {
+  width: 88px;
+  height: 88px;
+  font-size: 28px;
+}
+
+/* ============================================================
+   La liste
+   ============================================================ */
+
+.msg-liste__outils {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.msg-recherche {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-recherche svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--admin-texte-faible);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.msg-recherche input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 36px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 20px;
+  background-color: var(--admin-surface-douce);
+  font: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.msg-recherche input:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hope-violet) 18%, transparent);
+}
+
+.msg-liste__defilement {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.msg-liste__lignes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-liste__vide {
+  padding: 22px 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+  text-align: center;
+}
+
+.msg-liste__section {
+  padding: 14px 16px 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.msg-ligne {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.msg-ligne:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.msg-ligne:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: -2px;
+}
+
+.msg-ligne--active {
+  border-left-color: var(--hope-violet);
+  background-color: color-mix(in srgb, var(--hope-violet) 8%, var(--admin-surface));
+}
+
+.msg-ligne:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.msg-ligne__corps {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg-ligne__haut,
+.msg-ligne__bas {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.msg-ligne__bas {
+  align-items: center;
+}
+
+.msg-ligne__nom,
+.msg-ligne__sous-titre,
+.msg-ligne__apercu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-ligne__nom {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.msg-ligne__heure {
+  flex: none;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.msg-ligne__sous-titre {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.msg-ligne__apercu {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.msg-ligne--non-lue .msg-ligne__nom,
+.msg-ligne--non-lue .msg-ligne__apercu {
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.msg-ligne--non-lue .msg-ligne__heure {
+  font-weight: 600;
+  color: var(--hope-violet);
+}
+
+.msg-pastille {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background-color: var(--hope-violet);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ============================================================
+   Le fil
+   ============================================================ */
+
+.msg-fil__entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.msg-fil__identite {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.msg-fil__noms {
+  min-width: 0;
+}
+
+.msg-fil__nom {
+  overflow: hidden;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-fil__sous-titre {
+  overflow: hidden;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-fil__messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: 18px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.msg-fil__etat {
+  margin: auto;
+  padding: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+  text-align: center;
+}
+
+.msg-fil--vide {
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Separateur de jour ------------------------------------------ */
+
+.msg-jour {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0 6px;
+}
+
+.msg-jour span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background-color: var(--admin-surface-douce);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Bulles -------------------------------------------------------- */
+
+.msg-rang {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.msg-rang--moi {
+  align-items: flex-end;
+}
+
+.msg-rang--autre {
+  align-items: flex-start;
+}
+
+.msg-rang__auteur {
+  margin: 6px 0 2px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.msg-bulle {
+  position: relative;
+  max-width: min(76%, 560px);
+  padding: 9px 13px 7px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.msg-rang--moi .msg-bulle {
+  border-bottom-right-radius: 5px;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.msg-rang--autre .msg-bulle {
+  border-bottom-left-radius: 5px;
+  background-color: var(--admin-bordure);
+  color: var(--admin-texte);
+}
+
+.msg-bulle__texte {
+  white-space: pre-wrap;
+  /* Une longue adresse se coupe sans casser les mots ordinaires. */
+  overflow-wrap: anywhere;
+}
+
+.msg-bulle__transfere {
+  margin-bottom: 2px;
+  font-size: 11.5px;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.msg-bulle__heure {
+  margin-top: 2px;
+  font-size: 11px;
+  text-align: right;
+  opacity: 0.85;
+}
+
+.msg-rang--autre .msg-bulle__heure {
+  color: var(--admin-texte-doux);
+  opacity: 1;
+}
+
+/* Un message supprime garde sa place, en pointilles. */
+.msg-rang .msg-bulle--supprimee {
+  border: 1px dashed var(--admin-bordure-forte);
+  background-color: transparent;
+  color: var(--admin-texte-doux);
+}
+
+.msg-rang .msg-bulle--supprimee .msg-bulle__heure {
+  color: var(--admin-texte-faible);
+}
+
+.msg-bulle__texte--supprime {
+  font-style: italic;
+}
+
+.msg-lien {
+  color: var(--hope-violet-lisible);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+/* Sur sa propre bulle violette, le lien reste lisible. */
+.msg-rang--moi .msg-bulle:not(.msg-bulle--supprimee) .msg-lien {
+  color: #ffffff;
+}
+
+.msg-surligne {
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--hope-jaune) 55%, transparent);
+  color: inherit;
+}
+
+/* ============================================================
+   La zone de saisie
+   ============================================================ */
+
+.msg-saisie {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface);
+}
+
+.msg-saisie__ligne {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.msg-saisie__champ {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-saisie__champ textarea {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  max-height: 160px;
+  padding: 10px 16px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 21px;
+  background-color: var(--admin-surface-douce);
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--admin-texte);
+  resize: none;
+}
+
+.msg-saisie__champ textarea:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hope-violet) 18%, transparent);
+}
+
+.msg-saisie__outil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 20px;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+}
+
+.msg-saisie__outil:hover,
+.msg-saisie__outil[aria-expanded='true'] {
+  background-color: var(--admin-fond);
+}
+
+.msg-saisie__outil:focus-visible,
+.msg-saisie__envoyer:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.msg-saisie__outil svg {
+  width: 21px;
+  height: 21px;
+}
+
+.msg-saisie__envoyer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.msg-saisie__envoyer:hover:not(:disabled) {
+  background-color: var(--hope-violet-fonce);
+}
+
+.msg-saisie__envoyer:disabled {
+  background-color: var(--admin-bordure-forte);
+  cursor: default;
+}
+
+.msg-saisie__envoyer svg {
+  width: 19px;
+  height: 19px;
+}
+
+.msg-saisie__erreur {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--hope-erreur);
+}
+
+.msg-rotation {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: msg-rotation 0.8s linear infinite;
+}
+
+@keyframes msg-rotation {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Emojis -------------------------------------------------------- */
+
+.msg-emojis {
+  position: relative;
+  flex: none;
+}
+
+.msg-emojis__grille {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(6, 40px);
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre-flottante);
+}
+
+.msg-emojis__emoji {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.msg-emojis__emoji:hover,
+.msg-emojis__emoji:focus-visible {
+  outline: none;
+  background-color: color-mix(in srgb, var(--hope-violet) 12%, var(--admin-surface));
+}
+
+/* ============================================================
+   Notification "N messages non lus"
+   ============================================================ */
+
+.msg-notif {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--hope-violet) 30%, var(--admin-bordure));
+  border-radius: var(--admin-rayon);
+  background-color: color-mix(in srgb, var(--hope-violet) 6%, var(--admin-surface));
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.msg-notif:hover {
+  border-color: var(--hope-violet);
+}
+
+.msg-notif:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.msg-notif__icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.msg-notif__icone svg {
+  width: 20px;
+  height: 20px;
+}
+
+.msg-notif__corps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.msg-notif__titre {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.msg-notif__texte {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+/* ============================================================
+   Telephone : un volet a la fois
+   ============================================================ */
+
+@media (max-width: 760px) {
+  .msg {
+    display: block;
+    height: auto;
+    min-height: 0;
+  }
+
+  .msg-liste {
+    min-height: 60vh;
+  }
+
+  .msg-liste__defilement {
+    overflow: visible;
+  }
+
+  /*
+   * Le fil prend l'ecran entier, par-dessus la barre superieure et
+   * l'arc de navigation. dvh : la barre d'adresse du telephone se replie
+   * en defilant, et 100vh la compterait depliee.
+   */
+  .msg-fil--plein-ecran {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    height: 100vh;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .msg-fil--plein-ecran .msg-fil__entete {
+    padding-left: 6px;
+  }
+
+  .msg-fil--plein-ecran .msg-saisie {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .msg-fil__messages {
+    padding: 14px 12px;
+  }
+
+  .msg-bulle {
+    max-width: 86%;
+  }
+
+  .msg-emojis__grille {
+    grid-template-columns: repeat(6, 38px);
+  }
+
+  .msg-emojis__emoji {
+    width: 38px;
+    height: 38px;
+  }
+}

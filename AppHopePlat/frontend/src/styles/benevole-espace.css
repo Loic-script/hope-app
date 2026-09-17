@@ -1579,6 +1579,18 @@
 }
 
 /*
+ * La ligne contient son lien.
+ *
+ * Une regle de l'administration etire .notif__lien sur toute sa ligne par
+ * un ::after en position absolue. Ici la ligne n'etait pas positionnee :
+ * le calque montait jusqu'a la page entiere, et un clic n'importe ou --
+ * sur le titre, sur une carte voisine -- ouvrait la derniere notification.
+ */
+.fil-notifs .notif {
+  position: relative;
+}
+
+/*
  * Toute la ligne est cliquable, lien ou bouton selon qu'elle mene
  * quelque part. Les deux partagent la meme regle : une notification qui
  * ne mene nulle part doit se marquer lue du meme geste.
