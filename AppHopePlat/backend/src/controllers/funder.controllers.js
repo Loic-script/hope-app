@@ -85,6 +85,21 @@ export const espace = {
   tableauDeBord: gerer((req) => funderService.tableauDeBord(req.bailleur.bailleurId)),
   partenariat: gerer((req) => funderService.partenariat(req.bailleur.bailleurId)),
   versements: gerer((req) => funderService.versements(req.bailleur.bailleurId, req.query)),
+  projets: gerer((req) => funderService.projets(req.bailleur.bailleurId)),
+  rapportProjet: gerer((req) =>
+    funderService.rapportProjet(req.bailleur.bailleurId, req.params.id)
+  ),
+  pdfRapportProjet: gerer(async (req, res) => {
+    const { contenu, nomFichier } = await funderService.pdfRapportProjet(
+      req.bailleur.bailleurId,
+      req.params.id,
+      req.bailleur
+    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(nomFichier)}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(contenu);
+  }),
   documents: gerer((req) => funderService.documents(req.bailleur.bailleurId, req.query)),
   apercuDocument: gerer((req) =>
     funderService.apercuDocument(req.bailleur.bailleurId, req.params.id)

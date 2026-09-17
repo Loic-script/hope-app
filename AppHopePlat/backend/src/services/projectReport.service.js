@@ -312,6 +312,16 @@ export async function recuperer(projetId) {
   };
 }
 
+/**
+ * Le rapport du jour seul, sans destinataires ni envois : ce que lit un
+ * partenaire depuis son espace. Ces deux listes nomment les autres
+ * bailleurs du projet ; le rapport, lui, ne nomme personne.
+ */
+export async function rapportDuJour(projetId) {
+  const { rapport } = await charger(projetId);
+  return rapport;
+}
+
 /** Le rapport du jour en PDF, pour l'enregistrer ou l'imprimer. */
 export async function pdf(projetId) {
   const { apercu, rapport } = await charger(projetId);

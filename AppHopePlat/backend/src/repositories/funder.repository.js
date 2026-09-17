@@ -277,31 +277,100 @@ export async function zonesDIntervention(bailleurId, client = null) {
 }
 
 /**
- * Les projets finances par ce bailleur.
+ * Ce qu'un bailleur voit des projets.
  *
- * On affiche le montant que CE bailleur y a affecte, pas le budget
- * total du projet : sinon il croirait avoir finance plus qu'en realite.
+ * Tous les projets HOPE en cours ou termines : les projets internes
+ * font evoluer l'association elle-meme et restent a l'equipe, les
+ * archives sont retires. S'y ajoutent, quels qu'ils soient, les projets
+ * que CE bailleur finance -- un partenaire ne perd pas de vue un projet
+ * ou son argent est affecte parce que l'equipe l'a archive.
+ *
+ * $1 est le bailleur_id ; "p" designe le projet.
  */
-export async function projetsFinances(bailleurId, client = null) {
+const PROJET_VISIBLE = `
+  (
+    (p.project_type = 'HOPE' AND p.status IN ('IN_PROGRESS', 'COMPLETED'))
+    OR EXISTS (
+      SELECT 1
+        FROM affectation a
+        JOIN engagement e ON e.id = a.engagement_id
+       WHERE a.projet_id = p.id AND e.bailleur_id = $1
+    )
+  )
+`;
+
+/**
+ * Les projets visibles par ce bailleur, avec ce qu'il y a affecte.
+ *
+ * Le montant affecte est celui de CE bailleur, pas le budget total du
+ * projet : sinon il croirait avoir finance plus qu'en realite. Il vaut 0
+ * sur un projet qu'il ne finance pas.
+ *
+ * Le financement du projet reprend la "somme investie" de la fiche et
+ * du rapport -- dons recus et investissements de HOPE -- pour que la
+ * carte et le rapport disent le meme chiffre.
+ *
+ * Rien d'identifiant : ni nom de donateur, ni beneficiaire. La photo
+ * n'est rendue que si le media du projet en est une.
+ */
+export async function projetsVisibles(bailleurId, client = null) {
   const resultat = await query(
-    `SELECT p.id, p.reference, p.name, p.status, p.location,
-            p.beneficiary_target, p.required_budget,
-            c.name              AS categorie,
-            SUM(a.montant)      AS montant_affecte,
-            COUNT(*)::int       AS engagements,
-            MAX(a.date_affectation) AS derniere_affectation
-       FROM affectation a
-       JOIN engagement e ON e.id = a.engagement_id
-       JOIN projects   p ON p.id = a.projet_id
+    `SELECT p.id, p.reference, p.name, p.status, p.project_type,
+            p.description_titre, p.description, p.location,
+            p.start_date, p.completed_at,
+            p.beneficiary_target, p.required_budget, p.currency,
+            CASE WHEN p.media_type = 'PHOTO' THEN p.media_url END AS photo_url,
+            c.name                         AS categorie,
+            (don.montant + inv.montant)    AS montant_finance,
+            COALESCE(moi.montant, 0)       AS montant_affecte,
+            moi.engagements,
+            moi.derniere                   AS derniere_affectation
+       FROM projects p
        LEFT JOIN project_categories c ON c.id = p.category_id
-      WHERE e.bailleur_id = $1
-      GROUP BY p.id, p.reference, p.name, p.status, p.location,
-               p.beneficiary_target, p.required_budget, c.name
-      ORDER BY montant_affecte DESC`,
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(amount), 0) AS montant
+           FROM donations
+          WHERE project_id = p.id AND status = 'RECEIVED'
+       ) don ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(amount), 0) AS montant
+           FROM investments WHERE project_id = p.id
+       ) inv ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT SUM(a.montant)          AS montant,
+                COUNT(*)::int           AS engagements,
+                MAX(a.date_affectation) AS derniere
+           FROM affectation a
+           JOIN engagement e ON e.id = a.engagement_id
+          WHERE a.projet_id = p.id AND e.bailleur_id = $1
+       ) moi ON TRUE
+      WHERE ${PROJET_VISIBLE}
+      -- Ceux qu'il finance d'abord, puis les projets en cours, les plus
+      -- recents en tete.
+      ORDER BY COALESCE(moi.montant, 0) DESC,
+               (p.status = 'IN_PROGRESS') DESC,
+               p.start_date DESC, p.id DESC`,
     [bailleurId],
     client
   );
   return versListe(resultat.rows);
+}
+
+/**
+ * Le projet est-il visible par ce bailleur ?
+ *
+ * La meme regle que la liste : un identifiant devine ne donne pas a lire
+ * le rapport d'un projet interne.
+ */
+export async function projetVisible(bailleurId, projetId, client = null) {
+  const resultat = await query(
+    `SELECT p.id, p.reference, p.name
+       FROM projects p
+      WHERE p.id = $2 AND ${PROJET_VISIBLE}`,
+    [bailleurId, projetId],
+    client
+  );
+  return versObjet(resultat.rows[0]);
 }
 
 /**

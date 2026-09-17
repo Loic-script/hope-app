@@ -104,6 +104,59 @@ export async function versements(filtres = {}) {
   return data.items ?? [];
 }
 
+/** GET /api/bailleur/projets — les projets HOPE, et ceux qu'il finance. */
+export async function projets() {
+  const { data } = await apiBailleur.get('/bailleur/projets');
+  return data.items ?? [];
+}
+
+/**
+ * GET /api/bailleur/projets/:id/rapport
+ *
+ * Le rapport a jour du projet, compose avec les donnees du jour.
+ */
+export async function rapportProjet(id) {
+  const { data } = await apiBailleur.get(`/bailleur/projets/${id}/rapport`);
+  return data;
+}
+
+/**
+ * GET /api/bailleur/projets/:id/rapport/pdf
+ *
+ * La route exige le jeton : un simple lien ne l'enverrait pas. Le fichier
+ * est donc lu, puis remis au navigateur comme un telechargement nomme.
+ */
+export async function telechargerRapportProjet(id, reference) {
+  let reponse;
+  try {
+    reponse = await apiBailleur.get(`/bailleur/projets/${id}/rapport/pdf`, {
+      responseType: 'blob',
+      timeout: 30000,
+    });
+  } catch (echec) {
+    // Demandee en blob, la reponse d'erreur arrive en blob elle aussi :
+    // on la relit en JSON pour que messageErreur y trouve le motif.
+    const corps = echec?.response?.data;
+    if (corps instanceof Blob) {
+      try {
+        echec.response.data = JSON.parse(await corps.text());
+      } catch {
+        // Pas du JSON : le message par defaut fera l'affaire.
+      }
+    }
+    throw echec;
+  }
+
+  const url = URL.createObjectURL(reponse.data);
+  const lien = document.createElement('a');
+  lien.href = url;
+  lien.download = `rapport-impact-${reference ?? id}.pdf`;
+  document.body.append(lien);
+  lien.click();
+  lien.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 /** GET /api/bailleur/documents */
 export async function documents(filtres = {}) {
   const { data } = await apiBailleur.get('/bailleur/documents', { params: filtres });

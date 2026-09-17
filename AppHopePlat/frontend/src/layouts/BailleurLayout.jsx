@@ -8,6 +8,7 @@ import {
   PleineGraphique,
   PleineMessages,
   PleineOrganisation,
+  PleineProjets,
 } from '../components/IconesPleines.jsx';
 import { apiBailleur } from '../services/apiBailleur.js';
 import * as bailleurService from '../services/bailleur.service.js';
@@ -16,8 +17,8 @@ import CoqueEspace from './CoqueEspace.jsx';
 
 /**
  * Les ecrans de l'espace, dans l'ordre de la lecture : ce que l'argent a
- * produit, ce qui a ete promis, les pieces, les nouvelles, puis
- * l'organisation.
+ * produit, ce qui a ete promis, les pieces, les projets et les
+ * nouvelles, puis l'organisation.
  *
  * Les preuves terrain n'y figurent plus : ce sont souvent des photos de
  * beneficiaires, et l'equipe les garde dans son back-office.
@@ -41,6 +42,7 @@ const GROUPES = [
   {
     titre: 'Sur le terrain',
     entrees: [
+      { to: '/bailleur/projets', label: 'Projets', Icone: PleineProjets },
       { to: '/bailleur/actualites', label: 'Actualités', Icone: PleineActualites },
     ],
   },

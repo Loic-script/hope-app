@@ -18,8 +18,10 @@ import path from 'node:path';
 
 import * as funderRepository from '../repositories/funder.repository.js';
 import { TYPES_ORGANISATION } from './funderAuth.service.js';
+import * as projectReportService from './projectReport.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
+import { depuisBase, pourcentage } from '../shared/money.js';
 
 /** Types de document, et leurs libelles. */
 export const TYPES_DOCUMENT = {
@@ -66,7 +68,7 @@ export async function tableauDeBord(bailleurId) {
       funderRepository.indicateurs(bailleurId),
       funderRepository.repartitionParDomaine(bailleurId),
       funderRepository.zonesDIntervention(bailleurId),
-      funderRepository.projetsFinances(bailleurId),
+      funderRepository.projetsVisibles(bailleurId),
       funderRepository.listerVersements(bailleurId, { recusSeulement: true }),
       funderRepository.origineDesFonds(),
       funderRepository.listerDistinctions(bailleurId),
@@ -89,7 +91,10 @@ export async function tableauDeBord(bailleurId) {
     },
     domaines: avecPart(domaines),
     zones,
-    projets,
+    // Tous les projets qu'il peut voir, et non plus les seuls qu'il
+    // finance : montantAffecte vaut 0 sur les autres, et la somme des
+    // affectations ne change pas.
+    projets: projets.map(presenterProjet),
     // Les dix derniers versements recus suffisent au tableau de bord ;
     // la page Partenariat porte l'historique complet.
     versements: versements.slice(0, 10),
@@ -158,6 +163,78 @@ export async function versements(bailleurId, requete = {}) {
   const recusSeulement = requete.recus === 'true' || requete.recus === true;
   const items = await funderRepository.listerVersements(bailleurId, { recusSeulement });
   return { items };
+}
+
+/* ================================================================
+   Projets
+   ================================================================ */
+
+/** Un projet tel que le bailleur le lit : son financement en clair. */
+function presenterProjet(projet) {
+  return {
+    ...projet,
+    tauxFinancement: pourcentage(
+      depuisBase(projet.montantFinance),
+      depuisBase(projet.requiredBudget)
+    ),
+    financeParMoi: Number(projet.montantAffecte ?? 0) > 0,
+  };
+}
+
+/** Tous les projets visibles par le bailleur : voir PROJET_VISIBLE. */
+export async function projets(bailleurId) {
+  const items = await funderRepository.projetsVisibles(bailleurId);
+  return { items: items.map(presenterProjet) };
+}
+
+/**
+ * Le projet demande, s'il est visible par ce bailleur.
+ *
+ * Un identifiant mal forme ou un projet qu'il ne voit pas repondent de
+ * la meme facon : 404. Distinguer les deux dirait qu'un projet interne
+ * existe sous ce numero.
+ */
+async function projetLisible(bailleurId, projetId) {
+  const texte = String(projetId ?? '');
+  const projet = /^[1-9]\d{0,8}$/.test(texte)
+    ? await funderRepository.projetVisible(bailleurId, Number(texte))
+    : null;
+  if (!projet) throw new ErreurIntrouvable('Le projet', projetId);
+  return projet;
+}
+
+/**
+ * Le rapport a jour d'un projet.
+ *
+ * Le meme que celui de l'onglet Rapport de l'administration, compose
+ * avec les donnees du jour -- mais sans ses destinataires ni ses envois,
+ * qui nomment les autres partenaires. Le rapport lui-meme ne nomme ni
+ * beneficiaire ni donateur.
+ */
+export async function rapportProjet(bailleurId, projetId) {
+  const projet = await projetLisible(bailleurId, projetId);
+  const rapport = await projectReportService.rapportDuJour(projet.id);
+  return {
+    projet: { id: projet.id, reference: projet.reference, nom: projet.name },
+    ...rapport,
+  };
+}
+
+/**
+ * Le rapport a jour en PDF.
+ *
+ * Soumis au meme droit que les documents recus : un contact limite a la
+ * consultation lit le rapport, il ne l'enregistre pas.
+ */
+export async function pdfRapportProjet(bailleurId, projetId, contact) {
+  if (contact && contact.peutTelecharger === false) {
+    throw new ErreurRegleMetier(
+      'Votre accès est limité à la consultation : le téléchargement n’est pas autorisé.',
+      'TELECHARGEMENT_INTERDIT'
+    );
+  }
+  const projet = await projetLisible(bailleurId, projetId);
+  return projectReportService.pdf(projet.id);
 }
 
 /* ================================================================

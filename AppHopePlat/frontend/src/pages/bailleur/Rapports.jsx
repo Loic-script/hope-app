@@ -7,6 +7,8 @@ import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import { EntetePage, Panneau, Pastille, TYPES_DOCUMENT } from './composants.jsx';
+import { STATUTS_PROJET } from './Projets.jsx';
+import FenetreRapportProjet from './RapportProjet.jsx';
 
 /** Les trois onglets demandes, sur le champ "type". */
 const ONGLETS = [
@@ -18,12 +20,18 @@ const ONGLETS = [
 /**
  * Rapports et justificatifs.
  *
- * Chaque telechargement est enregistre : HOPE sait ainsi si ses
- * rapports sont reellement lus. Le compteur affiche sur chaque ligne
- * est celui du bailleur, pas un total global.
+ * Deux parties. En tete, le rapport a jour de chaque projet visible :
+ * compose avec les donnees du jour, il existe sans que l'equipe ait eu
+ * a l'envoyer. Dessous, les documents que HOPE a adresses au bailleur.
+ *
+ * Chaque telechargement d'un document recu est enregistre : HOPE sait
+ * ainsi si ses rapports sont reellement lus. Le compteur affiche sur
+ * chaque ligne est celui du bailleur, pas un total global.
  */
 export default function Rapports() {
   const [onglet, setOnglet] = useState('rapport_impact');
+  const projets = useChargement(() => service.projets(), []);
+  const [rapportDe, setRapportDe] = useState(null);
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => service.documents(onglet === 'tous' ? {} : { type: onglet }),
     [onglet]
@@ -62,6 +70,20 @@ export default function Rapports() {
     }
   }
 
+  /** Le PDF du rapport a jour d'un projet, sans ouvrir la fenetre. */
+  async function telechargerRapportProjet(projet) {
+    setEnvoi(true);
+    setRefus('');
+    setMessage('');
+    try {
+      await service.telechargerRapportProjet(projet.id, projet.reference);
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Le PDF du rapport n’a pas pu être préparé.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
   async function genererCertificat() {
     setEnvoi(true);
     setRefus('');
@@ -82,7 +104,7 @@ export default function Rapports() {
     <>
       <EntetePage
         titre="Rapports"
-        accroche="Les pièces produites par HOPE sur l’emploi de vos financements."
+        accroche="Le rapport à jour de chaque projet, et les pièces que HOPE vous a adressées."
         actions={
           <button
             type="button"
@@ -97,6 +119,63 @@ export default function Rapports() {
 
       {refus && <p className="alerte-bailleur">{refus}</p>}
       {message && <p className="succes-bailleur">{message}</p>}
+
+      <Panneau
+        titre="Rapports des projets"
+        sousTitre="Composés avec les données du jour : financement, dépenses, actions et résultats. Aucun bénéficiaire ni donateur n’y est nommé."
+      >
+        {projets.erreur ? (
+          <p className="alerte-bailleur">{projets.erreur}</p>
+        ) : projets.chargement && !projets.donnees ? (
+          <p className="vide-bailleur">Chargement…</p>
+        ) : (projets.donnees ?? []).length === 0 ? (
+          <p className="vide-bailleur">Aucun projet pour l’instant.</p>
+        ) : (
+          <ul className="documents">
+            {projets.donnees.map((projet) => {
+              const statut = STATUTS_PROJET[projet.status] ?? STATUTS_PROJET.IN_PROGRESS;
+              return (
+                <li key={projet.id} className="document">
+                  <div className="document__corps">
+                    <div className="document__haut">
+                      <Pastille teinte={statut.teinte}>{statut.libelle}</Pastille>
+                      {projet.financeParMoi && <Pastille teinte="violet">Vous financez</Pastille>}
+                    </div>
+
+                    <h3 className="document__titre">{projet.name}</h3>
+
+                    <p className="document__meta">
+                      {[projet.reference, projet.categorie, projet.location]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  </div>
+
+                  <div className="document__actions">
+                    <button
+                      type="button"
+                      className="bouton-bailleur bouton-bailleur--discret"
+                      onClick={() => setRapportDe(projet)}
+                    >
+                      Lire
+                    </button>
+                    <button
+                      type="button"
+                      className="bouton-bailleur bouton-bailleur--discret"
+                      onClick={() => telechargerRapportProjet(projet)}
+                      disabled={envoi}
+                    >
+                      Télécharger le PDF
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Panneau>
+
+      <h2 className="groupe__titre rapports-bailleur__recus">Documents reçus</h2>
 
       <div className="onglets-bailleur" role="tablist">
         {ONGLETS.map((o) => (
@@ -223,6 +302,8 @@ export default function Rapports() {
       >
         {apercu && <ApercuRapport documentId={apercu.id} />}
       </Modale>
+
+      <FenetreRapportProjet projet={rapportDe} onFermer={() => setRapportDe(null)} />
     </>
   );
 }

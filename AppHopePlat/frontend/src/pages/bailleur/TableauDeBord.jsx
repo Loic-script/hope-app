@@ -101,15 +101,22 @@ export default function TableauDeBord() {
         </Panneau>
       </div>
 
+      {/*
+        Tous les projets HOPE, et non plus les seuls que le partenaire
+        finance : ceux-la viennent en tete, et "Votre affectation" reste
+        vide sur les autres.
+      */}
       <Panneau
-        titre="Projets financés"
-        sousTitre="Le montant indiqué est celui que vous y avez affecté, non le budget total du projet"
+        titre="Tous les projets"
+        sousTitre="« Votre affectation » est le montant que vous y avez attribué, non le budget total du projet"
+        actions={
+          <Link className="lien-bailleur" to="/bailleur/projets">
+            Voir les fiches
+          </Link>
+        }
       >
         {projets.length === 0 ? (
-          <p className="vide-bailleur">
-            Aucune affectation enregistrée. L’équipe HOPE attribue les fonds aux projets et
-            cette table se remplira.
-          </p>
+          <p className="vide-bailleur">Aucun projet pour l’instant.</p>
         ) : (
           <div className="table-bailleur">
             <table>
@@ -132,7 +139,13 @@ export default function TableauDeBord() {
                     <td>{projet.categorie ?? '—'}</td>
                     <td>{projet.location ?? '—'}</td>
                     <td className="nombre">
-                      <strong>{fmt.montant(projet.montantAffecte)}</strong>
+                      {projet.financeParMoi ? (
+                        <strong>{fmt.montant(projet.montantAffecte)}</strong>
+                      ) : (
+                        <span className="table-bailleur__discret" aria-label="Aucune affectation">
+                          —
+                        </span>
+                      )}
                     </td>
                     <td className="nombre table-bailleur__discret">
                       {fmt.montant(projet.requiredBudget)}
