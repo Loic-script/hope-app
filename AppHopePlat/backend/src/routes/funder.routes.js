@@ -57,6 +57,8 @@ router.get('/partenariat', funder.espace.partenariat);
 router.get('/versements', funder.espace.versements);
 
 router.get('/documents', funder.espace.documents);
+// Lire le rapport dans l'espace : aucune trace, aucun fichier.
+router.get('/documents/:id/apercu', funder.espace.apercuDocument);
 router.post('/documents/:id/telechargement', funder.espace.telecharger);
 router.post('/certificat', funder.espace.certificat);
 

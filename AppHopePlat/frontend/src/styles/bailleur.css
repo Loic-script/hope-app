@@ -1137,44 +1137,159 @@
    ============================================================ */
 
 /*
- * L'apercu d'un PDF, dans la modale.
+ * La feuille : le rapport lu dans la fenetre.
  *
- * Une hauteur relative a la fenetre : sur un portable, 720 px de haut
- * feraient sortir les boutons de l'ecran, et c'est par eux qu'on ferme.
- * Les pages defilent a l'interieur.
+ * Elle reprend la mise en page du document imprime -- bandeau de la
+ * charte, titre, periode, sections -- pour que le partenaire reconnaisse
+ * ce qu'il telechargera ensuite.
+ *
+ * Une hauteur relative a la fenetre : sur un portable, 720 px feraient
+ * sortir les boutons de l'ecran, et c'est par eux qu'on ferme.
  */
-.apercu-pdf__pages {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  height: min(68vh, 720px);
-  padding: 12px;
+.feuille {
+  max-height: min(68vh, 720px);
   overflow-y: auto;
   border: 1px solid var(--admin-bordure);
   border-radius: 10px;
-  background-color: var(--admin-fond);
-}
-
-/* Chaque page, dessinee sur un canevas. */
-.apercu-pdf__page {
-  max-width: 100%;
-  border: 1px solid var(--admin-bordure);
-  border-radius: 4px;
   background-color: #ffffff;
   box-shadow: var(--admin-ombre);
 }
 
-.apercu-pdf__note {
-  margin-top: 10px;
+.feuille__bandeau {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 26px;
+  background-color: #5c528f;
+}
+
+.feuille__marque {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+}
+
+.feuille__signature {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.feuille__corps {
+  padding: 26px 30px 30px;
+}
+
+.feuille__titre {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.feuille__soustitre {
+  margin: 8px 0 0;
   font-size: 12.5px;
-  line-height: 1.5;
   color: var(--admin-texte-faible);
 }
 
-.apercu-pdf__note--echec {
+/* Les intertitres, du violet de la charte comme dans le document. */
+.feuille__section {
+  margin: 26px 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5c528f;
+}
+
+.feuille__paragraphe {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--admin-texte);
+}
+
+.feuille__puce {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 7px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--admin-texte);
+}
+
+/* Les chiffres cles : le libelle a gauche, la valeur alignee a droite. */
+.feuille__chiffres {
+  margin: 0 0 10px;
+}
+
+.feuille__chiffre {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.feuille__chiffre:last-child {
+  border-bottom: none;
+}
+
+.feuille__chiffre dt {
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.feuille__chiffre dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  color: var(--admin-texte);
+}
+
+/* Le rappel du projet et de l'engagement, en bas de la feuille. */
+.feuille__pied {
+  margin: 26px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.feuille__note {
+  margin: 0;
+  padding: 18px 2px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-texte-faible);
+}
+
+.feuille__note--echec {
   color: var(--hope-erreur);
+}
+
+/* Sur un telephone, la feuille respire moins. */
+@media (max-width: 560px) {
+  .feuille__bandeau {
+    padding: 12px 18px;
+  }
+
+  .feuille__corps {
+    padding: 20px 18px 22px;
+  }
+
+  .feuille__titre {
+    font-size: 18px;
+  }
+
+  .feuille__chiffre {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .feuille__chiffre dd {
+    text-align: left;
+  }
 }
 
 /* Les deux actions d'une ligne de document restent ensemble. */

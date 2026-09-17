@@ -86,6 +86,7 @@ const COLONNES_ATTENDUES = [
   ['projects', 'description_titre'],
   ['projects', 'project_type'],
   ['impacts', 'objective_id'],
+  ['document_bailleur', 'contenu'],
 ];
 
 async function executer() {

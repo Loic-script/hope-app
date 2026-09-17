@@ -189,6 +189,55 @@ export async function documents(bailleurId, requete = {}) {
 }
 
 /**
+ * Le rapport lui-meme, a lire dans l'espace.
+ *
+ * Rien n'est telecharge et le compteur de lecture ne bouge pas : on
+ * vient voir avant de decider. Le texte est celui du PDF, mot pour mot,
+ * mais il arrive en JSON -- un fichier qui circule finit par etre
+ * saisi au vol par un gestionnaire de telechargement installe sur le
+ * poste, et la fenetre reste vide.
+ */
+export async function apercuDocument(bailleurId, documentId) {
+  const document = await funderRepository.apercuDocument(bailleurId, documentId);
+  if (!document) throw new ErreurIntrouvable('Le document', documentId);
+
+  const contenu = document.contenu ?? null;
+  const blocs = Array.isArray(contenu?.blocs) ? contenu.blocs : null;
+
+  return {
+    id: document.id,
+    type: document.type,
+    titre: document.titre,
+    // Le sous-titre grave dans le document prime : il porte les dates
+    // telles qu'elles ont ete publiees.
+    sousTitre: contenu?.sousTitre ?? sousTitreParDefaut(document),
+    periodeDebut: document.periodeDebut,
+    periodeFin: document.periodeFin,
+    publieLe: document.publieLe,
+    nbPages: document.nbPages,
+    engagementIntitule: document.engagementIntitule,
+    projetNom: document.projetNom,
+    blocs,
+  };
+}
+
+/** Sous-titre reconstitue quand le document n'en porte pas. */
+function sousTitreParDefaut(document) {
+  const morceaux = [];
+  if (document.periodeDebut && document.periodeFin) {
+    morceaux.push(`Période du ${dateFr(document.periodeDebut)} au ${dateFr(document.periodeFin)}`);
+  }
+  if (document.publieLe) morceaux.push(`Publié le ${dateFr(document.publieLe)}`);
+  return morceaux.join(' · ');
+}
+
+/** Une date au format lu a Madagascar : 14/09/2026. */
+function dateFr(valeur) {
+  const date = valeur instanceof Date ? valeur : new Date(valeur);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('fr-FR');
+}
+
+/**
  * Enregistre un telechargement et renvoie l'adresse du fichier.
  *
  * Le document est cherche AVEC le bailleur_id : un identifiant devine
@@ -259,6 +308,28 @@ export async function genererCertificat(bailleurId, bailleur) {
     titre: `Certificat de partenariat ${reference}`,
     fichierUrl: `${PREFIXE_MEDIAS}/${nomDisque}`,
     nbPages: 1,
+    // Le meme texte que la page imprimee, pour qu'il se lise aussi
+    // dans l'espace sans ouvrir le fichier.
+    contenu: {
+      sousTitre: `Édité le ${dateFr(new Date())} · Référence ${reference}`,
+      blocs: [
+        { t: 'h2', texte: 'Partenaire' },
+        { t: 'p', texte: bailleur.raisonSociale },
+        { t: 'kv', lignes: [
+          ['Référence', reference],
+          ['Partenaire de HOPE depuis', bailleur.partenaireDepuis ?? '—'],
+          ['Montant engagé', `${Number(indicateurs.montantEngage ?? 0).toLocaleString('fr-FR')} Ar`],
+          ['Projets financés', String(indicateurs.projetsFinances ?? 0)],
+          ['Bénéficiaires touchés', String(indicateurs.beneficiairesTouches ?? 0)],
+          ['Domaines', domaines.map((d) => d.domaine).join(', ') || '—'],
+        ] },
+        { t: 'h2', texte: 'Attestation' },
+        { t: 'p', texte:
+          'Ce certificat atteste du partenariat établi entre HOPE et l’organisation nommée ' +
+          'ci-dessus. Il est généré automatiquement depuis les engagements enregistrés à la ' +
+          'date d’édition.' },
+      ],
+    },
   });
 
   return { ...document, reference };

@@ -492,6 +492,31 @@ export async function trouverDocument(bailleurId, documentId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
+/**
+ * Le contenu d'un document, pour le lire dans l'espace.
+ *
+ * Cherche AVEC le bailleur_id, comme le telechargement : un identifiant
+ * devine ne donne pas a lire le rapport d'un autre partenaire.
+ *
+ * L'adresse du fichier n'est pas renvoyee : l'apercu ne doit donner lieu
+ * a aucune requete vers le PDF.
+ */
+export async function apercuDocument(bailleurId, documentId, client = null) {
+  const resultat = await query(
+    `SELECT d.id, d.type, d.titre, d.periode_debut, d.periode_fin,
+            d.nb_pages, d.publie_le, d.contenu,
+            e.intitule AS engagement_intitule,
+            p.name     AS projet_nom
+       FROM document_bailleur d
+       LEFT JOIN engagement e ON e.id = d.engagement_id
+       LEFT JOIN projects   p ON p.id = d.projet_id
+      WHERE d.id = $1 AND d.bailleur_id = $2`,
+    [documentId, bailleurId],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
 /** Enregistre un telechargement : HOPE saura si le rapport est lu. */
 export async function marquerTelechargement(documentId, client = null) {
   const resultat = await query(
@@ -511,8 +536,8 @@ export async function creerDocument(bailleurId, donnees, client = null) {
   const resultat = await query(
     `INSERT INTO document_bailleur
        (bailleur_id, type, titre, periode_debut, periode_fin,
-        fichier_url, nb_pages, genere_auto)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
+        fichier_url, nb_pages, genere_auto, contenu)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8)
      RETURNING id, type, titre, fichier_url, publie_le`,
     [
       bailleurId,
@@ -522,6 +547,7 @@ export async function creerDocument(bailleurId, donnees, client = null) {
       donnees.periodeFin ?? null,
       donnees.fichierUrl,
       donnees.nbPages ?? null,
+      donnees.contenu ? JSON.stringify(donnees.contenu) : null,
     ],
     client
   );

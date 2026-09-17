@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import ApercuPdf from '../../components/ApercuPdf.jsx';
+import ApercuRapport from '../../components/ApercuRapport.jsx';
 import { Modale } from '../../components/admin/forms.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
@@ -186,7 +186,7 @@ export default function Rapports() {
       </Panneau>
 
       {/*
-        * L'apercu ouvre le fichier dans la page, sans rien enregistrer.
+        * L'apercu montre le rapport lui-meme, sans ouvrir son PDF.
         * Le compteur de lecture ne bouge qu'au telechargement : il sert a
         * HOPE pour savoir si ses rapports sont vraiment lus, et un coup
         * d'oeil n'est pas une lecture.
@@ -221,7 +221,7 @@ export default function Rapports() {
           </>
         }
       >
-        {apercu && <ApercuPdf url={urlMedia(apercu.fichierUrl)} titre={apercu.titre} />}
+        {apercu && <ApercuRapport documentId={apercu.id} />}
       </Modale>
     </>
   );

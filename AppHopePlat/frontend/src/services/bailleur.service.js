@@ -111,6 +111,17 @@ export async function documents(filtres = {}) {
 }
 
 /**
+ * GET /api/bailleur/documents/:id/apercu
+ *
+ * Le contenu du rapport, pour le lire dans la fenetre. Rien n'est
+ * enregistre : un coup d'oeil n'est pas un telechargement.
+ */
+export async function apercuDocument(id) {
+  const { data } = await apiBailleur.get(`/bailleur/documents/${id}/apercu`);
+  return data;
+}
+
+/**
  * POST /api/bailleur/documents/:id/telechargement
  *
  * Enregistre le telechargement et renvoie l'adresse du fichier : c'est

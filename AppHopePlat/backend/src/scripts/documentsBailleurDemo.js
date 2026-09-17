@@ -780,13 +780,10 @@ export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
   const documents = catalogue(contexte);
 
   for (const d of documents) {
-    const { contenu, pages } = construirePdf({
-      titre: d.titre,
-      sousTitre:
-        (d.debut !== null ? `Période du ${dateFr(jour(d.debut))} au ${dateFr(jour(d.fin))} · ` : '') +
-        `Publié le ${dateFr(jour(d.publie))}`,
-      blocs: d.corps,
-    });
+    const sousTitre =
+      (d.debut !== null ? `Période du ${dateFr(jour(d.debut))} au ${dateFr(jour(d.fin))} · ` : '') +
+      `Publié le ${dateFr(jour(d.publie))}`;
+    const { contenu, pages } = construirePdf({ titre: d.titre, sousTitre, blocs: d.corps });
 
     // Nom genere, comme pour tout fichier servi par HOPE.
     const nom = `document-${d.type}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}.pdf`;
@@ -798,8 +795,8 @@ export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
       `INSERT INTO document_bailleur
          (bailleur_id, engagement_id, projet_id, type, titre, periode_debut, periode_fin,
           fichier_url, nb_pages, genere_auto, publie_le, publie_par,
-          telecharge_le, nb_telechargements)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+          telecharge_le, nb_telechargements, contenu)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [
         d.bailleur,
         d.engagement ?? null,
@@ -816,6 +813,8 @@ export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
         d.genereAuto ? null : contexte.adminId,
         d.lectures > 0 ? instant(d.lu) : null,
         d.lectures,
+        // Le meme texte que le PDF, lisible sans ouvrir de fichier.
+        JSON.stringify({ sousTitre, blocs: d.corps }),
       ]
     );
   }

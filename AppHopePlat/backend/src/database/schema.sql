@@ -1494,3 +1494,24 @@ UPDATE utilisateur u
         AND r.role IN ('benevole', 'bailleur'))
    AND NOT EXISTS (SELECT 1 FROM benevole b WHERE b.utilisateur_id = u.id)
    AND NOT EXISTS (SELECT 1 FROM bailleur_contact c WHERE c.utilisateur_id = u.id);
+
+/*
+ * Le contenu lisible d'un document de bailleur.
+ *
+ * Le rapport n'existait que dans son PDF : pour en montrer un extrait,
+ * il fallait aller chercher le fichier, et un gestionnaire de
+ * telechargement installe sur le poste du partenaire s'en saisissait
+ * avant le navigateur -- la fenetre restait vide et un enregistrement
+ * demarrait. L'apercu se sert desormais d'ici, sans qu'aucun fichier ne
+ * circule.
+ *
+ * Forme : { "sousTitre": "...", "blocs": [ { "t": "h2", "texte": "..." },
+ * { "t": "p", "texte": "..." }, { "t": "puce", "texte": "..." },
+ * { "t": "kv", "lignes": [["libelle", "valeur"], ...] } ] } -- le meme
+ * vocabulaire que celui dont le PDF est compose, pour que les deux
+ * disent exactement la meme chose.
+ *
+ * NULL est permis : un document televerse par HOPE n'a pas de contenu
+ * structure, et l'espace propose alors son telechargement.
+ */
+ALTER TABLE document_bailleur ADD COLUMN IF NOT EXISTS contenu JSONB;
