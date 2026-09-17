@@ -128,3 +128,17 @@ export async function quitterGroupe(api, racine, id) {
   const { data } = await api.post(`${racine}/conversations/${id}/quitter`);
   return data;
 }
+
+/**
+ * POST .../conversations/depuis-fiche
+ *
+ * Une action et non un lien : le serveur cherche le fil, ou le cree, sous
+ * un verrou -- deux clics rapides n'en creent qu'un.
+ *
+ * @param {{personne?: {type: string, id: string}, entreprise?: string}} cible
+ * @returns {Promise<number>}
+ */
+export async function depuisFiche(api, racine, cible) {
+  const { data } = await api.post(`${racine}/conversations/depuis-fiche`, cible);
+  return data.id;
+}

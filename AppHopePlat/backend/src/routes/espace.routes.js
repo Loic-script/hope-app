@@ -35,6 +35,7 @@ router.get('/conversations/joignables', conversations.joignables);
 router.get('/conversations/non-lus', conversations.nonLus);
 router.get('/conversations', conversations.lister);
 router.post('/conversations/groupes', televerserGroupe, conversations.creerGroupe);
+router.post('/conversations/depuis-fiche', conversations.depuisFiche);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
 router.get('/conversations/:id/fichiers', conversations.fichiers);

@@ -925,3 +925,57 @@ export async function photoDeGroupe(acteur, id) {
   if (fil.type !== 'groupe' || !fil.photoFichier) throw new ErreurIntrouvable('La photo', id);
   return fil.photoFichier;
 }
+
+/* ================================================================
+   Depuis une fiche
+   ================================================================ */
+
+/**
+ * Ouvre le fil avec une personne ou une organisation, depuis sa fiche.
+ *
+ * - une personne : son fil, retrouve ou cree ;
+ * - une organisation : on cherche d'abord un fil existant avec l'une de
+ *   ses personnes -- ecrire a la fondation doit reprendre la conversation
+ *   deja en cours avec l'un de ses contacts --, et a defaut on le cree
+ *   avec son contact principal.
+ *
+ * Tout se passe sous un verrou : deux clics rapides sur le bouton, meme
+ * partis ensemble, ne creent qu'un fil.
+ *
+ * @returns {Promise<{id: number, cree: boolean}>}
+ */
+export async function depuisFiche(acteur, corps = {}) {
+  if (corps.personne) {
+    const cible = acteurValide(corps.personne, 'personne');
+    await verifierJoignable(acteur, cible);
+    return transaction((client) => filAvec(acteur, cible, client));
+  }
+
+  const bailleurId = String(corps.entreprise ?? '').trim();
+  if (!UUID.test(bailleurId)) {
+    throw new ErreurValidation('Organisation invalide.', { entreprise: 'Identifiant attendu' });
+  }
+
+  const joignables = new Set((await conversationRepository.joignables(acteur)).map((p) => `${p.type}:${p.id}`));
+  const contacts = (await conversationRepository.contactsDeBailleur(bailleurId)).filter((contact) =>
+    joignables.has(`${contact.acteur.type}:${contact.acteur.id}`)
+  );
+  if (contacts.length === 0) throw new ErreurIntrouvable('Un contact joignable pour cette organisation', bailleurId);
+
+  return transaction(async (client) => {
+    await conversationRepository.verrouiller(`fiche:${acteur.type}:${acteur.id}:${bailleurId}`, client);
+
+    for (const contact of contacts) {
+      const existant = acteur.type === 'admin'
+        ? await conversationRepository.trouverAssistance(contact.acteur.id, client)
+        : await conversationRepository.trouverIndividuel(acteur, contact.acteur, client);
+      if (existant) {
+        if (acteur.type === 'admin') await conversationRepository.ajouterParticipants(existant, [acteur], null, client);
+        return { id: nombre(existant), cree: false };
+      }
+    }
+
+    // Les contacts sont tries, le principal en tete.
+    return filAvec(acteur, contacts[0].acteur, client);
+  });
+}

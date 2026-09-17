@@ -68,6 +68,8 @@ export const conversations = {
     message: await conversationService.supprimer(acteurDe(req), req.params.id, req.params.messageId),
   })),
 
+  depuisFiche: gerer((req) => conversationService.depuisFiche(acteurDe(req), req.body ?? {}), { statut: 201 }),
+
   creerGroupe: gerer(
     (req) => conversationService.creerGroupe(acteurDe(req), req.body ?? {}, req.file ?? null),
     { statut: 201 }

@@ -11,7 +11,9 @@ import {
   Panneau,
   Tableau,
 } from '../../components/admin/ui.jsx';
+import BoutonMessage from '../../components/messagerie/BoutonMessage.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
+import { api } from '../../services/api.js';
 import * as consultationService from '../../services/consultation.service.js';
 import * as funderService from '../../services/funder.service.js';
 import * as fmt from '../../utils/format.js';
@@ -56,7 +58,7 @@ export default function FundersPage() {
     () => funderService.lister(filtre ? { statut: filtre } : {}),
     [filtre]
   );
-  const { soumettre, envoi, erreur: erreurAction } = useSoumission();
+  const { soumettre, envoi, erreur: erreurAction, setErreur } = useSoumission();
 
   const comptes = donnees?.items ?? [];
   const compteurs = donnees?.counts ?? {};
@@ -141,6 +143,19 @@ export default function FundersPage() {
       titre: '',
       rendu: (compte) => (
         <div className="tableau__actions">
+          {/*
+            Ecrire depuis la fiche : le serveur retrouve le fil, ou le cree.
+            Un compte suspendu n'est plus joignable.
+          */}
+          {['actif', 'en_attente'].includes(compte.statut) && (
+            <BoutonMessage
+              api={api}
+              racine="/admin"
+              cheminMessages="/admin/conversations"
+              cible={compte.bailleurId ? { entreprise: compte.bailleurId } : { personne: { type: 'utilisateur', id: compte.id } }}
+              onErreur={setErreur}
+            />
+          )}
             {/*
               Consulter, c'est ouvrir l'espace du compte et le voir tel
               que son occupant le voit. Seul un compte actif en a un.
