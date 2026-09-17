@@ -11,6 +11,7 @@ import {
   PleineFamille,
   PleineGraphique,
   PleineGroupe,
+  PleineMessages,
   PleinePreuves,
   PleineProjets,
 } from '../components/IconesPleines.jsx';
@@ -60,13 +61,18 @@ const GROUPES = [
     entrees: [
       {
         // La messagerie de l'equipe : elle parle ici avec les
-        // benevoles, les partenaires et les donateurs.
+        // benevoles, les partenaires et les donateurs. Meme nom et meme
+        // icone que dans l'espace bailleur : une seule messagerie, un
+        // seul mot pour la designer.
+        //
+        // L'adresse reste /admin/conversations : les liens deja envoyes
+        // dans les notifications continuent d'y mener.
         //
         // "compteur" designe la cle des pastilles renvoyees par
         // /admin/badges : l'entree porte alors son nombre de non-lus.
         to: '/admin/conversations',
-        label: 'Conversations',
-        Icone: PleineGroupe,
+        label: 'Messages',
+        Icone: PleineMessages,
         compteur: 'conversations',
       },
       { to: '/admin/donors', label: 'Donateurs', Icone: PleineDonateurs },
@@ -155,7 +161,7 @@ export default function AdminLayout() {
           // partage par les trois, et c'est lui qui construit le lien
           // vers une conversation.
           cheminMessages: '/admin/conversations',
-          titreMessagerie: 'Conversations',
+          titreMessagerie: 'Messages',
         }}
       />
     </CoqueEspace>

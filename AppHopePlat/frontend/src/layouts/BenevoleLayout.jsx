@@ -3,8 +3,8 @@ import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router
 
 import {
   PleineAccueil,
-  PleineGroupe,
   PleineJournal,
+  PleineMessages,
   PleinePersonne,
   PleineProjets,
   PleineTaches,
@@ -45,9 +45,9 @@ const GROUPES = [
     titre: 'Mon compte',
     entrees: [
       {
-        // La messagerie est faite de conversations, avec l'equipe comme
-        // avec les autres membres : l'entree porte leur nom et la meme
-        // icone que chez l'administrateur.
+        // La messagerie, avec l'equipe comme avec les autres membres :
+        // meme nom et meme icone que dans les espaces administrateur et
+        // bailleur.
         //
         // L'adresse reste /benevole/messages : les liens deja envoyes
         // dans les notifications continuent d'y mener.
@@ -57,8 +57,8 @@ const GROUPES = [
         // elle compte deja les conversations non lues : la renommer ici
         // eteindrait la pastille.
         to: '/benevole/messages',
-        label: 'Conversations',
-        Icone: PleineGroupe,
+        label: 'Messages',
+        Icone: PleineMessages,
         compteur: 'messages',
       },
       { to: '/benevole/profil', label: 'Mon profil', Icone: PleinePersonne },
@@ -126,7 +126,7 @@ export default function BenevoleLayout() {
           // partage par les trois, et c'est lui qui construit le lien
           // vers une conversation.
           cheminMessages: '/benevole/messages',
-          titreMessagerie: 'Conversations',
+          titreMessagerie: 'Messages',
         }}
       />
     </CoqueEspace>
