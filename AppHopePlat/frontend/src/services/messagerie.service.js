@@ -43,8 +43,27 @@ export async function ouvrir(api, racine, cible) {
   return data.id;
 }
 
-/** POST .../conversations/:id/messages */
-export async function envoyer(api, racine, id, { corps }) {
-  const { data } = await api.post(`${racine}/conversations/${id}/messages`, { corps });
+/**
+ * POST .../conversations/:id/messages
+ *
+ * Sans piece jointe, un simple JSON. Avec, un formulaire multipart : on
+ * laisse alors le navigateur ecrire l'en-tete et sa frontiere -- le client
+ * pose "application/json" par defaut, et multer ne trouverait rien a lire.
+ */
+export async function envoyer(api, racine, id, { corps, fichiers = [] }) {
+  if (fichiers.length === 0) {
+    const { data } = await api.post(`${racine}/conversations/${id}/messages`, { corps });
+    return data.message;
+  }
+
+  const formulaire = new FormData();
+  formulaire.append('corps', corps ?? '');
+  for (const fichier of fichiers) formulaire.append('files', fichier);
+
+  const { data } = await api.post(`${racine}/conversations/${id}/messages`, formulaire, {
+    headers: { 'Content-Type': undefined },
+    // Cinq videos de 25 Mo ne partent pas en dix secondes sur une ligne lente.
+    timeout: 180000,
+  });
   return data.message;
 }

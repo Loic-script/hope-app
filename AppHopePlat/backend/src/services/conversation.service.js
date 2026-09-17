@@ -12,6 +12,7 @@
  */
 import { transaction } from '../config/database.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
+import * as pieceJointe from './pieceJointe.service.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 
 /** Longueur maximale d'un message. */
@@ -44,8 +45,21 @@ export function memeActeur(a, b) {
  */
 const nombre = (valeur) => (valeur === null || valeur === undefined ? null : Number(valeur));
 
-/** Les pieces d'un message, identifiants en nombres. */
-const pieces = (liste) => (liste ?? []).map((piece) => ({ ...piece, id: nombre(piece.id) }));
+/**
+ * Les pieces d'un message, telles qu'un acteur les recoit.
+ *
+ * Chacune porte son adresse de lecture, signee pour cet acteur : une
+ * adresse copiee et ouverte par quelqu'un d'autre ne mene nulle part.
+ */
+const pieces = (liste, acteur) =>
+  (liste ?? []).map((piece) => ({
+    id: nombre(piece.id),
+    nom: piece.nom,
+    type: piece.type,
+    typeMime: piece.typeMime,
+    taille: piece.taille,
+    url: acteur ? pieceJointe.adresseSignee('piece', piece.id, acteur) : null,
+  }));
 
 /** Un identifiant de fil ou de message : entier positif, sinon introuvable. */
 function identifiant(valeur, quoi) {
@@ -181,7 +195,7 @@ export function presenterMessage(message, acteur) {
       photoUrl: message.auteurPhoto ?? null,
     },
     estDeMoi: memeActeur({ type: message.auteurType, id: message.auteurId }, acteur),
-    pieces: supprime ? [] : pieces(message.pieces),
+    pieces: supprime ? [] : pieces(message.pieces, acteur),
   };
 }
 
@@ -232,7 +246,7 @@ export async function lister(acteur) {
           id: nombre(fil.dernier.id),
           estDeMoi: memeActeur({ type: fil.dernier.auteurType, id: fil.dernier.auteurId }, acteur),
           corps: fil.dernier.supprime ? '' : fil.dernier.corps,
-          pieces: fil.dernier.supprime ? [] : pieces(fil.dernier.pieces),
+          pieces: fil.dernier.supprime ? [] : pieces(fil.dernier.pieces, null),
         }
       : null,
   }));
@@ -451,27 +465,64 @@ export async function ouvrir(acteur, corps = {}) {
    ================================================================ */
 
 /**
- * Envoie un message dans un fil dont on fait partie.
+ * Envoie un message dans un fil dont on fait partie, pieces comprises.
+ *
+ * L'ordre compte :
+ * 1. l'acces et le texte sont verifies ;
+ * 2. toutes les pieces sont analysees et preparees, sans rien ecrire ;
+ * 3. les fichiers sont ecrits ;
+ * 4. le message et ses pieces entrent en base, d'un seul tenant.
+ * Un refus aux etapes 1 et 2 ne laisse aucune trace ; un echec a l'etape
+ * 4 efface les fichiers de l'etape 3.
  *
  * Ecrire vaut lecture : ce qu'on vient de dire, et tout ce qui precedait,
  * est lu par son auteur.
  */
-export async function envoyer(acteur, id, corps = {}) {
+export async function envoyer(acteur, id, corps = {}, fichiers = []) {
   const fil = await filAccessible(acteur, id);
   const texte = corpsValide(corps.corps);
-  if (texte === '') {
+  if (texte === '' && fichiers.length === 0) {
     throw new ErreurValidation('Le message est vide.', { corps: 'Écrivez un message ou joignez un fichier' });
   }
 
-  const message = await transaction(async (client) => {
-    const cree = await conversationRepository.ajouterMessage(
-      { conversationId: fil.id, acteur, auteurNom: await nomDe(acteur, client), corps: texte },
-      client
-    );
-    await conversationRepository.marquerLu(acteur, fil.id, cree.id, client);
-    return cree;
-  });
+  const prets = await pieceJointe.preparer(fichiers);
+  const ecrites = await pieceJointe.ecrire(prets);
+
+  let message;
+  try {
+    message = await transaction(async (client) => {
+      const cree = await conversationRepository.ajouterMessage(
+        { conversationId: fil.id, acteur, auteurNom: await nomDe(acteur, client), corps: texte },
+        client
+      );
+      await conversationRepository.ajouterPieces(cree.id, ecrites, client);
+      await conversationRepository.marquerLu(acteur, fil.id, cree.id, client);
+      return cree;
+    });
+  } catch (erreur) {
+    await pieceJointe.effacer(ecrites.map((piece) => piece.fichier));
+    throw erreur;
+  }
 
   const complet = await conversationRepository.trouverMessage(message.id);
   return presenterMessage(complet, acteur);
+}
+
+/**
+ * Une piece jointe, pour la servir a un acteur.
+ *
+ * Tout refus -- piece inconnue, message supprime, acteur absent du fil --
+ * repond "introuvable" : la reponse ne doit pas dire si le fichier existe.
+ */
+export async function pieceLisible(acteur, pieceId) {
+  const numero = Number(pieceId);
+  if (!Number.isSafeInteger(numero) || numero <= 0) throw new ErreurIntrouvable('Le fichier', pieceId);
+
+  const piece = await conversationRepository.trouverPiece(numero);
+  if (!piece || piece.supprimeLe) throw new ErreurIntrouvable('Le fichier', pieceId);
+
+  const participe = await conversationRepository.estParticipant(acteur, piece.conversationId);
+  if (!participe) throw new ErreurIntrouvable('Le fichier', pieceId);
+
+  return piece;
 }

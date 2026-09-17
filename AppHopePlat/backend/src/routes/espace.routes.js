@@ -8,6 +8,7 @@
 import { Router } from 'express';
 
 import { conversations } from '../controllers/conversation.controllers.js';
+import { televerserMessage } from '../middleware/upload.middleware.js';
 import * as espace from '../controllers/espace.controllers.js';
 import { authenticateEspace } from '../middleware/espaceAuth.middleware.js';
 
@@ -36,7 +37,7 @@ router.get('/conversations', conversations.lister);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
 router.post('/conversations/:id/lu', conversations.marquerLu);
-router.post('/conversations/:id/messages', conversations.envoyer);
+router.post('/conversations/:id/messages', televerserMessage, conversations.envoyer);
 
 router.get('/messages', espace.listerMessages);
 router.post('/messages', espace.envoyerMessage);

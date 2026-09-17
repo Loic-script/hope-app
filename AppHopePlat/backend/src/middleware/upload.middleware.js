@@ -352,3 +352,56 @@ export async function supprimerFichier(cheminAbsolu) {
     }
   }
 }
+
+/* ================================================================
+   Messagerie : pieces jointes
+   ================================================================ */
+
+/*
+ * En memoire, et non sur le disque.
+ *
+ * Tout le lot doit etre verifie avant d'ecrire quoi que ce soit : un
+ * stockage disque ecrirait chaque fichier au fil de l'eau, et un refus au
+ * troisieme laisserait les deux premiers derriere lui. Cinq fichiers de
+ * 25 Mo au plus tiennent sans peine en memoire.
+ */
+const televerseurMessage = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    // Le plus haut des plafonds ; celui de chaque type s'applique ensuite,
+    // une fois le contenu reconnu.
+    fileSize: 25 * 1024 * 1024,
+    files: 5,
+    // Le texte du message voyage dans le meme formulaire.
+    fieldSize: 64 * 1024,
+    fields: 10,
+  },
+});
+
+/** Accepte un message multipart : "corps" et jusqu'a cinq "files". */
+export function televerserMessage(req, res, suite) {
+  // Un envoi sans piece jointe arrive en JSON : rien a lire ici.
+  if (!req.is('multipart/form-data')) {
+    suite();
+    return;
+  }
+
+  televerseurMessage.array('files', 5)(req, res, (erreur) => {
+    if (!erreur) {
+      suite();
+      return;
+    }
+    if (erreur instanceof multer.MulterError) {
+      const messages = {
+        LIMIT_FILE_SIZE: ['Un fichier dépasse 25 Mo, le maximum pour une vidéo.', 'Fichier trop volumineux'],
+        LIMIT_FILE_COUNT: ['5 pièces jointes au plus par message.', 'Trop de fichiers'],
+        LIMIT_UNEXPECTED_FILE: ['5 pièces jointes au plus par message.', 'Trop de fichiers'],
+        LIMIT_FIELD_VALUE: ['Le message est trop long.', 'Texte trop long'],
+      };
+      const [message, detail] = messages[erreur.code] ?? [`Envoi refusé : ${erreur.message}`, erreur.code];
+      suite(new ErreurValidation(message, { files: detail }));
+      return;
+    }
+    suite(erreur);
+  });
+}

@@ -10,6 +10,7 @@ import volunteerAuthRoutes from './volunteerAuth.routes.js';
 import volunteerSpaceRoutes from './volunteerSpace.routes.js';
 import funderRoutes from './funder.routes.js';
 import espaceRoutes from './espace.routes.js';
+import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
 
 const router = Router();
 
@@ -17,6 +18,10 @@ const router = Router();
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'hope-api', timestamp: new Date().toISOString() });
 });
+
+// Les fichiers de la messagerie : adresses signees, sans session -- une
+// balise <img> ou <video> n'en porte pas. Montes avant tout verrou.
+router.get('/messagerie/fichiers/piece/:id', fichiersMessagerie.piece);
 
 // Authentification des utilisateurs : un seul formulaire pour les trois
 // types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.

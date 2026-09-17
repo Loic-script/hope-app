@@ -4,6 +4,7 @@ import { IconeChevronGauche } from '../admin/AdminIcons.jsx';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/messagerie.service.js';
 import Avatar from './Avatar.jsx';
+import PiecesMessage from './PiecesMessage.jsx';
 import { heure, libelleJour, memeJour } from './outils.js';
 import Saisie from './Saisie.jsx';
 import TexteMessage from './TexteMessage.jsx';
@@ -189,11 +190,14 @@ export function Bulle({ message, groupe }) {
             {moi ? 'Vous avez supprimé ce message' : 'Ce message a été supprimé'}
           </p>
         ) : (
-          message.texte && (
-            <p className="msg-bulle__texte">
-              <TexteMessage texte={message.texte} />
-            </p>
-          )
+          <>
+            {message.pieces.length > 0 && <PiecesMessage pieces={message.pieces} />}
+            {message.texte && (
+              <p className="msg-bulle__texte">
+                <TexteMessage texte={message.texte} />
+              </p>
+            )}
+          </>
         )}
 
         <p className="msg-bulle__heure">

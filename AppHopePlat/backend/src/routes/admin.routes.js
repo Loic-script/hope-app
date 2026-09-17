@@ -22,6 +22,7 @@ import {
 } from '../middleware/upload.middleware.js';
 
 import { conversations } from '../controllers/conversation.controllers.js';
+import { televerserMessage } from '../middleware/upload.middleware.js';
 import {
   beneficiaries,
   catalog,
@@ -125,7 +126,7 @@ router.get('/conversations', conversations.lister);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
 router.post('/conversations/:id/lu', conversations.marquerLu);
-router.post('/conversations/:id/messages', conversations.envoyer);
+router.post('/conversations/:id/messages', televerserMessage, conversations.envoyer);
 
 router.get('/espace-messages', messagesEspaces.lister);
 router.post('/espace-messages/:id/reponse', exigerEcriture, messagesEspaces.repondre);

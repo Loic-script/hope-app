@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { messageErreur } from '../../services/api.js';
+import { poids } from './outils.js';
+import { ACCEPTE, MAX_PIECES, ajouterFichiers, natureDe } from './pieces.js';
 
 /** Hauteur maximale du champ, au-dela il defile. */
 const HAUTEUR_MAX = 160;
@@ -30,9 +32,11 @@ export const EMOJIS = [
  * - Entree envoie, Maj+Entree passe a la ligne, et rien ne part pendant
  *   une composition IME -- l'Entree qui valide un caractere en chinois ou
  *   en japonais n'est pas un envoi ;
- * - un emoji s'insere au curseur, qui se replace juste apres lui.
+ * - un emoji s'insere au curseur, qui se replace juste apres lui ;
+ * - le trombone joint jusqu'a cinq photos, videos ou PDF, affiches en
+ *   etiquettes qu'on retire avant l'envoi.
  *
- * @param {{ onEnvoyer: (contenu: {corps: string}) => Promise<void>,
+ * @param {{ onEnvoyer: (contenu: {corps: string, fichiers: File[]}) => Promise<void>,
  *           desactive?: boolean }} props
  */
 export default function Saisie({ onEnvoyer, desactive = false }) {
@@ -40,7 +44,33 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [palette, setPalette] = useState(false);
+  const [fichiers, setFichiers] = useState([]);
   const champ = useRef(null);
+  const selecteur = useRef(null);
+
+  /*
+   * Le champ fichier cache reflete la selection affichee.
+   *
+   * Retirer une etiquette doit aussi retirer le fichier du champ : sa
+   * liste n'est pas modifiable, on la reconstruit donc par DataTransfer.
+   */
+  useEffect(() => {
+    if (!selecteur.current || typeof DataTransfer === 'undefined') return;
+    const transfert = new DataTransfer();
+    for (const fichier of fichiers) transfert.items.add(fichier);
+    selecteur.current.files = transfert.files;
+  }, [fichiers]);
+
+  function choisir(liste) {
+    const { retenus, erreurs } = ajouterFichiers(fichiers, liste);
+    setFichiers(retenus);
+    setErreur(erreurs.join(' '));
+  }
+
+  function retirer(index) {
+    setFichiers((actuels) => actuels.filter((_, i) => i !== index));
+    setErreur('');
+  }
 
   // Le champ suit la hauteur de son contenu.
   useLayoutEffect(() => {
@@ -51,17 +81,18 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
     element.style.overflowY = element.scrollHeight > HAUTEUR_MAX ? 'auto' : 'hidden';
   }, [texte]);
 
-  const peutEnvoyer = texte.trim() !== '' && !envoi && !desactive;
+  const peutEnvoyer = (texte.trim() !== '' || fichiers.length > 0) && !envoi && !desactive;
 
   async function envoyer() {
     if (!peutEnvoyer) return;
     setEnvoi(true);
     setErreur('');
     try {
-      await onEnvoyer({ corps: texte });
+      await onEnvoyer({ corps: texte, fichiers });
       // Reinitialise seulement une fois l'envoi confirme : un echec garde
-      // le texte, qu'on n'a pas a retaper.
+      // le texte et les pieces, qu'on n'a pas a reprendre.
       setTexte('');
+      setFichiers([]);
     } catch (echec) {
       setErreur(messageErreur(echec, 'Le message n’a pas pu être envoyé.'));
     } finally {
@@ -98,6 +129,29 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
 
   return (
     <div className="msg-saisie">
+      {fichiers.length > 0 && (
+        <ul className="msg-etiquettes" aria-label="Pièces jointes à envoyer">
+          {fichiers.map((fichier, index) => (
+            <li key={`${fichier.name}-${fichier.size}-${fichier.lastModified}`} className="msg-etiquette">
+              <span className="msg-etiquette__icone" aria-hidden="true">
+                {{ image: '🖼️', video: '🎬', pdf: '📄' }[natureDe(fichier)]}
+              </span>
+              <span className="msg-etiquette__nom">{fichier.name}</span>
+              <span className="msg-etiquette__poids">{poids(fichier.size)}</span>
+              <button
+                type="button"
+                className="msg-etiquette__retirer"
+                onClick={() => retirer(index)}
+                disabled={envoi}
+                aria-label={`Retirer ${fichier.name}`}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <form
         className="msg-saisie__ligne"
         onSubmit={(evenement) => {
@@ -106,6 +160,31 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
         }}
       >
         <PaletteEmojis ouverte={palette} onBasculer={setPalette} onChoisir={insererEmoji} />
+
+        <button
+          type="button"
+          className="msg-saisie__outil"
+          onClick={() => selecteur.current?.click()}
+          disabled={envoi || desactive || fichiers.length >= MAX_PIECES}
+          aria-label={
+            fichiers.length >= MAX_PIECES ? 'Cinq pièces jointes au plus' : 'Joindre une photo, une vidéo ou un PDF'
+          }
+        >
+          <IconeTrombone />
+        </button>
+        <input
+          ref={selecteur}
+          type="file"
+          multiple
+          accept={ACCEPTE}
+          hidden
+          onChange={(evenement) => {
+            const liste = [...(evenement.target.files ?? [])];
+            // Les fichiers deja retenus sont dans l'etat : le champ, lui,
+            // ne garde que la derniere selection du systeme.
+            choisir(liste.filter((f) => !fichiers.includes(f)));
+          }}
+        />
 
         <label className="msg-saisie__champ">
           <span className="sr-only">Votre message</span>
@@ -217,6 +296,14 @@ function PaletteEmojis({ ouverte, onBasculer, onChoisir }) {
         </div>
       )}
     </div>
+  );
+}
+
+function IconeTrombone() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m20.5 11.5-8.3 8.3a5.2 5.2 0 0 1-7.4-7.4l8.6-8.6a3.5 3.5 0 0 1 4.9 4.9l-8.6 8.6a1.7 1.7 0 0 1-2.5-2.5l7.9-7.9" />
+    </svg>
   );
 }
 

@@ -7,7 +7,11 @@
  * jamais du corps ni de l'URL -- c'est ce qui empeche d'ecrire sous
  * l'identite d'un autre.
  */
+import fs from 'node:fs';
+
 import * as conversationService from '../services/conversation.service.js';
+import * as pieceJointe from '../services/pieceJointe.service.js';
+import { ErreurIntrouvable } from '../shared/errors.js';
 
 import { gerer } from './handler.js';
 
@@ -44,8 +48,54 @@ export const conversations = {
 
   envoyer: gerer(
     async (req) => ({
-      message: await conversationService.envoyer(acteurDe(req), req.params.id, req.body ?? {}),
+      message: await conversationService.envoyer(
+        acteurDe(req),
+        req.params.id,
+        req.body ?? {},
+        req.files ?? []
+      ),
     }),
     { statut: 201 }
   ),
+};
+
+/**
+ * Lecture d'un fichier de la messagerie, par adresse signee.
+ *
+ * Aucune session ici : <img> et <video> n'en envoient pas. La signature
+ * dit qui demande ; la participation est reverifiee avant de servir.
+ * Toute adresse fausse, expiree ou etrangere repond 404.
+ *
+ * res.sendFile traite les requetes Range : une video se lit et s'avance
+ * sans etre telechargee en entier.
+ */
+export const fichiers = {
+  piece: gerer(async (req, res) => {
+    const acteur = pieceJointe.verifierSignature('piece', req.params.id, req.query);
+    if (!acteur) throw new ErreurIntrouvable('Le fichier', req.params.id);
+
+    const piece = await conversationService.pieceLisible(acteur, req.params.id);
+    const cheminAbsolu = pieceJointe.chemin(piece.fichier);
+    if (!fs.existsSync(cheminAbsolu)) throw new ErreurIntrouvable('Le fichier', req.params.id);
+
+    await new Promise((resolve, reject) => {
+      res.sendFile(
+        cheminAbsolu,
+        {
+          acceptRanges: true,
+          lastModified: false,
+          headers: {
+            'Content-Type': piece.typeMime,
+            'Content-Disposition': pieceJointe.disposition(piece.nomOrigine, req.query.telecharger === '1'),
+            'X-Content-Type-Options': 'nosniff',
+            // Prive : ni proxy ni cache partage ne doit garder une piece.
+            'Cache-Control': 'private, max-age=3600',
+            // L'adresse porte sa signature : elle ne doit pas fuir en Referer.
+            'Referrer-Policy': 'no-referrer',
+          },
+        },
+        (erreur) => (erreur && !res.headersSent ? reject(erreur) : resolve())
+      );
+    });
+  }),
 };
