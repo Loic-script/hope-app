@@ -81,7 +81,7 @@ export function exigerConsultation(req, _res, next) {
 export function exigerOrganisation(req, _res, next) {
   if (!req.bailleur?.bailleurId) {
     const erreur = new ErreurAuthentification(
-      'Renseignez votre organisation pour accéder à votre espace.',
+      'Votre organisation est introuvable. Contactez l’équipe HOPE.',
       'ORGANISATION_MANQUANTE'
     );
     erreur.statut = 409;

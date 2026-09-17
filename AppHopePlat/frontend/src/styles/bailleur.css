@@ -1131,3 +1131,87 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   Apercu d'un document, et fiche de l'organisation
+   ============================================================ */
+
+/*
+ * L'apercu d'un PDF, dans la modale.
+ *
+ * Une hauteur relative a la fenetre : sur un portable, 720 px de haut
+ * feraient sortir les boutons de l'ecran, et c'est par eux qu'on ferme.
+ * Les pages defilent a l'interieur.
+ */
+.apercu-pdf__pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: min(68vh, 720px);
+  padding: 12px;
+  overflow-y: auto;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+  background-color: var(--admin-fond);
+}
+
+/* Chaque page, dessinee sur un canevas. */
+.apercu-pdf__page {
+  max-width: 100%;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 4px;
+  background-color: #ffffff;
+  box-shadow: var(--admin-ombre);
+}
+
+.apercu-pdf__note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-faible);
+}
+
+.apercu-pdf__note--echec {
+  color: var(--hope-erreur);
+}
+
+/* Les deux actions d'une ligne de document restent ensemble. */
+.document__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* L'invitation a preciser une organisation encore provisoire. */
+.note-fiche {
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-orange);
+  border-radius: 9px;
+  background-color: #fdf6ec;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #8a5c12;
+}
+
+/* Le champ d'adresse est le seul sur plusieurs lignes. */
+.champ-bailleur textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+  background-color: var(--admin-surface);
+  resize: vertical;
+}
+
+.champ-bailleur textarea:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}

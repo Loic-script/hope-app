@@ -47,11 +47,9 @@ router.post('/logout', authenticateFunder, funder.logout);
 // consultation. Un contact desactive par HOPE ne passe pas.
 router.use(authenticateFunder, exigerConsultation);
 
-// Declarer son organisation : accessible AVANT le verrou ci-dessous,
-// puisque c'est precisement ce qui manque a ce moment-la.
-router.post('/organisation', funder.espace.declarerOrganisation);
-
 // Tout ce qui suit a besoin d'un bailleur_id sur quoi filtrer.
+// L'organisation nait avec le compte : ce verrou ne sert plus qu'a
+// refuser proprement un cas qui ne devrait plus se produire.
 router.use(exigerOrganisation);
 
 router.get('/tableau-de-bord', funder.espace.tableauDeBord);
@@ -66,6 +64,8 @@ router.get('/fil', funder.espace.fil);
 router.post('/interet', funder.espace.manifesterUnInteret);
 
 router.get('/profil', funder.espace.profil);
+// La fiche de l'organisation se precise dans les parametres du compte.
+router.patch('/organisation', funder.espace.mettreAJourOrganisation);
 router.patch('/profil/contact', funder.espace.mettreAJourContact);
 
 // La photo de contact : televersee ici, rattachee par le PATCH ci-dessus.

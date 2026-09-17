@@ -9,11 +9,15 @@
  *   * si le compte s'ouvre aussitot ou attend la validation de HOPE ;
  *   * l'audience du jeton, donc l'espace ou il vaut.
  *
- * L'inscription ne cree que le compte. Les informations propres au role
- * -- competences d'un benevole, raison sociale d'un bailleur -- sont
- * demandees APRES la premiere connexion, par le formulaire de
- * completion : les exiger d'emblee ferait un formulaire de douze champs
- * la ou six suffisent a ouvrir un compte.
+ * L'inscription ne recueille que l'etat civil : les exiger d'emblee
+ * ferait un formulaire de douze champs la ou six suffisent a ouvrir un
+ * compte.
+ *
+ * Ce qui manque ensuite depend du role. Le benevole passe par un
+ * formulaire de completion : sans ses competences ni ses
+ * disponibilites, l'equipe ne sait pas quoi lui confier. Le bailleur,
+ * lui, entre directement -- son organisation est creee avec le compte,
+ * sous un nom provisoire, et il la precise dans ses parametres.
  */
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -21,6 +25,7 @@ import jwt from 'jsonwebtoken';
 import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
+import { garantirOrganisation } from './funderAuth.service.js';
 import {
   AUDIENCE_PAR_TYPE,
   EMETTEUR,
@@ -170,6 +175,20 @@ export async function inscrire(corps = {}) {
       await volunteerRepository.changerStatut(cree.id, 'actif', null, client);
     }
 
+    /*
+     * Un bailleur n'a pas de formulaire a remplir apres son inscription.
+     *
+     * Son organisation est creee ici, sous un nom provisoire, et il la
+     * precise quand il veut depuis "Mon organisation". Exiger une raison
+     * sociale et un type avant meme de voir l'espace arretait des gens a
+     * la porte, pour des informations que l'equipe HOPE reprend de toute
+     * facon a la signature d'une convention.
+     */
+    if (type === 'bailleur') {
+      await garantirOrganisation(cree.id, { nom, prenom }, client);
+      await volunteerRepository.marquerProfilComplete(cree.id, client);
+    }
+
     return volunteerRepository.trouverParId(cree.id, client);
   });
 
@@ -246,7 +265,10 @@ export async function connecter({ email, motDePasse } = {}) {
     profilComplete,
     // Le donateur n'a pas de formulaire de completion : il entre
     // directement dans son espace.
-    completionRequise: !profilComplete && type !== 'donateur',
+    // Seul le benevole a encore une fiche a remplir avant d'entrer : le
+    // bailleur precise son organisation quand il veut, depuis ses
+    // parametres, et le donateur n'a rien a remplir.
+    completionRequise: !profilComplete && type === 'benevole',
   };
 }
 

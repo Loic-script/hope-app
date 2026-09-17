@@ -838,9 +838,12 @@ CREATE TABLE IF NOT EXISTS bailleur (
   notes_internes    TEXT,
   cree_le           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
 
+  -- "autre" est le type pose a l'inscription : le compte se cree sans
+  -- rien demander, et l'organisation se precise ensuite depuis
+  -- "Mon organisation".
   CONSTRAINT bailleur_type_valide
     CHECK (type_organisation IN
-      ('fondation_privee', 'entreprise', 'agence_publique', 'ong', 'ambassade')),
+      ('fondation_privee', 'entreprise', 'agence_publique', 'ong', 'ambassade', 'autre')),
   CONSTRAINT bailleur_statut_valide
     CHECK (statut IN ('prospect', 'actif', 'en_pause', 'termine')),
   CONSTRAINT bailleur_niveau_valide
@@ -850,6 +853,13 @@ CREATE TABLE IF NOT EXISTS bailleur (
 -- Un bailleur n'est pas une personne : plusieurs employes peuvent se
 -- connecter, et les gens changent de poste. Toute requete de l'espace
 -- filtre donc sur bailleur_id, jamais sur utilisateur_id.
+-- Les bases creees avant le type "autre" portent encore l'ancienne
+-- regle : une contrainte CHECK ne se modifie pas en place.
+ALTER TABLE bailleur DROP CONSTRAINT IF EXISTS bailleur_type_valide;
+ALTER TABLE bailleur ADD CONSTRAINT bailleur_type_valide
+  CHECK (type_organisation IN
+    ('fondation_privee', 'entreprise', 'agence_publique', 'ong', 'ambassade', 'autre'));
+
 CREATE TABLE IF NOT EXISTS bailleur_contact (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   bailleur_id       UUID    NOT NULL REFERENCES bailleur(id) ON DELETE CASCADE,

@@ -86,6 +86,19 @@ export async function trouverParUtilisateur(utilisateurId, client = null) {
 }
 
 /** Met a jour les champs facultatifs de l'organisation d'un contact. */
+/**
+ * Met a jour la fiche d'une organisation.
+ *
+ * Les colonnes arrivent deja nommees comme en base : la liste de ce qui
+ * est modifiable est arretee par le service, pas ici.
+ */
+export async function mettreAJourOrganisation(bailleurId, colonnes, client = null) {
+  const { clause, valeurs, vide } = construireSet(colonnes, 2);
+  if (vide) return;
+
+  await query(`UPDATE bailleur SET ${clause} WHERE id = $1`, [bailleurId, ...valeurs], client);
+}
+
 export async function mettreAJourOrganisationParUtilisateur(
   utilisateurId,
   colonnes,

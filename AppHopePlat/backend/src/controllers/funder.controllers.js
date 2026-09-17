@@ -79,9 +79,8 @@ export async function typesOrganisation(_req, res) {
 /* ------------------------------- L'espace ------------------------------ */
 
 export const espace = {
-  declarerOrganisation: gerer(
-    (req) => funderService.declarerOrganisation(req.bailleur.utilisateurId, req.body),
-    { statut: 201 }
+  mettreAJourOrganisation: gerer((req) =>
+    funderService.mettreAJourOrganisation(req.bailleur.bailleurId, req.body)
   ),
   tableauDeBord: gerer((req) => funderService.tableauDeBord(req.bailleur.bailleurId)),
   partenariat: gerer((req) => funderService.partenariat(req.bailleur.bailleurId)),

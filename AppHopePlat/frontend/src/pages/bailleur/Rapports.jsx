@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import ApercuPdf from '../../components/ApercuPdf.jsx';
+import { Modale } from '../../components/admin/forms.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
@@ -30,6 +32,10 @@ export default function Rapports() {
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
   const [message, setMessage] = useState('');
+
+  // Le document dont on regarde l'apercu. Le lire ne compte pas comme un
+  // telechargement : on vient justement voir avant de decider.
+  const [apercu, setApercu] = useState(null);
 
   const items = donnees?.items ?? [];
   const compteurs = donnees?.counts ?? {};
@@ -153,19 +159,82 @@ export default function Rapports() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  className="bouton-bailleur bouton-bailleur--discret"
-                  onClick={() => telecharger(document)}
-                  disabled={envoi}
-                >
-                  Télécharger
-                </button>
+                <div className="document__actions">
+                  {/* Voir avant de telecharger : un rapport d'impact se
+                      parcourt d'abord, et le partenaire sait alors ce
+                      qu'il enregistre. */}
+                  <button
+                    type="button"
+                    className="bouton-bailleur bouton-bailleur--discret"
+                    onClick={() => setApercu(document)}
+                  >
+                    Aperçu
+                  </button>
+                  <button
+                    type="button"
+                    className="bouton-bailleur bouton-bailleur--discret"
+                    onClick={() => telecharger(document)}
+                    disabled={envoi}
+                  >
+                    Télécharger
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </Panneau>
+
+      {/*
+        * L'apercu ouvre le fichier dans la page, sans rien enregistrer.
+        * Le compteur de lecture ne bouge qu'au telechargement : il sert a
+        * HOPE pour savoir si ses rapports sont vraiment lus, et un coup
+        * d'oeil n'est pas une lecture.
+        */}
+      <Modale
+        ouverte={Boolean(apercu)}
+        titre={apercu?.titre ?? ''}
+        sousTitre={apercu ? sousTitreApercu(apercu) : ''}
+        onFermer={() => setApercu(null)}
+        large
+        pied={
+          <>
+            <button
+              type="button"
+              className="bouton-bailleur bouton-bailleur--discret"
+              onClick={() => setApercu(null)}
+            >
+              Fermer
+            </button>
+            <button
+              type="button"
+              className="bouton-bailleur"
+              disabled={envoi}
+              onClick={() => {
+                const document_ = apercu;
+                setApercu(null);
+                telecharger(document_);
+              }}
+            >
+              Télécharger
+            </button>
+          </>
+        }
+      >
+        {apercu && <ApercuPdf url={urlMedia(apercu.fichierUrl)} titre={apercu.titre} />}
+      </Modale>
     </>
   );
+}
+
+/** Ce que rappelle l'apercu sous le titre : la nature et la periode. */
+function sousTitreApercu(document) {
+  const morceaux = [TYPES_DOCUMENT[document.type] ?? document.type];
+  if (document.periodeDebut && document.periodeFin) {
+    morceaux.push(`période du ${fmt.date(document.periodeDebut)} au ${fmt.date(document.periodeFin)}`);
+  }
+  if (document.nbPages) {
+    morceaux.push(`${document.nbPages} page${document.nbPages > 1 ? 's' : ''}`);
+  }
+  return morceaux.join(' · ');
 }

@@ -32,10 +32,15 @@ const CLES = {
   bailleur: { jeton: CLE_JETON_BAILLEUR, profil: CLE_BAILLEUR },
 };
 
-/** Adresse du formulaire de completion, par type. */
+/**
+ * Adresse du formulaire de completion, par type.
+ *
+ * Le benevole seul en a un : sans ses competences ni ses
+ * disponibilites, l'equipe ne sait pas quoi lui confier. Le bailleur
+ * entre directement et precise son organisation dans ses parametres.
+ */
 export const COMPLETION_PAR_TYPE = {
   benevole: '/benevole/completer-profil',
-  bailleur: '/bailleur/declarer-organisation',
 };
 
 /** GET /api/auth/types — les trois types, pour la liste du formulaire. */

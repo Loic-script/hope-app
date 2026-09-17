@@ -3,9 +3,6 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import * as bailleurService from '../services/bailleur.service.js';
 
-/** Le formulaire a remplir a la premiere connexion. */
-const DECLARATION = '/bailleur/declarer-organisation';
-
 /**
  * Garde de route de l'espace bailleur.
  *
@@ -64,22 +61,9 @@ export default function RequireBailleur() {
   }
 
   /*
-   * Premiere connexion : le compte existe, l'organisation pas encore.
-   * Raison sociale et type d'organisation sont obligatoires en base et
-   * l'inscription commune ne les recueille pas : on les demande avant
-   * d'ouvrir l'espace, qui n'aurait sinon aucun bailleur sur quoi
-   * filtrer.
-   *
-   * La condition exclut le formulaire lui-meme, qui se redirigerait
-   * sans fin vers lui-meme.
+   * Aucun formulaire ne barre l'entree : l'organisation est creee avec
+   * le compte, sous un nom provisoire, et se precise depuis
+   * "Mon organisation".
    */
-  const surLaDeclaration = emplacement.pathname === DECLARATION;
-  if (bailleur?.organisationManquante && !surLaDeclaration) {
-    return <Navigate to={DECLARATION} replace />;
-  }
-  if (bailleur && !bailleur.organisationManquante && surLaDeclaration) {
-    return <Navigate to="/bailleur" replace />;
-  }
-
   return <Outlet context={{ bailleur, rafraichir }} />;
 }

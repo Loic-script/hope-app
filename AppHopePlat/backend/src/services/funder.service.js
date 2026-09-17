@@ -16,10 +16,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { transaction } from '../config/database.js';
 import * as funderRepository from '../repositories/funder.repository.js';
-import * as volunteerRepository from '../repositories/volunteer.repository.js';
-import { LIBELLES_TYPE, TYPES_ORGANISATION } from './funderAuth.service.js';
+import { TYPES_ORGANISATION } from './funderAuth.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 
@@ -383,21 +381,16 @@ export async function manifesterUnInteret(bailleurId, corps = {}, contact = null
    ================================================================ */
 
 /**
- * Cree l'organisation du bailleur et l'y rattache comme contact
- * principal.
+ * Met a jour la fiche de son organisation.
  *
- * Ce formulaire existe parce que l'inscription ne le recueille pas :
- * raison sociale et type d'organisation sont obligatoires en base, mais
- * le formulaire commun aux trois types ne peut pas les demander. On les
- * demande donc a la premiere connexion.
+ * Elle existe depuis l'inscription, sous un nom provisoire : c'est ici
+ * que le bailleur la precise, dans ses parametres, et non dans un
+ * formulaire qui lui barrerait l'entree.
  *
- * L'organisation nait en "prospect" : le compte est actif, le
- * partenariat reste a construire avec l'equipe.
- *
- * @param {string} utilisateurId compte connecte
- * @param {object} corps champs du formulaire
+ * Ce qui releve de HOPE -- le statut, le niveau de partenariat, les
+ * distinctions, les notes internes -- n'est pas modifiable ici.
  */
-export async function declarerOrganisation(utilisateurId, corps = {}) {
+export async function mettreAJourOrganisation(bailleurId, corps = {}) {
   const texte = (valeur, max) => {
     const propre = typeof valeur === 'string' ? valeur.trim() : '';
     if (propre === '') return null;
@@ -417,51 +410,20 @@ export async function declarerOrganisation(utilisateurId, corps = {}) {
     throw new ErreurValidation('Le formulaire comporte des erreurs.', details);
   }
 
-  // Une organisation deja declaree ne se recree pas : le formulaire ne
-  // doit pas servir a se rattacher deux fois.
-  const existante = await funderRepository.trouverParUtilisateur(utilisateurId);
-  if (existante) {
-    throw new ErreurRegleMetier(
-      'Votre organisation est déjà enregistrée.',
-      'ORGANISATION_DEJA_DECLAREE'
-    );
-  }
-
-  return transaction(async (client) => {
-    await funderRepository.creerAvecContact(
-      {
-        raisonSociale,
-        typeOrganisation,
-        secteur: texte(corps.secteur, 120),
-        pays: texte(corps.pays, 80) ?? 'Madagascar',
-        siteWeb: texte(corps.siteWeb, 500),
-      },
-      utilisateurId,
-      texte(corps.fonction, 120),
-      client
-    );
-
-    // Les champs facultatifs de l'organisation, en une passe.
-    await funderRepository.mettreAJourOrganisationParUtilisateur(
-      utilisateurId,
-      {
-        adresse: texte(corps.adresse, 2000),
-        nif: texte(corps.nif, 40),
-      },
-      client
-    );
-
-    await volunteerRepository.marquerProfilComplete(utilisateurId, client);
-
-    const fiche = await funderRepository.trouverParUtilisateur(utilisateurId, client);
-    return {
-      success: true,
-      message: 'Votre organisation est enregistrée. Bienvenue dans l’espace partenaire.',
-      bailleurId: fiche.id,
-      raisonSociale: fiche.raisonSociale,
-      typeLibelle: LIBELLES_TYPE[fiche.typeOrganisation] ?? fiche.typeOrganisation,
-    };
+  await funderRepository.mettreAJourOrganisation(bailleurId, {
+    raison_sociale: raisonSociale,
+    type_organisation: typeOrganisation,
+    secteur: texte(corps.secteur, 120),
+    pays: texte(corps.pays, 80) ?? 'Madagascar',
+    adresse: texte(corps.adresse, 2000),
+    site_web: texte(corps.siteWeb, 500),
+    nif: texte(corps.nif, 40),
   });
+
+  return {
+    success: true,
+    message: 'La fiche de votre organisation est à jour.',
+  };
 }
 
 /* ================================================================

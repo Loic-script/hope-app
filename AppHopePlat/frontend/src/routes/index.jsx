@@ -31,7 +31,6 @@ import VueDensemble from '../pages/benevole/VueDensemble.jsx';
 import RequireBenevole from './RequireBenevole.jsx';
 import BailleurLayout from '../layouts/BailleurLayout.jsx';
 import ActualitesBailleur from '../pages/bailleur/Actualites.jsx';
-import DeclarerOrganisation from '../pages/bailleur/DeclarerOrganisation.jsx';
 import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
 import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
 import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
@@ -82,9 +81,13 @@ export default function AppRoutes() {
       <Route path="/bailleur/inscription" element={<Navigate to="/authentification" replace />} />
 
       <Route element={<RequireBailleur />}>
-        {/* Hors de la coquille a rail : il n'y a pas encore
-            d'organisation a afficher dedans. */}
-        <Route path="/bailleur/declarer-organisation" element={<DeclarerOrganisation />} />
+        {/* L'organisation nait avec le compte : ce formulaire n'existe
+            plus. Un favori ou un lien deja envoye mene a la fiche, dans
+            les parametres du compte. */}
+        <Route
+          path="/bailleur/declarer-organisation"
+          element={<Navigate to="/bailleur/organisation" replace />}
+        />
 
         <Route element={<BailleurLayout />}>
           <Route path="/bailleur" element={<TableauDeBordBailleur />} />

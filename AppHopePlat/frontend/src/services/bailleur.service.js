@@ -150,6 +150,17 @@ export async function profil() {
   return data;
 }
 
+/**
+ * PATCH /api/bailleur/organisation
+ *
+ * La fiche de l'organisation se renseigne dans les parametres du compte :
+ * l'inscription ne demande rien de plus que l'etat civil.
+ */
+export async function mettreAJourOrganisation(corps) {
+  const { data } = await apiBailleur.patch('/bailleur/organisation', corps);
+  return data;
+}
+
 /** PATCH /api/bailleur/profil/contact */
 export async function mettreAJourContact(corps) {
   const { data } = await apiBailleur.patch('/bailleur/profil/contact', corps);

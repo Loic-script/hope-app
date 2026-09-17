@@ -29,10 +29,13 @@ export const TYPES_ORGANISATION = [
   'agence_publique',
   'ong',
   'ambassade',
+  // Pose a l'inscription, en attendant que le bailleur precise.
+  'autre',
 ];
 
 /** Libelles affichables des types d'organisation. */
 export const LIBELLES_TYPE = {
+  autre: 'À préciser',
   fondation_privee: 'Fondation privée',
   entreprise: 'Entreprise',
   agence_publique: 'Agence publique',
@@ -260,6 +263,37 @@ export function verifierJeton(token) {
  * On ne se fie pas au seul jeton : le compte a pu etre suspendu, ou son
  * acces a l'organisation retire, depuis son emission.
  */
+/**
+ * L'organisation d'un compte bailleur, creee si elle manque.
+ *
+ * L'inscription ne demande que l'etat civil : l'organisation est donc
+ * posee ici, avec un nom provisoire, et le bailleur la precise depuis
+ * "Mon organisation". Aucun formulaire ne barre l'entree de l'espace.
+ *
+ * Le meme geste rattrape les comptes plus anciens, crees du temps ou le
+ * formulaire etait obligatoire et parfois laisse de cote.
+ *
+ * @param {string} utilisateurId
+ * @param {{ nom?: string, prenom?: string }} compte
+ */
+export async function garantirOrganisation(utilisateurId, compte = {}, client = null) {
+  const existante = await funderRepository.trouverParUtilisateur(utilisateurId, client);
+  if (existante) return existante;
+
+  const personne = `${compte.prenom ?? ''} ${compte.nom ?? ''}`.trim();
+  await funderRepository.creerAvecContact(
+    {
+      raisonSociale: (personne ? `Organisation de ${personne}` : 'Mon organisation').slice(0, 200),
+      typeOrganisation: 'autre',
+      pays: 'Madagascar',
+    },
+    utilisateurId,
+    null,
+    client
+  );
+  return funderRepository.trouverParUtilisateur(utilisateurId, client);
+}
+
 export async function recupererBailleurAuthentifie(utilisateurId) {
   const compte = await volunteerRepository.trouverParId(utilisateurId);
   if (!compte) {
@@ -269,25 +303,9 @@ export async function recupererBailleurAuthentifie(utilisateurId) {
     throw new ErreurAuthentification('Ce compte n’est plus actif.', 'COMPTE_INACTIF');
   }
 
-  const fiche = await funderRepository.trouverParUtilisateur(utilisateurId);
-
-  // Un bailleur fraichement active n'a pas encore d'organisation : elle
-  // est creee par le formulaire de completion, qui demande la raison
-  // sociale et le type -- deux champs obligatoires que l'inscription ne
-  // recueille pas. On renvoie donc un profil minimal, charge a l'espace
-  // de router vers ce formulaire.
-  if (!fiche) {
-    return {
-      utilisateurId,
-      bailleurId: null,
-      organisationManquante: true,
-      nom: compte.nom,
-      prenom: compte.prenom,
-      email: compte.email,
-      telephone: compte.telephone,
-      profilComplete: Boolean(compte.profilComplete),
-    };
-  }
+  // Creee avec le compte ; garantie ici pour les comptes plus anciens,
+  // qui pouvaient rester sans organisation.
+  const fiche = await garantirOrganisation(utilisateurId, compte);
 
   if (!fiche.contactActif) {
     throw new ErreurAuthentification(
