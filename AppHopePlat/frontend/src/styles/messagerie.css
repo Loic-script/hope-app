@@ -1823,8 +1823,7 @@ a.msg-participants__ligne:hover {
   }
 
   /*
-   * Le fil prend l'ecran entier, par-dessus la barre superieure et
-   * l'arc de navigation. dvh : la barre d'adresse du telephone se replie
+   * Le fil prend l'ecran entier, par-dessus la barre superieure. dvh : la barre d'adresse du telephone se replie
    * en defilant, et 100vh la compterait depliee.
    */
   .msg-fil--plein-ecran {

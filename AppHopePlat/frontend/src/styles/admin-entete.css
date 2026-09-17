@@ -3,9 +3,9 @@
 
    Deux pieces, et une seule balise pour la seconde :
 
-     * le menu, colonne pleine hauteur au bord gauche sur ecran
-       large -- la marque en tete, la deconnexion au pied -- et arc
-       pose en bas de l'ecran sur telephone ;
+     * le menu, colonne pleine hauteur au bord gauche -- la marque
+       en tete, la deconnexion au pied -- fixe sur ecran large, et
+       tiroir ouvert par le bouton ☰ sur telephone ;
      * le bandeau sombre du haut, qui commence au bord du rail et
        ne porte plus que les alertes et le profil.
 
@@ -40,20 +40,6 @@
   --admin-entete-hauteur: 70px;
 
   /*
-   * Mesures de l'arc.
-   *
-   * Il n'existe que sous 560 px, ou le petit ecran redefinit les quatre
-   * valeurs ensemble : largeur et hauteur decoulent du rayon et de
-   * l'ouverture (70deg), et le bouton sert au calcul de l'origine du
-   * cercle. Au-dela, seule --admin-arc-hauteur sert encore, et
-   * uniquement au retrait bas du contenu.
-   */
-  --admin-arc-rayon: 240px;
-  --admin-arc-largeur: 321px;
-  --admin-arc-hauteur: 89px;
-  --admin-arc-bouton: 52px;
-
-  /*
    * Mesures du rail de bureau.
    *
    * Replie, il ne montre que les icones ; deploye, il laisse la place au
@@ -76,16 +62,14 @@
 
 /*
  * Le menu n'occupe aucune colonne dans la coquille : il flotte
- * par-dessus la page, qui garde toute la largeur. Seul un retrait la
- * tient a l'ecart -- en bas pour l'arc, a gauche pour le rail (section
- * 3). L'arc va plus loin : son conteneur est en pointer-events: none,
- * donc rien de ce qui passe dessous ne devient inaccessible.
+ * par-dessus la page, qui garde toute la largeur. Seul un retrait a
+ * gauche la tient a l'ecart du rail (section 3). Sur telephone, le
+ * tiroir ferme ne prend aucune place.
  */
 .admin__contenu {
   flex: 1;
   min-width: 0;
-  /* De quoi degager l'arc, ses fleches et une marge de respiration. */
-  padding: 26px 30px calc(var(--admin-arc-hauteur) + 60px);
+  padding: 26px 30px 40px;
 }
 
 /* ============================================================
@@ -113,7 +97,8 @@
 }
 
 /*
- * Trois colonnes : un vide a gauche, la marque, les actions a droite.
+ * Trois colonnes : le bouton du menu a gauche, la marque, les actions a
+ * droite.
  * Les deux colonnes laterales valent 1fr, donc exactement la meme
  * largeur : la marque tombe au centre reel du bandeau, quelle que soit
  * la place prise par le nom de l'administrateur. Un simple flex l'aurait
@@ -171,8 +156,8 @@
 }
 
 /*
- * Le logo du bandeau ne sert plus que sur telephone, ou le rail cede la
- * place a l'arc. Le bandeau etant clair, c'est la declinaison sur fond
+ * Le logo du bandeau ne sert plus que sur telephone, ou le rail se range
+ * dans son tiroir. Le bandeau etant clair, c'est la declinaison sur fond
  * blanc qui est chargee -- celle sur fond violet y poserait un
  * rectangle sombre.
  *
@@ -387,157 +372,202 @@
 }
 
 /* ============================================================
-   2. Le menu, forme mobile : l'arc
+   2. Le menu : le rail
 
-   C'est la forme de base, celle que la section 3 remplace par le
-   rail au-dela de 560 px.
+   Une colonne pleine hauteur au bord gauche : la marque en tete,
+   les entrees avec leur nom, la deconnexion au pied.
 
-   En bas de l'ecran, centre : les icones suivent un arc de cercle
-   dont le centre est sous la page, si bien que la courbe bombe
-   vers le haut. L'entree active occupe le sommet.
+   C'est le meme menu sur ordinateur et sur telephone. Seuls
+   changent sa place et son comportement : fixe et repliable sur
+   ecran large (section 3), tiroir qui glisse par la gauche sur
+   telephone (section 5).
 
-   Le menu est en position fixe plutot que dans le flux : il ne
-   defile pas avec le contenu, et l'en-tete garde son "sticky".
+   Il est deploye par defaut. Les noms se lisent alors sans avoir
+   a survoler, ce qui est toute la difference entre un menu qu'on
+   parcourt et un menu qu'on devine.
+
+   La largeur courante arrive par --admin-rail-actuel, posee sur
+   .admin : c'est elle qui decale le bandeau et le contenu, sans
+   que la mesure soit ecrite trois fois.
    ============================================================ */
 
 .lateral {
   position: fixed;
-  left: 50%;
-  bottom: 10px;
+  top: 0;
+  left: 0;
+  bottom: 0;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: var(--admin-arc-largeur);
-  padding: 0;
-  transform: translateX(-50%);
-  /* Aucun panneau : les boutons flottent sur le fond de page. Les couleurs
-     ci-dessous sont donc calees sur un fond CLAIR, contrairement a la barre
-     du bas mobile, qui garde son bandeau sombre. */
-  background: none;
-  box-shadow: none;
-  /* Le conteneur n'existe que pour positionner : il ne doit pas voler les
-     clics destines au contenu qui passe dessous. Les boutons, eux, les
-     reprennent. */
-  pointer-events: none;
-  /* Surtout pas d'overflow ici : il rognerait les infobulles, qui
-     debordent volontairement a droite du rail. Sept entrees tiennent
-     largement en hauteur. */
-  overflow: visible;
+  align-items: stretch;
+  gap: 0;
+  width: var(--admin-rail-actuel);
+  padding: 0 11px 10px;
+  /* Un halo violet au sommet, la teinte du bandeau en dessous : le
+     rail descend de l'en-tete plutot que d'etre un bloc rapporte. */
+  background:
+    radial-gradient(120% 30% at 50% 0%, rgba(93, 86, 150, 0.5), transparent 72%),
+    linear-gradient(180deg, var(--entete-fond-haut), var(--entete-fond-bas));
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.06);
+  /* Sur un ecran bas, les entrees defilent. */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /*
- * Le repere de l'arc : les entrees sont posees en absolu par rapport a
- * lui, et son bord gauche sert de centre au cercle.
+ * Le rail est sombre : la barre de la charte, prevue pour les fonds
+ * clairs, y disparaitrait. On redefinit donc ses deux teintes -- les
+ * variables pour les navigateurs WebKit, la propriete standard pour
+ * les autres, celle-ci ne se recalculant pas quand la variable change
+ * plus bas dans l'arbre.
  */
-/*
- * La zone du geste. Elle doit reprendre les evenements que le conteneur
- * abandonne, sinon ni le glissement ni les clics ne l'atteindraient.
- *
- * touch-action: none empeche le navigateur d'interpreter un glissement
- * horizontal comme un defilement de page : sans cela, sur telephone,
- * l'arc ne bougerait pas et la page partirait de cote.
- */
-.lateral__nav {
-  position: relative;
-  width: 100%;
-  height: var(--admin-arc-hauteur);
-  pointer-events: auto;
-  touch-action: none;
-  cursor: grab;
+.lateral {
+  --defilement-pouce: rgba(255, 255, 255, 0.2);
+  --defilement-pouce-survol: rgba(255, 255, 255, 0.36);
 }
 
-.lateral__nav--glisse {
-  cursor: grabbing;
+/* Firefox seulement : declarer "scrollbar-color" hors de cette
+   condition ferait basculer Chrome sur sa barre native pour le seul
+   rail, fleches comprises. */
+@supports (scrollbar-width: thin) and (not selector(::-webkit-scrollbar)) {
+  .lateral {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
 }
 
-/*
- * Les familles n'existent que pour le rail. Sur l'arc, le conteneur
- * disparait de la mise en page -- display: contents -- pour que les
- * entrees restent positionnees par rapport au repere du <nav>, et
- * l'intitule n'a nulle part ou aller.
- */
-/*
- * La tete du rail -- marque et etiquette de l'espace -- n'existe que sur
- * bureau. L'arc n'a pas de haut ou l'accrocher, et le bandeau garde son
- * logo sur telephone. Sans ce retrait, les deux blocs s'empilaient dans
- * l'arc et le faisaient passer de 110 a 984 px de haut.
- */
-.lateral__marque,
-.lateral__espace {
-  display: none;
-}
+/* --- La marque, en tete --- */
 
-.lateral__groupe {
-  display: contents;
-}
-
-.lateral__section {
-  display: none;
-}
-
-/*
- * Pendant le geste, l'arc doit coller au doigt : la transition de
- * placement ferait trainer les boutons derriere lui. Elle revient au
- * relachement, ou elle sert justement a animer le calage sur le cran.
- */
-.lateral__nav--glisse .lateral__lien {
-  transition: none;
-}
-
-/*
- * Placement sur l'arc, en trois temps :
- *   1. rotate() oriente le rayon selon l'angle de l'entree ;
- *   2. translateX() la pousse a la distance du rayon ;
- *   3. la rotation inverse remet l'icone d'aplomb -- sans elle, chaque
- *      icone pencherait de son propre angle.
- *
- * Le -90deg oriente l'arc vers le HAUT : le centre du cercle est sous le
- * bloc, si bien que seule la calotte superieure se voit.
- *
- * Ce centre est a (rayon + demi-bouton) du haut du bloc, et NON a son
- * pied : c'est ce qui fait tomber le bouton du sommet pile en haut du
- * bloc et ceux des extremites pile en bas. Le poser au pied du bloc
- * decalerait tout l'arc vers le haut de la difference -- 174 px avec un
- * rayon de 240.
- */
-.lateral__lien {
-  position: absolute;
-  top: calc(var(--admin-arc-rayon) + 0.5 * var(--admin-arc-bouton));
-  left: 50%;
-  pointer-events: auto;
+/* Le logo occupe la tete a lui seul, centre. La bande s'ajuste au logo
+   plutot que l'inverse : celui-ci porte sa signature, et une hauteur
+   fixe la rognerait. */
+.lateral__marque {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--admin-arc-bouton);
-  height: var(--admin-arc-bouton);
-  margin: calc(-0.5 * var(--admin-arc-bouton)) 0 0 calc(-0.5 * var(--admin-arc-bouton));
-  border: 0;
-  border-radius: 50%;
-  /* Sombre, et non blanc : sur le fond bleu tres pale de l'espace admin,
-     des pastilles blanches se confondaient avec la page. Cette teinte est
-     celle du bandeau du haut, ce qui rattache le menu a l'en-tete. */
-  background-color: var(--entete-fond-bas);
-  box-shadow: 0 4px 14px rgba(36, 43, 62, 0.28);
+  flex: none;
+  padding: 14px 0 10px;
+  margin-bottom: 6px;
+}
+
+.lateral__logo {
+  display: flex;
+  align-items: center;
+  min-width: 0;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.82);
-  transform: rotate(calc(var(--angle) - 90deg)) translateX(var(--admin-arc-rayon))
-    rotate(calc(90deg - var(--angle)));
-  transition:
-    background-color 0.18s ease,
-    color 0.18s ease,
-    opacity 0.24s ease,
-    transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 /*
- * Pastille de non-lus.
+ * Le fichier entier, signature "for a better life" comprise. Elle
+ * commande la taille : a 108 px de large elle tombait sous 5 px et
+ * devenait illisible, ce qui avait conduit a la recadrer. A 168 px --
+ * la largeur que laisse le rail deploye -- elle se lit.
+ */
+.lateral__logo img {
+  display: block;
+  width: 168px;
+  height: auto;
+}
+
+/* L'etiquette de l'espace, sous la marque. */
+.lateral__espace {
+  display: block;
+  flex: none;
+  margin-bottom: 14px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background-color: rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Les entrees --- */
+
+.lateral__nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  cursor: default;
+}
+
+.lateral__groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lateral__groupe + .lateral__groupe {
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/*
+ * L'intitule de famille. Hauteur fixe : elle reserve la place que
+ * l'intitule occupe, si bien que replier le rail -- ou il s'efface --
+ * ne fait pas remonter les entrees.
+ */
+.lateral__section {
+  display: flex;
+  align-items: center;
+  height: 17px;
+  margin: 0 0 4px;
+  /* Aligne sur le bord gauche de l'entourage, et non plus de l'icone. */
+  padding-left: 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.42);
+  transition: opacity 0.2s ease;
+}
+
+/*
+ * L'entree du rail : une ligne, l'icone puis le nom.
  *
- * Sur l'arc, un simple point pose au bord haut-droit de la rondelle : le
- * nombre y est masque par une taille de police nulle, il n'y aurait pas
- * la place de l'ecrire. Le liseré reprend la couleur du bouton et
- * detache le point du fond sombre.
+ * Le calage horizontal n'est pas cosmetique. Rail replie, 11 px de
+ * marge interieure du menu, plus 11 px de retrait de l'entree, plus la
+ * moitie des 30 px du disque, posent son centre a 37 px du bord --
+ * l'axe exact du rail, large de 74. L'icone ne bouge donc pas d'un
+ * pixel au repli : seul le nom s'en va.
+ *
+ * Ces 11 px de retrait etaient 16 avant que l'icone ne prenne son
+ * disque : le calcul doit suivre la largeur de ce qui vient en tete.
+ */
+.lateral__lien {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  height: 46px;
+  margin: 0;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.64);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/*
+ * Pastille de non-lus : un simple point pose au bord haut-droit de
+ * l'entree. Le nombre y est masque par une taille de police nulle --
+ * c'est l'aria-label du lien qui le dit. Le liseré detache le point du
+ * fond sombre.
  */
 .lateral__pastille {
   position: absolute;
@@ -556,216 +586,144 @@
   color: #ffffff;
 }
 
-/* Hors de la fenetre : l'entree reste dans le DOM pour que son
-   deplacement s'anime, mais elle ne se voit ni ne se clique. */
-.lateral__lien--horschamp {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.lateral__lien svg {
-  width: calc(var(--admin-arc-bouton) * 0.43);
-  height: calc(var(--admin-arc-bouton) * 0.43);
-  flex: none;
-}
-
-/* --- Les deux fleches qui font glisser la fenetre --- */
-
-.lateral__fleches {
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.lateral__fleche {
-  display: flex;
+/*
+ * Le disque sur lequel l'icone est posee, repris du jeu
+ * d'illustrations HOPE.
+ *
+ * C'est lui qui porte la couleur de la famille, et le pictogramme qui
+ * s'y detache -- l'inverse du premier essai, ou l'icone etait coloree
+ * sur un disque blanc. A contraste egal, la couleur se voit beaucoup
+ * mieux en aplat de 30 px qu'en silhouette de 17 : c'est elle qui doit
+ * occuper la surface. L'encre du pictogramme est choisie pour chaque
+ * disque, dans la coque -- voir TEINTES.
+ *
+ * Plein, et non un simple contour : c'est lui qui detache l'icone du
+ * rail, dont le fond est sombre. La couleur descend du groupe, pose par
+ * la coque en --teinte-famille. Le repli ne change rien : icones seules,
+ * la couleur devient le seul indice de famille, et compte donc double.
+ */
+.lateral__icone {
+  position: relative;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border: 0;
+  flex: none;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background-color: var(--entete-fond-bas);
-  box-shadow: 0 2px 8px rgba(36, 43, 62, 0.24);
-  color: rgba(255, 255, 255, 0.72);
-  transition: color 0.18s ease, opacity 0.18s ease;
-}
-
-.lateral__fleche svg {
-  width: 15px;
-  height: 15px;
-}
-
-/* Une seule icone de chevron dans le jeu : la premiere est retournee. */
-.lateral__fleche:first-child svg {
-  transform: rotate(180deg);
-}
-
-.lateral__fleche:hover:not(:disabled) {
-  color: #ffffff;
-  background-color: var(--entete-fond-haut);
-}
-
-.lateral__fleche:disabled {
-  opacity: 0.35;
-  cursor: default;
+  background-color: var(--teinte-famille, #ffffff);
+  transition: background-color 0.18s ease;
 }
 
 /*
- * L'entourage de l'icone n'existe que dans le rail.
- *
- * Sur l'arc, chaque entree est deja une pastille ronde : un cercle dans
- * un cercle ne dirait rien de plus. "display: contents" efface donc la
- * balise, et l'icone se pose comme avant, sans repere intermediaire.
+ * L'encre ne change nulle part, page courante et survol compris : elle
+ * est choisie pour le disque qui la porte, et celui-ci ne bouge pas.
  */
-.lateral__icone {
-  display: contents;
+.lateral__lien svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--encre-famille, currentColor);
+  transition: color 0.18s ease;
 }
 
-/* Infobulle AU-DESSUS du bouton : sur un arc horizontal, la sortir sur
-   le cote recouvrirait l'entree voisine. */
-.lateral__libelle {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  z-index: 60;
-  padding: 6px 11px;
-  border-radius: 7px;
-  background-color: #2b3244;
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: #ffffff;
-  box-shadow: 0 8px 20px rgba(27, 33, 48, 0.28);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translate(-50%, 5px);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+/* La deconnexion n'est pas une entree de la marque : pas de disque
+   colore, un simple contour a la couleur du libelle. */
+.lateral__lien--sortie .lateral__icone {
+  border: 2px solid color-mix(in srgb, currentColor 38%, transparent);
+  background-color: transparent;
 }
 
-.lateral__lien:hover .lateral__libelle,
-.lateral__lien:focus-visible .lateral__libelle {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-50%, 0);
-  /* Un court delai evite que les bulles clignotent quand la souris
-     traverse le rail sans s'arreter. */
-  transition-delay: 0.12s;
+.lateral__lien--sortie:hover .lateral__icone,
+.lateral__lien--sortie:focus-visible .lateral__icone {
+  border-color: color-mix(in srgb, currentColor 55%, transparent);
+  background-color: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+/* Le pied du rail n'appartient a aucune famille : la deconnexion garde
+   la couleur de son libelle, qui vire au rouge au survol. */
+.lateral__lien--sortie svg {
+  color: currentColor;
 }
 
 .lateral__lien:hover,
 .lateral__lien:focus-visible {
   color: #ffffff;
-  background-color: var(--entete-fond-haut);
-  box-shadow: 0 6px 18px rgba(36, 43, 62, 0.36);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
-/*
- * L'entree courante change de couleur, et rien d'autre : ni taille, ni
- * position. Un agrandissement la faisait paraitre sortir de l'arc.
- */
+/* Le fond violet de la page courante, et son halo. */
 .lateral__lien--actif,
 .lateral__lien--actif:hover {
   color: #ffffff;
-  background-color: var(--hope-violet);
-  box-shadow: 0 6px 18px rgba(93, 86, 150, 0.55);
+  background: linear-gradient(
+    90deg,
+    var(--hope-violet) 0%,
+    rgba(109, 103, 160, 0.72) 100%
+  );
+  box-shadow: 0 8px 20px rgba(93, 86, 150, 0.42);
+}
+
+/*
+ * Le repere de la page courante : un trait vif colle au bord gauche.
+ * Il compte surtout rail replie, ou le fond violet seul se distingue
+ * mal du survol. La couleur est celle du soleil du logo.
+ */
+.lateral__lien--actif::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -11px;
+  width: 3px;
+  height: 22px;
+  margin-top: -11px;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--hope-jaune);
+}
+
+/* Le nom, en clair dans la ligne. */
+.lateral__libelle {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: inherit;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+/* --- Le pied du rail : se deconnecter --- */
+
+.lateral__pied {
+  margin-top: auto;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.lateral__lien--sortie {
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.lateral__lien--sortie:hover,
+.lateral__lien--sortie:focus-visible {
+  color: #ffb0a3;
+  background-color: rgba(224, 90, 70, 0.16);
 }
 
 /* ============================================================
-   3. Bureau : le rail vertical, a gauche
+   3. Ecran large : le rail fixe, repliable
 
-   L'arc reste la forme mobile. Au-dela de 560 px, le menu est une
-   colonne pleine hauteur collee au bord gauche : la marque en
-   tete, les dix entrees avec leur nom, la deconnexion au pied.
-
-   Il est deploye par defaut. Les noms se lisent alors sans avoir
-   a survoler, ce qui est toute la difference entre un menu qu'on
-   parcourt et un menu qu'on devine. Le bouton de la tete le
-   replie a la largeur des seules icones pour qui manque de place.
-
-   La largeur courante arrive par --admin-rail-actuel, posee sur
-   .admin : c'est elle qui decale le bandeau et le contenu, sans
-   que la mesure soit ecrite trois fois.
+   Au-dela de 560 px, le rail occupe le bord gauche en permanence.
+   La poignee a son bord le replie a la largeur des seules icones
+   pour qui manque de place.
    ============================================================ */
 
 @media (min-width: 561px) {
   .lateral {
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: var(--admin-rail-actuel);
-    align-items: stretch;
-    gap: 0;
-    padding: 0 11px 10px;
-    transform: none;
-    pointer-events: auto;
-    border-radius: 0;
-    /* Un halo violet au sommet, la teinte du bandeau en dessous : le
-       rail descend de l'en-tete plutot que d'etre un bloc rapporte. */
-    background:
-      radial-gradient(120% 30% at 50% 0%, rgba(93, 86, 150, 0.5), transparent 72%),
-      linear-gradient(180deg, var(--entete-fond-haut), var(--entete-fond-bas));
-    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.06);
-    /* Sur un ecran bas, les dix entrees defilent. */
-    overflow-x: hidden;
-    overflow-y: auto;
     transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /*
-   * Le rail est sombre : la barre de la charte, prevue pour les fonds
-   * clairs, y disparaitrait. On redefinit donc ses deux teintes -- les
-   * variables pour les navigateurs WebKit, la propriete standard pour
-   * les autres, celle-ci ne se recalculant pas quand la variable change
-   * plus bas dans l'arbre.
-   */
-  .lateral {
-    --defilement-pouce: rgba(255, 255, 255, 0.2);
-    --defilement-pouce-survol: rgba(255, 255, 255, 0.36);
-  }
-
-  /* Firefox seulement : declarer "scrollbar-color" hors de cette
-     condition ferait basculer Chrome sur sa barre native pour le seul
-     rail, fleches comprises. */
-  @supports (scrollbar-width: thin) and (not selector(::-webkit-scrollbar)) {
-    .lateral {
-      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-    }
-  }
-
-  /* --- La marque, en tete --- */
-
-  /* Le logo occupe la tete a lui seul, centre : la poignee de repli a
-     quitte cette bande pour le bord droit du rail. */
-  /* La bande s'ajuste au logo plutot que l'inverse : celui-ci porte
-     desormais sa signature, et une hauteur fixe la rognerait. */
-  .lateral__marque {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    padding: 14px 0 10px;
-    margin-bottom: 6px;
-  }
-
-  .lateral__logo {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    text-decoration: none;
-  }
-
-  /*
-   * Le fichier entier, signature "for a better life" comprise. Elle
-   * commande la taille : a 108 px de large elle tombait sous 5 px et
-   * devenait illisible, ce qui avait conduit a la recadrer. A 168 px --
-   * la largeur que laisse le rail deploye -- elle se lit.
-   */
-  .lateral__logo img {
-    display: block;
-    width: 168px;
-    height: auto;
   }
 
   /*
@@ -814,271 +772,6 @@
     transform: none;
   }
 
-  /* L'etiquette de l'espace, sous la marque. */
-  .lateral__espace {
-    display: block;
-    flex: none;
-    margin-bottom: 14px;
-    padding: 7px 12px;
-    border-radius: 9px;
-    background-color: rgba(255, 255, 255, 0.06);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    color: rgba(255, 255, 255, 0.6);
-  }
-
-  /* --- Les entrees --- */
-
-  .lateral__nav {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    height: auto;
-    touch-action: auto;
-    cursor: default;
-  }
-
-  .lateral__groupe {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .lateral__groupe + .lateral__groupe {
-    margin-top: 11px;
-    padding-top: 11px;
-    border-top: 1px solid rgba(255, 255, 255, 0.09);
-  }
-
-  /*
-   * L'intitule de famille, precede de son embleme. Hauteur fixe : elle
-   * reserve la place que l'intitule occupe, si bien que replier le rail
-   * -- ou il s'efface -- ne fait pas remonter les entrees.
-   */
-  .lateral__section {
-    display: flex;
-    align-items: center;
-    height: 17px;
-    margin: 0 0 4px;
-    /* Aligne sur le bord gauche de l'entourage, et non plus de l'icone. */
-    padding-left: 12px;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    color: rgba(255, 255, 255, 0.42);
-    transition: opacity 0.2s ease;
-  }
-
-  /*
-   * L'entree du rail : une ligne, l'icone puis le nom.
-   *
-   * Le calage horizontal n'est pas cosmetique. Rail replie, 11 px de
-   * marge interieure du menu, plus 11 px de retrait de l'entree, plus la
-   * moitie des 30 px du disque, posent son centre a 37 px du bord --
-   * l'axe exact du rail, large de 74. L'icone ne bouge donc pas d'un
-   * pixel au repli : seul le nom s'en va.
-   *
-   * Ces 11 px de retrait etaient 16 avant que l'icone ne prenne son
-   * disque : le calcul doit suivre la largeur de ce qui vient en tete.
-   */
-  .lateral__lien {
-    position: relative;
-    top: auto;
-    left: auto;
-    justify-content: flex-start;
-    gap: 12px;
-    width: auto;
-    height: 46px;
-    margin: 0;
-    padding: 0 11px;
-    border-radius: 14px;
-    background: none;
-    box-shadow: none;
-    font-size: 14px;
-    font-weight: 600;
-    opacity: 1;
-    pointer-events: auto;
-    color: rgba(255, 255, 255, 0.64);
-    transform: none;
-    transition:
-      background-color 0.2s ease,
-      color 0.2s ease;
-  }
-
-  /*
-   * L'icone porte la couleur de sa famille.
-   *
-   * Les dix icones etaient du meme blanc grise : elles se distinguaient
-   * par leur dessin seul, et il faut regarder un dessin pour le
-   * reconnaitre. Une couleur par famille se voit sans etre lue, et
-   * double le decoupage que les intitules annoncent.
-   *
-   * La teinte descend du groupe, pose par la coque en
-   * --teinte-famille. Le repli ne change rien : icones seules, la
-   * couleur devient le seul indice de famille, et compte donc double.
-   */
-  /*
-   * Le disque sur lequel l'icone est posee, repris du jeu
-   * d'illustrations HOPE.
-   *
-   * C'est lui qui porte la couleur de la famille, et le pictogramme qui
-   * s'y detache -- l'inverse du premier essai, ou l'icone etait coloree
-   * sur un disque blanc. A contraste egal, la couleur se voit beaucoup
-   * mieux en aplat de 30 px qu'en silhouette de 17 : c'est elle qui doit
-   * occuper la surface. L'encre du pictogramme est choisie pour chaque
-   * disque, dans la coque -- voir TEINTES.
-   *
-   * Plein, et non un simple contour : c'est lui qui detache l'icone du
-   * rail, dont le fond est sombre. Les rayons de soleil du jeu
-   * d'illustrations ne sont pas repris : sur dix entrees empilees, ils
-   * faisaient une haie de hachures.
-   */
-  .lateral__icone {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: var(--teinte-famille, #ffffff);
-    transition: background-color 0.18s ease;
-  }
-
-  .lateral__lien svg {
-    width: 17px;
-    height: 17px;
-    color: var(--encre-famille, currentColor);
-    transition: color 0.18s ease;
-  }
-
-  /*
-   * Page courante et survol : l'icone passe au blanc (regle plus bas),
-   * son cercle doit suivre. Une teinte de famille sur un fond violet
-   * plein s'y eteindrait.
-   */
-  /*
-   * Page courante et survol : le disque est deja blanc et le reste. Il
-   * n'a rien a signaler de plus -- c'est la pastille violette de
-   * l'entree, et le trait jaune a son bord, qui disent ou l'on est.
-   */
-
-  /* Le pied n'appartient a aucune famille : son cercle suit la couleur
-     du libelle, qui vire au rouge au survol. */
-  /* La deconnexion n'est pas une entree de la marque : pas de disque
-     blanc, un simple contour a la couleur du libelle. */
-  .lateral__lien--sortie .lateral__icone {
-    border: 2px solid color-mix(in srgb, currentColor 38%, transparent);
-    background-color: transparent;
-  }
-
-  .lateral__lien--sortie:hover .lateral__icone,
-  .lateral__lien--sortie:focus-visible .lateral__icone {
-    border-color: color-mix(in srgb, currentColor 55%, transparent);
-    background-color: color-mix(in srgb, currentColor 14%, transparent);
-  }
-
-  /*
-   * L'encre ne change nulle part, page courante et survol compris : elle
-   * est choisie pour le disque qui la porte, et celui-ci ne bouge pas.
-   */
-
-  /* Le pied du rail n'appartient a aucune famille : la deconnexion garde
-     la couleur de son libelle, qui vire au rouge au survol. */
-  .lateral__lien--sortie svg {
-    color: currentColor;
-  }
-
-  .lateral__lien:hover,
-  .lateral__lien:focus-visible {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.08);
-    box-shadow: none;
-  }
-
-  /* Le fond violet de la page courante, et son halo. */
-  .lateral__lien--actif,
-  .lateral__lien--actif:hover {
-    color: #ffffff;
-    background: linear-gradient(
-      90deg,
-      var(--hope-violet) 0%,
-      rgba(109, 103, 160, 0.72) 100%
-    );
-    box-shadow: 0 8px 20px rgba(93, 86, 150, 0.42);
-  }
-
-  /*
-   * Le repere de la page courante : un trait vif colle au bord gauche.
-   * Il compte surtout rail replie, ou le fond violet seul se distingue
-   * mal du survol. La couleur est celle du soleil du logo.
-   */
-  .lateral__lien--actif::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -11px;
-    width: 3px;
-    height: 22px;
-    margin-top: -11px;
-    border-radius: 0 3px 3px 0;
-    background-color: var(--hope-jaune);
-  }
-
-  /* Le nom, en clair dans la ligne : ce n'est plus une infobulle. */
-  .lateral__libelle {
-    position: static;
-    padding: 0;
-    border-radius: 0;
-    background: none;
-    box-shadow: none;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    color: inherit;
-    visibility: visible;
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.18s ease;
-  }
-
-  /* La regle de l'infobulle de l'arc ne doit pas recentrer le libelle
-     sur son ancien axe quand on survole une entree. */
-  .lateral__lien:hover .lateral__libelle,
-  .lateral__lien:focus-visible .lateral__libelle {
-    transform: none;
-    transition-delay: 0s;
-  }
-
-  /* --- Le pied du rail : se deconnecter --- */
-
-  .lateral__pied {
-    margin-top: auto;
-    padding-top: 11px;
-    border-top: 1px solid rgba(255, 255, 255, 0.09);
-  }
-
-  .lateral__lien--sortie {
-    width: 100%;
-    font-family: inherit;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.45);
-  }
-
-  .lateral__lien--sortie:hover,
-  .lateral__lien--sortie:focus-visible {
-    color: #ffb0a3;
-    background-color: rgba(224, 90, 70, 0.16);
-  }
-
   /* ---------- Le rail replie ---------- */
 
   /*
@@ -1100,10 +793,6 @@
 
   .lateral--replie .lateral__libelle {
     position: absolute;
-    /* "bottom" vient de l'infobulle de l'arc, qui se pose au-dessus du
-       bouton. Le laisser en place avec "top" ecraserait la bulle entre
-       deux bords contradictoires : le texte tomberait hors du fond. */
-    bottom: auto;
     left: calc(100% + 22px);
     top: 50%;
     z-index: 60;
@@ -1124,12 +813,6 @@
   .lateral--replie .lateral__lien:focus-visible .lateral__libelle {
     opacity: 1;
     visibility: visible;
-    /* Le rail deplie annule la transformation au survol -- le libelle y
-       est du texte en ligne. Cette regle-la est plus specifique que
-       celle du rail replie : sans ce rappel, la bulle perd son
-       recentrage au moment meme ou elle apparait, et tombe d'une
-       demi-hauteur sous l'entree survolee. */
-    transform: translateY(-50%);
     transition-delay: 0.1s;
   }
 
@@ -1140,10 +823,6 @@
 
   /* ---------- Ce que le rail decale ---------- */
 
-  /*
-   * Le bandeau commence au bord du rail, et non sous lui : les deux
-   * fonds sombres se rejoignent alors sans couture.
-   */
   /*
    * Le bandeau commence au bord du rail, et non sous lui : les deux
    * fonds sombres se rejoignent alors sans couture. Sa colonne centrale
@@ -1197,51 +876,143 @@
   }
 }
 
-/*
- * Le meme arc sur mobile, simplement plus petit : rayon reduit, boutons
- * reduits, et les quatre mesures restent coherentes entre elles.
- *
- * Pas de rail ici : il mangerait un cinquieme d'un ecran de telephone,
- * et le pouce n'atteint pas le haut de l'ecran. L'arc reste en bas, la
- * ou la main se trouve deja.
- *
- * Ce bloc suit celui des 720 px : c'est lui qui doit avoir le dernier
- * mot sur le retrait du contenu, qui doit ici degager l'arc et ses
- * fleches plutot que le rail.
- */
+/* ============================================================
+   5. Telephone : le tiroir
+
+   Un rail fixe mangerait un cinquieme de l'ecran. Sous 561 px, le
+   meme menu attend donc hors champ, a gauche. Le bouton ☰ du
+   bandeau le fait glisser par-dessus la page, sur un voile ; il
+   se referme en touchant le voile, avec Echap, avec sa croix, ou
+   des qu'une page est choisie.
+
+   Ferme, il est aussi masque (visibility) : ses liens sortent du
+   parcours clavier et des lecteurs d'ecran. Le masquage attend la
+   fin du glissement, sans quoi le tiroir disparaitrait d'un coup
+   au lieu de repartir.
+
+   Ce bloc suit celui des 720 px : c'est lui qui doit avoir le
+   dernier mot sur le retrait du contenu.
+   ============================================================ */
+
 @media (max-width: 560px) {
-  :root {
-    --admin-arc-rayon: 200px;
-    --admin-arc-largeur: 271px;
-    --admin-arc-hauteur: 78px;
-    --admin-arc-bouton: 42px;
+  .lateral {
+    /* Au-dessus du bandeau (40) et du voile (55). */
+    z-index: 60;
+    /* Toujours une bande de voile a droite, a toucher pour refermer. */
+    width: min(288px, calc(100vw - 48px));
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    box-shadow: none;
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition:
+      transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.28s ease,
+      visibility 0s linear 0.28s;
+  }
+
+  .lateral--ouvert {
+    box-shadow: 12px 0 36px rgba(20, 25, 38, 0.35);
+    visibility: visible;
+    transform: none;
+    transition:
+      transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.28s ease,
+      visibility 0s;
+  }
+
+  .lateral__voile {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background-color: rgba(20, 25, 38, 0.48);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.28s ease,
+      visibility 0s linear 0.28s;
+  }
+
+  .lateral__voile--visible {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 0.28s ease,
+      visibility 0s;
+  }
+
+  /* La croix, dans le coin de la tete : le logo garde le centre. */
+  .lateral__marque {
+    position: relative;
+  }
+
+  .lateral__fermer {
+    position: absolute;
+    top: 10px;
+    right: -4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: rgba(255, 255, 255, 0.72);
+    transition:
+      background-color 0.16s ease,
+      color 0.16s ease;
+  }
+
+  .lateral__fermer:hover,
+  .lateral__fermer:focus-visible {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .lateral__fermer svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Le bouton ☰ tient la colonne de gauche du bandeau, la marque le
+     centre, les alertes et le profil la droite. Il reprend l'allure de
+     la cloche, qui est un lien : le bouton doit perdre son cadre natif. */
+  .entete__menu {
+    grid-column: 1;
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .entete__menu svg {
+    width: 22px;
+    height: 22px;
   }
 
   .admin__contenu {
-    padding: 20px 16px calc(var(--admin-arc-hauteur) + 56px);
-  }
-}
-
-/* Sur un ecran tactile il n'y a pas de survol : l'infobulle de l'arc ne
-   s'afficherait qu'au moment du tap, juste avant de changer de page.
-   Le rail, lui, garde ses noms : ils font partie de sa ligne. */
-@media (hover: none) and (max-width: 560px) {
-  .lateral__libelle {
-    display: none;
+    padding: 20px 16px 40px;
   }
 }
 
 /* ============================================================
-   5. Mouvement reduit
+   6. Mouvement reduit
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   .lateral,
+  .lateral__voile,
   .lateral__lien,
   .lateral__libelle,
   .lateral__section,
   .profil__chevron {
     transition-duration: 0.01ms;
+  }
+
+  /* Le masquage du tiroir n'a plus de glissement a attendre. */
+  .lateral,
+  .lateral__voile {
+    transition-delay: 0s;
   }
 
   .profil__menu {

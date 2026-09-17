@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 // Deux declinaisons officielles : celle sur fond sombre pour le rail,
@@ -11,7 +11,9 @@ import {
   IconeChevronBas,
   IconeChevronDroit,
   IconeCloche,
+  IconeCroix,
   IconeDeconnexion,
+  IconeMenu,
 } from '../components/admin/AdminIcons.jsx';
 import { PleineDeconnexion } from '../components/IconesPleines.jsx';
 import { urlMedia } from '../services/api.js';
@@ -29,8 +31,7 @@ import { initiales } from '../utils/format.js';
  * Ce qui change d'un espace a l'autre passe par les proprietes : les
  * familles du menu, l'intitule de l'espace, la personne connectee, la
  * cloche des notifications et les entrees du menu de profil. Le reste --
- * repli du rail, arc mobile, glissement au doigt, infobulles -- est le
- * meme partout.
+ * repli du rail, tiroir mobile, infobulles -- est le meme partout.
  *
  * Les classes gardent le prefixe "admin" parce que la feuille de style
  * vient de la : les renommer toucherait un millier de lignes sans rien
@@ -38,34 +39,15 @@ import { initiales } from '../utils/format.js';
  */
 
 /**
- * Ouverture de l'arc, en degres.
+ * En dessous de cette largeur, le rail devient un tiroir.
  *
- * Volontairement faible : plus l'arc est ouvert, plus il est haut. A 150
- * il mangeait 133 px de hauteur ; a 70, sur un rayon plus grand, il n'en
- * prend que 89 tout en gardant le meme espacement entre boutons.
+ * Il a d'abord ete un arc de boutons au bas de l'ecran. L'arc ne montrait
+ * que cinq entrees a la fois, sans leur nom, et il fallait le faire
+ * tourner pour trouver les autres. Le tiroir est le menu de telephone que
+ * tout le monde connait : un bouton en haut, le meme menu que sur
+ * ordinateur, toutes les entrees nommees d'un coup d'oeil.
  */
-const OUVERTURE_ARC = 70;
-
-/**
- * Nombre d'entrees affichees a la fois sur l'arc.
- *
- * Impair : il faut une place centrale, et c'est elle qui revient a
- * l'entree active. Sur bureau la barre les montre toutes.
- */
-const FENETRE_ARC = 5;
-
-/** En dessous de cette largeur, le menu prend la forme d'un arc. */
-const LARGEUR_ARC = '(max-width: 560px)';
-
-/** Distance a parcourir, en pixels, pour faire tourner l'arc d'un cran. */
-const PIXELS_PAR_CRAN = 62;
-
-/**
- * Deplacement au-dela duquel un geste est un glissement et non un clic.
- * Sans ce seuil, le moindre tremblement pendant un clic ferait naviguer
- * vers une entree qu'on n'a fait qu'effleurer.
- */
-const SEUIL_GLISSEMENT = 6;
+const LARGEUR_TIROIR = '(max-width: 560px)';
 
 /**
  * Les quatre couleurs de la charte, dans l'ordre ou les familles du menu
@@ -95,20 +77,6 @@ const TEINTES = [
 ];
 
 /**
- * Place d'une entree sur l'arc, relative au centre.
- *
- * Le calcul est circulaire : l'entree qui suit la derniere revient a la
- * premiere. Sans ce rebouclage, centrer la premiere entree laisserait
- * l'arc a moitie vide au-dessus d'elle.
- *
- * @returns {number} 0 au centre, negatif au-dessus, positif en dessous
- */
-function placeSurLArc(rang, centre, total) {
-  const ecart = (((rang - centre) % total) + total) % total;
-  return ecart > total / 2 ? ecart - total : ecart;
-}
-
-/**
  * @param {object} props
  * @param {Array}  props.groupes       familles du menu : { titre, entrees }
  * @param {string} props.espace        intitule affiche sous le logo
@@ -135,15 +103,6 @@ export default function CoqueEspace({
 }) {
   const emplacement = useLocation();
 
-  // La meme liste a plat, et le rang de chaque entree. L'arc mobile
-  // raisonne en rangs continus : il ignore les familles, qui n'auraient
-  // de toute facon la place ni d'un intitule ni d'un separateur.
-  const navigation = useMemo(() => groupes.flatMap((groupe) => groupe.entrees), [groupes]);
-  const rangs = useMemo(
-    () => new Map(navigation.map((entree, rang) => [entree.to, rang])),
-    [navigation]
-  );
-
   const [menuOuvert, setMenuOuvert] = useState(false);
 
   /*
@@ -167,133 +126,88 @@ export default function CoqueEspace({
     });
   }
 
-  /**
-   * Rotation manuelle de l'arc, en crans, par rapport a la position ou
-   * l'entree active occupe le centre. Les fleches la font varier ; elle
-   * repart de zero des qu'on change de page.
-   */
-  const [rotationArc, setRotationArc] = useState(0);
-
-  /**
-   * Glissement en cours, en crans fractionnaires. Zero au repos ; pendant
-   * un geste, l'arc suit le doigt ou le curseur sans a-coups, et se cale
-   * sur le cran le plus proche au relachement.
-   */
-  const [glissement, setGlissement] = useState(0);
-  const [enGlissement, setEnGlissement] = useState(false);
-  const geste = useRef(null);
-
   /*
-   * Forme du menu. On ne peut pas la deduire du seul CSS : c'est elle qui
-   * decide combien d'entrees sont rendues, donc lesquelles sont
-   * focalisables au clavier et annoncees aux lecteurs d'ecran. Une entree
-   * masquee par CSS mais presente dans le DOM serait un piege a tabulation.
+   * Forme du menu : rail ou tiroir. Le CSS seul ne suffit pas -- c'est
+   * elle qui decide du bouton ☰, du fil d'Ariane, et de ce que le clavier
+   * peut atteindre quand le tiroir est ouvert.
    */
-  const [enArc, setEnArc] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(LARGEUR_ARC).matches
+  const [enTiroir, setEnTiroir] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(LARGEUR_TIROIR).matches
   );
+  const [tiroirOuvert, setTiroirOuvert] = useState(false);
 
   useEffect(() => {
-    const requete = window.matchMedia(LARGEUR_ARC);
-    const suivre = (e) => setEnArc(e.matches);
+    const requete = window.matchMedia(LARGEUR_TIROIR);
+    const suivre = (e) => {
+      setEnTiroir(e.matches);
+      // Un tiroir reste ouvert d'un telephone tourne en tablette
+      // bloquerait le defilement d'une page qui n'en a plus.
+      setTiroirOuvert(false);
+    };
     requete.addEventListener('change', suivre);
     return () => requete.removeEventListener('change', suivre);
   }, []);
 
-  // Sur bureau la barre montre tout ; sur mobile l'arc n'accueille que cinq.
-  const fenetre = enArc ? FENETRE_ARC : navigation.length;
-  const rayonFenetre = (fenetre - 1) / 2;
+  // Le tiroir montre toujours le menu entier : le repli, reglage de
+  // bureau, ne s'y applique pas.
+  const replie = railReplie && !enTiroir;
 
-  /**
-   * Retient qu'un glissement vient de s'achever.
-   *
-   * Le navigateur emet le clic APRES le relachement du pointeur : sans
-   * ce drapeau, qui survit a la fin du geste, le filtre du clic
-   * trouverait le geste deja efface et laisserait naviguer.
-   */
-  const vientDeGlisser = useRef(false);
-
+  const idTiroir = useId();
+  const boutonTiroir = useRef(null);
+  const tiroir = useRef(null);
   const profil = useRef(null);
 
-  // Changer de page ferme le menu de profil et remet l'entree active au
-  // sommet : la rotation manuelle en cours est abandonnee.
+  // Changer de page ferme le menu de profil et le tiroir.
   useEffect(() => {
     setMenuOuvert(false);
-    setRotationArc(0);
+    setTiroirOuvert(false);
   }, [emplacement.pathname]);
 
-  /** Rang de l'entree correspondant a la page affichee. */
-  const rangActif = navigation.findIndex(({ to, exact }) =>
-    exact ? emplacement.pathname === to : emplacement.pathname.startsWith(to)
-  );
-
-  /** L'entree active, telle que le fil d'Ariane la nomme. */
-  const entreeActive = rangActif >= 0 ? navigation[rangActif] : null;
-
   /*
-   * Ce qui occupe le sommet de l'arc : l'entree active, decalee de la
-   * rotation manuelle eventuelle.
+   * Tiroir ouvert : le focus y entre, Echap le ferme, et la page dessous
+   * ne defile plus. A la fermeture, le focus revient au bouton ☰ -- sans
+   * quoi il tomberait sur le <body>, et le clavier repartirait du debut.
    */
-  const centreArc =
-    (Math.max(0, rangActif) + rotationArc + navigation.length * 8) % navigation.length;
+  useEffect(() => {
+    if (!tiroirOuvert) return undefined;
 
-  /* ---------- Glissement de l'arc, souris et tactile ----------
-   *
-   * Les evenements Pointer couvrent souris, doigt et stylet avec un seul
-   * jeu de gestionnaires.
-   *
-   * La capture du pointeur n'est demandee qu'une fois le seuil franchi,
-   * et surtout PAS des l'appui : un pointeur capture fait rediriger le
-   * clic vers l'element capteur. Capturer trop tot volait donc son clic
-   * a chaque lien, et le menu devenait impossible a utiliser.
-   */
-  function debuterGeste(evenement) {
-    geste.current = { x: evenement.clientX, aBouge: false };
-    vientDeGlisser.current = false;
-    setEnGlissement(true);
-  }
+    const bouton = boutonTiroir.current;
+    const panneau = tiroir.current;
+    panneau?.querySelector('.lateral__fermer')?.focus();
 
-  function suivreGeste(evenement) {
-    if (!geste.current) return;
+    const avant = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
-    const ecart = evenement.clientX - geste.current.x;
+    const surTouche = (evenement) => {
+      if (evenement.key === 'Escape') setTiroirOuvert(false);
+    };
+    document.addEventListener('keydown', surTouche);
 
-    // Le seuil franchi, c'est un glissement : on capture le pointeur pour
-    // suivre le geste meme si le curseur quitte l'arc, et on renonce au
-    // clic qui suivra.
-    if (!geste.current.aBouge && Math.abs(ecart) > SEUIL_GLISSEMENT) {
-      geste.current.aBouge = true;
-      evenement.currentTarget.setPointerCapture(evenement.pointerId);
-    }
-
-    if (geste.current.aBouge) setGlissement(ecart / PIXELS_PAR_CRAN);
-  }
-
-  function terminerGeste() {
-    if (!geste.current) return;
-
-    // On se cale sur le cran le plus proche. Un glissement vers la droite
-    // fait descendre les entrees le long de l'arc, donc recule le centre.
-    const crans = Math.round(glissement);
-    if (crans !== 0) setRotationArc((r) => r - crans);
-
-    vientDeGlisser.current = geste.current.aBouge;
-    geste.current = null;
-    setGlissement(0);
-    setEnGlissement(false);
-  }
+    return () => {
+      document.removeEventListener('keydown', surTouche);
+      document.body.style.overflow = avant;
+      // Toucher le voile, qui n'est pas focalisable, a deja renvoye le
+      // focus au <body> : il faut le rattraper la aussi.
+      const focus = document.activeElement;
+      if (!focus || focus === document.body || panneau?.contains(focus)) bouton?.focus();
+    };
+  }, [tiroirOuvert]);
 
   /**
-   * Un glissement ne doit pas naviguer : on annule le clic qui suit,
-   * mais seulement si le doigt a reellement parcouru du chemin.
+   * Un lien choisi dans le tiroir le referme, meme s'il mene a la page
+   * deja affichee -- le changement d'adresse ne le ferait pas.
    */
-  function filtrerClic(evenement) {
-    if (!vientDeGlisser.current) return;
-
-    evenement.preventDefault();
-    evenement.stopPropagation();
-    vientDeGlisser.current = false;
+  function surClicTiroir(evenement) {
+    if (evenement.target.closest('a')) setTiroirOuvert(false);
   }
+
+  const navigation = groupes.flatMap((groupe) => groupe.entrees);
+
+  /** L'entree correspondant a la page affichee, telle que le fil d'Ariane la nomme. */
+  const entreeActive =
+    navigation.find(({ to, exact }) =>
+      exact ? emplacement.pathname === to : emplacement.pathname.startsWith(to)
+    ) ?? null;
 
   // Le menu du profil se ferme au clic exterieur et a la touche Echap.
   useEffect(() => {
@@ -316,6 +230,10 @@ export default function CoqueEspace({
 
   const nonLusNotifications = notifications ? (compteurs[notifications.cle] ?? 0) : 0;
 
+  // Tiroir ouvert, le reste de l'ecran sort du parcours clavier : le
+  // focus ne peut pas s'echapper derriere le voile.
+  const derriereLeTiroir = enTiroir && tiroirOuvert;
+
   return (
     /*
       La largeur du rail descend en variable CSS : c'est elle qui decale
@@ -325,47 +243,66 @@ export default function CoqueEspace({
     <div
       className="admin"
       style={{
-        '--admin-rail-actuel': railReplie ? 'var(--admin-rail-large)' : 'var(--admin-rail-ouvert)',
+        '--admin-rail-actuel': replie ? 'var(--admin-rail-large)' : 'var(--admin-rail-ouvert)',
       }}
     >
       {/*
-        Rail vertical a gauche sur ecran large, arc en bas de l'ecran sur
-        mobile : c'est la meme balise, seule sa mise en page change.
+        Le voile sous le tiroir : le toucher referme le menu. Il n'a rien
+        a dire aux lecteurs d'ecran, qui ont le bouton Fermer et Echap.
+      */}
+      {enTiroir && (
+        <div
+          className={`lateral__voile${tiroirOuvert ? ' lateral__voile--visible' : ''}`}
+          onClick={() => setTiroirOuvert(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/*
+        Rail vertical a gauche sur ecran large, tiroir sur telephone :
+        c'est la meme balise, avec le meme contenu.
 
         Le rail montre les noms en clair ; replie, il n'a de place que
         pour les icones et les noms redeviennent des infobulles. Dans les
         deux cas c'est l'aria-label du lien qui porte le nom pour les
         lecteurs d'ecran.
       */}
-      <aside className={`lateral${railReplie ? ' lateral--replie' : ''}`}>
+      <aside
+        ref={tiroir}
+        id={idTiroir}
+        className={
+          'lateral' + (replie ? ' lateral--replie' : '') + (tiroirOuvert ? ' lateral--ouvert' : '')
+        }
+        role={enTiroir ? 'dialog' : undefined}
+        aria-modal={enTiroir ? true : undefined}
+        aria-label={enTiroir ? 'Menu' : undefined}
+        onClick={enTiroir ? surClicTiroir : undefined}
+      >
         {/*
           La marque en tete du rail, et non au centre du bandeau : c'est
           la colonne de gauche qui identifie l'espace, comme sur la
-          plupart des back-offices. Le bandeau garde son logo sur
-          telephone, ou le rail cede la place a l'arc.
+          plupart des back-offices.
         */}
         <div className="lateral__marque">
           <Link className="lateral__logo" to={accueil} aria-label={`HOPE — ${espace}`}>
-            <img src={railReplie ? pictogramme : logoSurFondViolet} alt="HOPE" />
+            <img src={replie ? pictogramme : logoSurFondViolet} alt="HOPE" />
           </Link>
+
+          {enTiroir && (
+            <button
+              type="button"
+              className="lateral__fermer"
+              onClick={() => setTiroirOuvert(false)}
+              aria-label="Fermer le menu"
+            >
+              <IconeCroix />
+            </button>
+          )}
         </div>
 
         <p className="lateral__espace">{espace}</p>
 
-        <nav
-          className={`lateral__nav${enGlissement ? ' lateral__nav--glisse' : ''}`}
-          aria-label="Navigation principale"
-          onPointerDown={enArc ? debuterGeste : undefined}
-          onPointerMove={enArc ? suivreGeste : undefined}
-          onPointerUp={enArc ? terminerGeste : undefined}
-          onPointerCancel={enArc ? terminerGeste : undefined}
-          onClickCapture={enArc ? filtrerClic : undefined}
-        >
-          {/*
-            Le groupe est un simple conteneur : en arc il passe en
-            display: contents et s'efface, si bien que les entrees restent
-            positionnees par rapport au repere du <nav>.
-          */}
+        <nav className="lateral__nav" aria-label="Navigation principale">
           {groupes.map((groupe, rangGroupe) => (
             <div
               className="lateral__groupe"
@@ -382,12 +319,6 @@ export default function CoqueEspace({
               )}
 
               {groupe.entrees.map(({ to, label, Icone, exact, compteur }) => {
-                // Place fractionnaire pendant un geste : l'arc suit le doigt.
-                const place =
-                  placeSurLArc(rangs.get(to), centreArc, navigation.length) + glissement;
-                // La demi-place de marge evite qu'une entree apparaisse
-                // d'un coup au bord de l'arc en cours de glissement.
-                const surLArc = !enArc || Math.abs(place) <= rayonFenetre + 0.5;
                 const nonLus = compteur ? (compteurs[compteur] ?? 0) : 0;
 
                 return (
@@ -399,15 +330,8 @@ export default function CoqueEspace({
                     // annonce le nombre, sans quoi un lecteur d'ecran
                     // lirait "Messages 3" sans dire de quoi il s'agit.
                     aria-label={nonLus > 0 ? `${label} : ${nonLus} non lu(s)` : label}
-                    // Hors de l'arc, l'entree est retiree du parcours
-                    // clavier en plus d'etre invisible : on ne tabule pas
-                    // vers un bouton qu'on ne voit pas.
-                    tabIndex={surLArc ? undefined : -1}
-                    aria-hidden={surLArc ? undefined : true}
-                    style={{ '--angle': `${place * (OUVERTURE_ARC / (fenetre - 1))}deg` }}
                     className={({ isActive }) =>
-                      `lateral__lien${isActive ? ' lateral__lien--actif' : ''}` +
-                      (surLArc ? '' : ' lateral__lien--horschamp')
+                      `lateral__lien${isActive ? ' lateral__lien--actif' : ''}`
                     }
                   >
                     {/*
@@ -435,57 +359,26 @@ export default function CoqueEspace({
         </nav>
 
         {/*
-          Les fleches ne servent qu'a l'arc, qui ne montre que cinq
-          entrees. Le rail les affiche toutes : elles n'ont rien a faire
-          tourner, et les rendre malgre tout mettrait deux boutons morts
-          dans le parcours clavier.
-        */}
-        {enArc && (
-          <div className="lateral__fleches">
-            <button
-              type="button"
-              className="lateral__fleche"
-              onClick={() => setRotationArc((r) => r - 1)}
-              aria-label="Faire tourner le menu vers le haut"
-            >
-              <IconeChevronDroit />
-            </button>
-            <button
-              type="button"
-              className="lateral__fleche"
-              onClick={() => setRotationArc((r) => r + 1)}
-              aria-label="Faire tourner le menu vers le bas"
-            >
-              <IconeChevronDroit />
-            </button>
-          </div>
-        )}
-
-        {/*
           Le pied du rail. Se deconnecter reste aussi dans le menu du
           profil : c'est la meme action a deux endroits, et non un
           doublon a arbitrer -- l'un se trouve avec le compte, l'autre au
           bout du menu, la ou l'oeil descend en fin de session.
-
-          Absent de l'arc, qui n'a pas de pied ou l'accrocher.
         */}
-        {!enArc && (
-          <div className="lateral__pied">
-            <button
-              type="button"
-              className="lateral__lien lateral__lien--sortie"
-              onClick={onDeconnexion}
-              aria-label="Se déconnecter"
-            >
-              <span className="lateral__icone" aria-hidden="true">
-                <PleineDeconnexion />
-              </span>
-              <span className="lateral__libelle" aria-hidden="true">
-                Se déconnecter
-              </span>
-            </button>
-          </div>
-        )}
+        <div className="lateral__pied">
+          <button
+            type="button"
+            className="lateral__lien lateral__lien--sortie"
+            onClick={onDeconnexion}
+            aria-label="Se déconnecter"
+          >
+            <span className="lateral__icone" aria-hidden="true">
+              <PleineDeconnexion />
+            </span>
+            <span className="lateral__libelle" aria-hidden="true">
+              Se déconnecter
+            </span>
+          </button>
+        </div>
       </aside>
 
       {/*
@@ -496,29 +389,49 @@ export default function CoqueEspace({
         Hors du rail dans le DOM : celui-ci masque ce qui deborde de sa
         largeur, et la poignee y serait rognee de moitie. Elle suit donc
         le bord par la meme variable de largeur.
+
+        Le tiroir ne se replie pas : pas de poignee sur telephone.
       */}
-      {!enArc && (
+      {!enTiroir && (
         <button
           type="button"
-          className={`lateral__basculer${railReplie ? ' lateral__basculer--replie' : ''}`}
+          className={`lateral__basculer${replie ? ' lateral__basculer--replie' : ''}`}
           onClick={basculerRail}
-          aria-label={railReplie ? 'Déployer le menu' : 'Replier le menu'}
-          aria-expanded={!railReplie}
+          aria-label={replie ? 'Déployer le menu' : 'Replier le menu'}
+          aria-expanded={!replie}
         >
           <IconeChevronDroit />
         </button>
       )}
 
-      <header className="entete">
-        {/* ---------- Marque au centre, alertes et profil a droite ---------- */}
+      <header className="entete" inert={derriereLeTiroir}>
+        {/* ---------- Menu ou fil d'Ariane, marque, alertes et profil ---------- */}
         <div className="entete__barre">
           {/*
-            Le fil d'Ariane occupe la colonne de gauche, vide jusqu'ici
-            sur ecran large. Il ne remplace pas le menu : il dit ou l'on
-            se trouve, ce que le rail ne fait que par une pastille de
-            couleur. Absent de l'arc, ou la marque tient le centre.
+            Sur telephone, la colonne de gauche porte le bouton du tiroir,
+            a l'endroit ou tout le monde le cherche.
           */}
-          {!enArc && (
+          {enTiroir && (
+            <button
+              type="button"
+              ref={boutonTiroir}
+              className="entete__action entete__menu"
+              onClick={() => setTiroirOuvert(true)}
+              aria-label="Ouvrir le menu"
+              aria-expanded={tiroirOuvert}
+              aria-controls={idTiroir}
+            >
+              <IconeMenu />
+            </button>
+          )}
+
+          {/*
+            Le fil d'Ariane occupe la colonne de gauche sur ecran large. Il
+            ne remplace pas le menu : il dit ou l'on se trouve, ce que le
+            rail ne fait que par une pastille de couleur. Sur telephone, la
+            place revient au bouton du menu.
+          */}
+          {!enTiroir && (
             <nav className="entete__fil" aria-label="Fil d'Ariane">
               <Link to={accueil}>Mon espace</Link>
               {entreeActive && (
@@ -601,7 +514,9 @@ export default function CoqueEspace({
         </div>
       </header>
 
-      <main className="admin__contenu">{children}</main>
+      <main className="admin__contenu" inert={derriereLeTiroir}>
+        {children}
+      </main>
     </div>
   );
 }

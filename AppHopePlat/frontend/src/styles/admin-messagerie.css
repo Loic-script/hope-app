@@ -530,10 +530,10 @@
 }
 
 /*
- * Sous 561 px, la navigation devient un arc de boutons flottants, fixe
- * au bas de la fenetre. La messagerie occupant toute la hauteur utile,
- * son champ de saisie et son bouton Envoyer passaient dessous : on ne
- * pouvait plus repondre. L'arc a donc sa place reservee ici.
+ * Sur telephone, la messagerie occupe toute la hauteur utile : celle de
+ * la fenetre, moins le bandeau, le retrait bas du contenu (40 px) et le
+ * titre de page avec ses marges (60 px). Le grand titre disparait quand
+ * un fil est ouvert (regle ci-dessous).
  *
  * dvh plutot que vh : sur un telephone, la barre d'adresse se replie
  * en defilant, et 100vh vaut la hauteur barre depliee -- le bas de la
@@ -541,20 +541,10 @@
  */
 @media (max-width: 560px) {
   .messagerie {
-    /* --admin-arc-hauteur mesure la bande, pas la courbe : l'arc bombe
-       vers le haut et s'etend d'une trentaine de pixels de plus. On
-       reprend donc le meme degagement que .admin__contenu applique en
-       bas de page -- la hauteur de l'arc plus 56 px.
-       Les 60 px restants sont le titre de page et les marges ; le grand
-       titre disparait quand un fil est ouvert (regle ci-dessous). */
-    height: calc(
-      100vh - var(--admin-entete-hauteur) - var(--admin-arc-hauteur) - 56px - 60px
-    );
-    height: calc(
-      100dvh - var(--admin-entete-hauteur) - var(--admin-arc-hauteur) - 56px - 60px
-    );
+    height: calc(100vh - var(--admin-entete-hauteur) - 40px - 60px);
+    height: calc(100dvh - var(--admin-entete-hauteur) - 40px - 60px);
     /* Pas de plancher : sur un ecran court, mieux vaut un fil ramasse
-       qu'un bouton Envoyer sous les boutons de navigation. */
+       qu'un bouton Envoyer hors de l'ecran. */
     min-height: 0;
   }
 

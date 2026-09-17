@@ -1088,7 +1088,7 @@
 
    L'espace est concu pour le bureau, mais il doit rester consultable
    sur un ecran etroit. Le menu, lui, se debrouille seul : la coque le
-   fait passer en arc sous 560 px.
+   range dans un tiroir sous 561 px.
    ============================================================ */
 
 @media (max-width: 1080px) {

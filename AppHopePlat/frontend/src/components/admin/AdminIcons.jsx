@@ -171,6 +171,8 @@ export const IconePlus = creerIcone('IconePlus', <path d="M12 5.5v13M5.5 12h13" 
 
 export const IconeCroix = creerIcone('IconeCroix', <path d="m6 6 12 12M18 6 6 18" />);
 
+export const IconeMenu = creerIcone('IconeMenu', <path d="M4 7h16M4 12h16M4 17h16" />);
+
 export const IconeChevronDroit = creerIcone('IconeChevronDroit', <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />);
 export const IconeChevronGauche = creerIcone('IconeChevronGauche', <path d="m14.5 5.5-6.5 6.5 6.5 6.5" />);
 
