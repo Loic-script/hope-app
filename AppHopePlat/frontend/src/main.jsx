@@ -25,6 +25,7 @@ import './styles/admin-messagerie.css';
 // (--admin-*), ses boutons et son tableau.
 import './styles/benevole-espace.css';
 import './styles/bailleur.css';
+import './styles/feuille.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

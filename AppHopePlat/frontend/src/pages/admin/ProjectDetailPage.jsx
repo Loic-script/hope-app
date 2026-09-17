@@ -26,6 +26,7 @@ import {
   Progression,
   Tableau,
 } from '../../components/admin/ui.jsx';
+import OngletRapport from '../../components/admin/OngletRapport.jsx';
 import VignettePreuve from '../../components/admin/VignettePreuve.jsx';
 import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { urlMedia } from '../../services/api.js';
@@ -336,6 +337,9 @@ export default function ProjectDetailPage() {
     },
     { cle: 'beneficiaires', label: 'Bénéficiaires', compteur: donnees.beneficiaries.length },
     { cle: 'impact', label: 'Impact', compteur: donnees.impacts.length },
+    // Pas de compteur : les rapports envoyes ne viennent pas de la vue du
+    // projet, et l'onglet ne les charge qu'a son ouverture.
+    { cle: 'rapport', label: 'Rapport' },
   ];
 
   return (
@@ -1288,6 +1292,9 @@ export default function ProjectDetailPage() {
           </Panneau>
         </>
       )}
+
+      {/* ================= Rapport ================= */}
+      {ongletActif === 'rapport' && <OngletRapport projet={projet} />}
 
       {/* ================= Modales ================= */}
       <InvestirModale

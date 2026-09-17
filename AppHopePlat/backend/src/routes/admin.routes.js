@@ -38,6 +38,7 @@ import {
   messagesEspaces,
   notifications,
   projects,
+  projectReports,
   statistics,
   tasks,
   team,
@@ -95,6 +96,12 @@ router.patch('/projects/:id', projects.mettreAJour);
 router.patch('/projects/:id/complete', projects.terminer);
 router.patch('/projects/:id/reopen', projects.rouvrir);
 router.patch('/projects/:id/archive', projects.archiver);
+
+// Onglet Rapport : lu par tous, envoye aux bailleurs par ceux qui ecrivent.
+router.get('/projects/:id/rapport', projectReports.recuperer);
+router.get('/projects/:id/rapport/pdf', projectReports.pdf);
+router.get('/projects/:id/rapport/publies/:documentId', projectReports.contenuPublie);
+router.post('/projects/:id/rapport/publication', exigerEcriture, projectReports.publier);
 // Supprimer un projet efface un dossier : decision d'administrateur.
 router.delete('/projects/:id', exigerRole('ADMIN'), projects.supprimer);
 

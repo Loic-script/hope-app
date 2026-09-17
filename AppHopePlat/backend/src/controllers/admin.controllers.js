@@ -25,6 +25,7 @@ import * as messageService from '../services/message.service.js';
 import * as notificationService from '../services/notification.service.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 import * as projectService from '../services/project.service.js';
+import * as projectReportService from '../services/projectReport.service.js';
 import * as statisticsService from '../services/statistics.service.js';
 import * as teamService from '../services/team.service.js';
 import * as funderAccountService from '../services/funderAccount.service.js';
@@ -74,6 +75,32 @@ export const projects = {
 
   /** Televersement de la photo ou de la video qui illustre un projet. */
   televerserMedia: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
+};
+
+/* ================================================================
+   Onglet Rapport de la fiche projet
+   ================================================================ */
+
+export const projectReports = {
+  recuperer: gerer((req) => projectReportService.recuperer(req.params.id)),
+  contenuPublie: gerer((req) =>
+    projectReportService.contenuPublie(req.params.id, req.params.documentId)
+  ),
+  publier: gerer((req) => projectReportService.publier(req.params.id, req.admin), {
+    statut: 201,
+  }),
+
+  /**
+   * Le PDF du jour, en piece jointe : c'est un telechargement demande,
+   * pas un apercu -- la lecture se fait dans l'onglet.
+   */
+  pdf: gerer(async (req, res) => {
+    const { contenu, nomFichier } = await projectReportService.pdf(req.params.id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(nomFichier)}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(contenu);
+  }),
 };
 
 /* ================================================================
