@@ -40,6 +40,7 @@ import RequireBailleur from './RequireBailleur.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
 import StatisticsPage from '../pages/admin/StatisticsPage.jsx';
 import FundersPage from '../pages/admin/FundersPage.jsx';
+import PublicationsPage from '../pages/admin/PublicationsPage.jsx';
 import VolunteersPage from '../pages/admin/VolunteersPage.jsx';
 import RequireAuth from './RequireAuth.jsx';
 
@@ -172,6 +173,7 @@ export default function AppRoutes() {
           <Route path="/admin/conversations/:id" element={<ConversationsEspace />} />
           <Route path="/admin/volunteers" element={<VolunteersPage />} />
           <Route path="/admin/funders" element={<FundersPage />} />
+          <Route path="/admin/actualites" element={<PublicationsPage />} />
           <Route path="/admin/statistics" element={<StatisticsPage />} />
           <Route path="/admin/settings" element={<SettingsPage />} />
         </Route>

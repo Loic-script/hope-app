@@ -75,6 +75,26 @@ export async function creerNotification(
   return versObjet(resultat.rows[0]);
 }
 
+/**
+ * Depose la meme notification chez chaque contact bailleur qui peut
+ * ouvrir son espace : compte actif, contact actif et autorise a
+ * consulter. Les autres ne verraient jamais la cloche.
+ *
+ * @returns {Promise<number>} le nombre de notifications deposees
+ */
+export async function notifierBailleurs({ type, titre, corps = null, lien = null }, client = null) {
+  const resultat = await query(
+    `INSERT INTO notification_utilisateur (utilisateur_id, type, titre, corps, lien)
+     SELECT DISTINCT u.id, $1, $2, $3, $4
+       FROM bailleur_contact bc
+       JOIN utilisateur u ON u.id = bc.utilisateur_id
+      WHERE bc.actif AND bc.peut_consulter AND u.statut = 'actif'`,
+    [type, titre, corps, lien],
+    client
+  );
+  return resultat.rowCount;
+}
+
 /* ================================================================
    Messages
 

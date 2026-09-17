@@ -20,6 +20,7 @@ import './styles/admin-entete.css';
 import './styles/admin-modules.css';
 import './styles/admin-publications.css';
 import './styles/admin-media.css';
+import './styles/admin-actualites.css';
 import './styles/admin-messagerie.css';
 import './styles/messagerie.css';
 // Apres admin.css : l'espace benevole connecte reprend ses variables

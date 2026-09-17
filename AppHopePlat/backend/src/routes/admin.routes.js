@@ -40,6 +40,7 @@ import {
   notifications,
   projects,
   projectReports,
+  publications,
   statistics,
   tasks,
   team,
@@ -235,6 +236,17 @@ router.patch('/volunteers/:id/status', exigerEcriture, volunteers.changerStatut)
 router.post('/consulter/:id', exigerRole('ADMIN'), consultation.ouvrir);
 
 router.get('/funders', funders.lister);
+
+// --- Actualites de l'espace bailleur ----------------------------------
+// Les ecritures passent par le verrou global pose plus haut. La photo se
+// televerse d'abord ; la publication n'en garde que l'adresse.
+router.get('/publications', publications.lister);
+router.post('/publications', publications.creer);
+router.post('/publications/photo', televerserMedia, publications.televerserPhoto);
+router.patch('/publications/:id', publications.modifier);
+router.delete('/publications/:id', publications.supprimer);
+router.patch('/publications/interets/:id', publications.changerStatutInteret);
+
 router.post('/funders/:id/activate', exigerEcriture, funders.activer);
 router.patch('/funders/:id/status', exigerEcriture, funders.changerStatut);
 

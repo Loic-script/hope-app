@@ -26,6 +26,7 @@ import * as notificationService from '../services/notification.service.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 import * as projectService from '../services/project.service.js';
 import * as projectReportService from '../services/projectReport.service.js';
+import * as publicationService from '../services/publication.service.js';
 import * as statisticsService from '../services/statistics.service.js';
 import * as teamService from '../services/team.service.js';
 import * as funderAccountService from '../services/funderAccount.service.js';
@@ -211,6 +212,21 @@ export const team = {
  * l'acces s'ouvre ici. Activer un bailleur fait aussi passer son
  * organisation de "prospect" a "actif".
  */
+/* ================================================================
+   Actualites de l'espace bailleur
+   ================================================================ */
+
+export const publications = {
+  lister: gerer(() => publicationService.lister()),
+  creer: gerer((req) => publicationService.creer(req.body, req.admin), { statut: 201 }),
+  modifier: gerer((req) => publicationService.modifier(req.params.id, req.body, req.admin)),
+  supprimer: gerer((req) => publicationService.supprimer(req.params.id, req.admin)),
+  televerserPhoto: gerer((req) => publicationService.televerserPhoto(req.file), { statut: 201 }),
+  changerStatutInteret: gerer((req) =>
+    publicationService.changerStatutInteret(req.params.id, req.body)
+  ),
+};
+
 export const funders = {
   lister: gerer((req) => funderAccountService.lister(req.query)),
   activer: gerer((req) => funderAccountService.activer(req.params.id, req.admin)),

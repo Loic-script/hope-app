@@ -476,17 +476,29 @@ function construireCertificat(donnees) {
    Fil d'actualite
    ================================================================ */
 
-/** Le fil, filtre sur la cible "bailleurs". */
+/**
+ * Le fil, filtre sur la cible "bailleurs".
+ *
+ * La barre d'un appel se lit sur son projet : la somme investie face au
+ * budget. Sans projet -- supprime depuis --, l'appel n'a plus de barre.
+ * Les deux sources de la photo restent internes : le bailleur recoit
+ * celle qui s'affiche.
+ */
 export async function fil(bailleurId) {
   const items = await funderRepository.listerPublications(bailleurId);
 
   return {
-    items: items.map((publication) => {
-      const cible = Number(publication.montantCible ?? 0);
-      const collecte = Number(publication.montantCollecte ?? 0);
+    items: items.map(({ photoPropre, photoProjet, ...publication }) => {
+      const budget = depuisBase(publication.budgetProjet);
+      const finance = depuisBase(publication.montantFinance);
+      const avecBarre =
+        publication.type === 'appel_financement' && publication.projetId !== null && budget > 0;
       return {
         ...publication,
-        avancement: cible > 0 ? Math.min(100, Math.round((collecte * 1000) / cible) / 10) : null,
+        avancement: avecBarre ? pourcentage(finance, budget) : null,
+        objectifAtteint: avecBarre && finance >= budget,
+        // Un projet termine ne cherche plus de partenaire, meme sous budget.
+        projetTermine: avecBarre && publication.projetStatut !== 'IN_PROGRESS',
       };
     }),
   };

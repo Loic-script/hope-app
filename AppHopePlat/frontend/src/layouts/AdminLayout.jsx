@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router
 import { IconeParametres } from '../components/admin/AdminIcons.jsx';
 import {
   PleineAccueil,
+  PleineActualites,
   PleineBudget,
   PleineDonateurs,
   PleineDons,
@@ -71,6 +72,9 @@ const GROUPES = [
       { to: '/admin/donors', label: 'Donateurs', Icone: PleineDonateurs },
       { to: '/admin/volunteers', label: 'Bénévoles', Icone: PleineGroupe },
       { to: '/admin/funders', label: 'Bailleurs', Icone: PleineDons },
+      // Ce que les bailleurs lisent dans leur espace, et qui s'y est
+      // manifeste en retour.
+      { to: '/admin/actualites', label: 'Actualités', Icone: PleineActualites },
     ],
   },
   {

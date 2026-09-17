@@ -1,0 +1,316 @@
+/* ============================================================
+   HOPE - Actualites de l'espace bailleur, cote administration
+
+   Une carte par publication : la photo a gauche, le texte et la
+   barre du projet a droite, puis les bailleurs interesses sous les
+   appels a financement.
+   ============================================================ */
+
+.actualites-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.actualites-admin__attente {
+  padding: 24px 0;
+  color: var(--admin-texte-doux);
+}
+
+.actualite-admin {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+}
+
+/* L'appel a financement demande une suite : il se distingue, comme dans
+   l'espace bailleur. */
+.actualite-admin--appel {
+  border-left: 3px solid var(--hope-orange);
+}
+
+.actualite-admin__visuel {
+  position: relative;
+  align-self: start;
+  overflow: hidden;
+  border-radius: 10px;
+  aspect-ratio: 4 / 3;
+  background-color: var(--admin-surface-douce);
+}
+
+.actualite-admin__visuel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Rappel que la photo vient du projet : la changer se fait sur le projet. */
+.actualite-admin__source {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: rgba(36, 43, 62, 0.72);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.actualite-admin__sans-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.actualite-admin__corps {
+  min-width: 0;
+}
+
+.actualite-admin__haut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.actualite-admin__date {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.actualite-admin__titre {
+  margin-top: 8px;
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.actualite-admin__projet {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.actualite-admin__projet a {
+  font-weight: 600;
+  color: var(--hope-violet);
+  text-decoration: none;
+}
+
+.actualite-admin__projet a:hover {
+  text-decoration: underline;
+}
+
+.actualite-admin__projet--manquant {
+  color: var(--etat-ambre);
+}
+
+.actualite-admin__texte {
+  margin-top: 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.actualite-admin__financement {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.actualite-admin__financement strong {
+  color: var(--admin-texte);
+}
+
+.actualite-admin__financement .progression {
+  margin-top: 6px;
+  max-width: 420px;
+}
+
+.actualite-admin__note {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--etat-vert);
+}
+
+.actualite-admin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* --- Les bailleurs interesses --- */
+
+.interets-admin {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.interets-admin__titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.interets-admin__compte {
+  min-width: 21px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--admin-surface-douce);
+  border: 1px solid var(--admin-bordure);
+  font-size: 11.5px;
+  text-align: center;
+  letter-spacing: 0;
+  color: var(--admin-texte-doux);
+}
+
+.interets-admin__titre .badge {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.interets-admin__vide {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.interets-admin__liste {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interet-admin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f4f9;
+}
+
+.interet-admin:last-child {
+  border-bottom: 0;
+}
+
+.interet-admin__qui {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.interet-admin__qui strong {
+  color: var(--admin-texte);
+}
+
+.interet-admin__qui a {
+  color: var(--hope-violet);
+  overflow-wrap: anywhere;
+}
+
+.interet-admin__date {
+  color: var(--admin-texte-faible);
+}
+
+.interet-admin__message {
+  grid-column: 1;
+  margin: 0;
+  padding: 7px 11px;
+  border-left: 3px solid var(--admin-bordure-forte);
+  border-radius: 0 8px 8px 0;
+  background-color: var(--admin-surface-douce);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.interet-admin__suivi {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.interet-admin__statut select {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--admin-texte);
+}
+
+/* --- Formulaire --- */
+
+.actualite-form__types {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.photo-actualite__legende {
+  flex-wrap: wrap;
+}
+
+.photo-actualite__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.photo-actualite__actions label.btn {
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .actualite-admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actualite-admin__visuel {
+    aspect-ratio: 16 / 9;
+  }
+
+  .interet-admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .interet-admin__suivi {
+    grid-column: 1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
+}

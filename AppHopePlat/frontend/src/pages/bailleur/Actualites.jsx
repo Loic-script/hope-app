@@ -95,11 +95,19 @@ function Carte({ publication, onInteret }) {
       )}
       {publication.corps && <p className="actu__corps">{publication.corps}</p>}
 
-      {appel && (
+      {/*
+        La barre suit le projet lie : la somme investie -- dons et fonds
+        HOPE -- face a son budget, le meme chiffre que la page Projets.
+        Un appel dont le projet a ete supprime n'a plus de barre.
+      */}
+      {appel && publication.avancement !== null && (
         <div className="collecte">
           <div className="collecte__chiffres">
-            <strong>{fmt.montant(publication.montantCollecte)}</strong>
-            <span>collectés sur {fmt.montant(publication.montantCible)}</span>
+            <strong>{fmt.montant(publication.montantFinance, publication.devise ?? 'MGA')}</strong>
+            <span>
+              de dons et de fonds HOPE, sur un budget de{' '}
+              {fmt.montant(publication.budgetProjet, publication.devise ?? 'MGA')}
+            </span>
           </div>
           <div className="collecte__rail">
             <span
@@ -108,13 +116,17 @@ function Carte({ publication, onInteret }) {
             />
           </div>
           <p className="collecte__reste">
-            {fmt.montant(
-              Math.max(
-                0,
-                Number(publication.montantCible ?? 0) - Number(publication.montantCollecte ?? 0)
-              )
-            )}{' '}
-            restent à financer
+            {publication.projetTermine
+              ? 'Ce projet est terminé.'
+              : publication.objectifAtteint
+              ? 'Le budget de ce projet est atteint.'
+              : `${fmt.montant(
+                  Math.max(
+                    0,
+                    Number(publication.budgetProjet ?? 0) - Number(publication.montantFinance ?? 0)
+                  ),
+                  publication.devise ?? 'MGA'
+                )} restent à financer`}
           </p>
         </div>
       )}
@@ -122,7 +134,11 @@ function Carte({ publication, onInteret }) {
       {refus && <p className="alerte-bailleur">{refus}</p>}
       {confirmation && <p className="succes-bailleur">{confirmation}</p>}
 
-      {appel && !confirmation && (
+      {/* Un budget atteint ou un projet termine ne cherche plus de
+          partenaire : pas de bouton. Un interet deja exprime reste affiche. */}
+      {appel &&
+        !confirmation &&
+        (publication.interetManifeste || !(publication.objectifAtteint || publication.projetTermine)) && (
         publication.interetManifeste ? (
           <p className="actu__deja">
             Votre intérêt est enregistré. L’équipe HOPE vous contacte pour formaliser le

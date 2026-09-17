@@ -10,6 +10,7 @@
  */
 import { query, transaction } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
+import { COLONNES_PUBLICATION, PROJET_ET_FINANCEMENT } from './publication.repository.js';
 
 /* ================================================================
    Organisation et contacts
@@ -638,28 +639,19 @@ export async function prochainNumeroCertificat(client = null) {
    Fil d'actualite
    ================================================================ */
 
-/** Les publications diffusees aux bailleurs. */
+/**
+ * Les publications diffusees aux bailleurs.
+ *
+ * La photo et le financement viennent du projet lie, comme dans
+ * l'administration : voir publication.repository.
+ */
 export async function listerPublications(bailleurId, client = null) {
   const resultat = await query(
-    `SELECT pu.id, pu.type, pu.titre, pu.corps, pu.media_url,
-            pu.montant_cible, pu.publie_le,
-            p.id   AS projet_id,
-            p.name AS projet_nom,
-            -- Ce qui est deja collecte sur le projet vise, toutes
-            -- sources confondues : dons affectes et affectations.
-            COALESCE(collecte.total, 0) AS montant_collecte,
-            (mi.id IS NOT NULL)         AS interet_manifeste,
-            mi.statut                   AS interet_statut
+    `SELECT ${COLONNES_PUBLICATION},
+            (mi.id IS NOT NULL) AS interet_manifeste,
+            mi.statut           AS interet_statut
        FROM publication pu
-       LEFT JOIN projects p ON p.id = pu.projet_id
-       LEFT JOIN LATERAL (
-         SELECT COALESCE(
-                  (SELECT SUM(amount) FROM donations
-                    WHERE project_id = pu.projet_id AND status = 'RECEIVED'), 0)
-              + COALESCE(
-                  (SELECT SUM(montant) FROM affectation
-                    WHERE projet_id = pu.projet_id), 0) AS total
-       ) collecte ON TRUE
+       ${PROJET_ET_FINANCEMENT}
        LEFT JOIN manifestation_interet mi
               ON mi.publication_id = pu.id AND mi.bailleur_id = $1
       WHERE 'bailleurs' = ANY(pu.cibles)

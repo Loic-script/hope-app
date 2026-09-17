@@ -1067,22 +1067,28 @@ CREATE TABLE IF NOT EXISTS publication (
   titre         VARCHAR(200) NOT NULL,
   corps         TEXT,
   projet_id     INTEGER      REFERENCES projects(id) ON DELETE SET NULL,
+  -- La photo propre a la publication. NULL : elle reprend celle du
+  -- projet lie, lue a l'affichage -- changer la photo du projet change
+  -- donc celle de ses actualites.
   media_url     TEXT,
   -- Cibles de diffusion : {'bailleurs'}, {'donateurs','bailleurs'}...
   cibles        TEXT[]       NOT NULL DEFAULT ARRAY['bailleurs']::TEXT[],
-  -- Pour un appel a financement : la barre de collecte.
+  -- Ancienne cible saisie a la main. La barre d'un appel se lit
+  -- desormais sur le projet lie : budget et somme investie.
   montant_cible NUMERIC(14,2),
   publie_le     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   publie_par    INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
 
   CONSTRAINT publication_type_valide
-    CHECK (type IN ('actualite', 'appel_financement')),
-  -- Un appel a financement sans cible chiffree n'a pas de barre.
-  CONSTRAINT publication_appel_chiffre
-    CHECK (type <> 'appel_financement' OR montant_cible IS NOT NULL)
+    CHECK (type IN ('actualite', 'appel_financement'))
 );
 
 CREATE INDEX IF NOT EXISTS publication_date_idx ON publication (publie_le DESC);
+
+-- Un appel n'a plus de montant saisi : la contrainte qui l'exigeait tombe.
+-- Le projet lie, lui, est verifie par le service -- une contrainte le
+-- rendrait impossible a supprimer, la cle passant a NULL.
+ALTER TABLE publication DROP CONSTRAINT IF EXISTS publication_appel_chiffre;
 
 CREATE TABLE IF NOT EXISTS manifestation_interet (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1100,6 +1106,10 @@ CREATE TABLE IF NOT EXISTS manifestation_interet (
   -- Une seule manifestation vivante par bailleur et par publication.
   UNIQUE (bailleur_id, publication_id)
 );
+
+-- L'administration lit les interets publication par publication.
+CREATE INDEX IF NOT EXISTS manifestation_publication_idx
+  ON manifestation_interet (publication_id);
 
 -- ------------------------------------------------------------
 -- 20. Declencheurs updated_at
