@@ -11,8 +11,8 @@ import { initiales } from './outils.js';
  *
  * @param {{ nom: string, photoUrl?: string|null, src?: string|null,
  *           equipe?: boolean, taille?: 'petite'|'moyenne'|'grande' }} props
- *        src : une adresse deja complete (photo de groupe signee) ;
- *        photoUrl : un chemin /media, complete ici.
+ *        src : l'adresse signee d'une photo de groupe ;
+ *        photoUrl : un chemin /media. Les deux sont completes ici.
  */
 export default function Avatar({ nom, photoUrl = null, src = null, equipe = false, taille = 'moyenne' }) {
   const classe = `msg-avatar msg-avatar--${taille}`;
@@ -25,7 +25,7 @@ export default function Avatar({ nom, photoUrl = null, src = null, equipe = fals
     );
   }
 
-  const adresse = src ?? (photoUrl ? urlMedia(photoUrl) : null);
+  const adresse = src ? urlMedia(src) : photoUrl ? urlMedia(photoUrl) : null;
   return (
     <span className={classe} aria-hidden="true">
       {adresse ? <img src={adresse} alt="" /> : initiales(nom)}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 
 import Fil from '../../components/messagerie/Fil.jsx';
+import { BoutonCreerGroupe } from '../../components/messagerie/Groupes.jsx';
 import ListeFils from '../../components/messagerie/ListeFils.jsx';
 import { espaceDe } from '../../components/messagerie/profil.js';
 import { useEcranEtroit } from '../../components/messagerie/useEcranEtroit.js';
@@ -40,6 +41,7 @@ export default function Conversations() {
   const [fils, setFils] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
+  const [annonce, setAnnonce] = useState('');
 
   // Les anciennes adresses /messages/:id menent au meme fil, sous ?t=.
   useEffect(() => {
@@ -94,6 +96,17 @@ export default function Conversations() {
     }
   }
 
+  /** Le groupe quitte : retour a la liste, avec confirmation. */
+  const surQuitte = useCallback(
+    (nom) => {
+      setParametres({});
+      charger();
+      setAnnonce(`Vous avez quitté le groupe « ${nom} ».`);
+      setTimeout(() => setAnnonce(''), 4000);
+    },
+    [setParametres, charger]
+  );
+
   const pleinEcran = etroit && affiche !== null;
 
   return (
@@ -120,6 +133,16 @@ export default function Conversations() {
           onOuvrir={ouvrir}
           onNouvelle={nouvelle}
           chargerJoignables={chargerJoignables}
+          actions={
+            <BoutonCreerGroupe
+              api={api}
+              racine={racine}
+              onCree={async (id) => {
+                await charger();
+                ouvrir(id);
+              }}
+            />
+          }
         />
 
         {affiche !== null ? (
@@ -134,6 +157,7 @@ export default function Conversations() {
             onActivite={charger}
             onOuvrirFil={ouvrir}
             espace={espaceDe(cheminMessages)}
+            onQuitte={surQuitte}
           />
         ) : (
           !etroit && (
@@ -145,6 +169,10 @@ export default function Conversations() {
           )
         )}
       </div>
+
+      <p className="msg-annonce" role="status" aria-live="polite">
+        {annonce}
+      </p>
     </div>
   );
 }

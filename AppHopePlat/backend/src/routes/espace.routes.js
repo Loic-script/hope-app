@@ -8,7 +8,7 @@
 import { Router } from 'express';
 
 import { conversations } from '../controllers/conversation.controllers.js';
-import { televerserMessage } from '../middleware/upload.middleware.js';
+import { televerserGroupe, televerserMessage } from '../middleware/upload.middleware.js';
 import * as espace from '../controllers/espace.controllers.js';
 import { authenticateEspace } from '../middleware/espaceAuth.middleware.js';
 
@@ -34,10 +34,13 @@ router.patch('/notifications/:id/lue', espace.marquerLue);
 router.get('/conversations/joignables', conversations.joignables);
 router.get('/conversations/non-lus', conversations.nonLus);
 router.get('/conversations', conversations.lister);
+router.post('/conversations/groupes', televerserGroupe, conversations.creerGroupe);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
 router.get('/conversations/:id/fichiers', conversations.fichiers);
 router.post('/conversations/:id/lu', conversations.marquerLu);
+router.post('/conversations/:id/participants', conversations.ajouterAuGroupe);
+router.post('/conversations/:id/quitter', conversations.quitterGroupe);
 router.post('/conversations/:id/messages', televerserMessage, conversations.envoyer);
 router.patch('/conversations/:id/messages/:messageId', conversations.modifier);
 router.delete('/conversations/:id/messages/:messageId', conversations.supprimer);

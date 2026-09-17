@@ -7,6 +7,7 @@ import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/messagerie.service.js';
 import ActionsFil, { useActionsFil } from './ActionsFil.jsx';
 import Avatar from './Avatar.jsx';
+import { ActionsGroupe } from './Groupes.jsx';
 import MenuMessage from './MenuMessage.jsx';
 import PanneauInfo from './PanneauInfo.jsx';
 import PiecesMessage from './PiecesMessage.jsx';
@@ -29,9 +30,10 @@ import TexteMessage from './TexteMessage.jsx';
  *   onActivite: () => void,
  *   onOuvrirFil: (id: number) => void,
  *   espace: 'admin'|'benevole'|'bailleur',
+ *   onQuitte: (nom: string) => void,
  * }} props
  */
-export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite, onOuvrirFil, espace }) {
+export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite, onOuvrirFil, espace, onQuitte }) {
   const [donnees, setDonnees] = useState(null);
   // Le panneau d'information : ferme a chaque changement de fil, puisque
   // le fil est remonte (sa cle est son identifiant).
@@ -260,6 +262,20 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
           pleinEcran={pleinEcran}
           onFermer={() => setPanneau(false)}
           onAllerAuMessage={allerAuMessage}
+          actionsGroupe={
+            groupe && (
+              <ActionsGroupe
+                api={api}
+                racine={racine}
+                conversation={conversation}
+                onAjoutes={() => {
+                  charger();
+                  onActivite?.();
+                }}
+                onQuitte={onQuitte}
+              />
+            )
+          }
         />
       )}
     </section>

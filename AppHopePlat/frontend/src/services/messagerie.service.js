@@ -96,3 +96,35 @@ export async function fichiers(api, racine, id) {
   const { data } = await api.get(`${racine}/conversations/${id}/fichiers`);
   return data.items ?? [];
 }
+
+/**
+ * POST .../conversations/groupes
+ *
+ * Toujours en multipart : la photo, facultative, voyage avec le nom et la
+ * liste des participants.
+ *
+ * @returns {Promise<number>} l'identifiant du groupe
+ */
+export async function creerGroupe(api, racine, { nom, participants, photo = null }) {
+  const formulaire = new FormData();
+  formulaire.append('nom', nom);
+  formulaire.append('participants', JSON.stringify(participants));
+  if (photo) formulaire.append('photo', photo);
+  const { data } = await api.post(`${racine}/conversations/groupes`, formulaire, {
+    headers: { 'Content-Type': undefined },
+    timeout: 60000,
+  });
+  return data.id;
+}
+
+/** POST .../conversations/:id/participants */
+export async function ajouterAuGroupe(api, racine, id, participants) {
+  const { data } = await api.post(`${racine}/conversations/${id}/participants`, { participants });
+  return data.ajoutes ?? 0;
+}
+
+/** POST .../conversations/:id/quitter */
+export async function quitterGroupe(api, racine, id) {
+  const { data } = await api.post(`${racine}/conversations/${id}/quitter`);
+  return data;
+}

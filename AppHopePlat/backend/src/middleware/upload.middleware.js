@@ -405,3 +405,35 @@ export function televerserMessage(req, res, suite) {
     suite(erreur);
   });
 }
+
+/*
+ * La creation d'un groupe : un formulaire avec son nom, ses participants
+ * et, au plus, une photo. En memoire, pour la meme raison que les messages :
+ * rien ne s'ecrit avant que tout soit verifie.
+ */
+const televerseurGroupe = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024, files: 1, fieldSize: 64 * 1024, fields: 10 },
+});
+
+/** Accepte "nom", "participants" et une "photo" facultative. */
+export function televerserGroupe(req, res, suite) {
+  if (!req.is('multipart/form-data')) {
+    suite();
+    return;
+  }
+  televerseurGroupe.single('photo')(req, res, (erreur) => {
+    if (!erreur) {
+      suite();
+      return;
+    }
+    if (erreur instanceof multer.MulterError) {
+      const message = erreur.code === 'LIMIT_FILE_SIZE'
+        ? 'La photo dépasse 8 Mo.'
+        : `Envoi refusé : ${erreur.message}`;
+      suite(new ErreurValidation(message, { photo: erreur.code }));
+      return;
+    }
+    suite(erreur);
+  });
+}

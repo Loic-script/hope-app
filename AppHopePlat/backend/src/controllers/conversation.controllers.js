@@ -68,6 +68,15 @@ export const conversations = {
     message: await conversationService.supprimer(acteurDe(req), req.params.id, req.params.messageId),
   })),
 
+  creerGroupe: gerer(
+    (req) => conversationService.creerGroupe(acteurDe(req), req.body ?? {}, req.file ?? null),
+    { statut: 201 }
+  ),
+
+  ajouterAuGroupe: gerer((req) => conversationService.ajouterAuGroupe(acteurDe(req), req.params.id, req.body ?? {})),
+
+  quitterGroupe: gerer((req) => conversationService.quitterGroupe(acteurDe(req), req.params.id)),
+
   transferer: gerer(
     (req) => conversationService.transferer(acteurDe(req), req.params.id, req.params.messageId, req.body ?? {}),
     { statut: 201 }
@@ -85,6 +94,32 @@ export const conversations = {
  * sans etre telechargee en entier.
  */
 export const fichiers = {
+  groupe: gerer(async (req, res) => {
+    const acteur = pieceJointe.verifierSignature('groupe', req.params.id, req.query);
+    if (!acteur) throw new ErreurIntrouvable('La photo', req.params.id);
+
+    const fichier = await conversationService.photoDeGroupe(acteur, req.params.id);
+    const cheminAbsolu = pieceJointe.chemin(fichier);
+    if (!fs.existsSync(cheminAbsolu)) throw new ErreurIntrouvable('La photo', req.params.id);
+
+    await new Promise((resolve, reject) => {
+      res.sendFile(
+        cheminAbsolu,
+        {
+          lastModified: false,
+          headers: {
+            'Content-Type': 'image/jpeg',
+            'Content-Disposition': 'inline; filename="groupe.jpg"',
+            'X-Content-Type-Options': 'nosniff',
+            'Cache-Control': 'private, max-age=3600',
+            'Referrer-Policy': 'no-referrer',
+          },
+        },
+        (erreur) => (erreur && !res.headersSent ? reject(erreur) : resolve())
+      );
+    });
+  }),
+
   piece: gerer(async (req, res) => {
     const acteur = pieceJointe.verifierSignature('piece', req.params.id, req.query);
     if (!acteur) throw new ErreurIntrouvable('Le fichier', req.params.id);

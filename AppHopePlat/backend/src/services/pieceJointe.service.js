@@ -187,6 +187,35 @@ export async function preparer(fichiers) {
   return prets;
 }
 
+/** Cote de la photo d'un groupe : un carre, recadre au centre. */
+const COTE_PHOTO_GROUPE = 400;
+
+/**
+ * Prepare la photo d'un groupe : une image qui se decode, redressee,
+ * recadree en carre et recompressee -- sans metadonnees.
+ *
+ * @returns {Promise<{contenu: Buffer, extension: string}>}
+ */
+export async function preparerPhotoGroupe(fichier) {
+  const nom = nomPropre(fichier.originalname, 'photo');
+  if (fichier.buffer.length > PLAFONDS.image) {
+    throw new ErreurValidation(`« ${nom} » dépasse ${mo(PLAFONDS.image)} Mo, le maximum pour une photo.`, {
+      photo: 'Fichier trop volumineux',
+    });
+  }
+  try {
+    const contenu = await sharp(fichier.buffer, { failOn: 'error' })
+      .rotate()
+      .resize({ width: COTE_PHOTO_GROUPE, height: COTE_PHOTO_GROUPE, fit: 'cover', position: 'attention' })
+      .flatten({ background: '#ffffff' })
+      .jpeg({ quality: QUALITE_JPEG, mozjpeg: true })
+      .toBuffer();
+    return { contenu, extension: '.jpg' };
+  } catch {
+    throw new ErreurValidation(`« ${nom} » n’est pas une photo lisible.`, { photo: 'Format non accepté' });
+  }
+}
+
 /* ================================================================
    Disque
    ================================================================ */

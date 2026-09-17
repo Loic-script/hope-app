@@ -1644,6 +1644,106 @@ a.msg-participants__ligne:hover {
 }
 
 /* ============================================================
+   Groupes
+   ============================================================ */
+
+.msg-liste__groupe {
+  flex: none;
+  white-space: nowrap;
+}
+
+.msg-groupe__entete {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.msg-groupe__photo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 2px dashed var(--admin-bordure-forte);
+  border-radius: 50%;
+  background-color: var(--admin-surface-douce);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--hope-violet);
+  cursor: pointer;
+}
+
+.msg-groupe__photo:hover {
+  border-color: var(--hope-violet);
+}
+
+.msg-groupe__photo:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.msg-groupe__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.msg-groupe__nom {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.msg-groupe__libelle {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.msg-groupe__nom input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--admin-texte);
+}
+
+.msg-groupe__nom input:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hope-violet) 18%, transparent);
+}
+
+.msg-groupe__aide {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.msg-panneau__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.msg-panneau__actions .btn {
+  justify-content: center;
+  width: 100%;
+}
+
+.msg-panneau__quitter {
+  color: var(--hope-erreur);
+}
+
+/* ============================================================
    Notification "N messages non lus"
    ============================================================ */
 
@@ -1767,6 +1867,11 @@ a.msg-participants__ligne:hover {
 
   .msg-bulle {
     max-width: 86%;
+  }
+
+  /* Sur un ecran etroit, le bouton se resume a son geste. */
+  .msg-liste__outils {
+    flex-wrap: wrap;
   }
 
   .msg-emojis__grille {

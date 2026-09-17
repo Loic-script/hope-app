@@ -146,6 +146,8 @@ export function presenter(fil, acteur) {
       nom: fil.nom,
       sousTitre: `${participants.length} participant${participants.length > 1 ? 's' : ''}`,
       photoUrl: null,
+      // Une photo privee, comme les pieces : son adresse est signee.
+      photoSrc: fil.photoFichier ? pieceJointe.adresseSignee('groupe', fil.id, acteur) : null,
       interlocuteur: null,
     };
   }
@@ -753,4 +755,173 @@ export async function transferer(acteur, filId, messageId, corps = {}) {
     await pieceJointe.effacer(copiesEcrites);
     throw erreur;
   }
+}
+
+/* ================================================================
+   Groupes
+   ================================================================ */
+
+/** Longueur maximale du nom d'un groupe. */
+export const NOM_GROUPE_MAX = 80;
+
+/** Nombre de participants d'un groupe, createur compris. */
+export const MAX_PARTICIPANTS = 50;
+
+/**
+ * Lit une liste de participants venue du client.
+ *
+ * Elle arrive en JSON dans un formulaire multipart -- la photo voyage avec
+ * elle --, ou directement en tableau. L'equipe en bloc n'est pas une
+ * personne : elle ne se met pas dans un groupe.
+ */
+function participantsValides(valeur) {
+  let liste = valeur;
+  if (typeof valeur === 'string') {
+    try {
+      liste = JSON.parse(valeur);
+    } catch {
+      liste = null;
+    }
+  }
+  if (!Array.isArray(liste)) {
+    throw new ErreurValidation('Participants invalides.', { participants: 'Liste attendue' });
+  }
+
+  const vus = new Set();
+  const acteurs = [];
+  for (const brut of liste) {
+    const acteur = acteurValide(brut, 'participants');
+    if (acteur.type === 'equipe') {
+      throw new ErreurValidation('Ajoutez des personnes, pas l’équipe en bloc.', { participants: 'Valeur non acceptée' });
+    }
+    const cle = `${acteur.type}:${acteur.id}`;
+    if (!vus.has(cle)) {
+      vus.add(cle);
+      acteurs.push(acteur);
+    }
+  }
+  return acteurs;
+}
+
+/** Chaque personne doit etre joignable par l'acteur. */
+async function verifierTousJoignables(acteur, personnes) {
+  const joignables = await conversationRepository.joignables(acteur);
+  const cles = new Set(joignables.map((p) => `${p.type}:${p.id}`));
+  for (const personne of personnes) {
+    if (!cles.has(`${personne.type}:${personne.id}`)) throw new ErreurIntrouvable('La personne', personne.id);
+  }
+}
+
+/**
+ * Cree un groupe.
+ *
+ * Un nom (80 caracteres au plus), une photo facultative, au moins une autre
+ * personne et 50 participants au plus, createur compris. Le createur y
+ * arrive a jour : son propre groupe n'a rien de non lu pour lui.
+ *
+ * @returns {Promise<{id: number}>}
+ */
+export async function creerGroupe(acteur, corps = {}, photo = null) {
+  const nom = String(corps.nom ?? '').replace(/\s+/g, ' ').trim();
+  if (nom === '') throw new ErreurValidation('Donnez un nom au groupe.', { nom: 'Champ obligatoire' });
+  if (nom.length > NOM_GROUPE_MAX) {
+    throw new ErreurValidation(`Le nom fait ${NOM_GROUPE_MAX} caractères au plus.`, { nom: 'Trop long' });
+  }
+
+  const autres = participantsValides(corps.participants).filter((p) => !memeActeur(p, acteur));
+  if (autres.length === 0) {
+    throw new ErreurValidation('Ajoutez au moins une autre personne.', { participants: 'Au moins une' });
+  }
+  if (autres.length + 1 > MAX_PARTICIPANTS) {
+    throw new ErreurValidation(`Un groupe réunit ${MAX_PARTICIPANTS} participants au plus.`, { participants: 'Trop de participants' });
+  }
+  await verifierTousJoignables(acteur, autres);
+
+  // La photo est preparee avant toute ecriture ; un refus ne cree rien.
+  const photoPrete = photo ? await pieceJointe.preparerPhotoGroupe(photo) : null;
+  const [photoEcrite] = photoPrete
+    ? await pieceJointe.ecrire([{ nomOrigine: 'photo.jpg', type: 'image', typeMime: 'image/jpeg', extension: '.jpg', contenu: photoPrete.contenu }])
+    : [null];
+
+  try {
+    const id = await transaction(async (client) => {
+      const nouveau = await conversationRepository.creerFil(
+        { type: 'groupe', nom, photoFichier: photoEcrite?.fichier ?? null },
+        client
+      );
+      await conversationRepository.ajouterParticipants(nouveau, [acteur], new Date(), client);
+      await conversationRepository.ajouterParticipants(nouveau, autres, null, client);
+      return nouveau;
+    });
+    return { id: nombre(id) };
+  } catch (erreur) {
+    if (photoEcrite) await pieceJointe.effacer([photoEcrite.fichier]);
+    throw erreur;
+  }
+}
+
+/** Charge un groupe dont l'acteur fait partie. */
+async function groupeAccessible(acteur, id) {
+  const fil = await filAccessible(acteur, id);
+  if (fil.type !== 'groupe') {
+    throw new ErreurRegleMetier('Cette action ne concerne que les groupes.', 'PAS_UN_GROUPE');
+  }
+  return fil;
+}
+
+/**
+ * Ajoute des participants a un groupe.
+ *
+ * Reserve aux participants du groupe. Ceux qui y sont deja sont ignores ;
+ * le plafond compte ceux qui restent a ajouter.
+ *
+ * @returns {Promise<{ajoutes: number}>}
+ */
+export async function ajouterAuGroupe(acteur, id, corps = {}) {
+  const fil = await groupeAccessible(acteur, id);
+  const presents = new Set((fil.participants ?? []).map((p) => `${p.type}:${p.id}`));
+  const nouveaux = participantsValides(corps.participants).filter((p) => !presents.has(`${p.type}:${p.id}`));
+
+  if (nouveaux.length === 0) return { ajoutes: 0 };
+  if (presents.size + nouveaux.length > MAX_PARTICIPANTS) {
+    throw new ErreurValidation(
+      `Un groupe réunit ${MAX_PARTICIPANTS} participants au plus : il reste ${Math.max(0, MAX_PARTICIPANTS - presents.size)} place(s).`,
+      { participants: 'Trop de participants' }
+    );
+  }
+  await verifierTousJoignables(acteur, nouveaux);
+
+  const ajoutes = await transaction((client) =>
+    conversationRepository.ajouterParticipants(fil.id, nouveaux, null, client)
+  );
+  return { ajoutes };
+}
+
+/**
+ * Quitte un groupe.
+ *
+ * Les messages de la personne restent : ce qu'elle a dit fait partie de
+ * la conversation des autres. Si plus personne ne participe, le groupe
+ * disparait, avec ses messages et ses fichiers.
+ *
+ * @returns {Promise<{supprime: boolean}>}
+ */
+export async function quitterGroupe(acteur, id) {
+  const fil = await groupeAccessible(acteur, id);
+
+  const { reste, fichiers } = await transaction(async (client) => {
+    const restants = await conversationRepository.retirerParticipant(acteur, fil.id, client);
+    if (restants > 0) return { reste: restants, fichiers: [] };
+    return { reste: 0, fichiers: await conversationRepository.supprimerFil(fil.id, client) };
+  });
+
+  if (fichiers.length > 0) await pieceJointe.effacer(fichiers);
+  return { supprime: reste === 0 };
+}
+
+/** La photo d'un groupe, pour un acteur qui y participe. */
+export async function photoDeGroupe(acteur, id) {
+  const fil = await filAccessible(acteur, id);
+  if (fil.type !== 'groupe' || !fil.photoFichier) throw new ErreurIntrouvable('La photo', id);
+  return fil.photoFichier;
 }

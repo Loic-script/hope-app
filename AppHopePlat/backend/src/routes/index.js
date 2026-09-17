@@ -22,6 +22,7 @@ router.get('/health', (_req, res) => {
 // Les fichiers de la messagerie : adresses signees, sans session -- une
 // balise <img> ou <video> n'en porte pas. Montes avant tout verrou.
 router.get('/messagerie/fichiers/piece/:id', fichiersMessagerie.piece);
+router.get('/messagerie/fichiers/groupe/:id', fichiersMessagerie.groupe);
 
 // Authentification des utilisateurs : un seul formulaire pour les trois
 // types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.

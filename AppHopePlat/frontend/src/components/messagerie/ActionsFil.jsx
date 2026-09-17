@@ -370,8 +370,8 @@ function TransfertDialogue({ api, racine, filId, message, onFermer, onTransfere 
   );
 }
 
-/** Une section de la liste a cocher. */
-function Section({ titre, elements, estChoisi, plein, onBasculer, desactive }) {
+/** Une section de la liste a cocher, partagee avec les fenetres de groupe. */
+export function Section({ titre, elements, estChoisi, plein, onBasculer, desactive }) {
   if (elements.length === 0) return null;
   return (
     <fieldset className="msg-choix">
