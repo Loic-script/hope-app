@@ -54,6 +54,17 @@ export const config = {
     expiresIn: optionnel('JWT_EXPIRES_IN', '2h'),
   },
 
+  /*
+   * Les coordonnees de l'equipe, montrees dans un fil d'assistance.
+   * Facultatives : rien n'est invente -- seules celles renseignees
+   * s'affichent.
+   */
+  equipe: {
+    email: optionnel('EQUIPE_EMAIL', ''),
+    telephone: optionnel('EQUIPE_TELEPHONE', ''),
+    siteWeb: optionnel('EQUIPE_SITE', ''),
+  },
+
   admin: {
     log: optionnel('ADMIN_LOG', 'AdminHope'),
     password: optionnel('ADMIN_PASSWORD', ''),

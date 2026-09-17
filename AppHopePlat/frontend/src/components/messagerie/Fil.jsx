@@ -1,12 +1,16 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { Link } from 'react-router-dom';
+
 import { IconeChevronGauche } from '../admin/AdminIcons.jsx';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/messagerie.service.js';
 import ActionsFil, { useActionsFil } from './ActionsFil.jsx';
 import Avatar from './Avatar.jsx';
 import MenuMessage from './MenuMessage.jsx';
+import PanneauInfo from './PanneauInfo.jsx';
 import PiecesMessage from './PiecesMessage.jsx';
+import { lienProfil } from './profil.js';
 import { heure, libelleJour, memeJour } from './outils.js';
 import Saisie from './Saisie.jsx';
 import TexteMessage from './TexteMessage.jsx';
@@ -24,10 +28,15 @@ import TexteMessage from './TexteMessage.jsx';
  *   onLu: (id: number, nonLus: {total: number}) => void,
  *   onActivite: () => void,
  *   onOuvrirFil: (id: number) => void,
+ *   espace: 'admin'|'benevole'|'bailleur',
  * }} props
  */
-export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite, onOuvrirFil }) {
+export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite, onOuvrirFil, espace }) {
   const [donnees, setDonnees] = useState(null);
+  // Le panneau d'information : ferme a chaque changement de fil, puisque
+  // le fil est remonte (sa cle est son identifiant).
+  const [panneau, setPanneau] = useState(false);
+  const [eclat, setEclat] = useState(null);
   const [erreur, setErreur] = useState('');
   const defilement = useRef(null);
   const dejaLu = useRef('');
@@ -136,8 +145,29 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     [id, charger, onOuvrirFil]
   );
 
+  /*
+   * Aller a un message trouve par la recherche : le faire defiler au centre
+   * et le faire briller un instant, pour que l'oeil le retrouve.
+   */
+  const allerAuMessage = useCallback((messageId) => {
+    const element = document.getElementById(`message-${messageId}`);
+    if (!element) return;
+    element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setEclat(messageId);
+    setTimeout(() => setEclat((actuel) => (actuel === messageId ? null : actuel)), 2200);
+  }, []);
+
   const conversation = donnees?.conversation?.id === id ? donnees.conversation : null;
   const groupe = conversation?.type === 'groupe';
+
+  // Le nom mene au profil de la personne quand il en existe un ; sinon il
+  // ouvre le panneau, qui en tient lieu.
+  const interlocuteur = conversation?.interlocuteur
+    ? conversation.participants.find(
+        (p) => p.type === conversation.interlocuteur.type && p.id === conversation.interlocuteur.id
+      )
+    : null;
+  const profil = interlocuteur ? lienProfil(interlocuteur, espace) : null;
 
   return (
     <ActionsFil
@@ -159,17 +189,35 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
           </button>
         )}
         {conversation && (
-          <div className="msg-fil__identite">
-            <Avatar
-              nom={conversation.nom}
-              photoUrl={conversation.photoUrl}
-              equipe={conversation.equipe}
-            />
-            <div className="msg-fil__noms">
-              <h2 className="msg-fil__nom">{conversation.nom}</h2>
-              {conversation.sousTitre && <p className="msg-fil__sous-titre">{conversation.sousTitre}</p>}
-            </div>
-          </div>
+          <>
+            {profil ? (
+              <Link className="msg-fil__identite" to={profil} title="Voir le profil">
+                <IdentiteFil conversation={conversation} />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="msg-fil__identite"
+                onClick={() => setPanneau(true)}
+                aria-label={`Informations sur ${conversation.nom}`}
+              >
+                <IdentiteFil conversation={conversation} />
+              </button>
+            )}
+            <button
+              type="button"
+              className={`msg-icone msg-fil__info${panneau ? ' msg-icone--actif' : ''}`}
+              onClick={() => setPanneau((ouvert) => !ouvert)}
+              aria-label="Informations sur la conversation"
+              aria-expanded={panneau}
+              aria-pressed={panneau}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 11v5.5M12 7.6v.1" />
+              </svg>
+            </button>
+          </>
         )}
       </header>
 
@@ -193,15 +241,42 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
                   <span>{libelleJour(message.creeLe)}</span>
                 </div>
               )}
-              <Bulle message={message} groupe={groupe} />
+              <Bulle message={message} groupe={groupe} eclat={eclat === message.id} />
             </Fragment>
           );
         })}
       </div>
 
       {conversation && <Saisie onEnvoyer={envoyer} />}
+
+      {conversation && panneau && (
+        <PanneauInfo
+          api={api}
+          racine={racine}
+          conversation={conversation}
+          messages={messages ?? []}
+          equipe={donnees?.equipe ?? null}
+          espace={espace}
+          pleinEcran={pleinEcran}
+          onFermer={() => setPanneau(false)}
+          onAllerAuMessage={allerAuMessage}
+        />
+      )}
     </section>
     </ActionsFil>
+  );
+}
+
+/** L'avatar, le nom et le sous-titre de l'en-tete. */
+function IdentiteFil({ conversation }) {
+  return (
+    <>
+      <Avatar nom={conversation.nom} photoUrl={conversation.photoUrl} src={conversation.photoSrc} equipe={conversation.equipe} />
+      <span className="msg-fil__noms">
+        <span className="msg-fil__nom">{conversation.nom}</span>
+        {conversation.sousTitre && <span className="msg-fil__sous-titre">{conversation.sousTitre}</span>}
+      </span>
+    </>
   );
 }
 
@@ -217,7 +292,7 @@ const HAUTEUR_EDITION = 200;
  * Le bouton ⋯ ouvre les actions : transferer et copier pour tous, modifier
  * et supprimer pour l'auteur seulement. Un message supprime n'en a plus.
  */
-export function Bulle({ message, groupe }) {
+export function Bulle({ message, groupe, eclat = false }) {
   const actions = useActionsFil();
   const moi = message.estDeMoi;
   const [edition, setEdition] = useState(false);
@@ -235,7 +310,10 @@ export function Bulle({ message, groupe }) {
   }
 
   return (
-    <div className={`msg-rang msg-rang--${moi ? 'moi' : 'autre'}`} id={`message-${message.id}`}>
+    <div
+      className={`msg-rang msg-rang--${moi ? 'moi' : 'autre'}${eclat ? ' msg-rang--eclat' : ''}`}
+      id={`message-${message.id}`}
+    >
       {groupe && !moi && <p className="msg-rang__auteur">{message.auteur.nom}</p>}
 
       <div className="msg-rang__ligne">

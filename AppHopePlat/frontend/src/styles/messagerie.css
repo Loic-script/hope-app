@@ -307,16 +307,77 @@
   border-bottom: 1px solid var(--admin-bordure);
 }
 
+.msg-fil {
+  position: relative;
+}
+
+/* Le nom et l'avatar : un lien vers le profil, ou un bouton vers le panneau. */
 .msg-fil__identite {
   display: flex;
   flex: 1;
   align-items: center;
   gap: 12px;
   min-width: 0;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.msg-fil__identite:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.msg-fil__identite:hover .msg-fil__nom {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.msg-fil__identite:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 1px;
+}
+
+.msg-fil__noms {
+  display: flex;
+  flex-direction: column;
+}
+
+.msg-icone--actif {
+  background-color: color-mix(in srgb, var(--hope-violet) 12%, var(--admin-surface));
+  color: var(--hope-violet);
 }
 
 .msg-fil__noms {
   min-width: 0;
+}
+
+/* Un message trouve par la recherche brille un instant. */
+.msg-rang--eclat .msg-bulle {
+  animation: msg-eclat 2.2s ease-out;
+}
+
+@keyframes msg-eclat {
+  0%,
+  35% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--hope-jaune) 85%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-rang--eclat .msg-bulle {
+    animation: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--hope-jaune) 85%, transparent);
+  }
 }
 
 .msg-fil__nom {
@@ -1286,6 +1347,303 @@
 }
 
 /* ============================================================
+   Panneau d'information
+   ============================================================ */
+
+.msg-panneau {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, 100%);
+  border-left: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface);
+  box-shadow: -12px 0 32px rgba(36, 43, 62, 0.1);
+}
+
+.msg-panneau__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 68px;
+  padding: 12px 10px 12px 18px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.msg-panneau__titre {
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.msg-panneau__titre:focus {
+  outline: none;
+}
+
+.msg-panneau__defilement {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.msg-panneau__identite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 18px 18px;
+  text-align: center;
+}
+
+.msg-panneau__nom {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.msg-panneau__fonction {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.msg-panneau__section {
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.msg-panneau__intertitre {
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.msg-panneau__compte {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.msg-panneau__bouton {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.msg-coordonnees {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+
+.msg-coordonnees__ligne dt {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.msg-coordonnees__ligne dd {
+  margin: 1px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.msg-coordonnees__ligne a {
+  color: var(--hope-violet-lisible);
+}
+
+/* Participants d'un groupe */
+.msg-participants {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-participants__ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  margin: 0 -6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+a.msg-participants__ligne:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.msg-participants__texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.msg-participants__nom {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-participants__vous {
+  font-weight: 400;
+  color: var(--admin-texte-doux);
+}
+
+.msg-participants__fonction {
+  overflow: hidden;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Resultats de recherche */
+.msg-resultats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-resultats__ligne {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.msg-resultats__ligne:hover {
+  border-color: var(--hope-violet);
+}
+
+.msg-resultats__ligne:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 1px;
+}
+
+.msg-resultats__haut {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.msg-resultats__auteur {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.msg-resultats__date {
+  flex: none;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.msg-resultats__texte,
+.msg-resultats__piece {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+  overflow-wrap: anywhere;
+}
+
+/* Fichiers partages */
+.msg-fichiers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-fichiers__ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  margin: 0 -6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.msg-fichiers__ligne:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.msg-fichiers__ligne:focus-visible {
+  outline: 2px solid var(--hope-violet);
+}
+
+.msg-fichiers__type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--admin-texte);
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.msg-fichiers__type--pdf {
+  background-color: var(--hope-erreur);
+}
+
+.msg-fichiers__type img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.msg-fichiers__texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.msg-fichiers__nom {
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-fichiers__meta {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
    Notification "N messages non lus"
    ============================================================ */
 
@@ -1383,6 +1741,20 @@
 
   .msg-fil--plein-ecran .msg-fil__entete {
     padding-left: 6px;
+  }
+
+  /* Le panneau prend l'ecran entier, par-dessus le fil. */
+  .msg-panneau,
+  .msg-panneau--plein-ecran {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    width: 100vw;
+    height: 100dvh;
+    border-left: 0;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .msg-fil--plein-ecran .msg-saisie {

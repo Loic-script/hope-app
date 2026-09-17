@@ -42,6 +42,8 @@ export const conversations = {
     ...(await conversationService.recuperer(acteurDe(req), req.params.id)),
   })),
 
+  fichiers: gerer((req) => conversationService.fichiersPartages(acteurDe(req), req.params.id)),
+
   marquerLu: gerer((req) => conversationService.marquerLu(acteurDe(req), req.params.id, req.body ?? {})),
 
   ouvrir: gerer((req) => conversationService.ouvrir(acteurDe(req), req.body ?? {}), { statut: 201 }),

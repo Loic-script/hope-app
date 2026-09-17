@@ -173,6 +173,8 @@ export default function VolunteersPage() {
             colonnes={colonnes}
             lignes={comptes}
             cleLigne={(compte) => compte.id}
+            // L'ancre que vise la messagerie : un clic sur un nom y mene.
+            idLigne={(compte) => `compte-${compte.id}`}
             chargement={chargement}
           />
         )}

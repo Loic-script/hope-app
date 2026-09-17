@@ -5,6 +5,7 @@
  * barre d'outils, panneau, tableau) pour obtenir un ensemble homogene sans
  * dupliquer le balisage.
  */
+import { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import {
@@ -275,7 +276,23 @@ export function BarreOutils({
  *           lignes: object[], cleLigne?: Function,
  *           chargement?: boolean, erreur?: string, vide?: React.ReactNode }} props
  */
-export function Tableau({ colonnes, lignes, cleLigne, chargement, erreur, vide }) {
+export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide }) {
+  /*
+   * Arriver sur une ligne par son ancre (#compte-xxx).
+   *
+   * La liste se charge apres la navigation : le navigateur ne trouve rien a
+   * faire defiler, on le fait une fois les lignes la. Et une navigation
+   * interne (pushState) ne met pas :target a jour -- la ligne visee porte
+   * donc sa propre classe.
+   */
+  const { hash } = useLocation();
+  const visee = idLigne && hash ? decodeURIComponent(hash.slice(1)) : null;
+
+  useEffect(() => {
+    if (!visee || !lignes?.length) return;
+    document.getElementById(visee)?.scrollIntoView({ block: 'center' });
+  }, [visee, lignes]);
+
   if (chargement) return <Chargement />;
   if (erreur) {
     return (
@@ -304,7 +321,11 @@ export function Tableau({ colonnes, lignes, cleLigne, chargement, erreur, vide }
         </thead>
         <tbody>
           {lignes.map((ligne, index) => (
-            <tr key={cleLigne ? cleLigne(ligne) : (ligne.id ?? index)}>
+            <tr
+              key={cleLigne ? cleLigne(ligne) : (ligne.id ?? index)}
+              id={idLigne ? idLigne(ligne) : undefined}
+              className={visee && idLigne(ligne) === visee ? 'ligne--visee' : undefined}
+            >
               {colonnes.map((colonne) => (
                 <td
                   key={colonne.cle}

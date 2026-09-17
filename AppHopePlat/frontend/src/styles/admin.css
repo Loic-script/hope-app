@@ -1599,3 +1599,13 @@
     border-bottom: 1px solid var(--admin-bordure);
   }
 }
+
+/* Une ligne visee par son ancre -- depuis la messagerie -- se signale. */
+tr.ligne--visee > td {
+  background-color: color-mix(in srgb, var(--hope-jaune) 35%, var(--admin-surface));
+  transition: background-color 0.3s ease;
+}
+
+tr[id^='compte-'] {
+  scroll-margin-top: calc(var(--admin-entete-hauteur, 70px) + 20px);
+}

@@ -11,6 +11,7 @@
  * "interdit" confirmerait qu'il existe.
  */
 import { transaction } from '../config/database.js';
+import { config } from '../config/env.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
 import * as pieceJointe from './pieceJointe.service.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
@@ -287,6 +288,40 @@ export async function recuperer(acteur, id) {
       })),
     },
     messages: liste.map((message) => presenterMessage(message, acteur)),
+    // Dans un fil d'assistance, l'utilisateur voit l'equipe : ses
+    // coordonnees sont celles de la configuration, si elle en donne.
+    equipe:
+      fil.assistance && acteur.type === 'utilisateur'
+        ? {
+            nom: NOM_EQUIPE,
+            email: config.equipe.email || null,
+            telephone: config.equipe.telephone || null,
+            siteWeb: config.equipe.siteWeb || null,
+          }
+        : null,
+  };
+}
+
+/**
+ * Les fichiers partages d'un fil, du plus recent au plus ancien.
+ *
+ * Les pieces d'un message supprime n'existent plus : la table ne les
+ * rend pas. Chaque piece porte son adresse signee pour cet acteur.
+ */
+export async function fichiersPartages(acteur, id) {
+  const fil = await filAccessible(acteur, id);
+  const liste = await conversationRepository.piecesDuFil(fil.id);
+  return {
+    items: liste.map((piece) => ({
+      id: nombre(piece.id),
+      nom: piece.nom,
+      type: piece.type,
+      taille: piece.taille,
+      messageId: nombre(piece.messageId),
+      creeLe: piece.creeLe,
+      auteurNom: piece.auteurNom,
+      url: pieceJointe.adresseSignee('piece', piece.id, acteur),
+    })),
   };
 }
 

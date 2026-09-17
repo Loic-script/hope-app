@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext, useParams, useSearchParams } from 'react
 
 import Fil from '../../components/messagerie/Fil.jsx';
 import ListeFils from '../../components/messagerie/ListeFils.jsx';
+import { espaceDe } from '../../components/messagerie/profil.js';
 import { useEcranEtroit } from '../../components/messagerie/useEcranEtroit.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/messagerie.service.js';
@@ -132,6 +133,7 @@ export default function Conversations() {
             onLu={surLu}
             onActivite={charger}
             onOuvrirFil={ouvrir}
+            espace={espaceDe(cheminMessages)}
           />
         ) : (
           !etroit && (

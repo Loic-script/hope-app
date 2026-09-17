@@ -90,3 +90,9 @@ export async function transferer(api, racine, id, messageId, cibles) {
   const { data } = await api.post(`${racine}/conversations/${id}/messages/${messageId}/transfert`, { cibles });
   return data.fils ?? [];
 }
+
+/** GET .../conversations/:id/fichiers : les pieces du fil, la plus recente en tete. */
+export async function fichiers(api, racine, id) {
+  const { data } = await api.get(`${racine}/conversations/${id}/fichiers`);
+  return data.items ?? [];
+}

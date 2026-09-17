@@ -36,6 +36,7 @@ router.get('/conversations/non-lus', conversations.nonLus);
 router.get('/conversations', conversations.lister);
 router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
+router.get('/conversations/:id/fichiers', conversations.fichiers);
 router.post('/conversations/:id/lu', conversations.marquerLu);
 router.post('/conversations/:id/messages', televerserMessage, conversations.envoyer);
 router.patch('/conversations/:id/messages/:messageId', conversations.modifier);
