@@ -3,7 +3,9 @@ import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } f
 import { IconeChevronGauche } from '../admin/AdminIcons.jsx';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/messagerie.service.js';
+import ActionsFil, { useActionsFil } from './ActionsFil.jsx';
 import Avatar from './Avatar.jsx';
+import MenuMessage from './MenuMessage.jsx';
 import PiecesMessage from './PiecesMessage.jsx';
 import { heure, libelleJour, memeJour } from './outils.js';
 import Saisie from './Saisie.jsx';
@@ -21,9 +23,10 @@ import TexteMessage from './TexteMessage.jsx';
  *   pleinEcran: boolean, onRetour: () => void,
  *   onLu: (id: number, nonLus: {total: number}) => void,
  *   onActivite: () => void,
+ *   onOuvrirFil: (id: number) => void,
  * }} props
  */
-export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite }) {
+export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite, onOuvrirFil }) {
   const [donnees, setDonnees] = useState(null);
   const [erreur, setErreur] = useState('');
   const defilement = useRef(null);
@@ -110,10 +113,41 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     onActivite?.();
   }
 
+  /** Un message modifie ou supprime prend la place de l'ancien, sans recharger le fil. */
+  const remplacer = useCallback(
+    (message) =>
+      setDonnees((actuel) =>
+        actuel && actuel.conversation.id === id
+          ? { ...actuel, messages: actuel.messages.map((m) => (m.id === message.id ? message : m)) }
+          : actuel
+      ),
+    [id]
+  );
+
+  /*
+   * Apres un transfert vers un seul fil, on l'ouvre -- et si c'est celui-ci,
+   * on le recharge : la copie doit y apparaitre.
+   */
+  const ouvrirFil = useCallback(
+    (cible) => {
+      if (Number(cible) === Number(id)) charger();
+      else onOuvrirFil?.(cible);
+    },
+    [id, charger, onOuvrirFil]
+  );
+
   const conversation = donnees?.conversation?.id === id ? donnees.conversation : null;
   const groupe = conversation?.type === 'groupe';
 
   return (
+    <ActionsFil
+      api={api}
+      racine={racine}
+      filId={id}
+      onRemplacer={remplacer}
+      onOuvrirFil={ouvrirFil}
+      onActivite={onActivite}
+    >
     <section
       className={`msg-fil${pleinEcran ? ' msg-fil--plein-ecran' : ''}`}
       aria-label={conversation ? `Conversation avec ${conversation.nom}` : 'Conversation'}
@@ -167,43 +201,193 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
 
       {conversation && <Saisie onEnvoyer={envoyer} />}
     </section>
+    </ActionsFil>
   );
 }
+
+/** Hauteur maximale du champ d'edition, dans la bulle. */
+const HAUTEUR_EDITION = 200;
 
 /**
  * Une bulle.
  *
  * Les siennes a droite, dans la couleur principale ; celles des autres a
  * gauche, en gris. Dans un groupe, le nom de l'auteur se pose au-dessus.
+ *
+ * Le bouton ⋯ ouvre les actions : transferer et copier pour tous, modifier
+ * et supprimer pour l'auteur seulement. Un message supprime n'en a plus.
  */
 export function Bulle({ message, groupe }) {
+  const actions = useActionsFil();
   const moi = message.estDeMoi;
+  const [edition, setEdition] = useState(false);
+
+  const liste = [];
+  if (!message.supprime && actions) {
+    liste.push({ cle: 'transferer', libelle: 'Transférer', onChoisir: () => actions.demanderTransfert(message) });
+    if (message.texte) {
+      liste.push({ cle: 'copier', libelle: 'Copier le texte', onChoisir: () => actions.copier(message.texte) });
+    }
+    if (moi) {
+      liste.push({ cle: 'modifier', libelle: 'Modifier', onChoisir: () => setEdition(true) });
+      liste.push({ cle: 'supprimer', libelle: 'Supprimer', danger: true, onChoisir: () => actions.demanderSuppression(message) });
+    }
+  }
+
   return (
     <div className={`msg-rang msg-rang--${moi ? 'moi' : 'autre'}`} id={`message-${message.id}`}>
       {groupe && !moi && <p className="msg-rang__auteur">{message.auteur.nom}</p>}
 
-      <div className={`msg-bulle${message.supprime ? ' msg-bulle--supprimee' : ''}`}>
-        {message.transfere && !message.supprime && <p className="msg-bulle__transfere">Transféré</p>}
+      <div className="msg-rang__ligne">
+        <div className={`msg-bulle${message.supprime ? ' msg-bulle--supprimee' : ''}${edition ? ' msg-bulle--edition' : ''}`}>
+          {message.transfere && !message.supprime && <p className="msg-bulle__transfere">Transféré</p>}
 
-        {message.supprime ? (
-          <p className="msg-bulle__texte msg-bulle__texte--supprime">
-            {moi ? 'Vous avez supprimé ce message' : 'Ce message a été supprimé'}
-          </p>
-        ) : (
-          <>
-            {message.pieces.length > 0 && <PiecesMessage pieces={message.pieces} />}
-            {message.texte && (
-              <p className="msg-bulle__texte">
-                <TexteMessage texte={message.texte} />
-              </p>
-            )}
-          </>
-        )}
+          {message.supprime ? (
+            <p className="msg-bulle__texte msg-bulle__texte--supprime">
+              {moi ? 'Vous avez supprimé ce message' : 'Ce message a été supprimé'}
+            </p>
+          ) : (
+            <>
+              {message.pieces.length > 0 && <PiecesMessage pieces={message.pieces} />}
+              {edition ? (
+                <EditionBulle message={message} onFermer={() => setEdition(false)} />
+              ) : (
+                message.texte && (
+                  <p className="msg-bulle__texte">
+                    <TexteMessage texte={message.texte} />
+                  </p>
+                )
+              )}
+            </>
+          )}
 
-        <p className="msg-bulle__heure">
-          {message.modifieLe && !message.supprime ? 'modifié · ' : ''}
-          <time dateTime={message.creeLe}>{heure(message.creeLe)}</time>
+          {!edition && (
+            <p className="msg-bulle__heure">
+              {message.modifieLe && !message.supprime ? 'modifié · ' : ''}
+              <time dateTime={message.creeLe}>{heure(message.creeLe)}</time>
+            </p>
+          )}
+        </div>
+
+        {!edition && liste.length > 0 && <MenuMessage actions={liste} cote={moi ? 'droite' : 'gauche'} />}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * L'edition d'un message, dans sa bulle.
+ *
+ * Entree enregistre, Echap annule. L'edition ne se ferme qu'une fois
+ * l'enregistrement termine : un clic ne suffit pas, et le bouton garde
+ * son etat "en cours" jusqu'a la reponse.
+ */
+function EditionBulle({ message, onFermer }) {
+  const actions = useActionsFil();
+  const [texte, setTexte] = useState(message.texte);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState('');
+  const champ = useRef(null);
+
+  useLayoutEffect(() => {
+    const element = champ.current;
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = `${Math.min(element.scrollHeight, HAUTEUR_EDITION)}px`;
+  }, [texte]);
+
+  useEffect(() => {
+    const element = champ.current;
+    element?.focus();
+    element?.setSelectionRange(element.value.length, element.value.length);
+  }, []);
+
+  const vide = texte.trim() === '';
+  const sansPiece = message.pieces.length === 0;
+
+  async function enregistrer() {
+    if (envoi) return;
+    if (vide && sansPiece) {
+      setErreur('Un message sans pièce jointe ne peut pas être vide.');
+      return;
+    }
+    if (texte.trim() === message.texte.trim()) {
+      onFermer();
+      return;
+    }
+    setEnvoi(true);
+    setErreur('');
+    try {
+      await actions.modifier(message, texte);
+      onFermer();
+    } catch (echec) {
+      setErreur(messageErreur(echec, 'La modification n’a pas pu être enregistrée.'));
+      setEnvoi(false);
+    }
+  }
+
+  function surTouche(evenement) {
+    const composition = evenement.nativeEvent.isComposing || evenement.keyCode === 229;
+    if (evenement.key === 'Enter' && !evenement.shiftKey && !composition) {
+      evenement.preventDefault();
+      enregistrer();
+    } else if (evenement.key === 'Escape') {
+      evenement.preventDefault();
+      if (!envoi) onFermer();
+    }
+  }
+
+  return (
+    <div className="msg-edition">
+      <label>
+        <span className="sr-only">Modifier le message</span>
+        <textarea
+          ref={champ}
+          rows={1}
+          value={texte}
+          onChange={(evenement) => {
+            setTexte(evenement.target.value);
+            setErreur('');
+          }}
+          onKeyDown={surTouche}
+          maxLength={4000}
+          disabled={envoi}
+        />
+      </label>
+
+      {erreur && (
+        <p className="msg-edition__erreur" role="alert">
+          {erreur}
+          {vide && sansPiece && (
+            <>
+              {' '}
+              <button
+                type="button"
+                className="msg-edition__lien"
+                onClick={() => {
+                  onFermer();
+                  actions.demanderSuppression(message);
+                }}
+              >
+                Le supprimer
+              </button>
+            </>
+          )}
         </p>
+      )}
+
+      <div className="msg-edition__boutons">
+        <button type="button" className="msg-edition__bouton" onClick={onFermer} disabled={envoi}>
+          Annuler
+        </button>
+        <button
+          type="button"
+          className="msg-edition__bouton msg-edition__bouton--principal"
+          onClick={enregistrer}
+          disabled={envoi}
+        >
+          {envoi ? 'Enregistrement…' : 'Enregistrer'}
+        </button>
       </div>
     </div>
   );

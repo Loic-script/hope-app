@@ -57,6 +57,19 @@ export const conversations = {
     }),
     { statut: 201 }
   ),
+
+  modifier: gerer(async (req) => ({
+    message: await conversationService.modifier(acteurDe(req), req.params.id, req.params.messageId, req.body ?? {}),
+  })),
+
+  supprimer: gerer(async (req) => ({
+    message: await conversationService.supprimer(acteurDe(req), req.params.id, req.params.messageId),
+  })),
+
+  transferer: gerer(
+    (req) => conversationService.transferer(acteurDe(req), req.params.id, req.params.messageId, req.body ?? {}),
+    { statut: 201 }
+  ),
 };
 
 /**

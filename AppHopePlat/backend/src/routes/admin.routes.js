@@ -127,6 +127,9 @@ router.post('/conversations', conversations.ouvrir);
 router.get('/conversations/:id', conversations.recuperer);
 router.post('/conversations/:id/lu', conversations.marquerLu);
 router.post('/conversations/:id/messages', televerserMessage, conversations.envoyer);
+router.patch('/conversations/:id/messages/:messageId', conversations.modifier);
+router.delete('/conversations/:id/messages/:messageId', conversations.supprimer);
+router.post('/conversations/:id/messages/:messageId/transfert', conversations.transferer);
 
 router.get('/espace-messages', messagesEspaces.lister);
 router.post('/espace-messages/:id/reponse', exigerEcriture, messagesEspaces.repondre);

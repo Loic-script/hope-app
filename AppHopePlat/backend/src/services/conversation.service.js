@@ -13,7 +13,7 @@
 import { transaction } from '../config/database.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
 import * as pieceJointe from './pieceJointe.service.js';
-import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
+import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 
 /** Longueur maximale d'un message. */
 export const CORPS_MAX = 4000;
@@ -525,4 +525,197 @@ export async function pieceLisible(acteur, pieceId) {
   if (!participe) throw new ErreurIntrouvable('Le fichier', pieceId);
 
   return piece;
+}
+
+/* ================================================================
+   Modifier, supprimer, transferer
+   ================================================================ */
+
+/** Nombre de destinations d'un transfert. */
+export const MAX_CIBLES_TRANSFERT = 10;
+
+/**
+ * Charge un message d'un fil dont on fait partie.
+ *
+ * Le message doit appartenir au fil de l'adresse : sans ce controle, un
+ * identifiant de message pris ailleurs passerait par un fil ou l'on est.
+ */
+async function messageAccessible(acteur, filId, messageId) {
+  const fil = await filAccessible(acteur, filId);
+  const numero = Number(messageId);
+  if (!Number.isSafeInteger(numero) || numero <= 0) throw new ErreurIntrouvable('Le message', messageId);
+
+  const message = await conversationRepository.trouverMessage(numero);
+  if (!message || Number(message.conversationId) !== Number(fil.id)) {
+    throw new ErreurIntrouvable('Le message', messageId);
+  }
+  return { fil, message };
+}
+
+/** Seul l'auteur modifie ou supprime son message. */
+function exigerAuteur(acteur, message) {
+  if (!memeActeur({ type: message.auteurType, id: message.auteurId }, acteur)) {
+    throw new ErreurRegleMetier('Seul l’auteur peut modifier ou supprimer ce message.', 'PAS_AUTEUR');
+  }
+}
+
+/**
+ * Modifie le texte d'un message.
+ *
+ * - auteur seulement, et jamais un message supprime ;
+ * - un message sans piece jointe ne peut pas etre vide : c'est une
+ *   suppression, qui a son propre geste ;
+ * - un texte inchange n'enregistre rien -- sans quoi "modifie"
+ *   s'afficherait sur un message que personne n'a change.
+ */
+export async function modifier(acteur, filId, messageId, corps = {}) {
+  const { message } = await messageAccessible(acteur, filId, messageId);
+  exigerAuteur(acteur, message);
+  if (message.supprimeLe) {
+    throw new ErreurRegleMetier('Ce message a été supprimé.', 'MESSAGE_SUPPRIME');
+  }
+
+  const texte = corpsValide(corps.corps);
+  if (texte === '' && (message.pieces ?? []).length === 0) {
+    throw new ErreurValidation('Un message sans pièce jointe ne peut pas être vide : supprimez-le plutôt.', {
+      corps: 'Texte obligatoire',
+    });
+  }
+
+  if (texte !== message.corps) {
+    await conversationRepository.modifierMessage(message.id, texte);
+  }
+  const complet = await conversationRepository.trouverMessage(message.id);
+  return presenterMessage(complet, acteur);
+}
+
+/**
+ * Supprime un message, pour tous les participants.
+ *
+ * Suppression logique dans une transaction -- texte vide, date posee,
+ * lignes de pieces retirees -- puis effacement des fichiers, une fois la
+ * base a jour : un echec en cours de route ne laisse jamais une ligne
+ * pointer vers un fichier deja efface.
+ */
+export async function supprimer(acteur, filId, messageId) {
+  const { message } = await messageAccessible(acteur, filId, messageId);
+  exigerAuteur(acteur, message);
+  if (message.supprimeLe) {
+    const deja = await conversationRepository.trouverMessage(message.id);
+    return presenterMessage(deja, acteur);
+  }
+
+  const fichiers = await transaction((client) => conversationRepository.supprimerMessage(message.id, client));
+  await pieceJointe.effacer(fichiers);
+
+  const complet = await conversationRepository.trouverMessage(message.id);
+  return presenterMessage(complet, acteur);
+}
+
+/**
+ * Lit la liste des destinations d'un transfert.
+ *
+ * Deux formes : { type: 'fil', id } pour un fil existant, ou une personne
+ * -- { type: 'utilisateur' | 'admin' | 'equipe', id }. Les doublons sont
+ * retires ici ; ceux qui ne se revelent qu'une fois les fils resolus --
+ * une personne et le fil qu'on a deja avec elle -- le seront plus loin.
+ */
+function ciblesValides(valeur) {
+  if (!Array.isArray(valeur) || valeur.length === 0) {
+    throw new ErreurValidation('Choisissez au moins une destination.', { cibles: 'Au moins une' });
+  }
+
+  const vues = new Set();
+  const cibles = [];
+  for (const brute of valeur) {
+    const cible = brute?.type === 'fil'
+      ? { type: 'fil', id: Number(brute.id) }
+      : acteurValide(brute, 'cibles');
+    if (cible.type === 'fil' && (!Number.isSafeInteger(cible.id) || cible.id <= 0)) {
+      throw new ErreurValidation('Destination invalide.', { cibles: 'Valeur non acceptée' });
+    }
+    const cle = `${cible.type}:${cible.id}`;
+    if (!vues.has(cle)) {
+      vues.add(cle);
+      cibles.push(cible);
+    }
+  }
+
+  if (cibles.length > MAX_CIBLES_TRANSFERT) {
+    throw new ErreurValidation(`${MAX_CIBLES_TRANSFERT} destinations au plus.`, { cibles: 'Trop de destinations' });
+  }
+  return cibles;
+}
+
+/**
+ * Transfere un message vers des fils ou des personnes.
+ *
+ * Tout est reverifie : la participation au fil source, un message non
+ * supprime, la participation a chaque fil vise, et que chaque personne
+ * visee soit joignable -- son fil individuel est retrouve, ou cree.
+ *
+ * Le message est recopie sous le nom de celui qui transfere, marque
+ * "transfere", et ses pieces sont dupliquees sur le disque : supprimer
+ * l'original ne doit pas vider la copie.
+ *
+ * @returns {Promise<{fils: number[]}>} les fils ou le message est arrive
+ */
+export async function transferer(acteur, filId, messageId, corps = {}) {
+  const { message } = await messageAccessible(acteur, filId, messageId);
+  if (message.supprimeLe) {
+    throw new ErreurRegleMetier('Un message supprimé ne peut pas être transféré.', 'MESSAGE_SUPPRIME');
+  }
+  const cibles = ciblesValides(corps.cibles);
+
+  // Verifications prealables, hors transaction : un refus ne cree rien.
+  for (const cible of cibles) {
+    if (cible.type === 'fil') {
+      const participe = await conversationRepository.estParticipant(acteur, cible.id);
+      if (!participe) throw new ErreurIntrouvable('La conversation', cible.id);
+    } else {
+      await verifierJoignable(acteur, cible);
+    }
+  }
+
+  const pieces = await conversationRepository.piecesAvecFichiers(message.id);
+  const auteurNom = await nomDe(acteur);
+  const copiesEcrites = [];
+
+  try {
+    const fils = await transaction(async (client) => {
+      // Les fils de destination, dedoublonnes une fois resolus.
+      const destinations = [];
+      for (const cible of cibles) {
+        const id = cible.type === 'fil' ? cible.id : (await filAvec(acteur, cible, client)).id;
+        if (!destinations.includes(Number(id))) destinations.push(Number(id));
+      }
+
+      for (const destination of destinations) {
+        const copie = await conversationRepository.ajouterMessage(
+          { conversationId: destination, acteur, auteurNom, corps: message.corps, transfere: true },
+          client
+        );
+        if (pieces.length > 0) {
+          const dupliquees = await pieceJointe.dupliquer(
+            pieces.map((piece) => ({
+              nomOrigine: piece.nomOrigine,
+              type: piece.type,
+              typeMime: piece.typeMime,
+              fichier: piece.fichier,
+              taille: piece.taille,
+            }))
+          );
+          copiesEcrites.push(...dupliquees.map((piece) => piece.fichier));
+          await conversationRepository.ajouterPieces(copie.id, dupliquees, client);
+        }
+        // Transferer vaut lecture, pour celui qui transfere.
+        await conversationRepository.marquerLu(acteur, destination, copie.id, client);
+      }
+      return destinations;
+    });
+    return { fils };
+  } catch (erreur) {
+    await pieceJointe.effacer(copiesEcrites);
+    throw erreur;
+  }
 }

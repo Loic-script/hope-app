@@ -67,3 +67,26 @@ export async function envoyer(api, racine, id, { corps, fichiers = [] }) {
   });
   return data.message;
 }
+
+/** PATCH .../conversations/:id/messages/:messageId */
+export async function modifier(api, racine, id, messageId, corps) {
+  const { data } = await api.patch(`${racine}/conversations/${id}/messages/${messageId}`, { corps });
+  return data.message;
+}
+
+/** DELETE .../conversations/:id/messages/:messageId */
+export async function supprimer(api, racine, id, messageId) {
+  const { data } = await api.delete(`${racine}/conversations/${id}/messages/${messageId}`);
+  return data.message;
+}
+
+/**
+ * POST .../conversations/:id/messages/:messageId/transfert
+ *
+ * @param {({type: 'fil', id: number} | {type: string, id: string})[]} cibles
+ * @returns {Promise<number[]>} les fils ou le message est arrive
+ */
+export async function transferer(api, racine, id, messageId, cibles) {
+  const { data } = await api.post(`${racine}/conversations/${id}/messages/${messageId}/transfert`, { cibles });
+  return data.fils ?? [];
+}

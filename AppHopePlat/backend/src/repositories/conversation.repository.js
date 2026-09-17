@@ -507,6 +507,19 @@ export async function supprimerMessage(messageId, client = null) {
   return pieces.rows.map((ligne) => ligne.fichier);
 }
 
+/** Les pieces d'un message avec leur nom sur le disque : pour les dupliquer. */
+export async function piecesAvecFichiers(messageId, client = null) {
+  const resultat = await query(
+    `SELECT nom_origine, type, type_mime, fichier, taille
+       FROM conversation_piece
+      WHERE message_id = $1
+      ORDER BY position, id`,
+    [messageId],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
 /** Une piece, avec le fil de son message, pour en controler l'acces. */
 export async function trouverPiece(pieceId, client = null) {
   const resultat = await query(

@@ -131,6 +131,7 @@ export default function Conversations() {
             onRetour={revenirALaListe}
             onLu={surLu}
             onActivite={charger}
+            onOuvrirFil={ouvrir}
           />
         ) : (
           !etroit && (
