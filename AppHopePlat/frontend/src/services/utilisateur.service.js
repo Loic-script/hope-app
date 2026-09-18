@@ -41,6 +41,8 @@ const CLES = {
  */
 export const COMPLETION_PAR_TYPE = {
   benevole: '/benevole/completer-profil',
+  // Le parcours d'accueil en cinq etapes, tant qu'il n'est pas termine.
+  donateur: '/donateur/completer-profil',
 };
 
 /** GET /api/auth/types — les trois types, pour la liste du formulaire. */

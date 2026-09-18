@@ -28,6 +28,7 @@ import './styles/messagerie.css';
 import './styles/benevole-espace.css';
 import './styles/bailleur.css';
 import './styles/feuille.css';
+import './styles/parcours-donateur.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -1639,3 +1639,41 @@ UPDATE utilisateur u
  * structure, et l'espace propose alors son telechargement.
  */
 ALTER TABLE document_bailleur ADD COLUMN IF NOT EXISTS contenu JSONB;
+
+/*
+ * La fiche du donateur.
+ *
+ * Le pendant de "benevole" et de "bailleur_contact" : ce que le compte
+ * ne dit pas. Le nom, le prenom, l'adresse et le telephone vivent sur
+ * "utilisateur", comme pour les deux autres ; ici, le reste.
+ *
+ * Elle se remplit au fil d'un parcours en cinq etapes, ouvert des
+ * l'inscription. "etape_suivante" dit ou le donateur reprendra : il peut
+ * s'arreter entre deux etapes sans rien perdre de ce qu'il a donne.
+ *
+ * - pays : code ISO 3166-1 alpha-2 ("MG"), et non un libelle. C'est de
+ *   lui qu'on deduira le fuseau horaire, et un code ne s'orthographie
+ *   pas de deux facons.
+ * - source_connaissance : comment il a connu HOPE. Un code, pour que
+ *   l'equipe puisse compter ; la liste est tenue par le service.
+ */
+CREATE TABLE IF NOT EXISTS donateur (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  utilisateur_id      UUID         NOT NULL UNIQUE REFERENCES utilisateur(id) ON DELETE CASCADE,
+  ville               VARCHAR(120),
+  pays                CHAR(2),
+  profession          VARCHAR(120),
+  source_connaissance VARCHAR(30),
+  etape_suivante      SMALLINT     NOT NULL DEFAULT 1,
+  cree_le             TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  mis_a_jour_le       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT donateur_pays_iso CHECK (pays IS NULL OR pays ~ '^[A-Z]{2}$'),
+  CONSTRAINT donateur_source_valide CHECK (
+    source_connaissance IS NULL OR source_connaissance IN (
+      'reseaux_sociaux', 'bouche_a_oreille', 'recherche_internet', 'evenement',
+      'medias', 'membre_hope', 'partenaire', 'autre')),
+  -- 6 : le parcours est termine.
+  CONSTRAINT donateur_etape_valide CHECK (etape_suivante BETWEEN 1 AND 6)
+);
+

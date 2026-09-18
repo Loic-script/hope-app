@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import AdminLayout from '../layouts/AdminLayout.jsx';
@@ -17,6 +18,13 @@ import ProofsPage from '../pages/admin/ProofsPage.jsx';
 import Redirection from '../pages/Redirection.jsx';
 import Authentification from '../pages/Authentification.jsx';
 import BienvenueDonateur from '../pages/donateur/Bienvenue.jsx';
+
+/*
+ * Le parcours d'accueil du donateur se charge a part : il embarque la
+ * liste des pays et leurs regles de numerotation, dont aucun autre
+ * ecran n'a besoin. Les autres espaces ne les telechargent pas.
+ */
+const ParcoursDonateur = lazy(() => import('../pages/donateur/Parcours.jsx'));
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
 import ConversationsEspace from '../pages/espace/Conversations.jsx';
@@ -70,6 +78,22 @@ export default function AppRoutes() {
       {/* ----- Espace donateur : une page de bienvenue, pour l instant ----- */}
       <Route element={<RequireDonateur />}>
         <Route path="/donateur" element={<BienvenueDonateur />} />
+        {/* Le parcours d'accueil, ouvert des l'inscription. */}
+        <Route
+          path="/donateur/completer-profil"
+          element={
+            <Suspense
+              fallback={
+                <div className="verification" role="status" aria-live="polite">
+                  <span className="verification__rotation" aria-hidden="true" />
+                  <p>Préparation de votre espace…</p>
+                </div>
+              }
+            >
+              <ParcoursDonateur />
+            </Suspense>
+          }
+        />
       </Route>
 
       {/*

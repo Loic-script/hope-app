@@ -1,0 +1,554 @@
+/* ============================================================
+   Parcours d'accueil du donateur
+
+   Une colonne centree sur un fond bleu tres pale, les rayons du soleil
+   HOPE en filigrane dans les coins. Le modele de reference est la page
+   "Faisons connaissance" (etape 1).
+
+   Mouvement : une seule entree par etape -- l'en-tete, puis le
+   formulaire -- et des transitions courtes sur les champs. Rien ne bouge
+   pour qui a demande a son systeme de reduire les animations.
+   ============================================================ */
+
+.parcours {
+  --parcours-encre: #2a2839;
+  --parcours-bordure: #dde3ee;
+  --parcours-icone: #8e8ba3;
+  --parcours-fond-champ: #ffffff;
+  --parcours-placeholder: #75728a;
+  --parcours-anneau: rgba(134, 185, 222, 0.35);
+  --parcours-rythme: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: 36px 16px 72px;
+  background:
+    radial-gradient(1200px 520px at 50% -10%, #ffffff 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #f5f8fd 0%, #eaf1fa 100%);
+  color: var(--parcours-encre);
+  font-family: var(--police-titre);
+}
+
+/* Les rayons du soleil, en filigrane : ils ne captent ni clic ni regard. */
+.parcours__rayons {
+  position: absolute;
+  bottom: -28px;
+  width: 260px;
+  height: 260px;
+  fill: rgba(134, 185, 222, 0.14);
+  stroke: rgba(134, 185, 222, 0.14);
+  pointer-events: none;
+}
+
+.parcours__rayons--gauche {
+  left: -70px;
+  transform: rotate(18deg);
+}
+
+.parcours__rayons--droite {
+  right: -70px;
+  transform: rotate(-18deg);
+}
+
+.parcours__colonne {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.parcours__logo {
+  display: block;
+  width: 168px;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* ---------------- En-tete d'etape ---------------- */
+
+.parcours__entete {
+  margin-top: 26px;
+  text-align: center;
+  animation: parcours-entree 0.55s var(--parcours-rythme) both;
+}
+
+.parcours__etape {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  /* Le bleu de la charte est trop pale pour un texte de cette taille :
+     sa version lisible garde la teinte et atteint le contraste. */
+  color: var(--hope-lien);
+}
+
+/* La progression : cinq traits, l'etape courante plus longue. */
+.parcours__progression {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.parcours__pas {
+  width: 10px;
+  height: 4px;
+  border-radius: 99px;
+  background-color: var(--hope-bleu-clair);
+  transition: width 0.35s var(--parcours-rythme), background-color 0.35s ease;
+}
+
+.parcours__pas--fait {
+  background-color: var(--hope-bleu);
+}
+
+.parcours__pas--actif {
+  width: 32px;
+  background-color: var(--hope-bleu);
+}
+
+.parcours__titre {
+  margin: 20px 0 0;
+  font-size: clamp(30px, 5.2vw, 44px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--hope-violet);
+}
+
+.parcours__accroche {
+  margin: 14px auto 0;
+  max-width: 52ch;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--hope-texte-doux);
+}
+
+/* ---------------- Formulaire ---------------- */
+
+.parcours__formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 44px;
+  animation: parcours-entree 0.6s var(--parcours-rythme) 0.12s both;
+}
+
+.parcours__section {
+  position: relative;
+  margin: 0 0 6px;
+  padding-bottom: 14px;
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--parcours-encre);
+}
+
+.parcours__section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 32px;
+  height: 3px;
+  border-radius: 99px;
+  background-color: var(--hope-bleu);
+}
+
+.parcours__paire {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.parcours__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.parcours__libelle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--parcours-encre);
+}
+
+.parcours__facultatif {
+  padding: 1px 8px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--hope-texte-doux);
+  background-color: #eef2f8;
+}
+
+/*
+ * La boite : icone a gauche, saisie au milieu, chevron a droite pour
+ * une liste. La bordure et l'icone changent de couleur au focus : on voit
+ * ou l'on ecrit sans avoir a chercher le curseur.
+ */
+.parcours__boite {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  border: 1px solid var(--parcours-bordure);
+  border-radius: 11px;
+  background-color: var(--parcours-fond-champ);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.parcours__boite:hover {
+  border-color: #c9d3e4;
+}
+
+.parcours__boite:focus-within {
+  border-color: var(--hope-bleu-lisible);
+  box-shadow: 0 0 0 4px var(--parcours-anneau);
+}
+
+.parcours__icone {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-left: 17px;
+  color: var(--parcours-icone);
+  transition: color 0.18s ease;
+}
+
+.parcours__boite:focus-within .parcours__icone {
+  color: var(--hope-violet);
+}
+
+.parcours__saisie {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  padding: 0 16px 0 13px;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  font: inherit;
+  font-size: 15.5px;
+  color: var(--parcours-encre);
+  /* La boite porte l'anneau de focus : la saisie n'en dessine pas un
+     second a l'interieur. */
+  outline: none;
+}
+
+.parcours__saisie::placeholder {
+  color: var(--parcours-placeholder);
+  opacity: 1;
+}
+
+.parcours__saisie:disabled {
+  cursor: progress;
+}
+
+select.parcours__saisie {
+  appearance: none;
+  padding-right: 46px;
+  cursor: pointer;
+}
+
+/* Tant que rien n'est choisi, la liste parle comme un placeholder. */
+select.parcours__saisie[data-vide='true'] {
+  color: var(--parcours-placeholder);
+}
+
+select.parcours__saisie option {
+  color: var(--parcours-encre);
+}
+
+.parcours__chevron {
+  position: absolute;
+  right: 16px;
+  width: 18px;
+  height: 18px;
+  color: var(--hope-texte-doux);
+  pointer-events: none;
+  transition: transform 0.2s var(--parcours-rythme);
+}
+
+.parcours__boite:focus-within .parcours__chevron {
+  transform: translateY(1px);
+}
+
+/* L'indicatif : lu, pas saisi. Il suit le pays choisi. */
+.parcours__prefixe {
+  flex: none;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+  padding: 0 17px;
+  border-left: 1px solid var(--parcours-bordure);
+  border-right: 1px solid var(--parcours-bordure);
+  background-color: #f3f6fb;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--parcours-encre);
+  font-variant-numeric: tabular-nums;
+}
+
+.parcours__boite--prefixe .parcours__saisie {
+  padding-left: 16px;
+}
+
+/* ---------------- Erreurs ---------------- */
+
+.parcours__champ--erreur .parcours__boite {
+  border-color: var(--hope-erreur);
+}
+
+.parcours__champ--erreur .parcours__boite:focus-within {
+  box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.14);
+}
+
+.parcours__champ--erreur .parcours__icone {
+  color: var(--hope-erreur);
+}
+
+.parcours__erreur {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--hope-erreur);
+  animation: parcours-message 0.22s var(--parcours-rythme) both;
+}
+
+.parcours__recap {
+  min-height: 1.4em;
+  margin: -8px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--hope-erreur);
+}
+
+.parcours__recap:empty {
+  min-height: 0;
+  margin: 0;
+}
+
+/* ---------------- Bouton ---------------- */
+
+/*
+ * L'orange de la charte, assombri d'un cran : le blanc sur l'orange clair
+ * ne se lit qu'a 2,4 pour 1. En orange fonce et en texte de 18 px gras,
+ * il atteint le seuil de lecture des grands textes.
+ */
+.parcours__continuer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  margin-top: 4px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #cc842b 0%, #bd7522 100%);
+  box-shadow: 0 12px 26px -12px rgba(189, 117, 34, 0.75);
+  font: inherit;
+  font-size: 18.7px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    transform 0.18s var(--parcours-rythme),
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.parcours__continuer:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px -12px rgba(189, 117, 34, 0.85);
+  filter: brightness(1.04);
+}
+
+.parcours__continuer:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.parcours__continuer:focus-visible {
+  outline: 3px solid var(--hope-violet);
+  outline-offset: 3px;
+}
+
+.parcours__continuer:disabled {
+  cursor: progress;
+  filter: saturate(0.85);
+}
+
+.parcours__fleche {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s var(--parcours-rythme);
+}
+
+.parcours__continuer:hover:not(:disabled) .parcours__fleche {
+  transform: translateX(4px);
+}
+
+.parcours__rotation {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: parcours-rotation 0.8s linear infinite;
+}
+
+/* ---------------- Etapes a venir ---------------- */
+
+.parcours__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  margin: 40px auto 0;
+  animation: parcours-entree 0.6s var(--parcours-rythme) 0.12s both;
+}
+
+.parcours__secondaire {
+  min-height: 52px;
+  border: 1px solid var(--parcours-bordure);
+  border-radius: 11px;
+  background-color: #ffffff;
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--hope-violet);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.parcours__secondaire:hover {
+  border-color: var(--hope-bleu);
+  background-color: #f7faff;
+}
+
+.parcours__secondaire:focus-visible {
+  outline: 3px solid var(--hope-violet);
+  outline-offset: 3px;
+}
+
+.parcours__attente,
+.parcours__alerte {
+  margin: 48px 0 0;
+  text-align: center;
+  font-size: 15px;
+  color: var(--hope-texte-doux);
+}
+
+.parcours__alerte {
+  color: var(--hope-erreur);
+}
+
+/* ---------------- Mouvement ---------------- */
+
+@keyframes parcours-entree {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes parcours-message {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes parcours-rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcours__entete,
+  .parcours__formulaire,
+  .parcours__actions,
+  .parcours__erreur {
+    animation: none;
+  }
+
+  .parcours__continuer,
+  .parcours__fleche,
+  .parcours__chevron,
+  .parcours__pas,
+  .parcours__boite,
+  .parcours__icone {
+    transition: none;
+  }
+
+  .parcours__rotation {
+    animation-duration: 2.4s;
+  }
+}
+
+/* ---------------- Telephone ---------------- */
+
+@media (max-width: 640px) {
+  .parcours {
+    padding: 26px 16px 56px;
+  }
+
+  .parcours__logo {
+    width: 140px;
+  }
+
+  .parcours__accroche {
+    font-size: 15.5px;
+  }
+
+  .parcours__formulaire {
+    gap: 18px;
+    margin-top: 34px;
+  }
+
+  .parcours__section {
+    font-size: 20px;
+  }
+
+  /* Deux champs cote a cote seraient trop etroits pour y ecrire. */
+  .parcours__paire {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  /* 16 px au moins : en dessous, iOS agrandit la page au focus. */
+  .parcours__saisie {
+    font-size: 16px;
+  }
+
+  .parcours__rayons {
+    width: 170px;
+    height: 170px;
+  }
+}

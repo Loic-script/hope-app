@@ -130,7 +130,11 @@ export default function Authentification() {
           {section === 'connexion' ? (
             <Connexion navigate={navigate} types={types ?? []} />
           ) : (
-            <Inscription types={types ?? []} onInscrit={() => setSection('connexion')} />
+            <Inscription
+              types={types ?? []}
+              navigate={navigate}
+              onInscrit={() => setSection('connexion')}
+            />
           )}
 
           <footer className="carte-connexion__pied">
@@ -329,7 +333,7 @@ function Connexion({ navigate, types }) {
    Section inscription
    ================================================================ */
 
-function Inscription({ types, onInscrit }) {
+function Inscription({ types, navigate, onInscrit }) {
   const [champs, setChamps] = useState(FORMULAIRE_VIDE);
   const [erreursChamps, setErreursChamps] = useState({});
   const [erreur, setErreur] = useState('');
@@ -387,6 +391,26 @@ function Inscription({ types, onInscrit }) {
         motDePasse: champs.motDePasse,
         confirmation: champs.confirmation,
       });
+      /*
+       * Le compte d'un donateur s'ouvre sans attendre HOPE : il entre
+       * donc aussitot, et son parcours d'accueil commence. Lui faire
+       * retaper ce qu'il vient d'ecrire pour se connecter serait une
+       * etape pour rien.
+       */
+      if (champs.typeUtilisateur === 'donateur') {
+        try {
+          const session = await utilisateurService.connecter(
+            champs.email.trim(),
+            champs.motDePasse,
+            'donateur',
+            true
+          );
+          navigate(session.destination, { replace: true });
+          return;
+        } catch {
+          // Le compte existe : la connexion manuelle reste possible.
+        }
+      }
       setSucces(message);
       setChamps(FORMULAIRE_VIDE);
     } catch (echec) {

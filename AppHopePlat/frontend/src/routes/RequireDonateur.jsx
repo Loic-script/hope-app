@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import {
@@ -20,6 +20,18 @@ export default function RequireDonateur() {
   const emplacement = useLocation();
   const [etat, setEtat] = useState('verification');
   const [donateur, setDonateur] = useState(null);
+
+  /*
+   * Relit le profil. Le parcours d'accueil l'appelle apres chaque etape :
+   * le nom qu'on vient de donner doit se lire aussitot dans l'espace.
+   */
+  const rafraichir = useCallback(async () => {
+    try {
+      setDonateur(await utilisateurService.recupererDonateur());
+    } catch {
+      /* la session reste ouverte ; la prochaine lecture reessaiera */
+    }
+  }, []);
 
   useEffect(() => {
     let annule = false;
@@ -63,5 +75,5 @@ export default function RequireDonateur() {
     return <Navigate to="/authentification" replace state={{ depuis: emplacement.pathname }} />;
   }
 
-  return <Outlet context={{ donateur }} />;
+  return <Outlet context={{ donateur, rafraichir }} />;
 }

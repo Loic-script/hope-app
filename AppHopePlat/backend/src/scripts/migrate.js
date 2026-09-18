@@ -52,6 +52,7 @@ const TABLES_ATTENDUES = {
   ],
   'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role'],
   'Espace benevole': ['benevole', 'mission', 'inscription_mission', 'tache', 'tache_fichier', 'avis_mission'],
+  'Espace donateur': ['donateur'],
   'Espace bailleur': [
     'bailleur',
     'bailleur_contact',

@@ -283,12 +283,10 @@ export async function connecter({ email, motDePasse, typeUtilisateur } = {}) {
     type,
     espace: ESPACE_PAR_TYPE[type],
     profilComplete,
-    // Le donateur n'a pas de formulaire de completion : il entre
-    // directement dans son espace.
-    // Seul le benevole a encore une fiche a remplir avant d'entrer : le
-    // bailleur precise son organisation quand il veut, depuis ses
-    // parametres, et le donateur n'a rien a remplir.
-    completionRequise: !profilComplete && type === 'benevole',
+    // Le benevole remplit sa fiche avant d'entrer ; le donateur suit son
+    // parcours d'accueil en cinq etapes. Le bailleur, lui, precise son
+    // organisation quand il veut, depuis ses parametres.
+    completionRequise: !profilComplete && (type === 'benevole' || type === 'donateur'),
   };
 }
 

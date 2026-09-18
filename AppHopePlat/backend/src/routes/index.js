@@ -10,6 +10,7 @@ import volunteerAuthRoutes from './volunteerAuth.routes.js';
 import volunteerSpaceRoutes from './volunteerSpace.routes.js';
 import funderRoutes from './funder.routes.js';
 import espaceRoutes from './espace.routes.js';
+import donorSpaceRoutes from './donorSpace.routes.js';
 import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
 
 const router = Router();
@@ -48,5 +49,8 @@ router.use('/bailleur', funderRoutes);
 // Notifications et messages, communs a tous les espaces utilisateurs :
 // le benevole et le bailleur y lisent les leurs avec leur propre jeton.
 router.use('/espace', espaceRoutes);
+
+// Espace donateur : le parcours d'accueil, puis le reste a venir.
+router.use('/donateur', donorSpaceRoutes);
 
 export default router;
