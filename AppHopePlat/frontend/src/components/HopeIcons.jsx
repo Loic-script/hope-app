@@ -424,3 +424,62 @@ export function IconeLecture({ className = '' }) {
     </svg>
   );
 }
+
+/** Un recu coche : le don ponctuel, regle une fois. */
+export function IconeRecuCoche({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path
+        d="M30 24.5V8a3 3 0 0 0-3-3H10a3 3 0 0 0-3 3v33l3.5-2.5L14 41l3.5-2.5L21 41l2-1.4"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M13 14h11M13 20h11M13 26h6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="33" cy="35" r="9" stroke="currentColor" strokeWidth="2.4" />
+      <path
+        d="m29 35 3 3 5-6"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Un calendrier et deux fleches qui tournent : le don mensuel. */
+export function IconeCalendrierRenouvele({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path
+        d="M24 38H9a3 3 0 0 1-3-3V13a3 3 0 0 1 3-3h26a3 3 0 0 1 3 3v9"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M6 18h32M14 6v7M30 6v7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M12 25h6M12 31h4M22 25h4" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path
+        d="M43 33a8 8 0 0 1-14 4.5M29 37.5V33h4.5M29 29a8 8 0 0 1 14-2.5M43 26.5V31h-4.5"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Un i dans un cercle : une information. */
+export function IconeInfo({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 11v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="12" cy="7.8" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}

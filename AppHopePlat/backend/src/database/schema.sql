@@ -1747,3 +1747,17 @@ ALTER TABLE donateur ADD CONSTRAINT donateur_mode_paiement_valide CHECK (
   mode_paiement IS NULL OR mode_paiement IN (
     'mvola', 'orange_money', 'virement_bancaire', 'depot_bancaire',
     'especes', 'carte_bancaire', 'virement_international', 'plateforme'));
+
+/*
+ * La fiche du donateur, etape 5 : la frequence de son don.
+ *
+ * Le vocabulaire de donations.frequency : ONE_TIME (ponctuel) ou MONTHLY
+ * (mensuel). Enregistrer cette etape clot le parcours : etape_suivante
+ * passe a 6, et le compte est marque complet -- la connexion ne ramene
+ * plus au formulaire.
+ */
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS frequence VARCHAR(10);
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_frequence_valide;
+ALTER TABLE donateur ADD CONSTRAINT donateur_frequence_valide CHECK (
+  frequence IS NULL OR frequence IN ('ONE_TIME', 'MONTHLY'));

@@ -25,7 +25,7 @@ export async function trouver(utilisateurId, client = null) {
             d.ville, d.pays, d.profession, d.source_connaissance,
             d.type_donateur, d.nom_structure, d.site_web, d.devise,
             d.langue, d.fuseau_horaire,
-            d.affectation, d.projet_id, d.mode_paiement,
+            d.affectation, d.projet_id, d.mode_paiement, d.frequence,
             d.etape_suivante
        FROM utilisateur u
        JOIN donateur d ON d.utilisateur_id = u.id
@@ -107,4 +107,19 @@ export async function enregistrerEtape4(utilisateurId, modePaiement, client = nu
     [utilisateurId, modePaiement],
     client
   );
+}
+
+/**
+ * L'etape 5 : la frequence. C'est la derniere : le parcours se clot, et
+ * le compte est marque complet dans la meme transaction.
+ */
+export async function enregistrerEtape5(utilisateurId, frequence, client = null) {
+  await query(
+    `UPDATE donateur
+        SET frequence = $2, etape_suivante = 6, mis_a_jour_le = NOW()
+      WHERE utilisateur_id = $1`,
+    [utilisateurId, frequence],
+    client
+  );
+  await query('UPDATE utilisateur SET profil_complete = TRUE WHERE id = $1', [utilisateurId], client);
 }

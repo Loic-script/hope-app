@@ -202,6 +202,22 @@ export const MODES_PAIEMENT = [
   },
 ];
 
+/** Les deux frequences : le vocabulaire de donations.frequency. */
+export const FREQUENCES = [
+  {
+    cle: 'ONE_TIME',
+    libelle: 'Don ponctuel',
+    texte: 'Un don payé en une seule fois.',
+    detail: 'Aucun versement récurrent.',
+  },
+  {
+    cle: 'MONTHLY',
+    libelle: 'Don mensuel',
+    texte: 'Un don renouvelé chaque mois.',
+    detail: 'Un soutien régulier aux projets de HOPE.',
+  },
+];
+
 /** Le numero au format international : "+261341234567". */
 const TELEPHONE_E164 = /^\+[1-9]\d{6,14}$/;
 
@@ -239,7 +255,10 @@ export async function recuperer(utilisateurId) {
     },
     // Vide tant que l'etape 4 n'a pas ete enregistree.
     paiement: { mode: fiche.modePaiement ?? '' },
+    // Vide tant que l'etape 5 n'a pas ete enregistree.
+    frequence: { valeur: fiche.frequence ?? '' },
     options: {
+      frequences: FREQUENCES,
       modesPaiement: MODES_PAIEMENT,
       sources: SOURCES_CONNAISSANCE,
       types: TYPES_DONATEUR,
@@ -519,6 +538,27 @@ export async function enregistrerEtape4(utilisateurId, corps = {}) {
   await transaction(async (client) => {
     await donorProfileRepository.garantir(utilisateurId, client);
     await donorProfileRepository.enregistrerEtape4(utilisateurId, mode, client);
+  });
+
+  return recuperer(utilisateurId);
+}
+
+/* ================================================================
+   Etape 5 : la frequence, et la fin du parcours
+   ================================================================ */
+
+/** Enregistre l'etape 5 et clot le parcours. */
+export async function enregistrerEtape5(utilisateurId, corps = {}) {
+  const frequence = String(corps.frequence ?? '').trim().toUpperCase();
+  if (!FREQUENCES.some((f) => f.cle === frequence)) {
+    throw new ErreurValidation('Choisissez la fréquence de votre don.', {
+      frequence: 'Choisissez un don ponctuel ou mensuel',
+    });
+  }
+
+  await transaction(async (client) => {
+    await donorProfileRepository.garantir(utilisateurId, client);
+    await donorProfileRepository.enregistrerEtape5(utilisateurId, frequence, client);
   });
 
   return recuperer(utilisateurId);

@@ -16,6 +16,7 @@ router.put('/profil/etape-1', profil.enregistrerEtape1);
 router.put('/profil/etape-2', profil.enregistrerEtape2);
 router.put('/profil/etape-3', profil.enregistrerEtape3);
 router.put('/profil/etape-4', profil.enregistrerEtape4);
+router.put('/profil/etape-5', profil.enregistrerEtape5);
 
 // Les projets que l'on peut soutenir : leur face publique seulement.
 router.get('/projets', profil.projets);

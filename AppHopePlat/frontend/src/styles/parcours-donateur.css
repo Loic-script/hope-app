@@ -461,40 +461,6 @@ select.parcours__saisie option {
   animation: parcours-rotation 0.8s linear infinite;
 }
 
-/* ---------------- Etapes a venir ---------------- */
-
-.parcours__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 420px;
-  margin: 40px auto 0;
-  animation: parcours-entree 0.6s var(--parcours-rythme) 0.12s both;
-}
-
-.parcours__secondaire {
-  min-height: 52px;
-  border: 1px solid var(--parcours-bordure);
-  border-radius: 11px;
-  background-color: #ffffff;
-  font: inherit;
-  font-size: 15.5px;
-  font-weight: 600;
-  color: var(--hope-violet);
-  cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease;
-}
-
-.parcours__secondaire:hover {
-  border-color: var(--hope-bleu);
-  background-color: #f7faff;
-}
-
-.parcours__secondaire:focus-visible {
-  outline: 3px solid var(--hope-violet);
-  outline-offset: 3px;
-}
-
 .parcours__attente,
 .parcours__alerte {
   margin: 48px 0 0;
@@ -540,7 +506,6 @@ select.parcours__saisie option {
 @media (prefers-reduced-motion: reduce) {
   .parcours__entete,
   .parcours__formulaire,
-  .parcours__actions,
   .parcours__erreur {
     animation: none;
   }
@@ -810,10 +775,6 @@ select.parcours__saisie option {
 
 .parcours__retour:hover:not(:disabled) .parcours__fleche-retour {
   transform: translateX(-3px);
-}
-
-.parcours__actions .parcours__retour {
-  width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1520,6 +1481,51 @@ select.parcours__saisie option {
   }
 
   .parcours__paiement-nom {
+    font-size: 14px;
+  }
+}
+
+
+/* ============================================================
+   Etape 5 : la frequence du don
+   ============================================================ */
+
+/* La seconde ligne d'une carte : plus discrete, sous la premiere. */
+.parcours__mode-detail {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #8a87a0;
+}
+
+/*
+ * L'encart qui dit ce que le choix engage. Bleu pale, comme une note : il
+ * informe, il ne met pas en garde.
+ */
+.parcours__info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background-color: #e6eff9;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #2b4a73;
+}
+
+.parcours__info-icone {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  color: var(--hope-lien);
+}
+
+@media (max-width: 640px) {
+  .parcours__info {
+    align-items: flex-start;
+    padding: 14px 16px;
     font-size: 14px;
   }
 }

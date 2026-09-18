@@ -27,6 +27,12 @@ export async function listerProjets() {
   return data;
 }
 
+/** PUT /api/donateur/profil/etape-5 : la frequence ; clot le parcours. */
+export async function enregistrerEtape5(frequence) {
+  const { data } = await apiDonateur.put('/donateur/profil/etape-5', frequence);
+  return data;
+}
+
 /** PUT /api/donateur/profil/etape-4 : le mode de paiement. */
 export async function enregistrerEtape4(paiement) {
   const { data } = await apiDonateur.put('/donateur/profil/etape-4', paiement);

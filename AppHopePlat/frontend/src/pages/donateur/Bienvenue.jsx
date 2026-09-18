@@ -1,4 +1,4 @@
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import logoSurFondViolet from '../../assets/LOGO_WORDMARK_SUR_FOND_VIOLET.png';
 import * as utilisateurService from '../../services/utilisateur.service.js';
@@ -14,6 +14,8 @@ import * as utilisateurService from '../../services/utilisateur.service.js';
 export default function BienvenueDonateur() {
   const { donateur } = useOutletContext();
   const navigate = useNavigate();
+  // On arrive du parcours d'accueil : il vient d'etre termine.
+  const parcoursTermine = Boolean(useLocation().state?.parcoursTermine);
 
   async function seDeconnecter() {
     await utilisateurService.deconnecterDonateur();
@@ -27,6 +29,12 @@ export default function BienvenueDonateur() {
       <h1 className="donateur__titre">
         Bienvenue, {donateur?.prenom || 'chez HOPE'}
       </h1>
+
+      {parcoursTermine && (
+        <p className="donateur__merci" role="status">
+          Merci ! Votre profil de donateur est complet.
+        </p>
+      )}
 
       <p className="donateur__texte">
         Votre compte donateur est ouvert. Votre espace — suivi de vos dons, projets soutenus

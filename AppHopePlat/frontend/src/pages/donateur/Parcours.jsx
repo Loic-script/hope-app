@@ -15,8 +15,10 @@ import {
   IconeFlecheGauche,
   IconeGlobe,
   IconeGroupe,
+  IconeCalendrierRenouvele,
   IconeHorloge,
   IconeImmeuble,
+  IconeInfo,
   IconeLangue,
   IconeLecture,
   IconeLien,
@@ -26,6 +28,7 @@ import {
   IconePieces,
   IconePoigneeMain,
   IconeRecherche,
+  IconeRecuCoche,
   IconeRepere,
   IconeSoleil,
   IconeTelephone,
@@ -62,7 +65,8 @@ const NOMBRE_ETAPES = 5;
  * etape est enregistree en la quittant ; le serveur retient ou
  * reprendre, et un donateur qui s'arrete en chemin retrouve sa place.
  *
- * Les etapes 1 a 4 sont construites ; la cinquieme attend son modele.
+ * "Terminer", a la cinquieme, clot le parcours : le compte est marque
+ * complet et le donateur entre dans son espace.
  *
  * "Continuer" mene toujours a l'etape suivante, meme quand on revient
  * corriger une etape deja franchie. "Retour" garde ce qu'on a saisi sur
@@ -172,11 +176,22 @@ export default function Parcours() {
             onSuivante={(reponse) => apresEnregistrement(4, reponse)}
           />
         )}
-        {profil && etape > 4 && (
-          <EtapeAVenir
-            key={`etape-${etape}`}
-            etape={etape}
-            onRetour={() => allerA(etape - 1)}
+        {profil && etape === 5 && (
+          <EtapeFrequence
+            key="etape-5"
+            initiales={brouillons[5] ?? profil.frequence ?? {}}
+            frequences={profil.options?.frequences ?? []}
+            modePaiement={profil.paiement?.mode}
+            onRetour={(valeurs) => {
+              setBrouillons((precedents) => ({ ...precedents, 5: valeurs }));
+              allerA(4);
+            }}
+            onTerminer={async () => {
+              // Le parcours est clos : la garde doit relire un compte
+              // desormais complet avant qu'on entre dans l'espace.
+              await rafraichir?.();
+              navigate('/donateur', { replace: true, state: { parcoursTermine: true } });
+            }}
           />
         )}
       </main>
@@ -1493,41 +1508,144 @@ function EtapePaiement({ initiales, pays, modes, onRetour, onSuivante }) {
 }
 
 /* ================================================================
-   Etape 5 : en attente de son modele
+   Etape 5 : la frequence du don
    ================================================================ */
 
-const ETAPES_A_VENIR = {
-  5: 'La fréquence de votre don',
+/** L'illustration de chaque frequence. */
+const ILLUSTRATIONS_FREQUENCE = {
+  ONE_TIME: IconeRecuCoche,
+  MONTHLY: IconeCalendrierRenouvele,
 };
 
 /**
- * Provisoire : l'etape existe dans le parcours, pas encore a l'ecran.
- * Les informations deja donnees sont enregistrees ; on peut revenir les
- * corriger, ou entrer dans son espace.
+ * Le moyen de paiement tel qu'on le dit dans une phrase : "par MVola",
+ * "en especes", "par carte bancaire".
  */
-function EtapeAVenir({ etape, onRetour }) {
-  const navigate = useNavigate();
+const MOYEN_DANS_UNE_PHRASE = {
+  mvola: 'par MVola',
+  orange_money: 'par Orange Money',
+  virement_bancaire: 'par virement bancaire',
+  depot_bancaire: 'par dépôt bancaire',
+  especes: 'en espèces',
+  carte_bancaire: 'par carte bancaire',
+  virement_international: 'par virement international',
+  plateforme: 'sur une plateforme de paiement',
+};
+
+/**
+ * Etape 5 : la frequence du don, et la fin du parcours.
+ *
+ * Le modele annoncait "Votre premier don est deja paye" : c'est faux --
+ * aucun paiement n'a lieu pendant ce parcours. L'encart dit donc ce qui
+ * est vrai : rien n'est preleve ici, et comment le don sera regle.
+ *
+ * Le don ponctuel est retenu d'avance, comme dans le modele : il
+ * n'engage a rien au-dela d'un versement.
+ */
+function EtapeFrequence({ initiales, frequences, modePaiement, onRetour, onTerminer }) {
+  const [frequence, setFrequence] = useState(initiales.valeur || 'ONE_TIME');
+  const [envoi, setEnvoi] = useState(false);
+  const [refus, setRefus] = useState('');
+
+  const moyen = MOYEN_DANS_UNE_PHRASE[modePaiement];
+  const information =
+    frequence === 'MONTHLY'
+      ? `Rien n’est prélevé à cette étape. Votre don sera réglé chaque mois${moyen ? ` ${moyen}` : ''}.`
+      : `Rien n’est prélevé à cette étape. Votre don sera réglé en une seule fois${moyen ? ` ${moyen}` : ''}.`;
+
+  async function soumettre(evenement) {
+    evenement.preventDefault();
+    setRefus('');
+    setEnvoi(true);
+    try {
+      const reponse = await donateurService.enregistrerEtape5({ frequence });
+      await onTerminer(reponse);
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Votre choix n’a pas pu être enregistré.'));
+      setEnvoi(false);
+    }
+  }
+
   return (
     <>
       <EntetePas
-        etape={etape}
-        titre={ETAPES_A_VENIR[etape] ?? 'La suite'}
-        accroche="Cette étape arrive très bientôt. Vos informations sont bien enregistrées."
+        etape={5}
+        titre="Fréquence de votre don"
+        accroche="Souhaitez-vous renouveler votre soutien chaque mois ?"
       />
-      <div className="parcours__actions">
-        <button type="button" className="parcours__retour" onClick={onRetour}>
-          <IconeFlecheGauche className="parcours__fleche-retour" />
-          Retour
-        </button>
-        <button
-          type="button"
-          className="parcours__continuer"
-          onClick={() => navigate('/donateur')}
-        >
-          Accéder à mon espace
-          <IconeFleche className="parcours__fleche" />
-        </button>
-      </div>
+
+      <form className="parcours__formulaire" onSubmit={soumettre} noValidate aria-label="Fréquence de votre don">
+        <fieldset className="parcours__groupe">
+          <legend className="sr-only">Fréquence de votre don</legend>
+          <div className="parcours__modes">
+            {frequences.map((option) => {
+              const Illustration = ILLUSTRATIONS_FREQUENCE[option.cle] ?? IconeRecuCoche;
+              const choisi = frequence === option.cle;
+              return (
+                <label
+                  key={option.cle}
+                  className={`parcours__mode${choisi ? ' parcours__mode--choisi' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="frequence"
+                    value={option.cle}
+                    checked={choisi}
+                    onChange={() => setFrequence(option.cle)}
+                    disabled={envoi}
+                    className="parcours__type-radio"
+                    aria-describedby={`donateur-frequence-${option.cle}`}
+                  />
+                  <span className="parcours__rond" aria-hidden="true" />
+                  <Illustration className="parcours__mode-illustration" />
+                  <span className="parcours__mode-titre">{option.libelle}</span>
+                  <span className="parcours__mode-texte" id={`donateur-frequence-${option.cle}`}>
+                    {option.texte}
+                    <span className="parcours__mode-detail">{option.detail}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        {/* Ce que le choix engage, dit a mesure qu'on le fait. */}
+        <p className="parcours__info" aria-live="polite">
+          <IconeInfo className="parcours__info-icone" />
+          <span>{information}</span>
+        </p>
+
+        <hr className="parcours__separateur" />
+
+        <div className="parcours__boutons">
+          <button
+            type="button"
+            className="parcours__retour"
+            onClick={() => onRetour({ valeur: frequence })}
+            disabled={envoi}
+          >
+            <IconeFlecheGauche className="parcours__fleche-retour" />
+            Retour
+          </button>
+          <button type="submit" className="parcours__continuer" disabled={envoi} aria-busy={envoi}>
+            {envoi ? (
+              <>
+                <span className="parcours__rotation" aria-hidden="true" />
+                Enregistrement…
+              </>
+            ) : (
+              <>
+                Terminer
+                <IconeFleche className="parcours__fleche" />
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="parcours__recap" role="alert">
+          {refus}
+        </p>
+      </form>
     </>
   );
 }
