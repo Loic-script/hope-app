@@ -15,5 +15,8 @@ export const profil = {
   enregistrerEtape3: gerer((req) =>
     donorProfileService.enregistrerEtape3(req.donateur.id, req.body)
   ),
+  enregistrerEtape4: gerer((req) =>
+    donorProfileService.enregistrerEtape4(req.donateur.id, req.body)
+  ),
   projets: gerer(async () => ({ items: await donorProfileService.projetsProposes() })),
 };

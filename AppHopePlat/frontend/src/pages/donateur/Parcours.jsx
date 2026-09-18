@@ -2,6 +2,10 @@ import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { isValidPhoneNumber, parsePhoneNumberFromString } from 'libphonenumber-js';
 
+import logoCartes from '../../assets/paiement/cartes-bancaires.webp';
+import imageEspeces from '../../assets/paiement/especes.webp';
+import logoMvola from '../../assets/paiement/mvola.webp';
+import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
   IconeChevronBas,
@@ -27,6 +31,12 @@ import {
   IconeTelephone,
   IconeUtilisateur,
 } from '../../components/HopeIcons.jsx';
+import {
+  IllustrationDepot,
+  IllustrationInternational,
+  IllustrationPlateformes,
+  IllustrationVirement,
+} from '../../components/IllustrationsPaiement.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
@@ -52,8 +62,7 @@ const NOMBRE_ETAPES = 5;
  * etape est enregistree en la quittant ; le serveur retient ou
  * reprendre, et un donateur qui s'arrete en chemin retrouve sa place.
  *
- * Les etapes 1 a 3 sont construites ; les suivantes attendent leur
- * modele.
+ * Les etapes 1 a 4 sont construites ; la cinquieme attend son modele.
  *
  * "Continuer" mene toujours a l'etape suivante, meme quand on revient
  * corriger une etape deja franchie. "Retour" garde ce qu'on a saisi sur
@@ -103,7 +112,7 @@ export default function Parcours() {
       <RayonsDecor className="parcours__rayons parcours__rayons--gauche" />
       <RayonsDecor className="parcours__rayons parcours__rayons--droite" />
 
-      <main className="parcours__colonne">
+      <main className={`parcours__colonne${etape === 4 ? ' parcours__colonne--large' : ''}`}>
         <HopeLogo className="parcours__logo" />
 
         {chargement && !donnees && (
@@ -150,7 +159,20 @@ export default function Parcours() {
             onSuivante={(reponse) => apresEnregistrement(3, reponse)}
           />
         )}
-        {profil && etape > 3 && (
+        {profil && etape === 4 && (
+          <EtapePaiement
+            key="etape-4"
+            initiales={brouillons[4] ?? profil.paiement ?? {}}
+            pays={profil.informations?.pays || PAYS_PAR_DEFAUT}
+            modes={profil.options?.modesPaiement ?? []}
+            onRetour={(valeurs) => {
+              setBrouillons((precedents) => ({ ...precedents, 4: valeurs }));
+              allerA(3);
+            }}
+            onSuivante={(reponse) => apresEnregistrement(4, reponse)}
+          />
+        )}
+        {profil && etape > 4 && (
           <EtapeAVenir
             key={`etape-${etape}`}
             etape={etape}
@@ -1307,11 +1329,174 @@ function CarteProjet({ projet, choisi, onChange, disabled }) {
 }
 
 /* ================================================================
-   Etapes 4 et 5 : en attente de leur modele
+   Etape 4 : le mode de paiement
+   ================================================================ */
+
+/**
+ * Le visuel de chaque moyen : son logo quand il a une marque que l'on
+ * reconnait, une illustration au trait de la charte sinon.
+ */
+const VISUELS_PAIEMENT = {
+  mvola: { image: logoMvola },
+  orange_money: { image: logoOrangeMoney },
+  virement_bancaire: { Illustration: IllustrationVirement },
+  depot_bancaire: { Illustration: IllustrationDepot },
+  especes: { image: imageEspeces },
+  carte_bancaire: { image: logoCartes },
+  virement_international: { Illustration: IllustrationInternational },
+  plateforme: { Illustration: IllustrationPlateformes },
+};
+
+/**
+ * Etape 4 : le mode de paiement.
+ *
+ * Huit cartes, dans l'ordre du modele : les moyens de Madagascar, puis
+ * ceux de l'etranger. Pour un donateur qui vit hors de Madagascar, ces
+ * derniers passent devant -- MVola ne lui est guere utile en premier.
+ *
+ * Rien n'est coche d'avance : un moyen de paiement se choisit, il ne se
+ * subit pas. Le choix fait, une phrase dit ce qu'il suppose.
+ */
+function EtapePaiement({ initiales, pays, modes, onRetour, onSuivante }) {
+  const depuisEtranger = Boolean(pays) && pays !== 'MG';
+  const ordonnes = depuisEtranger
+    ? [...modes.filter((m) => m.zone === 'international'), ...modes.filter((m) => m.zone !== 'international')]
+    : modes;
+
+  const [mode, setMode] = useState(initiales.mode || '');
+  const [soumis, setSoumis] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
+  const [refus, setRefus] = useState('');
+  const formulaire = useRef(null);
+
+  const choisi = modes.find((m) => m.cle === mode);
+  const erreur = soumis && !choisi ? 'Choisissez votre moyen de paiement.' : '';
+
+  async function soumettre(evenement) {
+    evenement.preventDefault();
+    setSoumis(true);
+    setRefus('');
+
+    if (!choisi) {
+      formulaire.current?.querySelector('input[name="paiement"]')?.focus();
+      return;
+    }
+
+    setEnvoi(true);
+    try {
+      const reponse = await donateurService.enregistrerEtape4({ mode });
+      await onSuivante(reponse);
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Votre choix n’a pas pu être enregistré.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <>
+      <EntetePas
+        etape={4}
+        titre="Mode de paiement"
+        accroche="Choisissez votre moyen de paiement pour poursuivre votre don."
+      />
+
+      <form
+        ref={formulaire}
+        className="parcours__formulaire"
+        onSubmit={soumettre}
+        noValidate
+        aria-label="Mode de paiement"
+      >
+        <fieldset className="parcours__groupe" aria-describedby="donateur-paiement-aide">
+          <legend className="parcours__section parcours__section--legende">Type de paiement</legend>
+
+          <div className="parcours__paiements">
+            {ordonnes.map((moyen) => {
+              const visuel = VISUELS_PAIEMENT[moyen.cle] ?? {};
+              const actif = mode === moyen.cle;
+              return (
+                <label
+                  key={moyen.cle}
+                  className={`parcours__paiement${actif ? ' parcours__paiement--choisi' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="paiement"
+                    value={moyen.cle}
+                    checked={actif}
+                    onChange={() => {
+                      setMode(moyen.cle);
+                      setRefus('');
+                    }}
+                    disabled={envoi}
+                    className="parcours__type-radio"
+                  />
+                  <span className="parcours__rond" aria-hidden="true" />
+                  <span className="parcours__paiement-visuel" aria-hidden="true">
+                    {visuel.image ? (
+                      <img src={visuel.image} alt="" decoding="async" />
+                    ) : (
+                      visuel.Illustration && <visuel.Illustration />
+                    )}
+                  </span>
+                  <span className="parcours__paiement-nom">{moyen.libelle}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Ce que le moyen choisi suppose, dit a mesure qu'on le choisit. */}
+          <p className="parcours__aide parcours__paiement-aide" id="donateur-paiement-aide" aria-live="polite">
+            {choisi
+              ? choisi.description
+              : depuisEtranger
+                ? 'Les moyens utilisables depuis l’étranger sont proposés en premier.'
+                : 'Choisissez le moyen que vous utiliserez pour ce don.'}
+          </p>
+          {erreur && <p className="parcours__erreur">{erreur}</p>}
+        </fieldset>
+
+        <hr className="parcours__separateur" />
+
+        <div className="parcours__boutons">
+          <button
+            type="button"
+            className="parcours__retour"
+            onClick={() => onRetour({ mode })}
+            disabled={envoi}
+          >
+            <IconeFlecheGauche className="parcours__fleche-retour" />
+            Retour
+          </button>
+          <button type="submit" className="parcours__continuer" disabled={envoi} aria-busy={envoi}>
+            {envoi ? (
+              <>
+                <span className="parcours__rotation" aria-hidden="true" />
+                Enregistrement…
+              </>
+            ) : (
+              <>
+                Continuer
+                <IconeFleche className="parcours__fleche" />
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="parcours__recap" role="alert">
+          {refus || (erreur ? 'Choisissez un moyen de paiement pour continuer.' : '')}
+        </p>
+      </form>
+    </>
+  );
+}
+
+/* ================================================================
+   Etape 5 : en attente de son modele
    ================================================================ */
 
 const ETAPES_A_VENIR = {
-  4: 'Votre mode de paiement',
   5: 'La fréquence de votre don',
 };
 

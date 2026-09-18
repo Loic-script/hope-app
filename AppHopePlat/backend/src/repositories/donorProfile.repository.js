@@ -25,7 +25,7 @@ export async function trouver(utilisateurId, client = null) {
             d.ville, d.pays, d.profession, d.source_connaissance,
             d.type_donateur, d.nom_structure, d.site_web, d.devise,
             d.langue, d.fuseau_horaire,
-            d.affectation, d.projet_id,
+            d.affectation, d.projet_id, d.mode_paiement,
             d.etape_suivante
        FROM utilisateur u
        JOIN donateur d ON d.utilisateur_id = u.id
@@ -92,6 +92,19 @@ export async function enregistrerEtape3(utilisateurId, donnees, client = null) {
             mis_a_jour_le = NOW()
       WHERE utilisateur_id = $1`,
     [utilisateurId, donnees.affectation, donnees.projetId],
+    client
+  );
+}
+
+/** L'etape 4 : le mode de paiement. L'etape suivante ne recule pas. */
+export async function enregistrerEtape4(utilisateurId, modePaiement, client = null) {
+  await query(
+    `UPDATE donateur
+        SET mode_paiement = $2,
+            etape_suivante = GREATEST(etape_suivante, 5),
+            mis_a_jour_le = NOW()
+      WHERE utilisateur_id = $1`,
+    [utilisateurId, modePaiement],
     client
   );
 }

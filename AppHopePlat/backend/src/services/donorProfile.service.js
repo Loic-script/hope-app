@@ -143,6 +143,65 @@ export const LANGUES = (() => {
   return [...courantes, ...autres];
 })();
 
+/**
+ * Les modes de paiement, dans l'ordre du modele : ceux qu'on utilise a
+ * Madagascar, puis ceux qui viennent de l'etranger. "zone" permet au
+ * formulaire de mettre en tete ceux du pays du donateur.
+ *
+ * Les phrases disent ce qu'est le moyen, pas ce qui se passera ensuite :
+ * le paiement lui-meme n'est pas encore en ligne.
+ */
+export const MODES_PAIEMENT = [
+  {
+    cle: 'mvola',
+    libelle: 'MVola',
+    zone: 'madagascar',
+    description: 'Paiement mobile depuis un numéro Telma (034 ou 038).',
+  },
+  {
+    cle: 'orange_money',
+    libelle: 'Orange Money',
+    zone: 'madagascar',
+    description: 'Paiement mobile depuis un numéro Orange (032 ou 037).',
+  },
+  {
+    cle: 'virement_bancaire',
+    libelle: 'Virement bancaire',
+    zone: 'madagascar',
+    description: 'Virement depuis un compte bancaire à Madagascar.',
+  },
+  {
+    cle: 'depot_bancaire',
+    libelle: 'Dépôt bancaire',
+    zone: 'madagascar',
+    description: 'Versement en agence ou au distributeur, sur le compte de HOPE.',
+  },
+  {
+    cle: 'especes',
+    libelle: 'Espèces',
+    zone: 'madagascar',
+    description: 'Remise en main propre à l’équipe HOPE.',
+  },
+  {
+    cle: 'carte_bancaire',
+    libelle: 'Carte bancaire',
+    zone: 'international',
+    description: 'Visa, Mastercard ou CB.',
+  },
+  {
+    cle: 'virement_international',
+    libelle: 'Virement international',
+    zone: 'international',
+    description: 'Virement depuis un compte bancaire hors de Madagascar.',
+  },
+  {
+    cle: 'plateforme',
+    libelle: 'Plateformes de paiement',
+    zone: 'international',
+    description: 'PayPal ou un autre portefeuille en ligne.',
+  },
+];
+
 /** Le numero au format international : "+261341234567". */
 const TELEPHONE_E164 = /^\+[1-9]\d{6,14}$/;
 
@@ -178,7 +237,10 @@ export async function recuperer(utilisateurId) {
       affectation: fiche.affectation ?? '',
       projetId: fiche.projetId ?? null,
     },
+    // Vide tant que l'etape 4 n'a pas ete enregistree.
+    paiement: { mode: fiche.modePaiement ?? '' },
     options: {
+      modesPaiement: MODES_PAIEMENT,
       sources: SOURCES_CONNAISSANCE,
       types: TYPES_DONATEUR,
       devises: DEVISES,
@@ -436,6 +498,27 @@ export async function enregistrerEtape3(utilisateurId, corps = {}) {
   await transaction(async (client) => {
     await donorProfileRepository.garantir(utilisateurId, client);
     await donorProfileRepository.enregistrerEtape3(utilisateurId, { affectation, projetId }, client);
+  });
+
+  return recuperer(utilisateurId);
+}
+
+/* ================================================================
+   Etape 4 : le mode de paiement
+   ================================================================ */
+
+/** Enregistre l'etape 4 : un mode de paiement de la liste. */
+export async function enregistrerEtape4(utilisateurId, corps = {}) {
+  const mode = String(corps.mode ?? '').trim();
+  if (!MODES_PAIEMENT.some((m) => m.cle === mode)) {
+    throw new ErreurValidation('Choisissez votre moyen de paiement.', {
+      mode: 'Choisissez un moyen de paiement',
+    });
+  }
+
+  await transaction(async (client) => {
+    await donorProfileRepository.garantir(utilisateurId, client);
+    await donorProfileRepository.enregistrerEtape4(utilisateurId, mode, client);
   });
 
   return recuperer(utilisateurId);

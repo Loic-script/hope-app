@@ -27,6 +27,12 @@ export async function listerProjets() {
   return data;
 }
 
+/** PUT /api/donateur/profil/etape-4 : le mode de paiement. */
+export async function enregistrerEtape4(paiement) {
+  const { data } = await apiDonateur.put('/donateur/profil/etape-4', paiement);
+  return data;
+}
+
 /** PUT /api/donateur/profil/etape-3 : l'affectation du don. */
 export async function enregistrerEtape3(choix) {
   const { data } = await apiDonateur.put('/donateur/profil/etape-3', choix);

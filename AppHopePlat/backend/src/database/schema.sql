@@ -1735,3 +1735,15 @@ ALTER TABLE donateur ADD CONSTRAINT donateur_affectation_valide CHECK (
 ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_affectation_coherente;
 ALTER TABLE donateur ADD CONSTRAINT donateur_affectation_coherente CHECK (
   affectation IS DISTINCT FROM 'HOPE' OR projet_id IS NULL);
+
+/*
+ * La fiche du donateur, etape 4 : le mode de paiement qu'il prevoit.
+ * Un code ; la liste et ses libelles sont tenus par le service.
+ */
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS mode_paiement VARCHAR(30);
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_mode_paiement_valide;
+ALTER TABLE donateur ADD CONSTRAINT donateur_mode_paiement_valide CHECK (
+  mode_paiement IS NULL OR mode_paiement IN (
+    'mvola', 'orange_money', 'virement_bancaire', 'depot_bancaire',
+    'especes', 'carte_bancaire', 'virement_international', 'plateforme'));
