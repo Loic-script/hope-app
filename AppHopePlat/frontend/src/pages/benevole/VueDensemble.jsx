@@ -67,7 +67,7 @@ export default function VueDensemble() {
             Votre espace bénévole
           </p>
           <h1 className="accueil-benevole__titre">
-            Bonjour, {benevole?.prenom ?? 'bénévole'}
+            Bonjour, {benevole?.prenom || 'bénévole'}
           </h1>
           <p className="accueil-benevole__accroche">
             Vos tâches, et ce que vous avez déjà livré, au même endroit.

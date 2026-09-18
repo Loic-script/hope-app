@@ -269,7 +269,9 @@ export const consultation = {
       // entity_id est un entier ; l'identifiant d'un utilisateur est un
       // UUID. Il vit donc dans le libelle, qui le porte en clair.
       entityId: null,
-      label: `a consulté l’espace ${session.type} de « ${session.utilisateur.prenom} ${session.utilisateur.nom} »`,
+      label: `a consulté l’espace ${session.type} de « ${
+        `${session.utilisateur.prenom} ${session.utilisateur.nom}`.trim() || session.utilisateur.email
+      } »`,
     });
 
     return session;

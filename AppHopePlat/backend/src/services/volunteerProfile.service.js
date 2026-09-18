@@ -183,6 +183,37 @@ function photoValide(valeur) {
   return adresse;
 }
 
+/**
+ * Un nom ou un prenom.
+ *
+ * L'inscription ne les demande plus : ils arrivent ici. Absent, le champ
+ * ne change pas ; fourni, il ne peut pas etre vide -- on renseigne son
+ * nom, on ne l'efface pas.
+ */
+function nomPropre(valeur, champ) {
+  if (valeur === undefined) return undefined;
+  const propre = String(valeur ?? '').trim();
+  if (propre === '') {
+    throw new ErreurValidation('Le nom et le prénom sont obligatoires.', {
+      [champ]: 'Champ obligatoire',
+    });
+  }
+  if (propre.length > 80) {
+    throw new ErreurValidation('Le nom et le prénom font au plus 80 caractères.', {
+      [champ]: 'Au plus 80 caractères',
+    });
+  }
+  return propre;
+}
+
+/**
+ * Le telephone est UNIQUE : un numero deja porte par un autre compte
+ * doit revenir comme une erreur de champ, pas comme une erreur interne.
+ */
+function numeroDejaPris(erreur) {
+  return erreur?.code === '23505' && String(erreur.constraint ?? '').includes('telephone');
+}
+
 export async function mettreAJour(utilisateurId, corps = {}) {
   const fiche = await profileRepository.garantir(utilisateurId);
   if (!fiche) throw new ErreurIntrouvable('Le profil bénévole', utilisateurId);
@@ -220,6 +251,8 @@ export async function mettreAJour(utilisateurId, corps = {}) {
   }
 
   const colonnesCompte = {
+    nom: nomPropre(corps.nom, 'nom'),
+    prenom: nomPropre(corps.prenom, 'prenom'),
     adresse: texte(corps.adresse, 'adresse', 255),
     telephone: texte(corps.telephone, 'telephone', 20),
     // La photo de profil. Seule une adresse servie par HOPE est acceptee :
@@ -231,11 +264,20 @@ export async function mettreAJour(utilisateurId, corps = {}) {
       : (corps.dateDeNaissance || null),
   };
 
-  return transaction(async (client) => {
-    await profileRepository.mettreAJourCompte(utilisateurId, colonnesCompte, client);
-    const misAJour = await profileRepository.mettreAJour(fiche.id, colonnesFiche, client);
-    return versProfilPublic(misAJour);
-  });
+  try {
+    return await transaction(async (client) => {
+      await profileRepository.mettreAJourCompte(utilisateurId, colonnesCompte, client);
+      const misAJour = await profileRepository.mettreAJour(fiche.id, colonnesFiche, client);
+      return versProfilPublic(misAJour);
+    });
+  } catch (erreur) {
+    if (numeroDejaPris(erreur)) {
+      throw new ErreurValidation('Ce numéro est déjà utilisé par un autre compte.', {
+        telephone: 'Numéro déjà utilisé',
+      });
+    }
+    throw erreur;
+  }
 }
 
 /**
@@ -291,6 +333,16 @@ export async function journal(utilisateurId) {
  * marqueur est explicite et non deduit du contenu de la fiche.
  */
 export async function completer(utilisateurId, corps = {}) {
+  // Le nom est demande ici, et non plus a l'inscription : la completion
+  // est le seul passage oblige avant d'entrer dans l'espace, et l'equipe
+  // ne confie pas une tache a une adresse electronique.
+  const manquants = {};
+  if (String(corps.prenom ?? '').trim() === '') manquants.prenom = 'Champ obligatoire';
+  if (String(corps.nom ?? '').trim() === '') manquants.nom = 'Champ obligatoire';
+  if (Object.keys(manquants).length > 0) {
+    throw new ErreurValidation('Indiquez votre prénom et votre nom.', manquants);
+  }
+
   const profil = await mettreAJour(utilisateurId, corps);
   await volunteerRepository.marquerProfilComplete(utilisateurId);
 

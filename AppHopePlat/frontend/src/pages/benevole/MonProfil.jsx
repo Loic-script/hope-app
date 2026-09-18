@@ -41,6 +41,8 @@ export default function MonProfil() {
   useEffect(() => {
     if (!donnees) return;
     setChamps({
+      prenom: donnees.prenom ?? '',
+      nom: donnees.nom ?? '',
       profession: donnees.profession ?? '',
       competences: (donnees.competences ?? []).join(', '),
       langues: (donnees.langues ?? []).join(', '),
@@ -82,6 +84,8 @@ export default function MonProfil() {
     setSucces('');
     try {
       await service.mettreAJourProfil({
+        prenom: champs.prenom,
+        nom: champs.nom,
         profession: champs.profession,
         competences: champs.competences,
         langues: champs.langues,
@@ -151,17 +155,28 @@ export default function MonProfil() {
           */}
           <ChampPhotoProfil
             valeur={champs.photoUrl}
-            nom={`${donnees.prenom} ${donnees.nom}`}
+            nom={`${donnees.prenom} ${donnees.nom}`.trim() || donnees.email}
             televerser={service.televerserPhoto}
             onChange={(url) => modifier('photoUrl', url)}
             disabled={envoi}
             aide="Une image — JPEG, PNG ou WebP. Elle n’est visible que par l’équipe HOPE."
           />
 
-          <p className="profil-benevole__fixe">
-            <span>Nom</span>
-            <strong>{`${donnees.prenom} ${donnees.nom}`}</strong>
-          </p>
+          {/* Le nom se renseigne ici : l'inscription ne le demande plus. */}
+          <Champ
+            id="prenom"
+            libelle="Prénom"
+            valeur={champs.prenom}
+            onChange={(v) => modifier('prenom', v)}
+            autoComplete="given-name"
+          />
+          <Champ
+            id="nom"
+            libelle="Nom"
+            valeur={champs.nom}
+            onChange={(v) => modifier('nom', v)}
+            autoComplete="family-name"
+          />
           <p className="profil-benevole__fixe">
             <span>Adresse électronique</span>
             <strong>{donnees.email}</strong>

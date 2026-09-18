@@ -25,7 +25,7 @@ export default function BienvenueDonateur() {
       <img className="donateur__logo" src={logoSurFondViolet} alt="HOPE" />
 
       <h1 className="donateur__titre">
-        Bienvenue, {donateur?.prenom ?? 'chez HOPE'}
+        Bienvenue, {donateur?.prenom || 'chez HOPE'}
       </h1>
 
       <p className="donateur__texte">

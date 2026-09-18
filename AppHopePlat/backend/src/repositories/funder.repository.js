@@ -135,6 +135,26 @@ export async function mettreAJourPhoto(contactId, photoUrl, client = null) {
   );
 }
 
+/**
+ * Le nom, le prenom et le telephone de la personne derriere un contact.
+ *
+ * Ils vivent sur le compte, comme la photo : c'est la personne, et non
+ * son role dans l'organisation.
+ */
+export async function mettreAJourIdentite(contactId, colonnes, client = null) {
+  const { clause, valeurs, vide } = construireSet(colonnes, 2);
+  if (vide) return;
+
+  await query(
+    `UPDATE utilisateur u
+        SET ${clause}
+       FROM bailleur_contact c
+      WHERE c.id = $1 AND u.id = c.utilisateur_id`,
+    [contactId, ...valeurs],
+    client
+  );
+}
+
 export async function mettreAJourContact(contactId, colonnes, client = null) {
   const { clause, valeurs, vide } = construireSet(colonnes, 2);
   if (vide) return;

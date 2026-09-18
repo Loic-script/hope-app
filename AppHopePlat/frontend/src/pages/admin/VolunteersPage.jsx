@@ -84,7 +84,7 @@ export default function VolunteersPage() {
       titre: 'Bénévole',
       rendu: (compte) => (
         <CelluleDouble
-          principal={`${compte.prenom} ${compte.nom}`.trim()}
+          principal={`${compte.prenom} ${compte.nom}`.trim() || 'Nom à renseigner'}
           secondaire={compte.email}
         />
       ),

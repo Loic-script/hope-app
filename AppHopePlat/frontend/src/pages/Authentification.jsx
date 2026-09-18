@@ -25,11 +25,13 @@ const LONGUEUR_MOT_DE_PASSE = 8;
 /** Adresse du site public HOPE (pas encore developpe a cette etape). */
 const SITE_PUBLIC = import.meta.env.VITE_SITE_URL ?? '/';
 
+/**
+ * Quatre champs, pas un de plus : le nom, le prenom et le telephone se
+ * donnent ensuite, la ou ils servent -- a la completion du profil pour
+ * un benevole, dans ses parametres pour un bailleur.
+ */
 const FORMULAIRE_VIDE = {
-  nom: '',
-  prenom: '',
   email: '',
-  telephone: '',
   typeUtilisateur: '',
   motDePasse: '',
   confirmation: '',
@@ -39,9 +41,9 @@ const FORMULAIRE_VIDE = {
  * Authentification des utilisateurs : donateur, benevole, bailleur.
  *
  * Une seule page pour les trois, et deux sections : se connecter ou
- * s'inscrire. Le type choisi a l'inscription decide de tout le reste --
- * si le compte s'ouvre aussitot ou attend la validation de HOPE, et
- * dans quel espace la connexion mene.
+ * s'inscrire. Le type choisi a l'inscription decide si le compte s'ouvre
+ * aussitot ou attend la validation de HOPE ; celui choisi a la connexion
+ * designe l'espace ou l'on entre.
  *
  * L'administrateur n'est pas concerne : son compte n'est pas cree par
  * inscription, il garde sa propre page.
@@ -126,7 +128,7 @@ export default function Authentification() {
           </div>
 
           {section === 'connexion' ? (
-            <Connexion navigate={navigate} />
+            <Connexion navigate={navigate} types={types ?? []} />
           ) : (
             <Inscription types={types ?? []} onInscrit={() => setSection('connexion')} />
           )}
@@ -150,11 +152,15 @@ export default function Authentification() {
 }
 
 /* ================================================================
-   Section connexion : adresse et mot de passe
+   Section connexion : adresse, type d'utilisateur, mot de passe
    ================================================================ */
 
-function Connexion({ navigate }) {
+function Connexion({ navigate, types }) {
   const [email, setEmail] = useState('');
+  const [typeUtilisateur, setTypeUtilisateur] = useState('');
+  // Le type choisi ne correspond pas au compte : c'est ce champ-la
+  // qu'on designe, pas l'adresse ni le mot de passe.
+  const [typeEnErreur, setTypeEnErreur] = useState(false);
   const [motDePasse, setMotDePasse] = useState('');
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
   const [seSouvenir, setSeSouvenir] = useState(true);
@@ -166,9 +172,11 @@ function Connexion({ navigate }) {
     evenement.preventDefault();
     setErreur('');
     setEnAttente(false);
+    setTypeEnErreur(false);
 
-    if (email.trim() === '' || motDePasse === '') {
-      setErreur('Veuillez renseigner votre adresse et votre mot de passe.');
+    if (email.trim() === '' || typeUtilisateur === '' || motDePasse === '') {
+      setTypeEnErreur(typeUtilisateur === '');
+      setErreur('Veuillez renseigner votre adresse, votre type d’utilisateur et votre mot de passe.');
       return;
     }
 
@@ -177,6 +185,7 @@ function Connexion({ navigate }) {
       const session = await utilisateurService.connecter(
         email.trim(),
         motDePasse,
+        typeUtilisateur,
         seSouvenir
       );
       // La destination est decidee par le backend : l'espace, ou le
@@ -191,6 +200,10 @@ function Connexion({ navigate }) {
       // refus.
       if (code === 'COMPTE_EN_ATTENTE') {
         setEnAttente(true);
+        setErreur(echec.response.data.message);
+      } else if (code === 'TYPE_INCORRECT') {
+        // Le mot de passe etait bon : le message dit quel champ changer.
+        setTypeEnErreur(true);
         setErreur(echec.response.data.message);
       } else if (statut === 401) {
         setErreur(MESSAGE_ERREUR);
@@ -229,6 +242,19 @@ function Connexion({ navigate }) {
           />
         </div>
       </div>
+
+      <ChampType
+        id="typeConnexion"
+        types={types}
+        valeur={typeUtilisateur}
+        onChange={(e) => {
+          setTypeUtilisateur(e.target.value);
+          setTypeEnErreur(false);
+        }}
+        erreur={typeEnErreur}
+        disabled={chargement}
+        invite="Votre espace"
+      />
 
       <div className="champ">
         <label className="champ__label" htmlFor="motDePasse">
@@ -329,10 +355,7 @@ function Inscription({ types, onInscrit }) {
   /** Controle cote client, double cote serveur. */
   function verifier() {
     const details = {};
-    if (champs.prenom.trim() === '') details.prenom = 'Champ obligatoire';
-    if (champs.nom.trim() === '') details.nom = 'Champ obligatoire';
     if (champs.email.trim() === '') details.email = 'Champ obligatoire';
-    if (champs.telephone.trim() === '') details.telephone = 'Champ obligatoire';
     if (champs.typeUtilisateur === '') details.typeUtilisateur = 'Champ obligatoire';
     if (champs.motDePasse === '') details.motDePasse = 'Champ obligatoire';
     else if (champs.motDePasse.length < LONGUEUR_MOT_DE_PASSE) {
@@ -359,10 +382,7 @@ function Inscription({ types, onInscrit }) {
     setEnvoi(true);
     try {
       const { message } = await utilisateurService.inscrire({
-        nom: champs.nom.trim(),
-        prenom: champs.prenom.trim(),
         email: champs.email.trim(),
-        telephone: champs.telephone.trim(),
         typeUtilisateur: champs.typeUtilisateur,
         motDePasse: champs.motDePasse,
         confirmation: champs.confirmation,
@@ -382,30 +402,9 @@ function Inscription({ types, onInscrit }) {
 
   return (
     <form className="formulaire" onSubmit={soumettre} noValidate>
-      <div className="paire-acces">
-        <Champ
-          id="prenom"
-          libelle="Prénom"
-          valeur={champs.prenom}
-          onChange={modifier('prenom')}
-          erreur={erreursChamps.prenom}
-          disabled={envoi}
-          autoComplete="given-name"
-          autoFocus
-        />
-        <Champ
-          id="nom"
-          libelle="Nom"
-          valeur={champs.nom}
-          onChange={modifier('nom')}
-          erreur={erreursChamps.nom}
-          disabled={envoi}
-          autoComplete="family-name"
-        />
-      </div>
-
       <Champ
-        id="email"
+        id="emailInscription"
+        nom="email"
         libelle="Adresse électronique"
         type="email"
         valeur={champs.email}
@@ -414,51 +413,18 @@ function Inscription({ types, onInscrit }) {
         disabled={envoi}
         autoComplete="email"
         placeholder="vous@exemple.mg"
+        autoFocus
       />
 
-      <Champ
-        id="telephone"
-        libelle="Téléphone"
-        type="tel"
-        valeur={champs.telephone}
-        onChange={modifier('telephone')}
-        erreur={erreursChamps.telephone}
+      <ChampType
+        id="typeUtilisateur"
+        types={types}
+        valeur={champs.typeUtilisateur}
+        onChange={modifier('typeUtilisateur')}
+        erreur={erreursChamps.typeUtilisateur}
         disabled={envoi}
-        autoComplete="tel"
-        placeholder="+261 34 12 345 67"
+        invite="Que venez-vous faire ?"
       />
-
-      <div className="champ">
-        <label className="champ__label" htmlFor="typeUtilisateur">
-          Utilisateur
-        </label>
-        <div
-          className={`champ__boite${
-            erreursChamps.typeUtilisateur ? ' champ__boite--erreur' : ''
-          }`}
-        >
-          <IconeBouclier className="champ__icone" />
-          <select
-            id="typeUtilisateur"
-            name="typeUtilisateur"
-            className="champ__saisie champ__selection"
-            value={champs.typeUtilisateur}
-            onChange={modifier('typeUtilisateur')}
-            disabled={envoi}
-            aria-invalid={Boolean(erreursChamps.typeUtilisateur)}
-          >
-            <option value="">Que venez-vous faire ?</option>
-            {types.map((type) => (
-              <option key={type.cle} value={type.cle}>
-                {type.libelle}
-              </option>
-            ))}
-          </select>
-        </div>
-        {erreursChamps.typeUtilisateur && (
-          <p className="champ__erreur">{erreursChamps.typeUtilisateur}</p>
-        )}
-      </div>
 
       {/* La regle de validation depend du type : on la dit ici, avant
           l'envoi, plutot que de laisser la surprise a la connexion. */}
@@ -528,6 +494,45 @@ function Inscription({ types, onInscrit }) {
         )}
       </button>
     </form>
+  );
+}
+
+/**
+ * Le type d'utilisateur : donateur, benevole ou bailleur.
+ *
+ * Le meme champ sert aux deux sections. A l'inscription, il dit ce que
+ * l'on vient faire ; a la connexion, dans quel espace on entre.
+ *
+ * @param {string|boolean} erreur un message, ou true pour marquer le
+ *        champ sans texte (le message est alors dit sous le formulaire).
+ */
+function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
+  return (
+    <div className="champ">
+      <label className="champ__label" htmlFor={id}>
+        Type d’utilisateur
+      </label>
+      <div className={`champ__boite${erreur ? ' champ__boite--erreur' : ''}`}>
+        <IconeBouclier className="champ__icone" />
+        <select
+          id={id}
+          name="typeUtilisateur"
+          className="champ__saisie champ__selection"
+          value={valeur}
+          onChange={onChange}
+          disabled={disabled}
+          aria-invalid={Boolean(erreur)}
+        >
+          <option value="">{invite}</option>
+          {types.map((type) => (
+            <option key={type.cle} value={type.cle}>
+              {type.libelle}
+            </option>
+          ))}
+        </select>
+      </div>
+      {typeof erreur === 'string' && erreur && <p className="champ__erreur">{erreur}</p>}
+    </div>
   );
 }
 

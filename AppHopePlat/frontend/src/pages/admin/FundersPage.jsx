@@ -105,7 +105,7 @@ export default function FundersPage() {
       titre: 'Contact',
       rendu: (compte) => (
         <CelluleDouble
-          principal={`${compte.prenom} ${compte.nom}`.trim()}
+          principal={`${compte.prenom} ${compte.nom}`.trim() || 'Nom à renseigner'}
           secondaire={`${compte.email}${compte.fonction ? ` · ${compte.fonction}` : ''}`}
         />
       ),

@@ -283,7 +283,11 @@ export async function garantirOrganisation(utilisateurId, compte = {}, client = 
   const personne = `${compte.prenom ?? ''} ${compte.nom ?? ''}`.trim();
   await funderRepository.creerAvecContact(
     {
-      raisonSociale: (personne ? `Organisation de ${personne}` : 'Mon organisation').slice(0, 200),
+      // Sans nom -- l'inscription n'en demande plus -- l'organisation
+      // se dit a preciser : "Mon organisation" se lisait bien dans
+      // l'espace du bailleur, mais faisait dans la liste de l'equipe une
+      // colonne de libelles identiques.
+      raisonSociale: (personne ? `Organisation de ${personne}` : 'Organisation à préciser').slice(0, 200),
       typeOrganisation: 'autre',
       pays: 'Madagascar',
     },

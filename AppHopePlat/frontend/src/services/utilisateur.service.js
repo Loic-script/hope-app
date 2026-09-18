@@ -66,8 +66,10 @@ export async function inscrire(corps) {
  * Range le jeton sous la cle de l'espace du type, puis renvoie de quoi
  * router : l'espace, et s'il reste un formulaire a remplir.
  */
-export async function connecter(email, motDePasse, persistant = true) {
-  const { data } = await apiAuth.post('/auth/login', { email, motDePasse });
+export async function connecter(email, motDePasse, typeUtilisateur, persistant = true) {
+  // Le type designe l'espace : un compte peut porter plusieurs roles, et
+  // le serveur refuse un type que le compte n'a pas.
+  const { data } = await apiAuth.post('/auth/login', { email, motDePasse, typeUtilisateur });
 
   const cles = CLES[data.type];
   if (!cles) {

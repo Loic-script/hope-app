@@ -16,17 +16,23 @@ const MOMENTS = [
 /**
  * Completion du profil, a la premiere connexion d'un benevole.
  *
- * L'inscription commune aux trois types ne recueille que l'etat civil.
- * Ce qui sert a confier les bonnes taches -- ce qu'on sait faire, quand
- * on est libre, jusqu'ou on se deplace -- est demande ici, une fois, et
- * modifiable ensuite depuis "Mon profil".
+ * L'inscription commune aux trois types ne demande que l'adresse, le
+ * type et le mot de passe. Le nom est donc demande ici, avec ce qui sert
+ * a confier les bonnes taches -- ce qu'on sait faire, quand on est
+ * libre, jusqu'ou on se deplace. Une fois, et modifiable ensuite depuis
+ * "Mon profil".
  */
 export default function CompleterProfil() {
   // La garde nous a laisses passer : c'est elle qui nous renverra vers
   // l'espace des qu'elle aura relu le profil.
-  const { rafraichir } = useOutletContext();
+  const { benevole, rafraichir } = useOutletContext();
 
+  // Un compte ouvert avant que l'inscription ne cesse de demander le nom
+  // l'a deja : on le reprend plutot que de le redemander.
   const [champs, setChamps] = useState({
+    prenom: benevole?.prenom ?? '',
+    nom: benevole?.nom ?? '',
+    telephone: benevole?.telephone ?? '',
     profession: '',
     competences: '',
     langues: '',
@@ -95,6 +101,40 @@ export default function CompleterProfil() {
         <form className="completion__formulaire" onSubmit={soumettre}>
           <fieldset className="completion__groupe">
             <legend>Vous</legend>
+
+            <div className="completion__paire">
+              <Champ
+                id="prenom"
+                libelle="Prénom"
+                valeur={champs.prenom}
+                onChange={(v) => modifier('prenom', v)}
+                disabled={envoi}
+                autoComplete="given-name"
+                required
+                autoFocus
+              />
+              <Champ
+                id="nom"
+                libelle="Nom"
+                valeur={champs.nom}
+                onChange={(v) => modifier('nom', v)}
+                disabled={envoi}
+                autoComplete="family-name"
+                required
+              />
+            </div>
+
+            <Champ
+              id="telephone"
+              libelle="Téléphone"
+              type="tel"
+              valeur={champs.telephone}
+              onChange={(v) => modifier('telephone', v)}
+              disabled={envoi}
+              autoComplete="tel"
+              placeholder="+261 34 12 345 67"
+              aide="Facultatif. L’équipe vous joint plus vite par téléphone."
+            />
 
             <div className="completion__paire">
               <Champ

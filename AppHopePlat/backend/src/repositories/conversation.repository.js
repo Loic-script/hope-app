@@ -35,8 +35,10 @@ const PERSONNE = `
   json_build_object(
     'type', CASE WHEN a.id IS NOT NULL THEN 'admin' ELSE 'utilisateur' END,
     'id', COALESCE(u.id::text, a.id::text),
-    'nom', COALESCE(NULLIF(TRIM(u.prenom || ' ' || u.nom), ''), a.full_name, a.admin_log, 'Compte supprimé'),
-    'prenom', COALESCE(u.prenom, split_part(COALESCE(a.full_name, a.admin_log, ''), ' ', 1)),
+    'nom', COALESCE(NULLIF(TRIM(u.prenom || ' ' || u.nom), ''), split_part(u.email, '@', 1),
+                    a.full_name, a.admin_log, 'Compte supprimé'),
+    'prenom', COALESCE(NULLIF(u.prenom, ''), split_part(u.email, '@', 1),
+                       split_part(COALESCE(a.full_name, a.admin_log, ''), ' ', 1)),
     'photoUrl', COALESCE(u.photo_url, a.photo_url),
     'role', CASE WHEN a.id IS NOT NULL THEN 'equipe' ELSE r.role END,
     'roleEquipe', a.role,

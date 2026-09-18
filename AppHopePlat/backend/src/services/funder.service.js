@@ -642,6 +642,39 @@ export async function mettreAJourContact(contactId, corps = {}) {
   });
 
   /*
+   * Le nom de la personne. L'inscription ne le demande plus : il se
+   * renseigne ici. Fourni, il ne peut pas etre vide -- on le precise,
+   * on ne l'efface pas.
+   */
+  const identite = {};
+  const details = {};
+  for (const champ of ['prenom', 'nom']) {
+    if (corps[champ] === undefined) continue;
+    const propre = String(corps[champ] ?? '').trim();
+    if (propre === '') details[champ] = 'Champ obligatoire';
+    else if (propre.length > 80) details[champ] = 'Au plus 80 caractères';
+    else identite[champ] = propre;
+  }
+  if (corps.telephone !== undefined) {
+    const numero = String(corps.telephone ?? '').trim();
+    if (numero.length > 20) details.telephone = 'Au plus 20 caractères';
+    else identite.telephone = numero === '' ? null : numero;
+  }
+  if (Object.keys(details).length > 0) {
+    throw new ErreurValidation('La fiche comporte des erreurs.', details);
+  }
+  try {
+    await funderRepository.mettreAJourIdentite(contactId, identite);
+  } catch (erreur) {
+    if (erreur?.code === '23505' && String(erreur.constraint ?? '').includes('telephone')) {
+      throw new ErreurValidation('Ce numéro est déjà utilisé par un autre compte.', {
+        telephone: 'Numéro déjà utilisé',
+      });
+    }
+    throw erreur;
+  }
+
+  /*
    * La photo vit sur le compte, pas sur la fiche de contact : c'est la
    * personne qu'on voit dans les conversations, pas son role dans
    * l'organisation. Meme colonne que pour un benevole.

@@ -9,15 +9,20 @@
  *   * si le compte s'ouvre aussitot ou attend la validation de HOPE ;
  *   * l'audience du jeton, donc l'espace ou il vaut.
  *
- * L'inscription ne recueille que l'etat civil : les exiger d'emblee
- * ferait un formulaire de douze champs la ou six suffisent a ouvrir un
- * compte.
+ * L'inscription ne demande que quatre choses : l'adresse, le type, le
+ * mot de passe et sa confirmation. Le nom, le prenom et le telephone
+ * viennent ensuite, la ou ils servent -- chaque champ de plus a la porte
+ * est une raison de plus de ne pas la franchir.
  *
  * Ce qui manque ensuite depend du role. Le benevole passe par un
- * formulaire de completion : sans ses competences ni ses
- * disponibilites, l'equipe ne sait pas quoi lui confier. Le bailleur,
- * lui, entre directement -- son organisation est creee avec le compte,
- * sous un nom provisoire, et il la precise dans ses parametres.
+ * formulaire de completion, qui demande son nom : l'equipe ne confie
+ * pas une tache a une adresse. Le bailleur, lui, entre directement --
+ * son organisation est creee avec le compte, sous un nom provisoire, et
+ * il precise l'une et l'autre dans ses parametres.
+ *
+ * La connexion demande aussi le type : c'est lui qui designe l'espace.
+ * Un compte peut porter plusieurs roles, et le type choisi doit en etre
+ * un -- sinon la connexion est refusee, avec un message qui le dit.
  */
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -109,34 +114,39 @@ function signerJeton(compte, type, { duree = config.jwt.expiresIn, pour = null }
  */
 const DUREE_CONSULTATION = '30m';
 
-/**
- * Inscription.
- *
- * @param {{ nom, prenom, email, telephone, typeUtilisateur,
- *           motDePasse, confirmation }} corps
- */
-export async function inscrire(corps = {}) {
-  const texte = (valeur) => (typeof valeur === 'string' ? valeur.trim() : '');
-
-  const nom = texte(corps.nom);
-  const prenom = texte(corps.prenom);
-  const email = texte(corps.email).toLowerCase();
-  const telephone = texte(corps.telephone);
-  const type = texte(corps.typeUtilisateur).toLowerCase();
-  const motDePasse = typeof corps.motDePasse === 'string' ? corps.motDePasse : '';
-  const confirmation = typeof corps.confirmation === 'string' ? corps.confirmation : '';
-
-  const details = {};
-  if (nom === '') details.nom = 'Champ obligatoire';
-  if (prenom === '') details.prenom = 'Champ obligatoire';
-  if (email === '') details.email = 'Champ obligatoire';
-  else if (!COURRIEL.test(email)) details.email = 'Adresse électronique invalide';
-  if (telephone === '') details.telephone = 'Champ obligatoire';
-  else if (telephone.length > 20) details.telephone = 'Au plus 20 caractères';
+/** Le type d'utilisateur saisi, controle ; l'erreur va dans details. */
+function typeSaisi(valeur, details) {
+  const type = typeof valeur === 'string' ? valeur.trim().toLowerCase() : '';
   if (type === '') details.typeUtilisateur = 'Champ obligatoire';
   else if (!TYPES_UTILISATEUR.includes(type)) {
     details.typeUtilisateur = 'Type d’utilisateur inconnu';
   }
+  return type;
+}
+
+/**
+ * Inscription.
+ *
+ * Quatre champs : l'adresse, le type, le mot de passe et sa
+ * confirmation. Le nom et le prenom partent vides -- les colonnes sont
+ * NOT NULL, et une chaine vide dit "pas encore renseigne" sans faire
+ * afficher "null" la ou l'on accole prenom et nom. Le telephone part a
+ * NULL : la colonne est UNIQUE, et plusieurs comptes sans numero ne
+ * doivent pas entrer en conflit.
+ *
+ * @param {{ email, typeUtilisateur, motDePasse, confirmation }} corps
+ */
+export async function inscrire(corps = {}) {
+  const texte = (valeur) => (typeof valeur === 'string' ? valeur.trim() : '');
+
+  const email = texte(corps.email).toLowerCase();
+  const motDePasse = typeof corps.motDePasse === 'string' ? corps.motDePasse : '';
+  const confirmation = typeof corps.confirmation === 'string' ? corps.confirmation : '';
+
+  const details = {};
+  if (email === '') details.email = 'Champ obligatoire';
+  else if (!COURRIEL.test(email)) details.email = 'Adresse électronique invalide';
+  const type = typeSaisi(corps.typeUtilisateur, details);
   if (motDePasse === '') details.motDePasse = 'Champ obligatoire';
   else if (motDePasse.length < LONGUEUR_MOT_DE_PASSE) {
     details.motDePasse = `Au moins ${LONGUEUR_MOT_DE_PASSE} caractères`;
@@ -154,18 +164,13 @@ export async function inscrire(corps = {}) {
       email: 'Adresse déjà inscrite',
     });
   }
-  if (await volunteerRepository.telephoneExiste(telephone)) {
-    throw new ErreurValidation('Ce numéro est déjà utilisé.', {
-      telephone: 'Numéro déjà inscrit',
-    });
-  }
 
   const hash = await bcrypt.hash(motDePasse, config.admin.saltRounds);
   const aValider = TYPES_A_VALIDER.includes(type);
 
   const compte = await transaction(async (client) => {
     const cree = await volunteerRepository.creer(
-      { nom, prenom, email, telephone, motDePasse: hash },
+      { nom: '', prenom: '', email, telephone: null, motDePasse: hash },
       [type],
       client
     );
@@ -185,7 +190,7 @@ export async function inscrire(corps = {}) {
      * facon a la signature d'une convention.
      */
     if (type === 'bailleur') {
-      await garantirOrganisation(cree.id, { nom, prenom }, client);
+      await garantirOrganisation(cree.id, {}, client);
       await volunteerRepository.marquerProfilComplete(cree.id, client);
     }
 
@@ -206,15 +211,19 @@ export async function inscrire(corps = {}) {
  * formulaire a remplir. C'est le frontend qui route : il a besoin des
  * trois informations d'un coup.
  */
-export async function connecter({ email, motDePasse } = {}) {
+export async function connecter({ email, motDePasse, typeUtilisateur } = {}) {
   const adresse = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const secret = typeof motDePasse === 'string' ? motDePasse : '';
 
-  if (adresse === '' || secret === '') {
-    throw new ErreurValidation('L’adresse et le mot de passe sont obligatoires.', {
-      email: adresse === '' ? 'Champ obligatoire' : undefined,
-      motDePasse: secret === '' ? 'Champ obligatoire' : undefined,
-    });
+  const details = {};
+  if (adresse === '') details.email = 'Champ obligatoire';
+  const typeChoisi = typeSaisi(typeUtilisateur, details);
+  if (secret === '') details.motDePasse = 'Champ obligatoire';
+  if (Object.keys(details).length > 0) {
+    throw new ErreurValidation(
+      'L’adresse, le type d’utilisateur et le mot de passe sont obligatoires.',
+      details
+    );
   }
 
   const compte = await volunteerRepository.trouverParEmailAvecHash(adresse);
@@ -226,13 +235,24 @@ export async function connecter({ email, motDePasse } = {}) {
     throw new ErreurAuthentification('Identifiants incorrects');
   }
 
-  const type = typeDuCompte(compte);
-  if (!type) {
+  if (!typeDuCompte(compte)) {
     throw new ErreurAuthentification(
       'Ce compte n’est rattaché à aucun espace. Contactez l’équipe HOPE.',
       'ROLE_MANQUANT'
     );
   }
+
+  // Le type choisi doit etre l'un des roles du compte. Le dire n'apprend
+  // rien a un intrus : le mot de passe a deja ete verifie.
+  if (!(compte.roles ?? []).includes(typeChoisi)) {
+    const libelle = String(LIBELLES_TYPE[typeChoisi] ?? typeChoisi).toLowerCase();
+    throw new ErreurAuthentification(
+      `Ce compte n’est pas un compte ${libelle}. ` +
+        'Choisissez le type d’utilisateur sous lequel vous vous êtes inscrit.',
+      'TYPE_INCORRECT'
+    );
+  }
+  const type = typeChoisi;
 
   // Les controles de statut viennent APRES la verification du mot de
   // passe : les faire avant revelerait qu'un compte existe.

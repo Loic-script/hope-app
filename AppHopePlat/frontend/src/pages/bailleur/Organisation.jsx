@@ -27,6 +27,9 @@ export default function Organisation() {
 
   const [fonction, setFonction] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  // Le nom de la personne : l'inscription ne le demande plus, il se
+  // renseigne ici.
+  const [identite, setIdentite] = useState({ prenom: '', nom: '', telephone: '' });
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
   const [succes, setSucces] = useState('');
@@ -49,7 +52,12 @@ export default function Organisation() {
   useEffect(() => {
     setFonction(bailleur?.fonction ?? '');
     setPhotoUrl(bailleur?.photoUrl ?? '');
-  }, [bailleur?.fonction, bailleur?.photoUrl]);
+    setIdentite({
+      prenom: bailleur?.prenom ?? '',
+      nom: bailleur?.nom ?? '',
+      telephone: bailleur?.telephone ?? '',
+    });
+  }, [bailleur?.fonction, bailleur?.photoUrl, bailleur?.prenom, bailleur?.nom, bailleur?.telephone]);
 
   useEffect(() => {
     if (!bailleur) return;
@@ -97,7 +105,20 @@ export default function Organisation() {
       // La photo part avec le reste : televersee, elle n'est rattachee
       // au compte qu'ici. Sans ce champ, elle disparaitrait au
       // rechargement.
-      await service.mettreAJourContact({ fonction, photoUrl });
+      /*
+       * Un nom encore jamais donne et laisse vide ne part pas : on peut
+       * enregistrer sa fonction sans etre force de se nommer. Un nom
+       * deja donne, lui, part toujours -- l'effacer est refuse par le
+       * serveur, qui le dit.
+       */
+      const sansNom = (champ) => identite[champ].trim() === '' && !bailleur?.[champ];
+      await service.mettreAJourContact({
+        fonction,
+        photoUrl,
+        prenom: sansNom('prenom') ? undefined : identite.prenom,
+        nom: sansNom('nom') ? undefined : identite.nom,
+        telephone: identite.telephone,
+      });
       setSucces('Votre fiche est à jour.');
       // Le bandeau porte la photo : il doit relire la fiche.
       rafraichirBailleur?.();
@@ -249,7 +270,7 @@ export default function Organisation() {
                 l'en-tete de l'espace, et ses messages. */}
             <ChampPhotoProfil
               valeur={photoUrl}
-              nom={`${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim()}
+              nom={`${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim() || bailleur?.email}
               televerser={service.televerserPhoto}
               onChange={setPhotoUrl}
               disabled={envoi}
@@ -257,9 +278,35 @@ export default function Organisation() {
             />
 
             <dl className="fiche-part">
-              <Ligne terme="Nom" valeur={`${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim()} />
               <Ligne terme="Adresse électronique" valeur={bailleur?.email} />
             </dl>
+
+            <ChampFiche
+                id="prenomContact"
+                libelle="Prénom"
+                valeur={identite.prenom}
+                onChange={(v) => setIdentite((i) => ({ ...i, prenom: v }))}
+                disabled={envoi}
+                autoComplete="given-name"
+              />
+              <ChampFiche
+                id="nomContact"
+                libelle="Nom"
+                valeur={identite.nom}
+                onChange={(v) => setIdentite((i) => ({ ...i, nom: v }))}
+                disabled={envoi}
+                autoComplete="family-name"
+              />
+            <ChampFiche
+              id="telephoneContact"
+              libelle="Téléphone"
+              type="tel"
+              valeur={identite.telephone}
+              onChange={(v) => setIdentite((i) => ({ ...i, telephone: v }))}
+              disabled={envoi}
+              autoComplete="tel"
+              placeholder="+261 34 12 345 67"
+            />
 
             <div className="champ-bailleur">
               <label htmlFor="fonction">Fonction</label>
@@ -273,7 +320,7 @@ export default function Organisation() {
                 disabled={envoi}
               />
               <span className="champ-bailleur__aide">
-                Votre nom et votre adresse électronique viennent de votre compte.
+                Votre adresse électronique vient de votre compte.
               </span>
             </div>
 

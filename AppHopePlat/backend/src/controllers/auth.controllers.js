@@ -57,8 +57,8 @@ export async function inscription(req, res, next) {
  */
 export async function login(req, res, next) {
   try {
-    const { email, motDePasse } = req.body ?? {};
-    const resultat = await authService.connecter({ email, motDePasse });
+    const { email, motDePasse, typeUtilisateur } = req.body ?? {};
+    const resultat = await authService.connecter({ email, motDePasse, typeUtilisateur });
 
     res.status(200).json({
       success: true,
