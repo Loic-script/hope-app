@@ -93,6 +93,7 @@ const COLONNES_ATTENDUES = [
   ['document_bailleur', 'contenu'],
   ['donateur', 'type_donateur'],
   ['donateur', 'fuseau_horaire'],
+  ['donateur', 'affectation'],
 ];
 
 async function executer() {

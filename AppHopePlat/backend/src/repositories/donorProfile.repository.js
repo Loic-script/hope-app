@@ -25,6 +25,7 @@ export async function trouver(utilisateurId, client = null) {
             d.ville, d.pays, d.profession, d.source_connaissance,
             d.type_donateur, d.nom_structure, d.site_web, d.devise,
             d.langue, d.fuseau_horaire,
+            d.affectation, d.projet_id,
             d.etape_suivante
        FROM utilisateur u
        JOIN donateur d ON d.utilisateur_id = u.id
@@ -78,6 +79,19 @@ export async function enregistrerEtape2(utilisateurId, donnees, client = null) {
       donnees.langue,
       donnees.fuseau,
     ],
+    client
+  );
+}
+
+/** L'etape 3 : l'affectation du don. L'etape suivante ne recule pas. */
+export async function enregistrerEtape3(utilisateurId, donnees, client = null) {
+  await query(
+    `UPDATE donateur
+        SET affectation = $2, projet_id = $3,
+            etape_suivante = GREATEST(etape_suivante, 4),
+            mis_a_jour_le = NOW()
+      WHERE utilisateur_id = $1`,
+    [utilisateurId, donnees.affectation, donnees.projetId],
     client
   );
 }

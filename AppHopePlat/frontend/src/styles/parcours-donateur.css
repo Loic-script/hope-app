@@ -854,3 +854,486 @@ select.parcours__saisie option {
     font-size: 16px;
   }
 }
+
+
+/* ============================================================
+   Etape 3 : l'affectation du don
+   ============================================================ */
+
+/* ---------------- Les deux facons de donner ---------------- */
+
+.parcours__modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.parcours__mode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 24px 26px;
+  border: 1px solid var(--parcours-bordure);
+  border-radius: 16px;
+  background-color: #ffffff;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s var(--parcours-rythme);
+}
+
+.parcours__mode:hover {
+  border-color: #c4bfe3;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -22px rgba(93, 86, 150, 0.55);
+}
+
+.parcours__mode--choisi {
+  border-color: var(--hope-violet);
+  background: linear-gradient(180deg, #f7f5fe 0%, #eeebfa 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--hope-violet),
+    0 16px 34px -24px rgba(93, 86, 150, 0.6);
+}
+
+.parcours__mode:has(.parcours__type-radio:focus-visible),
+.parcours__projet:has(.parcours__type-radio:focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px var(--hope-violet),
+    0 0 0 4px var(--parcours-anneau);
+}
+
+.parcours__mode-illustration {
+  width: 62px;
+  height: 62px;
+  color: var(--hope-violet);
+}
+
+/* La carte retenue salue le choix d'un petit battement, une fois. */
+.parcours__mode--choisi .parcours__mode-illustration {
+  animation: parcours-battement 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.parcours__mode-titre {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--parcours-encre);
+}
+
+.parcours__mode--choisi .parcours__mode-titre {
+  color: var(--hope-violet);
+}
+
+.parcours__mode-texte {
+  max-width: 30ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--hope-texte-doux);
+}
+
+/* Le rond d'un bouton radio, dessine : plein quand il est choisi. */
+.parcours__rond {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #b9b4d8;
+  border-radius: 50%;
+  background-color: #ffffff;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.parcours__mode--choisi .parcours__rond,
+.parcours__projet--choisi .parcours__rond {
+  border-color: var(--hope-violet);
+  background-color: var(--hope-violet);
+  box-shadow: inset 0 0 0 4px #ffffff;
+}
+
+/* ---------------- Les projets ---------------- */
+
+.parcours__projets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.parcours__projet {
+  position: relative;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 18px;
+  padding: 14px 52px 14px 14px;
+  border: 1px solid var(--parcours-bordure);
+  border-radius: 16px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s var(--parcours-rythme);
+}
+
+.parcours__projet:hover:not(.parcours__projet--atteint):not(.parcours__projet--squelette) {
+  border-color: #c4bfe3;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px -20px rgba(93, 86, 150, 0.5);
+}
+
+.parcours__projet--choisi {
+  border-color: var(--hope-violet);
+  background-color: #faf9fe;
+  box-shadow: inset 0 0 0 1px var(--hope-violet);
+}
+
+.parcours__projet .parcours__rond {
+  top: 16px;
+  right: 16px;
+}
+
+/* Un projet finance : lisible, mais il ne se choisit plus. */
+.parcours__projet--atteint {
+  background-color: #fbfcfe;
+  cursor: default;
+}
+
+.parcours__projet--atteint .parcours__projet-visuel {
+  opacity: 0.75;
+  filter: saturate(0.6);
+}
+
+.parcours__projet--atteint .parcours__type-radio {
+  cursor: default;
+}
+
+.parcours__projet-visuel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--hope-violet) 0%, var(--hope-bleu) 100%);
+}
+
+.parcours__projet-visuel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.parcours__projet-substitut svg {
+  width: 36px;
+  height: 36px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.parcours__projet-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.parcours__projet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 12.5px;
+  color: var(--hope-texte-doux);
+}
+
+.parcours__puce {
+  padding: 2px 10px;
+  border-radius: 99px;
+  background-color: #fdf1e1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hope-orange-lisible);
+}
+
+.parcours__projet-lieu {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.parcours__projet-lieu svg {
+  width: 14px;
+  height: 14px;
+}
+
+.parcours__projet-nom {
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--parcours-encre);
+}
+
+.parcours__projet-accroche {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--hope-texte-doux);
+}
+
+/*
+ * La jauge se remplit a l'arrivee. C'est une echelle qui s'anime, et non
+ * une largeur : le navigateur n'a pas a recalculer la mise en page.
+ */
+.parcours__jauge {
+  position: relative;
+  height: 8px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background-color: #ebe8f7;
+}
+
+.parcours__jauge > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--taux);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8a82c4 0%, var(--hope-violet) 100%);
+  transform-origin: left center;
+  animation: parcours-jauge 0.9s var(--parcours-rythme) 0.15s both;
+}
+
+.parcours__projet--atteint .parcours__jauge > span {
+  background: var(--hope-bleu);
+}
+
+.parcours__projet-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 14px;
+  font-size: 13px;
+  color: var(--hope-texte-doux);
+}
+
+.parcours__projet-chiffres strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.parcours__projet--atteint .parcours__projet-chiffres strong {
+  color: var(--hope-bleu-lisible);
+}
+
+.parcours__badge-atteint {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 7px;
+  border-radius: 99px;
+  background-color: #e5f0f9;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hope-bleu-lisible);
+}
+
+.parcours__badge-atteint svg {
+  width: 13px;
+  height: 13px;
+}
+
+.parcours__recherche {
+  margin-bottom: 4px;
+}
+
+/* Des cartes grises en attendant les vraies : la page ne saute pas. */
+.parcours__projet--squelette {
+  cursor: default;
+}
+
+.parcours__projet--squelette .parcours__projet-visuel,
+.parcours__squelette {
+  background: linear-gradient(90deg, #eef1f7 0%, #f7f9fc 50%, #eef1f7 100%);
+  background-size: 200% 100%;
+  animation: parcours-chatoiement 1.4s ease-in-out infinite;
+}
+
+.parcours__squelette {
+  display: block;
+  height: 14px;
+  border-radius: 7px;
+}
+
+.parcours__squelette--court {
+  width: 40%;
+}
+
+.parcours__squelette--jauge {
+  height: 8px;
+  margin-top: 14px;
+}
+
+/* ---------------- Le don non affecte ---------------- */
+
+/* En ligne : le soleil a gauche du texte. La classe d'apparition, posee
+   aussi sur l'encart, le mettrait sinon en colonne. */
+.parcours__fonds {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 24px 26px;
+  border: 1px solid #e3e0f3;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7f5fe 0%, #eef5fc 100%);
+}
+
+.parcours__fonds-soleil {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  color: var(--hope-orange);
+}
+
+.parcours__fonds-titre {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hope-violet);
+}
+
+.parcours__fonds-texte {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--hope-texte-doux);
+}
+
+.parcours__fonds-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  color: var(--hope-texte-doux);
+}
+
+.parcours__fonds-chiffres strong {
+  display: block;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--parcours-encre);
+}
+
+/* ---------------- Mouvement ---------------- */
+
+@keyframes parcours-battement {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes parcours-jauge {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes parcours-chatoiement {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcours__mode--choisi .parcours__mode-illustration,
+  .parcours__jauge > span,
+  .parcours__projet--squelette .parcours__projet-visuel,
+  .parcours__squelette {
+    animation: none;
+  }
+
+  .parcours__mode,
+  .parcours__projet,
+  .parcours__rond {
+    transition: none;
+  }
+
+  .parcours__mode:hover,
+  .parcours__projet:hover:not(.parcours__projet--atteint) {
+    transform: none;
+  }
+}
+
+/* ---------------- Telephone ---------------- */
+
+@media (max-width: 640px) {
+  /* Deux grandes cartes cote a cote seraient illisibles a cette largeur. */
+  .parcours__modes {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .parcours__mode {
+    padding: 22px 18px 20px;
+  }
+
+  .parcours__mode-illustration {
+    width: 52px;
+    height: 52px;
+  }
+
+  .parcours__projet {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 14px;
+    padding: 12px 44px 12px 12px;
+  }
+
+  .parcours__projet-visuel {
+    width: 76px;
+    height: 76px;
+  }
+
+  .parcours__projet-accroche {
+    display: none;
+  }
+
+  .parcours__fonds {
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+  }
+}

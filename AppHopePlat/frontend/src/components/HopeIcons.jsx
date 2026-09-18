@@ -369,3 +369,58 @@ export function IconeCoche({ className = '' }) {
     </svg>
   );
 }
+
+/** Deux mains qui portent un coeur : le don affecte. */
+export function IconeMainsCoeur({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path
+        d="M24 25s-8-4.8-8-10.6A4.4 4.4 0 0 1 24 11.7a4.4 4.4 0 0 1 8 2.7C32 20.2 24 25 24 25Z"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m20.5 15.8 2.4 2.4 4.6-4.8"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 20v12.5a6 6 0 0 0 1.8 4.3L13 42M42 20v12.5a6 6 0 0 1-1.8 4.3L35 42"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 20a3 3 0 0 1 6 0v8l4.6 4.3a3.2 3.2 0 0 1-4.4 4.6M42 20a3 3 0 0 0-6 0v8l-4.6 4.3a3.2 3.2 0 0 0 4.4 4.6"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Une loupe : rechercher. */
+export function IconeRecherche({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m20 20-4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Un triangle de lecture : une video. */
+export function IconeLecture({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M10 8.5v7l5.5-3.5L10 8.5Z" fill="currentColor" />
+    </svg>
+  );
+}

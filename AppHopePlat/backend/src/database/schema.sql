@@ -1712,3 +1712,26 @@ ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_langue_valide;
 ALTER TABLE donateur ADD CONSTRAINT donateur_langue_valide CHECK (
   langue IS NULL OR langue ~ '^[a-z]{2}$');
 
+/*
+ * La fiche du donateur, etape 3 : l'affectation de son don.
+ *
+ * Le meme vocabulaire que donations.allocation, pour que le choix se
+ * change en don sans traduction :
+ *   PROJECT : don affecte au projet projet_id ;
+ *   HOPE    : don non affecte, que HOPE repartit entre ses projets.
+ *
+ * projet_id tombe a NULL si le projet disparait : le donateur le
+ * retrouvera a choisir. La contrainte n'interdit donc que le cas absurde
+ * d'un don libre attache a un projet.
+ */
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS affectation VARCHAR(10);
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS projet_id INTEGER
+  REFERENCES projects(id) ON DELETE SET NULL;
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_affectation_valide;
+ALTER TABLE donateur ADD CONSTRAINT donateur_affectation_valide CHECK (
+  affectation IS NULL OR affectation IN ('PROJECT', 'HOPE'));
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_affectation_coherente;
+ALTER TABLE donateur ADD CONSTRAINT donateur_affectation_coherente CHECK (
+  affectation IS DISTINCT FROM 'HOPE' OR projet_id IS NULL);

@@ -14,18 +14,23 @@ import {
   IconeHorloge,
   IconeImmeuble,
   IconeLangue,
+  IconeLecture,
   IconeLien,
+  IconeMainsCoeur,
   IconeMallette,
   IconeMegaphone,
   IconePieces,
   IconePoigneeMain,
+  IconeRecherche,
   IconeRepere,
+  IconeSoleil,
   IconeTelephone,
   IconeUtilisateur,
 } from '../../components/HopeIcons.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
-import { messageErreur } from '../../services/api.js';
+import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
+import * as fmt from '../../utils/format.js';
 import {
   devisePourPays,
   fuseauParDefaut,
@@ -47,7 +52,7 @@ const NOMBRE_ETAPES = 5;
  * etape est enregistree en la quittant ; le serveur retient ou
  * reprendre, et un donateur qui s'arrete en chemin retrouve sa place.
  *
- * Les etapes 1 et 2 sont construites ; les suivantes attendent leur
+ * Les etapes 1 a 3 sont construites ; les suivantes attendent leur
  * modele.
  *
  * "Continuer" mene toujours a l'etape suivante, meme quand on revient
@@ -134,7 +139,18 @@ export default function Parcours() {
             onSuivante={(reponse) => apresEnregistrement(2, reponse)}
           />
         )}
-        {profil && etape > 2 && (
+        {profil && etape === 3 && (
+          <EtapeAffectation
+            key="etape-3"
+            initiales={brouillons[3] ?? profil.don ?? {}}
+            onRetour={(valeurs) => {
+              setBrouillons((precedents) => ({ ...precedents, 3: valeurs }));
+              allerA(2);
+            }}
+            onSuivante={(reponse) => apresEnregistrement(3, reponse)}
+          />
+        )}
+        {profil && etape > 3 && (
           <EtapeAVenir
             key={`etape-${etape}`}
             etape={etape}
@@ -926,11 +942,375 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
 }
 
 /* ================================================================
-   Etapes 3 a 5 : en attente de leur modele
+   Etape 3 : l'affectation du don
+   ================================================================ */
+
+/** Les deux facons d'affecter un don : le vocabulaire de donations.allocation. */
+const MODES_AFFECTATION = [
+  {
+    cle: 'PROJECT',
+    titre: 'Don affecté',
+    texte: 'Soutenez un projet précis, parmi ceux qui sont en cours.',
+    Illustration: IconeMainsCoeur,
+  },
+  {
+    cle: 'HOPE',
+    titre: 'Don non affecté',
+    texte: 'Laissez HOPE utiliser votre don pour un ou plusieurs projets de son choix.',
+    Illustration: IconePoigneeMain,
+  },
+];
+
+/** "Fianarantsoa" et "fianarantsoa" se valent, "Santé" et "sante" aussi. */
+function normaliser(texte) {
+  return String(texte ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Etape 3 : l'affectation du don.
+ *
+ * Le modele proposait une liste deroulante et la fiche du seul projet
+ * choisi. Les projets sont ici des cartes que l'on compare d'un regard :
+ * image, lieu, jauge, ce qu'il reste a reunir. Ceux qui ont le plus
+ * besoin de soutien viennent d'abord ; un projet deja finance reste
+ * visible -- il dit ce que les dons ont permis -- mais ne se choisit plus.
+ */
+function EtapeAffectation({ initiales, onRetour, onSuivante }) {
+  const { donnees: liste, chargement, erreur: erreurListe } = useChargement(
+    () => donateurService.listerProjets(),
+    []
+  );
+  const projets = liste?.items ?? [];
+
+  const [choix, setChoix] = useState(() => ({
+    affectation: initiales.affectation || 'PROJECT',
+    projetId: initiales.projetId ?? null,
+  }));
+  const [recherche, setRecherche] = useState('');
+  const [soumis, setSoumis] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreurServeur, setErreurServeur] = useState('');
+  const [refus, setRefus] = useState('');
+  const formulaire = useRef(null);
+
+  const affecte = choix.affectation === 'PROJECT';
+  const projetChoisi = projets.find((projet) => projet.id === choix.projetId);
+
+  // Un projet choisi naguere, puis finance ou retire depuis, ne compte plus.
+  const projetValable = projetChoisi && !projetChoisi.atteint;
+  const erreurProjet =
+    erreurServeur ||
+    (soumis && affecte && !chargement && !projetValable
+      ? 'Choisissez le projet que vous voulez soutenir.'
+      : '');
+
+  // Au-dela de six projets, une recherche aide a trouver le sien.
+  const avecRecherche = projets.length > 6;
+  const visibles = recherche.trim()
+    ? projets.filter((projet) =>
+        normaliser(`${projet.nom} ${projet.lieu} ${projet.categorie}`).includes(normaliser(recherche))
+      )
+    : projets;
+
+  const ouverts = projets.filter((projet) => !projet.atteint);
+  const memeDevise = ouverts.every((projet) => projet.devise === (ouverts[0]?.devise ?? 'MGA'));
+  const resteTotal = ouverts.reduce((somme, projet) => somme + Number(projet.restant ?? 0), 0);
+
+  function choisirMode(evenement) {
+    const valeur = evenement.target.value;
+    setChoix((precedent) => ({ ...precedent, affectation: valeur }));
+    setErreurServeur('');
+  }
+
+  function choisirProjet(evenement) {
+    const identifiant = Number(evenement.target.value);
+    setChoix((precedent) => ({ ...precedent, projetId: identifiant }));
+    setErreurServeur('');
+  }
+
+  async function soumettre(evenement) {
+    evenement.preventDefault();
+    setSoumis(true);
+    setRefus('');
+
+    if (affecte && !projetValable) {
+      formulaire.current?.querySelector('input[name="projet"]:not(:disabled)')?.focus();
+      return;
+    }
+
+    setEnvoi(true);
+    try {
+      const reponse = await donateurService.enregistrerEtape3({
+        affectation: choix.affectation,
+        projetId: affecte ? choix.projetId : null,
+      });
+      await onSuivante(reponse);
+    } catch (echec) {
+      const details = echec?.response?.data?.details ?? {};
+      setErreurServeur(details.projetId ?? '');
+      setRefus(messageErreur(echec, 'Votre choix n’a pas pu être enregistré.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <>
+      <EntetePas
+        etape={3}
+        titre="Affectation de votre don"
+        accroche="Choisissez comment votre don sera utilisé."
+      />
+
+      <form
+        ref={formulaire}
+        className="parcours__formulaire"
+        onSubmit={soumettre}
+        noValidate
+        aria-label="Affectation de votre don"
+      >
+        {/* Deux grandes cartes : un vrai groupe de boutons radio. */}
+        <fieldset className="parcours__groupe">
+          <legend className="sr-only">Comment votre don sera-t-il utilisé ?</legend>
+          <div className="parcours__modes">
+            {MODES_AFFECTATION.map(({ cle, titre, texte, Illustration }) => {
+              const choisi = choix.affectation === cle;
+              return (
+                <label
+                  key={cle}
+                  className={`parcours__mode${choisi ? ' parcours__mode--choisi' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="affectation"
+                    value={cle}
+                    checked={choisi}
+                    onChange={choisirMode}
+                    disabled={envoi}
+                    className="parcours__type-radio"
+                    aria-describedby={`donateur-mode-${cle}`}
+                  />
+                  <span className="parcours__rond" aria-hidden="true" />
+                  <Illustration className="parcours__mode-illustration" />
+                  <span className="parcours__mode-titre">{titre}</span>
+                  <span className="parcours__mode-texte" id={`donateur-mode-${cle}`}>
+                    {texte}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        {affecte ? (
+          <fieldset
+            className="parcours__groupe parcours__revele"
+            key="projets"
+            aria-describedby="donateur-projets-aide"
+          >
+            <legend className="parcours__libelle">Choisissez un projet</legend>
+
+            {avecRecherche && (
+              <div className="parcours__boite parcours__recherche">
+                <IconeRecherche className="parcours__icone" />
+                <input
+                  type="search"
+                  className="parcours__saisie"
+                  value={recherche}
+                  onChange={(evenement) => setRecherche(evenement.target.value)}
+                  placeholder="Rechercher un projet, une ville…"
+                  aria-label="Rechercher un projet"
+                />
+              </div>
+            )}
+
+            {erreurListe && <p className="parcours__erreur">{erreurListe}</p>}
+
+            <div className="parcours__projets">
+              {chargement && !liste
+                ? [0, 1, 2].map((index) => (
+                    <div key={index} className="parcours__projet parcours__projet--squelette" aria-hidden="true">
+                      <span className="parcours__projet-visuel" />
+                      <span className="parcours__projet-corps">
+                        <span className="parcours__squelette parcours__squelette--court" />
+                        <span className="parcours__squelette" />
+                        <span className="parcours__squelette parcours__squelette--jauge" />
+                      </span>
+                    </div>
+                  ))
+                : visibles.map((projet) => (
+                    <CarteProjet
+                      key={projet.id}
+                      projet={projet}
+                      choisi={choix.projetId === projet.id}
+                      onChange={choisirProjet}
+                      disabled={envoi}
+                    />
+                  ))}
+              {!chargement && avecRecherche && visibles.length === 0 && (
+                <p className="parcours__aide">Aucun projet ne correspond à « {recherche} ».</p>
+              )}
+            </div>
+
+            <p className="parcours__aide" id="donateur-projets-aide">
+              Seuls les projets en cours sont proposés, ceux qui ont le plus besoin de soutien en
+              premier.
+            </p>
+            {erreurProjet && <p className="parcours__erreur">{erreurProjet}</p>}
+          </fieldset>
+        ) : (
+          <div className="parcours__fonds parcours__revele" key="fonds">
+            <IconeSoleil className="parcours__fonds-soleil" />
+            <div>
+              <p className="parcours__fonds-titre">
+                HOPE place votre don là où le besoin est le plus grand
+              </p>
+              <p className="parcours__fonds-texte">
+                Votre don rejoint le fonds de HOPE, que l’équipe répartit entre ses projets en
+                cours selon leurs besoins.
+              </p>
+              {ouverts.length > 0 && (
+                <ul className="parcours__fonds-chiffres">
+                  <li>
+                    <strong>{ouverts.length}</strong>
+                    projet{ouverts.length > 1 ? 's cherchent' : ' cherche'} encore un financement
+                  </li>
+                  {memeDevise && (
+                    <li>
+                      <strong>{fmt.montant(resteTotal, ouverts[0]?.devise)}</strong>
+                      restent à réunir
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="parcours__boutons">
+          <button
+            type="button"
+            className="parcours__retour"
+            onClick={() => onRetour(choix)}
+            disabled={envoi}
+          >
+            <IconeFlecheGauche className="parcours__fleche-retour" />
+            Retour
+          </button>
+          <button type="submit" className="parcours__continuer" disabled={envoi} aria-busy={envoi}>
+            {envoi ? (
+              <>
+                <span className="parcours__rotation" aria-hidden="true" />
+                Enregistrement…
+              </>
+            ) : (
+              <>
+                Continuer
+                <IconeFleche className="parcours__fleche" />
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="parcours__recap" role="alert">
+          {refus || (erreurProjet ? 'Choisissez un projet pour continuer.' : '')}
+        </p>
+      </form>
+    </>
+  );
+}
+
+/**
+ * Un projet, tel qu'un donateur le compare : image, categorie, lieu, nom,
+ * accroche, jauge et ce qu'il reste a reunir. Le bouton radio couvre la
+ * carte ; son nom accessible dit l'essentiel en une phrase.
+ */
+function CarteProjet({ projet, choisi, onChange, disabled }) {
+  const taux = Math.min(100, Math.max(0, Number(projet.taux ?? 0)));
+  const nomAccessible = projet.atteint
+    ? `${projet.nom} : objectif atteint, ne peut plus être choisi`
+    : `${projet.nom} : ${fmt.montant(projet.restant, projet.devise)} restant à financer, ${fmt.pourcent(taux)} financé`;
+
+  return (
+    <label
+      className={`parcours__projet${choisi ? ' parcours__projet--choisi' : ''}${
+        projet.atteint ? ' parcours__projet--atteint' : ''
+      }`}
+    >
+      <input
+        type="radio"
+        name="projet"
+        value={projet.id}
+        checked={choisi}
+        onChange={onChange}
+        disabled={disabled || projet.atteint}
+        className="parcours__type-radio"
+        aria-label={nomAccessible}
+      />
+
+      <span className="parcours__projet-visuel" aria-hidden="true">
+        {projet.image ? (
+          <img src={urlMedia(projet.image)} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <span className="parcours__projet-substitut">
+            {projet.video ? <IconeLecture /> : <IconeCoeur />}
+          </span>
+        )}
+      </span>
+
+      <span className="parcours__projet-corps" aria-hidden="true">
+        <span className="parcours__projet-meta">
+          {projet.categorie && <span className="parcours__puce">{projet.categorie}</span>}
+          {projet.lieu && (
+            <span className="parcours__projet-lieu">
+              <IconeRepere />
+              {projet.lieu}
+            </span>
+          )}
+        </span>
+        <span className="parcours__projet-nom">{projet.nom}</span>
+        {projet.accroche && <span className="parcours__projet-accroche">{projet.accroche}</span>}
+        <span className="parcours__jauge">
+          <span style={{ '--taux': `${taux}%` }} />
+        </span>
+        <span className="parcours__projet-chiffres">
+          {projet.atteint ? (
+            <span>
+              <strong>Objectif atteint</strong> · {fmt.montant(projet.objectif, projet.devise)}{' '}
+              réunis
+            </span>
+          ) : (
+            <span>
+              <strong>{fmt.montant(projet.restant, projet.devise)}</strong> restant à financer
+            </span>
+          )}
+          <span>
+            {fmt.pourcent(taux)} · {fmt.montant(projet.collecte, projet.devise)} sur{' '}
+            {fmt.montant(projet.objectif, projet.devise)}
+          </span>
+        </span>
+      </span>
+
+      {projet.atteint ? (
+        <span className="parcours__badge-atteint" aria-hidden="true">
+          <IconeCoche />
+          Financé
+        </span>
+      ) : (
+        <span className="parcours__rond" aria-hidden="true" />
+      )}
+    </label>
+  );
+}
+
+/* ================================================================
+   Etapes 4 et 5 : en attente de leur modele
    ================================================================ */
 
 const ETAPES_A_VENIR = {
-  3: 'L’affectation de votre don',
   4: 'Votre mode de paiement',
   5: 'La fréquence de votre don',
 };

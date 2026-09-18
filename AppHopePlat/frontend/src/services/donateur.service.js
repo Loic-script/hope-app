@@ -16,6 +16,23 @@ export async function recupererProfil() {
   return data;
 }
 
+/**
+ * GET /api/donateur/projets
+ *
+ * Les projets que l'on peut soutenir : leur face publique et leurs
+ * totaux, ceux qui ont le plus besoin de soutien en premier.
+ */
+export async function listerProjets() {
+  const { data } = await apiDonateur.get('/donateur/projets');
+  return data;
+}
+
+/** PUT /api/donateur/profil/etape-3 : l'affectation du don. */
+export async function enregistrerEtape3(choix) {
+  const { data } = await apiDonateur.put('/donateur/profil/etape-3', choix);
+  return data;
+}
+
 /** PUT /api/donateur/profil/etape-2 : le profil et les preferences. */
 export async function enregistrerEtape2(profil) {
   const { data } = await apiDonateur.put('/donateur/profil/etape-2', profil);

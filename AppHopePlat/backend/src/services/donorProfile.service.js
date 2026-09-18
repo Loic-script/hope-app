@@ -9,6 +9,7 @@ import { transaction } from '../config/database.js';
 import * as donorProfileRepository from '../repositories/donorProfile.repository.js';
 import { ErreurValidation } from '../shared/errors.js';
 import { DEVISES_ACCEPTEES } from '../shared/money.js';
+import { lister as listerProjets } from './project.service.js';
 
 /**
  * Comment on a connu HOPE.
@@ -171,6 +172,11 @@ export async function recuperer(utilisateurId) {
       devise: fiche.devise ?? '',
       langue: fiche.langue ?? '',
       fuseau: fiche.fuseauHoraire ?? '',
+    },
+    // Vide tant que l'etape 3 n'a pas ete enregistree.
+    don: {
+      affectation: fiche.affectation ?? '',
+      projetId: fiche.projetId ?? null,
     },
     options: {
       sources: SOURCES_CONNAISSANCE,
@@ -348,3 +354,89 @@ export async function enregistrerEtape2(utilisateurId, corps = {}) {
   return recuperer(utilisateurId);
 }
 
+/* ================================================================
+   Etape 3 : l'affectation du don
+   ================================================================ */
+
+/** Une accroche de projet : son titre de description, ou son debut. */
+function accroche(projet) {
+  const titre = String(projet.descriptionTitre ?? '').trim();
+  if (titre) return titre;
+  const texte = String(projet.description ?? '').replace(/\s+/g, ' ').trim();
+  if (texte.length <= 150) return texte;
+  const coupe = texte.slice(0, 150);
+  return `${coupe.slice(0, coupe.lastIndexOf(' ') > 90 ? coupe.lastIndexOf(' ') : 150)}…`;
+}
+
+/**
+ * Les projets que l'on peut soutenir.
+ *
+ * Les projets HOPE en cours -- ni termines, ni archives, ni internes : un
+ * projet interne fait evoluer HOPE elle-meme, et ne se presente pas aux
+ * donateurs. Les chiffres sont ceux de la fiche projet de l'equipe.
+ *
+ * Seule leur face publique sort d'ici : nom, lieu, categorie, image,
+ * accroche, et les totaux. Rien sur les beneficiaires ni les donateurs.
+ *
+ * Ceux qui ont le plus besoin de soutien viennent d'abord ; un projet
+ * deja finance vient en dernier, marque comme tel.
+ */
+export async function projetsProposes() {
+  const { items } = await listerProjets({ status: 'IN_PROGRESS', projectType: 'HOPE', pageSize: 200 });
+  return items
+    .map((projet) => ({
+      id: projet.id,
+      nom: projet.name,
+      accroche: accroche(projet),
+      lieu: projet.location ?? '',
+      categorie: projet.categoryName ?? '',
+      image: projet.mediaType === 'PHOTO' ? projet.mediaUrl ?? null : null,
+      video: projet.mediaType === 'VIDEO',
+      devise: projet.currency ?? 'MGA',
+      objectif: projet.requiredBudget,
+      collecte: projet.fundedTotal,
+      restant: projet.remainingNeed,
+      taux: projet.fundingRate,
+      atteint: Boolean(projet.isFullyFunded),
+    }))
+    .sort((a, b) => Number(a.atteint) - Number(b.atteint) || Number(a.taux) - Number(b.taux));
+}
+
+/**
+ * Enregistre l'etape 3.
+ *
+ * PROJECT exige un projet, et un projet que l'on peut encore soutenir :
+ * en cours, et dont l'objectif n'est pas atteint. HOPE n'en prend aucun.
+ */
+export async function enregistrerEtape3(utilisateurId, corps = {}) {
+  const affectation = String(corps.affectation ?? '').trim().toUpperCase();
+  if (!['PROJECT', 'HOPE'].includes(affectation)) {
+    throw new ErreurValidation('Choisissez l’affectation de votre don.', {
+      affectation: 'Choisissez un don affecté ou non affecté',
+    });
+  }
+
+  let projetId = null;
+  if (affectation === 'PROJECT') {
+    const identifiant = Number.parseInt(corps.projetId, 10);
+    const projet = (await projetsProposes()).find((p) => p.id === identifiant);
+    if (!projet) {
+      throw new ErreurValidation('Choisissez un projet parmi ceux qui sont proposés.', {
+        projetId: 'Choisissez un projet',
+      });
+    }
+    if (projet.atteint) {
+      throw new ErreurValidation('Ce projet a déjà atteint son objectif.', {
+        projetId: 'Objectif déjà atteint',
+      });
+    }
+    projetId = projet.id;
+  }
+
+  await transaction(async (client) => {
+    await donorProfileRepository.garantir(utilisateurId, client);
+    await donorProfileRepository.enregistrerEtape3(utilisateurId, { affectation, projetId }, client);
+  });
+
+  return recuperer(utilisateurId);
+}
