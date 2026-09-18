@@ -78,12 +78,69 @@ export const DEVISES = DEVISES_ACCEPTEES.map((code) => ({
   libelle: LIBELLES_DEVISE[code] ?? code,
 }));
 
-/** Les langues dans lesquelles HOPE peut ecrire au donateur. */
-export const LANGUES = [
-  { cle: 'fr', libelle: 'Français' },
-  { cle: 'mg', libelle: 'Malagasy' },
-  { cle: 'en', libelle: 'English' },
+/**
+ * Les langues du monde : codes ISO 639-1 des langues vivantes.
+ *
+ * Les langues anciennes, liturgiques ou construites pour l'etude (latin,
+ * sanskrit, avestique, volapuk...) n'y sont pas : on choisit ici la
+ * langue dans laquelle on veut etre ecrit. Le norvegien figure une fois,
+ * sous "no", plutot qu'en trois variantes.
+ */
+const CODES_LANGUES = [
+  'aa', 'ab', 'af', 'ak', 'am', 'an', 'ar', 'as', 'av', 'ay', 'az', 'ba', 'be', 'bg', 'bi',
+  'bm', 'bn', 'bo', 'br', 'bs', 'ca', 'ce', 'ch', 'co', 'cr', 'cs', 'cv', 'cy', 'da', 'de',
+  'dv', 'dz', 'ee', 'el', 'en', 'eo', 'es', 'et', 'eu', 'fa', 'ff', 'fi', 'fj', 'fo', 'fr',
+  'fy', 'ga', 'gd', 'gl', 'gn', 'gu', 'gv', 'ha', 'he', 'hi', 'ho', 'hr', 'ht', 'hu', 'hy',
+  'hz', 'id', 'ig', 'ii', 'ik', 'is', 'it', 'iu', 'ja', 'jv', 'ka', 'kg', 'ki', 'kj', 'kk',
+  'kl', 'km', 'kn', 'ko', 'kr', 'ks', 'ku', 'kv', 'kw', 'ky', 'lb', 'lg', 'li', 'ln', 'lo',
+  'lt', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mr', 'ms', 'mt', 'my', 'na', 'nd',
+  'ne', 'ng', 'nl', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pl', 'ps',
+  'pt', 'qu', 'rm', 'rn', 'ro', 'ru', 'rw', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm',
+  'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk',
+  'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'wa',
+  'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu',
 ];
+
+/** Les langues dans lesquelles HOPE ecrit deja : proposees en tete. */
+const LANGUES_COURANTES = ['fr', 'mg', 'en'];
+
+const nomsFrancais = new Intl.DisplayNames(['fr'], { type: 'language', fallback: 'none' });
+
+/** Le nom d'une langue dans cette langue-la ("español"), si le moteur le connait. */
+function nomPropre(code) {
+  try {
+    if (Intl.DisplayNames.supportedLocalesOf([code]).length === 0) return null;
+    return new Intl.DisplayNames([code], { type: 'language', fallback: 'none' }).of(code) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * "Espagnol (español)", "Malgache (Malagasy)", "Français" : le nom
+ * francais, pour la page qui est en francais, et le nom que la langue se
+ * donne, pour qu'on reconnaisse la sienne au premier coup d'oeil.
+ */
+function libelleLangue(code) {
+  const francais = nomsFrancais.of(code) ?? code;
+  const libelle = francais.charAt(0).toLocaleUpperCase('fr') + francais.slice(1);
+  const propre = nomPropre(code);
+  return propre && propre.toLowerCase() !== francais.toLowerCase() ? `${libelle} (${propre})` : libelle;
+}
+
+/** Toutes les langues : les courantes d'abord, puis les autres par ordre alphabetique. */
+export const LANGUES = (() => {
+  const liste = CODES_LANGUES.map((cle) => ({
+    cle,
+    libelle: libelleLangue(cle),
+    courante: LANGUES_COURANTES.includes(cle),
+  }));
+  const courantes = LANGUES_COURANTES.map((cle) => liste.find((langue) => langue.cle === cle));
+  const autres = liste
+    .filter((langue) => !langue.courante)
+    .sort((a, b) => a.libelle.localeCompare(b.libelle, 'fr'));
+  return [...courantes, ...autres];
+})();
 
 /** Le numero au format international : "+261341234567". */
 const TELEPHONE_E164 = /^\+[1-9]\d{6,14}$/;

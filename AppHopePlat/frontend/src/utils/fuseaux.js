@@ -181,7 +181,22 @@ const PAYS_ANGLOPHONES = new Set([
   'MU', 'SC',
 ]);
 
-/** L'anglais dans les pays anglophones, le francais partout ailleurs. */
+/**
+ * La langue proposee pour quelques grandes aires linguistiques. Madagascar
+ * reste au francais : c'est la langue dans laquelle HOPE ecrit d'abord a
+ * ses donateurs malgaches. Tout se change dans la liste.
+ */
+const LANGUE_PAR_PAYS = {
+  ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es', PE: 'es', VE: 'es', EC: 'es', GT: 'es',
+  CU: 'es', BO: 'es', DO: 'es', HN: 'es', PY: 'es', SV: 'es', NI: 'es', CR: 'es', PA: 'es',
+  UY: 'es', PT: 'pt', BR: 'pt', AO: 'pt', MZ: 'pt', CV: 'pt', DE: 'de', AT: 'de', LI: 'de',
+  IT: 'it', SM: 'it', VA: 'it', NL: 'nl', CN: 'zh', TW: 'zh', HK: 'zh', JP: 'ja', KR: 'ko',
+  RU: 'ru', PL: 'pl', RO: 'ro', GR: 'el', TR: 'tr', SA: 'ar', AE: 'ar', EG: 'ar', QA: 'ar',
+  KW: 'ar', JO: 'ar', IQ: 'ar', OM: 'ar', BH: 'ar', YE: 'ar',
+};
+
+/** La langue proposee : celle du pays s'il en a une, sinon anglais ou francais. */
 export function languePourPays(code) {
+  if (LANGUE_PAR_PAYS[code]) return LANGUE_PAR_PAYS[code];
   return PAYS_ANGLOPHONES.has(code) ? 'en' : 'fr';
 }

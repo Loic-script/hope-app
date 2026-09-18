@@ -834,12 +834,28 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
           </Champ>
 
           <Champ id="langue" libelle="Langue" erreur={erreurDe('langue')} Icone={IconeLangue} liste>
+            {/* Les langues dans lesquelles HOPE ecrit deja, puis toutes les
+                autres : on trouve vite la sienne sans faire defiler cent
+                soixante-dix noms. */}
             <select value={champs.langue} onChange={modifier('langue')} disabled={envoi}>
-              {(options.langues ?? []).map((langue) => (
-                <option key={langue.cle} value={langue.cle}>
-                  {langue.libelle}
-                </option>
-              ))}
+              <optgroup label="Les plus courantes">
+                {(options.langues ?? [])
+                  .filter((langue) => langue.courante)
+                  .map((langue) => (
+                    <option key={langue.cle} value={langue.cle}>
+                      {langue.libelle}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="Toutes les langues">
+                {(options.langues ?? [])
+                  .filter((langue) => !langue.courante)
+                  .map((langue) => (
+                    <option key={langue.cle} value={langue.cle}>
+                      {langue.libelle}
+                    </option>
+                  ))}
+              </optgroup>
             </select>
           </Champ>
         </div>

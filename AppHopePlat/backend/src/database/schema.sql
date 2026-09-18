@@ -1686,7 +1686,9 @@ CREATE TABLE IF NOT EXISTS donateur (
  *   elle qui figurera sur les recus. NULL pour un particulier.
  * - devise : l'une de celles que HOPE accepte pour un don (money.js).
  *   Une preference qu'aucun don ne pourrait honorer ne servirait a rien.
- * - langue : celle des messages que HOPE lui adresse.
+ * - langue : celle des messages que HOPE lui adresse, en code ISO 639-1
+ *   ("fr", "mg", "es"...). La liste des langues proposees est tenue par
+ *   le service ; la base n'en controle que la forme.
  * - fuseau_horaire : un identifiant IANA ("Indian/Antananarivo"), pour
  *   dater les messages a son heure.
  */
@@ -1708,5 +1710,5 @@ ALTER TABLE donateur ADD CONSTRAINT donateur_devise_valide CHECK (
 
 ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_langue_valide;
 ALTER TABLE donateur ADD CONSTRAINT donateur_langue_valide CHECK (
-  langue IS NULL OR langue IN ('fr', 'mg', 'en'));
+  langue IS NULL OR langue ~ '^[a-z]{2}$');
 
