@@ -9,4 +9,7 @@ export const profil = {
   enregistrerEtape1: gerer((req) =>
     donorProfileService.enregistrerEtape1(req.donateur.id, req.body)
   ),
+  enregistrerEtape2: gerer((req) =>
+    donorProfileService.enregistrerEtape2(req.donateur.id, req.body)
+  ),
 };

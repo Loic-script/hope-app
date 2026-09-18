@@ -1677,3 +1677,36 @@ CREATE TABLE IF NOT EXISTS donateur (
   CONSTRAINT donateur_etape_valide CHECK (etape_suivante BETWEEN 1 AND 6)
 );
 
+/*
+ * La fiche du donateur, etape 2 : son profil et ses preferences.
+ *
+ * - type_donateur : particulier, ou une structure (entreprise,
+ *   fondation, organisation, partenaire), ou un donateur de l'etranger.
+ * - nom_structure : la raison sociale, exigee pour une structure -- c'est
+ *   elle qui figurera sur les recus. NULL pour un particulier.
+ * - devise : l'une de celles que HOPE accepte pour un don (money.js).
+ *   Une preference qu'aucun don ne pourrait honorer ne servirait a rien.
+ * - langue : celle des messages que HOPE lui adresse.
+ * - fuseau_horaire : un identifiant IANA ("Indian/Antananarivo"), pour
+ *   dater les messages a son heure.
+ */
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS type_donateur  VARCHAR(20);
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS nom_structure  VARCHAR(200);
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS site_web       VARCHAR(255);
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS devise         CHAR(3);
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS langue         VARCHAR(5);
+ALTER TABLE donateur ADD COLUMN IF NOT EXISTS fuseau_horaire VARCHAR(64);
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_type_valide;
+ALTER TABLE donateur ADD CONSTRAINT donateur_type_valide CHECK (
+  type_donateur IS NULL OR type_donateur IN (
+    'particulier', 'entreprise', 'fondation', 'organisation', 'partenaire', 'international'));
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_devise_valide;
+ALTER TABLE donateur ADD CONSTRAINT donateur_devise_valide CHECK (
+  devise IS NULL OR devise IN ('MGA', 'EUR', 'USD'));
+
+ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_langue_valide;
+ALTER TABLE donateur ADD CONSTRAINT donateur_langue_valide CHECK (
+  langue IS NULL OR langue IN ('fr', 'mg', 'en'));
+

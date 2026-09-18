@@ -599,3 +599,258 @@ select.parcours__saisie option {
     height: 170px;
   }
 }
+
+
+/* ============================================================
+   Etape 2 : profil et preferences
+   ============================================================ */
+
+/* Le groupe de cartes : un fieldset sans son cadre natif. */
+.parcours__groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.parcours__groupe > legend {
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.parcours__types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/*
+ * Une carte : icone et nom, centres. La carte retenue prend le violet de
+ * la charte et une coche -- la couleur seule ne suffirait pas a la
+ * distinguer pour qui la percoit mal.
+ */
+.parcours__type {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 92px;
+  padding: 16px 10px;
+  border: 1px solid var(--parcours-bordure);
+  border-radius: 12px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s var(--parcours-rythme);
+}
+
+.parcours__type:hover {
+  border-color: #c4bfe3;
+  transform: translateY(-1px);
+}
+
+.parcours__type--choisi {
+  border-color: var(--hope-violet);
+  background-color: #f4f2fc;
+  box-shadow: inset 0 0 0 1px var(--hope-violet);
+}
+
+/* Le focus clavier : l'anneau de la charte autour de la carte. */
+.parcours__type:has(.parcours__type-radio:focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px var(--hope-violet),
+    0 0 0 4px var(--parcours-anneau);
+}
+
+/* Le vrai bouton radio couvre la carte : c'est lui que l'on touche. */
+.parcours__type-radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.parcours__type-radio:disabled {
+  cursor: progress;
+}
+
+.parcours__type-icone {
+  width: 26px;
+  height: 26px;
+  color: var(--hope-violet);
+}
+
+.parcours__type-nom {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--parcours-encre);
+}
+
+.parcours__type--choisi .parcours__type-nom {
+  font-weight: 600;
+  color: var(--hope-violet);
+}
+
+.parcours__type-coche {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 0.16s ease,
+    transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.parcours__type-coche svg {
+  width: 12px;
+  height: 12px;
+}
+
+.parcours__type--choisi .parcours__type-coche {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Une aide sous un champ ou un groupe. */
+.parcours__aide {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--hope-texte-doux);
+}
+
+/* Les champs d'une structure apparaissent en glissant, sans a-coup. */
+.parcours__revele {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: parcours-revele 0.32s var(--parcours-rythme) both;
+}
+
+@keyframes parcours-revele {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Retour et Continuer, cote a cote : le pas en arriere, plus discret. */
+.parcours__boutons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.parcours__boutons .parcours__continuer {
+  margin-top: 0;
+}
+
+.parcours__retour {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 0 18px;
+  border: 1.5px solid var(--hope-violet);
+  border-radius: 11px;
+  background-color: #ffffff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--hope-violet);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.parcours__retour:hover:not(:disabled) {
+  background-color: #f6f4fd;
+}
+
+.parcours__retour:focus-visible {
+  outline: 3px solid var(--hope-violet);
+  outline-offset: 3px;
+}
+
+.parcours__retour:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.parcours__fleche-retour {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s var(--parcours-rythme);
+}
+
+.parcours__retour:hover:not(:disabled) .parcours__fleche-retour {
+  transform: translateX(-3px);
+}
+
+.parcours__actions .parcours__retour {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcours__revele {
+    animation: none;
+  }
+
+  .parcours__type,
+  .parcours__type-coche,
+  .parcours__fleche-retour {
+    transition: none;
+  }
+
+  .parcours__type:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .parcours__types {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .parcours__type {
+    min-height: 84px;
+  }
+
+  .parcours__revele {
+    gap: 18px;
+  }
+
+  .parcours__boutons {
+    gap: 10px;
+  }
+
+  .parcours__retour {
+    font-size: 16px;
+  }
+}

@@ -16,6 +16,12 @@ export async function recupererProfil() {
   return data;
 }
 
+/** PUT /api/donateur/profil/etape-2 : le profil et les preferences. */
+export async function enregistrerEtape2(profil) {
+  const { data } = await apiDonateur.put('/donateur/profil/etape-2', profil);
+  return data;
+}
+
 /** PUT /api/donateur/profil/etape-1 : les informations personnelles. */
 export async function enregistrerEtape1(informations) {
   const { data } = await apiDonateur.put('/donateur/profil/etape-1', informations);

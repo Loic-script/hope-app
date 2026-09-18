@@ -91,6 +91,8 @@ const COLONNES_ATTENDUES = [
   ['conversation_message', 'supprime_le'],
   ['impacts', 'objective_id'],
   ['document_bailleur', 'contenu'],
+  ['donateur', 'type_donateur'],
+  ['donateur', 'fuseau_horaire'],
 ];
 
 async function executer() {

@@ -1,15 +1,24 @@
-import { cloneElement, useEffect, useRef, useState } from 'react';
+import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { isValidPhoneNumber, parsePhoneNumberFromString } from 'libphonenumber-js';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
   IconeChevronBas,
+  IconeCoche,
+  IconeCoeur,
   IconeFleche,
+  IconeFlecheGauche,
   IconeGlobe,
+  IconeGroupe,
+  IconeHorloge,
   IconeImmeuble,
+  IconeLangue,
+  IconeLien,
   IconeMallette,
   IconeMegaphone,
+  IconePieces,
+  IconePoigneeMain,
   IconeRepere,
   IconeTelephone,
   IconeUtilisateur,
@@ -17,6 +26,14 @@ import {
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
+import {
+  devisePourPays,
+  fuseauParDefaut,
+  fuseauxDuPays,
+  languePourPays,
+  libelleFuseau,
+  tousLesFuseaux,
+} from '../../utils/fuseaux.js';
 import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomDuPays } from '../../utils/pays.js';
 
 /** Le parcours compte cinq etapes ; la sixieme veut dire "termine". */
@@ -30,7 +47,12 @@ const NOMBRE_ETAPES = 5;
  * etape est enregistree en la quittant ; le serveur retient ou
  * reprendre, et un donateur qui s'arrete en chemin retrouve sa place.
  *
- * Seule l'etape 1 est construite. Les suivantes attendent leur modele.
+ * Les etapes 1 et 2 sont construites ; les suivantes attendent leur
+ * modele.
+ *
+ * "Continuer" mene toujours a l'etape suivante, meme quand on revient
+ * corriger une etape deja franchie. "Retour" garde ce qu'on a saisi sur
+ * la page qu'on quitte : revenir a une etape ne doit rien faire perdre.
  */
 export default function Parcours() {
   const navigate = useNavigate();
@@ -43,6 +65,17 @@ export default function Parcours() {
   // ce qui avait ete lu a l'ouverture de la page.
   const [misAJour, setMisAJour] = useState(null);
   const profil = misAJour ?? donnees;
+  // Ce qui a ete saisi sur une etape quittee par "Retour", sans etre
+  // enregistre : on le retrouve en y revenant.
+  const [brouillons, setBrouillons] = useState({});
+
+  /** Une etape vient d'etre enregistree : on passe a la suivante. */
+  async function apresEnregistrement(numero, reponse) {
+    setMisAJour(reponse);
+    setBrouillons((precedents) => ({ ...precedents, [numero]: undefined }));
+    await rafraichir?.();
+    allerA(Math.min(numero + 1, NOMBRE_ETAPES));
+  }
 
   useEffect(() => {
     if (!donnees) return;
@@ -85,15 +118,28 @@ export default function Parcours() {
             key="etape-1"
             initiales={profil.informations}
             sources={profil.options?.sources ?? []}
-            onSuivante={async (reponse) => {
-              setMisAJour(reponse);
-              await rafraichir?.();
-              allerA(Math.min(reponse.etapeSuivante, NOMBRE_ETAPES));
-            }}
+            onSuivante={(reponse) => apresEnregistrement(1, reponse)}
           />
         )}
-        {profil && etape > 1 && (
-          <EtapeAVenir key={`etape-${etape}`} etape={etape} onRetour={() => allerA(1)} />
+        {profil && etape === 2 && (
+          <EtapeProfil
+            key="etape-2"
+            initiales={brouillons[2] ?? profil.profil ?? {}}
+            pays={profil.informations?.pays || PAYS_PAR_DEFAUT}
+            options={profil.options ?? {}}
+            onRetour={(valeurs) => {
+              setBrouillons((precedents) => ({ ...precedents, 2: valeurs }));
+              allerA(1);
+            }}
+            onSuivante={(reponse) => apresEnregistrement(2, reponse)}
+          />
+        )}
+        {profil && etape > 2 && (
+          <EtapeAVenir
+            key={`etape-${etape}`}
+            etape={etape}
+            onRetour={() => allerA(etape - 1)}
+          />
         )}
       </main>
     </div>
@@ -483,11 +529,391 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
 }
 
 /* ================================================================
-   Etapes 2 a 5 : en attente de leur modele
+   Etape 2 : profil et preferences
+   ================================================================ */
+
+/** L'icone de chaque type de donateur. */
+const ICONES_TYPE = {
+  particulier: IconeUtilisateur,
+  entreprise: IconeImmeuble,
+  fondation: IconeCoeur,
+  organisation: IconeGroupe,
+  partenaire: IconePoigneeMain,
+  international: IconeGlobe,
+};
+
+/** Le libelle de la raison sociale, selon le type de structure. */
+const LIBELLE_STRUCTURE = {
+  entreprise: 'Nom de l’entreprise',
+  fondation: 'Nom de la fondation',
+  organisation: 'Nom de l’organisation',
+  partenaire: 'Nom de la structure partenaire',
+};
+
+/** Ordre des champs de l'etape : c'est aussi l'ordre du focus en erreur. */
+const CHAMPS_PROFIL = ['type', 'nomStructure', 'siteWeb', 'devise', 'langue', 'fuseau'];
+
+/**
+ * Une adresse de site, completee : "hope.mg" -> "https://hope.mg".
+ * Vide si rien n'est saisi, null si ce n'est pas une adresse.
+ */
+function siteComplet(valeur) {
+  const texte = String(valeur ?? '').trim();
+  if (texte === '') return '';
+  const complet = /^https?:\/\//i.test(texte) ? texte : `https://${texte}`;
+  try {
+    const domaine = new URL(complet).hostname;
+    if (!domaine.includes('.') || domaine.startsWith('.') || domaine.endsWith('.')) return null;
+    return complet;
+  } catch {
+    return null;
+  }
+}
+
+/** Les erreurs de l'etape 2, champ par champ. */
+function verifierProfil(champs, types) {
+  const erreurs = {};
+  const type = types.find((t) => t.cle === champs.type);
+  if (!type) erreurs.type = 'Choisissez votre type de donateur.';
+  if (type?.structure) {
+    if (champs.nomStructure.trim() === '') erreurs.nomStructure = 'Indiquez le nom de votre structure.';
+    if (siteComplet(champs.siteWeb) === null) {
+      erreurs.siteWeb = 'Cette adresse de site n’est pas valide.';
+    }
+  }
+  if (!champs.devise) erreurs.devise = 'Choisissez une devise.';
+  if (!champs.langue) erreurs.langue = 'Choisissez une langue.';
+  if (!champs.fuseau) erreurs.fuseau = 'Choisissez un fuseau horaire.';
+  return erreurs;
+}
+
+/**
+ * Etape 2 : le profil du donateur et ses preferences.
+ *
+ * Tant qu'elle n'a jamais ete enregistree, devise, langue et fuseau sont
+ * proposes d'apres le pays donne a l'etape 1 : un donateur malgache
+ * trouve l'ariary, le francais et Antananarivo deja choisis. Tout reste
+ * modifiable.
+ *
+ * La raison sociale et le site web n'apparaissent que pour une
+ * structure : a un particulier, ils ne demanderaient rien d'utile.
+ */
+function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
+  const types = options.types ?? [];
+  const [champs, setChamps] = useState(() => ({
+    type: initiales.type || 'particulier',
+    nomStructure: initiales.nomStructure ?? '',
+    siteWeb: initiales.siteWeb ?? '',
+    devise: initiales.devise || devisePourPays(pays),
+    langue: initiales.langue || languePourPays(pays),
+    fuseau: initiales.fuseau || fuseauParDefaut(pays),
+  }));
+  const [touches, setTouches] = useState({});
+  const [erreursServeur, setErreursServeur] = useState({});
+  const [soumis, setSoumis] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
+  const [refus, setRefus] = useState('');
+  const formulaire = useRef(null);
+
+  // Les fuseaux du pays tout de suite ; les quatre cents autres juste
+  // apres l'affichage : les calculer d'emblee retarderait la page.
+  const locaux = useMemo(() => fuseauxDuPays(pays), [pays]);
+  const [autres, setAutres] = useState([]);
+  useEffect(() => {
+    const minuterie = setTimeout(() => {
+      setAutres(tousLesFuseaux().filter((fuseau) => !locaux.includes(fuseau.nom)));
+    }, 0);
+    return () => clearTimeout(minuterie);
+  }, [locaux]);
+
+  const typeChoisi = types.find((t) => t.cle === champs.type);
+  const estStructure = Boolean(typeChoisi?.structure);
+
+  const erreursLocales = verifierProfil(champs, types);
+  const erreurDe = (champ) =>
+    erreursServeur[champ] ?? ((touches[champ] || soumis) ? erreursLocales[champ] : undefined);
+
+  function modifier(champ) {
+    return (evenement) => {
+      const valeur = evenement.target.value;
+      setChamps((precedents) => ({ ...precedents, [champ]: valeur }));
+      setErreursServeur((precedentes) => ({ ...precedentes, [champ]: undefined }));
+      if (evenement.target.tagName === 'SELECT') {
+        setTouches((precedents) => ({ ...precedents, [champ]: true }));
+      }
+    };
+  }
+
+  function quitter(champ) {
+    return () => {
+      setTouches((precedents) => ({ ...precedents, [champ]: true }));
+      // "hope.mg" se complete en "https://hope.mg" des qu'on quitte le champ.
+      if (champ === 'siteWeb') {
+        const complet = siteComplet(champs.siteWeb);
+        if (complet) setChamps((precedents) => ({ ...precedents, siteWeb: complet }));
+      }
+    };
+  }
+
+  function choisirType(evenement) {
+    const valeur = evenement.target.value;
+    setChamps((precedents) => ({ ...precedents, type: valeur }));
+    setErreursServeur((precedentes) => ({
+      ...precedentes,
+      type: undefined,
+      nomStructure: undefined,
+      siteWeb: undefined,
+    }));
+  }
+
+  function focaliserPremiereErreur(erreurs) {
+    const premier = CHAMPS_PROFIL.find((champ) => erreurs[champ]);
+    if (!premier) return;
+    const cible =
+      premier === 'type'
+        ? formulaire.current?.querySelector('input[name="type"]')
+        : formulaire.current?.querySelector(`#donateur-${premier}`);
+    cible?.focus();
+  }
+
+  async function soumettre(evenement) {
+    evenement.preventDefault();
+    setSoumis(true);
+    setRefus('');
+
+    const erreurs = verifierProfil(champs, types);
+    if (Object.keys(erreurs).length > 0) {
+      focaliserPremiereErreur(erreurs);
+      return;
+    }
+
+    setEnvoi(true);
+    try {
+      const reponse = await donateurService.enregistrerEtape2({
+        type: champs.type,
+        nomStructure: estStructure ? champs.nomStructure.trim() : '',
+        siteWeb: estStructure ? siteComplet(champs.siteWeb) || '' : '',
+        devise: champs.devise,
+        langue: champs.langue,
+        fuseau: champs.fuseau,
+      });
+      await onSuivante(reponse);
+    } catch (echec) {
+      const details = echec?.response?.data?.details ?? {};
+      setErreursServeur(details);
+      focaliserPremiereErreur(details);
+      setRefus(messageErreur(echec, 'Votre profil n’a pas pu être enregistré.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  const nbErreurs = soumis ? CHAMPS_PROFIL.filter((champ) => erreurDe(champ)).length : 0;
+  // Un fuseau deja enregistre reste choisissable meme avant que la liste
+  // complete ne soit prete.
+  const fuseauHorsListe =
+    champs.fuseau &&
+    !locaux.includes(champs.fuseau) &&
+    !autres.some((fuseau) => fuseau.nom === champs.fuseau);
+
+  return (
+    <>
+      <EntetePas
+        etape={2}
+        titre="Votre profil donateur"
+        accroche="Personnalisez votre profil et vos préférences."
+      />
+
+      <form
+        ref={formulaire}
+        className="parcours__formulaire"
+        onSubmit={soumettre}
+        noValidate
+        aria-labelledby="parcours-section-2"
+      >
+        <h2 className="parcours__section" id="parcours-section-2">
+          Profil et préférences
+        </h2>
+
+        {/* Un groupe de boutons radio : les fleches du clavier passent
+            d'une carte a l'autre, comme dans toute liste de choix. */}
+        <fieldset className="parcours__groupe" aria-describedby="donateur-type-aide">
+          <legend className="parcours__libelle">Type de donateur</legend>
+          <div className="parcours__types">
+            {types.map((type) => {
+              const Icone = ICONES_TYPE[type.cle] ?? IconeUtilisateur;
+              const choisi = champs.type === type.cle;
+              return (
+                <label
+                  key={type.cle}
+                  className={`parcours__type${choisi ? ' parcours__type--choisi' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value={type.cle}
+                    checked={choisi}
+                    onChange={choisirType}
+                    disabled={envoi}
+                    className="parcours__type-radio"
+                  />
+                  <span className="parcours__type-coche" aria-hidden="true">
+                    <IconeCoche />
+                  </span>
+                  <Icone className="parcours__type-icone" />
+                  <span className="parcours__type-nom">{type.libelle}</span>
+                </label>
+              );
+            })}
+          </div>
+          {/* Ce que le type implique, dit a mesure qu'on le choisit. */}
+          <p className="parcours__aide" id="donateur-type-aide" aria-live="polite">
+            {typeChoisi?.description ?? ''}
+          </p>
+          {erreurDe('type') && <p className="parcours__erreur">{erreurDe('type')}</p>}
+        </fieldset>
+
+        {estStructure && (
+          <div className="parcours__revele">
+            <Champ
+              id="nomStructure"
+              libelle={LIBELLE_STRUCTURE[champs.type] ?? 'Nom de la structure'}
+              erreur={erreurDe('nomStructure')}
+              aide="Il figurera sur vos reçus de don."
+              Icone={IconeImmeuble}
+            >
+              <input
+                type="text"
+                value={champs.nomStructure}
+                onChange={modifier('nomStructure')}
+                onBlur={quitter('nomStructure')}
+                placeholder="Raison sociale"
+                autoComplete="organization"
+                maxLength={200}
+                disabled={envoi}
+              />
+            </Champ>
+
+            <Champ
+              id="siteWeb"
+              libelle="Site web"
+              facultatif
+              erreur={erreurDe('siteWeb')}
+              Icone={IconeLien}
+            >
+              <input
+                type="url"
+                inputMode="url"
+                value={champs.siteWeb}
+                onChange={modifier('siteWeb')}
+                onBlur={quitter('siteWeb')}
+                placeholder="https://votre-site.com"
+                autoComplete="url"
+                maxLength={255}
+                disabled={envoi}
+              />
+            </Champ>
+          </div>
+        )}
+
+        <div className="parcours__paire">
+          <Champ
+            id="devise"
+            libelle="Devise préférée"
+            erreur={erreurDe('devise')}
+            Icone={IconePieces}
+            liste
+          >
+            <select value={champs.devise} onChange={modifier('devise')} disabled={envoi}>
+              {(options.devises ?? []).map((devise) => (
+                <option key={devise.code} value={devise.code}>
+                  {devise.code} · {devise.libelle}
+                </option>
+              ))}
+            </select>
+          </Champ>
+
+          <Champ id="langue" libelle="Langue" erreur={erreurDe('langue')} Icone={IconeLangue} liste>
+            <select value={champs.langue} onChange={modifier('langue')} disabled={envoi}>
+              {(options.langues ?? []).map((langue) => (
+                <option key={langue.cle} value={langue.cle}>
+                  {langue.libelle}
+                </option>
+              ))}
+            </select>
+          </Champ>
+        </div>
+
+        <Champ
+          id="fuseau"
+          libelle="Fuseau horaire"
+          erreur={erreurDe('fuseau')}
+          aide="Défini automatiquement selon votre pays. Vous pouvez le modifier."
+          Icone={IconeHorloge}
+          liste
+        >
+          <select value={champs.fuseau} onChange={modifier('fuseau')} disabled={envoi}>
+            {fuseauHorsListe && <option value={champs.fuseau}>{libelleFuseau(champs.fuseau)}</option>}
+            <optgroup label={nomDuPays(pays) || 'Votre pays'}>
+              {locaux.map((nom) => (
+                <option key={nom} value={nom}>
+                  {libelleFuseau(nom)}
+                </option>
+              ))}
+            </optgroup>
+            {autres.length > 0 && (
+              <optgroup label="Autres fuseaux">
+                {autres.map((fuseau) => (
+                  <option key={fuseau.nom} value={fuseau.nom}>
+                    {fuseau.libelle}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </Champ>
+
+        <div className="parcours__boutons">
+          <button
+            type="button"
+            className="parcours__retour"
+            onClick={() => onRetour(champs)}
+            disabled={envoi}
+          >
+            <IconeFlecheGauche className="parcours__fleche-retour" />
+            Retour
+          </button>
+          <button type="submit" className="parcours__continuer" disabled={envoi} aria-busy={envoi}>
+            {envoi ? (
+              <>
+                <span className="parcours__rotation" aria-hidden="true" />
+                Enregistrement…
+              </>
+            ) : (
+              <>
+                Continuer
+                <IconeFleche className="parcours__fleche" />
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="parcours__recap" role="alert">
+          {refus ||
+            (nbErreurs > 0
+              ? `${nbErreurs} champ${nbErreurs > 1 ? 's demandent' : ' demande'} votre attention.`
+              : '')}
+        </p>
+      </form>
+    </>
+  );
+}
+
+/* ================================================================
+   Etapes 3 a 5 : en attente de leur modele
    ================================================================ */
 
 const ETAPES_A_VENIR = {
-  2: 'Votre profil de donateur',
   3: 'L’affectation de votre don',
   4: 'Votre mode de paiement',
   5: 'La fréquence de votre don',
@@ -505,11 +931,12 @@ function EtapeAVenir({ etape, onRetour }) {
       <EntetePas
         etape={etape}
         titre={ETAPES_A_VENIR[etape] ?? 'La suite'}
-        accroche="Cette étape arrive très bientôt. Vos informations personnelles sont bien enregistrées."
+        accroche="Cette étape arrive très bientôt. Vos informations sont bien enregistrées."
       />
       <div className="parcours__actions">
-        <button type="button" className="parcours__secondaire" onClick={onRetour}>
-          Revoir mes informations
+        <button type="button" className="parcours__retour" onClick={onRetour}>
+          <IconeFlecheGauche className="parcours__fleche-retour" />
+          Retour
         </button>
         <button
           type="button"
@@ -567,15 +994,29 @@ function EntetePas({ etape, titre, accroche }) {
  * La saisie arrive en enfant ; ce composant lui donne son id, et la
  * relie a son message d'erreur pour les lecteurs d'ecran.
  */
-function Champ({ id, libelle, facultatif = false, erreur, Icone, prefixe, liste = false, children }) {
+function Champ({
+  id,
+  libelle,
+  facultatif = false,
+  erreur,
+  aide,
+  Icone,
+  prefixe,
+  liste = false,
+  children,
+}) {
   const identifiant = `donateur-${id}`;
   const idErreur = `${identifiant}-erreur`;
+  const idAide = `${identifiant}-aide`;
+  const decrit = [erreur ? idErreur : null, aide && !erreur ? idAide : null]
+    .filter(Boolean)
+    .join(' ');
   const saisie = cloneElement(children, {
     id: identifiant,
     name: id,
     className: 'parcours__saisie',
     'aria-invalid': Boolean(erreur),
-    'aria-describedby': erreur ? idErreur : undefined,
+    'aria-describedby': decrit || undefined,
     'aria-required': facultatif ? undefined : true,
   });
 
@@ -591,10 +1032,16 @@ function Champ({ id, libelle, facultatif = false, erreur, Icone, prefixe, liste 
         {saisie}
         {liste && <IconeChevronBas className="parcours__chevron" />}
       </div>
-      {erreur && (
+      {erreur ? (
         <p className="parcours__erreur" id={idErreur}>
           {erreur}
         </p>
+      ) : (
+        aide && (
+          <p className="parcours__aide" id={idAide}>
+            {aide}
+          </p>
+        )
       )}
     </div>
   );

@@ -23,6 +23,8 @@ export async function trouver(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT u.nom, u.prenom, u.adresse, u.telephone, u.email,
             d.ville, d.pays, d.profession, d.source_connaissance,
+            d.type_donateur, d.nom_structure, d.site_web, d.devise,
+            d.langue, d.fuseau_horaire,
             d.etape_suivante
        FROM utilisateur u
        JOIN donateur d ON d.utilisateur_id = u.id
@@ -54,6 +56,28 @@ export async function enregistrerEtape1(utilisateurId, donnees, client = null) {
             mis_a_jour_le = NOW()
       WHERE utilisateur_id = $1`,
     [utilisateurId, donnees.ville, donnees.pays, donnees.profession, donnees.source],
+    client
+  );
+}
+
+/** L'etape 2 : profil et preferences. L'etape suivante ne recule pas. */
+export async function enregistrerEtape2(utilisateurId, donnees, client = null) {
+  await query(
+    `UPDATE donateur
+        SET type_donateur = $2, nom_structure = $3, site_web = $4,
+            devise = $5, langue = $6, fuseau_horaire = $7,
+            etape_suivante = GREATEST(etape_suivante, 3),
+            mis_a_jour_le = NOW()
+      WHERE utilisateur_id = $1`,
+    [
+      utilisateurId,
+      donnees.type,
+      donnees.nomStructure,
+      donnees.siteWeb,
+      donnees.devise,
+      donnees.langue,
+      donnees.fuseau,
+    ],
     client
   );
 }

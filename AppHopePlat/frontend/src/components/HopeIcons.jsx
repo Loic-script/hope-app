@@ -237,3 +237,135 @@ export function IconeChevronBas({ className = '' }) {
     </svg>
   );
 }
+
+/** Un coeur : la fondation. */
+export function IconeCoeur({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7.2a4.4 4.4 0 0 1 8 2.7c0 5.9-8 10.6-8 10.6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Trois personnes : l'organisation. */
+export function IconeGroupe({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="5.5" cy="10" r="2.2" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="18.5" cy="10" r="2.2" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M7 19.5v-1a5 5 0 0 1 10 0v1M2.5 18.5v-.6a3.3 3.3 0 0 1 4-3.2M21.5 18.5v-.6a3.3 3.3 0 0 0-4-3.2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Une poignee de main : le partenaire. */
+export function IconePoigneeMain({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="m11 17 2 2a1.4 1.4 0 0 0 2-2M13 15l2.5 2.5a1.4 1.4 0 0 0 2-2l-3.9-3.9a2 2 0 0 0-2.8 0l-.9.9a1.4 1.4 0 0 1-2-2l2.8-2.8a3.8 3.8 0 0 1 4.6-.6l.5.3a2 2 0 0 0 1.5.2L21 6.5M21 6l1 7h-2M3 6.5l3.3.9a2 2 0 0 0 1.4-.1M3 6l-1 7 6.5 6.5a1.4 1.4 0 0 0 2-2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Deux maillons : le site web. */
+export function IconeLien({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M10 13.5a4 4 0 0 0 6 .4l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7M14 10.5a4 4 0 0 0-6-.4l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Des pieces empilees : la devise. */
+export function IconePieces({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <ellipse cx="9" cy="6.5" rx="6" ry="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M3 6.5v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4M3 10.5v4c0 1.4 2.7 2.5 6 2.5 1 0 2-.1 2.8-.3M15 13.5a6 2.5 0 1 0 6 0a6 2.5 0 1 0-6 0M15 13.5v4c0 1.4 2.7 2.5 6 2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Un signe de traduction : la langue. */
+export function IconeLangue({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 5h9M7.5 3v2M10.5 5c-.8 3.8-3.3 6.8-6.5 8.5M5.5 8.5c1.2 1.9 3 3.4 5 4.3M12.5 21l4-9 4 9M14 17.5h5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Une horloge : le fuseau horaire. */
+export function IconeHorloge({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Une fleche vers la gauche : revenir a l'etape precedente. */
+export function IconeFlecheGauche({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M19 12H5M11 18l-6-6 6-6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Une coche : le choix retenu. */
+export function IconeCoche({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="m5 12.5 4.5 4.5L19 7.5"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
