@@ -108,24 +108,30 @@ export default function Parcours() {
 const OBLIGATOIRES = ['nom', 'prenom', 'adresse', 'ville', 'pays', 'telephone'];
 
 /**
- * Le numero tel qu'on l'affiche : national s'il est du pays choisi,
- * international sinon. Le serveur, lui, le garde au format +261...
+ * Le numero tel qu'on l'affiche : national s'il est de l'indicatif
+ * choisi, international sinon. Le serveur, lui, le garde au format
+ * +261...
  */
-function numeroAffiche(telephone, pays) {
+function numeroAffiche(telephone, indicatif) {
   const numero = parsePhoneNumberFromString(telephone ?? '');
   if (!numero) return telephone ?? '';
-  return numero.country === (pays || PAYS_PAR_DEFAUT)
+  return numero.country === (indicatif || PAYS_PAR_DEFAUT)
     ? numero.formatNational()
     : numero.formatInternational();
 }
 
 /** Le numero saisi, au format international, ou null s'il ne vaut rien. */
-function numeroInternational(saisie, pays) {
+function numeroInternational(saisie, indicatif) {
   const texte = String(saisie ?? '').trim();
   if (texte === '') return null;
-  const code = pays || PAYS_PAR_DEFAUT;
+  const code = indicatif || PAYS_PAR_DEFAUT;
   if (!isValidPhoneNumber(texte, code)) return null;
   return parsePhoneNumberFromString(texte, code)?.number ?? null;
+}
+
+/** Le pays d'un numero deja enregistre ("+33612..." -> "FR"), s'il se deduit. */
+function paysDuNumero(telephone) {
+  return parsePhoneNumberFromString(telephone ?? '')?.country ?? null;
 }
 
 /** Les erreurs du formulaire, champ par champ. */
@@ -138,26 +144,40 @@ function verifier(champs) {
   if (champs.pays === '') erreurs.pays = 'Choisissez votre pays.';
   if (champs.telephone.trim() === '') {
     erreurs.telephone = 'Indiquez votre numéro de téléphone.';
-  } else if (!numeroInternational(champs.telephone, champs.pays)) {
+  } else if (!numeroInternational(champs.telephone, champs.indicatif)) {
     erreurs.telephone = `Ce numéro n’est pas valide pour ${nomDuPays(
-      champs.pays || PAYS_PAR_DEFAUT
-    )}.`;
+      champs.indicatif || PAYS_PAR_DEFAUT
+    )} (${indicatifDe(champs.indicatif)}).`;
   }
   if (champs.profession.length > 120) erreurs.profession = 'Au plus 120 caractères.';
   return erreurs;
 }
 
 function EtapeInformations({ initiales, sources, onSuivante }) {
-  const [champs, setChamps] = useState(() => ({
-    nom: initiales.nom ?? '',
-    prenom: initiales.prenom ?? '',
-    adresse: initiales.adresse ?? '',
-    ville: initiales.ville ?? '',
-    pays: initiales.pays ?? '',
-    telephone: numeroAffiche(initiales.telephone, initiales.pays),
-    profession: initiales.profession ?? '',
-    source: initiales.source ?? '',
-  }));
+  /*
+   * L'indicatif est distinct du pays de residence : on peut vivre en
+   * France et garder un numero malgache. Il part du numero deja
+   * enregistre, a defaut du pays, a defaut de Madagascar.
+   */
+  const [champs, setChamps] = useState(() => {
+    const indicatif = paysDuNumero(initiales.telephone) ?? (initiales.pays || PAYS_PAR_DEFAUT);
+    return {
+      nom: initiales.nom ?? '',
+      prenom: initiales.prenom ?? '',
+      adresse: initiales.adresse ?? '',
+      ville: initiales.ville ?? '',
+      pays: initiales.pays ?? '',
+      indicatif,
+      telephone: numeroAffiche(initiales.telephone, indicatif),
+      profession: initiales.profession ?? '',
+      source: initiales.source ?? '',
+    };
+  });
+  // Tant qu'on ne l'a pas choisi soi-meme, l'indicatif suit le pays : on
+  // n'a pas a le chercher deux fois. Une fois choisi, on le respecte.
+  const [indicatifChoisi, setIndicatifChoisi] = useState(() =>
+    Boolean(paysDuNumero(initiales.telephone))
+  );
   // Un champ n'est juge qu'une fois quitte : on ne reproche pas a
   // quelqu'un ce qu'il est en train d'ecrire.
   const [touches, setTouches] = useState({});
@@ -183,16 +203,47 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
     };
   }
 
+  /** Le pays de residence ; l'indicatif le suit s'il n'a pas ete choisi. */
+  function modifierPays(evenement) {
+    const valeur = evenement.target.value;
+    modifier('pays')(evenement);
+    if (!indicatifChoisi && valeur) {
+      setChamps((precedents) => ({ ...precedents, indicatif: valeur }));
+    }
+  }
+
+  function modifierIndicatif(evenement) {
+    const valeur = evenement.target.value;
+    setIndicatifChoisi(true);
+    setChamps((precedents) => ({ ...precedents, indicatif: valeur }));
+    setErreursServeur((precedentes) => ({ ...precedentes, telephone: undefined }));
+  }
+
   function quitter(champ) {
     return () => {
       setTouches((precedents) => ({ ...precedents, [champ]: true }));
-      // Un numero valide se remet en forme : 0341234567 -> 034 12 345 67.
       if (champ === 'telephone') {
-        const international = numeroInternational(champs.telephone, champs.pays);
-        if (international) {
+        // Un numero saisi avec son "+" dit lui-meme son pays : l'indicatif
+        // s'y range. "+33 6 12 34 56 78" -> +33 et "06 12 34 56 78".
+        const texte = champs.telephone.trim();
+        const international = texte.startsWith('+')
+          ? parsePhoneNumberFromString(texte)
+          : null;
+        if (international?.isValid() && international.country) {
+          setIndicatifChoisi(true);
           setChamps((precedents) => ({
             ...precedents,
-            telephone: numeroAffiche(international, precedents.pays),
+            indicatif: international.country,
+            telephone: international.formatNational(),
+          }));
+          return;
+        }
+        // Un numero valide se remet en forme : 0341234567 -> 034 12 345 67.
+        const valide = numeroInternational(champs.telephone, champs.indicatif);
+        if (valide) {
+          setChamps((precedents) => ({
+            ...precedents,
+            telephone: numeroAffiche(valide, precedents.indicatif),
           }));
         }
       }
@@ -224,7 +275,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
         adresse: champs.adresse.trim(),
         ville: champs.ville.trim(),
         pays: champs.pays,
-        telephone: numeroInternational(champs.telephone, champs.pays),
+        telephone: numeroInternational(champs.telephone, champs.indicatif),
         profession: champs.profession.trim(),
         source: champs.source,
       });
@@ -319,7 +370,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
           <Champ id="pays" libelle="Pays" erreur={erreurDe('pays')} Icone={IconeGlobe} liste>
             <select
               value={champs.pays}
-              onChange={modifier('pays')}
+              onChange={modifierPays}
               onBlur={quitter('pays')}
               autoComplete="country"
               disabled={envoi}
@@ -340,8 +391,13 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
           libelle="Téléphone"
           erreur={erreurDe('telephone')}
           Icone={IconeTelephone}
-          // L'indicatif suit le pays choisi : on ne le tape pas, on le lit.
-          prefixe={indicatifDe(champs.pays)}
+          prefixe={
+            <SelecteurIndicatif
+              valeur={champs.indicatif}
+              onChange={modifierIndicatif}
+              disabled={envoi}
+            />
+          }
         >
           <input
             type="tel"
@@ -531,11 +587,7 @@ function Champ({ id, libelle, facultatif = false, erreur, Icone, prefixe, liste 
       </label>
       <div className={`parcours__boite${prefixe ? ' parcours__boite--prefixe' : ''}`}>
         <Icone className="parcours__icone" />
-        {prefixe && (
-          <span className="parcours__prefixe" aria-label={`Indicatif ${prefixe}`}>
-            {prefixe}
-          </span>
-        )}
+        {prefixe && <div className="parcours__prefixe">{prefixe}</div>}
         {saisie}
         {liste && <IconeChevronBas className="parcours__chevron" />}
       </div>
@@ -545,6 +597,40 @@ function Champ({ id, libelle, facultatif = false, erreur, Icone, prefixe, liste 
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * L'indicatif du telephone : tous les pays, Madagascar en tete.
+ *
+ * Replie, il ne montre que "+261" : le nom du pays ne tiendrait pas
+ * devant le numero. Ouvert, c'est la liste native du systeme -- "Pays
+ * (+indicatif)" -- que le clavier et les lecteurs d'ecran savent
+ * parcourir, et qui s'ouvre en roue sur un telephone. Elle est posee,
+ * transparente, sur l'affichage : c'est elle que l'on touche.
+ */
+function SelecteurIndicatif({ valeur, onChange, disabled }) {
+  return (
+    <>
+      <span className="parcours__indicatif" aria-hidden="true">
+        {indicatifDe(valeur)}
+        <IconeChevronBas className="parcours__indicatif-chevron" />
+      </span>
+      <select
+        id="donateur-indicatif"
+        className="parcours__indicatif-liste"
+        value={valeur}
+        onChange={onChange}
+        disabled={disabled}
+        aria-label="Indicatif téléphonique"
+      >
+        {PAYS.map((pays) => (
+          <option key={pays.code} value={pays.code}>
+            {pays.nom} ({indicatifDe(pays.code)})
+          </option>
+        ))}
+      </select>
+    </>
   );
 }
 

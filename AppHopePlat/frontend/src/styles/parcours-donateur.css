@@ -284,21 +284,68 @@ select.parcours__saisie option {
   transform: translateY(1px);
 }
 
-/* L'indicatif : lu, pas saisi. Il suit le pays choisi. */
+/*
+ * L'indicatif : une liste de tous les pays, repliee sur "+261". La liste
+ * native, transparente, couvre l'affichage ; au survol et au focus, le
+ * fond change pour dire que la case se choisit.
+ */
 .parcours__prefixe {
+  position: relative;
   flex: none;
   align-self: stretch;
   display: flex;
   align-items: center;
   margin-left: 16px;
-  padding: 0 17px;
   border-left: 1px solid var(--parcours-bordure);
   border-right: 1px solid var(--parcours-bordure);
   background-color: #f3f6fb;
+  transition: background-color 0.18s ease;
+}
+
+.parcours__prefixe:hover {
+  background-color: #e9f0f9;
+}
+
+.parcours__prefixe:focus-within {
+  background-color: #e3ecf8;
+}
+
+.parcours__indicatif {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 0 16px;
   font-size: 15px;
   font-weight: 600;
   color: var(--parcours-encre);
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.parcours__prefixe:focus-within .parcours__indicatif {
+  color: var(--hope-violet);
+}
+
+.parcours__indicatif-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--hope-texte-doux);
+}
+
+.parcours__indicatif-liste {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  opacity: 0;
+  /* 16 px : en dessous, iOS agrandit la page a l'ouverture. */
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.parcours__indicatif-liste:disabled {
+  cursor: progress;
 }
 
 .parcours__boite--prefixe .parcours__saisie {
