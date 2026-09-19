@@ -206,6 +206,9 @@ export function ModaleFormulaire({
   erreur,
   libelleValider = 'Enregistrer',
   large,
+  // Une action a gauche du pied, a l'ecart des deux autres : "Supprimer",
+  // quand la fenetre modifie un element existant.
+  actionGauche = null,
   children,
 }) {
   return (
@@ -227,6 +230,7 @@ export function ModaleFormulaire({
         {children}
 
         <div className="formulaire-actions">
+          {actionGauche && <div className="formulaire-actions__gauche">{actionGauche}</div>}
           <button type="button" className="btn btn--neutre" onClick={onFermer} disabled={envoi}>
             Annuler
           </button>

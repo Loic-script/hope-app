@@ -259,90 +259,58 @@ export default function ProjectDetailPage() {
   const sansObjectifs = (projet.objectives?.length ?? 0) === 0;
 
   /**
-   * Les colonnes d'un tableau de mesures.
-   *
-   * Les deux tableaux montrent les memes lignes ; seule la colonne de
-   * l'objectif distingue celui du bas. Une fabrique plutot qu'une copie :
-   * elles doivent rester identiques.
+   * Le nom d'une mesure, qui ouvre sa fenetre de modification -- d'ou
+   * l'on peut aussi la supprimer. Il remplace la colonne d'actions : on
+   * agit sur une mesure en la designant. Sur un projet archive, plus rien
+   * ne se modifie : le nom reste un simple texte.
    */
-  function colonnesImpact({ objectif }) {
-    return [
-      {
-        cle: 'title',
-        titre: 'Impact',
-        rendu: (i) => (
-          <div>
-            <div className="table__principal">{i.title}</div>
-            {i.description && (
-              <div className="table__secondaire">{fmt.tronquer(i.description, 70)}</div>
-            )}
-          </div>
-        ),
-      },
-      // Mesurer un objectif ne demande ni indicateur ni beneficiaire :
-      // l'objectif dit ce qu'on compte, et la mesure est collective. Les
-      // deux colonnes n'auraient rien montre que l'on puisse changer.
-      ...(objectif
-        ? [
-            {
-              cle: 'objectiveLabel',
-              titre: 'Objectif',
-              rendu: (i) => <span className="table__principal">{i.objectiveLabel}</span>,
-            },
-          ]
-        : [
-            {
-              cle: 'indicator',
-              titre: 'Indicateur',
-              rendu: (i) => libelleIndicateur(i.indicator),
-            },
-          ]),
-      {
-        cle: 'value',
-        titre: 'Valeur',
-        aligne: 'droite',
-        rendu: (i) => (
-          <strong>
-            {fmt.nombre(i.value)} {i.unit ?? ''}
-          </strong>
-        ),
-      },
-      ...(objectif
-        ? []
-        : [
-            {
-              cle: 'beneficiaryName',
-              titre: 'Bénéficiaire',
-              rendu: (i) => i.beneficiaryName ?? 'Collectif',
-            },
-          ]),
-      { cle: 'measuredAt', titre: 'Mesuré le', rendu: (i) => fmt.date(i.measuredAt) },
-      {
-        cle: 'actions',
-        titre: 'Actions',
-        aligne: 'droite',
-        rendu: (impact) =>
-          archive ? null : (
-            <div className="cellule-actions">
-              <button
-                type="button"
-                className="lien-action"
-                onClick={() => ouvrir(objectif ? 'impactObjectif' : 'impactGeneral', impact)}
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="lien-action lien-action--danger"
-                onClick={() => ouvrir('supprimerImpact', impact)}
-              >
-                Supprimer
-              </button>
-            </div>
-          ),
-      },
-    ];
+  function nomMesure(impact, portee, className) {
+    if (archive) return <strong className={className}>{impact.title}</strong>;
+    return (
+      <button
+        type="button"
+        className={`${className} nom-mesure`}
+        onClick={() => ouvrir(portee === 'objectif' ? 'impactObjectif' : 'impactGeneral', impact)}
+        title="Modifier ou supprimer"
+      >
+        {impact.title}
+      </button>
+    );
   }
+
+  /** Les mesures par objectif : toutes les colonnes centrees, sans actions. */
+  const colonnesMesures = [
+    {
+      cle: 'title',
+      titre: 'Impact',
+      aligne: 'centre',
+      rendu: (i) => (
+        <div>
+          {nomMesure(i, 'objectif', 'table__principal')}
+          {i.description && (
+            <div className="table__secondaire">{fmt.tronquer(i.description, 70)}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      cle: 'objectiveLabel',
+      titre: 'Objectif',
+      aligne: 'centre',
+      rendu: (i) => <span className="table__principal">{i.objectiveLabel}</span>,
+    },
+    {
+      cle: 'value',
+      titre: 'Valeur',
+      aligne: 'centre',
+      rendu: (i) => (
+        <strong>
+          {fmt.nombre(i.value)} {i.unit ?? ''}
+        </strong>
+      ),
+    },
+    { cle: 'measuredAt', titre: 'Mesuré le', aligne: 'centre', rendu: (i) => fmt.date(i.measuredAt) },
+  ];
 
   const ONGLETS = [
     { cle: 'general', label: 'Vue générale' },
@@ -1256,7 +1224,11 @@ export default function ProjectDetailPage() {
           */}
           <Panneau
             titre="Impact général du projet"
-            sousTitre="Ce que le projet a produit dans son ensemble, sans se rattacher à un objectif précis"
+            sousTitre={
+              impactsGeneraux.length > 0 && !archive
+                ? 'Ce que le projet a produit dans son ensemble. Cliquez sur un impact pour le modifier.'
+                : 'Ce que le projet a produit dans son ensemble, sans se rattacher à un objectif précis'
+            }
             actions={
               !archive && (
                 <button
@@ -1269,12 +1241,31 @@ export default function ProjectDetailPage() {
                 </button>
               )
             }
-            serre
           >
-            <Tableau
-              lignes={impactsGeneraux}
-              colonnes={colonnesImpact({ objectif: false })}
-              vide={
+            {/*
+              Un texte, et non un tableau : une phrase par impact, qui se
+              lit comme un compte rendu. "Habitants desservis en eau
+              potable : 400 personnes, mesure le 17/08/2026."
+            */}
+            {impactsGeneraux.length > 0 ? (
+              <div className="impact-texte">
+                {impactsGeneraux.map((impact) => (
+                  <p className="impact-texte__paragraphe" key={impact.id}>
+                    {nomMesure(impact, 'general', 'impact-texte__titre')}
+                    {' : '}
+                    <strong className="impact-texte__valeur">
+                      {fmt.nombre(impact.value)}
+                      {impact.unit ? ` ${impact.unit}` : ''}
+                    </strong>
+                    {impact.beneficiaryName ? ` pour ${impact.beneficiaryName}` : ''}
+                    <span className="impact-texte__date">
+                      , mesuré le {fmt.date(impact.measuredAt)}.
+                    </span>
+                    {impact.description && ` ${impact.description}`}
+                  </p>
+                ))}
+              </div>
+            ) : (
                 <EtatVide
                   titre="Aucun impact général"
                   texte="Chiffrez ce que le projet a permis de changer dans son ensemble : personnes aidées, matériel distribué, services rendus."
@@ -1291,13 +1282,16 @@ export default function ProjectDetailPage() {
                     )
                   }
                 />
-              }
-            />
+            )}
           </Panneau>
 
           <Panneau
             titre="Mesures par objectif"
-            sousTitre="Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente"
+            sousTitre={
+              impactsParObjectif.length > 0 && !archive
+                ? 'Chaque mesure et l’objectif qu’elle documente. Cliquez sur une mesure pour la modifier.'
+                : 'Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente'
+            }
             actions={
               /* Un projet sans objectifs n'a rien a mesurer ici. Le
                  bouton reste en place -- le faire disparaitre laisse
@@ -1323,7 +1317,7 @@ export default function ProjectDetailPage() {
           >
             <Tableau
               lignes={impactsParObjectif}
-              colonnes={colonnesImpact({ objectif: true })}
+              colonnes={colonnesMesures}
               vide={
                 <EtatVide
                   titre="Aucune mesure par objectif"
@@ -1509,6 +1503,9 @@ export default function ProjectDetailPage() {
         beneficiaires={donnees.beneficiaries}
         onFermer={fermer}
         onEnregistre={rechargerTout}
+        // Supprimer se demande depuis la fenetre : la confirmation prend
+        // sa place.
+        onSupprimer={(impact) => ouvrir('supprimerImpact', impact)}
       />
 
       <TacheModale

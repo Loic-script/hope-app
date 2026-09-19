@@ -358,6 +358,12 @@
   white-space: nowrap;
 }
 
+/* "th" pose deja un alignement a gauche : il faut le viser aussi. */
+.table th.table__centre,
+.table td.table__centre {
+  text-align: center;
+}
+
 .table__principal {
   font-weight: 600;
   color: var(--admin-texte);
@@ -1024,6 +1030,12 @@
   border-top: 1px solid var(--admin-bordure);
 }
 
+/* Supprimer se tient a gauche, loin d'Enregistrer : on ne le touche pas
+   par megarde en validant. */
+.formulaire-actions__gauche {
+  margin-right: auto;
+}
+
 /* ============================================================
    10. Modales
    ============================================================ */
@@ -1516,6 +1528,63 @@
   line-height: 1.6;
   color: var(--admin-texte);
   white-space: pre-wrap;
+}
+
+/* L'impact general du projet : un texte, une phrase par impact. */
+.impact-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.impact-texte__paragraphe {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--admin-texte);
+}
+
+.impact-texte__titre {
+  font-weight: 700;
+}
+
+.impact-texte__valeur {
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.impact-texte__date {
+  color: var(--admin-texte-doux);
+}
+
+/* Le nom d'une mesure se clique pour la modifier : il reste du texte,
+   et ne se revele lien qu'au survol ou au clavier. */
+.nom-mesure {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--admin-texte);
+  text-align: inherit;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.nom-mesure:hover,
+.nom-mesure:focus-visible {
+  color: var(--hope-violet);
+  text-decoration-color: currentColor;
+}
+
+.nom-mesure:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 /* Le titre de la description : il annonce le paragraphe qui suit, et se

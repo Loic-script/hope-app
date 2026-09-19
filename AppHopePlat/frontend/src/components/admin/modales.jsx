@@ -1290,6 +1290,9 @@ export function ImpactModale({
   portee = null,
   onFermer,
   onEnregistre,
+  // Facultatif : en modification, un bouton "Supprimer" le propose. La
+  // fiche projet s'en sert, ses listes n'ayant plus de colonne d'actions.
+  onSupprimer = null,
 }) {
   const edition = Boolean(impact);
   const [formulaire, setFormulaire] = useState(IMPACT_VIDE);
@@ -1429,6 +1432,18 @@ export function ImpactModale({
       erreur={erreur}
       libelleValider={edition ? 'Enregistrer' : 'Enregistrer l’impact'}
       large
+      actionGauche={
+        edition && onSupprimer ? (
+          <button
+            type="button"
+            className="btn btn--danger"
+            onClick={() => onSupprimer(impact)}
+            disabled={envoi}
+          >
+            Supprimer
+          </button>
+        ) : null
+      }
     >
       <div className="formulaire-grille">
         {projet ? (

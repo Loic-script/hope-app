@@ -276,6 +276,13 @@ export function BarreOutils({
  *           lignes: object[], cleLigne?: Function,
  *           chargement?: boolean, erreur?: string, vide?: React.ReactNode }} props
  */
+/** 'droite' pour les montants, 'centre' pour une colonne centree. */
+function classeAlignement(aligne) {
+  if (aligne === 'droite') return 'table__nombre';
+  if (aligne === 'centre') return 'table__centre';
+  return undefined;
+}
+
 export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide }) {
   /*
    * Arriver sur une ligne par son ancre (#compte-xxx).
@@ -311,7 +318,7 @@ export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreu
             {colonnes.map((colonne) => (
               <th
                 key={colonne.cle}
-                className={colonne.aligne === 'droite' ? 'table__nombre' : undefined}
+                className={classeAlignement(colonne.aligne)}
                 style={colonne.largeur ? { width: colonne.largeur } : undefined}
               >
                 {colonne.titre}
@@ -327,10 +334,7 @@ export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreu
               className={visee && idLigne(ligne) === visee ? 'ligne--visee' : undefined}
             >
               {colonnes.map((colonne) => (
-                <td
-                  key={colonne.cle}
-                  className={colonne.aligne === 'droite' ? 'table__nombre' : undefined}
-                >
+                <td key={colonne.cle} className={classeAlignement(colonne.aligne)}>
                   {colonne.rendu ? colonne.rendu(ligne) : (ligne[colonne.cle] ?? '—')}
                 </td>
               ))}
