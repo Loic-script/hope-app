@@ -217,6 +217,11 @@
   white-space: nowrap;
 }
 
+/* Dans un tableau centre, les actions se centrent avec le reste. */
+.cellule-actions--centre {
+  justify-content: center;
+}
+
 /* ============================================================
    3. Panneaux
    ============================================================ */

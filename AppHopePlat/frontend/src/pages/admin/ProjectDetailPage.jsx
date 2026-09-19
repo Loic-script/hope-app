@@ -278,7 +278,11 @@ export default function ProjectDetailPage() {
     );
   }
 
-  /** Les mesures par objectif : toutes les colonnes centrees, sans actions. */
+  /**
+   * Les mesures par objectif : toutes les colonnes centrees, et Modifier
+   * / Supprimer en fin de ligne. Un projet archive ne se modifie plus :
+   * la colonne des actions disparait avec lui.
+   */
   const colonnesMesures = [
     {
       cle: 'title',
@@ -286,7 +290,7 @@ export default function ProjectDetailPage() {
       aligne: 'centre',
       rendu: (i) => (
         <div>
-          {nomMesure(i, 'objectif', 'table__principal')}
+          <div className="table__principal">{i.title}</div>
           {i.description && (
             <div className="table__secondaire">{fmt.tronquer(i.description, 70)}</div>
           )}
@@ -310,6 +314,35 @@ export default function ProjectDetailPage() {
       ),
     },
     { cle: 'measuredAt', titre: 'Mesuré le', aligne: 'centre', rendu: (i) => fmt.date(i.measuredAt) },
+    ...(archive
+      ? []
+      : [
+          {
+            cle: 'actions',
+            titre: 'Actions',
+            aligne: 'centre',
+            rendu: (impact) => (
+              <div className="cellule-actions cellule-actions--centre">
+                <button
+                  type="button"
+                  className="lien-action"
+                  onClick={() => ouvrir('impactObjectif', impact)}
+                  aria-label={`Modifier la mesure ${impact.title}`}
+                >
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  className="lien-action lien-action--danger"
+                  onClick={() => ouvrir('supprimerImpact', impact)}
+                  aria-label={`Supprimer la mesure ${impact.title}`}
+                >
+                  Supprimer
+                </button>
+              </div>
+            ),
+          },
+        ]),
   ];
 
   const ONGLETS = [
@@ -1287,11 +1320,7 @@ export default function ProjectDetailPage() {
 
           <Panneau
             titre="Mesures par objectif"
-            sousTitre={
-              impactsParObjectif.length > 0 && !archive
-                ? 'Chaque mesure et l’objectif qu’elle documente. Cliquez sur une mesure pour la modifier.'
-                : 'Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente'
-            }
+            sousTitre="Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente"
             actions={
               /* Un projet sans objectifs n'a rien a mesurer ici. Le
                  bouton reste en place -- le faire disparaitre laisse
