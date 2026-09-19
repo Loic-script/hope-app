@@ -33,11 +33,6 @@ import { recupererApercu } from './project.service.js';
    Mise en forme
    ================================================================ */
 
-const MOIS = [
-  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-];
-
 /** "2026-09-17" ou une date -> ses trois morceaux, sans decalage de fuseau. */
 function morceaux(valeur) {
   if (!valeur) return null;
@@ -56,12 +51,6 @@ function dateNue(valeur) {
 function dateFr(valeur) {
   const m = morceaux(valeur);
   return m ? `${m.jour}/${m.mois}/${m.annee}` : '';
-}
-
-/** "17 septembre 2026" */
-function dateLongue(valeur) {
-  const m = morceaux(valeur);
-  return m ? `${Number(m.jour)} ${MOIS[Number(m.mois) - 1]} ${m.annee}` : '';
 }
 
 /** "2 000 000 Ar" -- l'ariary n'a pas de centimes en usage courant. */
@@ -117,7 +106,9 @@ function composer(apercu, bailleurs, indicateurs, aujourdhui) {
   const periodeFin =
     projet.status === 'IN_PROGRESS' ? aujourdhui : (dateNue(projet.completedAt) ?? aujourdhui);
 
-  const titre = `Rapport d’impact — ${projet.name}, ${dateLongue(aujourdhui)}`;
+  // Le titre nomme le projet, sans date : celle-ci se lit juste dessous,
+  // dans "Edite le ...", et la liste des rapports envoyes a la sienne.
+  const titre = `Rapport d’impact — ${projet.name}`;
   const sousTitre = [
     periodeDebut ? `Période du ${dateFr(periodeDebut)} au ${dateFr(periodeFin)}` : null,
     `Édité le ${dateFr(aujourdhui)}`,
@@ -287,7 +278,7 @@ async function charger(projetId) {
   ]);
   const aujourdhui = new Date().toISOString().slice(0, 10);
   const rapport = composer(apercu, bailleurs, catalogue.indicators ?? [], aujourdhui);
-  return { apercu, bailleurs, rapport };
+  return { apercu, bailleurs, rapport, aujourdhui };
 }
 
 /* ================================================================
@@ -359,7 +350,7 @@ export async function contenuPublie(projetId, documentId) {
  * doit pas lui faire trouver deux fois le meme rapport.
  */
 export async function publier(projetId, admin) {
-  const { apercu, bailleurs, rapport } = await charger(projetId);
+  const { apercu, bailleurs, rapport, aujourdhui } = await charger(projetId);
   const projet = apercu.project;
 
   if (bailleurs.length === 0) {
@@ -369,9 +360,11 @@ export async function publier(projetId, admin) {
     );
   }
 
+  // L'edition du jour se reconnait a sa date d'envoi : le titre, sans
+  // date, est le meme d'un jour a l'autre.
   const deja = new Set(
     (await reportRepository.rapportsPublies(projet.id))
-      .filter((d) => d.titre === rapport.titre)
+      .filter((d) => String(d.publieLe ?? '').slice(0, 10) === aujourdhui)
       .map((d) => d.bailleur)
   );
   const destinataires = bailleurs.filter((b) => !deja.has(b.raisonSociale));
