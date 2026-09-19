@@ -255,19 +255,14 @@
   cursor: progress;
 }
 
-select.parcours__saisie {
-  appearance: none;
+/* Une liste (ListeRecherche) : le chevron occupe la droite du champ. */
+.parcours__saisie[role='combobox'] {
   padding-right: 46px;
-  cursor: pointer;
 }
 
 /* Tant que rien n'est choisi, la liste parle comme un placeholder. */
-select.parcours__saisie[data-vide='true'] {
+.parcours__saisie[data-vide='true'] {
   color: var(--parcours-placeholder);
-}
-
-select.parcours__saisie option {
-  color: var(--parcours-encre);
 }
 
 .parcours__chevron {
@@ -284,13 +279,19 @@ select.parcours__saisie option {
   transform: translateY(1px);
 }
 
+/* La liste ouverte, le chevron se retourne. */
+.parcours__boite:has(> [aria-expanded='true']) .parcours__chevron {
+  transform: rotate(180deg);
+}
+
 /*
- * L'indicatif : une liste de tous les pays, repliee sur "+261". La liste
- * native, transparente, couvre l'affichage ; au survol et au focus, le
- * fond change pour dire que la case se choisit.
+ * L'indicatif : une liste de tous les pays, repliee sur "+261". Au survol
+ * et au focus, le fond change pour dire que la case se choisit.
+ *
+ * La case n'est pas positionnee : la liste qu'elle ouvre se pose ainsi
+ * sur la boite entiere du champ, et non sur ses quatre-vingts pixels.
  */
 .parcours__prefixe {
-  position: relative;
   flex: none;
   align-self: stretch;
   display: flex;
@@ -311,15 +312,23 @@ select.parcours__saisie option {
 }
 
 .parcours__indicatif {
+  align-self: stretch;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 0 12px 0 16px;
+  border: none;
+  background: transparent;
+  font: inherit;
   font-size: 15px;
   font-weight: 600;
   color: var(--parcours-encre);
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
+  outline: none;
+}
+
+.parcours__indicatif:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--hope-bleu-lisible);
 }
 
 .parcours__prefixe:focus-within .parcours__indicatif {
@@ -330,22 +339,18 @@ select.parcours__saisie option {
   width: 14px;
   height: 14px;
   color: var(--hope-texte-doux);
+  transition: transform 0.2s var(--parcours-rythme);
 }
 
-.parcours__indicatif-liste {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  opacity: 0;
-  /* 16 px : en dessous, iOS agrandit la page a l'ouverture. */
-  font-size: 16px;
-  cursor: pointer;
+.parcours__indicatif[aria-expanded='true'] .parcours__indicatif-chevron {
+  transform: rotate(180deg);
 }
 
-.parcours__indicatif-liste:disabled {
-  cursor: progress;
+/* La liste des indicatifs : "Madagascar ... +261", assez large pour les
+   noms longs, pas au point de couvrir tout le champ. */
+.parcours__indicatif-panneau {
+  right: auto;
+  width: min(440px, calc(100% + 2px));
 }
 
 .parcours__boite--prefixe .parcours__saisie {
