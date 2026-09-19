@@ -1,21 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { IconePlus, IconeProjets } from '../../components/admin/AdminIcons.jsx';
+import {
+  IconeArchive,
+  IconeCorbeille,
+  IconeCrayon,
+  IconePlus,
+  IconeValide,
+} from '../../components/admin/AdminIcons.jsx';
 import { ModaleConfirmation } from '../../components/admin/forms.jsx';
 import { TerminerProjetModale } from '../../components/admin/modales.jsx';
+import PublicationProjet from '../../components/admin/PublicationProjet.jsx';
 import {
   Alerte,
   Badge,
   BarreOutils,
+  Chargement,
   EntetePage,
   EtatVide,
   Panneau,
-  Progression,
-  Tableau,
 } from '../../components/admin/ui.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
-import { urlMedia } from '../../services/api.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
@@ -35,42 +40,75 @@ const FILTRES = [
 ];
 
 /**
- * L'image du projet, en vignette devant son nom : on reconnait un projet
- * a sa photo plus vite qu'a son intitule. Une video montre une image de
- * son debut ; sans media, un emplacement neutre garde les lignes
- * alignees. Elle mene a la fiche, comme le nom.
+ * Les actions d'un projet, au pied de sa carte.
+ *
+ * Voir, toujours. Modifier, Terminer et Supprimer tant qu'il est en
+ * cours ; Archiver une fois termine. Chaque bouton nomme le projet pour
+ * les lecteurs d'ecran : une page de dix cartes compte dix "Voir".
  */
-function VignetteProjet({ projet }) {
-  const video = projet.mediaType === 'VIDEO';
+function ActionsProjet({ projet, onDemander }) {
   return (
-    <Link
-      to={`/admin/projects/${projet.id}`}
-      className={`table__vignette${video ? ' table__vignette--video' : ''}${
-        projet.mediaUrl ? '' : ' table__vignette--vide'
-      }`}
-      // Le nom, juste a cote, porte deja le lien : la vignette ne
-      // l'annonce pas une seconde fois.
-      tabIndex={-1}
-      aria-hidden="true"
-    >
-      {!projet.mediaUrl ? (
-        <IconeProjets />
-      ) : video ? (
-        <video src={`${urlMedia(projet.mediaUrl)}#t=0.5`} muted playsInline preload="metadata" />
-      ) : (
-        <img src={urlMedia(projet.mediaUrl)} alt="" loading="lazy" decoding="async" />
+    <>
+      <Link
+        className="btn btn--neutre btn--petit"
+        to={`/admin/projects/${projet.id}`}
+        aria-label={`Voir le projet ${projet.name}`}
+      >
+        Voir
+      </Link>
+      {projet.status === 'IN_PROGRESS' && (
+        <>
+          <Link
+            className="btn btn--neutre btn--petit"
+            to={`/admin/projects/${projet.id}/edit`}
+            aria-label={`Modifier le projet ${projet.name}`}
+          >
+            <IconeCrayon />
+            Modifier
+          </Link>
+          <button
+            type="button"
+            className="btn btn--neutre btn--petit"
+            onClick={() => onDemander('terminer', projet)}
+            aria-label={`Terminer le projet ${projet.name}`}
+          >
+            <IconeValide />
+            Terminer
+          </button>
+          <button
+            type="button"
+            className="btn btn--danger btn--petit"
+            onClick={() => onDemander('supprimer', projet)}
+            aria-label={`Supprimer le projet ${projet.name}`}
+          >
+            <IconeCorbeille />
+            Supprimer
+          </button>
+        </>
       )}
-    </Link>
+      {projet.status === 'COMPLETED' && (
+        <button
+          type="button"
+          className="btn btn--neutre btn--petit"
+          onClick={() => onDemander('archiver', projet)}
+          aria-label={`Archiver le projet ${projet.name}`}
+        >
+          <IconeArchive />
+          Archiver
+        </button>
+      )}
+    </>
   );
 }
 
 /**
- * Liste des projets.
+ * Liste des projets, en cartes.
  *
- * Chaque ligne repond aux questions de l'ecran "Voir les projets" : la
- * photo et l'identifiant, combien a été investi, où en est le
- * financement, et les actions Modifier / Terminer / Supprimer. Les
- * donateurs se lisent dans la fiche du projet, onglet Financement.
+ * Chaque projet se presente comme sur l'accueil : sa photo, sa categorie
+ * et son lieu, son nom, ce qu'il a recu et ce qui manque, puis ses
+ * chiffres. Le statut se lit en face du surtitre, et les actions -- Voir,
+ * Modifier, Terminer, Supprimer, ou Archiver un projet termine -- au pied
+ * de la carte.
  */
 export default function ProjectsPage() {
   const [parametres, setParametres] = useSearchParams();
@@ -180,130 +218,57 @@ export default function ProjectsPage() {
             </select>
           }
         />
-
-        <Tableau
-          chargement={chargement}
-          lignes={projets}
-          colonnes={[
-            {
-              cle: 'reference',
-              titre: 'Projet',
-              rendu: (projet) => (
-                <div className="table__projet">
-                  <VignetteProjet projet={projet} />
-                  <div>
-                    <Link className="table__lien" to={`/admin/projects/${projet.id}`}>
-                      {projet.name}
-                    </Link>
-                    {/* Seul le projet interne porte l'etiquette : les projets
-                        HOPE sont la regle, les marquer tous ferait du bruit. */}
-                    {projet.projectType === 'INTERNAL' && (
-                      <span className="badge badge--violet table__etiquette">
-                        {libellesType.INTERNAL ?? 'Projet interne'}
-                      </span>
-                    )}
-                    <div className="table__secondaire">
-                      {projet.reference} · {projet.categoryName ?? 'Sans catégorie'}
-                      {projet.location ? ` · ${projet.location}` : ''}
-                    </div>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              cle: 'requiredBudget',
-              titre: 'Budget nécessaire',
-              aligne: 'droite',
-              rendu: (p) => fmt.montant(p.requiredBudget, p.currency),
-            },
-            {
-              cle: 'fundedTotal',
-              titre: 'Somme investie',
-              aligne: 'droite',
-              rendu: (projet) => (
-                <div>
-                  <strong>{fmt.montant(projet.fundedTotal, projet.currency)}</strong>
-                  <div className="table__secondaire table__secondaire--repliable">
-                    dont {fmt.montant(projet.investedHopeTotal, projet.currency)} du fonds HOPE
-                  </div>
-                </div>
-              ),
-            },
-            {
-              cle: 'fundingRate',
-              titre: 'Financement',
-              rendu: (p) => <Progression valeur={p.fundingRate} />,
-            },
-            {
-              cle: 'status',
-              titre: 'Statut',
-              rendu: (p) => <Badge valeur={p.status} libelles={libelles} />,
-            },
-            {
-              cle: 'actions',
-              titre: 'Actions',
-              aligne: 'droite',
-              rendu: (projet) => (
-                <div className="cellule-actions cellule-actions--repliable">
-                  <Link className="lien-action" to={`/admin/projects/${projet.id}`}>
-                    Voir
-                  </Link>
-                  {projet.status === 'IN_PROGRESS' && (
-                    <>
-                      <Link className="lien-action" to={`/admin/projects/${projet.id}/edit`}>
-                        Modifier
-                      </Link>
-                      <button
-                        type="button"
-                        className="lien-action"
-                        onClick={() => demander('terminer', projet)}
-                      >
-                        Terminer
-                      </button>
-                      <button
-                        type="button"
-                        className="lien-action lien-action--danger"
-                        onClick={() => demander('supprimer', projet)}
-                      >
-                        Supprimer
-                      </button>
-                    </>
-                  )}
-                  {projet.status === 'COMPLETED' && (
-                    <button
-                      type="button"
-                      className="lien-action"
-                      onClick={() => demander('archiver', projet)}
-                    >
-                      Archiver
-                    </button>
-                  )}
-                </div>
-              ),
-            },
-          ]}
-          vide={
-            <EtatVide
-              titre={
-                rechercheAppliquee || statut !== 'TOUS'
-                  ? 'Aucun projet ne correspond à ces critères'
-                  : 'Aucun projet enregistré'
-              }
-              texte={
-                rechercheAppliquee || statut !== 'TOUS'
-                  ? 'Modifiez la recherche ou changez de filtre.'
-                  : 'Créez un premier projet pour suivre son financement et son impact.'
-              }
-              action={
-                <Link className="btn btn--principal" to="/admin/projects/new">
-                  <IconePlus />
-                  Créer un projet
-                </Link>
-              }
-            />
-          }
-        />
       </Panneau>
+
+      {chargement ? (
+        <Chargement texte="Chargement des projets…" />
+      ) : projets.length === 0 ? (
+        <Panneau className="publications--page">
+          <EtatVide
+            titre={
+              rechercheAppliquee || statut !== 'TOUS'
+                ? 'Aucun projet ne correspond à ces critères'
+                : 'Aucun projet enregistré'
+            }
+            texte={
+              rechercheAppliquee || statut !== 'TOUS'
+                ? 'Modifiez la recherche ou changez de filtre.'
+                : 'Créez un premier projet pour suivre son financement et son impact.'
+            }
+            action={
+              <Link className="btn btn--principal" to="/admin/projects/new">
+                <IconePlus />
+                Créer un projet
+              </Link>
+            }
+          />
+        </Panneau>
+      ) : (
+        <div className="publications publications--page">
+          {projets.map((projet, rang) => (
+            <PublicationProjet
+              key={projet.id}
+              projet={projet}
+              // Les premieres cartes se remplissent l'une apres l'autre ; au-dela,
+              // attendre ne dirait plus rien.
+              rang={Math.min(rang, 5)}
+              etiquettes={
+                <>
+                  {/* Seul le projet interne porte l'etiquette : les projets
+                      HOPE sont la regle, les marquer tous ferait du bruit. */}
+                  {projet.projectType === 'INTERNAL' && (
+                    <span className="badge badge--violet">
+                      {libellesType.INTERNAL ?? 'Projet interne'}
+                    </span>
+                  )}
+                  <Badge valeur={projet.status} libelles={libelles} />
+                </>
+              }
+              actions={<ActionsProjet projet={projet} onDemander={demander} />}
+            />
+          ))}
+        </div>
+      )}
 
       <TerminerProjetModale
         ouverte={modale.nom === 'terminer'}

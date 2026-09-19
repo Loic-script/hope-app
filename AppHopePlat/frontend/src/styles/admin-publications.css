@@ -110,6 +110,13 @@
   background-color: rgba(93, 86, 150, 0.82);
 }
 
+/* Sur une video, le bas appartient aux commandes de lecture : la
+   reference monte en haut pour ne pas couvrir la barre de progression. */
+.publication__video + .publication__reference {
+  top: 12px;
+  bottom: auto;
+}
+
 /* --- Le corps --- */
 
 .publication__corps {
@@ -306,6 +313,54 @@
   white-space: nowrap;
 }
 
+/* --- Le pied : les mesures, et les actions quand la carte en porte --- */
+
+.publication__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.publication__pied .publication__mesures {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Les actions se calent a droite ; faute de place, elles passent sous
+   les mesures, toujours a droite. */
+.publication__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Le surtitre a gauche, le statut en face. */
+.publication__haut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.publication__etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* La page Projets : les cartes suivent la barre de recherche. */
+.publications--page {
+  margin-top: 18px;
+}
+
 /* ============================================================
    4. Adaptation aux petits ecrans
    ============================================================ */
@@ -324,6 +379,14 @@
 @media (max-width: 620px) {
   .publication__corps {
     padding: 16px;
+  }
+
+  /* Sur un telephone, les actions se rangent deux par deux, sur toute la
+     largeur : aucun bouton ne reste seul sur sa ligne. */
+  .publication__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
   }
 
   .jauge__legende {

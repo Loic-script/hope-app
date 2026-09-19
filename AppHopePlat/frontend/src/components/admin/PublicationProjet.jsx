@@ -114,9 +114,15 @@ function Mesure({ Icone, libelle, valeur }) {
  * Un projet en cours, presente comme une publication : le visuel a gauche,
  * ce qu'il faut savoir pour decider a droite.
  *
- * @param {{ projet: object, rang?: number }} proprietes
+ * La liste des projets y ajoute deux choses, facultatives : des
+ * etiquettes (le statut) en face du surtitre, et une rangee d'actions
+ * (Voir, Modifier, Terminer...) au pied, a droite des mesures. Sans elles,
+ * la carte est celle de l'accueil.
+ *
+ * @param {{ projet: object, rang?: number, etiquettes?: React.ReactNode,
+ *           actions?: React.ReactNode }} proprietes
  */
-export default function PublicationProjet({ projet, rang = 0 }) {
+export default function PublicationProjet({ projet, rang = 0, etiquettes = null, actions = null }) {
   const devise = projet.currency ?? 'MGA';
   const cible = Number(projet.beneficiaryTarget) || 0;
   const atteints = Number(projet.beneficiariesCount) || 0;
@@ -129,9 +135,12 @@ export default function PublicationProjet({ projet, rang = 0 }) {
       </div>
 
       <div className="publication__corps">
-        <p className="publication__surtitre">
-          {[projet.categoryName, projet.location].filter(Boolean).join(' · ') || 'Projet'}
-        </p>
+        <div className="publication__haut">
+          <p className="publication__surtitre">
+            {[projet.categoryName, projet.location].filter(Boolean).join(' · ') || 'Projet'}
+          </p>
+          {etiquettes && <div className="publication__etiquettes">{etiquettes}</div>}
+        </div>
 
         <h3 className="publication__titre">
           <Link to={`/admin/projects/${projet.id}`}>{projet.name}</Link>
@@ -146,27 +155,30 @@ export default function PublicationProjet({ projet, rang = 0 }) {
           devise={devise}
         />
 
-        <div className="publication__mesures">
-          <Mesure
-            Icone={IconeBudgets}
-            libelle="budget nécessaire"
-            valeur={fmt.montant(projet.requiredBudget, devise)}
-          />
-          <Mesure
-            Icone={IconeBeneficiaires}
-            libelle={cible ? `bénéficiaires sur ${fmt.nombre(cible)}` : 'bénéficiaires'}
-            valeur={fmt.nombre(atteints)}
-          />
-          <Mesure
-            Icone={IconeDonateurs}
-            libelle={Number(projet.donorsCount) === 1 ? 'donateur' : 'donateurs'}
-            valeur={fmt.nombre(projet.donorsCount)}
-          />
-          <Mesure
-            Icone={IconeDepenses}
-            libelle="déjà dépensé"
-            valeur={fmt.montant(projet.spentTotal, devise)}
-          />
+        <div className="publication__pied">
+          <div className="publication__mesures">
+            <Mesure
+              Icone={IconeBudgets}
+              libelle="budget nécessaire"
+              valeur={fmt.montant(projet.requiredBudget, devise)}
+            />
+            <Mesure
+              Icone={IconeBeneficiaires}
+              libelle={cible ? `bénéficiaires sur ${fmt.nombre(cible)}` : 'bénéficiaires'}
+              valeur={fmt.nombre(atteints)}
+            />
+            <Mesure
+              Icone={IconeDonateurs}
+              libelle={Number(projet.donorsCount) === 1 ? 'donateur' : 'donateurs'}
+              valeur={fmt.nombre(projet.donorsCount)}
+            />
+            <Mesure
+              Icone={IconeDepenses}
+              libelle="déjà dépensé"
+              valeur={fmt.montant(projet.spentTotal, devise)}
+            />
+          {actions && <div className="publication__actions">{actions}</div>}
+        </div>
         </div>
       </div>
     </article>
