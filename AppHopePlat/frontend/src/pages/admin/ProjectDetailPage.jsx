@@ -370,6 +370,37 @@ export default function ProjectDetailPage() {
 
   return (
     <>
+      {/*
+        La photo du projet, en couverture de sa fiche : on reconnait le
+        projet avant d'en lire le nom, et elle reste en vue quel que soit
+        l'onglet ouvert. Une photo s'agrandit d'un clic ; une video se
+        regarde sur place. Sans media, pas de couverture : un cadre vide
+        n'apprendrait rien.
+      */}
+      {projet.mediaUrl && (
+        <div
+          className={`couverture-projet${
+            projet.mediaType === 'VIDEO' ? ' couverture-projet--video' : ''
+          }`}
+        >
+          {projet.mediaType === 'VIDEO' ? (
+            <video
+              src={`${urlMedia(projet.mediaUrl)}#t=0.5`}
+              controls
+              playsInline
+              preload="metadata"
+              aria-label={`Vidéo du projet ${projet.name}`}
+            />
+          ) : (
+            <PhotoAgrandissable
+              src={urlMedia(projet.mediaUrl)}
+              alt={projet.name}
+              legende={projet.name}
+            />
+          )}
+        </div>
+      )}
+
       <EntetePage
         fil={[{ label: 'Projets', to: '/admin/projects' }, { label: projet.reference }]}
         titre={projet.name}
@@ -624,25 +655,6 @@ export default function ProjectDetailPage() {
               <p className="bloc-texte">{projet.outcome}</p>
             </Panneau>
           )}
-
-          <Panneau titre="Photo / vidéo">
-            {projet.mediaUrl ? (
-              projet.mediaType === 'VIDEO' ? (
-                <video className="media-projet" src={urlMedia(projet.mediaUrl)} controls />
-              ) : (
-                <PhotoAgrandissable
-                  className="media-projet"
-                  src={urlMedia(projet.mediaUrl)}
-                  alt={projet.name}
-                  legende={projet.name}
-                />
-              )
-            ) : (
-              <div className="media-projet media-projet--absente">
-                Aucun média rattaché à ce projet.
-              </div>
-            )}
-          </Panneau>
         </>
       )}
 

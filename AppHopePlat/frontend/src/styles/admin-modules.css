@@ -389,23 +389,38 @@
    4. Media d'un projet
    ============================================================ */
 
-.media-projet {
-  display: block;
-  width: 100%;
-  max-height: 280px;
-  object-fit: cover;
+/* La photo du projet, en couverture en haut de sa fiche. */
+.couverture-projet {
+  overflow: hidden;
+  height: clamp(190px, 22vw, 290px);
+  margin-bottom: 20px;
   border-radius: var(--admin-rayon);
   background-color: var(--admin-surface-douce);
+  box-shadow: 0 10px 28px -18px rgba(42, 40, 57, 0.45);
 }
 
-.media-projet--absente {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 140px;
-  border: 1px dashed var(--admin-bordure-forte);
-  font-size: 13.5px;
-  color: var(--admin-texte-faible);
+.couverture-projet .photo-voir,
+.couverture-projet video {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Une video garde son image entiere, sur fond sombre : on la regarde,
+   on ne la recadre pas. */
+.couverture-projet--video {
+  background-color: #1f1d2b;
+}
+
+.couverture-projet video {
+  object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .couverture-projet {
+    height: 180px;
+    margin-bottom: 14px;
+  }
 }
 
 /* ============================================================
