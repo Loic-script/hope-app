@@ -484,6 +484,32 @@ export async function listerVersements(bailleurId, filtres = {}, client = null) 
   return versListe(resultat.rows);
 }
 
+/**
+ * Les financements des bailleurs affectes a un projet, pour sa fiche
+ * cote administration : qui finance, par quel engagement, combien.
+ *
+ * Le montant est dans la devise de l'engagement. Date et montant sont
+ * rendus en texte : une date sans heure ne doit pas glisser d'un jour
+ * selon le fuseau, et un NUMERIC ne passe pas par un flottant.
+ */
+export async function affectationsDuProjet(projetId, client = null) {
+  const resultat = await query(
+    `SELECT a.id, a.montant::text AS montant, a.date_affectation::text AS date_affectation,
+            a.commentaire,
+            e.id AS engagement_id, e.intitule AS engagement_intitule, e.type_soutien,
+            e.devise, e.reference_convention, e.statut AS engagement_statut,
+            b.id AS bailleur_id, b.raison_sociale AS bailleur_nom, b.type_organisation, b.pays
+       FROM affectation a
+       JOIN engagement e ON e.id = a.engagement_id
+       JOIN bailleur   b ON b.id = e.bailleur_id
+      WHERE a.projet_id = $1
+      ORDER BY a.date_affectation DESC, b.raison_sociale`,
+    [projetId],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
 /** Les affectations d'un engagement, projet par projet. */
 export async function listerAffectations(bailleurId, engagementId = null, client = null) {
   const valeurs = [bailleurId];

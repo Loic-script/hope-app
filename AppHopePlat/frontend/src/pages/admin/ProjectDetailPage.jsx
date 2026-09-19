@@ -53,6 +53,24 @@ import * as fmt from '../../utils/format.js';
 /** Statut d'une tache, tel qu'il s'affiche. */
 const STATUTS_TACHE = { a_faire: 'À faire', en_cours: 'En cours', livree: 'Livrée' };
 
+/** Le financement d'un bailleur : son organisation, son engagement. */
+const TYPES_ORGANISATION = {
+  fondation_privee: 'Fondation privée',
+  entreprise: 'Entreprise',
+  agence_publique: 'Agence publique',
+  ong: 'ONG',
+  ambassade: 'Ambassade',
+  autre: 'Organisation',
+};
+const TYPES_SOUTIEN = { financier: 'Financier', competences: 'Compétences', materiel: 'Matériel' };
+const STATUTS_ENGAGEMENT = {
+  en_cours: 'En cours',
+  finalise: 'Finalisé',
+  suspendu: 'Suspendu',
+  annule: 'Annulé',
+};
+const COULEURS_ENGAGEMENT = { en_cours: 'bleu', finalise: 'vert', suspendu: 'ambre', annule: 'gris' };
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const [parametres, setParametres] = useSearchParams();
@@ -222,6 +240,13 @@ export default function ProjectDetailPage() {
   const enCours = projet.status === 'IN_PROGRESS';
   const archive = projet.status === 'ARCHIVED';
 
+  // Les financements des bailleurs, et leur total quand ils partagent
+  // une meme devise : additionner ariary et euros ne voudrait rien dire.
+  const affectationsBailleurs = donnees.funderAllocations ?? [];
+  const devisesBailleurs = [...new Set(affectationsBailleurs.map((a) => a.devise))];
+  const totalBailleurs = affectationsBailleurs.reduce((somme, a) => somme + Number(a.montant), 0);
+  const nombreBailleurs = new Set(affectationsBailleurs.map((a) => a.bailleurId)).size;
+
   /*
    * Une mesure appartient a l'un des deux tableaux selon qu'elle nomme
    * un objectif. Le partage se fait ici, et non en base : c'est la meme
@@ -324,7 +349,8 @@ export default function ProjectDetailPage() {
     {
       cle: 'financement',
       label: 'Financement',
-      compteur: donnees.donations.length + donnees.investments.length,
+      compteur:
+        donnees.donations.length + affectationsBailleurs.length + donnees.investments.length,
     },
     { cle: 'depenses', label: 'Dépenses', compteur: donnees.expenses.length },
     {
@@ -483,6 +509,39 @@ export default function ProjectDetailPage() {
           )}
 
           {/*
+            Les objectifs specifiques, juste sous la description : elle
+            dit ce qu'est le projet, eux ce qu'il doit avoir accompli. Le
+            panneau se montre meme vide -- un projet sans objectif doit se
+            voir, puisque l'impact se mesure objectif par objectif.
+          */}
+          <Panneau
+            titre="Objectifs spécifiques"
+            sousTitre={sansObjectifs ? undefined : `${projet.objectives.length} objectif(s)`}
+          >
+            {sansObjectifs ? (
+              <EtatVide
+                titre="Aucun objectif spécifique"
+                texte="Précisez ce que le projet doit accomplir : l’impact se mesure ensuite objectif par objectif."
+                action={
+                  enCours && (
+                    <Link className="btn btn--neutre" to={`/admin/projects/${projet.id}/edit`}>
+                      Ajouter des objectifs
+                    </Link>
+                  )
+                }
+              />
+            ) : (
+              <ol className="objectifs">
+                {projet.objectives.map((objectif) => (
+                  <li className="objectifs__ligne" key={objectif.id}>
+                    {objectif.label}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Panneau>
+
+          {/*
             Le budget, categorie par categorie : ce qui etait prevu, et ce
             qui a ete depense. Il n'apparait que s'il y a quelque chose a
             montrer -- un projet dont le montant a ete saisi directement,
@@ -560,25 +619,6 @@ export default function ProjectDetailPage() {
             </Panneau>
           )}
 
-          {/*
-            Les objectifs specifiques : ce que le projet doit avoir
-            accompli. Ils suivent la description, qui dit ce qu'il est.
-          */}
-          {projet.objectives?.length > 0 && (
-            <Panneau
-              titre="Objectifs spécifiques"
-              sousTitre={`${projet.objectives.length} objectif(s)`}
-            >
-              <ol className="objectifs">
-                {projet.objectives.map((objectif) => (
-                  <li className="objectifs__ligne" key={objectif.id}>
-                    {objectif.label}
-                  </li>
-                ))}
-              </ol>
-            </Panneau>
-          )}
-
           {projet.outcome && (
             <Panneau titre="Résultat du projet">
               <p className="bloc-texte">{projet.outcome}</p>
@@ -609,8 +649,10 @@ export default function ProjectDetailPage() {
       {/* ================= Financement ================= */}
       {ongletActif === 'financement' && (
         <>
+          {/* Deux tableaux, deux origines : les dons des donateurs, puis
+              les financements des bailleurs. */}
           <Panneau
-            titre="Dons affectés à ce projet"
+            titre="Dons des donateurs"
             sousTitre={`${fmt.montant(finance.designatedTotal, projet.currency)} versés directement par des donateurs`}
             serre
           >
@@ -682,6 +724,92 @@ export default function ProjectDetailPage() {
                 <EtatVide
                   titre="Aucun don affecté à ce projet"
                   texte="Les dons fléchés par les donateurs apparaîtront ici."
+                />
+              }
+            />
+          </Panneau>
+
+          <Panneau
+            titre="Financements des bailleurs"
+            sousTitre={
+              affectationsBailleurs.length === 0
+                ? 'Engagements des bailleurs affectés à ce projet'
+                : `${
+                    devisesBailleurs.length === 1
+                      ? fmt.montant(totalBailleurs, devisesBailleurs[0])
+                      : `${affectationsBailleurs.length} financements`
+                  } affectés par ${nombreBailleurs} bailleur${nombreBailleurs > 1 ? 's' : ''}`
+            }
+            serre
+          >
+            <Tableau
+              lignes={affectationsBailleurs}
+              colonnes={[
+                {
+                  cle: 'bailleurNom',
+                  titre: 'Bailleur',
+                  rendu: (a) => (
+                    <div>
+                      <div className="table__principal">{a.bailleurNom}</div>
+                      <div className="table__secondaire">
+                        {TYPES_ORGANISATION[a.typeOrganisation] ?? a.typeOrganisation}
+                        {a.pays ? ` · ${a.pays}` : ''}
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  cle: 'engagementIntitule',
+                  titre: 'Engagement',
+                  rendu: (a) => (
+                    <div>
+                      <div>{a.engagementIntitule}</div>
+                      <div className="table__secondaire">
+                        {a.referenceConvention
+                          ? `Convention ${a.referenceConvention}`
+                          : 'Sans référence de convention'}
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  cle: 'typeSoutien',
+                  titre: 'Soutien',
+                  rendu: (a) => (
+                    <Badge
+                      valeur={a.typeSoutien}
+                      libelles={TYPES_SOUTIEN}
+                      couleur={a.typeSoutien === 'financier' ? 'gris' : 'violet'}
+                    />
+                  ),
+                },
+                {
+                  cle: 'dateAffectation',
+                  titre: 'Affecté le',
+                  rendu: (a) => fmt.date(a.dateAffectation),
+                },
+                {
+                  cle: 'montant',
+                  titre: 'Montant',
+                  aligne: 'droite',
+                  rendu: (a) => <strong>{fmt.montant(a.montant, a.devise)}</strong>,
+                },
+                {
+                  cle: 'engagementStatut',
+                  titre: 'Statut',
+                  rendu: (a) => (
+                    <Badge
+                      valeur={a.engagementStatut}
+                      libelles={STATUTS_ENGAGEMENT}
+                      couleur={COULEURS_ENGAGEMENT[a.engagementStatut]}
+                    />
+                  ),
+                },
+              ]}
+              vide={
+                <EtatVide
+                  titre="Aucun bailleur ne finance ce projet"
+                  texte="Les engagements des bailleurs affectés à ce projet apparaîtront ici."
                 />
               }
             />

@@ -14,6 +14,7 @@ import * as projectRepository from '../repositories/project.repository.js';
 import * as taskRepository from '../repositories/task.repository.js';
 import * as categoryRepository from '../repositories/projectCategory.repository.js';
 import * as donationRepository from '../repositories/donation.repository.js';
+import * as funderRepository from '../repositories/funder.repository.js';
 import * as investmentRepository from '../repositories/investment.repository.js';
 import * as expenseRepository from '../repositories/expense.repository.js';
 import * as documentRepository from '../repositories/document.repository.js';
@@ -368,6 +369,7 @@ export async function recupererApercu(id) {
     impacts,
     syntheseImpacts,
     taches,
+    affectationsBailleurs,
   ] = await Promise.all([
     donationRepository.lister({ projectId, limite: 200 }),
     investmentRepository.listerParProjet(projectId),
@@ -377,6 +379,7 @@ export async function recupererApercu(id) {
     impactRepository.lister({ projectId }),
     impactRepository.syntheseParProjet(projectId),
     taskRepository.lister({ projetId: projectId }),
+    funderRepository.affectationsDuProjet(projectId),
   ]);
 
   const enrichi = enrichir(projet);
@@ -395,6 +398,8 @@ export async function recupererApercu(id) {
       spendingRate: enrichi.spendingRate,
     },
     donations: dons,
+    // Les financements des bailleurs, a cote des dons des donateurs.
+    funderAllocations: affectationsBailleurs,
     investments: investissements,
     expenses: depenses,
     documents: justificatifs,

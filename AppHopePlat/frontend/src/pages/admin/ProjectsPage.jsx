@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { IconePlus } from '../../components/admin/AdminIcons.jsx';
+import { IconePlus, IconeProjets } from '../../components/admin/AdminIcons.jsx';
 import { ModaleConfirmation } from '../../components/admin/forms.jsx';
 import { TerminerProjetModale } from '../../components/admin/modales.jsx';
 import {
@@ -15,6 +15,7 @@ import {
   Tableau,
 } from '../../components/admin/ui.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
+import { urlMedia } from '../../services/api.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
@@ -34,11 +35,42 @@ const FILTRES = [
 ];
 
 /**
+ * L'image du projet, en vignette devant son nom : on reconnait un projet
+ * a sa photo plus vite qu'a son intitule. Une video montre une image de
+ * son debut ; sans media, un emplacement neutre garde les lignes
+ * alignees. Elle mene a la fiche, comme le nom.
+ */
+function VignetteProjet({ projet }) {
+  const video = projet.mediaType === 'VIDEO';
+  return (
+    <Link
+      to={`/admin/projects/${projet.id}`}
+      className={`table__vignette${video ? ' table__vignette--video' : ''}${
+        projet.mediaUrl ? '' : ' table__vignette--vide'
+      }`}
+      // Le nom, juste a cote, porte deja le lien : la vignette ne
+      // l'annonce pas une seconde fois.
+      tabIndex={-1}
+      aria-hidden="true"
+    >
+      {!projet.mediaUrl ? (
+        <IconeProjets />
+      ) : video ? (
+        <video src={`${urlMedia(projet.mediaUrl)}#t=0.5`} muted playsInline preload="metadata" />
+      ) : (
+        <img src={urlMedia(projet.mediaUrl)} alt="" loading="lazy" decoding="async" />
+      )}
+    </Link>
+  );
+}
+
+/**
  * Liste des projets.
  *
- * Chaque ligne repond aux questions de l'ecran "Voir les projets" :
- * l'identifiant, qui a donné, combien a été investi, où en est le
- * financement, et les actions Modifier / Terminer / Supprimer.
+ * Chaque ligne repond aux questions de l'ecran "Voir les projets" : la
+ * photo et l'identifiant, combien a été investi, où en est le
+ * financement, et les actions Modifier / Terminer / Supprimer. Les
+ * donateurs se lisent dans la fiche du projet, onglet Financement.
  */
 export default function ProjectsPage() {
   const [parametres, setParametres] = useSearchParams();
@@ -157,38 +189,26 @@ export default function ProjectsPage() {
               cle: 'reference',
               titre: 'Projet',
               rendu: (projet) => (
-                <div>
-                  <Link className="table__lien" to={`/admin/projects/${projet.id}`}>
-                    {projet.name}
-                  </Link>
-                  {/* Seul le projet interne porte l'etiquette : les projets
-                      HOPE sont la regle, les marquer tous ferait du bruit. */}
-                  {projet.projectType === 'INTERNAL' && (
-                    <span className="badge badge--violet table__etiquette">
-                      {libellesType.INTERNAL ?? 'Projet interne'}
-                    </span>
-                  )}
-                  <div className="table__secondaire">
-                    {projet.reference} · {projet.categoryName ?? 'Sans catégorie'}
-                    {projet.location ? ` · ${projet.location}` : ''}
+                <div className="table__projet">
+                  <VignetteProjet projet={projet} />
+                  <div>
+                    <Link className="table__lien" to={`/admin/projects/${projet.id}`}>
+                      {projet.name}
+                    </Link>
+                    {/* Seul le projet interne porte l'etiquette : les projets
+                        HOPE sont la regle, les marquer tous ferait du bruit. */}
+                    {projet.projectType === 'INTERNAL' && (
+                      <span className="badge badge--violet table__etiquette">
+                        {libellesType.INTERNAL ?? 'Projet interne'}
+                      </span>
+                    )}
+                    <div className="table__secondaire">
+                      {projet.reference} · {projet.categoryName ?? 'Sans catégorie'}
+                      {projet.location ? ` · ${projet.location}` : ''}
+                    </div>
                   </div>
                 </div>
               ),
-            },
-            {
-              cle: 'donorNames',
-              titre: 'Donateurs',
-              rendu: (projet) =>
-                projet.donorsCount > 0 ? (
-                  <div>
-                    <div>{fmt.tronquer(projet.donorNames, 38)}</div>
-                    <div className="table__secondaire">
-                      {projet.donorsCount} donateur(s) · {projet.donationsCount} don(s)
-                    </div>
-                  </div>
-                ) : (
-                  <span style={{ color: 'var(--admin-texte-faible)' }}>Aucun don direct</span>
-                ),
             },
             {
               cle: 'requiredBudget',
@@ -203,7 +223,7 @@ export default function ProjectsPage() {
               rendu: (projet) => (
                 <div>
                   <strong>{fmt.montant(projet.fundedTotal, projet.currency)}</strong>
-                  <div className="table__secondaire">
+                  <div className="table__secondaire table__secondaire--repliable">
                     dont {fmt.montant(projet.investedHopeTotal, projet.currency)} du fonds HOPE
                   </div>
                 </div>
@@ -224,7 +244,7 @@ export default function ProjectsPage() {
               titre: 'Actions',
               aligne: 'droite',
               rendu: (projet) => (
-                <div className="cellule-actions">
+                <div className="cellule-actions cellule-actions--repliable">
                   <Link className="lien-action" to={`/admin/projects/${projet.id}`}>
                     Voir
                   </Link>
