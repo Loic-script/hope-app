@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import HopeLogo from '../components/HopeLogo.jsx';
@@ -14,6 +14,7 @@ import {
 } from '../components/HopeIcons.jsx';
 import { useChargement } from '../hooks/useChargement.js';
 import { messageErreur } from '../services/api.js';
+import { focusAutomatique } from '../utils/ecran.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 
 /** Message unique en cas d'echec : il ne revele jamais quel champ est faux. */
@@ -21,6 +22,19 @@ const MESSAGE_ERREUR = 'Adresse ou mot de passe incorrect.';
 
 /** Longueur minimale, alignee sur le controle du backend. */
 const LONGUEUR_MOT_DE_PASSE = 8;
+
+/**
+ * Les trois types, connus d'avance.
+ *
+ * Le serveur les renvoie aussi, et sa reponse prime ; mais la liste ne
+ * doit jamais rester vide le temps qu'elle arrive -- ou si elle n'arrive
+ * pas : sur un telephone, un reseau lent laissait un choix sans options.
+ */
+const TYPES_PAR_DEFAUT = [
+  { cle: 'donateur', libelle: 'Donateur', validationRequise: false },
+  { cle: 'benevole', libelle: 'Bénévole', validationRequise: true },
+  { cle: 'bailleur', libelle: 'Bailleur', validationRequise: true },
+];
 
 /** Adresse du site public HOPE (pas encore developpe a cette etape). */
 const SITE_PUBLIC = import.meta.env.VITE_SITE_URL ?? '/';
@@ -50,9 +64,39 @@ const FORMULAIRE_VIDE = {
  */
 export default function Authentification() {
   const navigate = useNavigate();
-  const { donnees: types } = useChargement(() => utilisateurService.typesUtilisateur(), []);
+  const { donnees: typesServeur } = useChargement(() => utilisateurService.typesUtilisateur(), []);
+  const types = typesServeur?.length ? typesServeur : TYPES_PAR_DEFAUT;
 
   const [section, setSection] = useState('connexion');
+
+  /*
+   * Le trait bleu court jusqu'a la fin du titre -- le "n" de "demain".
+   *
+   * Aucune regle de style ne donne cette largeur : quand la premiere
+   * ligne du titre passe elle-meme a la ligne, le navigateur dimensionne
+   * le bloc comme si elle tenait sur une seule, et le trait debordait. On
+   * mesure donc la fin reelle de la plus longue ligne affichee, et on la
+   * remesure quand la largeur change ou quand la police arrive.
+   */
+  const titre = useRef(null);
+  const [largeurTitre, setLargeurTitre] = useState(null);
+  useLayoutEffect(() => {
+    const element = titre.current;
+    if (!element) return undefined;
+    const mesurer = () => {
+      const plage = document.createRange();
+      plage.selectNodeContents(element);
+      const lignes = [...plage.getClientRects()];
+      if (lignes.length === 0) return;
+      const fin = Math.max(...lignes.map((ligne) => ligne.right));
+      setLargeurTitre(Math.ceil(fin - element.getBoundingClientRect().left));
+    };
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(element);
+    document.fonts?.ready.then(mesurer);
+    return () => observateur.disconnect();
+  }, []);
 
   return (
     <div className="connexion">
@@ -63,12 +107,16 @@ export default function Authentification() {
       >
         <div className="illustration__principal">
           <p className="illustration__surtitre">Rejoindre HOPE</p>
-          <h1 className="illustration__titre">
+          <h1 className="illustration__titre" ref={titre}>
             Des enfants d’aujourd’hui,
             <br />
             un meilleur demain
           </h1>
-          <div className="trait-hope trait-hope--renverse illustration__barre" aria-hidden="true" />
+          <div
+            className="trait-hope trait-hope--renverse illustration__barre"
+            style={largeurTitre ? { width: largeurTitre } : undefined}
+            aria-hidden="true"
+          />
           <p className="illustration__sous-titre">
             Donnez, agissez sur le terrain ou financez nos projets. Un seul compte, selon ce
             que vous venez faire.
@@ -128,10 +176,10 @@ export default function Authentification() {
           </div>
 
           {section === 'connexion' ? (
-            <Connexion navigate={navigate} types={types ?? []} />
+            <Connexion navigate={navigate} types={types} />
           ) : (
             <Inscription
-              types={types ?? []}
+              types={types}
               navigate={navigate}
               onInscrit={() => setSection('connexion')}
             />
@@ -242,7 +290,7 @@ function Connexion({ navigate, types }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={chargement}
-            autoFocus
+            autoFocus={focusAutomatique()}
           />
         </div>
       </div>
@@ -437,7 +485,7 @@ function Inscription({ types, navigate, onInscrit }) {
         disabled={envoi}
         autoComplete="email"
         placeholder="vous@exemple.mg"
-        autoFocus
+        autoFocus={focusAutomatique()}
       />
 
       <ChampType

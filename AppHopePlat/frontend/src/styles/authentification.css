@@ -16,6 +16,23 @@
   font-size: clamp(34px, 4vw, 46px);
 }
 
+/*
+ * Le trait bleu sous le titre court jusqu'au "n" de "demain".
+ *
+ * Sa largeur totale -- celle de la plus longue ligne du titre -- est
+ * mesuree par la page (Authentification.jsx) ; le soleil garde la
+ * sienne, et la barre prend tout le reste.
+ */
+.connexion__illustration--utilisateur .illustration__barre {
+  display: flex;
+  max-width: 100%;
+}
+
+.connexion__illustration--utilisateur .illustration__barre::before {
+  flex: 1;
+  width: auto;
+}
+
 .carte-connexion--utilisateur {
   /* Le formulaire d'inscription est plus long que celui de connexion :
      la carte respire un peu plus. */

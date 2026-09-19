@@ -69,7 +69,19 @@ function CarteProjet({ projet }) {
   return (
     <article className="carte-projet">
       <div className="carte-projet__image">
-        {projet.mediaUrl ? (
+        {projet.mediaUrl && projet.mediaType === 'VIDEO' ? (
+          // Une video en vignette : muette, sans commandes, arretee sur
+          // une image de son debut (#t=0.5). Seules ses premieres donnees
+          // sont chargees.
+          <video
+            src={`${urlMedia(projet.mediaUrl)}#t=0.5`}
+            muted
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        ) : projet.mediaUrl ? (
           <img src={urlMedia(projet.mediaUrl)} alt="" loading="lazy" />
         ) : (
           <span className="carte-projet__sans-image" aria-hidden="true">

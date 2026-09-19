@@ -105,6 +105,24 @@ a {
   border-radius: 6px;
 }
 
+/*
+ * Sur un petit ecran, aucun champ de saisie sous 16 px.
+ *
+ * En dessous, Safari sur iPhone agrandit toute la page des qu'on touche
+ * le champ, et ne la rend pas : le formulaire deborde, et il faut
+ * pincer pour revenir. :is() donne a la regle le poids de son selecteur
+ * le plus precis, assez pour passer devant les classes des champs.
+ */
+@media (max-width: 640px) {
+  :is(
+      input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+      select,
+      textarea
+    ) {
+    font-size: max(16px, 1em);
+  }
+}
+
 /* Reserve aux lecteurs d'ecran. */
 .sr-only {
   position: absolute;

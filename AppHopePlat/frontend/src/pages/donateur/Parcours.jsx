@@ -44,6 +44,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
+import { focusAutomatique } from '../../utils/ecran.js';
 import {
   devisePourPays,
   fuseauParDefaut,
@@ -423,7 +424,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
               autoComplete="family-name"
               maxLength={80}
               disabled={envoi}
-              autoFocus
+              autoFocus={focusAutomatique()}
             />
           </Champ>
           <Champ id="prenom" libelle="Prénom" erreur={erreurDe('prenom')} Icone={IconeUtilisateur}>

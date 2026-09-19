@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import { messageErreur } from '../../services/api.js';
 import { apiBenevole } from '../../services/apiBenevole.js';
+import { focusAutomatique } from '../../utils/ecran.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const MOMENTS = [
@@ -111,7 +112,7 @@ export default function CompleterProfil() {
                 disabled={envoi}
                 autoComplete="given-name"
                 required
-                autoFocus
+                autoFocus={focusAutomatique()}
               />
               <Champ
                 id="nom"

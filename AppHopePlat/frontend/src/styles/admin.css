@@ -1571,16 +1571,15 @@
 }
 
 @media (max-width: 720px) {
-  /* Certains ecrans ont six filtres : sur un telephone, la rangee defile
-     lateralement plutot que de pousser la page hors de la fenetre. */
+  /*
+   * Certains ecrans ont six filtres : sur un telephone, la rangee passe a
+   * la ligne. Elle defilait lateralement, barre de defilement masquee :
+   * le dernier filtre paraissait coupe, et rien ne disait qu'il suffisait
+   * de glisser pour le trouver.
+   */
   .filtres {
+    flex-wrap: wrap;
     max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .filtres::-webkit-scrollbar {
-    display: none;
   }
 
   .filtres__bouton {

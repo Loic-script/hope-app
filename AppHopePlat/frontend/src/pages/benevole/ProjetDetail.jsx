@@ -56,11 +56,23 @@ export default function ProjetDetail() {
       <section className="tete-projet">
         {projet.mediaUrl && (
           <div className="tete-projet__image">
-            <PhotoAgrandissable
-              src={urlMedia(projet.mediaUrl)}
-              alt={projet.name}
-              legende={projet.name}
-            />
+            {/* Une video se regarde, elle ne s'agrandit pas comme une
+                photo : rendue en image, elle s'affichait cassee. */}
+            {projet.mediaType === 'VIDEO' ? (
+              <video
+                src={urlMedia(projet.mediaUrl)}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label={`Vidéo du projet ${projet.name}`}
+              />
+            ) : (
+              <PhotoAgrandissable
+                src={urlMedia(projet.mediaUrl)}
+                alt={projet.name}
+                legende={projet.name}
+              />
+            )}
           </div>
         )}
         <div className="tete-projet__corps">

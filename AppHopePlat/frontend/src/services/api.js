@@ -7,7 +7,13 @@
  */
 import axios from 'axios';
 
-export const URL_API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+/*
+ * Relative par defaut : le serveur de developpement relaie "/api" vers le
+ * backend (vite.config.js), et la page fonctionne ainsi depuis n'importe
+ * quel appareil du reseau, telephone compris. En production, VITE_API_URL
+ * donne l'adresse reelle si l'API n'est pas servie sur la meme origine.
+ */
+export const URL_API = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Origine du serveur, sans le suffixe /api.

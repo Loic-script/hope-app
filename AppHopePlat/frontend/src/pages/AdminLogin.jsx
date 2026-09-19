@@ -15,6 +15,7 @@ import {
 import * as authService from '../services/auth.service.js';
 import photoHope from '../assets/hope-couverture.jpg';
 
+import { focusAutomatique } from '../utils/ecran.js';
 /** Message unique en cas d'echec : il ne revele jamais quel champ est faux. */
 const MESSAGE_ERREUR = 'Login ou mot de passe incorrect.';
 
@@ -151,7 +152,7 @@ export default function AdminLogin() {
                   value={adminLog}
                   onChange={(e) => setAdminLog(e.target.value)}
                   disabled={chargement}
-                  autoFocus
+                  autoFocus={focusAutomatique()}
                 />
               </div>
             </div>
