@@ -27,24 +27,6 @@ export function nomDuPays(code) {
   }
 }
 
-const nomsAnglais =
-  typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
-    ? new Intl.DisplayNames(['en'], { type: 'region' })
-    : null;
-
-/**
- * "DE" -> "Germany". Sert a la recherche : un donateur etranger cherche
- * souvent son pays sous son nom anglais. Vide si le navigateur ne sait pas.
- */
-export function nomAnglais(code) {
-  if (!code) return '';
-  try {
-    return nomsAnglais?.of(code) ?? '';
-  } catch {
-    return '';
-  }
-}
-
 /** "MG" -> "+261". Madagascar si le pays n'est pas encore choisi. */
 export function indicatifDe(code) {
   try {

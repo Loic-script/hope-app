@@ -7,7 +7,6 @@ import imageEspeces from '../../assets/paiement/especes.webp';
 import logoMvola from '../../assets/paiement/mvola.webp';
 import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
 import HopeLogo from '../../components/HopeLogo.jsx';
-import ListeRecherche, { normaliser } from '../../components/ListeRecherche.jsx';
 import {
   IconeChevronBas,
   IconeCoche,
@@ -47,66 +46,17 @@ import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
 import { focusAutomatique } from '../../utils/ecran.js';
 import {
-  decalage,
   devisePourPays,
   fuseauParDefaut,
   fuseauxDuPays,
   languePourPays,
   libelleFuseau,
   tousLesFuseaux,
-  ville,
 } from '../../utils/fuseaux.js';
-import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomAnglais, nomDuPays } from '../../utils/pays.js';
+import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomDuPays } from '../../utils/pays.js';
 
 /** Le parcours compte cinq etapes ; la sixieme veut dire "termine". */
 const NOMBRE_ETAPES = 5;
-
-/*
- * Les listes de choix se fouillent (ListeRecherche) : deux cents pays ou
- * quatre cents fuseaux ne se parcourent pas au doigt. On les cherche en
- * francais comme en anglais -- "Allemagne" ou "Germany" --, et
- * l'indicatif par son numero, avec ou sans "+".
- */
-
-/** Les pays, Madagascar en tete. */
-const GROUPES_PAYS = [
-  {
-    options: PAYS.map((pays) => ({
-      valeur: pays.code,
-      libelle: pays.nom,
-      motsCles: [nomAnglais(pays.code)],
-    })),
-  },
-];
-
-/** Les indicatifs : "Madagascar ... +261", a chercher par "261" ou "+261". */
-const GROUPES_INDICATIF = [
-  {
-    options: PAYS.map((pays) => {
-      const indicatif = indicatifDe(pays.code);
-      return {
-        valeur: pays.code,
-        libelle: pays.nom,
-        detail: indicatif,
-        motsCles: [indicatif.slice(1), nomAnglais(pays.code)],
-      };
-    }),
-  },
-];
-
-const nomsDeLangueEnAnglais =
-  typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
-    ? new Intl.DisplayNames(['en'], { type: 'language' })
-    : null;
-
-/** "es" -> "Spanish" : une langue se cherche aussi sous son nom anglais. */
-function langueEnAnglais(code) {
-  try {
-    return nomsDeLangueEnAnglais?.of(code) ?? '';
-  } catch {
-    return '';
-  }
-}
 
 /**
  * Le parcours d'accueil du donateur.
@@ -346,36 +296,28 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
       const valeur = evenement.target.value;
       setChamps((precedents) => ({ ...precedents, [champ]: valeur }));
       setErreursServeur((precedentes) => ({ ...precedentes, [champ]: undefined }));
-    };
-  }
-
-  /** Un choix dans une liste : il est acheve des qu'il est fait. */
-  function choisir(champ) {
-    return (valeur) => {
-      setChamps((precedents) => ({ ...precedents, [champ]: valeur }));
-      setErreursServeur((precedentes) => ({ ...precedentes, [champ]: undefined }));
-      setTouches((precedents) => ({ ...precedents, [champ]: true }));
+      // Un choix dans une liste est acheve des qu'il est fait.
+      if (evenement.target.tagName === 'SELECT') {
+        setTouches((precedents) => ({ ...precedents, [champ]: true }));
+      }
     };
   }
 
   /** Le pays de residence ; l'indicatif le suit s'il n'a pas ete choisi. */
-  function choisirPays(valeur) {
-    choisir('pays')(valeur);
+  function modifierPays(evenement) {
+    const valeur = evenement.target.value;
+    modifier('pays')(evenement);
     if (!indicatifChoisi && valeur) {
       setChamps((precedents) => ({ ...precedents, indicatif: valeur }));
     }
   }
 
-  function choisirIndicatif(valeur) {
+  function modifierIndicatif(evenement) {
+    const valeur = evenement.target.value;
     setIndicatifChoisi(true);
     setChamps((precedents) => ({ ...precedents, indicatif: valeur }));
     setErreursServeur((precedentes) => ({ ...precedentes, telephone: undefined }));
   }
-
-  const groupesSources = useMemo(
-    () => [{ options: sources.map((source) => ({ valeur: source.cle, libelle: source.libelle })) }],
-    [sources]
-  );
 
   function quitter(champ) {
     return () => {
@@ -526,16 +468,21 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
             />
           </Champ>
           <Champ id="pays" libelle="Pays" erreur={erreurDe('pays')} Icone={IconeGlobe} liste>
-            <ListeRecherche
-              nom="Pays"
-              valeur={champs.pays}
-              groupes={GROUPES_PAYS}
-              indice="Sélectionnez votre pays"
-              indiceRecherche="Rechercher un pays…"
-              onChoisir={choisirPays}
-              onQuitter={quitter('pays')}
+            <select
+              value={champs.pays}
+              onChange={modifierPays}
+              onBlur={quitter('pays')}
+              autoComplete="country"
               disabled={envoi}
-            />
+              data-vide={champs.pays === ''}
+            >
+              <option value="">Sélectionnez votre pays</option>
+              {PAYS.map((pays) => (
+                <option key={pays.code} value={pays.code}>
+                  {pays.nom}
+                </option>
+              ))}
+            </select>
           </Champ>
         </div>
 
@@ -547,7 +494,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
           prefixe={
             <SelecteurIndicatif
               valeur={champs.indicatif}
-              onChoisir={choisirIndicatif}
+              onChange={modifierIndicatif}
               disabled={envoi}
             />
           }
@@ -592,15 +539,19 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
           Icone={IconeMegaphone}
           liste
         >
-          <ListeRecherche
-            nom="Comment avez-vous connu Hope ?"
-            valeur={champs.source}
-            groupes={groupesSources}
-            indice="Sélectionnez une réponse"
-            indiceRecherche="Rechercher une réponse…"
-            onChoisir={choisir('source')}
+          <select
+            value={champs.source}
+            onChange={modifier('source')}
             disabled={envoi}
-          />
+            data-vide={champs.source === ''}
+          >
+            <option value="">Sélectionnez une réponse</option>
+            {sources.map((source) => (
+              <option key={source.cle} value={source.cle}>
+                {source.libelle}
+              </option>
+            ))}
+          </select>
         </Champ>
 
         <button type="submit" className="parcours__continuer" disabled={envoi} aria-busy={envoi}>
@@ -729,71 +680,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
     return () => clearTimeout(minuterie);
   }, [locaux]);
 
-  // Un fuseau deja enregistre reste choisissable meme avant que la liste
-  // complete ne soit prete.
-  const fuseauHorsListe =
-    Boolean(champs.fuseau) &&
-    !locaux.includes(champs.fuseau) &&
-    !autres.some((fuseau) => fuseau.nom === champs.fuseau);
-
-  /*
-   * Les fuseaux : ceux du pays, puis tous les autres. On les trouve par la
-   * ville, le pays ou le decalage : "tana", "Madagascar", "UTC+3", "+3".
-   * Ferme, le champ dit "Antananarivo (UTC+3)".
-   */
-  const groupesFuseaux = useMemo(() => {
-    const option = (nom, code, avecPays) => {
-      const ecart = decalage(nom);
-      return {
-        valeur: nom,
-        libelle: avecPays && code ? `${ville(nom)}, ${nomDuPays(code)}` : ville(nom),
-        detail: ecart,
-        affichage: libelleFuseau(nom),
-        motsCles: [
-          nom,
-          nomDuPays(code),
-          nomAnglais(code),
-          ecart.replace('UTC', 'GMT'),
-          ecart.replace('UTC', ''),
-        ],
-      };
-    };
-    return [
-      ...(fuseauHorsListe ? [{ options: [option(champs.fuseau, '', false)] }] : []),
-      { libelle: nomDuPays(pays) || 'Votre pays', options: locaux.map((nom) => option(nom, pays, false)) },
-      {
-        libelle: 'Autres fuseaux',
-        options: autres.map((fuseau) => option(fuseau.nom, fuseau.pays, true)),
-      },
-    ];
-  }, [locaux, autres, pays, fuseauHorsListe, champs.fuseau]);
-
-  /** Les langues ou HOPE ecrit deja, puis toutes les autres. */
-  const groupesLangues = useMemo(() => {
-    const langues = (options.langues ?? []).map((langue) => ({
-      valeur: langue.cle,
-      libelle: langue.libelle,
-      motsCles: [langue.cle, langueEnAnglais(langue.cle)],
-      courante: langue.courante,
-    }));
-    return [
-      { libelle: 'Les plus courantes', options: langues.filter((langue) => langue.courante) },
-      { libelle: 'Toutes les langues', options: langues.filter((langue) => !langue.courante) },
-    ];
-  }, [options.langues]);
-
-  const groupesDevises = useMemo(
-    () => [
-      {
-        options: (options.devises ?? []).map((devise) => ({
-          valeur: devise.code,
-          libelle: `${devise.code} · ${devise.libelle}`,
-        })),
-      },
-    ],
-    [options.devises]
-  );
-
   const typeChoisi = types.find((t) => t.cle === champs.type);
   const estStructure = Boolean(typeChoisi?.structure);
 
@@ -806,15 +692,9 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
       const valeur = evenement.target.value;
       setChamps((precedents) => ({ ...precedents, [champ]: valeur }));
       setErreursServeur((precedentes) => ({ ...precedentes, [champ]: undefined }));
-    };
-  }
-
-  /** Un choix dans une liste : il est acheve des qu'il est fait. */
-  function choisir(champ) {
-    return (valeur) => {
-      setChamps((precedents) => ({ ...precedents, [champ]: valeur }));
-      setErreursServeur((precedentes) => ({ ...precedentes, [champ]: undefined }));
-      setTouches((precedents) => ({ ...precedents, [champ]: true }));
+      if (evenement.target.tagName === 'SELECT') {
+        setTouches((precedents) => ({ ...precedents, [champ]: true }));
+      }
     };
   }
 
@@ -883,6 +763,12 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
   }
 
   const nbErreurs = soumis ? CHAMPS_PROFIL.filter((champ) => erreurDe(champ)).length : 0;
+  // Un fuseau deja enregistre reste choisissable meme avant que la liste
+  // complete ne soit prete.
+  const fuseauHorsListe =
+    champs.fuseau &&
+    !locaux.includes(champs.fuseau) &&
+    !autres.some((fuseau) => fuseau.nom === champs.fuseau);
 
   return (
     <>
@@ -992,28 +878,39 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
             Icone={IconePieces}
             liste
           >
-            <ListeRecherche
-              nom="Devise préférée"
-              valeur={champs.devise}
-              groupes={groupesDevises}
-              onChoisir={choisir('devise')}
-              onQuitter={quitter('devise')}
-              disabled={envoi}
-            />
+            <select value={champs.devise} onChange={modifier('devise')} disabled={envoi}>
+              {(options.devises ?? []).map((devise) => (
+                <option key={devise.code} value={devise.code}>
+                  {devise.code} · {devise.libelle}
+                </option>
+              ))}
+            </select>
           </Champ>
 
           <Champ id="langue" libelle="Langue" erreur={erreurDe('langue')} Icone={IconeLangue} liste>
-            {/* Cent soixante-dix langues : on tape "esp", "español" ou
-                "Spanish" plutot que de les faire defiler. */}
-            <ListeRecherche
-              nom="Langue"
-              valeur={champs.langue}
-              groupes={groupesLangues}
-              indiceRecherche="Rechercher une langue…"
-              onChoisir={choisir('langue')}
-              onQuitter={quitter('langue')}
-              disabled={envoi}
-            />
+            {/* Les langues dans lesquelles HOPE ecrit deja, puis toutes les
+                autres : on trouve vite la sienne sans faire defiler cent
+                soixante-dix noms. */}
+            <select value={champs.langue} onChange={modifier('langue')} disabled={envoi}>
+              <optgroup label="Les plus courantes">
+                {(options.langues ?? [])
+                  .filter((langue) => langue.courante)
+                  .map((langue) => (
+                    <option key={langue.cle} value={langue.cle}>
+                      {langue.libelle}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="Toutes les langues">
+                {(options.langues ?? [])
+                  .filter((langue) => !langue.courante)
+                  .map((langue) => (
+                    <option key={langue.cle} value={langue.cle}>
+                      {langue.libelle}
+                    </option>
+                  ))}
+              </optgroup>
+            </select>
           </Champ>
         </div>
 
@@ -1025,15 +922,25 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
           Icone={IconeHorloge}
           liste
         >
-          <ListeRecherche
-            nom="Fuseau horaire"
-            valeur={champs.fuseau}
-            groupes={groupesFuseaux}
-            indiceRecherche="Ville, pays ou décalage (UTC+3)…"
-            onChoisir={choisir('fuseau')}
-            onQuitter={quitter('fuseau')}
-            disabled={envoi}
-          />
+          <select value={champs.fuseau} onChange={modifier('fuseau')} disabled={envoi}>
+            {fuseauHorsListe && <option value={champs.fuseau}>{libelleFuseau(champs.fuseau)}</option>}
+            <optgroup label={nomDuPays(pays) || 'Votre pays'}>
+              {locaux.map((nom) => (
+                <option key={nom} value={nom}>
+                  {libelleFuseau(nom)}
+                </option>
+              ))}
+            </optgroup>
+            {autres.length > 0 && (
+              <optgroup label="Autres fuseaux">
+                {autres.map((fuseau) => (
+                  <option key={fuseau.nom} value={fuseau.nom}>
+                    {fuseau.libelle}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
         </Champ>
 
         <div className="parcours__boutons">
@@ -1091,6 +998,14 @@ const MODES_AFFECTATION = [
     Illustration: IconePoigneeMain,
   },
 ];
+
+/** "Fianarantsoa" et "fianarantsoa" se valent, "Santé" et "sante" aussi. */
+function normaliser(texte) {
+  return String(texte ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
 
 /**
  * Etape 3 : l'affectation du don.
@@ -1836,36 +1751,33 @@ function Champ({
  * L'indicatif du telephone : tous les pays, Madagascar en tete.
  *
  * Replie, il ne montre que "+261" : le nom du pays ne tiendrait pas
- * devant le numero. Ouvert, c'est une liste "Pays ... +indicatif" que
- * l'on fouille par le pays ou par le numero : "Maurice", "Mauritius",
- * "230" ou "+230".
+ * devant le numero. Ouvert, c'est la liste native du systeme -- "Pays
+ * (+indicatif)" -- que le clavier et les lecteurs d'ecran savent
+ * parcourir, et qui s'ouvre en roue sur un telephone. Elle est posee,
+ * transparente, sur l'affichage : c'est elle que l'on touche.
  */
-function SelecteurIndicatif({ valeur, onChoisir, disabled }) {
+function SelecteurIndicatif({ valeur, onChange, disabled }) {
   return (
-    <ListeRecherche
-      id="donateur-indicatif"
-      className="parcours__indicatif"
-      classePanneau="parcours__indicatif-panneau"
-      nom="Indicatif téléphonique"
-      aria-label="Indicatif téléphonique"
-      valeur={valeur}
-      groupes={GROUPES_INDICATIF}
-      indiceRecherche="Pays ou indicatif, par ex. +261…"
-      onChoisir={onChoisir}
-      disabled={disabled}
-      rendu={(option) => (
-        <>
-          <span className="parcours__indicatif-code" aria-hidden="true">
-            {indicatifDe(valeur)}
-          </span>
-          {/* Le numero seul ne dit rien a l'oreille : on nomme le pays. */}
-          <span className="sr-only">
-            {option?.libelle ?? nomDuPays(valeur)} {indicatifDe(valeur)}
-          </span>
-          <IconeChevronBas className="parcours__indicatif-chevron" />
-        </>
-      )}
-    />
+    <>
+      <span className="parcours__indicatif" aria-hidden="true">
+        {indicatifDe(valeur)}
+        <IconeChevronBas className="parcours__indicatif-chevron" />
+      </span>
+      <select
+        id="donateur-indicatif"
+        className="parcours__indicatif-liste"
+        value={valeur}
+        onChange={onChange}
+        disabled={disabled}
+        aria-label="Indicatif téléphonique"
+      >
+        {PAYS.map((pays) => (
+          <option key={pays.code} value={pays.code}>
+            {pays.nom} ({indicatifDe(pays.code)})
+          </option>
+        ))}
+      </select>
+    </>
   );
 }
 
