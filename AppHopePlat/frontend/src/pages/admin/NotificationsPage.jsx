@@ -65,7 +65,7 @@ function destination(notification) {
     return '/admin/conversations';
   }
   if (type === 'DONATION') {
-    return projectId ? `/admin/projects/${projectId}?onglet=financement` : '/admin/donors?onglet=dons';
+    return projectId ? `/admin/projects/${projectId}?onglet=financement` : '/admin/dons';
   }
   return null;
 }

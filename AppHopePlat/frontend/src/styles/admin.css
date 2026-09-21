@@ -210,6 +210,61 @@
   color: var(--etat-rouge);
 }
 
+.lien-action--succes {
+  color: var(--etat-vert);
+}
+
+.lien-action:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* ---------------- Profil d'un utilisateur ---------------- */
+
+/* Les chiffres d'un profil, sous son en-tete. */
+.profil__chiffres {
+  margin: 0 0 18px;
+}
+
+/* Une adresse electronique longue passe a la ligne plutot que de
+   deborder de sa colonne. */
+.fiche__valeur {
+  overflow-wrap: anywhere;
+}
+
+/* Sous le nom : son role, son statut, et une precision. */
+.profil__accroche {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Des mots en pastilles : competences, langues. */
+.pastilles {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Les notes reservees a l'equipe, a part du reste de la fiche. */
+.profil__notes {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--hope-orange);
+  border-radius: 0 9px 9px 0;
+  background-color: #fdf6ec;
+}
+
+.profil__notes-titre {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hope-orange-lisible);
+}
+
 .cellule-actions {
   display: flex;
   gap: 14px;

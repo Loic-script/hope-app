@@ -44,6 +44,7 @@ import {
   statistics,
   tasks,
   team,
+  utilisateurs,
   volunteers,
   consultation,
 } from '../controllers/admin.controllers.js';
@@ -217,6 +218,17 @@ router.patch('/team/:id/password', exigerRole('ADMIN'), team.reinitialiserMotDeP
 
 // Le journal se lit ; personne ne l'ecrit a la main.
 router.get('/activity', team.journal);
+
+// --- Utilisateurs : donateurs, benevoles, bailleurs --------------------
+// Un compte se designe par son UUID, une fiche donateur par son numero.
+// Les ecritures passent par le verrou global pose plus haut ; supprimer
+// un compte le retire des listes sans effacer ce qu'il a fait.
+router.get('/utilisateurs/comptes/:id', utilisateurs.profilCompte);
+router.patch('/utilisateurs/comptes/:id', utilisateurs.modifierCompte);
+router.delete('/utilisateurs/comptes/:id', utilisateurs.supprimerCompte);
+router.get('/utilisateurs/fiches/:id', utilisateurs.profilFiche);
+router.delete('/utilisateurs/fiches/:id', utilisateurs.supprimerFiche);
+router.get('/utilisateurs/:onglet', utilisateurs.lister);
 
 // --- Benevoles --------------------------------------------------------
 // Activer un compte ouvre un acces : c'est une ecriture, pas une lecture.

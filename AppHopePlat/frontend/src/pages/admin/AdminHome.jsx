@@ -40,7 +40,7 @@ const RACCOURCIS = [
   { to: '/admin/projects/new', label: 'Créer un projet', Icone: IconeProjets },
   { to: '/admin/budget?depense=1', label: 'Enregistrer une dépense', Icone: IconeDepenses },
   { to: '/admin/beneficiaries?nouveau=1', label: 'Ajouter un bénéficiaire', Icone: IconeBeneficiaires },
-  { to: '/admin/donors?don=1', label: 'Affecter un don', Icone: IconeDons },
+  { to: '/admin/dons?don=1', label: 'Affecter un don', Icone: IconeDons },
 ];
 
 /** Couleur de la pastille du fil d'activite selon la nature de l'ecriture. */

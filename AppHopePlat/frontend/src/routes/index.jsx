@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import AdminLogin from '../pages/AdminLogin.jsx';
@@ -7,7 +7,7 @@ import AdminLoginSuccess from '../pages/AdminLoginSuccess.jsx';
 import AdminHome from '../pages/admin/AdminHome.jsx';
 import BeneficiariesPage from '../pages/admin/BeneficiariesPage.jsx';
 import BudgetPage from '../pages/admin/BudgetPage.jsx';
-import DonorsPage from '../pages/admin/DonorsPage.jsx';
+import DonsPage from '../pages/admin/DonsPage.jsx';
 import ImpactPage from '../pages/admin/ImpactPage.jsx';
 import NotificationsPage from '../pages/admin/NotificationsPage.jsx';
 import ProjectDetailPage from '../pages/admin/ProjectDetailPage.jsx';
@@ -46,10 +46,10 @@ import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
 import TableauDeBordBailleur from '../pages/bailleur/TableauDeBord.jsx';
 import RequireBailleur from './RequireBailleur.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
+import ProfilUtilisateurPage from '../pages/admin/ProfilUtilisateurPage.jsx';
+import UtilisateursPage from '../pages/admin/UtilisateursPage.jsx';
 import StatisticsPage from '../pages/admin/StatisticsPage.jsx';
-import FundersPage from '../pages/admin/FundersPage.jsx';
 import PublicationsPage from '../pages/admin/PublicationsPage.jsx';
-import VolunteersPage from '../pages/admin/VolunteersPage.jsx';
 import RequireAuth from './RequireAuth.jsx';
 
 /**
@@ -66,6 +66,25 @@ import RequireAuth from './RequireAuth.jsx';
  * Les huit sections du menu : accueil, projets, impact, budget,
  * notifications, donateurs, messages, statistiques.
  */
+/**
+ * Les anciennes adresses des ecrans Donateurs, Benevoles et Bailleurs,
+ * reunis dans "Utilisateurs". Les liens deja envoyes -- notifications,
+ * messagerie, favoris -- menent au bon onglet, ancre comprise ; le
+ * journal des dons (?onglet=dons) et l'enregistrement d'un don (?don=1)
+ * menent a l'ecran des dons.
+ */
+function VersUtilisateurs({ onglet }) {
+  const { search, hash } = useLocation();
+  const parametres = new URLSearchParams(search);
+  if (onglet === 'donateurs' && parametres.get('don') === '1') {
+    return <Navigate to="/admin/dons?don=1" replace />;
+  }
+  if (onglet === 'donateurs' && parametres.get('onglet') === 'dons') {
+    return <Navigate to="/admin/dons" replace />;
+  }
+  return <Navigate to={`/admin/utilisateurs?onglet=${onglet}${hash}`} replace />;
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -188,15 +207,21 @@ export default function AppRoutes() {
           <Route path="/admin/impact" element={<ImpactPage />} />
           <Route path="/admin/budget" element={<BudgetPage />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
-          <Route path="/admin/donors" element={<DonorsPage />} />
+          {/* Donateurs, benevoles et bailleurs : un seul ecran, trois
+              onglets, et le profil de chacun. Le journal des dons a gardé
+              le sien. */}
+          <Route path="/admin/utilisateurs" element={<UtilisateursPage />} />
+          <Route path="/admin/utilisateurs/:genre/:id" element={<ProfilUtilisateurPage />} />
+          <Route path="/admin/dons" element={<DonsPage />} />
+          <Route path="/admin/donors" element={<VersUtilisateurs onglet="donateurs" />} />
           {/* La messagerie commune : l'equipe y est un participant
               comme un autre. Le courrier des donateurs garde son ecran. */}
           <Route path="/admin/conversations" element={<ConversationsEspace />} />
           {/* La conversation a son adresse : sur un telephone,
               c'est une page a elle, et le lien se partage. */}
           <Route path="/admin/conversations/:id" element={<ConversationsEspace />} />
-          <Route path="/admin/volunteers" element={<VolunteersPage />} />
-          <Route path="/admin/funders" element={<FundersPage />} />
+          <Route path="/admin/volunteers" element={<VersUtilisateurs onglet="benevoles" />} />
+          <Route path="/admin/funders" element={<VersUtilisateurs onglet="bailleurs" />} />
           <Route path="/admin/actualites" element={<PublicationsPage />} />
           <Route path="/admin/statistics" element={<StatisticsPage />} />
           <Route path="/admin/settings" element={<SettingsPage />} />

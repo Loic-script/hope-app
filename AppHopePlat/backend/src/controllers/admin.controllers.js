@@ -31,6 +31,7 @@ import * as statisticsService from '../services/statistics.service.js';
 import * as teamService from '../services/team.service.js';
 import * as funderAccountService from '../services/funderAccount.service.js';
 import * as volunteerService from '../services/volunteer.service.js';
+import * as utilisateursService from '../services/utilisateurs.service.js';
 // La consultation d'un espace reutilise la mecanique de jeton de
 // l'authentification : c'est la meme session, emise autrement.
 import * as authService from '../services/auth.service.js';
@@ -233,6 +234,19 @@ export const funders = {
   changerStatut: gerer((req) =>
     funderAccountService.changerStatut(req.params.id, req.body, req.admin)
   ),
+};
+
+/*
+ * L'ecran "Utilisateurs" : donateurs, benevoles et bailleurs, leurs
+ * profils, et ce que l'equipe peut y changer.
+ */
+export const utilisateurs = {
+  lister: gerer((req) => utilisateursService.lister(req.params.onglet, req.query)),
+  profilCompte: gerer((req) => utilisateursService.profilCompte(req.params.id)),
+  profilFiche: gerer((req) => utilisateursService.profilFiche(req.params.id)),
+  modifierCompte: gerer((req) => utilisateursService.modifierCompte(req.params.id, req.body)),
+  supprimerCompte: gerer((req) => utilisateursService.supprimerCompte(req.params.id, req.admin)),
+  supprimerFiche: gerer((req) => utilisateursService.supprimerFiche(req.params.id)),
 };
 
 export const volunteers = {

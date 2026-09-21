@@ -6,7 +6,6 @@ import {
   PleineAccueil,
   PleineActualites,
   PleineBudget,
-  PleineDonateurs,
   PleineDons,
   PleineFamille,
   PleineGraphique,
@@ -75,9 +74,9 @@ const GROUPES = [
         Icone: PleineMessages,
         compteur: 'conversations',
       },
-      { to: '/admin/donors', label: 'Donateurs', Icone: PleineDonateurs },
-      { to: '/admin/volunteers', label: 'Bénévoles', Icone: PleineGroupe },
-      { to: '/admin/funders', label: 'Bailleurs', Icone: PleineDons },
+      // Donateurs, benevoles et bailleurs : un seul ecran, un onglet
+      // chacun.
+      { to: '/admin/utilisateurs', label: 'Utilisateurs', Icone: PleineGroupe },
       // Ce que les bailleurs lisent dans leur espace, et qui s'y est
       // manifeste en retour.
       { to: '/admin/actualites', label: 'Actualités', Icone: PleineActualites },
@@ -87,6 +86,8 @@ const GROUPES = [
     titre: 'Finances & analyse',
     entrees: [
       { to: '/admin/budget', label: 'Budget', Icone: PleineBudget },
+      // Le journal des dons, qui vivait dans l'ancien ecran Donateurs.
+      { to: '/admin/dons', label: 'Dons reçus', Icone: PleineDons },
       { to: '/admin/statistics', label: 'Statistiques', Icone: PleineGraphique },
     ],
   },
