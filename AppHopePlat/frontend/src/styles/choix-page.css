@@ -1,0 +1,273 @@
+/* ============================================================
+   Un choix sur une page a lui (components/ChoixSurPage.jsx)
+
+   Sur telephone, les longues listes du formulaire -- pays, indicatif,
+   langue, fuseau horaire -- s'ouvrent sur une page entiere : un retour et
+   le titre en haut, la recherche dessous, la liste sur toute la hauteur.
+   Rattachee au document, la page porte ses propres couleurs.
+   ============================================================ */
+
+/* Le champ ferme : il se lit comme la liste native qu'il remplace. */
+.choix-page__declencheur {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choix-page__declencheur:disabled {
+  cursor: progress;
+}
+
+.choix-page__valeur {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- La page ---------------- */
+
+.choix-page {
+  --choix-encre: #2a2839;
+  --choix-bordure: #dde3ee;
+
+  position: fixed;
+  z-index: 1001;
+  top: var(--zone-haut, 0px);
+  left: 0;
+  right: 0;
+  height: var(--zone-hauteur, 100dvh);
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  font-family: var(--police-titre);
+  color: var(--choix-encre);
+  animation: choix-entree 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.choix-page__tete {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: max(8px, env(safe-area-inset-top, 0px)) 12px 4px 6px;
+}
+
+.choix-page__retour {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--choix-encre);
+  cursor: pointer;
+}
+
+.choix-page__retour:hover,
+.choix-page__retour:focus-visible {
+  background-color: #f1f4f9;
+}
+
+.choix-page__retour:focus-visible,
+.choix-page__effacer:focus-visible,
+.choix-page__option:focus-visible {
+  outline: 2px solid var(--hope-bleu-lisible);
+  outline-offset: 2px;
+}
+
+.choix-page__retour svg {
+  width: 22px;
+  height: 22px;
+}
+
+.choix-page__titre {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+/* ---------------- La recherche, en haut ---------------- */
+
+.choix-page__recherche {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin: 6px 14px 8px;
+  border: 1px solid var(--choix-bordure);
+  border-radius: 12px;
+  background-color: #f5f8fd;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.choix-page__recherche:focus-within {
+  border-color: var(--hope-bleu-lisible);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.35);
+}
+
+.choix-page__loupe {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  margin-left: 14px;
+  color: var(--hope-texte-doux);
+}
+
+.choix-page__recherche:focus-within .choix-page__loupe {
+  color: var(--hope-violet);
+}
+
+/* 16 px : en dessous, iOS agrandit la page au focus. */
+.choix-page__saisie {
+  flex: 1;
+  min-width: 0;
+  height: 50px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  color: var(--choix-encre);
+  outline: none;
+}
+
+.choix-page__saisie::placeholder {
+  color: #75728a;
+  opacity: 1;
+}
+
+.choix-page__effacer {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-right: 4px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--hope-texte-doux);
+  cursor: pointer;
+}
+
+.choix-page__effacer svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* ---------------- La liste ---------------- */
+
+.choix-page__liste {
+  flex: 1;
+  min-height: 0;
+  padding: 0 8px calc(16px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Le titre d'un groupe reste en haut tant qu'on parcourt ses options. */
+.choix-page__groupe {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 -8px;
+  padding: 14px 22px 6px;
+  background-color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hope-texte-doux);
+}
+
+/* Des lignes a la mesure du doigt : 52 px. */
+.choix-page__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1.35;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.choix-page__option:active {
+  background-color: #e3ecf8;
+}
+
+.choix-page__option--choisie {
+  background-color: #edf3fb;
+  box-shadow: inset 3px 0 0 var(--hope-bleu-lisible);
+  font-weight: 600;
+  color: var(--hope-violet);
+}
+
+.choix-page__libelle {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.choix-page__libelle mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background-color: var(--hope-bleu-clair);
+  color: inherit;
+}
+
+.choix-page__detail {
+  flex: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--hope-texte-doux);
+  font-variant-numeric: tabular-nums;
+}
+
+.choix-page__coche {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  color: var(--hope-violet);
+}
+
+.choix-page__vide {
+  margin: 0;
+  padding: 28px 18px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--hope-texte-doux);
+}
+
+@keyframes choix-entree {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choix-page {
+    animation: none;
+  }
+
+  .choix-page__recherche {
+    transition: none;
+  }
+}

@@ -6,6 +6,7 @@ import logoCartes from '../../assets/paiement/cartes-bancaires.webp';
 import imageEspeces from '../../assets/paiement/especes.webp';
 import logoMvola from '../../assets/paiement/mvola.webp';
 import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
+import ChoixSurPage from '../../components/ChoixSurPage.jsx';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
   IconeChevronBas,
@@ -44,19 +45,77 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
-import { focusAutomatique } from '../../utils/ecran.js';
+import { focusAutomatique, useEcranTelephone } from '../../utils/ecran.js';
 import {
+  decalage,
   devisePourPays,
   fuseauParDefaut,
   fuseauxDuPays,
   languePourPays,
   libelleFuseau,
   tousLesFuseaux,
+  ville,
 } from '../../utils/fuseaux.js';
-import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomDuPays } from '../../utils/pays.js';
+import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomAnglais, nomDuPays } from '../../utils/pays.js';
 
 /** Le parcours compte cinq etapes ; la sixieme veut dire "termine". */
 const NOMBRE_ETAPES = 5;
+
+/*
+ * Sur telephone, les quatre longues listes -- pays, indicatif, langue,
+ * fuseau horaire -- s'ouvrent sur une page a part, recherche en haut
+ * (ChoixSurPage). On les y cherche en francais comme en anglais --
+ * "Allemagne" ou "Germany" --, et l'indicatif par son numero, avec ou
+ * sans "+". Sur ordinateur, les listes natives restent.
+ */
+
+/** Les pays, Madagascar en tete. */
+const GROUPES_PAYS = [
+  {
+    options: PAYS.map((pays) => ({
+      valeur: pays.code,
+      libelle: pays.nom,
+      motsCles: [nomAnglais(pays.code)],
+    })),
+  },
+];
+
+/** Les indicatifs : "Madagascar ... +261", a chercher par "261" ou "+261". */
+const GROUPES_INDICATIF = [
+  {
+    options: PAYS.map((pays) => {
+      const indicatif = indicatifDe(pays.code);
+      return {
+        valeur: pays.code,
+        libelle: pays.nom,
+        detail: indicatif,
+        motsCles: [indicatif.slice(1), nomAnglais(pays.code)],
+      };
+    }),
+  },
+];
+
+const nomsDeLangueEnAnglais =
+  typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
+    ? new Intl.DisplayNames(['en'], { type: 'language' })
+    : null;
+
+/** "es" -> "Spanish" : une langue se cherche aussi sous son nom anglais. */
+function langueEnAnglais(code) {
+  try {
+    return nomsDeLangueEnAnglais?.of(code) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Un choix fait sur la page de choix, rendu comme un changement de liste
+ * native : les gestionnaires du formulaire n'ont pas a distinguer l'un de
+ * l'autre.
+ */
+const commeUneListe = (gestionnaire) => (valeur) =>
+  gestionnaire({ target: { value: valeur, tagName: 'SELECT' } });
 
 /**
  * Le parcours d'accueil du donateur.
@@ -290,6 +349,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
   const erreursLocales = verifier(champs);
   const erreurDe = (champ) =>
     erreursServeur[champ] ?? ((touches[champ] || soumis) ? erreursLocales[champ] : undefined);
+  const telephone = useEcranTelephone();
 
   function modifier(champ) {
     return (evenement) => {
@@ -468,21 +528,34 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
             />
           </Champ>
           <Champ id="pays" libelle="Pays" erreur={erreurDe('pays')} Icone={IconeGlobe} liste>
-            <select
-              value={champs.pays}
-              onChange={modifierPays}
-              onBlur={quitter('pays')}
-              autoComplete="country"
-              disabled={envoi}
-              data-vide={champs.pays === ''}
-            >
-              <option value="">Sélectionnez votre pays</option>
-              {PAYS.map((pays) => (
-                <option key={pays.code} value={pays.code}>
-                  {pays.nom}
-                </option>
-              ))}
-            </select>
+            {telephone ? (
+              <ChoixSurPage
+                nom="Pays"
+                valeur={champs.pays}
+                groupes={GROUPES_PAYS}
+                indice="Sélectionnez votre pays"
+                indiceRecherche="Rechercher un pays…"
+                onChoisir={commeUneListe(modifierPays)}
+                onQuitter={quitter('pays')}
+                disabled={envoi}
+              />
+            ) : (
+              <select
+                value={champs.pays}
+                onChange={modifierPays}
+                onBlur={quitter('pays')}
+                autoComplete="country"
+                disabled={envoi}
+                data-vide={champs.pays === ''}
+              >
+                <option value="">Sélectionnez votre pays</option>
+                {PAYS.map((pays) => (
+                  <option key={pays.code} value={pays.code}>
+                    {pays.nom}
+                  </option>
+                ))}
+              </select>
+            )}
           </Champ>
         </div>
 
@@ -496,6 +569,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
               valeur={champs.indicatif}
               onChange={modifierIndicatif}
               disabled={envoi}
+              surPage={telephone}
             />
           }
         >
@@ -679,6 +753,47 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
     }, 0);
     return () => clearTimeout(minuterie);
   }, [locaux]);
+
+  const telephone = useEcranTelephone();
+
+  /** Les langues ou HOPE ecrit deja, puis toutes les autres. */
+  const groupesLangues = useMemo(() => {
+    const langues = (options.langues ?? []).map((langue) => ({
+      valeur: langue.cle,
+      libelle: langue.libelle,
+      motsCles: [langue.cle, langueEnAnglais(langue.cle)],
+      courante: langue.courante,
+    }));
+    return [
+      { libelle: 'Les plus courantes', options: langues.filter((langue) => langue.courante) },
+      { libelle: 'Toutes les langues', options: langues.filter((langue) => !langue.courante) },
+    ];
+  }, [options.langues]);
+
+  /*
+   * Les fuseaux : ceux du pays, puis tous les autres. On les trouve par la
+   * ville, le pays ou le decalage : "tana", "Madagascar", "UTC+3", "+3".
+   */
+  const groupesFuseaux = useMemo(() => {
+    const option = (nom, code, avecPays) => {
+      const ecart = decalage(nom);
+      return {
+        valeur: nom,
+        libelle: avecPays && code ? `${ville(nom)}, ${nomDuPays(code)}` : ville(nom),
+        detail: ecart,
+        affichage: libelleFuseau(nom),
+        motsCles: [nom, nomDuPays(code), nomAnglais(code), ecart.replace('UTC', 'GMT'), ecart.replace('UTC', '')],
+      };
+    };
+    const connus = new Set([...locaux, ...autres.map((fuseau) => fuseau.nom)]);
+    return [
+      ...(champs.fuseau && !connus.has(champs.fuseau)
+        ? [{ options: [option(champs.fuseau, '', false)] }]
+        : []),
+      { libelle: nomDuPays(pays) || 'Votre pays', options: locaux.map((nom) => option(nom, pays, false)) },
+      { libelle: 'Autres fuseaux', options: autres.map((fuseau) => option(fuseau.nom, fuseau.pays, true)) },
+    ];
+  }, [locaux, autres, pays, champs.fuseau]);
 
   const typeChoisi = types.find((t) => t.cle === champs.type);
   const estStructure = Boolean(typeChoisi?.structure);
@@ -891,26 +1006,38 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
             {/* Les langues dans lesquelles HOPE ecrit deja, puis toutes les
                 autres : on trouve vite la sienne sans faire defiler cent
                 soixante-dix noms. */}
-            <select value={champs.langue} onChange={modifier('langue')} disabled={envoi}>
-              <optgroup label="Les plus courantes">
-                {(options.langues ?? [])
-                  .filter((langue) => langue.courante)
-                  .map((langue) => (
-                    <option key={langue.cle} value={langue.cle}>
-                      {langue.libelle}
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Toutes les langues">
-                {(options.langues ?? [])
-                  .filter((langue) => !langue.courante)
-                  .map((langue) => (
-                    <option key={langue.cle} value={langue.cle}>
-                      {langue.libelle}
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
+            {telephone ? (
+              <ChoixSurPage
+                nom="Langue"
+                valeur={champs.langue}
+                groupes={groupesLangues}
+                indiceRecherche="Rechercher une langue…"
+                onChoisir={commeUneListe(modifier('langue'))}
+                onQuitter={quitter('langue')}
+                disabled={envoi}
+              />
+            ) : (
+              <select value={champs.langue} onChange={modifier('langue')} disabled={envoi}>
+                <optgroup label="Les plus courantes">
+                  {(options.langues ?? [])
+                    .filter((langue) => langue.courante)
+                    .map((langue) => (
+                      <option key={langue.cle} value={langue.cle}>
+                        {langue.libelle}
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label="Toutes les langues">
+                  {(options.langues ?? [])
+                    .filter((langue) => !langue.courante)
+                    .map((langue) => (
+                      <option key={langue.cle} value={langue.cle}>
+                        {langue.libelle}
+                      </option>
+                    ))}
+                </optgroup>
+              </select>
+            )}
           </Champ>
         </div>
 
@@ -922,25 +1049,37 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
           Icone={IconeHorloge}
           liste
         >
-          <select value={champs.fuseau} onChange={modifier('fuseau')} disabled={envoi}>
-            {fuseauHorsListe && <option value={champs.fuseau}>{libelleFuseau(champs.fuseau)}</option>}
-            <optgroup label={nomDuPays(pays) || 'Votre pays'}>
-              {locaux.map((nom) => (
-                <option key={nom} value={nom}>
-                  {libelleFuseau(nom)}
-                </option>
-              ))}
-            </optgroup>
-            {autres.length > 0 && (
-              <optgroup label="Autres fuseaux">
-                {autres.map((fuseau) => (
-                  <option key={fuseau.nom} value={fuseau.nom}>
-                    {fuseau.libelle}
+          {telephone ? (
+            <ChoixSurPage
+              nom="Fuseau horaire"
+              valeur={champs.fuseau}
+              groupes={groupesFuseaux}
+              indiceRecherche="Ville, pays ou décalage (UTC+3)…"
+              onChoisir={commeUneListe(modifier('fuseau'))}
+              onQuitter={quitter('fuseau')}
+              disabled={envoi}
+            />
+          ) : (
+            <select value={champs.fuseau} onChange={modifier('fuseau')} disabled={envoi}>
+              {fuseauHorsListe && <option value={champs.fuseau}>{libelleFuseau(champs.fuseau)}</option>}
+              <optgroup label={nomDuPays(pays) || 'Votre pays'}>
+                {locaux.map((nom) => (
+                  <option key={nom} value={nom}>
+                    {libelleFuseau(nom)}
                   </option>
                 ))}
               </optgroup>
-            )}
-          </select>
+              {autres.length > 0 && (
+                <optgroup label="Autres fuseaux">
+                  {autres.map((fuseau) => (
+                    <option key={fuseau.nom} value={fuseau.nom}>
+                      {fuseau.libelle}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          )}
         </Champ>
 
         <div className="parcours__boutons">
@@ -1756,7 +1895,31 @@ function Champ({
  * parcourir, et qui s'ouvre en roue sur un telephone. Elle est posee,
  * transparente, sur l'affichage : c'est elle que l'on touche.
  */
-function SelecteurIndicatif({ valeur, onChange, disabled }) {
+function SelecteurIndicatif({ valeur, onChange, disabled, surPage = false }) {
+  // Sur telephone : la meme case "+261", qui ouvre la page de choix.
+  if (surPage) {
+    return (
+      <>
+        <span className="parcours__indicatif" aria-hidden="true">
+          {indicatifDe(valeur)}
+          <IconeChevronBas className="parcours__indicatif-chevron" />
+        </span>
+        <ChoixSurPage
+          id="donateur-indicatif"
+          className="parcours__indicatif-liste"
+          nom="Indicatif téléphonique"
+          aria-label={`Indicatif téléphonique : ${nomDuPays(valeur || PAYS_PAR_DEFAUT)} ${indicatifDe(valeur)}`}
+          valeur={valeur}
+          groupes={GROUPES_INDICATIF}
+          indiceRecherche="Pays ou indicatif, par ex. +261…"
+          onChoisir={commeUneListe(onChange)}
+          disabled={disabled}
+          rendu={() => null}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <span className="parcours__indicatif" aria-hidden="true">

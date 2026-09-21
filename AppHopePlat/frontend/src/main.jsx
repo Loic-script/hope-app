@@ -29,6 +29,7 @@ import './styles/benevole-espace.css';
 import './styles/bailleur.css';
 import './styles/feuille.css';
 import './styles/parcours-donateur.css';
+import './styles/choix-page.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

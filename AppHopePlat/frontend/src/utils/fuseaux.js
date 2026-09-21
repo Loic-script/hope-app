@@ -136,6 +136,8 @@ let tous = null;
  * Tous les fuseaux, chacun sous son nom local et avec son pays, d'ouest
  * en est : "Antananarivo, Madagascar (UTC+3)". Calcule a la premiere
  * demande seulement.
+ *
+ * Chaque fuseau porte aussi son pays (code) : la liste s'y cherche.
  */
 export function tousLesFuseaux() {
   if (tous) return tous;
@@ -148,6 +150,7 @@ export function tousLesFuseaux() {
   tous = [...vus.entries()]
     .map(([nom, pays]) => ({
       nom,
+      pays,
       libelle: `${ville(nom)}, ${nomDuPays(pays)} (${decalage(nom)})`,
     }))
     .sort((a, b) => minutes(a.nom) - minutes(b.nom) || a.libelle.localeCompare(b.libelle, 'fr'));

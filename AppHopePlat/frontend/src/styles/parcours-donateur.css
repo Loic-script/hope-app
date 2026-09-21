@@ -261,8 +261,15 @@ select.parcours__saisie {
   cursor: pointer;
 }
 
+/* Sur telephone, le champ d'une longue liste est un bouton qui ouvre sa
+   page de choix : il garde l'allure de la liste qu'il remplace. */
+button.parcours__saisie {
+  padding-right: 46px;
+}
+
 /* Tant que rien n'est choisi, la liste parle comme un placeholder. */
-select.parcours__saisie[data-vide='true'] {
+select.parcours__saisie[data-vide='true'],
+button.parcours__saisie[data-vide='true'] {
   color: var(--parcours-placeholder);
 }
 
