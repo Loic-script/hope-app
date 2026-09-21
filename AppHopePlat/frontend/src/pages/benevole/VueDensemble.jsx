@@ -55,10 +55,11 @@ function TachesDuProjet({ projet }) {
 /**
  * Accueil de l'espace benevole.
  *
- * La page ne liste pas : elle met en avant. Ce qu'un benevole vient
- * verifier, c'est la tache qu'il doit rendre en premier, et celle qu'il
- * pourrait prendre ensuite -- deux elements, pas deux listes. Le reste de
- * l'espace a ses propres ecrans, et chaque bloc y renvoie.
+ * La page ne liste pas : elle met en avant. En haut, sous les reperes,
+ * l'invitation -- "Une tache pour chaque savoir-faire." -- et la tache
+ * qu'il pourrait prendre ; puis les projets ; en bas, la tache qu'il doit
+ * rendre en premier, et son journal. Des elements, pas des listes : le
+ * reste de l'espace a ses propres ecrans, et chaque bloc y renvoie.
  *
  * Les trois reperes du haut parlent de lui d'abord : ce qu'il a en cours,
  * ce qu'il a deja livre, et seulement ensuite ce qui attend quelqu'un.
@@ -137,81 +138,26 @@ export default function VueDensemble() {
         />
       </div>
 
-      {/* ---------- La tache a rendre, et celle a prendre ---------- */}
+      {/* ---------- L'invitation, et la tache a prendre ---------- */}
       <div className="accueil-benevole__paire">
-        <section className="tache-phare">
-          <div className="tache-phare__corps">
-            <div className="tache-phare__haut">
-              <h2 className="tache-phare__intitule">Ma tâche prioritaire</h2>
-              {prioritaire && <span className="pastille pastille--orange">En cours</span>}
-            </div>
-
-            {prioritaire ? (
-              <>
-                <p className="tache-phare__projet">{prioritaire.projetNom}</p>
-                <h3 className="tache-phare__titre">{prioritaire.titre}</h3>
-                {prioritaire.description && (
-                  <p className="tache-phare__texte">{prioritaire.description}</p>
-                )}
-
-                <div className="tache-phare__quand">
-                  {/* La pastille de date n'a de sens qu'avec une echeance :
-                      sans elle, les faits suffisent. */}
-                  {prioritaire.echeance && (
-                    <span className="jour">
-                      <strong>{fmt.jourDuMois(prioritaire.echeance)}</strong>
-                      <em>{fmt.moisCourt(prioritaire.echeance)}</em>
-                    </span>
-                  )}
-                  <dl className="tache-phare__faits">
-                    <div>
-                      <dt aria-hidden="true"><IconeCalendrier /></dt>
-                      <dd>
-                        {prioritaire.echeance
-                          ? `À rendre le ${fmt.dateLongue(prioritaire.echeance)}`
-                          : 'Sans échéance'}
-                      </dd>
-                    </div>
-                    {prioritaire.priseLe && (
-                      <div>
-                        <dt aria-hidden="true"><IconeJournal /></dt>
-                        <dd>Prise le {fmt.dateLongue(prioritaire.priseLe)}</dd>
-                      </div>
-                    )}
-                  </dl>
-                </div>
-
-                <div className="tache-phare__actions">
-                  <Link className="bouton-hope" to="/benevole/taches">
-                    Ouvrir mes tâches
-                    <IconeChevronDroit />
-                  </Link>
-                  {prioritaire.projetId && (
-                    <Link className="lien-hope" to={`/benevole/projets/${prioritaire.projetId}`}>
-                      Voir le projet
-                    </Link>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="tache-phare__vide">
-                <p>
-                  Aucune tâche en cours.{' '}
-                  {nbLibres > 0
-                    ? `${pluriel(nbLibres, 'tâche')} ${nbLibres > 1 ? 'attendent' : 'attend'} un volontaire.`
-                    : 'Toutes les tâches sont prises pour le moment.'}
-                </p>
-                <Link className="bouton-hope" to="/benevole/taches">
-                  Prendre une tâche
-                  <IconeChevronDroit />
-                </Link>
-              </div>
-            )}
+        <section className="invitation">
+          <div className="invitation__image">
+            <img src={photoInvitation} alt="" />
           </div>
-
-          {/* Decorative : la tache est deja decrite en toutes lettres. */}
-          <div className="tache-phare__image">
-            <img src={photoTache} alt="" />
+          <div className="invitation__corps">
+            <p className="surtitre surtitre--clair">
+              <span className="trait-hope surtitre__trait" aria-hidden="true" />
+              Envie de participer davantage ?
+            </p>
+            <h2 className="invitation__titre">Une tâche pour chaque savoir-faire.</h2>
+            <p className="invitation__compte">
+              {pluriel(nbLibres, 'tâche')} à prendre
+              {nbProjets > 0 && ` · sur ${pluriel(nbProjets, 'projet')}`}
+            </p>
+            <Link className="lien-hope lien-hope--fleche" to="/benevole/projets">
+              Explorer les projets
+              <IconeChevronDroit />
+            </Link>
           </div>
         </section>
 
@@ -305,26 +251,81 @@ export default function VueDensemble() {
         </section>
       )}
 
-      {/* ---------- Invitation, et journal ---------- */}
+      {/* ---------- Ma tache prioritaire, et le journal ---------- */}
       <div className="accueil-benevole__paire accueil-benevole__paire--basse">
-        <section className="invitation">
-          <div className="invitation__image">
-            <img src={photoInvitation} alt="" />
+        <section className="tache-phare">
+          <div className="tache-phare__corps">
+            <div className="tache-phare__haut">
+              <h2 className="tache-phare__intitule">Ma tâche prioritaire</h2>
+              {prioritaire && <span className="pastille pastille--orange">En cours</span>}
+            </div>
+
+            {prioritaire ? (
+              <>
+                <p className="tache-phare__projet">{prioritaire.projetNom}</p>
+                <h3 className="tache-phare__titre">{prioritaire.titre}</h3>
+                {prioritaire.description && (
+                  <p className="tache-phare__texte">{prioritaire.description}</p>
+                )}
+
+                <div className="tache-phare__quand">
+                  {/* La pastille de date n'a de sens qu'avec une echeance :
+                      sans elle, les faits suffisent. */}
+                  {prioritaire.echeance && (
+                    <span className="jour">
+                      <strong>{fmt.jourDuMois(prioritaire.echeance)}</strong>
+                      <em>{fmt.moisCourt(prioritaire.echeance)}</em>
+                    </span>
+                  )}
+                  <dl className="tache-phare__faits">
+                    <div>
+                      <dt aria-hidden="true"><IconeCalendrier /></dt>
+                      <dd>
+                        {prioritaire.echeance
+                          ? `À rendre le ${fmt.dateLongue(prioritaire.echeance)}`
+                          : 'Sans échéance'}
+                      </dd>
+                    </div>
+                    {prioritaire.priseLe && (
+                      <div>
+                        <dt aria-hidden="true"><IconeJournal /></dt>
+                        <dd>Prise le {fmt.dateLongue(prioritaire.priseLe)}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+
+                <div className="tache-phare__actions">
+                  <Link className="bouton-hope" to="/benevole/taches">
+                    Ouvrir mes tâches
+                    <IconeChevronDroit />
+                  </Link>
+                  {prioritaire.projetId && (
+                    <Link className="lien-hope" to={`/benevole/projets/${prioritaire.projetId}`}>
+                      Voir le projet
+                    </Link>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="tache-phare__vide">
+                <p>
+                  Aucune tâche en cours.{' '}
+                  {nbLibres > 0
+                    ? `${pluriel(nbLibres, 'tâche')} ${nbLibres > 1 ? 'attendent' : 'attend'} un volontaire.`
+                    : 'Toutes les tâches sont prises pour le moment.'}
+                </p>
+                <Link className="bouton-hope" to="/benevole/taches">
+                  Prendre une tâche
+                  <IconeChevronDroit />
+                </Link>
+              </div>
+            )}
           </div>
-          <div className="invitation__corps">
-            <p className="surtitre surtitre--clair">
-              <span className="trait-hope surtitre__trait" aria-hidden="true" />
-              Envie de participer davantage ?
-            </p>
-            <h2 className="invitation__titre">Une tâche pour chaque savoir-faire.</h2>
-            <p className="invitation__compte">
-              {pluriel(nbLibres, 'tâche')} à prendre
-              {nbProjets > 0 && ` · sur ${pluriel(nbProjets, 'projet')}`}
-            </p>
-            <Link className="lien-hope lien-hope--fleche" to="/benevole/projets">
-              Explorer les projets
-              <IconeChevronDroit />
-            </Link>
+
+          {/* Decorative : la tache est deja decrite en toutes lettres. */}
+          <div className="tache-phare__image">
+            <img src={photoTache} alt="" />
           </div>
         </section>
 

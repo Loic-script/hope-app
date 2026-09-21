@@ -1053,9 +1053,9 @@
 /* --- Les deux paires de blocs --- */
 
 /*
- * Deux colonnes inegales : la tache prioritaire occupe les deux tiers,
- * la tache a prendre le reste. C'est la premiere qu'on vient verifier,
- * et elle seule porte une image.
+ * Deux colonnes inegales : la grande carte a image -- l'invitation en
+ * haut, la tache prioritaire en bas -- occupe les deux tiers, la petite
+ * carte le reste.
  */
 .accueil-benevole__paire {
   display: grid;
