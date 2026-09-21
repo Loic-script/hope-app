@@ -1019,3 +1019,46 @@
     animation: none;
   }
 }
+
+/*
+ * Les plus petits telephones (320 a 400 px) : le menu, la marque, la
+ * cloche et le profil ne tenaient pas sur la largeur -- la page debordait
+ * de 27 px, et tout l'ecran glissait de cote. Les colonnes laterales
+ * prennent la place de leur contenu, la marque se resserre au milieu, et
+ * le profil perd son chevron et son filet.
+ */
+@media (max-width: 400px) {
+  .entete__barre {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .entete__marque {
+    justify-self: center;
+  }
+
+  .entete__logo {
+    width: 86px;
+  }
+
+  .entete__actions {
+    gap: 2px;
+  }
+
+  .profil {
+    margin-left: 2px;
+    padding-left: 4px;
+    border-left: 0;
+  }
+
+  .profil__bouton {
+    gap: 0;
+    padding: 3px;
+  }
+
+  .profil__chevron {
+    display: none;
+  }
+}

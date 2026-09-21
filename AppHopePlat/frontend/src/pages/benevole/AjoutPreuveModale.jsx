@@ -230,7 +230,6 @@ export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
             onChange={(evenement) => setDescription(evenement.target.value)}
             maxLength={2000}
             rows={3}
-            placeholder="Les kits ont été remis ce matin aux 30 enfants de l’école d’Ankadifotsy."
             disabled={envoi}
             required
           />

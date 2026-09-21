@@ -1754,3 +1754,41 @@ tr.ligne--visee > td {
 tr[id^='compte-'] {
   scroll-margin-top: calc(var(--admin-entete-hauteur, 70px) + 20px);
 }
+
+/*
+ * Les fenetres sur telephone : elles montent du bas de l'ecran, sur toute
+ * sa largeur, comme une feuille posee sur la page. Posees au milieu avec
+ * 24 px de marge, elles laissaient trop peu de place a leur contenu --
+ * et les deux boutons du pied, qui ne passent pas a la ligne, les
+ * faisaient deborder de l'ecran.
+ */
+@media (max-width: 560px) {
+  .modale-fond {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modale,
+  .modale--large {
+    max-width: none;
+    max-height: 92dvh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .modale__entete {
+    padding: 16px 16px 12px;
+  }
+
+  .modale__corps {
+    padding: 16px;
+  }
+
+  .modale__pied {
+    flex-wrap: wrap;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .modale__pied .btn {
+    flex: 1 1 auto;
+  }
+}

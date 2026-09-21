@@ -2570,3 +2570,32 @@
     max-width: none;
   }
 }
+
+/*
+ * Telephone : la carte d'une preuve terrain. Trois colonnes (vignette,
+ * texte, boutons) ecrasaient le texte a un mot par ligne et posaient
+ * "Voir le fichier" sur la description. La vignette et le texte restent
+ * cote a cote ; les boutons passent dessous, sur toute la largeur.
+ */
+@media (max-width: 640px) {
+  .projet-benevole .preuve {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 12px;
+  }
+
+  .projet-benevole .preuve__actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: auto;
+  }
+
+  .projet-benevole .preuve__actions .bouton-hope {
+    flex: 1;
+    justify-content: center;
+  }
+}
