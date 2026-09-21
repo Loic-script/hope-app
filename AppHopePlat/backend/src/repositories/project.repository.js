@@ -230,12 +230,22 @@ export async function listerPourBenevole(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Un projet, pour l'espace benevole : les memes champs que la liste. */
+/**
+ * Un projet, pour l'espace benevole : sa vue generale.
+ *
+ * Tout ce qui dit ce qu'est le projet -- responsable, dates, public,
+ * objectifs, resultat -- et rien de ce qu'il coute : ni budget, ni dons,
+ * ni depenses. Les beneficiaires ne sont qu'un nombre : leurs fiches
+ * restent dans l'espace administrateur.
+ */
 export async function trouverPourBenevole(id, client = null) {
   const resultat = await query(
     `SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
             p.media_url, p.media_type, p.status, p.created_at,
+            p.manager_name, p.start_date::text AS start_date, p.completed_at,
+            p.beneficiary_profile, p.beneficiary_target, p.outcome,
             c.name AS category_name,
+            COALESCE(ben.nombre, 0) AS beneficiaries_count,
             COALESCE(o.liste, '[]'::json) AS objectives
        FROM projects p
        LEFT JOIN project_categories c ON c.id = p.category_id
@@ -244,6 +254,10 @@ export async function trouverPourBenevole(id, client = null) {
                 ORDER BY o.position, o.id) AS liste
            FROM project_objectives o WHERE o.project_id = p.id
        ) o ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS nombre
+           FROM project_beneficiaries WHERE project_id = p.id
+       ) ben ON TRUE
       WHERE p.id = $1 AND p.archived_at IS NULL`,
     [id],
     client

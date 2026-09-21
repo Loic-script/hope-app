@@ -25,6 +25,8 @@ router.get('/apercu', taches.apercu);
 // l'espace : les taches y sont rattachees.
 router.get('/projets', projets.lister);
 router.get('/projets/:id', projets.recuperer);
+// Les photos et videos des preuves terrain du projet (onglet Impact).
+router.get('/projets/:id/preuves/:preuveId/fichiers/:fileId', projets.fichierPreuve);
 
 // --- Taches -----------------------------------------------------------
 router.get('/taches/libres', taches.libres);

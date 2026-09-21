@@ -52,6 +52,29 @@ export async function lister(filtres = {}, client = null) {
   return versListe(resultat.rows);
 }
 
+/**
+ * Les mesures d'un projet, telles que l'espace benevole les montre.
+ *
+ * Une selection a part, et non COLONNES : une mesure peut nommer le
+ * beneficiaire qu'elle concerne, et ces fiches restent dans l'espace
+ * administrateur. Le benevole sait seulement si la mesure est
+ * collective.
+ */
+export async function listerPourBenevole(projectId, client = null) {
+  const resultat = await query(
+    `SELECT i.id, i.objective_id, i.title, i.description, i.indicator, i.value, i.unit,
+            i.measured_at, o.label AS objective_label,
+            (i.beneficiary_id IS NULL) AS collectif
+       FROM impacts i
+       LEFT JOIN project_objectives o ON o.id = i.objective_id
+      WHERE i.project_id = $1
+      ORDER BY i.measured_at DESC, i.id DESC`,
+    [projectId],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
 export async function trouverParId(id, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES} FROM impacts i ${JOINTURES} WHERE i.id = $1`,

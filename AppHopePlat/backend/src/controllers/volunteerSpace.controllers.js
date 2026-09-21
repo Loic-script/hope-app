@@ -20,6 +20,15 @@ import { gerer } from './handler.js';
 export const projets = {
   lister: gerer(() => volunteerProjectsService.lister()),
   recuperer: gerer((req) => volunteerProjectsService.recupererParId(req.params.id, req.benevole.id)),
+  // Un fichier d'une preuve terrain : ce que voit aussi le donateur.
+  fichierPreuve: gerer(async (req, res) => {
+    const fichier = await volunteerProjectsService.fichierDePreuve(
+      req.params.id,
+      req.params.preuveId,
+      req.params.fileId
+    );
+    envoyerFichierLivraison(res, fichier);
+  }),
 };
 
 export const taches = {

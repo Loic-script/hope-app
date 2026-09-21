@@ -145,6 +145,48 @@ export async function ajouterFichiers(preuveId, fichiers, client = null) {
 }
 
 /** Un fichier precis, pour le servir ou l'effacer. */
+/**
+ * Les preuves d'un projet, pour l'espace benevole.
+ *
+ * Ce que voit un donateur : la preuve et ses fichiers, sans le chemin sur
+ * le disque ni l'administrateur qui l'a deposee.
+ */
+export async function listerPourBenevole(projectId, client = null) {
+  const resultat = await query(
+    `SELECT f.id, f.proof_type, f.description, f.occurred_on::text AS occurred_on,
+            f.created_at,
+            COALESCE((
+              SELECT json_agg(
+                       json_build_object(
+                         'id', x.id, 'fileName', x.file_name,
+                         'mimeType', x.mime_type, 'fileSize', x.file_size,
+                         'position', x.position
+                       ) ORDER BY x.position, x.id
+                     )
+                FROM field_proof_files x WHERE x.proof_id = f.id
+            ), '[]'::json) AS files
+       FROM field_proofs f
+      WHERE f.project_id = $1
+      ORDER BY f.occurred_on DESC, f.id DESC`,
+    [projectId],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
+/** Un fichier de preuve, s'il appartient bien a une preuve de ce projet. */
+export async function trouverFichierDuProjet(projectId, preuveId, fichierId, client = null) {
+  const resultat = await query(
+    `SELECT x.id, x.file_name, x.file_path, x.mime_type
+       FROM field_proof_files x
+       JOIN field_proofs f ON f.id = x.proof_id
+      WHERE x.id = $1 AND x.proof_id = $2 AND f.project_id = $3`,
+    [fichierId, preuveId, projectId],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
 export async function trouverFichier(preuveId, fichierId, client = null) {
   const resultat = await query(
     `SELECT id, proof_id, file_name, file_path, mime_type, file_size, position
