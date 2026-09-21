@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useCallback, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 
+import { LigneFiche, Onglets } from '../../components/admin/ui.jsx';
 import { PleineCalendrier, PleineLieu, PleineTaches } from '../../components/IconesPleines.jsx';
+import { Carrousel, Vignette } from '../../components/preuves/MediasPreuve.jsx';
 import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
@@ -9,14 +11,30 @@ import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 import { ActionDemande, EquipeTache, STATUTS_TACHE } from './composants.jsx';
 
+const ONGLETS = ['general', 'taches', 'impact'];
+
+const STATUTS_PROJET = { IN_PROGRESS: 'En cours', COMPLETED: 'Terminé' };
+const TYPES_PREUVE = { PHOTO: 'Photo', VIDEO: 'Vidéo', DOCUMENT: 'Document', TESTIMONY: 'Témoignage' };
+
 /**
  * Un projet, et tout ce qu'un benevole peut y faire.
  *
- * Le projet vient d'abord -- ce qu'il est, ou il se mene, ce qu'il vise
- * -- et ses taches en decoulent : on sait a quoi sert celle qu'on prend.
+ * La tete du projet -- sa photo, son nom, son lieu -- puis trois onglets :
+ *   - Vue generale : ce qu'il est, ce qu'il vise, pour qui, qui le mene.
+ *     Rien d'argent : ni budget, ni financement, ni dons -- ils ne
+ *     regardent pas le benevole, et le serveur ne les envoie meme pas ;
+ *   - Taches : ce qu'il y a a faire, et la place du benevole dans chacune ;
+ *   - Impact : ce que le projet a produit, comme dans la fiche du projet
+ *     de l'administration, en lecture seule.
+ *
+ * L'onglet ouvert se lit dans l'adresse (?onglet=taches) : une
+ * notification peut y mener directement.
  */
 export default function ProjetDetail() {
   const { id } = useParams();
+  const [parametres, setParametres] = useSearchParams();
+  const onglet = ONGLETS.includes(parametres.get('onglet')) ? parametres.get('onglet') : 'general';
+
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => service.recupererProjet(id),
     [id]
@@ -24,6 +42,15 @@ export default function ProjetDetail() {
 
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
+  // La preuve dont on feuillette les fichiers, et le rang du fichier montre.
+  const [carrousel, setCarrousel] = useState(null);
+
+  // Un chargeur stable : les vignettes rechargeraient leur fichier a
+  // chaque rendu s'il changeait.
+  const chargerFichier = useCallback(
+    (preuve, fichier) => service.urlDuFichierPreuve(id, preuve, fichier),
+    [id]
+  );
 
   async function agir(action) {
     setEnvoi(true);
@@ -38,17 +65,23 @@ export default function ProjetDetail() {
     }
   }
 
+  function changerOnglet(cle) {
+    setParametres(cle === 'general' ? {} : { onglet: cle }, { replace: true });
+  }
+
   if (chargement && !donnees) return <p className="bloc__vide">Chargement du projet…</p>;
   if (erreur) return <p className="alerte-benevole">{erreur}</p>;
   if (!donnees) return null;
 
   const { project: projet, tasks: taches } = donnees;
-  // Libre : personne encore dans l'equipe. Les autres suivent.
+  const impacts = donnees.impacts ?? [];
+  const synthese = donnees.impactSummary ?? [];
+  const preuves = donnees.proofs ?? [];
+  const indicateurs = donnees.indicators ?? [];
   const libres = taches.filter((t) => t.statut === 'a_faire');
-  const prises = taches.filter((t) => t.statut !== 'a_faire');
 
   return (
-    <div className="accueil-benevole">
+    <div className="accueil-benevole projet-benevole">
       <p className="fil-retour">
         <Link to="/benevole/projets">← Tous les projets</Link>
       </p>
@@ -88,95 +121,316 @@ export default function ProjetDetail() {
               {projet.location}
             </p>
           )}
-          {/* Le titre de la description annonce le texte ; sans lui, le
-              paragraphe tient seul, comme avant. */}
           {projet.descriptionTitre && (
             <p className="tete-projet__annonce">{projet.descriptionTitre}</p>
           )}
-          {projet.description && (
-            <p className="accueil-benevole__accroche">{projet.description}</p>
-          )}
-
-          {projet.objectives?.length > 0 && (
-            <ul className="tete-projet__objectifs">
-              {projet.objectives.map((objectif) => (
-                <li key={objectif.id}>{objectif.label}</li>
-              ))}
-            </ul>
-          )}
         </div>
       </section>
+
+      <Onglets
+        onglets={[
+          { cle: 'general', label: 'Vue générale' },
+          { cle: 'taches', label: 'Tâches', compteur: taches.length },
+          { cle: 'impact', label: 'Impact', compteur: impacts.length },
+        ]}
+        actif={onglet}
+        onChange={changerOnglet}
+      />
 
       {refus && <p className="alerte-benevole">{refus}</p>}
 
-      {/* ---------- Les taches ---------- */}
+      {/* ================= Vue generale ================= */}
+      {onglet === 'general' && (
+        <>
+          {projet.description && (
+            <section className="bloc">
+              <h2 className="bloc__titre">Le projet</h2>
+              <p className="projet-benevole__texte">{projet.description}</p>
+            </section>
+          )}
+
+          <section className="bloc">
+            <h2 className="bloc__titre">En bref</h2>
+            <dl className="fiche projet-benevole__fiche">
+              <LigneFiche terme="Catégorie">{projet.categoryName}</LigneFiche>
+              <LigneFiche terme="Lieu">{projet.location}</LigneFiche>
+              <LigneFiche terme="Responsable">{projet.managerName}</LigneFiche>
+              <LigneFiche terme="Début">{projet.startDate ? fmt.date(projet.startDate) : null}</LigneFiche>
+              <LigneFiche terme="Statut">{STATUTS_PROJET[projet.status] ?? projet.status}</LigneFiche>
+              <LigneFiche terme="Pour qui">{projet.beneficiaryProfile}</LigneFiche>
+              <LigneFiche terme="Bénéficiaires accompagnés">
+                {fmt.nombre(projet.beneficiariesCount)}
+                {projet.beneficiaryTarget ? ` sur ${fmt.nombre(projet.beneficiaryTarget)} visés` : ''}
+              </LigneFiche>
+              <LigneFiche terme="Tâches">
+                {taches.length > 0
+                  ? `${libres.length} à prendre sur ${taches.length}`
+                  : 'Aucune pour l’instant'}
+              </LigneFiche>
+            </dl>
+          </section>
+
+          <section className="bloc">
+            <h2 className="bloc__titre">Objectifs spécifiques</h2>
+            {projet.objectives?.length > 0 ? (
+              <ol className="objectifs">
+                {projet.objectives.map((objectif) => (
+                  <li className="objectifs__ligne" key={objectif.id}>
+                    {objectif.label}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="bloc__vide">L’équipe n’a pas encore fixé d’objectifs à ce projet.</p>
+            )}
+          </section>
+
+          {projet.outcome && (
+            <section className="bloc">
+              <h2 className="bloc__titre">Résultat du projet</h2>
+              <p className="projet-benevole__texte">{projet.outcome}</p>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* ================= Taches ================= */}
+      {onglet === 'taches' && (
+        <section className="bloc">
+          <div className="bloc__entete">
+            <h2 className="bloc__titre">Tâches à faire</h2>
+            <p className="bloc__sous-titre">
+              {libres.length > 0
+                ? `${libres.length} à prendre sur ${taches.length}`
+                : `${taches.length} au total`}
+            </p>
+          </div>
+
+          {taches.length === 0 ? (
+            <p className="bloc__vide">
+              Aucune tâche sur ce projet pour l’instant. L’équipe en publiera au fil des
+              besoins.
+            </p>
+          ) : (
+            <ul className="taches-projet">
+              {[...libres, ...taches.filter((t) => t.statut !== 'a_faire')].map((tache) => (
+                <li
+                  key={tache.id}
+                  className={`tache-projet${tache.statut !== 'a_faire' ? ' tache-projet--prise' : ''}`}
+                >
+                  <span className="carre-icone carre-icone--bleu" aria-hidden="true">
+                    <PleineTaches />
+                  </span>
+
+                  <div className="tache-projet__corps">
+                    <p className="tache-projet__titre">{tache.titre}</p>
+                    {tache.description && (
+                      <p className="tache-projet__texte">{tache.description}</p>
+                    )}
+                    <EquipeTache tache={tache} className="tache-projet__equipe" />
+                    <p className="tache-projet__faits">
+                      <span
+                        className={`pastille pastille--${
+                          { a_faire: 'orange', en_cours: 'bleu', livree: 'valide' }[tache.statut]
+                        }`}
+                      >
+                        {STATUTS_TACHE[tache.statut]}
+                      </span>
+                      {tache.echeance && (
+                        <span className="tache-projet__echeance">
+                          <PleineCalendrier />À rendre le {fmt.date(tache.echeance)}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/*
+                    Toute tache non livree se demande : libre, pour la
+                    prendre ; commencee, pour rejoindre son equipe. L'equipe
+                    HOPE valide. "Mes tâches" est l'ecran ou l'on agit
+                    ensuite sur les siennes.
+                  */}
+                  <div className="tache-projet__action">
+                    <ActionDemande
+                      tache={tache}
+                      envoi={envoi}
+                      onDemander={(t) => agir(() => service.demanderTache(t.id))}
+                      onAnnuler={(t) => agir(() => service.annulerDemandeTache(t.id))}
+                      classeBouton="bouton-hope bouton-hope--creux"
+                      classeSecondaire="lien-hope"
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {/* ================= Impact ================= */}
+      {onglet === 'impact' && (
+        <OngletImpact
+          impacts={impacts}
+          synthese={synthese}
+          preuves={preuves}
+          indicateurs={indicateurs}
+          onOuvrirPreuve={(preuve) => setCarrousel({ preuve, rang: 0 })}
+          chargerFichier={chargerFichier}
+        />
+      )}
+
+      {carrousel && (
+        <Carrousel
+          preuve={carrousel.preuve}
+          charger={chargerFichier}
+          rang={carrousel.rang}
+          onRang={(rang) => setCarrousel((actuel) => ({ ...actuel, rang }))}
+          onFermer={() => setCarrousel(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * L'impact du projet, comme dans la fiche de l'administration, mais en
+ * lecture seule : les totaux mesures, l'impact general en phrases, les
+ * mesures objectif par objectif, et les preuves terrain.
+ *
+ * Aucun nom de beneficiaire : une mesure individuelle dit seulement
+ * qu'elle porte sur une personne.
+ */
+function OngletImpact({ impacts, synthese, preuves, indicateurs, onOuvrirPreuve, chargerFichier }) {
+  const generaux = impacts.filter((impact) => !impact.objectiveId);
+  const parObjectif = impacts.filter((impact) => impact.objectiveId);
+
+  return (
+    <>
+      {synthese.length > 0 && (
+        <div className="cartes-chiffres">
+          {synthese.map((ligne) => (
+            <div className="carte-chiffre" key={`${ligne.indicator}|${ligne.unit ?? ''}`}>
+              <div>
+                <p className="carte-chiffre__libelle">
+                  {fmt.libelleIndicateur(ligne.indicator, indicateurs)}
+                </p>
+                <p className="carte-chiffre__variation">{fmt.nombre(ligne.entriesCount)} mesure(s)</p>
+              </div>
+              <p className="carte-chiffre__valeur">
+                {fmt.nombre(ligne.total)} {ligne.unit ?? ''}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       <section className="bloc">
         <div className="bloc__entete">
-          <h2 className="bloc__titre">Tâches à faire</h2>
-          <p className="bloc__sous-titre">
-            {libres.length > 0
-              ? `${libres.length} à prendre sur ${taches.length}`
-              : `${taches.length} au total`}
-          </p>
+          <h2 className="bloc__titre">Impact général du projet</h2>
+          <p className="bloc__sous-titre">Ce que le projet a produit dans son ensemble</p>
         </div>
-
-        {taches.length === 0 ? (
-          <p className="bloc__vide">
-            Aucune tâche sur ce projet pour l’instant. L’équipe en publiera au fil des
-            besoins.
-          </p>
+        {generaux.length > 0 ? (
+          <div className="impact-texte">
+            {generaux.map((impact) => (
+              <p className="impact-texte__paragraphe" key={impact.id}>
+                <strong className="impact-texte__titre">{impact.title}</strong>
+                {' : '}
+                <strong className="impact-texte__valeur">
+                  {fmt.nombre(impact.value)}
+                  {impact.unit ? ` ${impact.unit}` : ''}
+                </strong>
+                {impact.collectif === false ? ' pour un bénéficiaire' : ''}
+                <span className="impact-texte__date">, mesuré le {fmt.date(impact.measuredAt)}.</span>
+                {impact.description && ` ${impact.description}`}
+              </p>
+            ))}
+          </div>
         ) : (
-          <ul className="taches-projet">
-            {[...libres, ...prises].map((tache) => (
-              <li
-                key={tache.id}
-                className={`tache-projet${tache.statut !== 'a_faire' ? ' tache-projet--prise' : ''}`}
-              >
-                <span className="carre-icone carre-icone--bleu" aria-hidden="true">
-                  <PleineTaches />
-                </span>
+          <p className="bloc__vide">Aucun impact général n’a encore été mesuré.</p>
+        )}
+      </section>
 
-                <div className="tache-projet__corps">
-                  <p className="tache-projet__titre">{tache.titre}</p>
-                  {tache.description && (
-                    <p className="tache-projet__texte">{tache.description}</p>
-                  )}
-                  <EquipeTache tache={tache} className="tache-projet__equipe" />
-                  <p className="tache-projet__faits">
-                    <span className={`pastille pastille--${
-                      { a_faire: 'orange', en_cours: 'bleu', livree: 'valide' }[tache.statut]
-                    }`}>
-                      {STATUTS_TACHE[tache.statut]}
+      <section className="bloc">
+        <div className="bloc__entete">
+          <h2 className="bloc__titre">Mesures par objectif</h2>
+          <p className="bloc__sous-titre">Chaque mesure, et l’objectif qu’elle documente</p>
+        </div>
+        {parObjectif.length > 0 ? (
+          <div className="table-enveloppe">
+            <table className="table table--empilable">
+              <thead>
+                <tr>
+                  <th className="table__centre">Impact</th>
+                  <th className="table__centre">Objectif</th>
+                  <th className="table__centre">Valeur</th>
+                  <th className="table__centre">Mesuré le</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parObjectif.map((impact) => (
+                  <tr key={impact.id}>
+                    <td className="table__centre" data-libelle="Impact">
+                      <div className="table__principal">{impact.title}</div>
+                      {impact.description && (
+                        <div className="table__secondaire">{fmt.tronquer(impact.description, 70)}</div>
+                      )}
+                    </td>
+                    <td className="table__centre" data-libelle="Objectif">
+                      {impact.objectiveLabel}
+                    </td>
+                    <td className="table__centre" data-libelle="Valeur">
+                      <strong>
+                        {fmt.nombre(impact.value)} {impact.unit ?? ''}
+                      </strong>
+                    </td>
+                    <td className="table__centre" data-libelle="Mesuré le">
+                      {fmt.date(impact.measuredAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="bloc__vide">Aucune mesure n’est encore rattachée à un objectif.</p>
+        )}
+      </section>
+
+      <section className="bloc">
+        <div className="bloc__entete">
+          <h2 className="bloc__titre">Preuves terrain</h2>
+          <p className="bloc__sous-titre">Les photos, vidéos et témoignages du terrain</p>
+        </div>
+        {preuves.length > 0 ? (
+          <ul className="preuves">
+            {preuves.map((preuve) => (
+              <li className="preuve" key={preuve.id}>
+                <Vignette preuve={preuve} charger={chargerFichier} />
+                <div className="preuve__corps">
+                  <p className="preuve__projet">
+                    <span className="pastille pastille--bleu">
+                      {TYPES_PREUVE[preuve.proofType] ?? preuve.proofType}
                     </span>
-                    {tache.echeance && (
-                      <span className="tache-projet__echeance">
-                        <PleineCalendrier />À rendre le {fmt.date(tache.echeance)}
-                      </span>
-                    )}
                   </p>
+                  <p className="preuve__description">{preuve.description}</p>
+                  <p className="preuve__signature">{fmt.date(preuve.occurredOn)}</p>
                 </div>
-
-                {/*
-                  Toute tache non livree se demande : libre, pour la
-                  prendre ; commencee, pour rejoindre son equipe. L'equipe
-                  HOPE valide. "Mes tâches" est l'ecran ou l'on agit
-                  ensuite sur les siennes.
-                */}
-                <div className="tache-projet__action">
-                  <ActionDemande
-                    tache={tache}
-                    envoi={envoi}
-                    onDemander={(t) => agir(() => service.demanderTache(t.id))}
-                    onAnnuler={(t) => agir(() => service.annulerDemandeTache(t.id))}
-                    classeBouton="bouton-hope bouton-hope--creux"
-                    classeSecondaire="lien-hope"
-                  />
-                </div>
+                {preuve.files?.length > 0 && (
+                  <button
+                    type="button"
+                    className="bouton-hope bouton-hope--creux preuve__action"
+                    onClick={() => onOuvrirPreuve(preuve)}
+                  >
+                    Voir {preuve.files.length > 1 ? `les ${preuve.files.length} fichiers` : 'le fichier'}
+                  </button>
+                )}
               </li>
             ))}
           </ul>
+        ) : (
+          <p className="bloc__vide">Aucune preuve terrain pour ce projet.</p>
         )}
       </section>
-    </div>
+    </>
   );
 }

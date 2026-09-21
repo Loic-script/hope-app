@@ -2241,3 +2241,173 @@
     text-align: left;
   }
 }
+
+/* ============================================================
+   La page d'un projet : trois onglets
+   ============================================================ */
+
+/* L'ecart entre les blocs vient de la colonne : pas de marge en plus. */
+.projet-benevole .bloc,
+.projet-benevole .onglets,
+.projet-benevole .cartes-chiffres {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.projet-benevole .bloc__titre {
+  margin: 0 0 14px;
+}
+
+.projet-benevole .bloc__entete .bloc__titre {
+  margin: 0;
+}
+
+.projet-benevole__texte {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--admin-texte);
+  white-space: pre-line;
+}
+
+/* ============================================================
+   Telephone : les taches d'un projet
+   ============================================================ */
+
+/*
+ * Sur un telephone, trois colonnes (icone, texte, bouton) ecrasaient le
+ * texte a un mot par ligne et faisaient chevaucher le bouton. L'icone et
+ * le texte restent cote a cote ; l'action passe dessous, sur toute la
+ * largeur, a portee de pouce.
+ */
+@media (max-width: 640px) {
+  .tache-projet {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 12px;
+  }
+
+  .tache-projet__action {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+    max-width: none;
+    text-align: left;
+  }
+
+  .tache-projet__action .bouton-hope {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .tache-projet__action .etat-demande {
+    text-align: left;
+  }
+
+  .projet-benevole .bloc {
+    padding: 16px;
+  }
+
+  /* Les onglets tiennent sur la largeur de l'ecran, sans defiler. */
+  .projet-benevole .onglets__bouton {
+    flex: 1;
+    padding: 11px 6px;
+    font-size: 14px;
+  }
+
+  .projet-benevole .onglets__compteur {
+    margin-left: 5px;
+  }
+}
+
+/* ============================================================
+   Telephone : un tableau se lit en fiches
+   ============================================================ */
+
+/*
+ * Un tableau de quatre ou cinq colonnes ne tient pas sur un telephone :
+ * il defilait de cote, et la derniere colonne restait cachee. Chaque
+ * ligne devient une fiche, chaque cellule une ligne "libelle : valeur" ;
+ * le libelle vient de l'attribut data-libelle de la cellule.
+ */
+@media (max-width: 640px) {
+  .table--empilable,
+  .table--empilable tbody,
+  .table--empilable tfoot,
+  .table--empilable tr,
+  .table--empilable td {
+    display: block;
+    width: 100%;
+  }
+
+  .table--empilable thead {
+    display: none;
+  }
+
+  .table--empilable tbody tr {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--admin-bordure);
+  }
+
+  .table--empilable tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table--empilable td,
+  .table--empilable td.table__centre {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    border: 0;
+    text-align: right;
+  }
+
+  .table--empilable td::before {
+    content: attr(data-libelle);
+    flex: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--admin-texte-faible);
+    text-align: left;
+  }
+
+  /* La premiere cellule est le titre de la fiche : pleine largeur, sans libelle. */
+  .table--empilable td:first-child {
+    display: block;
+    padding-bottom: 6px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .table--empilable td:first-child::before {
+    display: none;
+  }
+
+  .table--empilable tbody tr:hover td {
+    background: none;
+  }
+
+  .table--empilable tfoot td {
+    border-top: 2px solid var(--admin-bordure-forte);
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Le pied du journal : "Total" se lit dans le libelle de sa valeur. */
+  .table--empilable tfoot td:first-child {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  /* "En bref" sur deux colonnes : la fiche tient sans faire defiler. */
+  .projet-benevole__fiche {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+  }
+}

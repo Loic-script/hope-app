@@ -29,6 +29,26 @@ export async function recupererProjet(id) {
   return data;
 }
 
+/**
+ * Un fichier d'une preuve terrain du projet (onglet Impact), en URL locale.
+ *
+ * Servi derriere le jeton, comme les fichiers de taches : une balise
+ * <img src> ne peut pas l'atteindre. L'appelant libere l'URL avec
+ * URL.revokeObjectURL.
+ *
+ * @returns {Promise<string|null>}
+ */
+export async function urlDuFichierPreuve(projetId, preuve, fichier) {
+  if (!projetId || !preuve?.id || !fichier?.id) return null;
+
+  const reponse = await fetch(
+    `${URL_API}/benevole/projets/${projetId}/preuves/${preuve.id}/fichiers/${fichier.id}`,
+    { headers: { Authorization: `Bearer ${lireStockage(CLE_JETON_BENEVOLE)}` } }
+  );
+  if (!reponse.ok) return null;
+  return URL.createObjectURL(await reponse.blob());
+}
+
 /* -------------------------------- Taches ------------------------------- */
 
 /** GET /api/benevole/taches */

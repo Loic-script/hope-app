@@ -136,7 +136,7 @@ export default function MonJournal() {
           </p>
         ) : (
           <div className="table-enveloppe">
-            <table className="table">
+            <table className="table table--empilable">
               <thead>
                 <tr>
                   <th>Tâche</th>
@@ -149,8 +149,8 @@ export default function MonJournal() {
               <tbody>
                 {lignes.map((ligne) => (
                   <tr key={ligne.id}>
-                    <td>{ligne.titre}</td>
-                    <td>
+                    <td data-libelle="Tâche">{ligne.titre}</td>
+                    <td data-libelle="Projet">
                       {ligne.projetId ? (
                         <Link className="table__lien" to={`/benevole/projets/${ligne.projetId}`}>
                           {ligne.projetNom}
@@ -159,9 +159,9 @@ export default function MonJournal() {
                         '—'
                       )}
                     </td>
-                    <td>{fmt.date(ligne.priseLe)}</td>
-                    <td>{fmt.date(ligne.livreeLe)}</td>
-                    <td>
+                    <td data-libelle="Prise le">{fmt.date(ligne.priseLe)}</td>
+                    <td data-libelle="Livrée le">{fmt.date(ligne.livreeLe)}</td>
+                    <td data-libelle="Validation">
                       {/* Une livraison n'est reconnue qu'une fois relue par
                           l'equipe : l'ecran le dit, plutot que de laisser
                           croire que tout est acquis. */}
@@ -177,7 +177,7 @@ export default function MonJournal() {
               <tfoot>
                 <tr>
                   <td colSpan={4}>Total</td>
-                  <td>
+                  <td data-libelle="Total">
                     {taches} tâche{taches > 1 ? 's' : ''}
                   </td>
                 </tr>
