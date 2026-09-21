@@ -6,7 +6,7 @@ import logoCartes from '../../assets/paiement/cartes-bancaires.webp';
 import imageEspeces from '../../assets/paiement/especes.webp';
 import logoMvola from '../../assets/paiement/mvola.webp';
 import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
-import ChoixSurPage from '../../components/ChoixSurPage.jsx';
+import ChoixSurPage, { parLettre } from '../../components/ChoixSurPage.jsx';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
   IconeChevronBas,
@@ -69,31 +69,32 @@ const NOMBRE_ETAPES = 5;
  * sans "+". Sur ordinateur, les listes natives restent.
  */
 
-/** Les pays, Madagascar en tete. */
-const GROUPES_PAYS = [
-  {
-    options: PAYS.map((pays) => ({
+/**
+ * Les pays sur la page de choix : Madagascar en suggestion, puis tous les
+ * pays -- Madagascar compris -- ranges par lettre, chacun avec son
+ * drapeau. Pour l'indicatif, chaque ligne porte aussi "+261", et se
+ * cherche par "261" ou "+261".
+ */
+function groupesDePays(avecIndicatif) {
+  const options = PAYS.map((pays) => {
+    const indicatif = indicatifDe(pays.code);
+    return {
       valeur: pays.code,
       libelle: pays.nom,
-      motsCles: [nomAnglais(pays.code)],
-    })),
-  },
-];
+      drapeau: pays.code,
+      detail: avecIndicatif ? indicatif : undefined,
+      motsCles: [nomAnglais(pays.code), ...(avecIndicatif ? [indicatif.slice(1)] : [])],
+    };
+  });
+  const alphabetique = [...options].sort((a, b) => a.libelle.localeCompare(b.libelle, 'fr'));
+  return [
+    { libelle: 'Suggestion', options: options.filter((option) => option.valeur === PAYS_PAR_DEFAUT) },
+    ...parLettre(alphabetique),
+  ];
+}
 
-/** Les indicatifs : "Madagascar ... +261", a chercher par "261" ou "+261". */
-const GROUPES_INDICATIF = [
-  {
-    options: PAYS.map((pays) => {
-      const indicatif = indicatifDe(pays.code);
-      return {
-        valeur: pays.code,
-        libelle: pays.nom,
-        detail: indicatif,
-        motsCles: [indicatif.slice(1), nomAnglais(pays.code)],
-      };
-    }),
-  },
-];
+const GROUPES_PAYS = groupesDePays(false);
+const GROUPES_INDICATIF = groupesDePays(true);
 
 const nomsDeLangueEnAnglais =
   typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
@@ -107,6 +108,16 @@ function langueEnAnglais(code) {
   } catch {
     return '';
   }
+}
+
+/**
+ * "Espagnol (español)" -> ["Espagnol", "español"] : le serveur accole a
+ * chaque langue son propre nom ; la page de choix l'ecrit dessous, en
+ * plus petit.
+ */
+function deuxNomsDeLangue(libelle) {
+  const trouve = /^(.+?) \((.+)\)$/.exec(libelle ?? '');
+  return trouve ? [trouve[1], trouve[2]] : [libelle, undefined];
 }
 
 /**
@@ -756,42 +767,63 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
 
   const telephone = useEcranTelephone();
 
-  /** Les langues ou HOPE ecrit deja, puis toutes les autres. */
+  /*
+   * Les langues ou HOPE ecrit deja, puis toutes les autres par lettre.
+   * Chacune porte son code ("ES") et, dessous, son nom dans la langue
+   * meme ("español") -- celui qui la parle la reconnait d'un coup d'oeil.
+   */
   const groupesLangues = useMemo(() => {
-    const langues = (options.langues ?? []).map((langue) => ({
-      valeur: langue.cle,
-      libelle: langue.libelle,
-      motsCles: [langue.cle, langueEnAnglais(langue.cle)],
-      courante: langue.courante,
-    }));
+    const langues = (options.langues ?? []).map((langue) => {
+      const [francais, propre] = deuxNomsDeLangue(langue.libelle);
+      return {
+        valeur: langue.cle,
+        libelle: francais,
+        sousTitre: propre,
+        pastille: langue.cle.toUpperCase(),
+        affichage: langue.libelle,
+        motsCles: [langue.cle, langueEnAnglais(langue.cle)],
+        courante: langue.courante,
+      };
+    });
+    const autres = langues
+      .filter((langue) => !langue.courante)
+      .sort((a, b) => a.libelle.localeCompare(b.libelle, 'fr'));
     return [
       { libelle: 'Les plus courantes', options: langues.filter((langue) => langue.courante) },
-      { libelle: 'Toutes les langues', options: langues.filter((langue) => !langue.courante) },
+      ...parLettre(autres),
     ];
   }, [options.langues]);
 
   /*
-   * Les fuseaux : ceux du pays, puis tous les autres. On les trouve par la
-   * ville, le pays ou le decalage : "tana", "Madagascar", "UTC+3", "+3".
+   * Les fuseaux : ceux du pays d'abord, puis tous les autres, ranges par
+   * pays et par lettre. Chaque ligne : le drapeau, le pays, la ville
+   * dessous, le decalage a droite. On les trouve par la ville, le pays ou
+   * le decalage : "tana", "Madagascar", "UTC+3", "+3".
    */
   const groupesFuseaux = useMemo(() => {
-    const option = (nom, code, avecPays) => {
+    const option = (nom, code) => {
       const ecart = decalage(nom);
       return {
         valeur: nom,
-        libelle: avecPays && code ? `${ville(nom)}, ${nomDuPays(code)}` : ville(nom),
+        libelle: (code && nomDuPays(code)) || ville(nom),
+        sousTitre: code ? ville(nom) : undefined,
+        drapeau: code || undefined,
         detail: ecart,
         affichage: libelleFuseau(nom),
-        motsCles: [nom, nomDuPays(code), nomAnglais(code), ecart.replace('UTC', 'GMT'), ecart.replace('UTC', '')],
+        motsCles: [nom, nomAnglais(code), ecart.replace('UTC', 'GMT'), ecart.replace('UTC', '')],
       };
     };
     const connus = new Set([...locaux, ...autres.map((fuseau) => fuseau.nom)]);
+    const ailleurs = autres
+      .map((fuseau) => option(fuseau.nom, fuseau.pays))
+      .sort(
+        (a, b) =>
+          a.libelle.localeCompare(b.libelle, 'fr') || (a.sousTitre ?? '').localeCompare(b.sousTitre ?? '', 'fr')
+      );
     return [
-      ...(champs.fuseau && !connus.has(champs.fuseau)
-        ? [{ options: [option(champs.fuseau, '', false)] }]
-        : []),
-      { libelle: nomDuPays(pays) || 'Votre pays', options: locaux.map((nom) => option(nom, pays, false)) },
-      { libelle: 'Autres fuseaux', options: autres.map((fuseau) => option(fuseau.nom, fuseau.pays, true)) },
+      ...(champs.fuseau && !connus.has(champs.fuseau) ? [{ options: [option(champs.fuseau, '')] }] : []),
+      { libelle: 'Votre pays', options: locaux.map((nom) => option(nom, pays)) },
+      ...parLettre(ailleurs),
     ];
   }, [locaux, autres, pays, champs.fuseau]);
 
