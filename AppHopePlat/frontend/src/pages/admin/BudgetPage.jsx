@@ -39,12 +39,14 @@ function lignesDeTotal(projets) {
       nombre: 0,
       requis: 0,
       recu: 0,
+      hope: 0,
       reste: 0,
       depense: 0,
     };
     total.nombre += 1;
     total.requis += enCentimes(projet.requiredBudget);
     total.recu += enCentimes(projet.fundedTotal);
+    total.hope += enCentimes(projet.investedHopeTotal);
     total.reste += enCentimes(projet.remainingNeed);
     total.depense += enCentimes(projet.spentTotal);
     parDevise.set(devise, total);
@@ -53,9 +55,19 @@ function lignesDeTotal(projets) {
     ...total,
     requiredBudget: total.requis / 100,
     fundedTotal: total.recu / 100,
+    investedHopeTotal: total.hope / 100,
     remainingNeed: total.reste / 100,
     spentTotal: total.depense / 100,
   }));
+}
+
+/**
+ * Une somme des totaux, devise par devise : "12 400 000 Ar", ou
+ * "12 400 000 Ar + 3 000 EUR" si les projets ne partagent pas une devise.
+ */
+function somme(totaux, champ) {
+  if (totaux.length === 0) return fmt.montant(null);
+  return totaux.map((total) => fmt.montant(total[champ], total.currency)).join(' + ');
 }
 
 /** Une part, en pourcentage entier : "76 %". */
@@ -127,7 +139,10 @@ export default function BudgetPage() {
   );
   const listeDonateurs = donateurs?.items ?? [];
   const budgets = tousLesProjets?.items ?? [];
-  const lignesBudget = budgets.length > 0 ? [...budgets, ...lignesDeTotal(budgets)] : [];
+  const totaux = lignesDeTotal(budgets);
+  const lignesBudget = budgets.length > 0 ? [...budgets, ...totaux] : [];
+  // Les parts ne se calculent que dans une seule devise.
+  const unique = totaux.length === 1 ? totaux[0] : null;
 
   return (
     <>
@@ -170,35 +185,41 @@ export default function BudgetPage() {
 
       {erreur && <Alerte>{erreur}</Alerte>}
 
-      {/* ---------- Les trois sommes demandees ---------- */}
+      {/*
+        ---------- Les quatre sommes du budget ----------
+        Ce qu'il faut, ce qui est arrive, ce qui manque encore, ce qui est
+        sorti : le total du tableau "Budget des projets", plus bas. Le
+        detail des dons -- affectes, fonds HOPE, disponible a investir --
+        se lit dans "Ou va l'argent".
+      */}
       <div className="resume-financier" style={{ marginBottom: '18px' }}>
         <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Somme des dons affectés</p>
-          <p className="resume-financier__valeur">{fmt.montant(resume?.designatedTotal)}</p>
+          <p className="resume-financier__libelle">Budget nécessaire</p>
+          <p className="resume-financier__valeur">{somme(totaux, 'requiredBudget')}</p>
           <p className="resume-financier__detail">
-            {fmt.nombre(resume?.designatedCount)} don(s) fléchés sur un projet
+            {fmt.nombre(budgets.length)} projet{budgets.length > 1 ? 's' : ''} en cours ou terminé
+            {budgets.length > 1 ? 's' : ''}
           </p>
         </div>
         <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Somme pour HOPE</p>
-          <p className="resume-financier__valeur">{fmt.montant(resume?.hopeTotal)}</p>
+          <p className="resume-financier__libelle">Sommes reçues</p>
+          <p className="resume-financier__valeur">{somme(totaux, 'fundedTotal')}</p>
           <p className="resume-financier__detail">
-            {fmt.nombre(resume?.hopeCount)} don(s) non affectés
+            {unique ? `dont ${fmt.montant(unique.investedHopeTotal, unique.currency)} du fonds HOPE` : 'Dons affectés et fonds HOPE investi'}
           </p>
         </div>
         <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Somme totale reçue</p>
-          <p className="resume-financier__valeur">{fmt.montant(resume?.grandTotal)}</p>
+          <p className="resume-financier__libelle">Reste à financer</p>
+          <p className="resume-financier__valeur">{somme(totaux, 'remainingNeed')}</p>
           <p className="resume-financier__detail">
-            {fmt.nombre(resume?.donationsCount)} dons, dont {fmt.nombre(resume?.monthlyCount)}{' '}
-            mensuels
+            {unique ? `${part(unique.fundedTotal, unique.requiredBudget)} du budget financé` : 'Budget nécessaire moins sommes reçues'}
           </p>
         </div>
         <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Disponible à investir</p>
-          <p className="resume-financier__valeur">{fmt.montant(resume?.availableTotal)}</p>
+          <p className="resume-financier__libelle">Sommes dépensées</p>
+          <p className="resume-financier__valeur">{somme(totaux, 'spentTotal')}</p>
           <p className="resume-financier__detail">
-            {fmt.pourcent(resume?.investedRate)} du fonds HOPE déjà engagé
+            {unique ? `${part(unique.spentTotal, unique.fundedTotal)} des sommes reçues` : 'Dépenses enregistrées sur les projets'}
           </p>
         </div>
       </div>
