@@ -418,6 +418,14 @@
   white-space: nowrap;
 }
 
+/* Une ligne de total, sous les autres : elle se lit comme un pied de tableau. */
+.table tbody tr.ligne--total td,
+.table tbody tr.ligne--total:hover td {
+  border-top: 2px solid var(--admin-bordure-forte);
+  background-color: var(--admin-surface-douce);
+  font-weight: 700;
+}
+
 /* "th" pose deja un alignement a gauche : il faut le viser aussi. */
 .table th.table__centre,
 .table td.table__centre {
@@ -1026,6 +1034,15 @@
 
 .budget__totaux--depasse dd {
   color: var(--hope-erreur);
+}
+
+/* Ce qui manque encore a un projet, et un budget deja atteint. */
+.budget__manque {
+  color: var(--hope-orange-lisible);
+}
+
+.budget__atteint {
+  color: var(--etat-vert);
 }
 
 .devis__pied {

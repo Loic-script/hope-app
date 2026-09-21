@@ -6,11 +6,11 @@ import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
 import { DepenseModale, DonModale, InvestirModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
+  Badge,
   Chargement,
   EntetePage,
   EtatVide,
   Panneau,
-  Progression,
   Tableau,
 } from '../../components/admin/ui.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
@@ -19,6 +19,50 @@ import * as donorService from '../../services/donor.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
+
+/** Une somme en centimes : additionner des montants sans erreur d'arrondi. */
+const enCentimes = (valeur) => Math.round(Number(valeur ?? 0) * 100);
+
+/**
+ * Le total des projets, devise par devise : une ligne par devise, placee
+ * sous les projets. Additionner des ariary et des euros ne voudrait rien
+ * dire.
+ */
+function lignesDeTotal(projets) {
+  const parDevise = new Map();
+  for (const projet of projets) {
+    const devise = projet.currency ?? 'MGA';
+    const total = parDevise.get(devise) ?? {
+      id: `total-${devise}`,
+      total: true,
+      currency: devise,
+      nombre: 0,
+      requis: 0,
+      recu: 0,
+      reste: 0,
+      depense: 0,
+    };
+    total.nombre += 1;
+    total.requis += enCentimes(projet.requiredBudget);
+    total.recu += enCentimes(projet.fundedTotal);
+    total.reste += enCentimes(projet.remainingNeed);
+    total.depense += enCentimes(projet.spentTotal);
+    parDevise.set(devise, total);
+  }
+  return [...parDevise.values()].map((total) => ({
+    ...total,
+    requiredBudget: total.requis / 100,
+    fundedTotal: total.recu / 100,
+    remainingNeed: total.reste / 100,
+    spentTotal: total.depense / 100,
+  }));
+}
+
+/** Une part, en pourcentage entier : "76 %". */
+function part(valeur, sur) {
+  const base = enCentimes(sur);
+  return base > 0 ? `${Math.round((enCentimes(valeur) * 100) / base)} %` : '—';
+}
 
 /**
  * Ecran Budget : l'etat du fonds et son emploi.
@@ -43,6 +87,13 @@ export default function BudgetPage() {
    */
   const { donnees: listeProjets, recharger: rechargerProjets } = useChargement(
     () => projectService.lister({ status: 'IN_PROGRESS', pageSize: 200 }),
+    []
+  );
+  // Le budget de chaque projet, termines compris : ce qu'il fallait,
+  // ce qui est arrive, ce qui manque, ce qui est sorti. Les projets
+  // archives n'y figurent plus.
+  const { donnees: tousLesProjets, recharger: rechargerBudgets } = useChargement(
+    () => projectService.lister({ pageSize: 200 }),
     []
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
@@ -75,6 +126,8 @@ export default function BudgetPage() {
     (projet) => projet.status === 'IN_PROGRESS'
   );
   const listeDonateurs = donateurs?.items ?? [];
+  const budgets = tousLesProjets?.items ?? [];
+  const lignesBudget = budgets.length > 0 ? [...budgets, ...lignesDeTotal(budgets)] : [];
 
   return (
     <>
@@ -159,65 +212,108 @@ export default function BudgetPage() {
         <FluxDesFonds summary={resume} />
       </Panneau>
 
-      {/* ---------- Projets a financer ---------- */}
+      {/*
+        ---------- Le budget des projets ----------
+        Les quatre sommes de chaque projet, et leur total : le budget
+        necessaire, les sommes recues (dons affectes et fonds HOPE
+        investi), ce qui reste a financer, et ce qui est deja depense.
+      */}
       <Panneau
-        titre="Projets en attente de financement"
-        sousTitre="Le besoin restant, c’est le budget nécessaire moins ce qui est déjà investi."
+        titre="Budget des projets"
+        sousTitre="Le reste à financer, c’est le budget nécessaire moins les sommes reçues."
         serre
       >
         <Tableau
-          lignes={projets}
+          chargement={!tousLesProjets}
+          lignes={lignesBudget}
+          cleLigne={(ligne) => ligne.id}
+          classeLigne={(ligne) => (ligne.total ? 'ligne--total' : '')}
           colonnes={[
             {
               cle: 'name',
               titre: 'Projet',
-              rendu: (projet) => (
-                <div>
-                  <Link className="table__lien" to={`/admin/projects/${projet.id}`}>
-                    {projet.name}
-                  </Link>
-                  <div className="table__secondaire">{projet.reference}</div>
-                </div>
-              ),
+              aligne: 'centre',
+              rendu: (ligne) =>
+                ligne.total ? (
+                  <div>
+                    <div>Total</div>
+                    <div className="table__secondaire">
+                      {ligne.nombre} projet{ligne.nombre > 1 ? 's' : ''}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Link className="table__lien" to={`/admin/projects/${ligne.id}`}>
+                      {ligne.name}
+                    </Link>
+                    <div className="table__secondaire">
+                      {ligne.reference}
+                      {ligne.status === 'COMPLETED' && (
+                        <>
+                          {' · '}
+                          <Badge valeur="COMPLETED" libelles={{ COMPLETED: 'Terminé' }} couleur="bleu" />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ),
             },
             {
               cle: 'requiredBudget',
               titre: 'Budget nécessaire',
-              aligne: 'droite',
-              rendu: (p) => fmt.montant(p.requiredBudget, p.currency),
+              aligne: 'centre',
+              rendu: (ligne) => fmt.montant(ligne.requiredBudget, ligne.currency),
             },
             {
               cle: 'fundedTotal',
-              titre: 'Déjà financé',
-              aligne: 'droite',
-              rendu: (p) => fmt.montant(p.fundedTotal, p.currency),
+              titre: 'Sommes reçues',
+              aligne: 'centre',
+              rendu: (ligne) => (
+                <div>
+                  <strong>{fmt.montant(ligne.fundedTotal, ligne.currency)}</strong>
+                  {!ligne.total && Number(ligne.investedHopeTotal) > 0 && (
+                    <div className="table__secondaire">
+                      dont {fmt.montant(ligne.investedHopeTotal, ligne.currency)} du fonds HOPE
+                    </div>
+                  )}
+                </div>
+              ),
             },
             {
               cle: 'remainingNeed',
-              titre: 'Besoin restant',
-              aligne: 'droite',
-              rendu: (p) => <strong>{fmt.montant(p.remainingNeed, p.currency)}</strong>,
+              titre: 'Reste à financer',
+              aligne: 'centre',
+              rendu: (ligne) => (
+                <div>
+                  <strong className={Number(ligne.remainingNeed) > 0 ? 'budget__manque' : 'budget__atteint'}>
+                    {fmt.montant(ligne.remainingNeed, ligne.currency)}
+                  </strong>
+                  <div className="table__secondaire">
+                    {Number(ligne.remainingNeed) > 0
+                      ? `${part(ligne.fundedTotal, ligne.requiredBudget)} financé`
+                      : 'Budget atteint'}
+                  </div>
+                </div>
+              ),
             },
             {
-              cle: 'fundingRate',
-              titre: 'Couverture',
-              rendu: (p) => <Progression valeur={p.fundingRate} />,
-            },
-            {
-              cle: 'actions',
-              titre: 'Actions',
-              aligne: 'droite',
-              rendu: (projet) => (
-                <Link className="lien-action" to={`/admin/projects/${projet.id}?onglet=financement`}>
-                  Financement
-                </Link>
+              cle: 'spentTotal',
+              titre: 'Sommes dépensées',
+              aligne: 'centre',
+              rendu: (ligne) => (
+                <div>
+                  <strong>{fmt.montant(ligne.spentTotal, ligne.currency)}</strong>
+                  <div className="table__secondaire">
+                    {part(ligne.spentTotal, ligne.fundedTotal)} des sommes reçues
+                  </div>
+                </div>
               ),
             },
           ]}
           vide={
             <EtatVide
-              titre="Aucun projet en cours"
-              texte="Créez un projet pour pouvoir y investir le fonds HOPE."
+              titre="Aucun projet"
+              texte="Créez un projet pour suivre son budget."
               action={
                 <Link className="btn btn--principal" to="/admin/projects/new">
                   <IconePlus />
@@ -299,6 +395,7 @@ export default function BudgetPage() {
           setFondOuvert(false);
           recharger();
           rechargerProjets();
+          rechargerBudgets();
           rechargerDonateurs();
         }}
       />
@@ -318,6 +415,7 @@ export default function BudgetPage() {
           setDepenseOuverte(false);
           recharger();
           rechargerProjets();
+          rechargerBudgets();
         }}
       />
 
@@ -329,6 +427,7 @@ export default function BudgetPage() {
         onEnregistre={() => {
           setModaleOuverte(false);
           recharger();
+          rechargerBudgets();
         }}
       />
     </>

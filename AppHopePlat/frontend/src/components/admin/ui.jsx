@@ -292,7 +292,18 @@ function classeAlignement(aligne) {
  *        clic ; le clavier passe par un bouton de la ligne, que la page
  *        fournit.
  */
-export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide, onLigne }) {
+export function Tableau({
+  colonnes,
+  lignes,
+  cleLigne,
+  idLigne,
+  // Une classe de plus pour certaines lignes : une ligne de total, par exemple.
+  classeLigne,
+  chargement,
+  erreur,
+  vide,
+  onLigne,
+}) {
   /*
    * Arriver sur une ligne par son ancre (#compte-xxx).
    *
@@ -341,7 +352,11 @@ export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreu
               key={cleLigne ? cleLigne(ligne) : (ligne.id ?? index)}
               id={idLigne ? idLigne(ligne) : undefined}
               className={
-                [visee && idLigne(ligne) === visee ? 'ligne--visee' : '', onLigne ? 'ligne--cliquable' : '']
+                [
+                  visee && idLigne(ligne) === visee ? 'ligne--visee' : '',
+                  onLigne ? 'ligne--cliquable' : '',
+                  classeLigne?.(ligne) ?? '',
+                ]
                   .filter(Boolean)
                   .join(' ') || undefined
               }
