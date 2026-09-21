@@ -12,7 +12,7 @@ import {
   IconeProjets,
 } from '../../components/admin/AdminIcons.jsx';
 import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
-import PublicationProjet from '../../components/admin/PublicationProjet.jsx';
+import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import {
   Alerte,
   Badge,
@@ -128,36 +128,45 @@ export default function AdminHome() {
           {/* ---------- Deux colonnes ---------- */}
           <div className="accueil__colonnes" style={{ marginTop: '18px' }}>
             <div className="accueil__pile">
-              {/* ---------- Les projets en cours, en publications ---------- */}
-              <Panneau
-                titre="Projets en cours"
-                sousTitre="Ce qui est financé, ce qui manque encore"
-                actions={
+              {/*
+                Les projets en cours, en fil de publications : chacun se
+                lit comme un message d'un reseau social -- qui, quand, ou,
+                ce qu'il fait, sa photo en grand, son financement -- avec
+                une seule action, voir le projet.
+              */}
+              <section className="fil-accueil" aria-labelledby="fil-accueil-titre">
+                <div className="fil-accueil__entete">
+                  <div>
+                    <h2 className="fil-accueil__titre" id="fil-accueil-titre">
+                      Projets en cours
+                    </h2>
+                    <p className="fil-accueil__sous-titre">Ce qui est financé, ce qui manque encore</p>
+                  </div>
                   <Link className="btn btn--neutre btn--petit" to="/admin/projects">
                     Tous les projets
                     <IconeChevronDroit />
                   </Link>
-                }
-              >
+                </div>
+
                 {donnees?.activeProjects?.length ? (
-                  <div className="publications">
-                    {donnees.activeProjects.map((projet, rang) => (
-                      <PublicationProjet key={projet.id} projet={projet} rang={rang} />
-                    ))}
-                  </div>
+                  donnees.activeProjects.map((projet, rang) => (
+                    <PublicationFil key={projet.id} projet={projet} rang={rang} />
+                  ))
                 ) : (
-                  <EtatVide
-                    titre="Aucun projet en cours"
-                    texte="Créez un projet pour commencer à suivre son financement et son impact."
-                    action={
-                      <Link className="btn btn--principal" to="/admin/projects/new">
-                        <IconePlus />
-                        Créer un projet
-                      </Link>
-                    }
-                  />
+                  <Panneau>
+                    <EtatVide
+                      titre="Aucun projet en cours"
+                      texte="Créez un projet pour commencer à suivre son financement et son impact."
+                      action={
+                        <Link className="btn btn--principal" to="/admin/projects/new">
+                          <IconePlus />
+                          Créer un projet
+                        </Link>
+                      }
+                    />
+                  </Panneau>
                 )}
-              </Panneau>
+              </section>
             </div>
             <div className="accueil__pile">
               {/*

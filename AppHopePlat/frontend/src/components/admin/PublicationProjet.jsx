@@ -21,7 +21,7 @@ import { PhotoAgrandissable } from '../VisionneuseImage.jsx';
  * part manquante en hachures, et le soleil se tient exactement a la
  * frontiere entre les deux.
  */
-function JaugeHorizon({ taux, recu, manque, devise }) {
+export function JaugeHorizon({ taux, recu, manque, devise }) {
   const [anime, setAnime] = useState(false);
   const borne = Math.max(0, Math.min(100, Number(taux) || 0));
 

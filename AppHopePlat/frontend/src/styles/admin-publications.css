@@ -400,10 +400,374 @@
 }
 
 /* ============================================================
-   5. Mouvement reduit
+   5. Le fil de l'accueil
+
+   Les projets en cours se lisent comme des publications : qui, quand,
+   ou ; ce qu'il fait ; sa photo en grand ; son financement ; une seule
+   action, voir le projet. Ni "J'aime", ni commentaire, ni partage.
+   ============================================================ */
+
+/* "fil-accueil" et non "fil" : l'espace bailleur a deja son ".fil",
+   une grille d'actualites. */
+.fil-accueil {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fil-accueil__entete {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 4px 0;
+}
+
+.fil-accueil__titre {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.fil-accueil__sous-titre {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.fil-post {
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow:
+    0 1px 2px rgba(36, 43, 62, 0.05),
+    0 10px 28px -18px rgba(36, 43, 62, 0.22);
+  animation: fil-apparition 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--rang, 0) * 70ms);
+}
+
+/* --- Qui, quand, ou --- */
+
+.fil-post__entete {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px 10px;
+}
+
+/* L'avatar de HOPE : le soleil de la charte, sur son violet. */
+.fil-post__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #7c75ba, var(--hope-violet) 72%);
+  color: var(--hope-jaune);
+  box-shadow:
+    0 0 0 2px var(--admin-surface),
+    0 0 0 3.5px var(--hope-bleu-clair);
+}
+
+.fil-post__avatar svg {
+  width: 25px;
+  height: 25px;
+}
+
+.fil-post__qui {
+  flex: 1;
+  min-width: 0;
+}
+
+.fil-post__titre {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.fil-post__titre a {
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.fil-post__titre a:hover {
+  text-decoration: underline;
+}
+
+.fil-post__point {
+  margin: 0 6px;
+  font-weight: 400;
+  color: var(--admin-texte-faible);
+}
+
+.fil-post__categorie {
+  font-weight: 600;
+  color: var(--hope-lien);
+}
+
+.fil-post__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* Un point entre deux informations, comme sous un nom de page. */
+.fil-post__meta > * + *::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--admin-texte-faible);
+}
+
+.fil-post__lieu {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fil-post__lieu svg {
+  width: 13px;
+  height: 13px;
+  margin-right: 3px;
+}
+
+.fil-post__reference {
+  flex: none;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: #f1f3f8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Ce qu'il fait --- */
+
+.fil-post__texte {
+  padding: 0 16px 12px;
+}
+
+.fil-post__accroche {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.fil-post__description {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  white-space: pre-line;
+}
+
+.fil-post__description--repliee {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fil-post__voir-plus {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+}
+
+.fil-post__voir-plus:hover {
+  color: var(--admin-texte);
+  text-decoration: underline;
+}
+
+/* --- Sa photo, en pleine largeur --- */
+
+/*
+ * La photo garde ses proportions. Les bords qu'elle laisse libres se
+ * remplissent de la meme photo, floutee : pas de bandes grises.
+ */
+.fil-post__media {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: 480px;
+  background-color: #1f1d2b;
+}
+
+.fil-post__media::before {
+  content: '';
+  position: absolute;
+  inset: -30px;
+  z-index: -1;
+  background: var(--fond) center / cover no-repeat;
+  filter: blur(24px) brightness(0.82) saturate(1.1);
+}
+
+.fil-post__media .photo-voir {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fil-post__media .photo-voir img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fil-post__media--video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Sans visuel : une invitation a en poser un, et non un cadre vide. */
+.fil-post__sans-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 16px;
+  padding: 28px 16px;
+  border: 1px dashed var(--admin-bordure-forte);
+  border-radius: 12px;
+  background-color: var(--hope-fond-panneau);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hope-violet);
+  text-decoration: none;
+}
+
+.fil-post__sans-media .hope-logo {
+  height: 28px;
+  opacity: 0.45;
+}
+
+/* --- Son financement --- */
+
+.fil-post__compteurs {
+  padding: 2px 16px 12px;
+}
+
+.fil-post__compteurs .jauge {
+  padding-top: 12px;
+}
+
+.fil-post__chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.fil-post__chiffres strong {
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+/* --- Une seule action --- */
+
+.fil-post__actions {
+  margin: 0 12px;
+  padding: 4px 0;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.fil-post__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  margin: 2px 0;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.fil-post__action svg {
+  width: 19px;
+  height: 19px;
+}
+
+.fil-post__action:hover {
+  background-color: #f0f2f7;
+  color: var(--hope-violet);
+}
+
+.fil-post__action:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+@keyframes fil-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .fil-post__entete {
+    padding: 12px 12px 8px;
+  }
+
+  .fil-post__texte,
+  .fil-post__compteurs {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .fil-post__reference {
+    display: none;
+  }
+
+  .fil-post__media {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* ============================================================
+   6. Mouvement reduit
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
+  .fil-post {
+    animation: none;
+  }
+
+  .fil-post__action {
+    transition: none;
+  }
+
   .publication,
   .jauge__plein,
   .jauge__soleil {
