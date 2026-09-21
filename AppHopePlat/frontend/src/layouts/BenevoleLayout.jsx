@@ -31,7 +31,7 @@ import CoqueEspace from './CoqueEspace.jsx';
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/benevole', label: 'Vue d’ensemble', Icone: PleineAccueil, exact: true }],
+    entrees: [{ to: '/benevole', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Mon engagement',

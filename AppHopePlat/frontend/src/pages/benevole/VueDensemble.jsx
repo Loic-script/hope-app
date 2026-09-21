@@ -15,6 +15,7 @@ import {
  * trait : ils accompagnent du texte gris, et ne doivent pas le dominer.
  */
 import { PleineJournal, PleineProjets, PleineTaches } from '../../components/IconesPleines.jsx';
+import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
@@ -32,7 +33,27 @@ function pluriel(nombre, singulier, plurielForme = `${singulier}s`) {
 }
 
 /**
- * Vue d'ensemble de l'espace benevole.
+ * Ce qu'un projet propose a un benevole, a la place du financement :
+ * les taches qui attendent quelqu'un, et combien il en compte en tout.
+ */
+function TachesDuProjet({ projet }) {
+  const libres = Number(projet.tachesLibres) || 0;
+  const total = Number(projet.tachesTotal) || 0;
+  return (
+    <p className="fil-post__chiffres fil-post__taches">
+      <span className={libres > 0 ? 'fil-post__taches-libres' : undefined}>
+        <PleineTaches />
+        <strong>{fmt.nombre(libres)}</strong> tâche{libres > 1 ? 's' : ''} à prendre
+      </span>
+      <span>
+        <strong>{fmt.nombre(total)}</strong> au total
+      </span>
+    </p>
+  );
+}
+
+/**
+ * Accueil de l'espace benevole.
  *
  * La page ne liste pas : elle met en avant. Ce qu'un benevole vient
  * verifier, c'est la tache qu'il doit rendre en premier, et celle qu'il
@@ -49,6 +70,9 @@ export default function VueDensemble() {
   const { donnees: taches } = useChargement(() => service.mesTaches(), []);
   const { donnees: libres } = useChargement(() => service.tachesLibres(), []);
   const { donnees: journal } = useChargement(() => service.journal(), []);
+  // Les projets, en fil de publications -- comme l'accueil de l'equipe,
+  // sans l'argent : un benevole y lit ce qu'il y a a faire.
+  const { donnees: projets } = useChargement(() => service.listerProjets(), []);
 
   const enCours = (taches?.items ?? []).filter((t) => t.statut === 'en_cours');
   const prioritaire = [...enCours].sort(parEcheance)[0];
@@ -252,6 +276,34 @@ export default function VueDensemble() {
           )}
         </section>
       </div>
+
+      {/* ---------- Les projets, en publications ---------- */}
+      {(projets ?? []).length > 0 && (
+        <section className="fil-accueil fil-accueil--benevole" aria-labelledby="fil-benevole-titre">
+          <div className="fil-accueil__entete">
+            <div>
+              <h2 className="fil-accueil__titre" id="fil-benevole-titre">
+                Les projets
+              </h2>
+              <p className="fil-accueil__sous-titre">Ce que HOPE mène, et ce qu’il y a à y faire</p>
+            </div>
+            <Link className="bouton-hope bouton-hope--creux fil-accueil__tous" to="/benevole/projets">
+              Tous les projets
+              <IconeChevronDroit />
+            </Link>
+          </div>
+          {projets.map((projet, rang) => (
+            <PublicationFil
+              key={projet.id}
+              projet={projet}
+              rang={Math.min(rang, 5)}
+              lien={`/benevole/projets/${projet.id}`}
+              lienAjoutVisuel={null}
+              compteurs={<TachesDuProjet projet={projet} />}
+            />
+          ))}
+        </section>
+      )}
 
       {/* ---------- Invitation, et journal ---------- */}
       <div className="accueil-benevole__paire accueil-benevole__paire--basse">

@@ -39,16 +39,21 @@ function depuisCourt(valeur) {
  * la meme photo, floutee, plutot que de bandes grises. Un clic l'agrandit.
  * Une video se regarde sur place.
  */
-function Media({ projet }) {
+function Media({ projet, lienAjoutVisuel }) {
   const adresse = urlMedia(projet.mediaUrl);
 
   if (!adresse) {
-    // Sans visuel, on invite a en poser un plutot que de laisser un vide.
-    return (
-      <Link className="fil-post__sans-media" to={`/admin/projects/${projet.id}/edit`}>
+    // Sans visuel : l'equipe est invitee a en poser un ; ailleurs, le
+    // logo tient la place, sans promettre un geste impossible.
+    return lienAjoutVisuel ? (
+      <Link className="fil-post__sans-media" to={lienAjoutVisuel}>
         <HopeLogo compact />
         <span>Ajouter une photo ou une vidéo</span>
       </Link>
+    ) : (
+      <div className="fil-post__sans-media" aria-hidden="true">
+        <HopeLogo compact />
+      </div>
     );
   }
 
@@ -74,12 +79,24 @@ function Media({ projet }) {
  * qui, quand, ou ; ce qu'il fait ; sa photo en grand ; ou en est son
  * financement ; et une seule action, voir le projet.
  *
- * Pas de "J'aime", ni de commentaire, ni de partage : l'accueil de
- * l'equipe se lit comme un fil, mais on n'y reagit pas -- on y va voir.
+ * Pas de "J'aime", ni de commentaire, ni de partage : l'accueil se lit
+ * comme un fil, mais on n'y reagit pas -- on y va voir.
  *
- * @param {{ projet: object, rang?: number }} proprietes
+ * Ecrite pour l'accueil de l'administration, elle sert aussi l'espace
+ * benevole : "lien" mene a la fiche du projet dans l'espace qui l'affiche,
+ * et "compteurs" remplace le financement -- un benevole n'a pas a voir
+ * l'argent d'un projet, il y lit les taches a prendre.
+ *
+ * @param {{ projet: object, rang?: number, lien?: string,
+ *           compteurs?: React.ReactNode, lienAjoutVisuel?: string|null }} proprietes
  */
-export default function PublicationFil({ projet, rang = 0 }) {
+export default function PublicationFil({
+  projet,
+  rang = 0,
+  lien = `/admin/projects/${projet.id}`,
+  compteurs,
+  lienAjoutVisuel = `/admin/projects/${projet.id}/edit`,
+}) {
   const idTitre = useId();
   const [deplie, setDeplie] = useState(false);
 
@@ -101,7 +118,7 @@ export default function PublicationFil({ projet, rang = 0 }) {
         </span>
         <div className="fil-post__qui">
           <p className="fil-post__titre">
-            <Link id={idTitre} to={`/admin/projects/${projet.id}`}>
+            <Link id={idTitre} to={lien}>
               {projet.name}
             </Link>
             {projet.categoryName && (
@@ -154,38 +171,42 @@ export default function PublicationFil({ projet, rang = 0 }) {
       )}
 
       {/* ---------- Sa photo ---------- */}
-      <Media projet={projet} />
+      <Media projet={projet} lienAjoutVisuel={lienAjoutVisuel} />
 
       {/* ---------- Ou en est son financement ---------- */}
-      <div className="fil-post__compteurs">
-        <JaugeHorizon
-          taux={projet.fundingRate}
-          recu={projet.fundedTotal}
-          manque={projet.remainingNeed}
-          devise={devise}
-        />
-        <p className="fil-post__chiffres">
-          <span>
-            Budget <strong>{fmt.montant(projet.requiredBudget, devise)}</strong>
-          </span>
-          <span>
-            <strong>{fmt.nombre(atteints)}</strong>{' '}
-            {cible ? `bénéficiaire${atteints > 1 ? 's' : ''} sur ${fmt.nombre(cible)}` : `bénéficiaire${atteints > 1 ? 's' : ''}`}
-          </span>
-          <span>
-            <strong>{fmt.nombre(donateurs)}</strong> donateur{donateurs > 1 ? 's' : ''}
-          </span>
-          <span>
-            <strong>{fmt.montant(projet.spentTotal, devise)}</strong> dépensés
-          </span>
-        </p>
-      </div>
+      {compteurs !== undefined ? (
+        <div className="fil-post__compteurs">{compteurs}</div>
+      ) : (
+        <div className="fil-post__compteurs">
+          <JaugeHorizon
+            taux={projet.fundingRate}
+            recu={projet.fundedTotal}
+            manque={projet.remainingNeed}
+            devise={devise}
+          />
+          <p className="fil-post__chiffres">
+            <span>
+              Budget <strong>{fmt.montant(projet.requiredBudget, devise)}</strong>
+            </span>
+            <span>
+              <strong>{fmt.nombre(atteints)}</strong>{' '}
+              {cible ? `bénéficiaire${atteints > 1 ? 's' : ''} sur ${fmt.nombre(cible)}` : `bénéficiaire${atteints > 1 ? 's' : ''}`}
+            </span>
+            <span>
+              <strong>{fmt.nombre(donateurs)}</strong> donateur{donateurs > 1 ? 's' : ''}
+            </span>
+            <span>
+              <strong>{fmt.montant(projet.spentTotal, devise)}</strong> dépensés
+            </span>
+          </p>
+        </div>
+      )}
 
       {/* ---------- Une seule action ---------- */}
       <div className="fil-post__actions">
         <Link
           className="fil-post__action"
-          to={`/admin/projects/${projet.id}`}
+          to={lien}
           aria-label={`Voir le projet ${projet.name}`}
         >
           <IconeOeil />

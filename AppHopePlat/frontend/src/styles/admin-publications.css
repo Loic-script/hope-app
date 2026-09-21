@@ -755,6 +755,62 @@
   }
 }
 
+/* --- Dans l'espace benevole --- */
+
+/* Un fil se lit sur une colonne mesuree, comme un reseau social : pleine
+   largeur, une photo de 1 100 px de large n'aurait plus rien d'un fil. */
+.fil-accueil--benevole {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Le titre prend la place qu'il lui faut ; faute de place, le bouton
+   passe dessous au lieu de l'ecraser. */
+.fil-accueil__entete {
+  flex-wrap: wrap;
+}
+
+.fil-accueil__entete > div {
+  flex: 1 1 220px;
+}
+
+/* "Tous les projets" : un bouton discret, qui ne passe pas a la ligne. */
+.fil-accueil__tous {
+  flex: none;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.fil-accueil__tous svg {
+  width: 15px;
+  height: 15px;
+}
+
+.fil-post__taches {
+  margin-top: 2px;
+}
+
+.fil-post__taches span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fil-post__taches svg {
+  width: 15px;
+  height: 15px;
+  color: var(--admin-texte-faible);
+}
+
+/* Des taches attendent quelqu'un : la ligne le dit en couleur. */
+.fil-post__taches-libres,
+.fil-post__taches-libres strong,
+.fil-post__taches-libres svg {
+  color: var(--hope-violet);
+}
+
 /* ============================================================
    6. Mouvement reduit
    ============================================================ */
