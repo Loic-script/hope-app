@@ -761,6 +761,20 @@ CREATE INDEX IF NOT EXISTS tache_benevole_idx ON tache (benevole_id, statut);
 CREATE INDEX IF NOT EXISTS tache_projet_idx   ON tache (projet_id, statut);
 
 /*
+ * Une preuve terrain deposee par un benevole, depuis l'onglet Impact d'un
+ * projet. Une preuve a un seul auteur : admin_id pour l'equipe HOPE,
+ * benevole_id pour un benevole. Le compte supprime, le lien tombe ; la
+ * preuve reste.
+ *
+ * Place ici et non avec field_proofs : la table benevole n'existe qu'a
+ * partir de cette section.
+ */
+ALTER TABLE field_proofs
+  ADD COLUMN IF NOT EXISTS benevole_id UUID REFERENCES benevole(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS field_proofs_benevole_idx ON field_proofs (benevole_id);
+
+/*
  * La preuve d'une tache livree : les photos et videos que le benevole
  * joint en la declarant faite.
  *

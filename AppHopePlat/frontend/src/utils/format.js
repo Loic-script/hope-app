@@ -139,6 +139,15 @@ export function aujourdhui() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * L'auteur d'une preuve terrain : un membre de l'equipe, ou un benevole
+ * qui l'a deposee depuis son espace.
+ */
+export function auteurPreuve(preuve) {
+  if (preuve?.authorVolunteer) return `${preuve.authorVolunteer} (bénévole)`;
+  return preuve?.authorLog ?? 'compte supprimé';
+}
+
 /** Tronque une chaine trop longue pour une cellule de tableau. */
 export function tronquer(texte, longueur = 70) {
   if (!texte) return '';

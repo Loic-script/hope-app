@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
+import { ModaleConfirmation } from '../../components/admin/forms.jsx';
 import { LigneFiche, Onglets } from '../../components/admin/ui.jsx';
 import { PleineCalendrier, PleineLieu, PleineTaches } from '../../components/IconesPleines.jsx';
 import { Carrousel, Vignette } from '../../components/preuves/MediasPreuve.jsx';
@@ -9,6 +10,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
+import AjoutPreuveModale from './AjoutPreuveModale.jsx';
 import { ActionDemande, EquipeTache, STATUTS_TACHE } from './composants.jsx';
 
 const ONGLETS = ['general', 'taches', 'impact'];
@@ -25,7 +27,8 @@ const TYPES_PREUVE = { PHOTO: 'Photo', VIDEO: 'Vidéo', DOCUMENT: 'Document', TE
  *     regardent pas le benevole, et le serveur ne les envoie meme pas ;
  *   - Taches : ce qu'il y a a faire, et la place du benevole dans chacune ;
  *   - Impact : ce que le projet a produit, comme dans la fiche du projet
- *     de l'administration, en lecture seule.
+ *     de l'administration. Le benevole y lit les mesures, et y ajoute ses
+ *     preuves terrain -- il est souvent celui qui a la photo.
  *
  * L'onglet ouvert se lit dans l'adresse (?onglet=taches) : une
  * notification peut y mener directement.
@@ -44,6 +47,11 @@ export default function ProjetDetail() {
   const [refus, setRefus] = useState('');
   // La preuve dont on feuillette les fichiers, et le rang du fichier montre.
   const [carrousel, setCarrousel] = useState(null);
+  // Ajouter une preuve, et celle qu'on s'apprete a retirer.
+  const [ajoutPreuve, setAjoutPreuve] = useState(false);
+  const [aRetirer, setARetirer] = useState(null);
+  const [retrait, setRetrait] = useState({ envoi: false, erreur: '' });
+  const [annonce, setAnnonce] = useState('');
 
   // Un chargeur stable : les vignettes rechargeraient leur fichier a
   // chaque rendu s'il changeait.
@@ -65,7 +73,21 @@ export default function ProjetDetail() {
     }
   }
 
+  async function retirerPreuve() {
+    setRetrait({ envoi: true, erreur: '' });
+    try {
+      await service.supprimerPreuve(id, aRetirer.id);
+      setARetirer(null);
+      setRetrait({ envoi: false, erreur: '' });
+      setAnnonce('Votre preuve a été retirée.');
+      recharger();
+    } catch (echec) {
+      setRetrait({ envoi: false, erreur: messageErreur(echec, 'La preuve n’a pas pu être retirée.') });
+    }
+  }
+
   function changerOnglet(cle) {
+    setAnnonce('');
     setParametres(cle === 'general' ? {} : { onglet: cle }, { replace: true });
   }
 
@@ -138,6 +160,10 @@ export default function ProjetDetail() {
       />
 
       {refus && <p className="alerte-benevole">{refus}</p>}
+      {/* Annonce aux lecteurs d'ecran, et confirmation visible. */}
+      <p className="confirmation-benevole" role="status" hidden={!annonce}>
+        {annonce}
+      </p>
 
       {/* ================= Vue generale ================= */}
       {onglet === 'general' && (
@@ -275,9 +301,41 @@ export default function ProjetDetail() {
           preuves={preuves}
           indicateurs={indicateurs}
           onOuvrirPreuve={(preuve) => setCarrousel({ preuve, rang: 0 })}
+          onAjouter={() => {
+            setAnnonce('');
+            setAjoutPreuve(true);
+          }}
+          onRetirer={(preuve) => {
+            setRetrait({ envoi: false, erreur: '' });
+            setARetirer(preuve);
+          }}
           chargerFichier={chargerFichier}
         />
       )}
+
+      {ajoutPreuve && (
+        <AjoutPreuveModale
+          projet={projet}
+          onFermer={() => setAjoutPreuve(false)}
+          onAjoutee={() => {
+            setAjoutPreuve(false);
+            setAnnonce('Merci ! Votre preuve a été ajoutée à l’impact du projet.');
+            recharger();
+          }}
+        />
+      )}
+
+      <ModaleConfirmation
+        ouverte={aRetirer !== null}
+        titre="Retirer cette preuve ?"
+        message="Elle disparaîtra de l’impact du projet, avec ses fichiers."
+        onFermer={() => setARetirer(null)}
+        onConfirmer={retirerPreuve}
+        envoi={retrait.envoi}
+        erreur={retrait.erreur}
+        libelleConfirmer="Retirer"
+        danger
+      />
 
       {carrousel && (
         <Carrousel
@@ -293,14 +351,24 @@ export default function ProjetDetail() {
 }
 
 /**
- * L'impact du projet, comme dans la fiche de l'administration, mais en
- * lecture seule : les totaux mesures, l'impact general en phrases, les
- * mesures objectif par objectif, et les preuves terrain.
+ * L'impact du projet, comme dans la fiche de l'administration : les totaux
+ * mesures, l'impact general en phrases, les mesures objectif par objectif
+ * -- en lecture seule --, et les preuves terrain, auxquelles le benevole
+ * ajoute les siennes et dont il peut retirer celles qu'il a deposees.
  *
  * Aucun nom de beneficiaire : une mesure individuelle dit seulement
  * qu'elle porte sur une personne.
  */
-function OngletImpact({ impacts, synthese, preuves, indicateurs, onOuvrirPreuve, chargerFichier }) {
+function OngletImpact({
+  impacts,
+  synthese,
+  preuves,
+  indicateurs,
+  onOuvrirPreuve,
+  onAjouter,
+  onRetirer,
+  chargerFichier,
+}) {
   const generaux = impacts.filter((impact) => !impact.objectiveId);
   const parObjectif = impacts.filter((impact) => impact.objectiveId);
 
@@ -397,9 +465,15 @@ function OngletImpact({ impacts, synthese, preuves, indicateurs, onOuvrirPreuve,
       </section>
 
       <section className="bloc">
-        <div className="bloc__entete">
-          <h2 className="bloc__titre">Preuves terrain</h2>
-          <p className="bloc__sous-titre">Les photos, vidéos et témoignages du terrain</p>
+        <div className="bloc__entete bloc__entete--action">
+          <div>
+            <h2 className="bloc__titre">Preuves terrain</h2>
+            <p className="bloc__sous-titre">Les photos, vidéos et témoignages du terrain</p>
+          </div>
+          {/* Le benevole est sur le terrain : c'est souvent lui qui a la photo. */}
+          <button type="button" className="bouton-hope" onClick={onAjouter}>
+            + Ajouter une preuve
+          </button>
         </div>
         {preuves.length > 0 ? (
           <ul className="preuves">
@@ -413,22 +487,43 @@ function OngletImpact({ impacts, synthese, preuves, indicateurs, onOuvrirPreuve,
                     </span>
                   </p>
                   <p className="preuve__description">{preuve.description}</p>
-                  <p className="preuve__signature">{fmt.date(preuve.occurredOn)}</p>
+                  <p className="preuve__signature">
+                    {fmt.date(preuve.occurredOn)} ·{' '}
+                    {preuve.mienne
+                      ? 'ajoutée par vous'
+                      : preuve.auteurBenevole
+                        ? `ajoutée par ${preuve.auteurBenevole}`
+                        : 'ajoutée par l’équipe HOPE'}
+                  </p>
                 </div>
-                {preuve.files?.length > 0 && (
-                  <button
-                    type="button"
-                    className="bouton-hope bouton-hope--creux preuve__action"
-                    onClick={() => onOuvrirPreuve(preuve)}
-                  >
-                    Voir {preuve.files.length > 1 ? `les ${preuve.files.length} fichiers` : 'le fichier'}
-                  </button>
-                )}
+                <div className="preuve__actions">
+                  {preuve.files?.length > 0 && (
+                    <button
+                      type="button"
+                      className="bouton-hope bouton-hope--creux"
+                      onClick={() => onOuvrirPreuve(preuve)}
+                    >
+                      Voir {preuve.files.length > 1 ? `les ${preuve.files.length} fichiers` : 'le fichier'}
+                    </button>
+                  )}
+                  {/* On ne retire que ce qu'on a depose soi-meme. */}
+                  {preuve.mienne && (
+                    <button
+                      type="button"
+                      className="lien-action lien-action--danger"
+                      onClick={() => onRetirer(preuve)}
+                    >
+                      Retirer
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="bloc__vide">Aucune preuve terrain pour ce projet.</p>
+          <p className="bloc__vide">
+            Aucune preuve terrain pour ce projet. Vous étiez sur place ? Ajoutez la première.
+          </p>
         )}
       </section>
     </>

@@ -15,6 +15,7 @@
 import * as fieldProofRepository from '../repositories/fieldProof.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
+import * as volunteerProfileRepository from '../repositories/volunteerProfile.repository.js';
 
 import { plafondPreuve } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
@@ -91,6 +92,55 @@ export async function recupererParId(id) {
  */
 export async function creer(corps = {}, admin = null, fichiers = []) {
   const projectId = identifiantRequis(corps.projectId, 'projectId');
+  const { type, description, dateAction, liste } = verifierContenu(corps, fichiers);
+
+  const projet = await projectRepository.trouverParId(projectId);
+  if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
+
+  if (projet.status === 'ARCHIVED') {
+    throw new ErreurRegleMetier(
+      'Ce projet est archivé : il n’accepte plus de nouvelle preuve.',
+      'PROJET_ARCHIVE'
+    );
+  }
+
+  const preuve = await fieldProofRepository.creer({
+    projectId,
+    adminId: admin?.id ?? null,
+    proofType: type,
+    description,
+    occurredOn: dateAction,
+    files: versFichiers(liste),
+  });
+
+  await activityLogRepository.deposer(admin, {
+    action: 'CREATE',
+    entityType: 'FIELD_PROOF',
+    entityId: preuve.id,
+    label: `a ajouté une preuve pour « ${projet.name} »`,
+  });
+
+  return preuve;
+}
+
+/** Les fichiers televerses, tels que la base les range. */
+function versFichiers(liste) {
+  return liste.map((fichier) => ({
+    fileName: fichier.originalname,
+    filePath: fichier.filename,
+    mimeType: fichier.mimetype,
+    fileSize: fichier.size,
+  }));
+}
+
+/**
+ * Verifie le contenu d'une preuve : sa nature, sa description, sa date et
+ * ses fichiers. Les memes regles pour l'equipe et pour les benevoles.
+ *
+ * @returns {{ type: string, description: string, dateAction: string|null,
+ *             liste: Express.Multer.File[] }}
+ */
+function verifierContenu(corps = {}, fichiers = []) {
   const type = valeurParmi(corps.proofType, 'proofType', TYPES, { defaut: 'PHOTO' });
   const description = texteRequis(corps.description, 'description', { max: 2000 });
   const dateAction = dateFacultative(corps.occurredOn, 'occurredOn');
@@ -144,38 +194,84 @@ export async function creer(corps = {}, admin = null, fichiers = []) {
     });
   }
 
-  const projet = await projectRepository.trouverParId(projectId);
-  if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
+  return { type, description, dateAction, liste };
+}
 
-  if (projet.status === 'ARCHIVED') {
-    throw new ErreurRegleMetier(
-      'Ce projet est archivé : il n’accepte plus de nouvelle preuve.',
-      'PROJET_ARCHIVE'
-    );
-  }
+/* ================================================================
+   Depuis l'espace benevole
+   ================================================================ */
+
+/**
+ * Un benevole ajoute une preuve a un projet, depuis son onglet Impact.
+ *
+ * Les memes regles que pour l'equipe : un projet visible (en cours ou
+ * termine, jamais archive), une description, des fichiers conformes a la
+ * nature annoncee. La preuve porte son auteur, et l'equipe en est avertie
+ * par le journal d'activite.
+ *
+ * Seuls l'equipe et les benevoles voient les preuves terrain : rien de
+ * ce qu'un benevole depose n'est publie aupres des donateurs ou des
+ * bailleurs.
+ *
+ * @param {number|string} projetId
+ * @param {object} corps champs du formulaire
+ * @param {{ id: string }} benevole le compte connecte (req.benevole)
+ * @param {Express.Multer.File[]} fichiers
+ * @returns {Promise<{ id: number }>} sans chemin de fichier : le benevole
+ *          n'a pas a connaitre le disque
+ */
+export async function creerParBenevole(projetId, corps = {}, benevole = null, fichiers = []) {
+  const projet = await projectRepository.trouverPourBenevole(identifiantRequis(projetId, 'id'));
+  if (!projet) throw new ErreurIntrouvable('Le projet', projetId);
+
+  const { type, description, dateAction, liste } = verifierContenu(corps, fichiers);
+  const fiche = await volunteerProfileRepository.garantir(benevole.id);
 
   const preuve = await fieldProofRepository.creer({
-    projectId,
-    adminId: admin?.id ?? null,
+    projectId: projet.id,
+    benevoleId: fiche.id,
     proofType: type,
     description,
     occurredOn: dateAction,
-    files: liste.map((fichier) => ({
-      fileName: fichier.originalname,
-      filePath: fichier.filename,
-      mimeType: fichier.mimetype,
-      fileSize: fichier.size,
-    })),
+    files: versFichiers(liste),
   });
 
-  await activityLogRepository.deposer(admin, {
-    action: 'CREATE',
-    entityType: 'FIELD_PROOF',
-    entityId: preuve.id,
-    label: `a ajouté une preuve pour « ${projet.name} »`,
-  });
+  const nom = `${fiche.prenom ?? ''} ${fiche.nom ?? ''}`.trim() || 'Un bénévole';
+  await activityLogRepository.deposer(
+    { id: null, fullName: `${nom} (bénévole)` },
+    {
+      action: 'CREATE',
+      entityType: 'FIELD_PROOF',
+      entityId: preuve.id,
+      label: `a ajouté une preuve pour « ${projet.name} »`,
+    }
+  );
 
-  return preuve;
+  return { id: preuve.id };
+}
+
+/**
+ * Un benevole retire une preuve qu'il a lui-meme deposee.
+ *
+ * Celle d'un autre, ou de l'equipe, lui reste introuvable : il n'a pas a
+ * savoir qu'elle existe pour la supprimer. Rend les fichiers a effacer
+ * du disque ; le controleur s'en charge.
+ */
+export async function supprimerParBenevole(projetId, preuveId, benevole = null) {
+  const preuve = await fieldProofRepository.trouverParId(identifiantRequis(preuveId, 'preuveId'));
+  const fiche = await volunteerProfileRepository.garantir(benevole.id);
+
+  if (
+    !preuve ||
+    preuve.projectId !== identifiantRequis(projetId, 'id') ||
+    !preuve.benevoleId ||
+    preuve.benevoleId !== fiche.id
+  ) {
+    throw new ErreurIntrouvable('La preuve', preuveId);
+  }
+
+  const chemins = await fieldProofRepository.supprimer(preuve.id);
+  return { id: preuve.id, deleted: true, filePaths: chemins };
 }
 
 /** Un fichier precis d'une preuve, pour le servir. */

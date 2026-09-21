@@ -2411,3 +2411,162 @@
     gap: 14px 16px;
   }
 }
+
+/* ============================================================
+   Ajouter une preuve terrain (onglet Impact d'un projet)
+   ============================================================ */
+
+/* Le titre a gauche, le bouton en face ; sous le titre sur telephone. */
+.bloc__entete--action {
+  align-items: center;
+}
+
+.preuve__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.confirmation-benevole {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background-color: var(--etat-vert-fond);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--etat-vert);
+}
+
+.ajout-preuve {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ajout-preuve .livraison__consigne {
+  margin: 0;
+}
+
+.ajout-preuve__libelle {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+/* Les quatre natures, en pastilles a choisir. */
+.ajout-preuve__natures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ajout-preuve__natures legend {
+  width: 100%;
+  padding: 0;
+}
+
+.ajout-preuve__nature {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ajout-preuve__nature input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ajout-preuve__nature:hover {
+  border-color: var(--hope-bleu);
+}
+
+.ajout-preuve__nature--choisie {
+  border-color: var(--hope-violet);
+  background-color: #ece9f8;
+  color: var(--hope-violet);
+}
+
+.ajout-preuve__nature:has(input:focus-visible) {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.ajout-preuve__champ textarea,
+.ajout-preuve__champ input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  background-color: var(--admin-surface);
+  font: inherit;
+  font-size: 15px;
+  color: var(--admin-texte);
+}
+
+.ajout-preuve__champ textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.ajout-preuve__champ textarea:focus,
+.ajout-preuve__champ input:focus {
+  border-color: var(--hope-bleu-lisible);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.3);
+}
+
+.ajout-preuve__champ--date input {
+  max-width: 220px;
+}
+
+.ajout-preuve__pdf {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--etat-rouge);
+  background-color: var(--etat-rouge-fond);
+}
+
+@media (max-width: 640px) {
+  .bloc__entete--action .bouton-hope {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .preuve__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* 16 px : en dessous, iOS agrandit la page au focus. */
+  .ajout-preuve__champ textarea,
+  .ajout-preuve__champ input {
+    font-size: 16px;
+  }
+
+  .ajout-preuve__champ--date input {
+    max-width: none;
+  }
+}

@@ -8,6 +8,7 @@
 import path from 'node:path';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
+import * as fieldProofService from '../services/fieldProof.service.js';
 import * as taskService from '../services/task.service.js';
 import * as volunteerProjectsService from '../services/volunteerProjects.service.js';
 import * as volunteerProfileService from '../services/volunteerProfile.service.js';
@@ -28,6 +29,43 @@ export const projets = {
       req.params.fileId
     );
     envoyerFichierLivraison(res, fichier);
+  }),
+
+  /*
+   * Ajouter une preuve terrain au projet. multer a deja ecrit les fichiers
+   * quand le service se prononce : un refus les laisserait sur le disque
+   * sans rien pour les referencer.
+   */
+  ajouterPreuve: gerer(
+    async (req) => {
+      try {
+        return await fieldProofService.creerParBenevole(
+          req.params.id,
+          req.body,
+          req.benevole,
+          req.files ?? []
+        );
+      } catch (erreur) {
+        for (const fichier of req.files ?? []) {
+          await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(fichier.filename)));
+        }
+        throw erreur;
+      }
+    },
+    { statut: 201 }
+  ),
+
+  /** Retirer une preuve qu'il a deposee : les lignes, puis les fichiers. */
+  supprimerPreuve: gerer(async (req) => {
+    const resultat = await fieldProofService.supprimerParBenevole(
+      req.params.id,
+      req.params.preuveId,
+      req.benevole
+    );
+    for (const chemin of resultat.filePaths) {
+      await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(chemin)));
+    }
+    return { id: resultat.id, deleted: true };
   }),
 };
 

@@ -69,7 +69,7 @@ export default function ProofDetailPage() {
       <EntetePage
         fil={[{ label: 'Preuves terrain', to: '/admin/proofs' }]}
         titre={preuve.projectName}
-        accroche={`${fmt.date(preuve.occurredOn)} · ajouté par ${preuve.authorLog ?? 'compte supprimé'}`}
+        accroche={`${fmt.date(preuve.occurredOn)} · ajouté par ${fmt.auteurPreuve(preuve)}`}
         actions={
           <>
             <Link
@@ -122,7 +122,19 @@ export default function ProofDetailPage() {
             </div>
             <div>
               <dt>Auteur</dt>
-              <dd>{preuve.authorLog ?? 'compte supprimé'}</dd>
+              <dd>
+                {/* Un benevole : son profil est a un clic. */}
+                {preuve.authorVolunteerAccount ? (
+                  <Link
+                    className="table__lien"
+                    to={`/admin/utilisateurs/compte/${preuve.authorVolunteerAccount}?depuis=benevoles`}
+                  >
+                    {fmt.auteurPreuve(preuve)}
+                  </Link>
+                ) : (
+                  fmt.auteurPreuve(preuve)
+                )}
+              </dd>
             </div>
             {fichiers.length > 0 && (
               <div>

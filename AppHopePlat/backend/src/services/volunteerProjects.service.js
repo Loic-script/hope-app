@@ -46,7 +46,7 @@ export async function recupererParId(id, utilisateurId) {
     listerPourBenevoleParProjet(projet.id, utilisateurId),
     impactRepository.listerPourBenevole(projet.id),
     impactRepository.syntheseParProjet(projet.id),
-    fieldProofRepository.listerPourBenevole(projet.id),
+    fieldProofRepository.listerPourBenevole(projet.id, utilisateurId),
   ]);
 
   return {

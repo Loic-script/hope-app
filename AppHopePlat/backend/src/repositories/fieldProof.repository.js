@@ -23,18 +23,23 @@ export const SEUIL_SILENCE_JOURS = 15;
  * NULL -- pour un temoignage, qui n'a pas de fichier.
  */
 const COLONNES = `
-  f.id, f.project_id, f.admin_id, f.proof_type, f.description,
+  f.id, f.project_id, f.admin_id, f.benevole_id, f.proof_type, f.description,
   f.occurred_on, f.created_at, f.updated_at,
   p.name      AS project_name,
   p.reference AS project_reference,
   p.status    AS project_status,
   a.admin_log AS author_log,
+  -- Une preuve deposee par un benevole : son nom, et son compte.
+  NULLIF(TRIM(COALESCE(ub.prenom, '') || ' ' || COALESCE(ub.nom, '')), '') AS author_volunteer,
+  ub.id       AS author_volunteer_account,
   COALESCE(fichiers.liste, '[]'::json) AS files
 `;
 
 const JOINTURES = `
   JOIN projects p ON p.id = f.project_id
   LEFT JOIN admins a ON a.id = f.admin_id
+  LEFT JOIN benevole bv ON bv.id = f.benevole_id
+  LEFT JOIN utilisateur ub ON ub.id = bv.utilisateur_id
   LEFT JOIN LATERAL (
     SELECT json_agg(
              json_build_object(
@@ -106,12 +111,13 @@ export async function trouverParId(id, client = null) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO field_proofs
-       (project_id, admin_id, proof_type, description, occurred_on)
-     VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE))
+       (project_id, admin_id, benevole_id, proof_type, description, occurred_on)
+     VALUES ($1, $2, $3, $4, $5, COALESCE($6, CURRENT_DATE))
      RETURNING id`,
     [
       donnees.projectId,
       donnees.adminId ?? null,
+      donnees.benevoleId ?? null,
       donnees.proofType,
       donnees.description,
       donnees.occurredOn ?? null,
@@ -149,12 +155,19 @@ export async function ajouterFichiers(preuveId, fichiers, client = null) {
  * Les preuves d'un projet, pour l'espace benevole.
  *
  * Ce que voit un donateur : la preuve et ses fichiers, sans le chemin sur
- * le disque ni l'administrateur qui l'a deposee.
+ * le disque ni l'administrateur qui l'a deposee. Pour une preuve deposee
+ * par un benevole, son prenom -- comme les equipes des taches -- et, pour
+ * le benevole qui lit, si c'est la sienne : il peut la retirer.
+ *
+ * @param {number} projectId
+ * @param {string|null} utilisateurId le compte du benevole qui lit
  */
-export async function listerPourBenevole(projectId, client = null) {
+export async function listerPourBenevole(projectId, utilisateurId = null, client = null) {
   const resultat = await query(
     `SELECT f.id, f.proof_type, f.description, f.occurred_on::text AS occurred_on,
             f.created_at,
+            NULLIF(TRIM(ub.prenom), '') AS auteur_benevole,
+            (f.benevole_id IS NOT NULL AND ub.id = $2) AS mienne,
             COALESCE((
               SELECT json_agg(
                        json_build_object(
@@ -166,9 +179,11 @@ export async function listerPourBenevole(projectId, client = null) {
                 FROM field_proof_files x WHERE x.proof_id = f.id
             ), '[]'::json) AS files
        FROM field_proofs f
+       LEFT JOIN benevole bv ON bv.id = f.benevole_id
+       LEFT JOIN utilisateur ub ON ub.id = bv.utilisateur_id
       WHERE f.project_id = $1
       ORDER BY f.occurred_on DESC, f.id DESC`,
-    [projectId],
+    [projectId, utilisateurId],
     client
   );
   return versListe(resultat.rows);

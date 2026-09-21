@@ -174,7 +174,7 @@ export default function ProofsPage() {
                       </Link>
                     </p>
                     <p className="preuve__signature">
-                      {fmt.date(preuve.occurredOn)} · ajouté par {preuve.authorLog ?? 'compte supprimé'}
+                      {fmt.date(preuve.occurredOn)} · ajouté par {fmt.auteurPreuve(preuve)}
                     </p>
                   </div>
 

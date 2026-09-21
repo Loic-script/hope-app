@@ -49,6 +49,35 @@ export async function urlDuFichierPreuve(projetId, preuve, fichier) {
   return URL.createObjectURL(await reponse.blob());
 }
 
+/**
+ * POST /api/benevole/projets/:id/preuves -- ajouter une preuve terrain.
+ *
+ * @param {{ proofType: string, description: string, occurredOn: string,
+ *           fichiers: File[] }} preuve
+ */
+export async function ajouterPreuve(projetId, { proofType, description, occurredOn, fichiers = [] }) {
+  const formulaire = new FormData();
+  formulaire.append('proofType', proofType);
+  formulaire.append('description', description);
+  if (occurredOn) formulaire.append('occurredOn', occurredOn);
+  for (const fichier of fichiers) formulaire.append('files', fichier);
+
+  // Le client pose "application/json" par defaut : l'en-tete arriverait
+  // sans la frontiere du multipart, et multer ne trouverait rien a lire.
+  const { data } = await apiBenevole.post(`/benevole/projets/${projetId}/preuves`, formulaire, {
+    headers: { 'Content-Type': undefined },
+    // Une video d'une minute depasse vite les dix secondes par defaut.
+    timeout: 120000,
+  });
+  return data;
+}
+
+/** DELETE /api/benevole/projets/:id/preuves/:preuveId -- retirer la sienne. */
+export async function supprimerPreuve(projetId, preuveId) {
+  const { data } = await apiBenevole.delete(`/benevole/projets/${projetId}/preuves/${preuveId}`);
+  return data;
+}
+
 /* -------------------------------- Taches ------------------------------- */
 
 /** GET /api/benevole/taches */

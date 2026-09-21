@@ -1466,7 +1466,7 @@ export default function ProjectDetailPage() {
                       </p>
                       <p className="preuve__signature">
                         {fmt.date(preuve.occurredOn)} · ajouté par{' '}
-                        {preuve.authorLog ?? 'compte supprimé'}
+                        {fmt.auteurPreuve(preuve)}
                       </p>
                     </div>
 

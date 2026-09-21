@@ -27,6 +27,10 @@ router.get('/projets', projets.lister);
 router.get('/projets/:id', projets.recuperer);
 // Les photos et videos des preuves terrain du projet (onglet Impact).
 router.get('/projets/:id/preuves/:preuveId/fichiers/:fileId', projets.fichierPreuve);
+// Ajouter une preuve terrain (photos, videos, document sous "files"), et
+// retirer la sienne.
+router.post('/projets/:id/preuves', televerserPreuve, projets.ajouterPreuve);
+router.delete('/projets/:id/preuves/:preuveId', projets.supprimerPreuve);
 
 // --- Taches -----------------------------------------------------------
 router.get('/taches/libres', taches.libres);
