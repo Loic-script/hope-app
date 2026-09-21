@@ -1050,12 +1050,11 @@
   color: var(--admin-texte-doux);
 }
 
-/* --- Les deux paires de blocs --- */
+/* --- La paire du haut --- */
 
 /*
- * Deux colonnes inegales : la grande carte a image -- l'invitation en
- * haut, la tache prioritaire en bas -- occupe les deux tiers, la petite
- * carte le reste.
+ * Deux colonnes inegales : l'invitation, a image, occupe les deux tiers ;
+ * la tache a prendre, le reste.
  */
 .accueil-benevole__paire {
   display: grid;
@@ -1064,130 +1063,6 @@
   align-items: stretch;
 }
 
-/* --- La tache mise en avant --- */
-
-.tache-phare {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
-  overflow: hidden;
-  border: 1px solid var(--admin-bordure);
-  border-radius: var(--admin-rayon);
-  background-color: var(--admin-surface);
-  box-shadow: var(--admin-ombre);
-}
-
-.tache-phare__corps {
-  display: flex;
-  flex-direction: column;
-  padding: 20px 22px;
-}
-
-.tache-phare__haut {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.tache-phare__intitule {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.tache-phare__projet {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--hope-violet);
-}
-
-.tache-phare__titre {
-  margin-top: 5px;
-  font-size: 21px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.tache-phare__texte {
-  margin-top: 6px;
-  max-width: 46ch;
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--admin-texte-doux);
-}
-
-/* La date en pastille, puis les trois faits : quand, a quelle heure, ou. */
-.tache-phare__quand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.jour {
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 62px;
-  padding: 9px 0;
-  border-radius: 13px;
-  background-color: #eceafa;
-  color: var(--hope-violet);
-}
-
-.jour strong {
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.jour em {
-  font-size: 10.5px;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.tache-phare__faits {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  margin: 0;
-}
-
-.tache-phare__faits > div {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-}
-
-.tache-phare__faits dt {
-  display: flex;
-  flex: none;
-  color: var(--admin-texte-faible);
-}
-
-.tache-phare__faits svg {
-  width: 16px;
-  height: 16px;
-}
-
-.tache-phare__faits dd {
-  overflow: hidden;
-  margin: 0;
-  font-size: 13.5px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tache-phare__actions,
 .tache-active__actions {
   display: flex;
   flex-wrap: wrap;
@@ -1199,7 +1074,6 @@
   padding-top: 18px;
 }
 
-.tache-phare__vide,
 .tache-active__vide {
   display: flex;
   flex: 1;
@@ -1210,19 +1084,6 @@
   padding: 10px 0;
   font-size: 14px;
   color: var(--admin-texte-doux);
-}
-
-.tache-phare__image {
-  position: relative;
-  min-height: 200px;
-}
-
-.tache-phare__image img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 /* --- La tache en cours --- */
@@ -1314,10 +1175,6 @@
 
 /* --- L'invitation, et l'apercu du journal --- */
 
-.accueil-benevole__paire--basse {
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-}
-
 /*
  * Le seul bloc de la page a fond plein.
  *
@@ -1397,33 +1254,55 @@
   margin-top: 18px;
 }
 
+/*
+ * Seul en bas de l'accueil, le journal prend toute la largeur : sur un
+ * grand ecran, il se lit en une ligne -- le titre, les deux chiffres, le
+ * bouton. Sur un telephone, il reste en colonne.
+ */
+@media (min-width: 781px) {
+  .journal-apercu--large {
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .journal-apercu--large .tache-active__ligne {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .journal-apercu--large .journal-apercu__chiffres {
+    gap: 36px;
+    margin: 0;
+    padding: 4px 32px;
+    border-top: none;
+    border-bottom: none;
+    border-left: 1px solid var(--admin-bordure);
+    border-right: 1px solid var(--admin-bordure);
+  }
+
+  .journal-apercu--large .bouton-hope {
+    align-self: center;
+    margin-top: 0;
+  }
+}
+
 /* --- Petits ecrans : tout se met en colonne --- */
 
 @media (max-width: 1180px) {
-  .accueil-benevole__paire,
-  .accueil-benevole__paire--basse {
+  .accueil-benevole__paire {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 780px) {
   /* L'image passe au-dessus du texte plutot que de le comprimer. */
-  .tache-phare,
   .invitation {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .tache-phare__image {
-    order: -1;
-    min-height: 150px;
-  }
-
   .accueil-benevole__titre {
     font-size: 24px;
-  }
-
-  .tache-phare__quand {
-    align-items: flex-start;
   }
 }
 
