@@ -16,6 +16,7 @@ import {
   optionsDepuisLibelles,
 } from './forms.jsx';
 import { useSoumission } from '../../hooks/useChargement.js';
+import ChampPhotoProfil from '../ChampPhotoProfil.jsx';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as taskService from '../../services/task.service.js';
 import * as documentService from '../../services/document.service.js';
@@ -988,9 +989,17 @@ export function BeneficiaireModale({
   const [formulaire, setFormulaire] = useState(BENEFICIAIRE_VIDE);
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
+  /*
+   * La photo : l'adresse signee de l'apercu, le nom du fichier a
+   * rattacher, et si elle a change. Elle n'est envoyee que dans ce cas --
+   * une fiche enregistree sans y toucher garde sa photo.
+   */
+  const [photo, setPhoto] = useState({ apercu: '', fichier: null, modifiee: false });
+
   useEffect(() => {
     if (!ouverte) return;
     setErreur('');
+    setPhoto({ apercu: beneficiaire?.photoUrl ?? '', fichier: null, modifiee: false });
     setFormulaire(
       beneficiaire
         ? {
@@ -1012,12 +1021,26 @@ export function BeneficiaireModale({
     setFormulaire((actuel) => ({ ...actuel, [champ]: valeur }));
   }
 
+  /** Televerse, garde le nom du fichier, et rend l'adresse d'apercu. */
+  async function televerserPhoto(fichier) {
+    const resultat = await beneficiaryService.televerserPhoto(fichier);
+    setPhoto({ apercu: resultat.url, fichier: resultat.fichier, modifiee: true });
+    return resultat;
+  }
+
+  function changerPhoto(adresse) {
+    // Seul "Retirer" arrive ici avec une adresse vide ; un televersement
+    // a deja tout renseigne.
+    if (!adresse) setPhoto({ apercu: '', fichier: null, modifiee: true });
+  }
+
   async function enregistrer() {
     const charge = {
       ...formulaire,
       gender: formulaire.gender || null,
       birthDate: formulaire.birthDate || null,
       notes: formulaire.notes || null,
+      ...(photo.modifiee ? { photoFichier: photo.fichier } : {}),
       ...(edition || !projet ? {} : { projectId: projet.id }),
     };
 
@@ -1043,6 +1066,20 @@ export function BeneficiaireModale({
       large
     >
       <div className="formulaire-grille">
+        <div className="champ-admin champ-admin--pleine-largeur">
+          <span className="champ-admin__label">
+            Photo<span>(facultatif)</span>
+          </span>
+          <ChampPhotoProfil
+            valeur={photo.apercu}
+            nom={`${formulaire.firstName} ${formulaire.lastName}`.trim()}
+            televerser={televerserPhoto}
+            onChange={changerPhoto}
+            disabled={envoi}
+            aide="JPEG, PNG ou WebP. Visible seulement par l’équipe HOPE connectée ; la position GPS de la photo est retirée."
+          />
+        </div>
+
         <ChampTexte
           label="Prénom"
           id="beneficiaire-prenom"

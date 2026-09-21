@@ -7,8 +7,9 @@
  */
 import * as beneficiaryRepository from '../repositories/beneficiary.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
+import * as photos from './photoBeneficiaire.service.js';
 
-import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
+import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import {
   dateFacultative,
   identifiantFacultatif,
@@ -44,37 +45,73 @@ function calculerAge(dateNaissance) {
   return age >= 0 && age < 130 ? age : null;
 }
 
-function enrichir(beneficiaire) {
+/**
+ * Ce que l'ecran recoit : l'age, le libelle du type, et l'adresse signee
+ * de la photo pour l'administrateur qui demande -- jamais le chemin du
+ * fichier seul, qui ne se lit pas sans signature.
+ */
+function enrichir(beneficiaire, admin = null) {
   if (!beneficiaire) return null;
   return {
     ...beneficiaire,
     typeLabel: LIBELLES_TYPES[beneficiaire.beneficiaryType] ?? beneficiaire.beneficiaryType,
     age: calculerAge(beneficiaire.birthDate),
+    photoUrl: beneficiaire.photoFichier ? photos.adresseSignee(beneficiaire.photoFichier, admin) : null,
   };
 }
 
-export async function lister(requete = {}) {
+/**
+ * Le nom d'une photo televersee, verifie avant d'etre rattache.
+ *
+ * Il doit designer un fichier que le service a lui-meme ecrit, et qui
+ * n'est pas deja la photo de quelqu'un d'autre.
+ */
+async function photoValide(fichier, beneficiaryId = null) {
+  if (fichier === null || fichier === '') return null;
+  if (!photos.existe(fichier)) {
+    throw new ErreurValidation('Cette photo est introuvable : importez-la de nouveau.', {
+      photoFichier: 'Photo introuvable',
+    });
+  }
+  if (await beneficiaryRepository.photoDejaPrise(fichier, beneficiaryId)) {
+    throw new ErreurValidation('Cette photo appartient déjà à un autre bénéficiaire.', {
+      photoFichier: 'Photo déjà utilisée',
+    });
+  }
+  return fichier;
+}
+
+/** Televerse une photo ; c'est l'enregistrement de la fiche qui la rattache. */
+export async function televerserPhoto(fichier, admin) {
+  const nom = await photos.enregistrer(fichier);
+  return { fichier: nom, url: photos.adresseSignee(nom, admin) };
+}
+
+export async function lister(requete = {}, admin = null) {
   const beneficiaires = await beneficiaryRepository.lister({
     statut: requete.status ? valeurParmi(requete.status, 'status', STATUTS) : null,
     type: requete.type ? valeurParmi(requete.type, 'type', TYPES) : null,
     projectId: identifiantFacultatif(requete.projectId, 'projectId'),
     recherche: texteFacultatif(requete.search, 'search', { max: 120 }),
   });
-  return { items: beneficiaires.map(enrichir) };
+  return { items: beneficiaires.map((b) => enrichir(b, admin)) };
 }
 
-export async function recupererParId(id) {
+export async function recupererParId(id, admin = null) {
   const beneficiaryId = identifiantRequis(id, 'id');
   const beneficiaire = await beneficiaryRepository.trouverParId(beneficiaryId);
   if (!beneficiaire) throw new ErreurIntrouvable('Le beneficiaire', beneficiaryId);
 
   return {
-    ...enrichir(beneficiaire),
+    ...enrichir(beneficiaire, admin),
     projects: await beneficiaryRepository.listerProjetsDuBeneficiaire(beneficiaryId),
   };
 }
 
-export async function creer(corps = {}) {
+export async function creer(corps = {}, admin = null) {
+  const photoFichier =
+    corps.photoFichier === undefined ? null : await photoValide(corps.photoFichier);
+
   const beneficiaire = await beneficiaryRepository.creer({
     firstName: texteRequis(corps.firstName, 'firstName', { max: 120 }),
     lastName: texteRequis(corps.lastName, 'lastName', { max: 120 }),
@@ -85,19 +122,20 @@ export async function creer(corps = {}) {
     city: texteFacultatif(corps.city, 'city', { max: 120 }),
     status: valeurParmi(corps.status, 'status', STATUTS, { defaut: 'ACTIVE' }),
     notes: texteFacultatif(corps.notes, 'notes', { max: 5000 }),
+    photoFichier,
   });
 
   // Rattachement immediat si un projet est indique dans le formulaire.
   const projectId = identifiantFacultatif(corps.projectId, 'projectId');
   if (projectId !== null) {
     await rattacherAuProjet(projectId, { beneficiaryId: beneficiaire.id });
-    return recupererParId(beneficiaire.id);
+    return recupererParId(beneficiaire.id, admin);
   }
 
-  return enrichir(beneficiaire);
+  return enrichir(beneficiaire, admin);
 }
 
-export async function mettreAJour(id, corps = {}) {
+export async function mettreAJour(id, corps = {}, admin = null) {
   const beneficiaryId = identifiantRequis(id, 'id');
   const existant = await beneficiaryRepository.trouverParId(beneficiaryId);
   if (!existant) throw new ErreurIntrouvable('Le beneficiaire', beneficiaryId);
@@ -124,8 +162,25 @@ export async function mettreAJour(id, corps = {}) {
   if (corps.city !== undefined) colonnes.city = texteFacultatif(corps.city, 'city', { max: 120 });
   if (corps.status !== undefined) colonnes.status = valeurParmi(corps.status, 'status', STATUTS);
   if (corps.notes !== undefined) colonnes.notes = texteFacultatif(corps.notes, 'notes', { max: 5000 });
+  // La photo n'est touchee que si le formulaire l'a changee : une fiche
+  // enregistree sans elle ne la perd pas.
+  if (corps.photoFichier !== undefined) {
+    colonnes.photo_fichier = await photoValide(corps.photoFichier, beneficiaryId);
+  }
 
-  return enrichir(await beneficiaryRepository.mettreAJour(beneficiaryId, colonnes));
+  const misAJour = await beneficiaryRepository.mettreAJour(beneficiaryId, colonnes);
+
+  // L'ancienne photo s'efface une fois la fiche enregistree, pas avant :
+  // un echec aurait laisse la fiche pointer vers un fichier disparu.
+  if (
+    colonnes.photo_fichier !== undefined &&
+    existant.photoFichier &&
+    existant.photoFichier !== colonnes.photo_fichier
+  ) {
+    await photos.effacer(existant.photoFichier);
+  }
+
+  return enrichir(misAJour, admin);
 }
 
 // ------------------------------------------------------------------

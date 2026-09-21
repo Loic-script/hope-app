@@ -24,6 +24,8 @@ import * as mediaService from '../services/media.service.js';
 import * as messageService from '../services/message.service.js';
 import * as notificationService from '../services/notification.service.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
+import * as adminRepository from '../repositories/admin.repository.js';
+import * as photoBeneficiaireService from '../services/photoBeneficiaire.service.js';
 import * as projectService from '../services/project.service.js';
 import * as projectReportService from '../services/projectReport.service.js';
 import * as publicationService from '../services/publication.service.js';
@@ -228,6 +230,43 @@ export const publications = {
   ),
 };
 
+/**
+ * La photo d'un beneficiaire, par adresse signee.
+ *
+ * Aucune session ici : une balise <img> n'en porte pas. La signature dit
+ * quel administrateur l'a recue ; son compte doit toujours etre actif.
+ * Toute adresse fausse, expiree ou d'un compte suspendu repond 404.
+ */
+export const photosBeneficiaires = {
+  lire: gerer(async (req, res) => {
+    const adminId = photoBeneficiaireService.verifierSignature(req.params.fichier, req.query);
+    const admin = adminId ? await adminRepository.trouverParId(adminId) : null;
+    const cheminAbsolu = photoBeneficiaireService.chemin(req.params.fichier);
+    if (!admin || admin.status === 'SUSPENDED' || !fs.existsSync(cheminAbsolu)) {
+      throw new ErreurIntrouvable('La photo', req.params.fichier);
+    }
+
+    await new Promise((resolve, reject) => {
+      res.sendFile(
+        cheminAbsolu,
+        {
+          lastModified: false,
+          headers: {
+            'Content-Type': 'image/jpeg',
+            'Content-Disposition': 'inline; filename="beneficiaire.jpg"',
+            'X-Content-Type-Options': 'nosniff',
+            // Prive : ni proxy ni cache partage ne doit garder ce visage.
+            'Cache-Control': 'private, max-age=3600',
+            // L'adresse porte sa signature : elle ne doit pas fuir en Referer.
+            'Referrer-Policy': 'no-referrer',
+          },
+        },
+        (erreur) => (erreur && !res.headersSent ? reject(erreur) : resolve())
+      );
+    });
+  }),
+};
+
 export const funders = {
   lister: gerer((req) => funderAccountService.lister(req.query)),
   activer: gerer((req) => funderAccountService.activer(req.params.id, req.admin)),
@@ -364,10 +403,13 @@ export const fieldProofs = {
    ================================================================ */
 
 export const beneficiaries = {
-  lister: gerer((req) => beneficiaryService.lister(req.query)),
-  recuperer: gerer((req) => beneficiaryService.recupererParId(req.params.id)),
-  creer: gerer((req) => beneficiaryService.creer(req.body), { statut: 201 }),
-  mettreAJour: gerer((req) => beneficiaryService.mettreAJour(req.params.id, req.body)),
+  lister: gerer((req) => beneficiaryService.lister(req.query, req.admin)),
+  recuperer: gerer((req) => beneficiaryService.recupererParId(req.params.id, req.admin)),
+  creer: gerer((req) => beneficiaryService.creer(req.body, req.admin), { statut: 201 }),
+  mettreAJour: gerer((req) => beneficiaryService.mettreAJour(req.params.id, req.body, req.admin)),
+  televerserPhoto: gerer((req) => beneficiaryService.televerserPhoto(req.file, req.admin), {
+    statut: 201,
+  }),
   listerParProjet: gerer((req) => beneficiaryService.listerParProjet(req.params.projectId)),
   rattacherAuProjet: gerer(
     (req) => beneficiaryService.rattacherAuProjet(req.params.projectId, req.body),

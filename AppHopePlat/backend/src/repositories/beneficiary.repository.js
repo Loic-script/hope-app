@@ -10,6 +10,7 @@ import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 const COLONNES = `
   b.id, b.first_name, b.last_name, b.beneficiary_type, b.gender, b.birth_date,
   b.country, b.city, b.status, b.notes, b.created_at, b.updated_at,
+  b.photo_fichier,
   TRIM(CONCAT_WS(' ', b.first_name, b.last_name)) AS full_name,
   rattache.nombre  AS projects_count,
   rattache.projets AS project_names
@@ -77,8 +78,8 @@ export async function trouverParId(id, client = null) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO beneficiaries (first_name, last_name, beneficiary_type, gender,
-                                birth_date, country, city, status, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                birth_date, country, city, status, notes, photo_fichier)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING id`,
     [
       donnees.firstName,
@@ -90,10 +91,22 @@ export async function creer(donnees, client = null) {
       donnees.city,
       donnees.status,
       donnees.notes,
+      donnees.photoFichier ?? null,
     ],
     client
   );
   return trouverParId(resultat.rows[0].id, client);
+}
+
+/** La photo est-elle deja celle d'un autre beneficiaire ? */
+export async function photoDejaPrise(fichier, saufId = null, client = null) {
+  const resultat = await query(
+    `SELECT EXISTS (SELECT 1 FROM beneficiaries
+                     WHERE photo_fichier = $1 AND ($2::int IS NULL OR id <> $2)) AS prise`,
+    [fichier, saufId],
+    client
+  );
+  return resultat.rows[0].prise;
 }
 
 export async function mettreAJour(id, colonnes, client = null) {

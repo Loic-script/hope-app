@@ -1284,3 +1284,71 @@
   position: relative;
   z-index: 1;
 }
+
+/* ============================================================
+   Visages : la photo d'une personne, ou ses initiales
+
+   Un disque de taille fixe, avec ou sans photo : une liste ne saute
+   pas quand les images arrivent. Un clic sur la photo l'agrandit.
+   ============================================================ */
+
+.visage {
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+}
+
+.visage--petit {
+  width: 38px;
+  height: 38px;
+}
+
+.visage--grand {
+  width: 76px;
+  height: 76px;
+  box-shadow: 0 0 0 3px var(--admin-surface), 0 0 0 4px var(--admin-bordure);
+}
+
+.visage .photo-voir {
+  border-radius: 50%;
+}
+
+.visage__initiales {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.visage--grand .visage__initiales {
+  font-size: 24px;
+}
+
+/* Dans une cellule de tableau : le visage, puis le nom. */
+.cellule-visage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.page-entete__visuel {
+  flex: none;
+}
+
+@media (max-width: 560px) {
+  .visage--grand {
+    width: 56px;
+    height: 56px;
+  }
+
+  .visage--grand .visage__initiales {
+    font-size: 18px;
+  }
+}

@@ -265,6 +265,9 @@ router.patch('/funders/:id/status', exigerEcriture, funders.changerStatut);
 // --- Beneficiaires ----------------------------------------------------
 router.get('/beneficiaries', beneficiaries.lister);
 router.post('/beneficiaries', beneficiaries.creer);
+// La photo se televerse d'abord (champ "photo", 8 Mo) ; la fiche n'en
+// garde que le nom. Elle part dans un dossier prive, pas sous /media.
+router.post('/beneficiaries/photo', televerserGroupe, beneficiaries.televerserPhoto);
 router.get('/beneficiaries/:id', beneficiaries.recuperer);
 router.patch('/beneficiaries/:id', beneficiaries.mettreAJour);
 router.patch('/project-beneficiaries/:id', beneficiaries.mettreAJourRattachement);

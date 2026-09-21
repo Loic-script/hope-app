@@ -16,6 +16,7 @@ import {
   Panneau,
   Tableau,
 } from '../../components/admin/ui.jsx';
+import Visage from '../../components/admin/Visage.jsx';
 import BoutonMessage from '../../components/messagerie/BoutonMessage.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import { api } from '../../services/api.js';
@@ -721,6 +722,15 @@ export default function ProfilUtilisateurPage() {
           { label: nom || 'Profil' },
         ]}
         titre={nom || 'Nom à renseigner'}
+        // La photo que la personne a mise dans son espace, qu'un clic
+        // agrandit : c'est elle qui dit qui l'on a en face.
+        visuel={
+          <Visage
+            src={compte?.photoUrl ?? null}
+            nom={personne || nom}
+            taille="grand"
+          />
+        }
         accroche={
           <span className="profil__accroche">
             <Badge valeur={role} libelles={LIBELLES_ROLE} couleur="violet" />

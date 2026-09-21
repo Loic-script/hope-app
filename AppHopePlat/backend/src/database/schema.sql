@@ -348,6 +348,12 @@ CREATE TABLE IF NOT EXISTS beneficiaries (
 
 CREATE INDEX IF NOT EXISTS beneficiaries_status_idx ON beneficiaries (status);
 
+-- La photo d'identite, pour que l'equipe reconnaisse la personne. Le
+-- fichier vit dans un dossier prive, jamais sous /media qui est public :
+-- seul son nom est garde ici, et on ne le lit que par une adresse signee
+-- remise a un administrateur connecte.
+ALTER TABLE beneficiaries ADD COLUMN IF NOT EXISTS photo_fichier VARCHAR(80);
+
 -- ------------------------------------------------------------
 -- 10. Rattachement beneficiaires <-> projets (N-N)
 -- ------------------------------------------------------------

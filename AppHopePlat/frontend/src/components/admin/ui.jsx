@@ -30,7 +30,7 @@ import * as fmt from '../../utils/format.js';
  * @param {boolean} [props.retour] affiche la fleche de retour ; vrai par
  *        defaut, a passer a faux sur une page sans page precedente
  */
-export function EntetePage({ fil = [], titre, accroche, actions, retour = true }) {
+export function EntetePage({ fil = [], titre, accroche, actions, retour = true, visuel = null }) {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
@@ -55,6 +55,8 @@ export function EntetePage({ fil = [], titre, accroche, actions, retour = true }
             <IconeRetour />
           </button>
         )}
+        {/* Un visage, un logo : ce qui identifie la page avant son titre. */}
+        {visuel && <div className="page-entete__visuel">{visuel}</div>}
         <div className="page-entete__intitule">
         {fil.length > 0 && (
           <nav className="page-entete__fil" aria-label="Fil d'Ariane">

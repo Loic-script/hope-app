@@ -84,6 +84,7 @@ const COLONNES_ATTENDUES = [
   ['supporting_documents', 'admin_id'],
   ['utilisateur', 'profil_complete'],
   ['admins', 'photo_url'],
+  ['beneficiaries', 'photo_fichier'],
   ['projects', 'description_titre'],
   ['projects', 'project_type'],
   ['conversation', 'type'],
