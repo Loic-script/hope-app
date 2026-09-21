@@ -9,8 +9,8 @@
  * le lit meme pas.
  */
 import * as projectRepository from '../repositories/project.repository.js';
-import * as taskRepository from '../repositories/task.repository.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
+import { listerPourBenevoleParProjet } from './task.service.js';
 
 /** Tous les projets ouverts, avec ce qu'il y a a y faire. */
 export async function lister() {
@@ -19,14 +19,16 @@ export async function lister() {
 }
 
 /**
- * Un projet et ses taches.
+ * Un projet et ses taches, chacune avec la place du benevole : dans
+ * l'equipe, demande en attente, refusee, ou rien encore.
  *
  * @param {number|string} id
+ * @param {string} utilisateurId
  */
-export async function recupererParId(id) {
+export async function recupererParId(id, utilisateurId) {
   const projet = await projectRepository.trouverPourBenevole(id);
   if (!projet) throw new ErreurIntrouvable('Le projet', id);
 
-  const taches = await taskRepository.lister({ projetId: projet.id });
+  const taches = await listerPourBenevoleParProjet(projet.id, utilisateurId);
   return { project: projet, tasks: taches };
 }

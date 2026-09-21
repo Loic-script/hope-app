@@ -5,17 +5,16 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
-import { STATUTS_TACHE } from './composants.jsx';
+import { ActionDemande, EquipeTache, STATUTS_TACHE } from './composants.jsx';
 import { DetailTacheModale, LivraisonModale } from './ModalesTache.jsx';
 
 /**
- * Mes taches, en trois colonnes : a faire, en cours, livree.
+ * Mes taches, en trois colonnes : a prendre, en cours, livree.
  *
- * "A faire" montre les taches que personne n'a encore prises. Ce n'est
- * pas un detail de presentation : une tache assignee passe aussitot a
- * "en cours", donc une colonne "a faire" remplie de ses propres taches
- * serait toujours vide. Le vivier commun est la seule chose qui a du
- * sens a cet endroit, et c'est de la que l'on se sert.
+ * "A prendre" montre ce qu'on peut demander : les taches libres, et
+ * celles qu'une equipe a deja commencees et qu'on peut rejoindre. Une
+ * tache ne devient la sienne qu'une fois la demande validee par l'equipe
+ * HOPE : la carte dit ou en est la demande.
  */
 export default function MesTaches() {
   const miennes = useChargement(() => service.mesTaches(), []);
@@ -65,27 +64,25 @@ export default function MesTaches() {
 
       <div className="colonnes-taches">
         <Colonne
-          titre="À faire"
-          sousTitre="à prendre par qui veut"
+          titre="À prendre"
+          sousTitre="demandez-la : l’équipe HOPE valide"
           compteur={aPrendre.length}
-          vide="Toutes les tâches sont prises. Revenez plus tard."
+          vide="Aucune tâche à prendre pour l’instant. Revenez plus tard."
           taches={aPrendre}
           onOuvrir={setEnLecture}
           rendreActions={(tache) => (
-            <button
-              type="button"
-              className="btn btn--principal btn--petit"
-              disabled={envoi}
-              onClick={() => agir(() => service.prendreTache(tache.id))}
-            >
-              Prendre cette tâche
-            </button>
+            <ActionDemande
+              tache={tache}
+              envoi={envoi}
+              onDemander={(t) => agir(() => service.demanderTache(t.id))}
+              onAnnuler={(t) => agir(() => service.annulerDemandeTache(t.id))}
+            />
           )}
         />
 
         <Colonne
           titre="En cours"
-          sousTitre="vous les avez prises"
+          sousTitre="vous faites partie de l’équipe"
           compteur={compteurs.en_cours ?? 0}
           vide="Rien en cours. Prenez une tâche à gauche."
           taches={taches.filter((t) => t.statut === 'en_cours')}
@@ -105,7 +102,7 @@ export default function MesTaches() {
                 disabled={envoi}
                 onClick={() => agir(() => service.relacherTache(tache.id))}
               >
-                Rendre
+                Quitter
               </button>
             </>
           )}
@@ -119,7 +116,10 @@ export default function MesTaches() {
           taches={taches.filter((t) => t.statut === 'livree')}
           rendreActions={(tache) => (
             <>
-              <span className="carte-tache__fait">Livrée le {fmt.date(tache.livreeLe)}</span>
+              <span className="carte-tache__fait">
+                Livrée le {fmt.date(tache.livreeLe)}
+                {tache.livreeParMoi ? ' par vous' : ' par votre équipe'}
+              </span>
               {/* Les taches livrees avant la preuve obligatoire n'en ont pas. */}
               {tache.files?.length > 0 && (
                 <button
@@ -140,8 +140,11 @@ export default function MesTaches() {
           tache={enLecture}
           envoi={envoi}
           onFermer={() => setEnLecture(null)}
-          onPrendre={async (tache) => {
-            if (await agir(() => service.prendreTache(tache.id))) setEnLecture(null);
+          onDemander={async (tache) => {
+            if (await agir(() => service.demanderTache(tache.id))) setEnLecture(null);
+          }}
+          onAnnuler={async (tache) => {
+            if (await agir(() => service.annulerDemandeTache(tache.id))) setEnLecture(null);
           }}
         />
       )}
@@ -227,6 +230,7 @@ function CarteTache({ tache, actions, onOuvrir = null }) {
         )}
       </h3>
       {tache.description && <p className="carte-tache__texte">{tache.description}</p>}
+      <EquipeTache tache={tache} className="carte-tache__equipe" />
 
       <div className="carte-tache__pied">
         {tache.echeance && (

@@ -318,7 +318,7 @@ export default function CoqueEspace({
                 </p>
               )}
 
-              {groupe.entrees.map(({ to, label, Icone, exact, compteur }) => {
+              {groupe.entrees.map(({ to, label, Icone, exact, compteur, annonce }) => {
                 const nonLus = compteur ? (compteurs[compteur] ?? 0) : 0;
 
                 return (
@@ -329,7 +329,11 @@ export default function CoqueEspace({
                     // La pastille est decorative : c'est l'aria-label qui
                     // annonce le nombre, sans quoi un lecteur d'ecran
                     // lirait "Messages 3" sans dire de quoi il s'agit.
-                    aria-label={nonLus > 0 ? `${label} : ${nonLus} non lu(s)` : label}
+                    // Une entree peut dire autre chose que "non lu" :
+                    // des demandes a valider, par exemple.
+                    aria-label={
+                      nonLus > 0 ? `${label} : ${annonce ? annonce(nonLus) : `${nonLus} non lu(s)`}` : label
+                    }
                     className={({ isActive }) =>
                       `lateral__lien${isActive ? ' lateral__lien--actif' : ''}`
                     }

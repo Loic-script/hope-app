@@ -19,14 +19,16 @@ import { gerer } from './handler.js';
 /** Les projets, autour desquels l'espace s'organise. */
 export const projets = {
   lister: gerer(() => volunteerProjectsService.lister()),
-  recuperer: gerer((req) => volunteerProjectsService.recupererParId(req.params.id)),
+  recuperer: gerer((req) => volunteerProjectsService.recupererParId(req.params.id, req.benevole.id)),
 };
 
 export const taches = {
   apercu: gerer(() => taskService.apercu()),
-  libres: gerer(() => taskService.listerLibres()),
+  // Celles qu'il peut demander : libres, ou a rejoindre.
+  libres: gerer((req) => taskService.listerAPrendre(req.benevole.id)),
   miennes: gerer((req) => taskService.mesTaches(req.benevole.id, req.query)),
-  prendre: gerer((req) => taskService.prendre(req.params.id, req.benevole.id)),
+  demander: gerer((req) => taskService.demander(req.params.id, req.benevole.id)),
+  annulerDemande: gerer((req) => taskService.annulerDemande(req.params.id, req.benevole.id)),
   relacher: gerer((req) => taskService.relacher(req.params.id, req.benevole.id)),
   /*
    * multer a deja ecrit les fichiers quand le service se prononce : un

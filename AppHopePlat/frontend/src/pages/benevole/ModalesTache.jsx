@@ -6,6 +6,7 @@ import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
+import { ActionDemande, EquipeTache } from './composants.jsx';
 
 /**
  * Les deux fenetres de "Mes taches" : lire une tache avant de la prendre,
@@ -28,7 +29,7 @@ import * as fmt from '../../utils/format.js';
  * pas, et le charger pour chaque carte serait payer pour des fenetres
  * que personne n'ouvre.
  */
-export function DetailTacheModale({ tache, onFermer, onPrendre, envoi = false }) {
+export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envoi = false }) {
   const [projet, setProjet] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [refus, setRefus] = useState('');
@@ -75,15 +76,15 @@ export function DetailTacheModale({ tache, onFermer, onPrendre, envoi = false })
           <button type="button" className="btn btn--neutre" onClick={onFermer} disabled={envoi}>
             Fermer
           </button>
-          {onPrendre && (
-            <button
-              type="button"
-              className="btn btn--principal"
-              onClick={() => onPrendre(tache)}
-              disabled={envoi}
-            >
-              {envoi ? 'En cours…' : 'Prendre cette tâche'}
-            </button>
+          {onDemander && (
+            <ActionDemande
+              tache={tache}
+              envoi={envoi}
+              onDemander={onDemander}
+              onAnnuler={onAnnuler}
+              classeBouton="btn btn--principal"
+              classeSecondaire="btn btn--neutre"
+            />
           )}
         </>
       }
@@ -97,6 +98,7 @@ export function DetailTacheModale({ tache, onFermer, onPrendre, envoi = false })
             Pas de consigne détaillée pour cette tâche.
           </p>
         )}
+        <EquipeTache tache={tache} className="detail-tache__equipe" />
         {tache.echeance && (
           <p className={`detail-tache__echeance${enRetard ? ' detail-tache__echeance--retard' : ''}`}>
             <PleineCalendrier />

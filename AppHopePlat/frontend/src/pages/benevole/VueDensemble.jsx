@@ -197,7 +197,15 @@ export default function VueDensemble() {
               À prendre
               {nbLibres > 0 && <span className="tache-active__compte">{nbLibres}</span>}
             </h2>
-            {aPrendre && <span className="pastille pastille--bleu">Libre</span>}
+            {aPrendre && (
+              <span className="pastille pastille--bleu">
+                {aPrendre.maPlace === 'demandee'
+                  ? 'Demandée'
+                  : (aPrendre.equipe ?? []).length > 0
+                    ? 'À rejoindre'
+                    : 'Libre'}
+              </span>
+            )}
           </div>
 
           {aPrendre ? (
@@ -225,7 +233,7 @@ export default function VueDensemble() {
 
               <div className="tache-active__actions">
                 <Link className="bouton-hope bouton-hope--creux" to="/benevole/taches">
-                  La prendre
+                  {aPrendre.maPlace === 'demandee' ? 'Voir ma demande' : 'La demander'}
                   <IconeChevronDroit />
                 </Link>
                 <Link className="lien-hope" to="/benevole/taches">

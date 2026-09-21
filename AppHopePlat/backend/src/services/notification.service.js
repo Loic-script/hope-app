@@ -8,6 +8,7 @@
 import * as conversationRepository from '../repositories/conversation.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
 import * as messageRepository from '../repositories/message.repository.js';
+import * as taskRepository from '../repositories/task.repository.js';
 
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { identifiantRequis, valeurParmi } from '../shared/validation.js';
@@ -47,7 +48,7 @@ export function compterNonLues() {
  * Volontairement leger : appele a chaque changement de page.
  */
 export async function compteurs(admin = null) {
-  const [notifications, messages, conversations] = await Promise.all([
+  const [notifications, messages, conversations, taches] = await Promise.all([
     notificationRepository.compterNonLues(),
     messageRepository.compterNonLus(),
     // La messagerie commune : propre a l'administrateur connecte, la ou
@@ -55,6 +56,8 @@ export async function compteurs(admin = null) {
     admin?.id
       ? conversationRepository.compterNonLues({ type: 'admin', id: admin.id })
       : Promise.resolve(0),
+    // Les demandes de taches des benevoles, a valider.
+    taskRepository.compterDemandesEnAttente(),
   ]);
-  return { notifications, messages, conversations };
+  return { notifications, messages, conversations, taches };
 }

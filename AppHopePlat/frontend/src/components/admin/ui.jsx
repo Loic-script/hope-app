@@ -30,7 +30,7 @@ import * as fmt from '../../utils/format.js';
  * @param {boolean} [props.retour] affiche la fleche de retour ; vrai par
  *        defaut, a passer a faux sur une page sans page precedente
  */
-export function EntetePage({ fil = [], titre, accroche, actions, retour = true }) {
+export function EntetePage({ fil = [], titre, accroche, actions, retour = true, visuel = null }) {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
@@ -55,6 +55,8 @@ export function EntetePage({ fil = [], titre, accroche, actions, retour = true }
             <IconeRetour />
           </button>
         )}
+        {/* Un visage, un logo : ce qui identifie la page avant son titre. */}
+        {visuel && <div className="page-entete__visuel">{visuel}</div>}
         <div className="page-entete__intitule">
         {fil.length > 0 && (
           <nav className="page-entete__fil" aria-label="Fil d'Ariane">
@@ -283,7 +285,14 @@ function classeAlignement(aligne) {
   return undefined;
 }
 
-export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide }) {
+/**
+ * @param {object} props
+ * @param {(ligne: object) => void} [props.onLigne] rend la ligne entiere
+ *        cliquable. Les boutons et liens qu'elle porte gardent leur propre
+ *        clic ; le clavier passe par un bouton de la ligne, que la page
+ *        fournit.
+ */
+export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide, onLigne }) {
   /*
    * Arriver sur une ligne par son ancre (#compte-xxx).
    *
@@ -331,7 +340,19 @@ export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreu
             <tr
               key={cleLigne ? cleLigne(ligne) : (ligne.id ?? index)}
               id={idLigne ? idLigne(ligne) : undefined}
-              className={visee && idLigne(ligne) === visee ? 'ligne--visee' : undefined}
+              className={
+                [visee && idLigne(ligne) === visee ? 'ligne--visee' : '', onLigne ? 'ligne--cliquable' : '']
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
+              onClick={
+                onLigne
+                  ? (evenement) => {
+                      if (evenement.target.closest('button, a, input, select, label, textarea')) return;
+                      onLigne(ligne);
+                    }
+                  : undefined
+              }
             >
               {colonnes.map((colonne) => (
                 <td key={colonne.cle} className={classeAlignement(colonne.aligne)}>

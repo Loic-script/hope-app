@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { BeneficiaireModale } from '../../components/admin/modales.jsx';
+import Visage from '../../components/admin/Visage.jsx';
 import {
   Alerte,
   Badge,
@@ -148,11 +149,15 @@ export default function BeneficiariesPage() {
             {
               cle: 'fullName',
               titre: 'Bénéficiaire',
+              // Le visage d'abord : il dit qui c'est avant le nom.
               rendu: (personne) => (
-                <CelluleDouble
-                  principal={personne.fullName}
-                  secondaire={[personne.city, personne.country].filter(Boolean).join(' · ')}
-                />
+                <span className="cellule-visage">
+                  <Visage src={personne.photoUrl} nom={personne.fullName} />
+                  <CelluleDouble
+                    principal={personne.fullName}
+                    secondaire={[personne.city, personne.country].filter(Boolean).join(' · ')}
+                  />
+                </span>
               ),
             },
             {

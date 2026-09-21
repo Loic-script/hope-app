@@ -7,7 +7,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
-import { STATUTS_TACHE } from './composants.jsx';
+import { ActionDemande, EquipeTache, STATUTS_TACHE } from './composants.jsx';
 
 /**
  * Un projet, et tout ce qu'un benevole peut y faire.
@@ -43,8 +43,9 @@ export default function ProjetDetail() {
   if (!donnees) return null;
 
   const { project: projet, tasks: taches } = donnees;
-  const libres = taches.filter((t) => t.statut === 'a_faire' && !t.benevoleId);
-  const prises = taches.filter((t) => t.statut !== 'a_faire' || t.benevoleId);
+  // Libre : personne encore dans l'equipe. Les autres suivent.
+  const libres = taches.filter((t) => t.statut === 'a_faire');
+  const prises = taches.filter((t) => t.statut !== 'a_faire');
 
   return (
     <div className="accueil-benevole">
@@ -129,7 +130,7 @@ export default function ProjetDetail() {
             {[...libres, ...prises].map((tache) => (
               <li
                 key={tache.id}
-                className={`tache-projet${tache.benevoleId ? ' tache-projet--prise' : ''}`}
+                className={`tache-projet${tache.statut !== 'a_faire' ? ' tache-projet--prise' : ''}`}
               >
                 <span className="carre-icone carre-icone--bleu" aria-hidden="true">
                   <PleineTaches />
@@ -140,6 +141,7 @@ export default function ProjetDetail() {
                   {tache.description && (
                     <p className="tache-projet__texte">{tache.description}</p>
                   )}
+                  <EquipeTache tache={tache} className="tache-projet__equipe" />
                   <p className="tache-projet__faits">
                     <span className={`pastille pastille--${
                       { a_faire: 'orange', en_cours: 'bleu', livree: 'valide' }[tache.statut]
@@ -155,21 +157,21 @@ export default function ProjetDetail() {
                 </div>
 
                 {/*
-                  Seules les taches libres proposent une action. Celles
-                  qui sont prises le sont peut-etre par quelqu'un
-                  d'autre : "Mes tâches" est l'ecran ou l'on agit sur les
-                  siennes.
+                  Toute tache non livree se demande : libre, pour la
+                  prendre ; commencee, pour rejoindre son equipe. L'equipe
+                  HOPE valide. "Mes tâches" est l'ecran ou l'on agit
+                  ensuite sur les siennes.
                 */}
-                {!tache.benevoleId && (
-                  <button
-                    type="button"
-                    className="bouton-hope bouton-hope--creux"
-                    disabled={envoi}
-                    onClick={() => agir(() => service.prendreTache(tache.id))}
-                  >
-                    Prendre
-                  </button>
-                )}
+                <div className="tache-projet__action">
+                  <ActionDemande
+                    tache={tache}
+                    envoi={envoi}
+                    onDemander={(t) => agir(() => service.demanderTache(t.id))}
+                    onAnnuler={(t) => agir(() => service.annulerDemandeTache(t.id))}
+                    classeBouton="bouton-hope bouton-hope--creux"
+                    classeSecondaire="lien-hope"
+                  />
+                </div>
               </li>
             ))}
           </ul>

@@ -29,7 +29,10 @@ router.get('/projets/:id', projets.recuperer);
 // --- Taches -----------------------------------------------------------
 router.get('/taches/libres', taches.libres);
 router.get('/taches', taches.miennes);
-router.post('/taches/:id/prendre', taches.prendre);
+// Prendre une tache, c'est la demander : l'equipe HOPE valide.
+router.post('/taches/:id/demander', taches.demander);
+router.post('/taches/:id/annuler-demande', taches.annulerDemande);
+// Quitter l'equipe de la tache.
 router.post('/taches/:id/relacher', taches.relacher);
 // Livrer, c'est joindre la preuve : photos et videos sous "files".
 router.post('/taches/:id/livrer', televerserPreuve, taches.livrer);

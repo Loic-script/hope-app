@@ -12,6 +12,7 @@ import funderRoutes from './funder.routes.js';
 import espaceRoutes from './espace.routes.js';
 import donorSpaceRoutes from './donorSpace.routes.js';
 import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
+import { photosBeneficiaires } from '../controllers/admin.controllers.js';
 
 const router = Router();
 
@@ -24,6 +25,10 @@ router.get('/health', (_req, res) => {
 // balise <img> ou <video> n'en porte pas. Montes avant tout verrou.
 router.get('/messagerie/fichiers/piece/:id', fichiersMessagerie.piece);
 router.get('/messagerie/fichiers/groupe/:id', fichiersMessagerie.groupe);
+
+// Les photos des beneficiaires : meme principe, adresse signee remise a
+// un administrateur. Le dossier est prive, jamais servi sous /media.
+router.get('/fichiers/beneficiaires/:fichier', photosBeneficiaires.lire);
 
 // Authentification des utilisateurs : un seul formulaire pour les trois
 // types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.

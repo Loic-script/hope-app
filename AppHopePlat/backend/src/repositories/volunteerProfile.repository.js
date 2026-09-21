@@ -90,18 +90,19 @@ export async function mettreAJourCompte(utilisateurId, colonnes, client = null) 
  * taches livrees, et non plus des heures : une tache ne porte pas de
  * duree, et en inventer une ferait mentir l'attestation qu'on en tire.
  *
- * Une tache livree garde son benevole (tache_prise_coherente) : c'est
- * ce qui permet de la lui attribuer ici.
+ * Une tache est livree par son equipe entiere : elle compte pour chacun
+ * de ses membres, pas seulement pour celui qui l'a declaree.
  */
 export async function journal(benevoleId, client = null) {
   const resultat = await query(
-    `SELECT COUNT(*) FILTER (WHERE statut = 'livree')::int                  AS taches_livrees,
-            COUNT(*) FILTER (WHERE statut = 'en_cours')::int                AS taches_en_cours,
-            COUNT(DISTINCT projet_id) FILTER (WHERE statut = 'livree')::int AS projets_aides,
-            MIN(livree_le) FILTER (WHERE statut = 'livree')                 AS premiere_livraison,
-            MAX(livree_le) FILTER (WHERE statut = 'livree')                 AS derniere_livraison
-       FROM tache
-      WHERE benevole_id = $1`,
+    `SELECT COUNT(*) FILTER (WHERE t.statut = 'livree')::int                    AS taches_livrees,
+            COUNT(*) FILTER (WHERE t.statut = 'en_cours')::int                  AS taches_en_cours,
+            COUNT(DISTINCT t.projet_id) FILTER (WHERE t.statut = 'livree')::int AS projets_aides,
+            MIN(t.livree_le) FILTER (WHERE t.statut = 'livree')                 AS premiere_livraison,
+            MAX(t.livree_le) FILTER (WHERE t.statut = 'livree')                 AS derniere_livraison
+       FROM tache t
+       JOIN tache_benevole tb ON tb.tache_id = t.id AND tb.statut = 'affectee'
+      WHERE tb.benevole_id = $1`,
     [benevoleId],
     client
   );
@@ -116,8 +117,9 @@ export async function lignesDuJournal(benevoleId, client = null) {
             p.id   AS projet_id,
             p.name AS projet_nom
        FROM tache t
+       JOIN tache_benevole tb ON tb.tache_id = t.id AND tb.statut = 'affectee'
        LEFT JOIN projects p ON p.id = t.projet_id
-      WHERE t.benevole_id = $1 AND t.statut = 'livree'
+      WHERE tb.benevole_id = $1 AND t.statut = 'livree'
       ORDER BY t.livree_le DESC NULLS LAST`,
     [benevoleId],
     client
