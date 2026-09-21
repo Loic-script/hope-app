@@ -125,10 +125,14 @@ export default function UtilisateursPage() {
 
   const enAttente = (cle) => listes[cle].filter((ligne) => ligne.statut === 'en_attente').length;
 
+  // Quatre colonnes centrees, a largeur fixe : l'en-tete se tient au-dessus
+  // de son contenu, et les colonnes ne bougent pas d'un onglet a l'autre.
   const colonnes = [
     {
       cle: 'nom',
       titre: textes.colonne,
+      aligne: 'centre',
+      largeur: '34%',
       rendu: (ligne) => (
         <div>
           <Link className="table__lien" to={lienProfil(ligne, onglet)}>
@@ -141,6 +145,8 @@ export default function UtilisateursPage() {
     {
       cle: 'statut',
       titre: 'Statut',
+      aligne: 'centre',
+      largeur: '16%',
       rendu: (ligne) => (
         <div>
           <Badge
@@ -157,6 +163,8 @@ export default function UtilisateursPage() {
     {
       cle: 'profil',
       titre: 'Profil',
+      aligne: 'centre',
+      largeur: '16%',
       rendu: (ligne) => (
         <Link
           className="lien-action"
@@ -170,14 +178,15 @@ export default function UtilisateursPage() {
     {
       cle: 'actions',
       titre: 'Actions',
-      aligne: 'droite',
+      aligne: 'centre',
+      largeur: '34%',
       rendu: (ligne) => {
         const cible = { genre: ligne.genre, id: ligne.id, nom: ligne.nom, onglet };
         const nom = ligne.nom ?? 'cet utilisateur';
         // Activer, desactiver : l'acces des benevoles et des bailleurs.
         const gereLAcces = onglet !== 'donateurs';
         return (
-          <div className="cellule-actions">
+          <div className="cellule-actions cellule-actions--centre">
             {gereLAcces && ligne.statut !== 'actif' && (
               <button
                 type="button"
