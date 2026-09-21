@@ -429,6 +429,14 @@ export const beneficiaries = {
  */
 export const tasks = {
   listerParProjet: gerer((req) => taskService.listerParProjet(req.params.projectId)),
+  // La page Taches : toutes, et la fenetre de chacune.
+  listerTout: gerer((req) => taskService.listerPourAdmin(req.query)),
+  recuperer: gerer((req) => taskService.recupererPourAdmin(req.params.id)),
+  benevoles: gerer(() => taskService.benevolesAffectables()),
+  affecter: gerer((req) => taskService.affecter(req.params.id, req.body, req.admin)),
+  retirer: gerer((req) => taskService.retirer(req.params.id, req.params.benevoleId, req.admin)),
+  accepter: gerer((req) => taskService.accepter(req.params.id, req.params.benevoleId, req.admin)),
+  refuser: gerer((req) => taskService.refuser(req.params.id, req.params.benevoleId, req.admin)),
   creer: gerer((req) => taskService.creerPourProjet(req.params.projectId, req.body), {
     statut: 201,
   }),

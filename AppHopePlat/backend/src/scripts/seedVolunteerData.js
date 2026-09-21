@@ -351,11 +351,15 @@ async function installer() {
     const livree = statut === 'livree';
     if (livree) livrees += 1;
 
-    await query(
+    const membre = t.benevole ? benevole(t.benevole) : null;
+    const prise = t.benevole ? quand(t.prise ?? 0, 9) : null;
+
+    const { rows } = await query(
       `INSERT INTO tache
-         (projet_id, titre, description, echeance, statut, benevole_id,
-          prise_le, livree_le, validee_par)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+         (projet_id, titre, description, echeance, statut,
+          prise_le, livree_le, livree_par, validee_par)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id`,
       [
         projet(t.projet),
         t.titre,
@@ -364,13 +368,22 @@ async function installer() {
         // livraison : une date passee, mais tenue.
         t.echeance ?? (livree ? jour(t.livree + 3) : null),
         statut,
-        t.benevole ? benevole(t.benevole) : null,
-        t.benevole ? quand(t.prise ?? 0, 9) : null,
+        prise,
         livree ? quand(t.livree, 16) : null,
+        livree ? membre : null,
         // Moins d'une semaine : HOPE n'a pas encore valide la livraison.
         livree && t.livree <= -7 ? encadreur : null,
       ]
     );
+
+    // L'equipe de la tache : le benevole qui l'a prise.
+    if (membre) {
+      await query(
+        `INSERT INTO tache_benevole (tache_id, benevole_id, statut, origine, affectee_le)
+         VALUES ($1, $2, 'affectee', 'benevole', $3)`,
+        [rows[0].id, membre, prise]
+      );
+    }
   }
 
   return {

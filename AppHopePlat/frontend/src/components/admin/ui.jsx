@@ -285,7 +285,14 @@ function classeAlignement(aligne) {
   return undefined;
 }
 
-export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide }) {
+/**
+ * @param {object} props
+ * @param {(ligne: object) => void} [props.onLigne] rend la ligne entiere
+ *        cliquable. Les boutons et liens qu'elle porte gardent leur propre
+ *        clic ; le clavier passe par un bouton de la ligne, que la page
+ *        fournit.
+ */
+export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreur, vide, onLigne }) {
   /*
    * Arriver sur une ligne par son ancre (#compte-xxx).
    *
@@ -333,7 +340,19 @@ export function Tableau({ colonnes, lignes, cleLigne, idLigne, chargement, erreu
             <tr
               key={cleLigne ? cleLigne(ligne) : (ligne.id ?? index)}
               id={idLigne ? idLigne(ligne) : undefined}
-              className={visee && idLigne(ligne) === visee ? 'ligne--visee' : undefined}
+              className={
+                [visee && idLigne(ligne) === visee ? 'ligne--visee' : '', onLigne ? 'ligne--cliquable' : '']
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
+              onClick={
+                onLigne
+                  ? (evenement) => {
+                      if (evenement.target.closest('button, a, input, select, label, textarea')) return;
+                      onLigne(ligne);
+                    }
+                  : undefined
+              }
             >
               {colonnes.map((colonne) => (
                 <td key={colonne.cle} className={classeAlignement(colonne.aligne)}>

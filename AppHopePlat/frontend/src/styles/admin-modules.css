@@ -1352,3 +1352,268 @@
     font-size: 18px;
   }
 }
+
+/* ============================================================
+   Taches : la fenetre, l'equipe, les demandes
+
+   Une tache se confie a une equipe. La fenetre met d'abord ce qui
+   attend une decision -- les demandes --, puis l'equipe, puis la
+   preuve une fois livree.
+   ============================================================ */
+
+/* Une ligne qu'un clic ouvre. Le titre reste un vrai bouton, pour le
+   clavier ; la ligne entiere n'est qu'une facilite pour la souris. */
+.table tr.ligne--cliquable {
+  cursor: pointer;
+}
+
+.table tr.ligne--cliquable:hover td {
+  background-color: var(--admin-surface-douce);
+}
+
+.lien-tache {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  color: var(--admin-texte);
+  cursor: pointer;
+}
+
+.lien-tache:hover,
+.lien-tache:focus-visible {
+  color: var(--hope-violet);
+  text-decoration: underline;
+}
+
+/* Les visages de l'equipe, serres les uns sur les autres. */
+.equipe-bref {
+  display: inline-flex;
+  align-items: center;
+}
+
+.equipe-bref .visage {
+  width: 30px;
+  height: 30px;
+  box-shadow: 0 0 0 2px var(--admin-surface);
+}
+
+.equipe-bref .visage + .visage {
+  margin-left: -8px;
+}
+
+.equipe-bref .visage__initiales {
+  font-size: 11px;
+}
+
+.equipe-bref__plus {
+  margin-left: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.equipe-bref__nom {
+  margin-left: 8px;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.fenetre-tache {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fenetre-tache__attente {
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__faits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__retard {
+  font-weight: 600;
+  color: var(--etat-rouge);
+}
+
+.fenetre-tache__description {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--admin-texte);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.fenetre-tache__description--vide {
+  color: var(--admin-texte-faible);
+}
+
+.fenetre-tache__bloc {
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+/* Les demandes attendent une decision : elles se detachent. */
+.fenetre-tache__bloc--demandes {
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--etat-ambre) 35%, transparent);
+  border-radius: var(--admin-rayon);
+  background-color: var(--etat-ambre-fond);
+}
+
+.fenetre-tache__titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.fenetre-tache__compte {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-bordure);
+  font-size: 12px;
+  text-align: center;
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__aide {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__affecter {
+  margin-top: 12px;
+}
+
+.fenetre-tache__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.fenetre-tache__espace {
+  flex: 1;
+}
+
+.fenetre-tache__confirmer {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--etat-rouge);
+}
+
+.personnes-tache {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personne-tache {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--admin-bordure) 70%, transparent);
+}
+
+.personne-tache:last-child {
+  border-bottom: 0;
+}
+
+.personne-tache__qui {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.personne-tache__qui strong {
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.personne-tache__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* --- Choisir les benevoles a affecter --- */
+
+.choix-benevoles {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface-douce);
+}
+
+.choix-benevoles__recherche {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.choix-benevoles__liste {
+  max-height: 260px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.choix-benevoles__ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.choix-benevoles__ligne:hover {
+  background-color: var(--admin-surface);
+}
+
+.choix-benevoles__ligne input {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  accent-color: var(--hope-violet);
+}
+
+.choix-benevoles__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}

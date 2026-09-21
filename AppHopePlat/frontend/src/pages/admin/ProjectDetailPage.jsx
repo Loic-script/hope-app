@@ -37,6 +37,8 @@ import * as documentService from '../../services/document.service.js';
 import * as expenseService from '../../services/expense.service.js';
 import { Carrousel } from '../../components/preuves/MediasPreuve.jsx';
 import * as taskService from '../../services/task.service.js';
+import FenetreTache from '../../components/admin/FenetreTache.jsx';
+import { EquipeEnBref } from './TachesPage.jsx';
 import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as impactService from '../../services/impact.service.js';
@@ -79,6 +81,8 @@ export default function ProjectDetailPage() {
   const [modale, setModale] = useState({ nom: null, cible: null });
   // La preuve d'une tache livree, ouverte en grand.
   const [preuveTache, setPreuveTache] = useState(null);
+  // La tache ouverte dans sa fenetre : equipe, demandes, preuve.
+  const [tacheOuverte, setTacheOuverte] = useState(null);
   const ouvrir = (nom, cible = null) => setModale({ nom, cible });
   const fermer = () => setModale({ nom: null, cible: null });
 
@@ -1025,7 +1029,7 @@ export default function ProjectDetailPage() {
       {ongletActif === 'taches' && (
         <Panneau
           titre="Tâches à faire"
-          sousTitre="Ce que les bénévoles peuvent prendre en charge sur ce projet."
+          sousTitre="Ce que les bénévoles prennent en charge sur ce projet. Cliquez une tâche pour voir son équipe et les demandes."
           serre
           actions={
             !archive &&
@@ -1043,13 +1047,22 @@ export default function ProjectDetailPage() {
         >
           <Tableau
             lignes={donnees.tasks ?? []}
+            // Un clic sur la tache ouvre sa fenetre.
+            onLigne={(tache) => setTacheOuverte(tache.id)}
             colonnes={[
               {
                 cle: 'titre',
                 titre: 'Tâche',
                 rendu: (tache) => (
                   <div>
-                    <div className="table__principal">{tache.titre}</div>
+                    <button
+                      type="button"
+                      className="table__principal lien-tache"
+                      onClick={() => setTacheOuverte(tache.id)}
+                      aria-haspopup="dialog"
+                    >
+                      {tache.titre}
+                    </button>
                     {tache.description && (
                       <div className="table__secondaire">
                         {fmt.tronquer(tache.description, 80)}
@@ -1078,15 +1091,25 @@ export default function ProjectDetailPage() {
                 ),
               },
               {
-                // Qui l'a prise. Rien tant qu'elle est libre : c'est
-                // justement ce qui la rend disponible.
-                cle: 'benevoleId',
-                titre: 'Bénévole',
+                // Qui y travaille : une tache se confie a une equipe.
+                cle: 'equipe',
+                titre: 'Équipe',
+                rendu: (tache) => <EquipeEnBref equipe={tache.equipe} />,
+              },
+              {
+                // Les benevoles qui demandent a la prendre ou a la
+                // rejoindre : c'est a l'equipe de trancher.
+                cle: 'demandes',
+                titre: 'Demandes',
                 rendu: (tache) =>
-                  tache.benevoleId ? (
-                    <span>Prise{tache.priseLe ? ` le ${fmt.date(tache.priseLe)}` : ''}</span>
+                  tache.demandes?.length > 0 ? (
+                    <Badge
+                      valeur="demandes"
+                      libelles={{ demandes: `${tache.demandes.length} à valider` }}
+                      couleur="ambre"
+                    />
                   ) : (
-                    <span className="budget__hors">Libre</span>
+                    <span className="budget__hors">—</span>
                   ),
               },
               {
@@ -1112,7 +1135,7 @@ export default function ProjectDetailPage() {
                 titre: 'Actions',
                 aligne: 'droite',
                 rendu: (tache) =>
-                  archive || tache.benevoleId ? null : (
+                  archive || tache.equipe?.length > 0 ? null : (
                     <button
                       type="button"
                       className="lien-action lien-action--danger"
@@ -1126,11 +1149,19 @@ export default function ProjectDetailPage() {
             vide={
               <EtatVide
                 titre="Aucune tâche"
-                texte="Ajoutez-en une : elle apparaîtra aussitôt dans l’espace bénévole, et n’importe quel bénévole pourra la prendre."
+                texte="Ajoutez-en une : elle apparaîtra aussitôt dans l’espace bénévole. Affectez-y des bénévoles, ou validez leurs demandes."
               />
             }
           />
         </Panneau>
+      )}
+
+      {tacheOuverte && (
+        <FenetreTache
+          tacheId={tacheOuverte}
+          onFermer={() => setTacheOuverte(null)}
+          onChange={rechargerTout}
+        />
       )}
 
       {/* ================= Beneficiaires ================= */}

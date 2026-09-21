@@ -740,21 +740,21 @@ CREATE TABLE IF NOT EXISTS tache (
   titre        VARCHAR(160) NOT NULL,
   description  TEXT,
   echeance     DATE,
+  -- a_faire : personne dans l'equipe ; en_cours : au moins un benevole
+  -- affecte ; livree : l'un d'eux l'a declaree faite, preuve a l'appui.
   statut       VARCHAR(20)  NOT NULL DEFAULT 'a_faire',
-  -- NULL : personne ne l'a prise.
+  -- Ancienne affectation, a un seul benevole. L'equipe vit desormais dans
+  -- tache_benevole ; la colonne reste pour les bases existantes, et le
+  -- schema la vide plus bas apres en avoir repris le contenu.
   benevole_id  UUID         REFERENCES benevole(id) ON DELETE SET NULL,
+  -- Premiere affectation d'un benevole.
   prise_le     TIMESTAMPTZ,
   livree_le    TIMESTAMPTZ,
   validee_par  INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
   cree_le      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
 
   CONSTRAINT tache_statut_valide
-    CHECK (statut IN ('a_faire', 'en_cours', 'livree')),
-
-  -- Une tache prise a forcement quelqu'un derriere, et inversement.
-  CONSTRAINT tache_prise_coherente
-    CHECK ((statut = 'a_faire' AND benevole_id IS NULL)
-        OR (statut <> 'a_faire' AND benevole_id IS NOT NULL))
+    CHECK (statut IN ('a_faire', 'en_cours', 'livree'))
 );
 
 CREATE INDEX IF NOT EXISTS tache_benevole_idx ON tache (benevole_id, statut);
@@ -784,6 +784,69 @@ CREATE TABLE IF NOT EXISTS tache_fichier (
 );
 
 CREATE INDEX IF NOT EXISTS tache_fichier_tache_idx ON tache_fichier (tache_id, position);
+
+/*
+ * L'equipe d'une tache, et les demandes pour la rejoindre.
+ *
+ * Une tache se confie a un ou plusieurs benevoles : c'est une tache
+ * d'equipe, que n'importe lequel d'entre eux declare livree pour tous.
+ * Deux chemins y menent :
+ *
+ *   * l'equipe HOPE affecte directement (origine "equipe") ;
+ *   * un benevole demande a la prendre ou a la rejoindre (origine
+ *     "benevole") ; sa demande attend la decision de l'equipe, qui
+ *     l'accepte ou la refuse.
+ *
+ * Une ligne par benevole et par tache : "demandee", puis "affectee" ou
+ * "refusee". Un benevole refuse peut redemander ; quitter la tache, ou
+ * en etre retire, efface la ligne.
+ */
+CREATE TABLE IF NOT EXISTS tache_benevole (
+  id           BIGSERIAL    PRIMARY KEY,
+  tache_id     UUID         NOT NULL REFERENCES tache(id) ON DELETE CASCADE,
+  benevole_id  UUID         NOT NULL REFERENCES benevole(id) ON DELETE CASCADE,
+  statut       VARCHAR(20)  NOT NULL,
+  origine      VARCHAR(20)  NOT NULL,
+  demandee_le  TIMESTAMPTZ,
+  affectee_le  TIMESTAMPTZ,
+  -- Qui a affecte, accepte ou refuse.
+  decidee_par  INTEGER      REFERENCES admins(id) ON DELETE SET NULL,
+  decidee_le   TIMESTAMPTZ,
+  cree_le      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  UNIQUE (tache_id, benevole_id),
+  CONSTRAINT tache_benevole_statut_valide
+    CHECK (statut IN ('demandee', 'affectee', 'refusee')),
+  CONSTRAINT tache_benevole_origine_valide
+    CHECK (origine IN ('equipe', 'benevole'))
+);
+
+CREATE INDEX IF NOT EXISTS tache_benevole_benevole_idx ON tache_benevole (benevole_id, statut);
+CREATE INDEX IF NOT EXISTS tache_benevole_tache_idx    ON tache_benevole (tache_id, statut);
+-- Le compteur des demandes a valider, lu a chaque changement de page.
+CREATE INDEX IF NOT EXISTS tache_benevole_demandes_idx
+  ON tache_benevole (tache_id) WHERE statut = 'demandee';
+
+-- Qui, dans l'equipe, a declare la tache livree.
+ALTER TABLE tache ADD COLUMN IF NOT EXISTS livree_par UUID REFERENCES benevole(id) ON DELETE SET NULL;
+
+-- Une tache en cours n'a plus un benevole unique : la regle qui liait le
+-- statut a benevole_id tombe.
+ALTER TABLE tache DROP CONSTRAINT IF EXISTS tache_prise_coherente;
+
+-- Reprise des affectations d'avant, rejouable sans doublon : chaque
+-- benevole garde sa tache, et la livraison garde son auteur.
+INSERT INTO tache_benevole (tache_id, benevole_id, statut, origine, affectee_le, cree_le)
+SELECT id, benevole_id, 'affectee', 'benevole',
+       COALESCE(prise_le, cree_le), COALESCE(prise_le, cree_le)
+  FROM tache
+ WHERE benevole_id IS NOT NULL
+ON CONFLICT (tache_id, benevole_id) DO NOTHING;
+
+UPDATE tache SET livree_par = benevole_id
+ WHERE statut = 'livree' AND livree_par IS NULL AND benevole_id IS NOT NULL;
+
+UPDATE tache SET benevole_id = NULL WHERE benevole_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS avis_mission (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

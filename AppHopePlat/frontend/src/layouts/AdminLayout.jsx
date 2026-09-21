@@ -13,6 +13,7 @@ import {
   PleineMessages,
   PleinePreuves,
   PleineProjets,
+  PleineTaches,
 } from '../components/IconesPleines.jsx';
 import { api } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
@@ -51,6 +52,15 @@ const GROUPES = [
     titre: 'Gestion des projets',
     entrees: [
       { to: '/admin/projects', label: 'Projets', Icone: PleineProjets },
+      // Toutes les taches, et les demandes des benevoles a valider : la
+      // pastille dit combien attendent une decision.
+      {
+        to: '/admin/taches',
+        label: 'Tâches',
+        Icone: PleineTaches,
+        compteur: 'taches',
+        annonce: (n) => `${n} demande(s) à valider`,
+      },
       { to: '/admin/beneficiaries', label: 'Bénéficiaires', Icone: PleineFamille },
       { to: '/admin/proofs', label: 'Preuves terrain', Icone: PleinePreuves },
     ],

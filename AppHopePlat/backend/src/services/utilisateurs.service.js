@@ -210,7 +210,8 @@ export async function profilCompte(id) {
     const fiche = await depot.ficheBenevole(compte.id);
     const [taches, missions] = fiche
       ? await Promise.all([
-          taskRepository.lister({ benevoleId: fiche.id }),
+          // Les taches dont il fait partie de l'equipe.
+          taskRepository.lister({ membre: fiche.id }),
           depot.missionsDuBenevole(fiche.id),
         ])
       : [[], []];

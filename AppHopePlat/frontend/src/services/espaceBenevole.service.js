@@ -43,13 +43,24 @@ export async function tachesLibres() {
   return data.items ?? [];
 }
 
-/** POST /api/benevole/taches/:id/prendre */
-export async function prendreTache(id) {
-  const { data } = await apiBenevole.post(`/benevole/taches/${id}/prendre`);
+/**
+ * POST /api/benevole/taches/:id/demander
+ *
+ * Prendre une tache -- ou rejoindre son equipe --, c'est la demander :
+ * elle ne devient la sienne qu'une fois validee par l'equipe HOPE.
+ */
+export async function demanderTache(id) {
+  const { data } = await apiBenevole.post(`/benevole/taches/${id}/demander`);
   return data;
 }
 
-/** POST /api/benevole/taches/:id/relacher */
+/** POST /api/benevole/taches/:id/annuler-demande */
+export async function annulerDemandeTache(id) {
+  const { data } = await apiBenevole.post(`/benevole/taches/${id}/annuler-demande`);
+  return data;
+}
+
+/** POST /api/benevole/taches/:id/relacher — quitter l'equipe de la tache. */
 export async function relacherTache(id) {
   const { data } = await apiBenevole.post(`/benevole/taches/${id}/relacher`);
   return data;

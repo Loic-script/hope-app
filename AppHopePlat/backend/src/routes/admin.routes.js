@@ -119,6 +119,17 @@ router.post('/projects/:projectId/tasks', exigerEcriture, tasks.creer);
 router.delete('/tasks/:id', exigerEcriture, tasks.supprimer);
 router.get('/tasks/:id/files/:fileId', tasks.fichier);
 
+// Toutes les taches, leur equipe et les demandes des benevoles. Une
+// tache se confie a un ou plusieurs benevoles ; une demande attend la
+// decision de l'equipe. Les ecritures passent par le verrou global.
+router.get('/taches', tasks.listerTout);
+router.get('/taches/benevoles', tasks.benevoles);
+router.get('/taches/:id', tasks.recuperer);
+router.post('/taches/:id/equipe', tasks.affecter);
+router.delete('/taches/:id/equipe/:benevoleId', tasks.retirer);
+router.post('/taches/:id/demandes/:benevoleId/accepter', tasks.accepter);
+router.post('/taches/:id/demandes/:benevoleId/refuser', tasks.refuser);
+
 // Le courrier des espaces benevole et bailleur, distinct de celui des
 // donateurs : autre table, autres destinataires.
 // Les conversations : l'equipe y est un participant comme un autre.

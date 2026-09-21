@@ -213,7 +213,8 @@ export async function listerPourBenevole(client = null) {
        FROM projects p
        LEFT JOIN project_categories c ON c.id = p.category_id
        LEFT JOIN LATERAL (
-         SELECT COUNT(*) FILTER (WHERE statut = 'a_faire' AND benevole_id IS NULL)::int AS libres,
+         -- Libre : personne encore dans l'equipe.
+         SELECT COUNT(*) FILTER (WHERE statut = 'a_faire')::int AS libres,
                 COUNT(*)::int AS total
            FROM tache WHERE projet_id = p.id
        ) t ON TRUE

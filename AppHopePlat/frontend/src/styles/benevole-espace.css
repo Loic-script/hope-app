@@ -2167,3 +2167,77 @@
   font-size: 12.5px;
   color: var(--admin-texte-faible);
 }
+
+/* ============================================================
+   Taches d'equipe et demandes
+
+   Prendre une tache, c'est la demander : l'equipe HOPE valide.
+   La carte dit ou en est la demande, et qui travaille deja dessus.
+   ============================================================ */
+
+.carte-tache__equipe,
+.detail-tache__equipe,
+.tache-projet__equipe {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.detail-tache__equipe {
+  margin-top: 10px;
+  font-size: 13.5px;
+}
+
+/* L'etat de la demande : une ligne a part, au-dessus des boutons. */
+.etat-demande {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--etat-ambre);
+}
+
+.etat-demande--dedans {
+  color: var(--etat-vert);
+}
+
+.etat-demande--refus {
+  color: var(--admin-texte-doux);
+  font-weight: 500;
+}
+
+.tache-projet__action {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  max-width: 260px;
+  text-align: right;
+}
+
+.tache-projet__action .etat-demande {
+  text-align: right;
+}
+
+.modale__pied .etat-demande {
+  flex-basis: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 620px) {
+  .tache-projet {
+    flex-wrap: wrap;
+  }
+
+  .tache-projet__action {
+    justify-content: flex-start;
+    max-width: none;
+    text-align: left;
+  }
+
+  .tache-projet__action .etat-demande {
+    text-align: left;
+  }
+}
