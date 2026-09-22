@@ -314,9 +314,6 @@ function ProfilBenevole({ benevole }) {
             <Pastilles valeurs={fiche?.langues} />
           </LigneFiche>
           <LigneFiche terme="Disponibilités">{disponibilites(fiche?.disponibilites)}</LigneFiche>
-          <LigneFiche terme="Rayon de déplacement">
-            {fiche?.rayonKm != null ? `${fiche.rayonKm} km` : null}
-          </LigneFiche>
           <LigneFiche terme="Missions de terrain">{ouiNon(fiche?.accepteTerrain)}</LigneFiche>
           <LigneFiche terme="Missions à distance">{ouiNon(fiche?.accepteDistance)}</LigneFiche>
           <LigneFiche terme="Contact d’urgence">

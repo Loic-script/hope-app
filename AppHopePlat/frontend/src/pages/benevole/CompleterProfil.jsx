@@ -38,7 +38,6 @@ export default function CompleterProfil() {
     competences: '',
     langues: '',
     disponibilites: {},
-    rayonKm: '',
     adresse: '',
     dateDeNaissance: '',
     contactUrgenceNom: '',
@@ -74,7 +73,6 @@ export default function CompleterProfil() {
     try {
       await apiBenevole.post('/benevole/profil/completer', {
         ...champs,
-        rayonKm: champs.rayonKm === '' ? null : champs.rayonKm,
         dateDeNaissance: champs.dateDeNaissance || null,
       });
       // La garde relit le profil et route d'elle-meme vers l'espace :
@@ -215,22 +213,6 @@ export default function CompleterProfil() {
                 </div>
               ))}
             </div>
-          </fieldset>
-
-          <fieldset className="completion__groupe">
-            <legend>Vos déplacements</legend>
-
-            <Champ
-              id="rayonKm"
-              libelle="Distance acceptée depuis votre quartier"
-              type="number"
-              min="0"
-              max="500"
-              valeur={champs.rayonKm}
-              onChange={(v) => modifier('rayonKm', v)}
-              disabled={envoi}
-              aide="En kilomètres."
-            />
           </fieldset>
 
           <fieldset className="completion__groupe">

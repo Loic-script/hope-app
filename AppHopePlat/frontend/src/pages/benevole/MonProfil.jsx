@@ -47,7 +47,6 @@ export default function MonProfil() {
       competences: (donnees.competences ?? []).join(', '),
       langues: (donnees.langues ?? []).join(', '),
       disponibilites: donnees.disponibilites ?? {},
-      rayonKm: donnees.rayonKm ?? '',
       contactUrgenceNom: donnees.contactUrgenceNom ?? '',
       contactUrgenceTel: donnees.contactUrgenceTel ?? '',
       adresse: donnees.adresse ?? '',
@@ -90,7 +89,6 @@ export default function MonProfil() {
         competences: champs.competences,
         langues: champs.langues,
         disponibilites: champs.disponibilites,
-        rayonKm: champs.rayonKm === '' ? null : champs.rayonKm,
         contactUrgenceNom: champs.contactUrgenceNom,
         contactUrgenceTel: champs.contactUrgenceTel,
         adresse: champs.adresse,
@@ -259,21 +257,6 @@ export default function MonProfil() {
               </div>
             ))}
           </div>
-        </fieldset>
-
-        <fieldset className="profil-benevole__groupe">
-          <legend>Mes déplacements</legend>
-
-          <Champ
-            id="rayonKm"
-            libelle="Distance acceptée depuis mon quartier"
-            type="number"
-            min="0"
-            max="500"
-            valeur={champs.rayonKm}
-            onChange={(v) => modifier('rayonKm', v)}
-            aide="En kilomètres."
-          />
         </fieldset>
 
         <fieldset className="profil-benevole__groupe">

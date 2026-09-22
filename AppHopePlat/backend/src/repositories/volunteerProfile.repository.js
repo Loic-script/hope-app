@@ -13,7 +13,7 @@ import { construireSet, versObjet } from '../shared/mapping.js';
 
 const COLONNES = `
   b.id, b.utilisateur_id, b.profession, b.competences, b.langues,
-  b.disponibilites, b.rayon_km, b.accepte_terrain, b.accepte_distance,
+  b.disponibilites, b.accepte_terrain, b.accepte_distance,
   b.contact_urgence_nom, b.contact_urgence_tel,
   b.valide_par_hope, b.valide_le, b.benevole_depuis, b.cree_le,
   u.nom, u.prenom, u.email, u.telephone, u.adresse,

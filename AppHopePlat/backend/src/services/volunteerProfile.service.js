@@ -55,7 +55,6 @@ function versProfilPublic(fiche) {
     competences: fiche.competences ?? [],
     langues: fiche.langues ?? [],
     disponibilites: fiche.disponibilites ?? {},
-    rayonKm: fiche.rayonKm,
     accepteTerrain: fiche.accepteTerrain,
     accepteDistance: fiche.accepteDistance,
     contactUrgenceNom: fiche.contactUrgenceNom,
@@ -218,27 +217,13 @@ export async function mettreAJour(utilisateurId, corps = {}) {
   const fiche = await profileRepository.garantir(utilisateurId);
   if (!fiche) throw new ErreurIntrouvable('Le profil bénévole', utilisateurId);
 
-  let rayon;
-  if (corps.rayonKm !== undefined) {
-    if (corps.rayonKm === null || corps.rayonKm === '') {
-      rayon = null;
-    } else {
-      const nombre = Number.parseInt(corps.rayonKm, 10);
-      if (!Number.isInteger(nombre) || nombre < 0 || nombre > 500) {
-        throw new ErreurValidation('Le rayon doit être un entier de 0 à 500 km.', {
-          rayonKm: 'Entre 0 et 500',
-        });
-      }
-      rayon = nombre;
-    }
-  }
-
   const colonnesFiche = {
     profession: texte(corps.profession, 'profession', 120),
     competences: listeDeTextes(corps.competences, 'competences'),
     langues: listeDeTextes(corps.langues, 'langues'),
     disponibilites: disponibilitesValides(corps.disponibilites),
-    rayon_km: rayon,
+    // La distance acceptee depuis le quartier ne se demande plus : la
+    // colonne rayon_km reste en base, mais n'est plus ni lue ni ecrite.
     accepte_terrain: booleen(corps.accepteTerrain),
     accepte_distance: booleen(corps.accepteDistance),
     contact_urgence_nom: texte(corps.contactUrgenceNom, 'contactUrgenceNom', 120),

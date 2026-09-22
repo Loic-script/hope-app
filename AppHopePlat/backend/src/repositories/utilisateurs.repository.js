@@ -148,7 +148,7 @@ export async function fichesDeLAdresse(email, client = null) {
 export async function ficheBenevole(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT b.id, b.profession, b.competences, b.langues, b.disponibilites,
-            b.rayon_km, b.accepte_terrain, b.accepte_distance,
+            b.accepte_terrain, b.accepte_distance,
             b.contact_urgence_nom, b.contact_urgence_tel,
             b.valide_par_hope, b.valide_le, b.benevole_depuis::text AS benevole_depuis,
             b.notes_internes
