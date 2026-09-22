@@ -54,16 +54,16 @@ function TachesDuProjet({ projet }) {
 /**
  * Accueil de l'espace benevole.
  *
- * La page ne liste pas : elle met en avant. En haut, l'invitation --
- * "Une tache pour chaque savoir-faire." -- avec ses chiffres, et la
- * tache qu'il pourrait prendre ; puis les projets ; en bas, son journal.
- * Des elements, pas des listes : le reste de l'espace a ses propres
- * ecrans, et chaque bloc y renvoie. Sa prochaine tache a rendre se lit
- * dans le premier chiffre, et ses taches dans "Mes taches".
+ * La page ne liste pas : elle met en avant. En haut, la carte a photo et
+ * ses trois chiffres, et la tache qu'il pourrait prendre ; puis les
+ * projets ; en bas, son journal. Des elements, pas des listes : le reste
+ * de l'espace a ses propres ecrans, et chaque bloc y renvoie. Sa
+ * prochaine tache a rendre se lit dans le premier chiffre, et ses taches
+ * dans "Mes taches".
  *
- * Les trois chiffres de l'invitation parlent de lui d'abord : ce qu'il a
- * en cours, ce qu'il a deja livre, et seulement ensuite ce qui attend
- * quelqu'un. Ils remplacent les trois reperes qui la precedaient.
+ * Les trois chiffres parlent de lui d'abord : ce qu'il a en cours, ce
+ * qu'il a deja livre, et seulement ensuite ce qui attend quelqu'un. La
+ * carte ne porte rien d'autre -- ni titre, ni bouton.
  */
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
@@ -106,7 +106,7 @@ export default function VueDensemble() {
         </Link>
       </header>
 
-      {/* ---------- L'invitation et ses chiffres, et la tache a prendre ---------- */}
+      {/* ---------- La carte des chiffres, et la tache a prendre ---------- */}
       <div className="accueil-benevole__paire">
         <section className="invitation" aria-labelledby="invitation-titre">
           <div className="invitation__photo" aria-hidden="true">
@@ -114,12 +114,10 @@ export default function VueDensemble() {
           </div>
 
           <div className="invitation__corps">
-            <p className="surtitre surtitre--clair">
-              <span className="trait-hope surtitre__trait" aria-hidden="true" />
-              Envie de participer davantage ?
-            </p>
-            <h2 className="invitation__titre" id="invitation-titre">
-              Une tâche pour chaque <span className="invitation__souligne">savoir-faire.</span>
+            {/* La carte ne montre que ses chiffres ; le titre reste pour
+                les lecteurs d'ecran, qui s'orientent par les titres. */}
+            <h2 className="sr-only" id="invitation-titre">
+              Vos tâches en chiffres
             </h2>
 
             {/*
@@ -166,11 +164,6 @@ export default function VueDensemble() {
                 teinte="orange"
               />
             </ul>
-
-            <Link className="invitation__action" to="/benevole/projets">
-              Explorer les projets
-              <IconeChevronDroit />
-            </Link>
           </div>
         </section>
 

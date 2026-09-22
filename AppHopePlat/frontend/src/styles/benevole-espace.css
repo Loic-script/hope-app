@@ -1176,24 +1176,31 @@
 /* --- L'invitation, et l'apercu du journal --- */
 
 /*
- * Le seul bloc de la page a fond plein.
+ * Le seul bloc de la page a fond plein : la photo, et les trois chiffres
+ * du benevole poses dessus. Rien d'autre -- ni titre, ni bouton.
  *
- * Il propose, et dit ou en est le benevole : le violet le distingue des
- * panneaux blancs qui, eux, rendent compte. La photo tient la droite et
- * se fond dans le violet ; le titre, les chiffres et l'action se lisent
- * par-dessus, du cote du fond plein.
+ * La photo couvre toute la carte ; un degrade violet monte du bas pour
+ * que les chiffres se lisent, et laisse le haut de l'image en clair.
  *
  * L'entree se joue une fois, a l'arrivee : la carte monte, la photo se
- * pose, le trait jaune se trace sous "savoir-faire.", puis les chiffres
- * arrivent l'un apres l'autre en comptant. Rien ne boucle ensuite.
+ * pose, puis les chiffres arrivent l'un apres l'autre en comptant. Rien
+ * ne boucle ensuite.
+ *
+ * En colonne : sur ecran large, le corps prend toute la hauteur et les
+ * chiffres tombent en bas ; sur telephone, la photo passe dans le flux,
+ * en bandeau au-dessus d'eux.
+ *
+ * La carte est un conteneur : ses chiffres passent en lignes selon SA
+ * largeur, pas celle de l'ecran -- le menu lateral ouvert peut la
+ * reduire de moitie sur une tablette.
  */
-/* En colonne : sur telephone, la photo passe dans le flux au-dessus du
-   corps, et le corps prend ce qui reste -- l'action tombe en bas. */
 .invitation {
+  container: invitation / inline-size;
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
+  min-height: 350px;
   overflow: hidden;
   border-radius: 18px;
   background:
@@ -1204,23 +1211,45 @@
   animation: invitation-entree 560ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
 }
 
-/* La photo, a droite, fondue dans le violet par un masque. */
+/* La photo sur toute la carte, et le degrade qui monte du bas.
+   --visage : ou tombe le visage de l'enfant, depuis le haut de la carte. */
 .invitation__photo {
+  --visage: 108px;
   position: absolute;
-  inset: 0 0 0 auto;
+  inset: 0;
   z-index: -1;
-  width: 58%;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 48%);
-  mask-image: linear-gradient(to right, transparent 0%, #000 48%);
 }
 
+.invitation__photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    var(--hope-violet-fonce) 0%,
+    rgba(74, 68, 121, 0.7) 34%,
+    rgba(74, 68, 121, 0.1) 60%,
+    rgba(74, 68, 121, 0) 72%
+  );
+}
+
+/*
+ * L'image est un portrait (1024 x 1156), le visage vers 60 % de sa
+ * hauteur. Un cadrage en pourcentage le ferait monter a mesure que la
+ * carte s'elargit, jusqu'a le couper sur grand ecran. On le pose donc a
+ * --visage du haut, quelle que soit la largeur : une marge en % se
+ * compte sur la largeur, et 60 % d'une image haute de 112,9 % de sa
+ * largeur font 67,7 % de cette largeur.
+ */
 .invitation__photo img {
+  position: absolute;
+  top: var(--visage);
+  left: 0;
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 40% 35%;
+  height: auto;
+  margin-top: -67.7%;
   animation: invitation-photo 1600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
@@ -1228,38 +1257,8 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 26px 28px 28px;
-}
-
-.invitation__titre {
-  max-width: 15em;
-  font-size: 25px;
-  font-weight: 700;
-  line-height: 1.22;
-  letter-spacing: -0.015em;
-  text-wrap: balance;
-}
-
-/* Le trait sous "savoir-faire." : trace a l'entree, de gauche a droite,
-   jusqu'au "e" -- le point reste hors du trait. */
-.invitation__souligne {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-.invitation__souligne::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0.32em;
-  bottom: -0.06em;
-  height: 0.15em;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--hope-jaune), var(--hope-orange));
-  transform-origin: left center;
-  animation: invitation-trait 720ms 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  justify-content: flex-end;
+  padding: 22px;
 }
 
 /* --- Les trois chiffres --- */
@@ -1269,7 +1268,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
-  margin: 22px 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -1415,50 +1414,6 @@
   outline-color: var(--hope-jaune);
 }
 
-/* --- L'action --- */
-
-.invitation__action {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  margin-top: auto;
-  padding: 10px 18px 10px 20px;
-  border-radius: 999px;
-  background-color: var(--hope-jaune);
-  box-shadow: 0 10px 22px -12px rgba(245, 227, 137, 0.8);
-  font-size: 14.5px;
-  font-weight: 700;
-  color: var(--hope-violet-fonce);
-  text-decoration: none;
-  transition:
-    transform 200ms cubic-bezier(0.22, 0.8, 0.3, 1),
-    background-color 200ms ease-out,
-    box-shadow 200ms ease-out;
-}
-
-.invitation__action svg {
-  width: 18px;
-  height: 18px;
-  transition: transform 200ms ease-out;
-}
-
-@media (hover: hover) {
-  .invitation__action:hover {
-    background-color: #f9ecab;
-    box-shadow: 0 14px 26px -12px rgba(245, 227, 137, 0.9);
-    transform: translateY(-1px);
-  }
-
-  .invitation__action:hover svg {
-    transform: translateX(3px);
-  }
-}
-
-.invitation__action:active {
-  transform: scale(0.98);
-}
-
 @keyframes invitation-entree {
   from {
     opacity: 0;
@@ -1481,35 +1436,24 @@
   }
 }
 
-@keyframes invitation-trait {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
 /* Quand l'appareil demande moins de mouvement : tout est la d'emblee. */
 @media (prefers-reduced-motion: reduce) {
   .invitation,
   .invitation__photo img,
-  .invitation__souligne::after,
   .invitation__chiffre {
     animation: none;
   }
 
   .chiffre-invitation,
   .chiffre-invitation__icone,
-  .chiffre-invitation__fleche,
-  .invitation__action,
-  .invitation__action svg {
+  .chiffre-invitation__fleche {
     transition: none;
   }
 
   .chiffre-invitation:hover,
   .chiffre-invitation:active,
   .chiffre-invitation:hover .chiffre-invitation__icone,
-  .chiffre-invitation:hover .chiffre-invitation__fleche,
-  .invitation__action:hover,
-  .invitation__action:active,
-  .invitation__action:hover svg {
+  .chiffre-invitation:hover .chiffre-invitation__fleche {
     transform: none;
   }
 }
@@ -1591,27 +1535,25 @@
 
 @media (max-width: 780px) {
   /*
-   * La photo passe au-dessus du texte plutot que de le comprimer, et se
-   * fond vers le bas dans le violet ; le titre remonte un peu sur elle.
+   * La photo passe en bandeau au-dessus des chiffres plutot que de les
+   * comprimer ; le degrade la fond vers le bas dans le violet, et les
+   * chiffres remontent un peu sur elle.
    */
+  .invitation {
+    min-height: 0;
+  }
+
   .invitation__photo {
+    --visage: 82px;
     position: relative;
     inset: auto;
-    width: 100%;
     height: 190px;
-    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
   }
 
   .invitation__corps {
     position: relative;
-    margin-top: -40px;
-    padding: 0 20px 22px;
-  }
-
-  .invitation__titre {
-    max-width: none;
-    font-size: 22px;
+    margin-top: -48px;
+    padding: 0 16px 16px;
   }
 
   .accueil-benevole__titre {
@@ -1620,11 +1562,12 @@
 }
 
 /*
- * Telephone : les trois chiffres passent en lignes -- l'icone, le nombre
- * et son libelle, la precision dessous, la fleche au bout. En colonnes,
- * la precision n'aurait plus la place d'etre lue.
+ * Carte etroite (telephone, tablette au menu ouvert) : les trois chiffres
+ * passent en lignes -- l'icone, le nombre et son libelle, la precision
+ * dessous, la fleche au bout. En colonnes, la precision n'aurait plus la
+ * place d'etre lue.
  */
-@media (max-width: 560px) {
+@container invitation (max-width: 480px) {
   .invitation__chiffres {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
@@ -1663,11 +1606,6 @@
 
   .chiffre-invitation__libelle {
     margin-top: 0;
-  }
-
-  .invitation__action {
-    align-self: stretch;
-    justify-content: center;
   }
 }
 
