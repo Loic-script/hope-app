@@ -131,7 +131,7 @@ export function BarreRepartition({ lignes, cleLibelle = 'domaine', clePart = 'pa
             key={ligne[cleLibelle]}
             className={`repartition__part repartition__part--${(index % 5) + 1}`}
             style={{ flexGrow: Math.max(0.5, Number(ligne[clePart]) || 0) }}
-            title={`${ligne[cleLibelle]} — ${ligne[clePart]} %`}
+            title={`${ligne[cleLibelle]} — ${fmt.pourcent(ligne[clePart])}`}
           />
         ))}
       </div>
@@ -141,9 +141,16 @@ export function BarreRepartition({ lignes, cleLibelle = 'domaine', clePart = 'pa
           <li key={ligne[cleLibelle]}>
             <span className={`repartition__puce repartition__puce--${(index % 5) + 1}`} />
             <span className="repartition__nom">{ligne[cleLibelle]}</span>
-            <strong className="repartition__chiffre">{ligne[clePart]} %</strong>
+            <strong className="repartition__chiffre">{fmt.pourcent(ligne[clePart])}</strong>
             {ligne.montant !== undefined && (
               <span className="repartition__montant">{fmt.montant(ligne.montant)}</span>
+            )}
+            {/* Une repartition ne porte pas toujours un montant : les
+                beneficiaires se comptent en personnes. */}
+            {ligne.nombre !== undefined && (
+              <span className="repartition__montant repartition__montant--nombre">
+                {fmt.nombre(ligne.nombre)}
+              </span>
             )}
           </li>
         ))}

@@ -15,6 +15,14 @@ export const STATUTS_PROJET = {
   ARCHIVED: { libelle: 'Archivé', teinte: 'gris' },
 };
 
+/**
+ * Un projet qu'on peut encore financer : en cours, et dont le budget
+ * n'est pas couvert. Sert au bouton "Financer", ici et sur la fiche.
+ */
+export function ouvertAuFinancement(projet) {
+  return projet?.status === 'IN_PROGRESS' && Number(projet.tauxFinancement ?? 0) < 100;
+}
+
 /** Les filtres du haut de page. */
 const FILTRES = [
   { cle: 'tous', label: 'Tous', garde: () => true },
@@ -181,7 +189,18 @@ function CarteProjet({ projet, onRapport }) {
       </dl>
 
       <div className="projet-bailleur__actions">
-        <Link className="bouton-bailleur" to={`/bailleur/projets/${projet.id}`}>
+        {/* Financer, c'est promettre un don a ce projet : le meme parcours
+            que depuis le fil d'actualite. Un projet termine, archive ou
+            deja finance ne le propose pas. */}
+        {ouvertAuFinancement(projet) && (
+          <Link className="bouton-bailleur" to={`/bailleur/faire-un-don?projet=${projet.id}`}>
+            Financer
+          </Link>
+        )}
+        <Link
+          className={`bouton-bailleur${ouvertAuFinancement(projet) ? ' bouton-bailleur--discret' : ''}`}
+          to={`/bailleur/projets/${projet.id}`}
+        >
           Voir le projet
         </Link>
         <button type="button" className="bouton-bailleur bouton-bailleur--discret" onClick={onRapport}>

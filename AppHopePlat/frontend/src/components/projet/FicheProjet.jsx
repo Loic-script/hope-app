@@ -311,8 +311,11 @@ function OngletFinancement({ projet, finance, depenses, votrePart }) {
  * L'impact du projet, comme dans la fiche de l'administration : les
  * totaux mesures, l'impact general en phrases, les mesures objectif par
  * objectif. Seules les mesures collectives arrivent ici.
+ *
+ * Exporte : la fiche projet de l'espace bailleur, qui a sa propre mise
+ * en page, montre le meme onglet Impact.
  */
-function OngletImpact({ impacts, synthese, indicateurs }) {
+export function OngletImpact({ impacts, synthese, indicateurs }) {
   const generaux = impacts.filter((impact) => !impact.objectiveId);
   const parObjectif = impacts.filter((impact) => impact.objectiveId);
 

@@ -273,9 +273,12 @@
   border-radius: 3px;
 }
 
+/* Un libelle long -- "Âge non renseigné", un nom de ville -- se coupe
+   plutot que de passer sous le chiffre, qui est cale a droite. */
 .repartition__nom {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .repartition__chiffre {
@@ -289,6 +292,12 @@
   text-align: right;
   font-size: 12.5px;
   color: var(--admin-texte-faible);
+}
+
+/* Un nombre de personnes tient en deux caracteres : lui reserver la
+   largeur d'un montant ecraserait le libelle sur un telephone. */
+.repartition__montant--nombre {
+  min-width: 42px;
 }
 
 /* ============================================================
@@ -1299,4 +1308,51 @@
   .kpi__carte:last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
+}
+
+/* ============================================================
+   La fiche d'un projet, cote partenaire
+
+   Elle a la forme de celle de l'administration -- la photo en
+   couverture, le bandeau des quatre chiffres, les onglets -- sans
+   aucune prise sur le projet. Ces quelques regles ne posent que ce
+   qui lui est propre.
+   ============================================================ */
+
+.fiche-projet-bailleur .couverture-projet {
+  margin-bottom: 18px;
+}
+
+.fiche-projet-bailleur .page-bailleur__entete {
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+/* Le statut, "Vous financez", et le lieu du projet sur la meme ligne. */
+.fiche-projet-bailleur__jetons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.fiche-projet-bailleur__lieu {
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.fiche-projet-bailleur .resume-financier {
+  margin-bottom: 18px;
+}
+
+/* Ce que HOPE ne communique pas, et pourquoi : au pied de l'onglet, en
+   retrait, pour que la limite se lise sans couper la lecture. */
+.fiche-projet-bailleur__note {
+  margin-top: 14px;
+  padding-left: 12px;
+  border-left: 3px solid var(--admin-bordure-forte);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-texte-faible);
 }
