@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { IconeCalendrier, IconePersonne } from '../../components/admin/AdminIcons.jsx';
 import ChampPhotoActualite from '../../components/admin/ChampPhotoActualite.jsx';
 import {
   ChampSelection,
@@ -9,17 +10,20 @@ import {
   ModaleConfirmation,
   ModaleFormulaire,
 } from '../../components/admin/forms.jsx';
+import { JaugeHorizon, Mesure } from '../../components/admin/PublicationProjet.jsx';
 import {
   Alerte,
   Badge,
+  BarreOutils,
   BoutonAjout,
+  Chargement,
   EntetePage,
   EtatVide,
-  Onglets,
   Panneau,
-  Progression,
 } from '../../components/admin/ui.jsx';
+import HopeLogo from '../../components/HopeLogo.jsx';
 import BoutonMessage from '../../components/messagerie/BoutonMessage.jsx';
+import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import { api, urlMedia } from '../../services/api.js';
 import * as projectService from '../../services/project.service.js';
@@ -54,12 +58,26 @@ const ESPACES = {
   appel_financement: 'de l’espace bailleur',
 };
 
+/** Ce qu'une recherche parcourt dans une publication. */
+function texteCherchable(publication) {
+  return [
+    publication.titre,
+    publication.corps,
+    publication.projetNom,
+    publication.projetReference,
+    publication.publieParNom,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
 /**
  * Actualites des espaces bailleur et benevole.
  *
  * Ce que l'equipe publie ici, chaque bailleur le lit dans sa page
  * Actualites, et sa cloche l'en previent. Deux natures : l'actualite,
- * qui informe, et l'appel a financement, dont la barre suit le budget du
+ * qui informe, et l'appel a financement, dont la jauge suit le budget du
  * projet lie et qui porte le bouton "Financer ce projet".
  *
  * Les benevoles lisent aussi les actualites, dans leur propre page
@@ -67,9 +85,14 @@ const ESPACES = {
  *
  * Sous chaque appel, les bailleurs qui ont clique ce bouton : c'est ici
  * que l'equipe les retrouve pour les recontacter.
+ *
+ * La page se lit comme celle des projets : la meme barre d'outils --
+ * recherche, filtres, compteur -- puis les memes cartes, visuel a gauche
+ * et contenu a droite.
  */
 export default function PublicationsPage() {
   const [filtre, setFiltre] = useState('tous');
+  const [recherche, setRecherche] = useState('');
   const [edition, setEdition] = useState(null); // null, { publication: null } ou { publication }
   const [aSupprimer, setASupprimer] = useState(null);
   const [succes, setSucces] = useState('');
@@ -82,15 +105,21 @@ export default function PublicationsPage() {
 
   const publications = donnees?.items ?? [];
   const compteurs = donnees?.counts ?? {};
-  const affichees = filtre === 'tous' ? publications : publications.filter((p) => p.type === filtre);
+  const cherche = recherche.trim().toLowerCase();
 
-  const onglets = [
-    { cle: 'tous', label: 'Toutes', compteur: compteurs.tous ?? 0 },
-    { cle: 'actualite', label: 'Actualités', compteur: compteurs.actualite ?? 0 },
+  const affichees = publications.filter(
+    (p) =>
+      (filtre === 'tous' || p.type === filtre) &&
+      (!cherche || texteCherchable(p).includes(cherche))
+  );
+
+  // Le nombre accompagne chaque filtre, comme les onglets le faisaient.
+  const filtres = [
+    { valeur: 'tous', label: `Toutes (${compteurs.tous ?? publications.length})` },
+    { valeur: 'actualite', label: `Actualités (${compteurs.actualite ?? 0})` },
     {
-      cle: 'appel_financement',
-      label: 'Appels à financement',
-      compteur: compteurs.appel_financement ?? 0,
+      valeur: 'appel_financement',
+      label: `Appels à financement (${compteurs.appel_financement ?? 0})`,
     },
   ];
 
@@ -132,40 +161,61 @@ export default function PublicationsPage() {
       {erreurAction && !aSupprimer && <Alerte>{erreurAction}</Alerte>}
       {succes && <Alerte type="succes">{succes}</Alerte>}
 
-      <Panneau>
-        <Onglets onglets={onglets} actif={filtre} onChange={setFiltre} />
+      <Panneau serre>
+        <BarreOutils
+          recherche={recherche}
+          onRecherche={setRecherche}
+          placeholder="Rechercher un titre, un texte, un projet, un auteur…"
+          filtres={filtres}
+          filtreActif={filtre}
+          onFiltre={setFiltre}
+          compteur={`${fmt.nombre(affichees.length)} publication(s)`}
+        />
+      </Panneau>
 
-        {chargement && publications.length === 0 ? (
-          <p className="actualites-admin__attente">Chargement…</p>
-        ) : affichees.length === 0 ? (
+      {chargement && publications.length === 0 ? (
+        <Chargement texte="Chargement des actualités…" />
+      ) : affichees.length === 0 ? (
+        <Panneau className="publications--page">
           <EtatVide
-            titre="Aucune publication"
-            texte="Une actualité publiée ici apparaît aussitôt dans l’espace de chaque bailleur et de chaque bénévole."
+            titre={
+              cherche || filtre !== 'tous'
+                ? 'Aucune publication ne correspond à ces critères'
+                : 'Aucune publication'
+            }
+            texte={
+              cherche || filtre !== 'tous'
+                ? 'Modifiez la recherche ou changez de filtre.'
+                : 'Une actualité publiée ici apparaît aussitôt dans l’espace de chaque bailleur et de chaque bénévole.'
+            }
             action={
               <BoutonAjout onClick={() => setEdition({ publication: null })}>
                 Nouvelle actualité
               </BoutonAjout>
             }
           />
-        ) : (
-          <div className="actualites-admin">
-            {affichees.map((publication) => (
-              <CarteActualite
-                key={publication.id}
-                publication={publication}
-                envoi={envoi}
-                onModifier={() => setEdition({ publication })}
-                onSupprimer={() => {
-                  setErreur('');
-                  setASupprimer(publication);
-                }}
-                onStatut={changerStatut}
-                onErreur={setErreur}
-              />
-            ))}
-          </div>
-        )}
-      </Panneau>
+        </Panneau>
+      ) : (
+        <div className="publications publications--page">
+          {affichees.map((publication, rang) => (
+            <CarteActualite
+              key={publication.id}
+              publication={publication}
+              // Les premieres cartes se remplissent l'une apres l'autre ; au-dela,
+              // attendre ne dirait plus rien.
+              rang={Math.min(rang, 5)}
+              envoi={envoi}
+              onModifier={() => setEdition({ publication })}
+              onSupprimer={() => {
+                setErreur('');
+                setASupprimer(publication);
+              }}
+              onStatut={changerStatut}
+              onErreur={setErreur}
+            />
+          ))}
+        </div>
+      )}
 
       {edition && (
         <ModaleActualite
@@ -205,86 +255,130 @@ export default function PublicationsPage() {
    Une publication
    ================================================================== */
 
-function CarteActualite({ publication, envoi, onModifier, onSupprimer, onStatut, onErreur }) {
+/**
+ * Une publication, dans la carte des projets : le visuel a gauche, ce
+ * qu'il faut savoir pour decider a droite.
+ *
+ * Le surtitre porte le projet lie, l'etiquette la nature de la
+ * publication, et le pied les memes mesures qu'un projet -- la date,
+ * l'auteur, et pour un appel le nombre de bailleurs interesses. La jauge
+ * horizon d'un appel est celle du projet : la part deja financee.
+ */
+function CarteActualite({
+  publication,
+  rang = 0,
+  envoi,
+  onModifier,
+  onSupprimer,
+  onStatut,
+  onErreur,
+}) {
   const appel = publication.type === 'appel_financement';
   const photo = urlMedia(publication.mediaUrl);
   const suitLeProjet = !publication.photoPropre && Boolean(publication.photoProjet);
   const nouveaux = publication.interets.filter((i) => i.statut === 'nouvelle').length;
+  const manque = Math.max(0, Number(publication.budgetProjet) - Number(publication.montantFinance));
 
   return (
-    <article className={`actualite-admin${appel ? ' actualite-admin--appel' : ''}`}>
-      <div className="actualite-admin__visuel">
+    <article
+      className={`publication publication--actualite${appel ? ' publication--appel' : ''}`}
+      style={{ '--rang': rang }}
+    >
+      <div className="publication__media">
         {photo ? (
-          <>
-            <img src={photo} alt="" loading="lazy" />
-            {suitLeProjet && <span className="actualite-admin__source">Photo du projet</span>}
-          </>
+          <PhotoAgrandissable
+            className="publication__photo"
+            src={photo}
+            alt={`Illustration : ${publication.titre}`}
+            legende={publication.titre}
+          />
         ) : (
-          <span className="actualite-admin__sans-photo">Sans photo</span>
+          // Sans photo, le cadre reste habite : le logo, et ce qui manque.
+          <span className="publication__sans-visuel publication__sans-visuel--fige">
+            <HopeLogo compact />
+            <span>Sans photo</span>
+          </span>
         )}
+        {photo && suitLeProjet && <span className="publication__reference">Photo du projet</span>}
       </div>
 
-      <div className="actualite-admin__corps">
-        <div className="actualite-admin__haut">
-          <Badge
-            valeur={publication.type}
-            libelles={TYPES}
-            couleur={COULEURS_TYPE[publication.type]}
-          />
-          <span className="actualite-admin__date">
-            Publiée le {fmt.date(publication.publieLe)}
-            {publication.publieParNom && ` par ${publication.publieParNom}`}
-          </span>
+      <div className="publication__corps">
+        <div className="publication__haut">
+          <p className="publication__surtitre">
+            {publication.projetId ? (
+              <>
+                <Link to={`/admin/projects/${publication.projetId}`}>{publication.projetNom}</Link>
+                {publication.projetReference && ` · ${publication.projetReference}`}
+              </>
+            ) : appel ? (
+              <span className="publication__surtitre--alerte">
+                Projet supprimé : plus de jauge de financement
+              </span>
+            ) : (
+              'Actualité de HOPE'
+            )}
+          </p>
+          <div className="publication__etiquettes">
+            <Badge
+              valeur={publication.type}
+              libelles={TYPES}
+              couleur={COULEURS_TYPE[publication.type]}
+            />
+          </div>
         </div>
 
-        <h2 className="actualite-admin__titre">{publication.titre}</h2>
-
-        {publication.projetId ? (
-          <p className="actualite-admin__projet">
-            <Link to={`/admin/projects/${publication.projetId}`}>{publication.projetNom}</Link>
-            {publication.projetReference && ` · ${publication.projetReference}`}
-          </p>
-        ) : (
-          appel && (
-            <p className="actualite-admin__projet actualite-admin__projet--manquant">
-              Projet supprimé : l’appel n’a plus de barre de financement.
-            </p>
-          )
-        )}
+        <h2 className="publication__titre publication__titre--actualite">{publication.titre}</h2>
 
         {publication.corps && (
-          <p className="actualite-admin__texte">{fmt.tronquer(publication.corps, 320)}</p>
+          <p className="publication__texte publication__texte--actualite">
+            {fmt.tronquer(publication.corps, 320)}
+          </p>
         )}
 
         {appel && publication.avancement !== null && (
-          <div className="actualite-admin__financement">
-            <p>
-              <strong>{fmt.montant(publication.montantFinance, publication.devise)}</strong> de dons
-              et de fonds HOPE, sur un budget de{' '}
-              {fmt.montant(publication.budgetProjet, publication.devise)}
-            </p>
-            <Progression valeur={publication.avancement} />
+          <>
+            <JaugeHorizon
+              taux={publication.avancement}
+              recu={publication.montantFinance}
+              manque={manque}
+              devise={publication.devise}
+            />
             {(publication.objectifAtteint || publication.projetTermine) && (
-              <p className="actualite-admin__note">
+              <p className="publication__note">
                 {publication.projetTermine ? 'Projet terminé' : 'Budget atteint'} : le bouton
                 « Financer ce projet » n’est plus proposé aux bailleurs.
               </p>
             )}
-          </div>
+          </>
         )}
 
-        <div className="actualite-admin__actions">
-          <button type="button" className="btn btn--neutre btn--petit" onClick={onModifier}>
-            Modifier
-          </button>
-          <button
-            type="button"
-            className="lien-action lien-action--danger"
-            onClick={onSupprimer}
-            disabled={envoi}
-          >
-            Supprimer
-          </button>
+        <div className="publication__pied">
+          <div className="publication__mesures">
+            <Mesure
+              Icone={IconeCalendrier}
+              libelle="date de publication"
+              valeur={fmt.date(publication.publieLe)}
+            />
+            {publication.publieParNom && (
+              <Mesure Icone={IconePersonne} libelle="a publié" valeur={publication.publieParNom} />
+            )}
+            {/* Le nombre de bailleurs interesses n'est pas repris ici : il
+                se lit dans la section qui les liste, juste en dessous. */}
+          </div>
+
+          <div className="publication__actions">
+            <button type="button" className="btn btn--neutre btn--petit" onClick={onModifier}>
+              Modifier
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger btn--petit"
+              onClick={onSupprimer}
+              disabled={envoi}
+            >
+              Supprimer
+            </button>
+          </div>
         </div>
 
         {appel && (

@@ -1,157 +1,74 @@
 /* ============================================================
    HOPE - Actualites de l'espace bailleur, cote administration
 
-   Une carte par publication : la photo a gauche, le texte et la
-   barre du projet a droite, puis les bailleurs interesses sous les
-   appels a financement.
+   La page se lit comme celle des projets : la meme barre d'outils, puis
+   la meme carte -- le visuel a gauche, le contenu a droite, les mesures
+   et les actions au pied. Ce fichier n'en decrit que les differences,
+   la carte elle-meme vient de admin-publications.css.
+
+   Sous un appel a financement, les bailleurs interesses.
    ============================================================ */
-
-.actualites-admin {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 16px;
-}
-
-.actualites-admin__attente {
-  padding: 24px 0;
-  color: var(--admin-texte-doux);
-}
-
-.actualite-admin {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 18px;
-  padding: 16px;
-  border: 1px solid var(--admin-bordure);
-  border-radius: var(--admin-rayon);
-  background-color: var(--admin-surface);
-}
 
 /* L'appel a financement demande une suite : il se distingue, comme dans
    l'espace bailleur. */
-.actualite-admin--appel {
+.publication--appel {
   border-left: 3px solid var(--hope-orange);
 }
 
-.actualite-admin__visuel {
-  position: relative;
-  align-self: start;
-  overflow: hidden;
-  border-radius: 10px;
-  aspect-ratio: 4 / 3;
-  background-color: var(--admin-surface-douce);
+/* Le cadre sans photo n'est pas un lien ici : rien ne s'allume au survol. */
+.publication__sans-visuel--fige {
+  cursor: default;
 }
 
-.actualite-admin__visuel img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.publication__sans-visuel--fige:hover {
+  background-color: var(--hope-bleu-clair);
 }
 
-/* Rappel que la photo vient du projet : la changer se fait sur le projet. */
-.actualite-admin__source {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background-color: rgba(36, 43, 62, 0.72);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.actualite-admin__sans-photo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: 12.5px;
-  color: var(--admin-texte-faible);
-}
-
-.actualite-admin__corps {
-  min-width: 0;
-}
-
-.actualite-admin__haut {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-}
-
-.actualite-admin__date {
-  font-size: 12.5px;
-  color: var(--admin-texte-faible);
-}
-
-.actualite-admin__titre {
-  margin-top: 8px;
-  font-size: 16.5px;
-  font-weight: 700;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
-.actualite-admin__projet {
-  margin-top: 3px;
-  font-size: 13px;
-  color: var(--admin-texte-doux);
-}
-
-.actualite-admin__projet a {
-  font-weight: 600;
-  color: var(--hope-violet);
+/* Le surtitre porte le projet lie : le lien garde la couleur du surtitre. */
+.publication__surtitre a {
+  color: inherit;
   text-decoration: none;
 }
 
-.actualite-admin__projet a:hover {
+.publication__surtitre a:hover {
   text-decoration: underline;
 }
 
-.actualite-admin__projet--manquant {
+.publication__surtitre--alerte {
   color: var(--etat-ambre);
 }
 
-.actualite-admin__texte {
-  margin-top: 8px;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--admin-texte-doux);
+/* Le titre d'une actualite n'est pas un lien, et peut etre une longue
+   phrase : il se coupe plutot que de deborder de la carte. */
+.publication__titre--actualite {
+  overflow-wrap: anywhere;
+}
+
+/* Trois lignes du texte, ses retours a la ligne conserves : de quoi
+   reconnaitre la publication sans ouvrir le formulaire. */
+.publication__texte--actualite {
+  -webkit-line-clamp: 3;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
 
-.actualite-admin__financement {
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--admin-texte-doux);
+/*
+ * Sans jauge, c'est le pied qui prend la place libre et se cale en bas
+ * de la carte. La jauge d'un appel, elle, suit le texte : deux marges
+ * automatiques se partageraient l'espace et creuseraient un trou.
+ */
+.publication--actualite .publication__pied {
+  margin-top: auto;
 }
 
-.actualite-admin__financement strong {
-  color: var(--admin-texte);
+.publication--actualite .jauge {
+  margin-top: 16px;
 }
 
-.actualite-admin__financement .progression {
-  margin-top: 6px;
-  max-width: 420px;
-}
-
-.actualite-admin__note {
-  margin-top: 6px;
+.publication__note {
+  margin-top: 8px;
   font-size: 12.5px;
   color: var(--etat-vert);
-}
-
-.actualite-admin__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  margin-top: 14px;
 }
 
 /* --- Les bailleurs interesses --- */
@@ -296,14 +213,6 @@
 }
 
 @media (max-width: 720px) {
-  .actualite-admin {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .actualite-admin__visuel {
-    aspect-ratio: 16 / 9;
-  }
-
   .interet-admin {
     grid-template-columns: minmax(0, 1fr);
   }

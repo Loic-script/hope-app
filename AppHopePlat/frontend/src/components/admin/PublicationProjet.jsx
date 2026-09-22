@@ -99,8 +99,13 @@ function Visuel({ projet }) {
   );
 }
 
-/** Une donnee chiffree de la ligne de pied. */
-function Mesure({ Icone, libelle, valeur }) {
+/**
+ * Une donnee chiffree de la ligne de pied.
+ *
+ * Exportee : la page Actualites presente ses publications dans la meme
+ * carte, et son pied porte les memes mesures.
+ */
+export function Mesure({ Icone, libelle, valeur }) {
   return (
     <div className="publication__mesure">
       <Icone />
