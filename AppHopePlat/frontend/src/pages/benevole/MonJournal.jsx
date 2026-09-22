@@ -80,7 +80,12 @@ export default function MonJournal() {
           teinte="orange"
         />
         <Repere
-          valeur={`${obtenus.length} / ${badges.length}`}
+          valeur={
+            <>
+              {obtenus.length}
+              <span className="repere__sur">/{badges.length}</span>
+            </>
+          }
           libelle={obtenus.length > 1 ? 'Badges obtenus' : 'Badge obtenu'}
           detail={prochain ? `Prochain : ${prochain.libelle}` : 'Tous obtenus, bravo'}
           Icone={PleineTaches}
