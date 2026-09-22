@@ -75,6 +75,8 @@ function versUtilisateurPublic(compte, type) {
     profilComplete: Boolean(compte.profilComplete),
     roles: compte.roles ?? [],
     creeLe: compte.creeLe,
+    // La photo de profil : l'espace l'affiche dans son bandeau.
+    photoUrl: compte.photoUrl ?? null,
   };
 }
 

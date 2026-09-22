@@ -1844,3 +1844,18 @@ ALTER TABLE donateur ADD COLUMN IF NOT EXISTS frequence VARCHAR(10);
 ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_frequence_valide;
 ALTER TABLE donateur ADD CONSTRAINT donateur_frequence_valide CHECK (
   frequence IS NULL OR frequence IN ('ONE_TIME', 'MONTHLY'));
+
+/*
+ * La fiche de don d'un compte donateur.
+ *
+ * Un don porte une fiche "donors" (donor_id NOT NULL). Un don fait depuis
+ * l'espace donateur rattache sa fiche au compte par utilisateur_id : c'est
+ * ce lien, et lui seul, que lit "Mes dons". Un lien par l'adresse
+ * electronique ne suffirait pas : un compte donateur s'ouvre sans la
+ * verifier, et montrerait les dons d'un autre qui l'aurait saisie.
+ */
+ALTER TABLE donors
+  ADD COLUMN IF NOT EXISTS utilisateur_id UUID REFERENCES utilisateur(id) ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS donors_utilisateur_unique
+  ON donors (utilisateur_id) WHERE utilisateur_id IS NOT NULL;

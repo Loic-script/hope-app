@@ -3,8 +3,9 @@
  */
 import { Router } from 'express';
 
-import { profil } from '../controllers/donorSpace.controllers.js';
+import { actualites, dons, profil } from '../controllers/donorSpace.controllers.js';
 import { authenticateDonor } from '../middleware/donorAuth.middleware.js';
+import { televerserMedia } from '../middleware/upload.middleware.js';
 
 const router = Router();
 
@@ -18,7 +19,21 @@ router.put('/profil/etape-3', profil.enregistrerEtape3);
 router.put('/profil/etape-4', profil.enregistrerEtape4);
 router.put('/profil/etape-5', profil.enregistrerEtape5);
 
-// Les projets que l'on peut soutenir : leur face publique seulement.
+// La photo de profil : televersee, puis rattachee au compte.
+router.post('/profil/photo', televerserMedia, profil.televerserPhoto);
+router.patch('/profil/photo', profil.changerPhoto);
+
+// Les projets que l'on peut soutenir : leur face publique seulement ; et
+// la fiche d'un projet, avec ce que le donateur y a donne.
 router.get('/projets', profil.projets);
+router.get('/projets/:id', profil.projet);
+
+// Ses dons, et un nouveau don : une promesse, que l'equipe confirme a
+// reception du paiement.
+router.get('/dons', dons.lister);
+router.post('/dons', dons.faire);
+
+// Les nouvelles de HOPE.
+router.get('/actualites', actualites.lister);
 
 export default router;

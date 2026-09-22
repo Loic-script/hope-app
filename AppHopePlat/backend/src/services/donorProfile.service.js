@@ -257,6 +257,12 @@ export async function recuperer(utilisateurId) {
     paiement: { mode: fiche.modePaiement ?? '' },
     // Vide tant que l'etape 5 n'a pas ete enregistree.
     frequence: { valeur: fiche.frequence ?? '' },
+    // Le compte lui-meme : son adresse, sa photo, depuis quand il donne.
+    compte: {
+      email: fiche.email ?? '',
+      photoUrl: fiche.photoUrl ?? null,
+      membreDepuis: fiche.creeLe ?? null,
+    },
     options: {
       frequences: FREQUENCES,
       modesPaiement: MODES_PAIEMENT,
@@ -467,8 +473,13 @@ export async function projetsProposes() {
   return items
     .map((projet) => ({
       id: projet.id,
+      reference: projet.reference ?? null,
       nom: projet.name,
       accroche: accroche(projet),
+      // Le texte entier, et la date de lancement : l'espace donateur
+      // presente ces projets en fil de publications.
+      description: projet.description ?? '',
+      debut: projet.startDate ?? projet.createdAt ?? null,
       lieu: projet.location ?? '',
       categorie: projet.categoryName ?? '',
       image: projet.mediaType === 'PHOTO' ? projet.mediaUrl ?? null : null,

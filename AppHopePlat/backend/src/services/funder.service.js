@@ -17,11 +17,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import * as funderRepository from '../repositories/funder.repository.js';
-import * as impactRepository from '../repositories/impact.repository.js';
-import * as projectRepository from '../repositories/project.repository.js';
 import { TYPES_ORGANISATION } from './funderAuth.service.js';
-import { INDICATEURS_SUGGERES } from './impact.service.js';
-import { recupererApercu } from './project.service.js';
+import * as ficheProjetService from './ficheProjet.service.js';
 import * as projectReportService from './projectReport.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
@@ -209,90 +206,12 @@ async function projetLisible(bailleurId, projetId) {
 
 /**
  * Un projet, tel qu'un partenaire le consulte : sa fiche, son financement
- * et son impact.
- *
- * Chaque champ est choisi un a un, jamais recopie en bloc depuis la vue
- * de l'administration : celle-ci nomme les donateurs, les beneficiaires
- * et les autres partenaires, et rien de cela ne sort d'ici.
- *
- *   - la fiche est celle de l'espace benevole : ce qu'est le projet, ses
- *     objectifs, un nombre de beneficiaires ;
- *   - le financement ne donne que des totaux par origine -- dons, fonds
- *     HOPE, partenaires -- et, a part, ce que CE bailleur y a affecte ;
- *   - les depenses sont regroupees par poste ;
- *   - l'impact ne garde que les mesures collectives, comme le rapport :
- *     l'intitule d'une mesure individuelle peut designer la personne.
- *     Les totaux par indicateur, eux, ne nomment personne ;
- *   - l'avancement compte les actions, et nomme les dernieres realisees.
- *
- * Pas de preuves terrain : ce sont souvent des photos de beneficiaires,
- * et l'equipe les garde dans son back-office.
+ * et son impact -- la fiche commune aux espaces hors administration
+ * (ficheProjet.service), avec en plus ce que CE bailleur y a affecte.
  */
 export async function projet(bailleurId, projetId) {
   const visible = await projetLisible(bailleurId, projetId);
-  const [fiche, apercu, impacts, synthese] = await Promise.all([
-    projectRepository.trouverPourBailleur(visible.id),
-    recupererApercu(visible.id),
-    impactRepository.listerPourBenevole(visible.id),
-    impactRepository.syntheseParProjet(visible.id),
-  ]);
-
-  const finance = apercu.finance;
-
-  // Les partenaires : un total et un nombre, jamais un nom.
-  const affectations = apercu.funderAllocations ?? [];
-  const miennes = affectations.filter((a) => String(a.bailleurId) === String(bailleurId));
-  const somme = (lignes) => lignes.reduce((total, a) => total + Number(a.montant ?? 0), 0);
-
-  // Les depenses par poste ; une depense annulee ne compte pas.
-  const parPoste = new Map();
-  for (const depense of apercu.expenses ?? []) {
-    if (depense.status === 'CANCELLED') continue;
-    const poste = depense.category || 'Autre';
-    parPoste.set(poste, (parPoste.get(poste) ?? 0) + Number(depense.amount ?? 0));
-  }
-
-  const taches = apercu.tasks ?? [];
-  const compte = (statut) => taches.filter((t) => t.statut === statut).length;
-
-  return {
-    project: {
-      ...fiche,
-      currency: apercu.project.currency ?? 'MGA',
-      categoryName: fiche.categoryName ?? visible.categorie,
-      financeParMoi: miennes.length > 0,
-    },
-    finance: {
-      requiredBudget: finance.requiredBudget,
-      fundedTotal: finance.fundedTotal,
-      fundingRate: finance.fundingRate,
-      remainingNeed: finance.remainingNeed,
-      spentTotal: finance.spentTotal,
-      spendingRate: finance.spendingRate,
-      availableFunds: finance.availableFunds,
-      designatedTotal: finance.designatedTotal,
-      donationsCount: Number(apercu.project.donationsCount ?? 0),
-      investedHopeTotal: finance.investedHopeTotal,
-      partenairesTotal: somme(affectations),
-      partenairesNombre: new Set(affectations.map((a) => a.bailleurId)).size,
-      votreAffectation: somme(miennes),
-    },
-    expensesByCategory: [...parPoste.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([categorie, total]) => ({ categorie, total })),
-    progress: {
-      realisees: compte('livree'),
-      enCours: compte('en_cours'),
-      aVenir: compte('a_faire'),
-      dernieresRealisees: taches
-        .filter((t) => t.statut === 'livree')
-        .slice(0, 6)
-        .map((t) => t.titre),
-    },
-    impacts: impacts.filter((impact) => impact.collectif),
-    impactSummary: synthese,
-    indicators: INDICATEURS_SUGGERES,
-  };
+  return ficheProjetService.ficheHorsAdmin(visible.id, { bailleurId });
 }
 
 /**

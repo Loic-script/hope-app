@@ -21,7 +21,7 @@ export async function garantir(utilisateurId, client = null) {
 /** L'identite et la fiche, reunies. */
 export async function trouver(utilisateurId, client = null) {
   const resultat = await query(
-    `SELECT u.nom, u.prenom, u.adresse, u.telephone, u.email,
+    `SELECT u.nom, u.prenom, u.adresse, u.telephone, u.email, u.photo_url, u.cree_le,
             d.ville, d.pays, d.profession, d.source_connaissance,
             d.type_donateur, d.nom_structure, d.site_web, d.devise,
             d.langue, d.fuseau_horaire,

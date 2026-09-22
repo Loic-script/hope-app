@@ -248,7 +248,13 @@ export async function changerStatut(id, corps = {}) {
       }
     }
 
-    const misAJour = await donationRepository.mettreAJour(donationId, { status: statut }, client);
+    // Une promesse (PENDING) qui arrive est recue maintenant : sa date de
+    // reception n'etait qu'une attente, posee a la promesse.
+    const colonnes =
+      don.status === 'PENDING' && statut === 'RECEIVED'
+        ? { status: statut, received_at: new Date() }
+        : { status: statut };
+    const misAJour = await donationRepository.mettreAJour(donationId, colonnes, client);
 
     // Le don devient encaisse : il entre dans les comptes, on notifie.
     if (statut === 'RECEIVED') {
