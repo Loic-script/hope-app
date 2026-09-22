@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
-import photoInvitation from '../../assets/hope-children.jpg';
 import {
   IconeCalendrier,
   IconeChevronDroit,
@@ -54,8 +53,8 @@ function TachesDuProjet({ projet }) {
 /**
  * Accueil de l'espace benevole.
  *
- * La page ne liste pas : elle met en avant. En haut, la carte a photo et
- * ses trois chiffres, et la tache qu'il pourrait prendre ; puis les
+ * La page ne liste pas : elle met en avant. En haut, la carte de ses
+ * trois chiffres, et la tache qu'il pourrait prendre ; puis les
  * projets ; en bas, son journal. Des elements, pas des listes : le reste
  * de l'espace a ses propres ecrans, et chaque bloc y renvoie. Sa
  * prochaine tache a rendre se lit dans le premier chiffre, et ses taches
@@ -63,7 +62,7 @@ function TachesDuProjet({ projet }) {
  *
  * Les trois chiffres parlent de lui d'abord : ce qu'il a en cours, ce
  * qu'il a deja livre, et seulement ensuite ce qui attend quelqu'un. La
- * carte ne porte rien d'autre -- ni titre, ni bouton.
+ * carte ne porte rien d'autre -- ni photo, ni titre, ni bouton.
  */
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
@@ -109,10 +108,6 @@ export default function VueDensemble() {
       {/* ---------- La carte des chiffres, et la tache a prendre ---------- */}
       <div className="accueil-benevole__paire">
         <section className="invitation" aria-labelledby="invitation-titre">
-          <div className="invitation__photo" aria-hidden="true">
-            <img src={photoInvitation} alt="" />
-          </div>
-
           <div className="invitation__corps">
             {/* La carte ne montre que ses chiffres ; le titre reste pour
                 les lecteurs d'ecran, qui s'orientent par les titres. */}

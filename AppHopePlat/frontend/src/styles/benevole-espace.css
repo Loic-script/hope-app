@@ -1176,19 +1176,16 @@
 /* --- L'invitation, et l'apercu du journal --- */
 
 /*
- * Le seul bloc de la page a fond plein : la photo, et les trois chiffres
- * du benevole poses dessus. Rien d'autre -- ni titre, ni bouton.
+ * Le seul bloc de la page a fond plein : un violet, et les trois
+ * chiffres du benevole. Rien d'autre -- ni photo, ni titre, ni bouton.
  *
- * La photo couvre toute la carte ; un degrade violet monte du bas pour
- * que les chiffres se lisent, et laisse le haut de l'image en clair.
+ * Les tuiles remplissent la carte : a cote de "A prendre", elle prend la
+ * hauteur de sa voisine, et les tuiles s'etirent avec elle plutot que de
+ * laisser un vide.
  *
- * L'entree se joue une fois, a l'arrivee : la carte monte, la photo se
- * pose, puis les chiffres arrivent l'un apres l'autre en comptant. Rien
- * ne boucle ensuite.
- *
- * En colonne : sur ecran large, le corps prend toute la hauteur et les
- * chiffres tombent en bas ; sur telephone, la photo passe dans le flux,
- * en bandeau au-dessus d'eux.
+ * L'entree se joue une fois, a l'arrivee : la carte monte, puis les
+ * chiffres arrivent l'un apres l'autre en comptant. Rien ne boucle
+ * ensuite.
  *
  * La carte est un conteneur : ses chiffres passent en lignes selon SA
  * largeur, pas celle de l'ecran -- le menu lateral ouvert peut la
@@ -1200,7 +1197,6 @@
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  min-height: 350px;
   overflow: hidden;
   border-radius: 18px;
   background:
@@ -1211,62 +1207,22 @@
   animation: invitation-entree 560ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
 }
 
-/* La photo sur toute la carte, et le degrade qui monte du bas.
-   --visage : ou tombe le visage de l'enfant, depuis le haut de la carte. */
-.invitation__photo {
-  --visage: 108px;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-}
-
-.invitation__photo::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    var(--hope-violet-fonce) 0%,
-    rgba(74, 68, 121, 0.7) 34%,
-    rgba(74, 68, 121, 0.1) 60%,
-    rgba(74, 68, 121, 0) 72%
-  );
-}
-
-/*
- * L'image est un portrait (1024 x 1156), le visage vers 60 % de sa
- * hauteur. Un cadrage en pourcentage le ferait monter a mesure que la
- * carte s'elargit, jusqu'a le couper sur grand ecran. On le pose donc a
- * --visage du haut, quelle que soit la largeur : une marge en % se
- * compte sur la largeur, et 60 % d'une image haute de 112,9 % de sa
- * largeur font 67,7 % de cette largeur.
- */
-.invitation__photo img {
-  position: absolute;
-  top: var(--visage);
-  left: 0;
-  display: block;
-  width: 100%;
-  height: auto;
-  margin-top: -67.7%;
-  animation: invitation-photo 1600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
 .invitation__corps {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 22px;
+  padding: 16px;
 }
 
 /* --- Les trois chiffres --- */
 
+/* flex: 1 -- la grille prend toute la hauteur du corps, et ses tuiles
+   s'etirent avec elle. */
 .invitation__chiffres {
   display: grid;
+  flex: 1 1 auto;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -1280,27 +1236,28 @@
 }
 
 /*
- * Une tuile de verre : assez sombre pour que le blanc se lise meme
- * par-dessus la photo, assez translucide pour laisser passer la carte.
+ * Une tuile plus sombre que la carte, ou le blanc se lit nettement.
  * Toute la tuile est le lien -- une cible large, au doigt comme a la
  * souris.
+ *
+ * Etiree, elle garde l'icone en haut et pose le chiffre en bas : la
+ * hauteur gagnee passe entre les deux, pas sous le texte.
  */
 .chiffre-invitation {
   --teinte: var(--hope-jaune);
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
     'icone . fleche'
     'texte texte texte';
-  row-gap: 12px;
+  row-gap: 18px;
   height: 100%;
-  padding: 15px 14px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 18px 16px 17px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
-  background-color: rgba(34, 28, 78, 0.56);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  backdrop-filter: blur(12px) saturate(140%);
+  background-color: rgba(34, 28, 78, 0.42);
   color: #ffffff;
   text-decoration: none;
   transition:
@@ -1354,6 +1311,7 @@
 
 .chiffre-invitation__texte {
   grid-area: texte;
+  align-self: end;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -1366,7 +1324,7 @@
 
 /* Chiffres a chasse fixe : le compteur ne fait pas danser le libelle. */
 .chiffre-invitation__valeur {
-  font-size: 30px;
+  font-size: 36px;
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -1425,21 +1383,9 @@
   }
 }
 
-@keyframes invitation-photo {
-  from {
-    opacity: 0;
-    transform: scale(1.12);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 /* Quand l'appareil demande moins de mouvement : tout est la d'emblee. */
 @media (prefers-reduced-motion: reduce) {
   .invitation,
-  .invitation__photo img,
   .invitation__chiffre {
     animation: none;
   }
@@ -1534,28 +1480,6 @@
 }
 
 @media (max-width: 780px) {
-  /*
-   * La photo passe en bandeau au-dessus des chiffres plutot que de les
-   * comprimer ; le degrade la fond vers le bas dans le violet, et les
-   * chiffres remontent un peu sur elle.
-   */
-  .invitation {
-    min-height: 0;
-  }
-
-  .invitation__photo {
-    --visage: 82px;
-    position: relative;
-    inset: auto;
-    height: 190px;
-  }
-
-  .invitation__corps {
-    position: relative;
-    margin-top: -48px;
-    padding: 0 16px 16px;
-  }
-
   .accueil-benevole__titre {
     font-size: 24px;
   }
@@ -1570,16 +1494,20 @@
 @container invitation (max-width: 480px) {
   .invitation__chiffres {
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-    margin: 18px 0;
+    gap: 10px;
   }
 
   .chiffre-invitation {
     grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto;
     grid-template-areas: 'icone texte fleche';
     align-items: center;
     column-gap: 12px;
-    padding: 12px 14px;
+    padding: 13px 14px;
+  }
+
+  .chiffre-invitation__texte {
+    align-self: center;
   }
 
   /* Le fil de couleur passe sur le bord gauche. */
@@ -1601,7 +1529,7 @@
   }
 
   .chiffre-invitation__valeur {
-    font-size: 24px;
+    font-size: 26px;
   }
 
   .chiffre-invitation__libelle {
