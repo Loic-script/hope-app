@@ -3,8 +3,8 @@
  *
  * Authentification et espace connecte dans un seul fichier : l'espace
  * est en lecture seule sur les montants, il n'y a donc que des
- * lectures, plus deux ecritures -- la fiche de contact et la
- * manifestation d'interet.
+ * lectures, plus quelques ecritures -- la fiche de contact, la
+ * manifestation d'interet et la promesse de don.
  */
 import {
   apiBailleur,
@@ -197,6 +197,21 @@ export async function telechargerDocument(id) {
 /** POST /api/bailleur/certificat */
 export async function genererCertificat() {
   const { data } = await apiBailleur.post('/bailleur/certificat');
+  return data;
+}
+
+/** GET /api/bailleur/dons/options : les modes de paiement et les devises du don. */
+export async function optionsDon() {
+  const { data } = await apiBailleur.get('/bailleur/dons/options');
+  return data;
+}
+
+/**
+ * POST /api/bailleur/dons : une promesse de don a un projet, ponctuelle.
+ * L'equipe HOPE la confirme a reception du paiement.
+ */
+export async function faireUnDon(don) {
+  const { data } = await apiBailleur.post('/bailleur/dons', don);
   return data;
 }
 

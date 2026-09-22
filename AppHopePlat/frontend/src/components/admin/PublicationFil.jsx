@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import HopeLogo from '../HopeLogo.jsx';
-import { IconeOeil, IconeRepere, IconeSoleil } from '../HopeIcons.jsx';
+import { IconeCoeur, IconeOeil, IconeRepere, IconeSoleil } from '../HopeIcons.jsx';
 import { PhotoAgrandissable } from '../VisionneuseImage.jsx';
 import { urlMedia } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
@@ -92,13 +92,18 @@ export function MediaPublication({ projet, lienAjoutVisuel }) {
  * qui l'affiche, et "compteurs" remplace le financement -- un benevole
  * n'a pas a voir l'argent d'un projet, il y lit les taches a prendre.
  *
- * @param {{ projet: object, rang?: number, lien?: string,
+ * "lienDon" ajoute "Faire un don" a cote de "Voir le projet" : dans les
+ * espaces donateur, bailleur et benevole, chaque projet ouvert se soutient
+ * depuis le fil.
+ *
+ * @param {{ projet: object, rang?: number, lien?: string, lienDon?: string|null,
  *           compteurs?: React.ReactNode, lienAjoutVisuel?: string|null }} proprietes
  */
 export default function PublicationFil({
   projet,
   rang = 0,
   lien = `/admin/projects/${projet.id}`,
+  lienDon = null,
   compteurs,
   lienAjoutVisuel = `/admin/projects/${projet.id}/edit`,
 }) {
@@ -208,7 +213,7 @@ export default function PublicationFil({
       )}
 
       {/* ---------- Une seule action ---------- */}
-      <div className="fil-post__actions">
+      <div className={`fil-post__actions${lienDon ? ' fil-post__actions--double' : ''}`}>
         <Link
           className="fil-post__action"
           to={lien}
@@ -217,6 +222,16 @@ export default function PublicationFil({
           <IconeOeil />
           Voir le projet
         </Link>
+        {lienDon && (
+          <Link
+            className="fil-post__action fil-post__action--don"
+            to={lienDon}
+            aria-label={`Faire un don au projet ${projet.name}`}
+          >
+            <IconeCoeur />
+            Faire un don
+          </Link>
+        )}
       </div>
     </article>
   );

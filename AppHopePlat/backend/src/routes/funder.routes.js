@@ -61,6 +61,9 @@ router.get('/versements', funder.espace.versements);
 // en PDF.
 router.get('/projets', funder.espace.projets);
 router.get('/projets/:id', funder.espace.projet);
+// Faire un don a un projet : les modes de paiement, puis la promesse.
+router.get('/dons/options', funder.espace.optionsDon);
+router.post('/dons', funder.espace.faireUnDon);
 router.get('/projets/:id/rapport', funder.espace.rapportProjet);
 router.get('/projets/:id/rapport/pdf', funder.espace.pdfRapportProjet);
 

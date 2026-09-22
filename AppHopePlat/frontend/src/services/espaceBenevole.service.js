@@ -15,6 +15,21 @@ export async function apercu() {
   return data;
 }
 
+/** GET /api/benevole/dons/options : les modes de paiement et les devises du don. */
+export async function optionsDon() {
+  const { data } = await apiBenevole.get('/benevole/dons/options');
+  return data;
+}
+
+/**
+ * POST /api/benevole/dons : une promesse de don a un projet, ponctuelle.
+ * L'equipe HOPE la confirme a reception du paiement.
+ */
+export async function faireUnDon(don) {
+  const { data } = await apiBenevole.post('/benevole/dons', don);
+  return data;
+}
+
 /* ------------------------------ Actualites ----------------------------- */
 
 /** GET /api/benevole/actualites — les nouvelles de HOPE, sans aucun chiffre. */

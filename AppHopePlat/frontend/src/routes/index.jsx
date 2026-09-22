@@ -38,6 +38,7 @@ import ConversationsEspace from '../pages/espace/Conversations.jsx';
 import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
 import ProjetDetail from '../pages/benevole/ProjetDetail.jsx';
+import FaireUnDonBenevole from '../pages/benevole/FaireUnDon.jsx';
 import ProjetsBenevole from '../pages/benevole/Projets.jsx';
 import MonJournal from '../pages/benevole/MonJournal.jsx';
 import CompleterProfil from '../pages/benevole/CompleterProfil.jsx';
@@ -49,6 +50,7 @@ import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
 import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
 import ProjetsBailleur from '../pages/bailleur/Projets.jsx';
 import ProjetBailleur from '../pages/bailleur/ProjetDetail.jsx';
+import FaireUnDonBailleur from '../pages/bailleur/FaireUnDon.jsx';
 import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
 import AccueilBailleur from '../pages/bailleur/Accueil.jsx';
 import RequireBailleur from './RequireBailleur.jsx';
@@ -160,6 +162,8 @@ export default function AppRoutes() {
           <Route path="/bailleur/projets" element={<ProjetsBailleur />} />
           {/* La fiche d'un projet : ce qu'il est, son financement, son impact. */}
           <Route path="/bailleur/projets/:id" element={<ProjetBailleur />} />
+          {/* Le bouton "Faire un don" d'une publication : financer ce projet. */}
+          <Route path="/bailleur/faire-un-don" element={<FaireUnDonBailleur />} />
           {/* Les preuves terrain ont quitte l'espace bailleur. Une ancienne
               adresse -- un favori, une notification deja envoyee -- mene
               au tableau de bord plutot qu'a une page blanche. */}
@@ -188,6 +192,8 @@ export default function AppRoutes() {
               qu'il y a a y prendre. */}
           <Route path="/benevole/projets" element={<ProjetsBenevole />} />
           <Route path="/benevole/projets/:id" element={<ProjetDetail />} />
+          {/* Le bouton "Faire un don" d'une publication. */}
+          <Route path="/benevole/faire-un-don" element={<FaireUnDonBenevole />} />
           {/* Les actualites ont rejoint la page d'entree : une ancienne
               adresse y mene. */}
           <Route path="/benevole/actualites" element={<Navigate to="/benevole" replace />} />

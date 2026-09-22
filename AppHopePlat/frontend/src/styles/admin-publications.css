@@ -737,6 +737,33 @@
   height: 19px;
 }
 
+/* Deux actions : "Voir le projet" et "Faire un don", a parts egales. */
+.fil-post__actions--double {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+/* "Faire un don" : le violet de la charte, le coeur en orange ; il bat au
+   survol. */
+.fil-post__action--don {
+  color: var(--hope-violet);
+}
+
+.fil-post__action--don svg {
+  color: var(--hope-orange);
+}
+
+@media (hover: hover) {
+  .fil-post__action--don:hover {
+    background-color: #f3f1fb;
+  }
+
+  .fil-post__action--don:hover svg {
+    animation: don-battement 900ms ease-in-out;
+  }
+}
+
 .fil-post__action:hover {
   background-color: #f0f2f7;
   color: var(--hope-violet);

@@ -9,6 +9,7 @@ import path from 'node:path';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
 import * as fieldProofService from '../services/fieldProof.service.js';
+import * as promesseDonService from '../services/promesseDon.service.js';
 import * as publicationService from '../services/publication.service.js';
 import * as taskService from '../services/task.service.js';
 import * as volunteerProjectsService from '../services/volunteerProjects.service.js';
@@ -68,6 +69,22 @@ export const projets = {
     }
     return { id: resultat.id, deleted: true };
   }),
+};
+
+/**
+ * Faire un don a un projet : une promesse, ponctuelle. Le benevole choisit
+ * son montant et son mode de paiement ; il ne voit toujours rien de
+ * l'argent du projet.
+ */
+export const dons = {
+  options: gerer(() => promesseDonService.options()),
+  faire: gerer(
+    (req) =>
+      promesseDonService.promettreUnDon(promesseDonService.identiteBenevole(req.benevole), req.body, {
+        mensuelPermis: false,
+      }),
+    { statut: 201 }
+  ),
 };
 
 /** Les actualites de HOPE : le fil, sans aucun chiffre. */

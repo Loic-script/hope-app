@@ -20,8 +20,12 @@ import {
   totalPrincipal,
 } from './commun.jsx';
 
-/** Ce qu'un projet dit a un donateur, sous sa photo : son financement, et le bouton pour y donner. */
-function SoutenirLeProjet({ projet }) {
+/**
+ * Ce qu'un projet dit a un donateur, sous sa photo : son financement. Le
+ * bouton "Faire un don" est dans la barre d'actions, a cote de "Voir le
+ * projet".
+ */
+function FinancementDuProjet({ projet }) {
   return (
     <>
       <JaugeProjet projet={projet} />
@@ -29,17 +33,15 @@ function SoutenirLeProjet({ projet }) {
         <span>
           Objectif <strong>{fmt.montant(projet.objectif, projet.devise)}</strong>
         </span>
-        {projet.atteint ? (
-          <span className="don-fil__atteint">Objectif atteint, merci !</span>
-        ) : (
-          <Link className="don-fil__soutenir" to={`/donateur/faire-un-don?projet=${projet.id}`}>
-            <IconeCoeur />
-            Soutenir ce projet
-          </Link>
-        )}
+        {projet.atteint && <span className="don-fil__atteint">Objectif atteint, merci !</span>}
       </p>
     </>
   );
+}
+
+/** Les projets ouverts aux dons, par identifiant : une actualite liee s'y soutient aussi. */
+function ouvertsAuxDons(projets) {
+  return new Set(projets.filter((p) => !p.atteint).map((p) => p.id));
 }
 
 /**
@@ -66,6 +68,7 @@ export default function Actualites() {
   const fil = elementsDuFil(projets, actualites ?? [], filtre);
   const principal = totalPrincipal(dons?.synthese);
   const aSoutenir = projets.find((p) => !p.atteint);
+  const ouverts = ouvertsAuxDons(projets);
   const derniers = (dons?.items ?? []).slice(0, 3);
 
   return (
@@ -183,8 +186,9 @@ export default function Actualites() {
                     projet={projetCommePublication(element)}
                     rang={Math.min(rang, 5)}
                     lien={`/donateur/projets/${element.id}`}
+                    lienDon={element.atteint ? null : `/donateur/faire-un-don?projet=${element.id}`}
                     lienAjoutVisuel={null}
-                    compteurs={<SoutenirLeProjet projet={element} />}
+                    compteurs={<FinancementDuProjet projet={element} />}
                   />
                 ) : (
                   <PublicationActualite
@@ -192,6 +196,7 @@ export default function Actualites() {
                     publication={element}
                     rang={Math.min(rang, 5)}
                     lienProjet={element.projetId ? `/donateur/projets/${element.projetId}` : null}
+                    lienDon={ouverts.has(element.projetId) ? `/donateur/faire-un-don?projet=${element.projetId}` : null}
                   />
                 )
               )

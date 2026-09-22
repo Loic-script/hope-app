@@ -97,7 +97,7 @@ function FinancementDuProjet({ projet }) {
  * reel. L'ecran le dit explicitement : personne ne doit croire avoir
  * paye en cliquant.
  */
-function ActualiteDuFil({ publication, rang, onInteret }) {
+function ActualiteDuFil({ publication, rang, onInteret, ouverts }) {
   const appel = publication.type === 'appel_financement';
   const devise = publication.devise ?? 'MGA';
   const budget = Number(publication.budgetProjet) || 0;
@@ -203,11 +203,19 @@ function ActualiteDuFil({ publication, rang, onInteret }) {
       </div>
     ) : undefined;
 
+  // Une actualite liee a un projet en cours se soutient depuis le fil ;
+  // un appel a son propre bouton, "Financer ce projet".
+  const lienDon =
+    !appel && publication.projetId && ouverts?.has(publication.projetId)
+      ? `/bailleur/faire-un-don?projet=${publication.projetId}`
+      : null;
+
   return (
     <PublicationActualite
       publication={publication}
       rang={rang}
       appel={appel}
+      lienDon={lienDon}
       lienProjet={publication.projetId ? `/bailleur/projets/${publication.projetId}` : null}
       compteurs={collecte}
       actions={actions}
@@ -247,6 +255,8 @@ export default function Accueil() {
   const projets = (donnees?.projets ?? []).filter((p) => p.status === 'IN_PROGRESS');
   const actualites = publications ?? [];
   const fil = elementsDuFil(projets, actualites, filtre);
+  // Les projets qu'on peut encore soutenir : en cours, budget non atteint.
+  const ouverts = new Set(projets.filter((p) => Number(p.tauxFinancement) < 100).map((p) => p.id));
   const versements = (donnees?.versements ?? []).slice(0, VERSEMENTS_ACCUEIL);
   const origine = donnees?.origineDesFonds ?? {};
   const distinctions = donnees?.distinctions ?? [];
@@ -349,6 +359,9 @@ export default function Accueil() {
                         projet={commePublication(element)}
                         rang={Math.min(rang, 5)}
                         lien={`/bailleur/projets/${element.id}`}
+                        lienDon={
+                          Number(element.tauxFinancement) >= 100 ? null : `/bailleur/faire-un-don?projet=${element.id}`
+                        }
                         lienAjoutVisuel={null}
                         compteurs={<FinancementDuProjet projet={element} />}
                       />
@@ -358,6 +371,7 @@ export default function Accueil() {
                         publication={element}
                         rang={Math.min(rang, 5)}
                         onInteret={rechargerFil}
+                        ouverts={ouverts}
                       />
                     )
                   )

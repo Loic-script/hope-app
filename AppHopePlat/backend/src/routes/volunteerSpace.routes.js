@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 
-import { actualites, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
+import { actualites, dons, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
 import { televerserMedia, televerserPreuve } from '../middleware/upload.middleware.js';
 import { authenticateVolunteer } from '../middleware/volunteerAuth.middleware.js';
 
@@ -36,6 +36,12 @@ router.delete('/projets/:id/preuves/:preuveId', projets.supprimerPreuve);
 // Les nouvelles publiees par l'equipe. Les appels a financement n'y
 // figurent pas, et aucune ligne ne porte de montant.
 router.get('/actualites', actualites.lister);
+
+// --- Dons ---------------------------------------------------------------
+// Faire un don a un projet : une promesse ponctuelle, que l'equipe
+// confirme a reception.
+router.get('/dons/options', dons.options);
+router.post('/dons', dons.faire);
 
 // --- Taches -----------------------------------------------------------
 router.get('/taches/libres', taches.libres);

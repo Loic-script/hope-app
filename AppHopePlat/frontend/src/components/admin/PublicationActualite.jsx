@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { IconeOeil, IconeSoleil } from '../HopeIcons.jsx';
+import { IconeCoeur, IconeOeil, IconeSoleil } from '../HopeIcons.jsx';
 import * as fmt from '../../utils/format.js';
 import { depuisCourt, LONGUEUR_REPLIEE, MediaPublication } from './PublicationFil.jsx';
 
@@ -15,16 +15,18 @@ import { depuisCourt, LONGUEUR_REPLIEE, MediaPublication } from './PublicationFi
  *
  * "compteurs" et "actions" laissent l'espace ajouter ce qui lui est
  * propre : chez le bailleur, la collecte d'un appel et son bouton. Sans
- * "actions", une actualite liee a un projet propose d'aller le voir.
+ * "actions", une actualite liee a un projet propose d'aller le voir -- et,
+ * avec "lienDon", d'y faire un don.
  *
  * @param {{ publication: object, rang?: number, lienProjet?: string|null,
- *           appel?: boolean, compteurs?: React.ReactNode,
+ *           lienDon?: string|null, appel?: boolean, compteurs?: React.ReactNode,
  *           actions?: React.ReactNode }} proprietes
  */
 export default function PublicationActualite({
   publication,
   rang = 0,
   lienProjet = null,
+  lienDon = null,
   appel = false,
   compteurs,
   actions,
@@ -107,7 +109,7 @@ export default function PublicationActualite({
       {/* ---------- L'action ---------- */}
       {actions ??
         (lienProjet && (
-          <div className="fil-post__actions">
+          <div className={`fil-post__actions${lienDon ? ' fil-post__actions--double' : ''}`}>
             <Link
               className="fil-post__action"
               to={lienProjet}
@@ -116,6 +118,16 @@ export default function PublicationActualite({
               <IconeOeil />
               Voir le projet
             </Link>
+            {lienDon && (
+              <Link
+                className="fil-post__action fil-post__action--don"
+                to={lienDon}
+                aria-label={`Faire un don au projet ${publication.projetNom ?? ''}`.trim()}
+              >
+                <IconeCoeur />
+                Faire un don
+              </Link>
+            )}
           </div>
         ))}
     </article>

@@ -8,6 +8,7 @@
 import * as funderAuthService from '../services/funderAuth.service.js';
 import * as funderService from '../services/funder.service.js';
 import * as mediaService from '../services/media.service.js';
+import * as promesseDonService from '../services/promesseDon.service.js';
 
 import { gerer } from './handler.js';
 
@@ -87,6 +88,16 @@ export const espace = {
   versements: gerer((req) => funderService.versements(req.bailleur.bailleurId, req.query)),
   projets: gerer((req) => funderService.projets(req.bailleur.bailleurId)),
   projet: gerer((req) => funderService.projet(req.bailleur.bailleurId, req.params.id)),
+  // Faire un don a un projet : une promesse, ponctuelle -- le bailleur
+  // choisit son mode de paiement ; l'equipe confirme a reception.
+  optionsDon: gerer(() => promesseDonService.options()),
+  faireUnDon: gerer(
+    (req) =>
+      promesseDonService.promettreUnDon(promesseDonService.identiteBailleur(req.bailleur), req.body, {
+        mensuelPermis: false,
+      }),
+    { statut: 201 }
+  ),
   rapportProjet: gerer((req) =>
     funderService.rapportProjet(req.bailleur.bailleurId, req.params.id)
   ),

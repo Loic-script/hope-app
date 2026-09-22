@@ -86,6 +86,8 @@ export default function VueDensemble() {
   const { donnees: actualites } = useChargement(() => service.actualites(), []);
   const [filtre, setFiltre] = useState('tout');
   const fil = elementsDuFil(projets ?? [], actualites ?? [], filtre);
+  // Les projets en cours : chacun se soutient depuis le fil ("Faire un don").
+  const enCoursIds = new Set((projets ?? []).filter((p) => p.status === 'IN_PROGRESS').map((p) => p.id));
 
   const enCours = (taches?.items ?? []).filter((t) => t.statut === 'en_cours');
   const prioritaire = [...enCours].sort(parEcheance)[0];
@@ -168,6 +170,7 @@ export default function VueDensemble() {
                       projet={element}
                       rang={Math.min(rang, 5)}
                       lien={`/benevole/projets/${element.id}`}
+                      lienDon={element.status === 'IN_PROGRESS' ? `/benevole/faire-un-don?projet=${element.id}` : null}
                       lienAjoutVisuel={null}
                       compteurs={<TachesDuProjet projet={element} />}
                     />
@@ -177,6 +180,7 @@ export default function VueDensemble() {
                       publication={element}
                       rang={Math.min(rang, 5)}
                       lienProjet={element.projetId ? `/benevole/projets/${element.projetId}` : null}
+                      lienDon={enCoursIds.has(element.projetId) ? `/benevole/faire-un-don?projet=${element.projetId}` : null}
                     />
                   )
                 )
