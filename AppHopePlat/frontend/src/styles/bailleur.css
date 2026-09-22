@@ -1254,15 +1254,6 @@
    Accueil : le fil des projets, et la colonne du partenaire
    ============================================================ */
 
-/*
- * La colonne de droite est longue ici -- versements, domaines, zones,
- * origine des fonds : elle defile avec la page au lieu de rester
- * accrochee en haut comme chez l'administrateur, ou elle est courte.
- */
-.accueil__colonnes--bailleur > .accueil__pile:last-child {
-  position: static;
-}
-
 /* Dans les piles, l'ecart vient de la pile : pas de marge en plus. */
 .accueil__colonnes--bailleur .panneau-bailleur {
   margin-bottom: 0;

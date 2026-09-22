@@ -17,6 +17,7 @@ import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.j
 import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
+import { useColonneCollante } from '../../hooks/useColonneCollante.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 
@@ -56,10 +57,10 @@ function TachesDuProjet({ projet }) {
  * Actualites : la page d'entree de l'espace benevole.
  *
  * Elle reunit l'ancien accueil et l'ancienne page Actualites. La page ne
- * liste pas : elle met en avant. En haut, la carte de ses trois chiffres,
- * et la tache qu'il pourrait prendre ; puis le fil d'actualite -- les
+ * liste pas : elle met en avant. Au centre, le fil d'actualite -- les
  * projets et les nouvelles de HOPE ensemble, que trois filtres separent ;
- * en bas, son journal. Des elements, pas des listes : le reste
+ * a droite, la carte de ses trois chiffres, la tache qu'il pourrait
+ * prendre et son journal, dans une colonne qui suit l'ecran. Des elements, pas des listes : le reste
  * de l'espace a ses propres ecrans, et chaque bloc y renvoie. Sa
  * prochaine tache a rendre se lit dans le premier chiffre, et ses taches
  * dans "Mes taches".
@@ -70,6 +71,7 @@ function TachesDuProjet({ projet }) {
  */
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
+  const colonne = useColonneCollante();
 
   const { donnees: chiffres } = useChargement(() => service.apercu(), []);
   const { donnees: taches } = useChargement(() => service.mesTaches(), []);
@@ -114,211 +116,221 @@ export default function VueDensemble() {
         </Link>
       </header>
 
-      {/* ---------- La carte des chiffres, et la tache a prendre ---------- */}
-      <div className="accueil-benevole__paire">
-        <section className="invitation" aria-labelledby="invitation-titre">
-          <div className="invitation__corps">
-            {/* La carte ne montre que ses chiffres ; le titre reste pour
-                les lecteurs d'ecran, qui s'orientent par les titres. */}
-            <h2 className="sr-only" id="invitation-titre">
-              Vos tâches en chiffres
-            </h2>
-
-            {/*
-              Les trois chiffres du benevole, du plus personnel au plus
-              ouvert : ce qu'il a en cours, ce qu'il a livre, ce qui attend
-              quelqu'un. Chacun mene a l'ecran qui le detaille.
-            */}
-            <ul className="invitation__chiffres">
-              <ChiffreInvitation
-                rang={0}
-                to="/benevole/taches"
-                valeur={taches ? enCours.length : null}
-                libelles={['Tâche en cours', 'Tâches en cours']}
-                detail={
-                  enCours.length === 0
-                    ? 'Aucune pour le moment'
-                    : prioritaire?.echeance
-                      ? `À rendre le ${fmt.date(prioritaire.echeance)}`
-                      : 'Sans échéance'
-                }
-                Icone={PleineTaches}
-                teinte="jaune"
-              />
-              <ChiffreInvitation
-                rang={1}
-                to="/benevole/journal"
-                valeur={journal ? nbLivrees : null}
-                libelles={['Tâche livrée', 'Tâches livrées']}
-                detail={
-                  journal?.derniereLivraison
-                    ? `Dernière le ${fmt.date(journal.derniereLivraison)}`
-                    : 'Pas encore'
-                }
-                Icone={PleineJournal}
-                teinte="bleu"
-              />
-              <ChiffreInvitation
-                rang={2}
-                to="/benevole/taches"
-                valeur={chiffres ? nbLibres : null}
-                libelles={['Tâche à prendre', 'Tâches à prendre']}
-                detail={nbProjets > 0 ? `Sur ${pluriel(nbProjets, 'projet')}` : 'Tout est pris'}
-                Icone={PleineProjets}
-                teinte="orange"
-              />
-            </ul>
-          </div>
-        </section>
-
-        <section className="tache-active">
-          <div className="tache-active__haut">
-            <h2 className="tache-active__intitule">
-              À prendre
-              {nbLibres > 0 && <span className="tache-active__compte">{nbLibres}</span>}
-            </h2>
-            {aPrendre && (
-              <span className="pastille pastille--bleu">
-                {aPrendre.maPlace === 'demandee'
-                  ? 'Demandée'
-                  : (aPrendre.equipe ?? []).length > 0
-                    ? 'À rejoindre'
-                    : 'Libre'}
-              </span>
-            )}
-          </div>
-
-          {aPrendre ? (
-            <>
-              <div className="tache-active__ligne">
-                <span className="carre-icone carre-icone--violet" aria-hidden="true">
-                  <PleineTaches />
-                </span>
+      {/*
+        Deux colonnes, comme l'accueil de l'administrateur : le fil
+        d'actualite, et a droite ce qui regarde le benevole -- ses
+        chiffres, la tache a prendre, son journal. La colonne de droite
+        suit l'ecran (useColonneCollante). Sur une seule colonne, elle
+        passe avant le fil.
+      */}
+      <div className="accueil__colonnes accueil__colonnes--benevole">
+        {/* ---------- Le fil d'actualite : projets et nouvelles ---------- */}
+        <div className="accueil__pile">
+          {(projets ?? []).length + (actualites ?? []).length > 0 && (
+            <section className="fil-accueil" aria-labelledby="fil-benevole-titre">
+              <div className="fil-accueil__entete">
                 <div>
-                  <h3 className="tache-active__titre">{aPrendre.titre}</h3>
-                  <p className="tache-active__projet">{aPrendre.projetNom}</p>
+                  <h2 className="fil-accueil__titre" id="fil-benevole-titre">
+                    Fil d’actualité
+                  </h2>
+                  <p className="fil-accueil__sous-titre">
+                    Les projets de HOPE, ce qu’il y a à y faire, et ses nouvelles
+                  </p>
                 </div>
-              </div>
-
-              {aPrendre.description && (
-                <p className="tache-active__texte">{aPrendre.description}</p>
-              )}
-
-              {aPrendre.echeance && (
-                <p className="tache-active__echeance">
-                  <IconeCalendrier />
-                  À rendre le {fmt.date(aPrendre.echeance)}
-                </p>
-              )}
-
-              <div className="tache-active__actions">
-                <Link className="bouton-hope bouton-hope--creux" to="/benevole/taches">
-                  {aPrendre.maPlace === 'demandee' ? 'Voir ma demande' : 'La demander'}
+                <Link className="bouton-hope bouton-hope--creux fil-accueil__tous" to="/benevole/projets">
+                  Tous les projets
                   <IconeChevronDroit />
                 </Link>
-                <Link className="lien-hope" to="/benevole/taches">
-                  Toutes les tâches à prendre
+              </div>
+
+              <FiltresFil
+                actif={filtre}
+                onChange={setFiltre}
+                compteurs={{
+                  tout: (projets ?? []).length + (actualites ?? []).length,
+                  projet: (projets ?? []).length,
+                  actualite: (actualites ?? []).length,
+                }}
+              />
+
+              {fil.length === 0 ? (
+                <p className="bloc__vide">
+                  {filtre === 'actualite'
+                    ? 'Aucune actualité pour l’instant.'
+                    : 'Aucun projet ouvert pour l’instant.'}
+                </p>
+              ) : (
+                fil.map(({ type, cle, element }, rang) =>
+                  type === 'projet' ? (
+                    <PublicationFil
+                      key={cle}
+                      projet={element}
+                      rang={Math.min(rang, 5)}
+                      lien={`/benevole/projets/${element.id}`}
+                      lienAjoutVisuel={null}
+                      compteurs={<TachesDuProjet projet={element} />}
+                    />
+                  ) : (
+                    <PublicationActualite
+                      key={cle}
+                      publication={element}
+                      rang={Math.min(rang, 5)}
+                      lienProjet={element.projetId ? `/benevole/projets/${element.projetId}` : null}
+                    />
+                  )
+                )
+              )}
+            </section>
+          )}
+        </div>
+
+        {/* ---------- Ses chiffres, la tache a prendre, son journal ---------- */}
+        <aside className="accueil__pile" ref={colonne} aria-label="Mes tâches">
+          <section className="invitation" aria-labelledby="invitation-titre">
+            <div className="invitation__corps">
+              {/* La carte ne montre que ses chiffres ; le titre reste pour
+                  les lecteurs d'ecran, qui s'orientent par les titres. */}
+              <h2 className="sr-only" id="invitation-titre">
+                Vos tâches en chiffres
+              </h2>
+
+              {/*
+                Les trois chiffres du benevole, du plus personnel au plus
+                ouvert : ce qu'il a en cours, ce qu'il a livre, ce qui attend
+                quelqu'un. Chacun mene a l'ecran qui le detaille.
+              */}
+              <ul className="invitation__chiffres">
+                <ChiffreInvitation
+                  rang={0}
+                  to="/benevole/taches"
+                  valeur={taches ? enCours.length : null}
+                  libelles={['Tâche en cours', 'Tâches en cours']}
+                  detail={
+                    enCours.length === 0
+                      ? 'Aucune pour le moment'
+                      : prioritaire?.echeance
+                        ? `À rendre le ${fmt.date(prioritaire.echeance)}`
+                        : 'Sans échéance'
+                  }
+                  Icone={PleineTaches}
+                  teinte="jaune"
+                />
+                <ChiffreInvitation
+                  rang={1}
+                  to="/benevole/journal"
+                  valeur={journal ? nbLivrees : null}
+                  libelles={['Tâche livrée', 'Tâches livrées']}
+                  detail={
+                    journal?.derniereLivraison
+                      ? `Dernière le ${fmt.date(journal.derniereLivraison)}`
+                      : 'Pas encore'
+                  }
+                  Icone={PleineJournal}
+                  teinte="bleu"
+                />
+                <ChiffreInvitation
+                  rang={2}
+                  to="/benevole/taches"
+                  valeur={chiffres ? nbLibres : null}
+                  libelles={['Tâche à prendre', 'Tâches à prendre']}
+                  detail={nbProjets > 0 ? `Sur ${pluriel(nbProjets, 'projet')}` : 'Tout est pris'}
+                  Icone={PleineProjets}
+                  teinte="orange"
+                />
+              </ul>
+            </div>
+          </section>
+
+          <section className="tache-active">
+            <div className="tache-active__haut">
+              <h2 className="tache-active__intitule">
+                À prendre
+                {nbLibres > 0 && <span className="tache-active__compte">{nbLibres}</span>}
+              </h2>
+              {aPrendre && (
+                <span className="pastille pastille--bleu">
+                  {aPrendre.maPlace === 'demandee'
+                    ? 'Demandée'
+                    : (aPrendre.equipe ?? []).length > 0
+                      ? 'À rejoindre'
+                      : 'Libre'}
+                </span>
+              )}
+            </div>
+
+            {aPrendre ? (
+              <>
+                <div className="tache-active__ligne">
+                  <span className="carre-icone carre-icone--violet" aria-hidden="true">
+                    <PleineTaches />
+                  </span>
+                  <div>
+                    <h3 className="tache-active__titre">{aPrendre.titre}</h3>
+                    <p className="tache-active__projet">{aPrendre.projetNom}</p>
+                  </div>
+                </div>
+
+                {aPrendre.description && (
+                  <p className="tache-active__texte">{aPrendre.description}</p>
+                )}
+
+                {aPrendre.echeance && (
+                  <p className="tache-active__echeance">
+                    <IconeCalendrier />
+                    À rendre le {fmt.date(aPrendre.echeance)}
+                  </p>
+                )}
+
+                <div className="tache-active__actions">
+                  <Link className="bouton-hope bouton-hope--creux" to="/benevole/taches">
+                    {aPrendre.maPlace === 'demandee' ? 'Voir ma demande' : 'La demander'}
+                    <IconeChevronDroit />
+                  </Link>
+                  <Link className="lien-hope" to="/benevole/taches">
+                    Toutes les tâches à prendre
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <div className="tache-active__vide">
+                <p>Toutes les tâches ont trouvé un volontaire. Merci à tous.</p>
+                <Link className="bouton-hope bouton-hope--creux" to="/benevole/projets">
+                  Voir les projets
+                  <IconeChevronDroit />
                 </Link>
               </div>
-            </>
-          ) : (
-            <div className="tache-active__vide">
-              <p>Toutes les tâches ont trouvé un volontaire. Merci à tous.</p>
-              <Link className="bouton-hope bouton-hope--creux" to="/benevole/projets">
-                Voir les projets
-                <IconeChevronDroit />
-              </Link>
-            </div>
-          )}
-        </section>
-      </div>
+            )}
+          </section>
 
-      {/* ---------- Le fil d'actualite : projets et nouvelles ---------- */}
-      {(projets ?? []).length + (actualites ?? []).length > 0 && (
-        <section className="fil-accueil fil-accueil--benevole" aria-labelledby="fil-benevole-titre">
-          <div className="fil-accueil__entete">
-            <div>
-              <h2 className="fil-accueil__titre" id="fil-benevole-titre">
-                Fil d’actualité
-              </h2>
-              <p className="fil-accueil__sous-titre">
-                Les projets de HOPE, ce qu’il y a à y faire, et ses nouvelles
+          <section className="journal-apercu">
+            <div className="tache-active__ligne">
+              <span className="carre-icone carre-icone--bleu" aria-hidden="true">
+                <PleineJournal />
+              </span>
+              <div>
+                <h2 className="journal-apercu__titre">Mon journal</h2>
+                <p className="journal-apercu__accroche">Le compte de ce que vous avez livré.</p>
+              </div>
+            </div>
+
+            <div className="journal-apercu__chiffres">
+              <p>
+                <strong>{nbLivrees}</strong>
+                {nbLivrees > 1 ? 'tâches livrées' : 'tâche livrée'}
+              </p>
+              <p>
+                <strong>{journal?.projetsAides ?? 0}</strong>
+                {(journal?.projetsAides ?? 0) > 1 ? 'projets soutenus' : 'projet soutenu'}
               </p>
             </div>
-            <Link className="bouton-hope bouton-hope--creux fil-accueil__tous" to="/benevole/projets">
-              Tous les projets
+
+            <Link className="bouton-hope bouton-hope--creux" to="/benevole/journal">
+              Ouvrir mon journal
               <IconeChevronDroit />
             </Link>
-          </div>
-
-          <FiltresFil
-            actif={filtre}
-            onChange={setFiltre}
-            compteurs={{
-              tout: (projets ?? []).length + (actualites ?? []).length,
-              projet: (projets ?? []).length,
-              actualite: (actualites ?? []).length,
-            }}
-          />
-
-          {fil.length === 0 ? (
-            <p className="bloc__vide">
-              {filtre === 'actualite'
-                ? 'Aucune actualité pour l’instant.'
-                : 'Aucun projet ouvert pour l’instant.'}
-            </p>
-          ) : (
-            fil.map(({ type, cle, element }, rang) =>
-              type === 'projet' ? (
-                <PublicationFil
-                  key={cle}
-                  projet={element}
-                  rang={Math.min(rang, 5)}
-                  lien={`/benevole/projets/${element.id}`}
-                  lienAjoutVisuel={null}
-                  compteurs={<TachesDuProjet projet={element} />}
-                />
-              ) : (
-                <PublicationActualite
-                  key={cle}
-                  publication={element}
-                  rang={Math.min(rang, 5)}
-                  lienProjet={element.projetId ? `/benevole/projets/${element.projetId}` : null}
-                />
-              )
-            )
-          )}
-        </section>
-      )}
-
-      {/* ---------- Le journal, sur toute la largeur ---------- */}
-      <section className="journal-apercu journal-apercu--large">
-        <div className="tache-active__ligne">
-          <span className="carre-icone carre-icone--bleu" aria-hidden="true">
-            <PleineJournal />
-          </span>
-          <div>
-            <h2 className="journal-apercu__titre">Mon journal</h2>
-            <p className="journal-apercu__accroche">Le compte de ce que vous avez livré.</p>
-          </div>
-        </div>
-
-        <div className="journal-apercu__chiffres">
-          <p>
-            <strong>{nbLivrees}</strong>
-            {nbLivrees > 1 ? 'tâches livrées' : 'tâche livrée'}
-          </p>
-          <p>
-            <strong>{journal?.projetsAides ?? 0}</strong>
-            {(journal?.projetsAides ?? 0) > 1 ? 'projets soutenus' : 'projet soutenu'}
-          </p>
-        </div>
-
-        <Link className="bouton-hope bouton-hope--creux" to="/benevole/journal">
-          Ouvrir mon journal
-          <IconeChevronDroit />
-        </Link>
-      </section>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

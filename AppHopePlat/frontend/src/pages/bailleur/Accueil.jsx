@@ -7,6 +7,7 @@ import PublicationActualite from '../../components/admin/PublicationActualite.js
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { JaugeHorizon } from '../../components/admin/PublicationProjet.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
+import { useColonneCollante } from '../../hooks/useColonneCollante.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
@@ -236,6 +237,8 @@ function ActualiteDuFil({ publication, rang, onInteret }) {
  */
 export default function Accueil() {
   const { bailleur } = useOutletContext();
+  // La colonne de droite suit l'ecran, comme celle de l'administrateur.
+  const colonne = useColonneCollante();
   const { donnees, chargement, erreur } = useChargement(() => service.tableauDeBord(), []);
   const { donnees: publications, recharger: rechargerFil } = useChargement(() => service.fil(), []);
   const [filtre, setFiltre] = useState('tout');
@@ -363,7 +366,7 @@ export default function Accueil() {
             </div>
 
             {/* ---------- Ce qui est propre au partenaire ---------- */}
-            <div className="accueil__pile">
+            <div className="accueil__pile" ref={colonne}>
               <Panneau
                 titre="Derniers versements reçus"
                 actions={

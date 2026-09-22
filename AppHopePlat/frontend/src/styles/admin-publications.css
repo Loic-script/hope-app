@@ -26,6 +26,25 @@
   }
 }
 
+/*
+ * Benevole et bailleur : la meme colonne qui suit l'ecran. Plus haute
+ * que l'ecran, elle recoit un "top" negatif (useColonneCollante) : elle
+ * defile d'abord, puis s'arrete quand son bas atteint celui de l'ecran.
+ *
+ * Sur une seule colonne, rien a suivre -- et chez le benevole, ses
+ * taches passent avant le fil.
+ */
+@media (max-width: 1240px) {
+  .accueil__colonnes--benevole > .accueil__pile:last-child,
+  .accueil__colonnes--bailleur > .accueil__pile:last-child {
+    position: static;
+  }
+
+  .accueil__colonnes--benevole > .accueil__pile:last-child {
+    order: -1;
+  }
+}
+
 /* ============================================================
    1. La publication
    ============================================================ */
@@ -877,11 +896,6 @@
 
 /* Un fil se lit sur une colonne mesuree, comme un reseau social : pleine
    largeur, une photo de 1 100 px de large n'aurait plus rien d'un fil. */
-.fil-accueil--benevole {
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-}
 
 /* Le titre prend la place qu'il lui faut ; faute de place, le bouton
    passe dessous au lieu de l'ecraser. */
