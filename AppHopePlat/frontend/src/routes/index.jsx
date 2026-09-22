@@ -45,7 +45,7 @@ import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
 import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
 import ProjetsBailleur from '../pages/bailleur/Projets.jsx';
 import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
-import TableauDeBordBailleur from '../pages/bailleur/TableauDeBord.jsx';
+import AccueilBailleur from '../pages/bailleur/Accueil.jsx';
 import RequireBailleur from './RequireBailleur.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
 import ProfilUtilisateurPage from '../pages/admin/ProfilUtilisateurPage.jsx';
@@ -137,7 +137,7 @@ export default function AppRoutes() {
         />
 
         <Route element={<BailleurLayout />}>
-          <Route path="/bailleur" element={<TableauDeBordBailleur />} />
+          <Route path="/bailleur" element={<AccueilBailleur />} />
           <Route path="/bailleur/partenariat" element={<PartenariatBailleur />} />
           <Route path="/bailleur/rapports" element={<RapportsBailleur />} />
           <Route path="/bailleur/projets" element={<ProjetsBailleur />} />

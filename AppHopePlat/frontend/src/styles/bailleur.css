@@ -1315,3 +1315,57 @@
     padding: 18px;
   }
 }
+
+/* ============================================================
+   Accueil : le fil des projets, et la colonne du partenaire
+   ============================================================ */
+
+/*
+ * La colonne de droite est longue ici -- versements, domaines, zones,
+ * origine des fonds : elle defile avec la page au lieu de rester
+ * accrochee en haut comme chez l'administrateur, ou elle est courte.
+ */
+.accueil__colonnes--bailleur > .accueil__pile:last-child {
+  position: static;
+}
+
+/* Dans les piles, l'ecart vient de la pile : pas de marge en plus. */
+.accueil__colonnes--bailleur .panneau-bailleur {
+  margin-bottom: 0;
+}
+
+/* Ce que le partenaire a affecte au projet : sa part, mise en avant. */
+.fil-post__votre-part,
+.fil-post__votre-part strong {
+  font-weight: 600;
+  color: var(--hope-violet);
+}
+
+/* Telephone : les quatre chiffres deux par deux, pour que les projets
+   arrivent vite sous le pouce au lieu d'attendre quatre cartes. */
+@media (max-width: 620px) {
+  .kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .kpi__carte {
+    padding: 14px;
+  }
+
+  .kpi__libelle {
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Un montant comme "6 000 000 Ar" tient sur sa ligne jusqu'a 320 px. */
+  .kpi__valeur {
+    margin-top: 6px;
+    font-size: clamp(15px, 5vw, 19px);
+  }
+
+  .kpi__note {
+    font-size: 11.5px;
+  }
+}

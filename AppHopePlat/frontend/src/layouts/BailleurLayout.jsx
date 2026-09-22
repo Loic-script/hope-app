@@ -16,21 +16,24 @@ import * as espaceService from '../services/espace.service.js';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
- * Les ecrans de l'espace, dans l'ordre de la lecture : ce que l'argent a
- * produit, ce qui a ete promis, les pieces, les projets et les
+ * Les ecrans de l'espace, dans l'ordre de la lecture : l'accueil -- les
+ * projets en cours en fil de publications, et ce que l'argent a
+ * produit --, ce qui a ete promis, les pieces, les projets et les
  * nouvelles, puis l'organisation.
  *
  * Les preuves terrain n'y figurent plus : ce sont souvent des photos de
  * beneficiaires, et l'equipe les garde dans son back-office.
  *
- * Regroupes comme ailleurs : le tableau de bord seul en tete, puis ce
+ * Regroupes comme ailleurs : l'accueil seul en tete, puis ce
  * qui lie le bailleur a HOPE, ce qui se passe sur le terrain, et ce qui
  * releve de sa propre maison.
  */
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/bailleur', label: 'Tableau de bord', Icone: PleineAccueil, exact: true }],
+    // "Accueil", comme chez l'administrateur et le benevole : la meme
+    // page d'entree, les projets en fil de publications.
+    entrees: [{ to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Notre partenariat',

@@ -172,12 +172,15 @@
   padding-top: 16px;
 }
 
+/* 18 px sous la legende : le soleil depasse de 17 px au-dessus de la
+   ligne, et recouvrait la derniere ligne de texte quand la legende passe
+   sur deux lignes (telephone). */
 .jauge__legende {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 9px;
+  margin-bottom: 18px;
   font-size: 12.5px;
   color: var(--admin-texte-doux);
 }
@@ -498,6 +501,22 @@
   text-decoration: underline;
 }
 
+/* Le titre en bouton, quand l'espace ouvre une fenetre au lieu d'une
+   fiche : il se lit exactement comme le lien. */
+.fil-post__titre-bouton {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--admin-texte);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fil-post__titre-bouton:hover {
+  text-decoration: underline;
+}
+
 .fil-post__point {
   margin: 0 6px;
   font-weight: 400;
@@ -697,8 +716,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  width: 100%;
   min-height: 42px;
   margin: 2px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
   border-radius: 8px;
   font-size: 14.5px;
   font-weight: 600;

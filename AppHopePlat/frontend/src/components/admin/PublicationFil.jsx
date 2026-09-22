@@ -82,18 +82,24 @@ function Media({ projet, lienAjoutVisuel }) {
  * Pas de "J'aime", ni de commentaire, ni de partage : l'accueil se lit
  * comme un fil, mais on n'y reagit pas -- on y va voir.
  *
- * Ecrite pour l'accueil de l'administration, elle sert aussi l'espace
- * benevole : "lien" mene a la fiche du projet dans l'espace qui l'affiche,
- * et "compteurs" remplace le financement -- un benevole n'a pas a voir
- * l'argent d'un projet, il y lit les taches a prendre.
+ * Ecrite pour l'accueil de l'administration, elle sert aussi les espaces
+ * benevole et bailleur : "lien" mene a la fiche du projet dans l'espace
+ * qui l'affiche, et "compteurs" remplace le financement -- un benevole
+ * n'a pas a voir l'argent d'un projet, il y lit les taches a prendre.
+ *
+ * "onVoir" remplace le lien quand l'espace n'a pas de fiche projet : le
+ * titre et l'action ouvrent alors ce que l'espace montre a la place --
+ * chez le bailleur, le rapport a jour du projet.
  *
  * @param {{ projet: object, rang?: number, lien?: string,
- *           compteurs?: React.ReactNode, lienAjoutVisuel?: string|null }} proprietes
+ *           onVoir?: Function, compteurs?: React.ReactNode,
+ *           lienAjoutVisuel?: string|null }} proprietes
  */
 export default function PublicationFil({
   projet,
   rang = 0,
   lien = `/admin/projects/${projet.id}`,
+  onVoir,
   compteurs,
   lienAjoutVisuel = `/admin/projects/${projet.id}/edit`,
 }) {
@@ -118,9 +124,15 @@ export default function PublicationFil({
         </span>
         <div className="fil-post__qui">
           <p className="fil-post__titre">
-            <Link id={idTitre} to={lien}>
-              {projet.name}
-            </Link>
+            {onVoir ? (
+              <button type="button" id={idTitre} className="fil-post__titre-bouton" onClick={onVoir}>
+                {projet.name}
+              </button>
+            ) : (
+              <Link id={idTitre} to={lien}>
+                {projet.name}
+              </Link>
+            )}
             {projet.categoryName && (
               <>
                 <span className="fil-post__point" aria-hidden="true">
@@ -204,14 +216,26 @@ export default function PublicationFil({
 
       {/* ---------- Une seule action ---------- */}
       <div className="fil-post__actions">
-        <Link
-          className="fil-post__action"
-          to={lien}
-          aria-label={`Voir le projet ${projet.name}`}
-        >
-          <IconeOeil />
-          Voir le projet
-        </Link>
+        {onVoir ? (
+          <button
+            type="button"
+            className="fil-post__action"
+            onClick={onVoir}
+            aria-label={`Voir le projet ${projet.name}`}
+          >
+            <IconeOeil />
+            Voir le projet
+          </button>
+        ) : (
+          <Link
+            className="fil-post__action"
+            to={lien}
+            aria-label={`Voir le projet ${projet.name}`}
+          >
+            <IconeOeil />
+            Voir le projet
+          </Link>
+        )}
       </div>
     </article>
   );
