@@ -56,9 +56,11 @@ router.get('/tableau-de-bord', funder.espace.tableauDeBord);
 router.get('/partenariat', funder.espace.partenariat);
 router.get('/versements', funder.espace.versements);
 
-// Les projets HOPE, et le rapport a jour de chacun : lu dans l'espace
-// ou enregistre en PDF.
+// Les projets HOPE, la fiche de chacun -- ce qu'il est, son financement,
+// son impact -- et son rapport a jour : lu dans l'espace ou enregistre
+// en PDF.
 router.get('/projets', funder.espace.projets);
+router.get('/projets/:id', funder.espace.projet);
 router.get('/projets/:id/rapport', funder.espace.rapportProjet);
 router.get('/projets/:id/rapport/pdf', funder.espace.pdfRapportProjet);
 

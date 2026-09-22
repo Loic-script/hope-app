@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
 import { IconeChevronDroit } from '../../components/admin/AdminIcons.jsx';
@@ -14,7 +13,6 @@ import {
   STATUTS_VERSEMENT,
   TEINTES_VERSEMENT,
 } from './composants.jsx';
-import FenetreRapportProjet from './RapportProjet.jsx';
 
 import photoBandeau from '../../assets/hope-bandeau.jpg';
 
@@ -89,12 +87,11 @@ function FinancementDuProjet({ projet }) {
  * Le meme accueil que ceux de l'administration et des benevoles : un
  * bandeau de bienvenue, puis les projets en cours en fil de publications
  * -- qui, quand, ou, ce qu'il fait, sa photo, son financement -- avec une
- * seule action, voir le projet. Le bailleur n'a pas de fiche projet : voir
- * le projet ouvre son rapport a jour, comme sur la page Projets.
+ * seule action, voir le projet -- sa fiche dans l'espace bailleur.
  *
- * Ce qui reste propre au partenaire l'encadre : ses quatre chiffres en
- * tete, et dans la colonne de droite ses derniers versements, ou vont les
- * fonds, et d'ou viennent ceux de HOPE. Le detail des engagements --
+ * Ce qui reste propre au partenaire l'encadre : ses chiffres en tete, et
+ * dans la colonne de droite ses derniers versements, ou vont les fonds,
+ * et d'ou viennent ceux de HOPE. Le detail des engagements --
  * promis, recu, affecte -- est sur la page Partenariat.
  *
  * Les chiffres sont des agregats calcules a la volee : aucun n'est
@@ -104,7 +101,6 @@ function FinancementDuProjet({ projet }) {
 export default function Accueil() {
   const { bailleur } = useOutletContext();
   const { donnees, chargement, erreur } = useChargement(() => service.tableauDeBord(), []);
-  const [rapportDe, setRapportDe] = useState(null);
 
   const i = donnees?.indicateurs ?? {};
   const projets = (donnees?.projets ?? []).filter((p) => p.status === 'IN_PROGRESS');
@@ -137,23 +133,21 @@ export default function Accueil() {
         <p className="vide-bailleur">Chargement de votre accueil…</p>
       ) : (
         <>
-          {/* ---------- Les quatre chiffres du partenariat ---------- */}
+          {/*
+            Les trois chiffres du partenariat. Le taux d'execution a ete
+            retire ; ce qui a ete recu se lit sous le montant engage.
+          */}
           <div className="kpi">
             <Kpi
               libelle="Montant engagé"
               valeur={fmt.montant(i.montantEngage)}
-              note={
-                Number(i.montantAttendu) > 0
-                  ? `${fmt.montant(i.montantAttendu)} encore attendus`
-                  : undefined
-              }
+              note={[
+                `${fmt.montant(i.montantRecu)} reçus`,
+                Number(i.montantAttendu) > 0 ? `${fmt.montant(i.montantAttendu)} attendus` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
               teinte="violet"
-            />
-            <Kpi
-              libelle="Taux d’exécution"
-              valeur={`${i.tauxExecution ?? 0} %`}
-              note={`${fmt.montant(i.montantRecu)} reçus`}
-              teinte="orange"
             />
             <Kpi libelle="Projets financés" valeur={fmt.nombre(i.projetsFinances)} teinte="bleu" />
             <Kpi
@@ -193,7 +187,7 @@ export default function Accueil() {
                       key={projet.id}
                       projet={commePublication(projet)}
                       rang={Math.min(rang, 5)}
-                      onVoir={() => setRapportDe(projet)}
+                      lien={`/bailleur/projets/${projet.id}`}
                       lienAjoutVisuel={null}
                       compteurs={<FinancementDuProjet projet={projet} />}
                     />
@@ -293,8 +287,6 @@ export default function Accueil() {
           </div>
         </>
       )}
-
-      <FenetreRapportProjet projet={rapportDe} onFermer={() => setRapportDe(null)} />
     </>
   );
 }

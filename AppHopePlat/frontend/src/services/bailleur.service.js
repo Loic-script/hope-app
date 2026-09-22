@@ -111,6 +111,15 @@ export async function projets() {
 }
 
 /**
+ * GET /api/bailleur/projets/:id — la fiche du projet : ce qu'il est, son
+ * financement en totaux, son impact collectif.
+ */
+export async function projet(id) {
+  const { data } = await apiBailleur.get(`/bailleur/projets/${id}`);
+  return data;
+}
+
+/**
  * GET /api/bailleur/projets/:id/rapport
  *
  * Le rapport a jour du projet, compose avec les donnees du jour.

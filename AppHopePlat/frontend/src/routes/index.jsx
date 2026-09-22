@@ -44,6 +44,7 @@ import ActualitesBailleur from '../pages/bailleur/Actualites.jsx';
 import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
 import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
 import ProjetsBailleur from '../pages/bailleur/Projets.jsx';
+import ProjetBailleur from '../pages/bailleur/ProjetDetail.jsx';
 import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
 import AccueilBailleur from '../pages/bailleur/Accueil.jsx';
 import RequireBailleur from './RequireBailleur.jsx';
@@ -141,6 +142,8 @@ export default function AppRoutes() {
           <Route path="/bailleur/partenariat" element={<PartenariatBailleur />} />
           <Route path="/bailleur/rapports" element={<RapportsBailleur />} />
           <Route path="/bailleur/projets" element={<ProjetsBailleur />} />
+          {/* La fiche d'un projet : ce qu'il est, son financement, son impact. */}
+          <Route path="/bailleur/projets/:id" element={<ProjetBailleur />} />
           {/* Les preuves terrain ont quitte l'espace bailleur. Une ancienne
               adresse -- un favori, une notification deja envoyee -- mene
               au tableau de bord plutot qu'a une page blanche. */}

@@ -1296,8 +1296,22 @@
   color: var(--admin-texte);
 }
 
+/* Voir le projet, puis lire son rapport. */
 .projet-bailleur__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 16px;
+}
+
+/* Le nom du projet mene a sa fiche. */
+.projet-bailleur__titre a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.projet-bailleur__titre a:hover {
+  text-decoration: underline;
 }
 
 /* Page Rapports : les documents recus viennent apres les rapports des
@@ -1367,5 +1381,201 @@
 
   .kpi__note {
     font-size: 11.5px;
+  }
+
+  /* Trois chiffres : le dernier prend la rangee entiere plutot que de
+     rester seul sur une demi-largeur. */
+  .kpi__carte:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ============================================================
+   Fiche d'un projet
+
+   La mise en page est celle de la fiche projet benevole (classes
+   "projet-benevole") ; ne s'ajoute ici que ce qui est propre au
+   partenaire.
+   ============================================================ */
+
+/* Sous l'accroche : statut, "Vous financez", reference -- et le rapport. */
+.fiche-projet-bailleur__tete-bas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.fiche-projet-bailleur__tete-bas .projet-bailleur__jetons {
+  align-items: center;
+}
+
+/* L'avancement des actions : trois nombres cote a cote. */
+.fiche-projet-bailleur__avancement {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fiche-projet-bailleur__avancement p {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background-color: var(--admin-fond);
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.fiche-projet-bailleur__avancement strong {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--admin-texte);
+}
+
+/* Les dernieres actions realisees, cochees. */
+.fiche-projet-bailleur__realisees {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiche-projet-bailleur__realisees li {
+  position: relative;
+  padding-left: 26px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fiche-projet-bailleur__realisees li::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 2px;
+  width: 12px;
+  height: 7px;
+  border-bottom: 2px solid #2e8b57;
+  border-left: 2px solid #2e8b57;
+  transform: rotate(-45deg);
+}
+
+/* Ce que le partenaire a affecte : sa part, mise en avant. */
+.fiche-projet-bailleur__votre-part {
+  border-left: 4px solid var(--hope-violet);
+  background-color: #f6f4fc;
+}
+
+.fiche-projet-bailleur__votre-part-libelle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.fiche-projet-bailleur__votre-part-montant {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--hope-violet);
+}
+
+.fiche-projet-bailleur__votre-part-note {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+@media (max-width: 560px) {
+  .fiche-projet-bailleur__tete-bas .bouton-bailleur {
+    width: 100%;
+    text-align: center;
+  }
+
+  .fiche-projet-bailleur__avancement {
+    gap: 8px;
+  }
+
+  .fiche-projet-bailleur__avancement p {
+    padding: 10px;
+  }
+}
+
+/*
+ * Les chiffres du financement et de l'impact : le libelle, puis le
+ * montant sur sa propre ligne, puis la precision. Pose a droite du
+ * libelle, un grand montant se coupait en deux ("6 000 000 / Ar").
+ */
+.fiche-projet-bailleur .carte-chiffre {
+  display: grid;
+  grid-template-areas:
+    'libelle'
+    'valeur'
+    'note';
+  align-content: start;
+  gap: 4px;
+}
+
+.fiche-projet-bailleur .carte-chiffre > div {
+  display: contents;
+}
+
+.fiche-projet-bailleur .carte-chiffre__libelle {
+  grid-area: libelle;
+}
+
+.fiche-projet-bailleur .carte-chiffre__valeur {
+  grid-area: valeur;
+  margin-top: 2px;
+}
+
+.fiche-projet-bailleur .carte-chiffre__variation {
+  grid-area: note;
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  /* Deux par deux plutot qu'un par ligne : le financement tient sur un
+     ecran. */
+  .fiche-projet-bailleur .cartes-chiffres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .fiche-projet-bailleur .carte-chiffre {
+    padding: 13px;
+  }
+
+  .fiche-projet-bailleur .carte-chiffre__libelle {
+    font-size: 12.5px;
+  }
+
+  .fiche-projet-bailleur .carte-chiffre__valeur {
+    font-size: clamp(15px, 4.8vw, 19px);
+  }
+
+  .fiche-projet-bailleur .carte-chiffre__variation {
+    font-size: 11.5px;
+  }
+}
+
+/* "Financement" est plus long que "Taches" : sur un petit telephone, les
+   trois onglets se resserrent pour tenir sans deborder. */
+@media (max-width: 400px) {
+  .fiche-projet-bailleur .onglets__bouton {
+    padding: 11px 4px;
+    font-size: 13px;
+  }
+
+  .fiche-projet-bailleur .onglets__compteur {
+    margin-left: 4px;
   }
 }

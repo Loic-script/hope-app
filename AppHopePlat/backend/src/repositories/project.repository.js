@@ -231,37 +231,54 @@ export async function listerPourBenevole(client = null) {
 }
 
 /**
- * Un projet, pour l'espace benevole : sa vue generale.
+ * La fiche d'un projet hors de l'administration : sa vue generale.
  *
  * Tout ce qui dit ce qu'est le projet -- responsable, dates, public,
  * objectifs, resultat -- et rien de ce qu'il coute : ni budget, ni dons,
  * ni depenses. Les beneficiaires ne sont qu'un nombre : leurs fiches
  * restent dans l'espace administrateur.
+ *
+ * Lue par les espaces benevole et bailleur ; chacun y ajoute sa
+ * condition (WHERE).
  */
+const FICHE_HORS_ADMIN = `
+  SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
+         p.media_url, p.media_type, p.status, p.created_at,
+         p.manager_name, p.start_date::text AS start_date, p.completed_at,
+         p.beneficiary_profile, p.beneficiary_target, p.outcome,
+         c.name AS category_name,
+         COALESCE(ben.nombre, 0) AS beneficiaries_count,
+         COALESCE(o.liste, '[]'::json) AS objectives
+    FROM projects p
+    LEFT JOIN project_categories c ON c.id = p.category_id
+    LEFT JOIN LATERAL (
+      SELECT json_agg(json_build_object('id', o.id, 'label', o.label)
+             ORDER BY o.position, o.id) AS liste
+        FROM project_objectives o WHERE o.project_id = p.id
+    ) o ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int AS nombre
+        FROM project_beneficiaries WHERE project_id = p.id
+    ) ben ON TRUE
+`;
+
+/** Un projet, pour l'espace benevole : les projets archives n'y sont plus. */
 export async function trouverPourBenevole(id, client = null) {
   const resultat = await query(
-    `SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
-            p.media_url, p.media_type, p.status, p.created_at,
-            p.manager_name, p.start_date::text AS start_date, p.completed_at,
-            p.beneficiary_profile, p.beneficiary_target, p.outcome,
-            c.name AS category_name,
-            COALESCE(ben.nombre, 0) AS beneficiaries_count,
-            COALESCE(o.liste, '[]'::json) AS objectives
-       FROM projects p
-       LEFT JOIN project_categories c ON c.id = p.category_id
-       LEFT JOIN LATERAL (
-         SELECT json_agg(json_build_object('id', o.id, 'label', o.label)
-                ORDER BY o.position, o.id) AS liste
-           FROM project_objectives o WHERE o.project_id = p.id
-       ) o ON TRUE
-       LEFT JOIN LATERAL (
-         SELECT COUNT(*)::int AS nombre
-           FROM project_beneficiaries WHERE project_id = p.id
-       ) ben ON TRUE
-      WHERE p.id = $1 AND p.archived_at IS NULL`,
+    `${FICHE_HORS_ADMIN} WHERE p.id = $1 AND p.archived_at IS NULL`,
     [id],
     client
   );
+  return versObjet(resultat.rows[0]);
+}
+
+/**
+ * Un projet, pour l'espace bailleur. Pas de filtre ici : l'appelant a
+ * deja verifie que ce bailleur le voit -- un projet qu'il a finance lui
+ * reste lisible, meme archive.
+ */
+export async function trouverPourBailleur(id, client = null) {
+  const resultat = await query(`${FICHE_HORS_ADMIN} WHERE p.id = $1`, [id], client);
   return versObjet(resultat.rows[0]);
 }
 

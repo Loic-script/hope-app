@@ -86,6 +86,7 @@ export const espace = {
   partenariat: gerer((req) => funderService.partenariat(req.bailleur.bailleurId)),
   versements: gerer((req) => funderService.versements(req.bailleur.bailleurId, req.query)),
   projets: gerer((req) => funderService.projets(req.bailleur.bailleurId)),
+  projet: gerer((req) => funderService.projet(req.bailleur.bailleurId, req.params.id)),
   rapportProjet: gerer((req) =>
     funderService.rapportProjet(req.bailleur.bailleurId, req.params.id)
   ),

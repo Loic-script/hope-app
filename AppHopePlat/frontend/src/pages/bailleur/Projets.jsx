@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useChargement } from '../../hooks/useChargement.js';
 import { urlMedia } from '../../services/api.js';
@@ -27,7 +28,8 @@ const FILTRES = [
  *
  * Tous les projets HOPE en cours et termines, et ceux qu'il finance
  * quels qu'ils soient. Chaque carte dit ou en est le financement du
- * projet, ce que le partenaire y a mis, et ouvre le rapport a jour.
+ * projet, ce que le partenaire y a mis, et ouvre la fiche du projet ou
+ * son rapport a jour.
  */
 export default function Projets() {
   const { donnees, chargement, erreur } = useChargement(() => service.projets(), []);
@@ -115,7 +117,9 @@ function CarteProjet({ projet, onRapport }) {
         {projet.reference && <span className="projet-bailleur__reference">{projet.reference}</span>}
       </div>
 
-      <h2 className="projet-bailleur__titre">{projet.name}</h2>
+      <h2 className="projet-bailleur__titre">
+        <Link to={`/bailleur/projets/${projet.id}`}>{projet.name}</Link>
+      </h2>
       {lieu && <p className="projet-bailleur__lieu">{lieu}</p>}
 
       {(projet.descriptionTitre || projet.description) && (
@@ -177,6 +181,9 @@ function CarteProjet({ projet, onRapport }) {
       </dl>
 
       <div className="projet-bailleur__actions">
+        <Link className="bouton-bailleur" to={`/bailleur/projets/${projet.id}`}>
+          Voir le projet
+        </Link>
         <button type="button" className="bouton-bailleur bouton-bailleur--discret" onClick={onRapport}>
           Lire le rapport
         </button>
