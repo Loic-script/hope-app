@@ -45,12 +45,25 @@ const COULEURS_INTERET = { nouvelle: 'ambre', contactee: 'bleu', convertie: 'ver
 const VIDE = { type: 'actualite', titre: '', corps: '', projetId: '', mediaUrl: '' };
 
 /**
- * Actualites de l'espace bailleur.
+ * Ou se lit une publication, selon sa nature : l'actualite chez les
+ * bailleurs et les benevoles, l'appel a financement chez les bailleurs
+ * seuls.
+ */
+const ESPACES = {
+  actualite: 'des espaces bailleur et bénévole',
+  appel_financement: 'de l’espace bailleur',
+};
+
+/**
+ * Actualites des espaces bailleur et benevole.
  *
  * Ce que l'equipe publie ici, chaque bailleur le lit dans sa page
  * Actualites, et sa cloche l'en previent. Deux natures : l'actualite,
  * qui informe, et l'appel a financement, dont la barre suit le budget du
  * projet lie et qui porte le bouton "Financer ce projet".
+ *
+ * Les benevoles lisent aussi les actualites, dans leur propre page
+ * Actualites -- jamais les appels a financement, qui parlent d'argent.
  *
  * Sous chaque appel, les bailleurs qui ont clique ce bouton : c'est ici
  * que l'equipe les retrouve pour les recontacter.
@@ -92,7 +105,7 @@ export default function PublicationsPage() {
     soumettre(() => publicationService.supprimer(publication.id), {
       onSucces: () => {
         setASupprimer(null);
-        annoncer(`« ${publication.titre} » est retirée de l’espace bailleur.`);
+        annoncer(`« ${publication.titre} » est retirée ${ESPACES[publication.type]}.`);
         recharger();
       },
     });
@@ -109,7 +122,7 @@ export default function PublicationsPage() {
       <EntetePage
         fil={[{ label: 'Accueil', to: '/admin' }, { label: 'Actualités' }]}
         titre="Actualités"
-        accroche="Ce que lisent les bailleurs dans leur espace : les nouvelles de HOPE et les appels à financement."
+        accroche="Les nouvelles de HOPE, lues par les bailleurs et les bénévoles, et les appels à financement, lus par les bailleurs seuls."
         actions={
           <BoutonAjout onClick={() => setEdition({ publication: null })}>Nouvelle actualité</BoutonAjout>
         }
@@ -127,7 +140,7 @@ export default function PublicationsPage() {
         ) : affichees.length === 0 ? (
           <EtatVide
             titre="Aucune publication"
-            texte="Une actualité publiée ici apparaît aussitôt dans l’espace de chaque bailleur."
+            texte="Une actualité publiée ici apparaît aussitôt dans l’espace de chaque bailleur et de chaque bénévole."
             action={
               <BoutonAjout onClick={() => setEdition({ publication: null })}>
                 Nouvelle actualité
@@ -171,7 +184,7 @@ export default function PublicationsPage() {
         titre="Supprimer cette publication ?"
         message={
           aSupprimer
-            ? `« ${aSupprimer.titre} » disparaîtra de l’espace des bailleurs.` +
+            ? `« ${aSupprimer.titre} » disparaîtra ${ESPACES[aSupprimer.type]}.` +
               (aSupprimer.interets.length > 0
                 ? ` ${aSupprimer.interets.length} bailleur(s) s’étaient manifesté(s) : leurs intérêts restent enregistrés, mais ne seront plus affichés ici.`
                 : '')
@@ -444,6 +457,9 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
       ? publication.photoProjet
       : null;
 
+  // Une actualite se lit aussi chez les benevoles ; un appel, non.
+  const actualite = formulaire.type === 'actualite';
+
   function enregistrer() {
     const corps = {
       type: formulaire.type,
@@ -461,8 +477,10 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
         onSucces: (resultat) =>
           onEnregistre(
             creation
-              ? `Publiée dans l’espace bailleur. ${resultat.notifies} contact(s) bailleur prévenu(s) dans leur cloche.`
-              : 'Publication modifiée. Les bailleurs voient la nouvelle version.'
+              ? `Publiée ${actualite ? 'dans les espaces bailleur et bénévole' : 'dans l’espace bailleur'}. ${resultat.notifies} contact(s) bailleur prévenu(s) dans leur cloche.`
+              : actualite
+                ? 'Publication modifiée. Bailleurs et bénévoles voient la nouvelle version.'
+                : 'Publication modifiée. Les bailleurs voient la nouvelle version.'
           ),
       }
     );
@@ -476,7 +494,9 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
       titre={creation ? 'Nouvelle actualité' : 'Modifier la publication'}
       sousTitre={
         creation
-          ? 'Elle apparaît aussitôt dans l’espace de chaque bailleur, qui en est prévenu dans sa cloche.'
+          ? actualite
+            ? 'Elle apparaît aussitôt chez chaque bailleur, prévenu dans sa cloche, et chez chaque bénévole.'
+            : 'Il apparaît aussitôt chez chaque bailleur, prévenu dans sa cloche. Les bénévoles ne le voient pas.'
           : 'La modification ne renvoie pas de notification aux bailleurs.'
       }
       onFermer={onFermer}

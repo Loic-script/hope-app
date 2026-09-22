@@ -15,6 +15,14 @@ export async function apercu() {
   return data;
 }
 
+/* ------------------------------ Actualites ----------------------------- */
+
+/** GET /api/benevole/actualites — les nouvelles de HOPE, sans aucun chiffre. */
+export async function actualites() {
+  const { data } = await apiBenevole.get('/benevole/actualites');
+  return data.items ?? [];
+}
+
 /* ------------------------------- Projets ------------------------------- */
 
 /** GET /api/benevole/projets — ce que HOPE mene, et ce qu'il y a a y faire. */

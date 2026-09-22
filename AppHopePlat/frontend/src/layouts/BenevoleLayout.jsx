@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router
 
 import {
   PleineAccueil,
+  PleineActualites,
   PleineJournal,
   PleineMessages,
   PleinePersonne,
@@ -25,8 +26,12 @@ import CoqueEspace from './CoqueEspace.jsx';
  * suffit a ce que HOPE demande a ses benevoles.
  *
  * Meme decoupage que chez l'administrateur : l'entree d'accueil seule en
- * tete, puis des familles nommees. Deux ici -- ce que le benevole donne
- * a HOPE, et ce qui lui appartient en propre.
+ * tete, puis des familles nommees. Trois ici -- ce qui se passe sur le
+ * terrain, ce que le benevole donne a HOPE, et ce qui lui appartient en
+ * propre.
+ *
+ * "Sur le terrain" reprend la famille de l'espace bailleur : les projets,
+ * puis les actualites. Celles du benevole ne portent aucun chiffre.
  */
 const GROUPES = [
   {
@@ -34,9 +39,15 @@ const GROUPES = [
     entrees: [{ to: '/benevole', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
-    titre: 'Mon engagement',
+    titre: 'Sur le terrain',
     entrees: [
       { to: '/benevole/projets', label: 'Projets', Icone: PleineProjets },
+      { to: '/benevole/actualites', label: 'Actualités', Icone: PleineActualites },
+    ],
+  },
+  {
+    titre: 'Mon engagement',
+    entrees: [
       { to: '/benevole/taches', label: 'Mes tâches', Icone: PleineTaches },
       { to: '/benevole/journal', label: 'Mon journal', Icone: PleineJournal },
     ],

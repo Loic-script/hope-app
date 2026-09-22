@@ -9,6 +9,7 @@ import path from 'node:path';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
 import * as fieldProofService from '../services/fieldProof.service.js';
+import * as publicationService from '../services/publication.service.js';
 import * as taskService from '../services/task.service.js';
 import * as volunteerProjectsService from '../services/volunteerProjects.service.js';
 import * as volunteerProfileService from '../services/volunteerProfile.service.js';
@@ -67,6 +68,11 @@ export const projets = {
     }
     return { id: resultat.id, deleted: true };
   }),
+};
+
+/** Les actualites de HOPE : le fil, sans aucun chiffre. */
+export const actualites = {
+  lister: gerer(() => publicationService.filBenevole()),
 };
 
 export const taches = {

@@ -1,6 +1,7 @@
 /**
  * Acces aux publications -- actualites et appels a financement lus par
- * les bailleurs -- et aux interets qu'elles recoivent.
+ * les bailleurs, actualites seules lues par les benevoles -- et aux
+ * interets qu'elles recoivent.
  */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
@@ -76,6 +77,37 @@ export async function lister(client = null) {
           WHERE mi.publication_id = pu.id
        ) interets ON TRUE
       ORDER BY pu.publie_le DESC`,
+    [],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
+/**
+ * Le fil de l'espace benevole : les actualites, jamais les appels a
+ * financement.
+ *
+ * Un benevole ne voit aucun montant. La requete ne lit donc ni budget,
+ * ni somme investie, ni interets : pas de PROJET_ET_FINANCEMENT ici, et
+ * rien a oublier de retirer ensuite.
+ *
+ * La photo suit la meme regle que chez le bailleur : la sienne, sinon
+ * celle du projet. Le projet lie, lui, n'est rendu que s'il est visible
+ * dans l'espace -- non archive --, pour que son lien mene a une page qui
+ * existe.
+ */
+export async function listerPourBenevole(client = null) {
+  const resultat = await query(
+    `SELECT pu.id, pu.titre, pu.corps, pu.publie_le,
+            COALESCE(pu.media_url,
+                     CASE WHEN p.media_type = 'PHOTO' THEN p.media_url END) AS media_url,
+            CASE WHEN p.archived_at IS NULL THEN p.id   END AS projet_id,
+            CASE WHEN p.archived_at IS NULL THEN p.name END AS projet_nom
+       FROM publication pu
+       LEFT JOIN projects p ON p.id = pu.projet_id
+      WHERE pu.type = 'actualite'
+      ORDER BY pu.publie_le DESC
+      LIMIT 30`,
     [],
     client
   );

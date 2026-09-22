@@ -33,6 +33,7 @@ import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
 import ProjetDetail from '../pages/benevole/ProjetDetail.jsx';
 import ProjetsBenevole from '../pages/benevole/Projets.jsx';
+import ActualitesBenevole from '../pages/benevole/Actualites.jsx';
 import MonJournal from '../pages/benevole/MonJournal.jsx';
 import CompleterProfil from '../pages/benevole/CompleterProfil.jsx';
 import MonProfil from '../pages/benevole/MonProfil.jsx';
@@ -166,6 +167,8 @@ export default function AppRoutes() {
               qu'il y a a y prendre. */}
           <Route path="/benevole/projets" element={<ProjetsBenevole />} />
           <Route path="/benevole/projets/:id" element={<ProjetDetail />} />
+          {/* Les nouvelles de HOPE, sans aucun chiffre. */}
+          <Route path="/benevole/actualites" element={<ActualitesBenevole />} />
           {/* Les missions ont ete retirees : l'espace ne propose plus que
               des taches. Les anciennes adresses -- dans un favori, ou dans
               une notification deja envoyee -- menent aux taches plutot

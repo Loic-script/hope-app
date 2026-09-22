@@ -1,10 +1,11 @@
 /**
- * Les actualites de l'espace bailleur, cote administration.
+ * Les actualites des espaces bailleur et benevole, cote administration.
  *
  * Deux natures de publication :
  *
- *   * l'actualite, qui informe ;
+ *   * l'actualite, qui informe. Les bailleurs et les benevoles la lisent ;
  *   * l'appel a financement, qui cherche un partenaire pour un projet.
+ *     Les bailleurs seuls le lisent : un benevole ne voit aucun montant.
  *     Sa barre ne se saisit pas : elle se lit sur le projet lie -- son
  *     budget, et la somme deja investie. Un appel a donc toujours un
  *     projet, et ce projet est en cours quand on l'y rattache.
@@ -148,6 +149,14 @@ export async function lister() {
       appel_financement: items.filter((p) => p.type === 'appel_financement').length,
     },
   };
+}
+
+/**
+ * Le fil de l'espace benevole : les actualites seules, sans aucun
+ * chiffre. Les appels a financement restent aux bailleurs.
+ */
+export async function filBenevole() {
+  return { items: await publicationRepository.listerPourBenevole() };
 }
 
 /** Publie, et previent les bailleurs. */
