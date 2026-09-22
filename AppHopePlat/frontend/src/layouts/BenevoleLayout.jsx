@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
-  PleineActualites,
+  PleineAccueil,
   PleineJournal,
   PleineMessages,
   PleinePersonne,
@@ -28,14 +28,14 @@ import CoqueEspace from './CoqueEspace.jsx';
  * tete, puis des familles nommees. Deux ici -- ce que le benevole donne
  * a HOPE, et ce qui lui appartient en propre.
  *
- * L'entree de tete s'appelle "Actualites" : l'accueil et les actualites
- * ne font plus qu'une page, ou les projets et les nouvelles de HOPE se
- * suivent dans un meme fil. Aucune n'y porte de chiffre.
+ * L'entree de tete s'appelle "Accueil" : elle ouvre une page unique ou
+ * les projets et les nouvelles de HOPE se suivent dans un meme fil.
+ * Aucune n'y porte de chiffre.
  */
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/benevole', label: 'Actualités', Icone: PleineActualites, exact: true }],
+    entrees: [{ to: '/benevole', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Mon engagement',

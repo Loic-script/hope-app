@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
-  PleineActualites,
+  PleineAccueil,
   PleineDons,
   PleineGraphique,
   PleineMessages,
@@ -20,13 +20,12 @@ import CoqueEspace from './CoqueEspace.jsx';
  * appartient en propre.
  *
  * Meme decoupage que les autres espaces : l'entree d'accueil seule en
- * tete -- "Actualites", comme chez le benevole et le bailleur --, puis des
- * familles nommees.
+ * tete, puis des familles nommees.
  */
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/donateur', label: 'Actualités', Icone: PleineActualites, exact: true }],
+    entrees: [{ to: '/donateur', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Mes dons',

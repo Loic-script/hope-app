@@ -103,7 +103,7 @@ export default function VueDensemble() {
         <div>
           <p className="surtitre">
             <span className="trait-hope surtitre__trait" aria-hidden="true" />
-            Actualités
+            Accueil
           </p>
           <h1 className="accueil-benevole__titre">
             Bonjour, {benevole?.prenom || 'bénévole'}

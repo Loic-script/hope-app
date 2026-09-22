@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
-  PleineActualites,
+  PleineAccueil,
   PleineDons,
   PleineGraphique,
   PleineMessages,
@@ -30,10 +30,10 @@ import CoqueEspace from './CoqueEspace.jsx';
 const GROUPES = [
   {
     titre: null,
-    // "Actualites" : l'accueil et les actualites ne font plus qu'une
-    // page, ou les projets et les publications de l'equipe se suivent
-    // dans un meme fil. Meme entree chez le benevole.
-    entrees: [{ to: '/bailleur', label: 'Actualités', Icone: PleineActualites, exact: true }],
+    // "Accueil" : une seule page, ou les projets et les publications
+    // de l'equipe se suivent dans un meme fil. Meme entree chez le
+    // benevole et chez le donateur.
+    entrees: [{ to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Notre partenariat',

@@ -84,7 +84,7 @@ export default function Actualites() {
         <div className="don-hero__texte">
           <p className="surtitre surtitre--clair">
             <span className="trait-hope surtitre__trait" aria-hidden="true" />
-            Actualités
+            Accueil
           </p>
           <h1 className="don-hero__titre" id="don-hero-titre">
             Bonjour, {donateur?.prenom || 'cher donateur'}

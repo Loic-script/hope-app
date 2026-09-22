@@ -270,7 +270,7 @@ export default function Accueil() {
       {/* ---------- Bandeau de bienvenue ---------- */}
       <section className="accueil__bandeau" style={{ '--photo-bandeau': `url(${photoBandeau})` }}>
         <p className="page-entete__fil">
-          Actualités
+          Accueil
           <span className="trait-hope" aria-hidden="true" />
         </p>
         <h1 className="accueil__salutation">Bienvenue, {organisation}</h1>
