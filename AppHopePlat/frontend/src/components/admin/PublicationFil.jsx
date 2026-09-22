@@ -9,13 +9,15 @@ import * as fmt from '../../utils/format.js';
 import { JaugeHorizon } from './PublicationProjet.jsx';
 
 /** Au-dela, la description se replie sur trois lignes et s'ouvre a la demande. */
-const LONGUEUR_REPLIEE = 180;
+export const LONGUEUR_REPLIEE = 180;
 
 /**
  * "3 j", "2 sem", "4 mois" : la date courte d'une publication.
  * La date entiere reste lisible au survol.
+ *
+ * Exportee pour les actualites du fil, qui se datent de la meme facon.
  */
-function depuisCourt(valeur) {
+export function depuisCourt(valeur) {
   if (!valeur) return '';
   const date = new Date(valeur);
   if (Number.isNaN(date.getTime())) return '';
@@ -38,8 +40,11 @@ function depuisCourt(valeur) {
  * Une photo garde ses proportions : les bords libres se remplissent de
  * la meme photo, floutee, plutot que de bandes grises. Un clic l'agrandit.
  * Une video se regarde sur place.
+ *
+ * Exporte pour les actualites du fil : "projet" n'y demande que mediaUrl,
+ * mediaType et name.
  */
-function Media({ projet, lienAjoutVisuel }) {
+export function MediaPublication({ projet, lienAjoutVisuel }) {
   const adresse = urlMedia(projet.mediaUrl);
 
   if (!adresse) {
@@ -171,7 +176,7 @@ export default function PublicationFil({
       )}
 
       {/* ---------- Sa photo ---------- */}
-      <Media projet={projet} lienAjoutVisuel={lienAjoutVisuel} />
+      <MediaPublication projet={projet} lienAjoutVisuel={lienAjoutVisuel} />
 
       {/* ---------- Ou en est son financement ---------- */}
       {compteurs !== undefined ? (

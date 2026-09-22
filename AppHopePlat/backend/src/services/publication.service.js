@@ -175,7 +175,8 @@ export async function creer(corps = {}, admin = null) {
         type: 'actualite',
         titre: appel ? 'Nouvel appel à financement' : 'Nouvelle actualité',
         corps: donnees.titre,
-        lien: '/bailleur/actualites',
+        // Les actualites sont la page d'entree de l'espace bailleur.
+        lien: '/bailleur',
       },
       client
     );

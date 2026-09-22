@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
 import { IconeChevronDroit } from '../../components/admin/AdminIcons.jsx';
+import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
+import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { JaugeHorizon } from '../../components/admin/PublicationProjet.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
+import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import {
@@ -82,12 +86,144 @@ function FinancementDuProjet({ projet }) {
 }
 
 /**
- * Accueil de l'espace bailleur.
+ * Une publication de l'equipe dans le fil : une actualite, ou un appel a
+ * financement.
  *
- * Le meme accueil que ceux de l'administration et des benevoles : un
- * bandeau de bienvenue, puis les projets en cours en fil de publications
- * -- qui, quand, ou, ce qu'il fait, sa photo, son financement -- avec une
- * seule action, voir le projet -- sa fiche dans l'espace bailleur.
+ * L'appel porte la collecte du projet lie -- la somme investie, dons et
+ * fonds HOPE, face a son budget -- et le bouton "Financer ce projet".
+ * Le bouton ne debite rien : il enregistre une intention et previent
+ * l'equipe, qui prend contact hors ligne et cree ensuite l'engagement
+ * reel. L'ecran le dit explicitement : personne ne doit croire avoir
+ * paye en cliquant.
+ */
+function ActualiteDuFil({ publication, rang, onInteret }) {
+  const appel = publication.type === 'appel_financement';
+  const devise = publication.devise ?? 'MGA';
+  const budget = Number(publication.budgetProjet) || 0;
+  const finance = Number(publication.montantFinance) || 0;
+
+  const [ouvert, setOuvert] = useState(false);
+  const [message, setMessage] = useState('');
+  const [envoi, setEnvoi] = useState(false);
+  const [refus, setRefus] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+
+  async function envoyer() {
+    setEnvoi(true);
+    setRefus('');
+    try {
+      const resultat = await service.manifesterUnInteret({
+        publicationId: publication.id,
+        projetId: publication.projetId ?? undefined,
+        message,
+      });
+      setConfirmation(resultat.message);
+      setOuvert(false);
+      onInteret();
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Votre intérêt n’a pas pu être transmis.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  // Un budget atteint ou un projet termine ne cherche plus de partenaire :
+  // pas de bouton. Un interet deja exprime reste affiche.
+  const proposeLeBouton =
+    appel && (publication.interetManifeste || !(publication.objectifAtteint || publication.projetTermine));
+
+  // La barre suit le projet lie ; un appel dont le projet a ete supprime
+  // n'en a plus.
+  const collecte =
+    appel && publication.avancement !== null ? (
+      <>
+        <JaugeHorizon
+          taux={publication.avancement}
+          recu={finance}
+          manque={Math.max(0, budget - finance)}
+          devise={devise}
+        />
+        <p className="fil-post__chiffres">
+          <span>
+            Budget du projet <strong>{fmt.montant(budget, devise)}</strong>
+          </span>
+          <span>Reçus : dons et fonds HOPE</span>
+          {publication.projetTermine && <span>Ce projet est terminé.</span>}
+        </p>
+      </>
+    ) : null;
+
+  const actions =
+    appel && (proposeLeBouton || confirmation || refus) ? (
+      <div className="fil-post__interet">
+        {refus && <p className="alerte-bailleur">{refus}</p>}
+        {confirmation ? (
+          <p className="succes-bailleur">{confirmation}</p>
+        ) : publication.interetManifeste ? (
+          <p className="actu__deja">
+            Votre intérêt est enregistré. L’équipe HOPE vous contacte pour formaliser le partenariat.
+          </p>
+        ) : ouvert ? (
+          <div className="interet">
+            <label className="interet__label" htmlFor={`message-${publication.id}`}>
+              Un mot pour l’équipe ? (facultatif)
+            </label>
+            <textarea
+              id={`message-${publication.id}`}
+              className="interet__saisie"
+              rows={3}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Le montant que nous pourrions engager, nos contraintes de calendrier…"
+            />
+            <p className="interet__avertissement">
+              Aucun montant ne sera débité. Vous manifestez un intérêt ; l’équipe HOPE vous contacte
+              pour établir la convention.
+            </p>
+            <div className="interet__actions">
+              <button type="button" className="bouton-bailleur" onClick={envoyer} disabled={envoi}>
+                {envoi ? 'Envoi…' : 'Transmettre mon intérêt'}
+              </button>
+              <button
+                type="button"
+                className="bouton-bailleur bouton-bailleur--discret"
+                onClick={() => setOuvert(false)}
+                disabled={envoi}
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="bouton-bailleur" onClick={() => setOuvert(true)}>
+            Financer ce projet
+          </button>
+        )}
+      </div>
+    ) : undefined;
+
+  return (
+    <PublicationActualite
+      publication={publication}
+      rang={rang}
+      appel={appel}
+      lienProjet={publication.projetId ? `/bailleur/projets/${publication.projetId}` : null}
+      compteurs={collecte}
+      actions={actions}
+    />
+  );
+}
+
+/**
+ * Actualites : la page d'entree de l'espace bailleur.
+ *
+ * Elle reunit l'ancien accueil et l'ancienne page Actualites, sur le
+ * modele de l'accueil de l'administration : un bandeau de bienvenue, puis
+ * le fil d'actualite -- les projets en cours et les publications de
+ * l'equipe (actualites et appels a financement) dans un meme fil, que
+ * trois filtres separent. Un projet s'y lit comme un message : qui, quand,
+ * ou, ce qu'il fait, sa photo, son financement, et une seule action, voir
+ * le projet -- sa fiche dans l'espace bailleur.
  *
  * Ce qui reste propre au partenaire l'encadre : ses chiffres en tete, et
  * dans la colonne de droite ses derniers versements, ou vont les fonds,
@@ -101,9 +237,13 @@ function FinancementDuProjet({ projet }) {
 export default function Accueil() {
   const { bailleur } = useOutletContext();
   const { donnees, chargement, erreur } = useChargement(() => service.tableauDeBord(), []);
+  const { donnees: publications, recharger: rechargerFil } = useChargement(() => service.fil(), []);
+  const [filtre, setFiltre] = useState('tout');
 
   const i = donnees?.indicateurs ?? {};
   const projets = (donnees?.projets ?? []).filter((p) => p.status === 'IN_PROGRESS');
+  const actualites = publications ?? [];
+  const fil = elementsDuFil(projets, actualites, filtre);
   const versements = (donnees?.versements ?? []).slice(0, VERSEMENTS_ACCUEIL);
   const origine = donnees?.origineDesFonds ?? {};
   const distinctions = donnees?.distinctions ?? [];
@@ -117,13 +257,13 @@ export default function Accueil() {
       {/* ---------- Bandeau de bienvenue ---------- */}
       <section className="accueil__bandeau" style={{ '--photo-bandeau': `url(${photoBandeau})` }}>
         <p className="page-entete__fil">
-          Accueil
+          Actualités
           <span className="trait-hope" aria-hidden="true" />
         </p>
         <h1 className="accueil__salutation">Bienvenue, {organisation}</h1>
         <p className="accueil__accroche">
-          Ce que votre organisation a engagé, ce qui est arrivé, et les projets que cela fait
-          avancer à Madagascar.
+          Ce que votre organisation a engagé, les projets que cela fait avancer à Madagascar,
+          et les nouvelles de HOPE.
         </p>
       </section>
 
@@ -159,7 +299,8 @@ export default function Accueil() {
 
           <div className="accueil__colonnes accueil__colonnes--bailleur">
             {/*
-              Les projets en cours, en fil de publications. Ceux que le
+              Le fil d'actualite : les projets en cours et les
+              publications de l'equipe. Sous le filtre Projets, ceux que le
               partenaire finance viennent en tete : l'API les classe ainsi.
             */}
             <div className="accueil__pile">
@@ -167,9 +308,11 @@ export default function Accueil() {
                 <div className="fil-accueil__entete">
                   <div>
                     <h2 className="fil-accueil__titre" id="fil-bailleur-titre">
-                      Projets en cours
+                      Fil d’actualité
                     </h2>
-                    <p className="fil-accueil__sous-titre">Ce qui est financé, ce qui manque encore</p>
+                    <p className="fil-accueil__sous-titre">
+                      Les projets en cours, les nouvelles de HOPE et ses appels à financement
+                    </p>
                   </div>
                   <Link className="btn btn--neutre btn--petit fil-accueil__tous" to="/bailleur/projets">
                     Tous les projets
@@ -177,21 +320,44 @@ export default function Accueil() {
                   </Link>
                 </div>
 
-                {projets.length === 0 ? (
+                <FiltresFil
+                  actif={filtre}
+                  onChange={setFiltre}
+                  compteurs={{
+                    tout: projets.length + actualites.length,
+                    projet: projets.length,
+                    actualite: actualites.length,
+                  }}
+                />
+
+                {fil.length === 0 ? (
                   <Panneau>
-                    <p className="vide-bailleur">Aucun projet en cours pour l’instant.</p>
+                    <p className="vide-bailleur">
+                      {filtre === 'actualite'
+                        ? 'Aucune publication pour l’instant.'
+                        : 'Aucun projet en cours pour l’instant.'}
+                    </p>
                   </Panneau>
                 ) : (
-                  projets.map((projet, rang) => (
-                    <PublicationFil
-                      key={projet.id}
-                      projet={commePublication(projet)}
-                      rang={Math.min(rang, 5)}
-                      lien={`/bailleur/projets/${projet.id}`}
-                      lienAjoutVisuel={null}
-                      compteurs={<FinancementDuProjet projet={projet} />}
-                    />
-                  ))
+                  fil.map(({ type, cle, element }, rang) =>
+                    type === 'projet' ? (
+                      <PublicationFil
+                        key={cle}
+                        projet={commePublication(element)}
+                        rang={Math.min(rang, 5)}
+                        lien={`/bailleur/projets/${element.id}`}
+                        lienAjoutVisuel={null}
+                        compteurs={<FinancementDuProjet projet={element} />}
+                      />
+                    ) : (
+                      <ActualiteDuFil
+                        key={cle}
+                        publication={element}
+                        rang={Math.min(rang, 5)}
+                        onInteret={rechargerFil}
+                      />
+                    )
+                  )
                 )}
               </section>
             </div>

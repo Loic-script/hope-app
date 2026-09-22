@@ -2716,22 +2716,3 @@
     justify-content: center;
   }
 }
-
-/* ============================================================
-   Actualites
-   ============================================================ */
-
-/*
- * Les cartes sont celles du fil bailleur (.fil, .actu : bailleur.css).
- * Seul change le projet, qui devient un lien vers sa page : il garde le
- * violet du fil plutot que le bleu des liens.
- */
-.actu__projet a {
-  font-weight: 600;
-  color: inherit;
-  text-decoration: none;
-}
-
-.actu__projet a:hover {
-  text-decoration: underline;
-}

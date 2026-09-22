@@ -13,6 +13,8 @@ import {
  * trait : ils accompagnent du texte gris, et ne doivent pas le dominer.
  */
 import { PleineJournal, PleineProjets, PleineTaches } from '../../components/IconesPleines.jsx';
+import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
+import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/espaceBenevole.service.js';
@@ -51,11 +53,13 @@ function TachesDuProjet({ projet }) {
 }
 
 /**
- * Accueil de l'espace benevole.
+ * Actualites : la page d'entree de l'espace benevole.
  *
- * La page ne liste pas : elle met en avant. En haut, la carte de ses
- * trois chiffres, et la tache qu'il pourrait prendre ; puis les
- * projets ; en bas, son journal. Des elements, pas des listes : le reste
+ * Elle reunit l'ancien accueil et l'ancienne page Actualites. La page ne
+ * liste pas : elle met en avant. En haut, la carte de ses trois chiffres,
+ * et la tache qu'il pourrait prendre ; puis le fil d'actualite -- les
+ * projets et les nouvelles de HOPE ensemble, que trois filtres separent ;
+ * en bas, son journal. Des elements, pas des listes : le reste
  * de l'espace a ses propres ecrans, et chaque bloc y renvoie. Sa
  * prochaine tache a rendre se lit dans le premier chiffre, et ses taches
  * dans "Mes taches".
@@ -74,6 +78,11 @@ export default function VueDensemble() {
   // Les projets, en fil de publications -- comme l'accueil de l'equipe,
   // sans l'argent : un benevole y lit ce qu'il y a a faire.
   const { donnees: projets } = useChargement(() => service.listerProjets(), []);
+  // Les nouvelles publiees par l'equipe : les actualites seules, sans
+  // aucun chiffre -- l'API ne rend ni appel a financement ni montant.
+  const { donnees: actualites } = useChargement(() => service.actualites(), []);
+  const [filtre, setFiltre] = useState('tout');
+  const fil = elementsDuFil(projets ?? [], actualites ?? [], filtre);
 
   const enCours = (taches?.items ?? []).filter((t) => t.statut === 'en_cours');
   const prioritaire = [...enCours].sort(parEcheance)[0];
@@ -89,13 +98,13 @@ export default function VueDensemble() {
         <div>
           <p className="surtitre">
             <span className="trait-hope surtitre__trait" aria-hidden="true" />
-            Votre espace bénévole
+            Actualités
           </p>
           <h1 className="accueil-benevole__titre">
             Bonjour, {benevole?.prenom || 'bénévole'}
           </h1>
           <p className="accueil-benevole__accroche">
-            Vos tâches, et ce que vous avez déjà livré, au même endroit.
+            Vos tâches, ce que vous avez déjà livré, et les nouvelles de HOPE.
           </p>
         </div>
 
@@ -224,31 +233,61 @@ export default function VueDensemble() {
         </section>
       </div>
 
-      {/* ---------- Les projets, en publications ---------- */}
-      {(projets ?? []).length > 0 && (
+      {/* ---------- Le fil d'actualite : projets et nouvelles ---------- */}
+      {(projets ?? []).length + (actualites ?? []).length > 0 && (
         <section className="fil-accueil fil-accueil--benevole" aria-labelledby="fil-benevole-titre">
           <div className="fil-accueil__entete">
             <div>
               <h2 className="fil-accueil__titre" id="fil-benevole-titre">
-                Les projets
+                Fil d’actualité
               </h2>
-              <p className="fil-accueil__sous-titre">Ce que HOPE mène, et ce qu’il y a à y faire</p>
+              <p className="fil-accueil__sous-titre">
+                Les projets de HOPE, ce qu’il y a à y faire, et ses nouvelles
+              </p>
             </div>
             <Link className="bouton-hope bouton-hope--creux fil-accueil__tous" to="/benevole/projets">
               Tous les projets
               <IconeChevronDroit />
             </Link>
           </div>
-          {projets.map((projet, rang) => (
-            <PublicationFil
-              key={projet.id}
-              projet={projet}
-              rang={Math.min(rang, 5)}
-              lien={`/benevole/projets/${projet.id}`}
-              lienAjoutVisuel={null}
-              compteurs={<TachesDuProjet projet={projet} />}
-            />
-          ))}
+
+          <FiltresFil
+            actif={filtre}
+            onChange={setFiltre}
+            compteurs={{
+              tout: (projets ?? []).length + (actualites ?? []).length,
+              projet: (projets ?? []).length,
+              actualite: (actualites ?? []).length,
+            }}
+          />
+
+          {fil.length === 0 ? (
+            <p className="bloc__vide">
+              {filtre === 'actualite'
+                ? 'Aucune actualité pour l’instant.'
+                : 'Aucun projet ouvert pour l’instant.'}
+            </p>
+          ) : (
+            fil.map(({ type, cle, element }, rang) =>
+              type === 'projet' ? (
+                <PublicationFil
+                  key={cle}
+                  projet={element}
+                  rang={Math.min(rang, 5)}
+                  lien={`/benevole/projets/${element.id}`}
+                  lienAjoutVisuel={null}
+                  compteurs={<TachesDuProjet projet={element} />}
+                />
+              ) : (
+                <PublicationActualite
+                  key={cle}
+                  publication={element}
+                  rang={Math.min(rang, 5)}
+                  lienProjet={element.projetId ? `/benevole/projets/${element.projetId}` : null}
+                />
+              )
+            )
+          )}
         </section>
       )}
 

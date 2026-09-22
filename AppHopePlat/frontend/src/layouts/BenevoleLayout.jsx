@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
-  PleineAccueil,
   PleineActualites,
   PleineJournal,
   PleineMessages,
@@ -26,28 +25,22 @@ import CoqueEspace from './CoqueEspace.jsx';
  * suffit a ce que HOPE demande a ses benevoles.
  *
  * Meme decoupage que chez l'administrateur : l'entree d'accueil seule en
- * tete, puis des familles nommees. Trois ici -- ce qui se passe sur le
- * terrain, ce que le benevole donne a HOPE, et ce qui lui appartient en
- * propre.
+ * tete, puis des familles nommees. Deux ici -- ce que le benevole donne
+ * a HOPE, et ce qui lui appartient en propre.
  *
- * "Sur le terrain" reprend la famille de l'espace bailleur : les projets,
- * puis les actualites. Celles du benevole ne portent aucun chiffre.
+ * L'entree de tete s'appelle "Actualites" : l'accueil et les actualites
+ * ne font plus qu'une page, ou les projets et les nouvelles de HOPE se
+ * suivent dans un meme fil. Aucune n'y porte de chiffre.
  */
 const GROUPES = [
   {
     titre: null,
-    entrees: [{ to: '/benevole', label: 'Accueil', Icone: PleineAccueil, exact: true }],
-  },
-  {
-    titre: 'Sur le terrain',
-    entrees: [
-      { to: '/benevole/projets', label: 'Projets', Icone: PleineProjets },
-      { to: '/benevole/actualites', label: 'Actualités', Icone: PleineActualites },
-    ],
+    entrees: [{ to: '/benevole', label: 'Actualités', Icone: PleineActualites, exact: true }],
   },
   {
     titre: 'Mon engagement',
     entrees: [
+      { to: '/benevole/projets', label: 'Projets', Icone: PleineProjets },
       { to: '/benevole/taches', label: 'Mes tâches', Icone: PleineTaches },
       { to: '/benevole/journal', label: 'Mon journal', Icone: PleineJournal },
     ],

@@ -33,14 +33,12 @@ import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
 import MesTaches from '../pages/benevole/MesTaches.jsx';
 import ProjetDetail from '../pages/benevole/ProjetDetail.jsx';
 import ProjetsBenevole from '../pages/benevole/Projets.jsx';
-import ActualitesBenevole from '../pages/benevole/Actualites.jsx';
 import MonJournal from '../pages/benevole/MonJournal.jsx';
 import CompleterProfil from '../pages/benevole/CompleterProfil.jsx';
 import MonProfil from '../pages/benevole/MonProfil.jsx';
 import VueDensemble from '../pages/benevole/VueDensemble.jsx';
 import RequireBenevole from './RequireBenevole.jsx';
 import BailleurLayout from '../layouts/BailleurLayout.jsx';
-import ActualitesBailleur from '../pages/bailleur/Actualites.jsx';
 import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
 import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
 import ProjetsBailleur from '../pages/bailleur/Projets.jsx';
@@ -149,7 +147,9 @@ export default function AppRoutes() {
               au tableau de bord plutot qu'a une page blanche. */}
           <Route path="/bailleur/preuves" element={<Navigate to="/bailleur" replace />} />
           <Route path="/bailleur/preuves/:id" element={<Navigate to="/bailleur" replace />} />
-          <Route path="/bailleur/actualites" element={<ActualitesBailleur />} />
+          {/* Les actualites ont rejoint la page d'entree. Les notifications
+              deja envoyees menent encore ici : l'adresse y renvoie. */}
+          <Route path="/bailleur/actualites" element={<Navigate to="/bailleur" replace />} />
           <Route path="/bailleur/organisation" element={<OrganisationBailleur />} />
           <Route path="/bailleur/notifications" element={<NotificationsEspace />} />
           <Route path="/bailleur/messages" element={<ConversationsEspace />} />
@@ -170,8 +170,9 @@ export default function AppRoutes() {
               qu'il y a a y prendre. */}
           <Route path="/benevole/projets" element={<ProjetsBenevole />} />
           <Route path="/benevole/projets/:id" element={<ProjetDetail />} />
-          {/* Les nouvelles de HOPE, sans aucun chiffre. */}
-          <Route path="/benevole/actualites" element={<ActualitesBenevole />} />
+          {/* Les actualites ont rejoint la page d'entree : une ancienne
+              adresse y mene. */}
+          <Route path="/benevole/actualites" element={<Navigate to="/benevole" replace />} />
           {/* Les missions ont ete retirees : l'espace ne propose plus que
               des taches. Les anciennes adresses -- dans un favori, ou dans
               une notification deja envoyee -- menent aux taches plutot
