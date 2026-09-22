@@ -10,7 +10,7 @@ import {
   ModaleConfirmation,
   ModaleFormulaire,
 } from '../../components/admin/forms.jsx';
-import { JaugeHorizon, Mesure } from '../../components/admin/PublicationProjet.jsx';
+import { Mesure } from '../../components/admin/PublicationProjet.jsx';
 import {
   Alerte,
   Badge,
@@ -337,12 +337,18 @@ function CarteActualite({
 
         {appel && publication.avancement !== null && (
           <>
-            <JaugeHorizon
-              taux={publication.avancement}
-              recu={publication.montantFinance}
-              manque={manque}
-              devise={publication.devise}
-            />
+            {/* Le financement en clair, sans jauge : la barre du projet se
+                lit sur sa carte, dans la page Projets. */}
+            <p className="publication__financement">
+              <strong>{fmt.montant(publication.montantFinance, publication.devise)}</strong> reçus
+              sur {fmt.montant(publication.budgetProjet, publication.devise)}
+              <span className="publication__part">{fmt.pourcent(publication.avancement)}</span>
+              {manque > 0 && (
+                <span className="publication__manque">
+                  manque {fmt.montant(manque, publication.devise)}
+                </span>
+              )}
+            </p>
             {(publication.objectifAtteint || publication.projetTermine) && (
               <p className="publication__note">
                 {publication.projetTermine ? 'Projet terminé' : 'Budget atteint'} : le bouton

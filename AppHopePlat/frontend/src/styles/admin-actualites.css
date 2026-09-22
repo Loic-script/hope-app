@@ -52,17 +52,44 @@
   overflow-wrap: anywhere;
 }
 
-/*
- * Sans jauge, c'est le pied qui prend la place libre et se cale en bas
- * de la carte. La jauge d'un appel, elle, suit le texte : deux marges
- * automatiques se partageraient l'espace et creuseraient un trou.
- */
+/* Le pied prend la place libre et se cale en bas de la carte. */
 .publication--actualite .publication__pied {
   margin-top: auto;
 }
 
-.publication--actualite .jauge {
-  margin-top: 16px;
+/*
+ * Le financement d'un appel, en clair : ce qui est recu, le budget, la
+ * part faite, ce qui manque. Pas de jauge ici -- la barre du projet se
+ * lit sur sa propre carte, dans la page Projets.
+ */
+.publication__financement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.publication__financement strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.publication__part {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background-color: #ece9f8;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.publication__manque {
+  font-weight: 600;
+  color: var(--hope-orange-fonce);
 }
 
 .publication__note {
