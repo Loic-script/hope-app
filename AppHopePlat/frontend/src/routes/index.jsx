@@ -18,7 +18,13 @@ import ProofDetailPage from '../pages/admin/ProofDetailPage.jsx';
 import ProofsPage from '../pages/admin/ProofsPage.jsx';
 import Redirection from '../pages/Redirection.jsx';
 import Authentification from '../pages/Authentification.jsx';
-import BienvenueDonateur from '../pages/donateur/Bienvenue.jsx';
+import DonateurLayout from '../layouts/DonateurLayout.jsx';
+import ActualitesDonateur from '../pages/donateur/Actualites.jsx';
+import FaireUnDon from '../pages/donateur/FaireUnDon.jsx';
+import MesDons from '../pages/donateur/MesDons.jsx';
+import ProfilDonateur from '../pages/donateur/Profil.jsx';
+import ProjetDonateur from '../pages/donateur/ProjetDetail.jsx';
+import ProjetsDonateur from '../pages/donateur/Projets.jsx';
 
 /*
  * Le parcours d'accueil du donateur se charge a part : il embarque la
@@ -58,7 +64,7 @@ import RequireAuth from './RequireAuth.jsx';
  *
  *   /                page d'entree : l'admin, ou les utilisateurs
  *   /authentification connexion et inscription des utilisateurs
- *   /donateur        espace donateur (page de bienvenue seulement)
+ *   /donateur/...    espace donateur : actualites, dons, projets, profil
  *   /admin/login     connexion administrateur
  *   /benevole/...    espace benevole : projets, taches, journal
  *   /bailleur/...    espace partenaire : suivi des financements
@@ -95,9 +101,21 @@ export default function AppRoutes() {
       {/* ----- Porte unique des utilisateurs ----- */}
       <Route path="/authentification" element={<Authentification />} />
 
-      {/* ----- Espace donateur : une page de bienvenue, pour l instant ----- */}
+      {/* ----- Espace donateur ----- */}
       <Route element={<RequireDonateur />}>
-        <Route path="/donateur" element={<BienvenueDonateur />} />
+        <Route element={<DonateurLayout />}>
+          {/* La page d'entree : le fil d'actualite, et l'invitation a donner. */}
+          <Route path="/donateur" element={<ActualitesDonateur />} />
+          <Route path="/donateur/faire-un-don" element={<FaireUnDon />} />
+          <Route path="/donateur/mes-dons" element={<MesDons />} />
+          <Route path="/donateur/projets" element={<ProjetsDonateur />} />
+          <Route path="/donateur/projets/:id" element={<ProjetDonateur />} />
+          {/* La messagerie et les notifications communes aux espaces. */}
+          <Route path="/donateur/messages" element={<ConversationsEspace />} />
+          <Route path="/donateur/messages/:id" element={<ConversationsEspace />} />
+          <Route path="/donateur/notifications" element={<NotificationsEspace />} />
+          <Route path="/donateur/profil" element={<ProfilDonateur />} />
+        </Route>
         {/* Le parcours d'accueil, ouvert des l'inscription. */}
         <Route
           path="/donateur/completer-profil"

@@ -27,6 +27,67 @@ export async function listerProjets() {
   return data;
 }
 
+/**
+ * GET /api/donateur/projets/:id
+ *
+ * La fiche d'un projet -- ce qu'il est, son financement en totaux, son
+ * impact collectif --, ce que le donateur y a donne, et s'il est encore
+ * ouvert aux dons.
+ */
+export async function projet(id) {
+  const { data } = await apiDonateur.get(`/donateur/projets/${id}`);
+  return data;
+}
+
+/** GET /api/donateur/dons : ses dons, et leur synthese par devise. */
+export async function mesDons() {
+  const { data } = await apiDonateur.get('/donateur/dons');
+  return data;
+}
+
+/**
+ * POST /api/donateur/dons : une promesse de don.
+ *
+ * Elle part en attente ; l'equipe HOPE la confirme a reception du
+ * paiement.
+ *
+ * @param {{ affectation: 'PROJECT'|'HOPE', projetId?: number, montant: string,
+ *           devise: string, mode: string, frequence: 'ONE_TIME'|'MONTHLY',
+ *           message?: string }} don
+ */
+export async function faireUnDon(don) {
+  const { data } = await apiDonateur.post('/donateur/dons', don);
+  return data;
+}
+
+/** GET /api/donateur/actualites : les nouvelles de HOPE, sans argent. */
+export async function actualites() {
+  const { data } = await apiDonateur.get('/donateur/actualites');
+  return data.items ?? [];
+}
+
+/**
+ * POST /api/donateur/profil/photo -- televerse la photo de profil.
+ * Elle se rattache ensuite au compte par changerPhoto.
+ */
+export async function televerserPhoto(fichier) {
+  const formulaire = new FormData();
+  formulaire.append('file', fichier);
+  // Le client pose "application/json" par defaut : l'en-tete arriverait
+  // sans la frontiere du multipart, et multer ne trouverait rien a lire.
+  const { data } = await apiDonateur.post('/donateur/profil/photo', formulaire, {
+    headers: { 'Content-Type': undefined },
+    timeout: 60000,
+  });
+  return data;
+}
+
+/** PATCH /api/donateur/profil/photo : rattache (ou retire, null) la photo. */
+export async function changerPhoto(photoUrl) {
+  const { data } = await apiDonateur.patch('/donateur/profil/photo', { photoUrl });
+  return data;
+}
+
 /** PUT /api/donateur/profil/etape-5 : la frequence ; clot le parcours. */
 export async function enregistrerEtape5(frequence) {
   const { data } = await apiDonateur.put('/donateur/profil/etape-5', frequence);

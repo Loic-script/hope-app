@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
 import {
@@ -18,6 +18,7 @@ import PublicationActualite from '../../components/admin/PublicationActualite.js
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { useColonneCollante } from '../../hooks/useColonneCollante.js';
+import { useDecompte } from '../../hooks/useDecompte.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 
@@ -338,48 +339,6 @@ export default function VueDensemble() {
 /** Delai d'entree d'un chiffre, apres la carte : ils arrivent l'un apres l'autre. */
 const DELAI_CHIFFRE = 260;
 const ECART_CHIFFRE = 110;
-
-/**
- * Le nombre affiche monte de 0 a sa valeur, une seule fois, a l'arrivee
- * des donnees -- en ralentissant, comme un compteur qui se pose.
- *
- * null tant que la valeur n'est pas connue : l'ecran montre un tiret.
- * Rien ne bouge si l'appareil demande de reduire les animations.
- *
- * @param {number|null} valeur
- * @param {number} delai  en millisecondes, avant de commencer a compter
- */
-function useDecompte(valeur, delai = 0) {
-  const [affiche, setAffiche] = useState(null);
-  const depart = useRef(0);
-
-  useEffect(() => {
-    if (valeur === null || valeur === undefined) return undefined;
-
-    const reduit = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduit || valeur === depart.current) {
-      depart.current = valeur;
-      setAffiche(valeur);
-      return undefined;
-    }
-
-    const de = depart.current;
-    const duree = 900;
-    const debut = performance.now() + delai;
-    let image;
-    const avancer = (maintenant) => {
-      const t = Math.min(1, Math.max(0, (maintenant - debut) / duree));
-      const pose = 1 - (1 - t) ** 3;
-      setAffiche(Math.round(de + (valeur - de) * pose));
-      if (t < 1) image = requestAnimationFrame(avancer);
-      else depart.current = valeur;
-    };
-    image = requestAnimationFrame(avancer);
-    return () => cancelAnimationFrame(image);
-  }, [valeur, delai]);
-
-  return affiche;
-}
 
 /**
  * Un chiffre de l'invitation : un nombre, ce qu'il compte, une precision,

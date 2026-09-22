@@ -1,0 +1,200 @@
+/* ============================================================
+   HOPE - Fiche d'un projet hors administration
+
+   Commune aux espaces bailleur et donateur (FicheProjet.jsx). La mise en
+   page est celle de la fiche projet benevole (classes "projet-benevole") ;
+   ne s'ajoute ici que ce qui lui est propre : pastilles et action de
+   tete, avancement, part de la personne, chiffres du financement.
+   ============================================================ */
+
+/* Sous l'accroche : statut, "Vous financez", reference -- et le rapport. */
+.fiche-projet__tete-bas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.fiche-projet__jetons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.fiche-projet__reference {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+/* L'avancement des actions : trois nombres cote a cote. */
+.fiche-projet__avancement {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fiche-projet__avancement p {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background-color: var(--admin-fond);
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.fiche-projet__avancement strong {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--admin-texte);
+}
+
+/* Les dernieres actions realisees, cochees. */
+.fiche-projet__realisees {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiche-projet__realisees li {
+  position: relative;
+  padding-left: 26px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fiche-projet__realisees li::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 2px;
+  width: 12px;
+  height: 7px;
+  border-bottom: 2px solid #2e8b57;
+  border-left: 2px solid #2e8b57;
+  transform: rotate(-45deg);
+}
+
+/* Ce que le partenaire a affecte : sa part, mise en avant. */
+.fiche-projet__votre-part {
+  border-left: 4px solid var(--hope-violet);
+  background-color: #f6f4fc;
+}
+
+.fiche-projet__votre-part-libelle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.fiche-projet__votre-part-montant {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--hope-violet);
+}
+
+.fiche-projet__votre-part-note {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+@media (max-width: 560px) {
+  .fiche-projet__tete-bas > button,
+  .fiche-projet__tete-bas > a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .fiche-projet__avancement {
+    gap: 8px;
+  }
+
+  .fiche-projet__avancement p {
+    padding: 10px;
+  }
+}
+
+/*
+ * Les chiffres du financement et de l'impact : le libelle, puis le
+ * montant sur sa propre ligne, puis la precision. Pose a droite du
+ * libelle, un grand montant se coupait en deux ("6 000 000 / Ar").
+ */
+.fiche-projet .carte-chiffre {
+  display: grid;
+  grid-template-areas:
+    'libelle'
+    'valeur'
+    'note';
+  align-content: start;
+  gap: 4px;
+}
+
+.fiche-projet .carte-chiffre > div {
+  display: contents;
+}
+
+.fiche-projet .carte-chiffre__libelle {
+  grid-area: libelle;
+}
+
+.fiche-projet .carte-chiffre__valeur {
+  grid-area: valeur;
+  margin-top: 2px;
+}
+
+.fiche-projet .carte-chiffre__variation {
+  grid-area: note;
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  /* Deux par deux plutot qu'un par ligne : le financement tient sur un
+     ecran. */
+  .fiche-projet .cartes-chiffres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .fiche-projet .carte-chiffre {
+    padding: 13px;
+  }
+
+  .fiche-projet .carte-chiffre__libelle {
+    font-size: 12.5px;
+  }
+
+  .fiche-projet .carte-chiffre__valeur {
+    font-size: clamp(15px, 4.8vw, 19px);
+  }
+
+  .fiche-projet .carte-chiffre__variation {
+    font-size: 11.5px;
+  }
+}
+
+/* "Financement" est plus long que "Taches" : sur un petit telephone, les
+   trois onglets se resserrent pour tenir sans deborder. */
+@media (max-width: 400px) {
+  .fiche-projet .onglets__bouton {
+    padding: 11px 4px;
+    font-size: 13px;
+  }
+
+  .fiche-projet .onglets__compteur {
+    margin-left: 4px;
+  }
+}

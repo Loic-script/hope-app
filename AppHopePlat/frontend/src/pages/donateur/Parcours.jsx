@@ -2,10 +2,6 @@ import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { isValidPhoneNumber, parsePhoneNumberFromString } from 'libphonenumber-js';
 
-import logoCartes from '../../assets/paiement/cartes-bancaires.webp';
-import imageEspeces from '../../assets/paiement/especes.webp';
-import logoMvola from '../../assets/paiement/mvola.webp';
-import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
 import ChoixSurPage, { parLettre } from '../../components/ChoixSurPage.jsx';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
@@ -35,12 +31,7 @@ import {
   IconeTelephone,
   IconeUtilisateur,
 } from '../../components/HopeIcons.jsx';
-import {
-  IllustrationDepot,
-  IllustrationInternational,
-  IllustrationPlateformes,
-  IllustrationVirement,
-} from '../../components/IllustrationsPaiement.jsx';
+import { VISUELS_PAIEMENT } from '../../components/VisuelsPaiement.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
@@ -1519,20 +1510,8 @@ function CarteProjet({ projet, choisi, onChange, disabled }) {
    Etape 4 : le mode de paiement
    ================================================================ */
 
-/**
- * Le visuel de chaque moyen : son logo quand il a une marque que l'on
- * reconnait, une illustration au trait de la charte sinon.
- */
-const VISUELS_PAIEMENT = {
-  mvola: { image: logoMvola },
-  orange_money: { image: logoOrangeMoney },
-  virement_bancaire: { Illustration: IllustrationVirement },
-  depot_bancaire: { Illustration: IllustrationDepot },
-  especes: { image: imageEspeces },
-  carte_bancaire: { image: logoCartes },
-  virement_international: { Illustration: IllustrationInternational },
-  plateforme: { Illustration: IllustrationPlateformes },
-};
+/* Le visuel de chaque moyen vient de VisuelsPaiement.jsx, partage avec
+   "Faire un don" de l'espace donateur. */
 
 /**
  * Etape 4 : le mode de paiement.

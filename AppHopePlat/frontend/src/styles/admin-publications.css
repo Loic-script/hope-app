@@ -27,7 +27,7 @@
 }
 
 /*
- * Benevole et bailleur : la meme colonne qui suit l'ecran. Plus haute
+ * Benevole, bailleur et donateur : la meme colonne qui suit l'ecran. Plus haute
  * que l'ecran, elle recoit un "top" negatif (useColonneCollante) : elle
  * defile d'abord, puis s'arrete quand son bas atteint celui de l'ecran.
  *
@@ -36,7 +36,8 @@
  */
 @media (max-width: 1240px) {
   .accueil__colonnes--benevole > .accueil__pile:last-child,
-  .accueil__colonnes--bailleur > .accueil__pile:last-child {
+  .accueil__colonnes--bailleur > .accueil__pile:last-child,
+  .accueil__colonnes--donateur > .accueil__pile:last-child {
     position: static;
   }
 

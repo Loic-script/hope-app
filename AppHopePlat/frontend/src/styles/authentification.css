@@ -355,78 +355,6 @@
 }
 
 /* ============================================================
-   5. Espace donateur : la page de bienvenue
-   ============================================================ */
-
-.donateur {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 30px 20px;
-  text-align: center;
-  background-color: var(--hope-fond-panneau);
-}
-
-/* Le fichier porte la signature "for a better life", illisible a cette
-   taille : on la laisse deborder par le bas. */
-.donateur__logo {
-  width: 150px;
-  height: 56px;
-  object-fit: cover;
-  object-position: top;
-  /* Le logo est concu pour un fond sombre : une pastille le porte. */
-  padding: 8px 14px;
-  border-radius: 14px;
-  background-color: var(--hope-violet);
-}
-
-.donateur__titre {
-  font-size: clamp(24px, 5vw, 34px);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--hope-violet);
-}
-
-/* Le merci qui accueille au sortir du parcours. */
-.donateur__merci {
-  margin: 0;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background-color: #eaf5ee;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: #2f6b47;
-}
-
-.donateur__texte {
-  max-width: 46ch;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--hope-texte-doux);
-}
-
-.donateur__sortie {
-  margin-top: 6px;
-  padding: 11px 22px;
-  border: 1px solid var(--hope-bordure);
-  border-radius: 999px;
-  background-color: var(--hope-blanc);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--hope-texte);
-  transition: background-color 0.18s ease;
-}
-
-.donateur__sortie:hover {
-  background-color: #eef1f8;
-}
-
-/* ============================================================
    6. Petits ecrans
    ============================================================ */
 
@@ -456,8 +384,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bascule-acces__onglet,
-  .completion__bouton,
-  .donateur__sortie {
+  .completion__bouton {
     transition: none;
   }
 }
