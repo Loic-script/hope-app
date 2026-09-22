@@ -303,6 +303,10 @@ export function Tableau({
   erreur,
   vide,
   onLigne,
+  // Sur telephone, chaque ligne devient une fiche : la premiere cellule
+  // en titre, les autres en lignes "libelle : valeur". Pour les tableaux
+  // trop larges pour un petit ecran.
+  empilable = false,
 }) {
   /*
    * Arriver sur une ligne par son ancre (#compte-xxx).
@@ -332,7 +336,7 @@ export function Tableau({
 
   return (
     <div className="table-enveloppe">
-      <table className="table">
+      <table className={empilable ? 'table table--empilable' : 'table'}>
         <thead>
           <tr>
             {colonnes.map((colonne) => (
@@ -370,7 +374,11 @@ export function Tableau({
               }
             >
               {colonnes.map((colonne) => (
-                <td key={colonne.cle} className={classeAlignement(colonne.aligne)}>
+                <td
+                  key={colonne.cle}
+                  className={classeAlignement(colonne.aligne)}
+                  data-libelle={empilable ? colonne.titre : undefined}
+                >
                   {colonne.rendu ? colonne.rendu(ligne) : (ligne[colonne.cle] ?? '—')}
                 </td>
               ))}

@@ -355,7 +355,9 @@ function ProfilBenevole({ benevole }) {
       </Panneau>
 
       <Panneau titre="Tâches" sousTitre="Ce qu’il a pris en charge, et le projet de chaque tâche" serre>
+        {/* Six colonnes : sur un telephone, chaque tache se lit en fiche. */}
         <Tableau
+          empilable
           lignes={taches}
           colonnes={[
             {
@@ -393,6 +395,7 @@ function ProfilBenevole({ benevole }) {
       {missions.length > 0 && (
         <Panneau titre="Missions" sousTitre="Les missions auxquelles il s’est inscrit" serre>
           <Tableau
+            empilable
             lignes={missions}
             colonnes={[
               {

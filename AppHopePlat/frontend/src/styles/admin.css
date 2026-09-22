@@ -59,8 +59,11 @@
 
 .page-entete__fil {
   display: flex;
+  /* Sur un ecran etroit, le trait decoratif passe a la ligne plutot que
+     de sortir de l'ecran. */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 4px 10px;
   margin-bottom: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -1710,8 +1713,15 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /*
+   * En colonne, l'en-tete ne passe plus a la ligne : un conteneur flex
+   * "wrap" donne a sa colonne la largeur de son element le plus large, et
+   * non celle de l'ecran -- le titre, les boutons et le fil d'Ariane
+   * debordaient alors a droite sur un petit telephone.
+   */
   .page-entete {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
   }
 }
@@ -1790,5 +1800,60 @@ tr[id^='compte-'] {
 
   .modale__pied .btn {
     flex: 1 1 auto;
+  }
+}
+
+/*
+ * L'en-tete d'une page sur telephone.
+ *
+ * Un nom long et d'un seul tenant ("Randriamanana") ne tenait pas a cote
+ * de la fleche de retour et du visage : il poussait la page hors de
+ * l'ecran, qui defilait alors de cote. Il passe a la ligne, au besoin au
+ * milieu du mot ; sur les plus petits ecrans, le titre et le visage
+ * raccourcissent un peu.
+ */
+@media (max-width: 560px) {
+  .page-entete__titre {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 400px) {
+  .page-entete__gauche {
+    gap: 10px;
+  }
+
+  .page-entete__titre {
+    font-size: 22px;
+  }
+
+  .page-entete .visage--grand {
+    width: 48px;
+    height: 48px;
+  }
+
+  .page-entete .visage--grand .visage__initiales {
+    font-size: 16px;
+  }
+}
+
+/*
+ * Un tableau "empilable" (Tableau empilable) dans un panneau serre : sur
+ * telephone, ses lignes deviennent des fiches (regles communes dans
+ * benevole-espace.css) ; ici, elles gardent la marge du panneau, et la
+ * description sous le titre reste en gris, en texte courant.
+ */
+@media (max-width: 640px) {
+  .panneau__corps--serre .table--empilable tbody tr {
+    padding: 14px 20px;
+  }
+
+  .table--empilable td:first-child .table__secondaire {
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .table--empilable td .badge {
+    flex: none;
   }
 }
