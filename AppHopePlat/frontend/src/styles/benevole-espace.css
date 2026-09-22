@@ -1178,46 +1178,340 @@
 /*
  * Le seul bloc de la page a fond plein.
  *
- * Il n'informe pas, il propose : le violet le distingue des panneaux
- * blancs qui, eux, rendent compte.
+ * Il propose, et dit ou en est le benevole : le violet le distingue des
+ * panneaux blancs qui, eux, rendent compte. La photo tient la droite et
+ * se fond dans le violet ; le titre, les chiffres et l'action se lisent
+ * par-dessus, du cote du fond plein.
+ *
+ * L'entree se joue une fois, a l'arrivee : la carte monte, la photo se
+ * pose, le trait jaune se trace sous "savoir-faire.", puis les chiffres
+ * arrivent l'un apres l'autre en comptant. Rien ne boucle ensuite.
  */
+/* En colonne : sur telephone, la photo passe dans le flux au-dessus du
+   corps, et le corps prend ce qui reste -- l'action tombe en bas. */
 .invitation {
-  display: grid;
-  grid-template-columns: minmax(0, 0.52fr) minmax(0, 1fr);
-  overflow: hidden;
-  border-radius: var(--admin-rayon);
-  background: linear-gradient(135deg, var(--hope-violet) 0%, var(--hope-violet-fonce) 100%);
-  box-shadow: var(--admin-ombre);
-}
-
-.invitation__image {
   position: relative;
-  min-height: 168px;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(245, 227, 137, 0.16) 0%, transparent 46%),
+    linear-gradient(135deg, var(--hope-violet) 0%, var(--hope-violet-fonce) 100%);
+  box-shadow: 0 16px 36px -20px rgba(43, 36, 94, 0.6), var(--admin-ombre);
+  color: #ffffff;
+  animation: invitation-entree 560ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
 }
 
-.invitation__image img {
+/* La photo, a droite, fondue dans le violet par un masque. */
+.invitation__photo {
   position: absolute;
-  inset: 0;
+  inset: 0 0 0 auto;
+  z-index: -1;
+  width: 58%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 48%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 48%);
+}
+
+.invitation__photo img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 40% 35%;
+  animation: invitation-photo 1600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .invitation__corps {
-  padding: 22px 24px;
-  color: #ffffff;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 26px 28px 28px;
 }
 
 .invitation__titre {
-  font-size: 20px;
+  max-width: 15em;
+  font-size: 25px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
-.invitation__compte {
-  margin: 7px 0 14px;
+/* Le trait sous "savoir-faire." : trace a l'entree, de gauche a droite,
+   jusqu'au "e" -- le point reste hors du trait. */
+.invitation__souligne {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.invitation__souligne::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0.32em;
+  bottom: -0.06em;
+  height: 0.15em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--hope-jaune), var(--hope-orange));
+  transform-origin: left center;
+  animation: invitation-trait 720ms 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/* --- Les trois chiffres --- */
+
+.invitation__chiffres {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin: 22px 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --delai est pose par le composant : les chiffres entrent l'un apres
+   l'autre, au rythme ou leurs compteurs demarrent. */
+.invitation__chiffre {
+  animation: invitation-entree 520ms var(--delai, 0ms) cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+/*
+ * Une tuile de verre : assez sombre pour que le blanc se lise meme
+ * par-dessus la photo, assez translucide pour laisser passer la carte.
+ * Toute la tuile est le lien -- une cible large, au doigt comme a la
+ * souris.
+ */
+.chiffre-invitation {
+  --teinte: var(--hope-jaune);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'icone . fleche'
+    'texte texte texte';
+  row-gap: 12px;
+  height: 100%;
+  padding: 15px 14px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background-color: rgba(34, 28, 78, 0.56);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  color: #ffffff;
+  text-decoration: none;
+  transition:
+    transform 220ms cubic-bezier(0.22, 0.8, 0.3, 1),
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 220ms ease-out;
+}
+
+/* Le fil de couleur en tete de tuile : la teinte du chiffre. */
+.chiffre-invitation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background-color: var(--teinte);
+}
+
+.chiffre-invitation--jaune  { --teinte: var(--hope-jaune); }
+.chiffre-invitation--bleu   { --teinte: var(--hope-bleu); }
+.chiffre-invitation--orange { --teinte: var(--hope-orange); }
+
+.chiffre-invitation__icone {
+  grid-area: icone;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background-color: var(--teinte);
+  color: var(--hope-violet-fonce);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chiffre-invitation__icone svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chiffre-invitation__fleche {
+  grid-area: fleche;
+  align-self: center;
+  width: 18px;
+  height: 18px;
+  color: rgba(255, 255, 255, 0.55);
+  transition: transform 200ms ease-out, color 200ms ease-out;
+}
+
+.chiffre-invitation__texte {
+  grid-area: texte;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chiffre-invitation__tete {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chiffres a chasse fixe : le compteur ne fait pas danser le libelle. */
+.chiffre-invitation__valeur {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.chiffre-invitation__libelle {
+  margin-top: 4px;
   font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+}
+
+.chiffre-invitation__detail {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+@media (hover: hover) {
+  .chiffre-invitation:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.32);
+    background-color: rgba(34, 28, 78, 0.7);
+    box-shadow: 0 14px 26px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  .chiffre-invitation:hover .chiffre-invitation__icone {
+    transform: scale(1.08) rotate(-4deg);
+  }
+
+  .chiffre-invitation:hover .chiffre-invitation__fleche {
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+}
+
+.chiffre-invitation:active {
+  transform: scale(0.98);
+}
+
+/* Sur le violet, le contour de focus passe au jaune : le bleu clair
+   commun s'y perdrait. */
+.invitation :focus-visible {
+  outline-color: var(--hope-jaune);
+}
+
+/* --- L'action --- */
+
+.invitation__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: auto;
+  padding: 10px 18px 10px 20px;
+  border-radius: 999px;
+  background-color: var(--hope-jaune);
+  box-shadow: 0 10px 22px -12px rgba(245, 227, 137, 0.8);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--hope-violet-fonce);
+  text-decoration: none;
+  transition:
+    transform 200ms cubic-bezier(0.22, 0.8, 0.3, 1),
+    background-color 200ms ease-out,
+    box-shadow 200ms ease-out;
+}
+
+.invitation__action svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 200ms ease-out;
+}
+
+@media (hover: hover) {
+  .invitation__action:hover {
+    background-color: #f9ecab;
+    box-shadow: 0 14px 26px -12px rgba(245, 227, 137, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .invitation__action:hover svg {
+    transform: translateX(3px);
+  }
+}
+
+.invitation__action:active {
+  transform: scale(0.98);
+}
+
+@keyframes invitation-entree {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes invitation-photo {
+  from {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes invitation-trait {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Quand l'appareil demande moins de mouvement : tout est la d'emblee. */
+@media (prefers-reduced-motion: reduce) {
+  .invitation,
+  .invitation__photo img,
+  .invitation__souligne::after,
+  .invitation__chiffre {
+    animation: none;
+  }
+
+  .chiffre-invitation,
+  .chiffre-invitation__icone,
+  .chiffre-invitation__fleche,
+  .invitation__action,
+  .invitation__action svg {
+    transition: none;
+  }
+
+  .chiffre-invitation:hover,
+  .chiffre-invitation:active,
+  .chiffre-invitation:hover .chiffre-invitation__icone,
+  .chiffre-invitation:hover .chiffre-invitation__fleche,
+  .invitation__action:hover,
+  .invitation__action:active,
+  .invitation__action:hover svg {
+    transform: none;
+  }
 }
 
 .journal-apercu__accroche {
@@ -1296,13 +1590,84 @@
 }
 
 @media (max-width: 780px) {
-  /* L'image passe au-dessus du texte plutot que de le comprimer. */
-  .invitation {
-    grid-template-columns: minmax(0, 1fr);
+  /*
+   * La photo passe au-dessus du texte plutot que de le comprimer, et se
+   * fond vers le bas dans le violet ; le titre remonte un peu sur elle.
+   */
+  .invitation__photo {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 190px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+  }
+
+  .invitation__corps {
+    position: relative;
+    margin-top: -40px;
+    padding: 0 20px 22px;
+  }
+
+  .invitation__titre {
+    max-width: none;
+    font-size: 22px;
   }
 
   .accueil-benevole__titre {
     font-size: 24px;
+  }
+}
+
+/*
+ * Telephone : les trois chiffres passent en lignes -- l'icone, le nombre
+ * et son libelle, la precision dessous, la fleche au bout. En colonnes,
+ * la precision n'aurait plus la place d'etre lue.
+ */
+@media (max-width: 560px) {
+  .invitation__chiffres {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin: 18px 0;
+  }
+
+  .chiffre-invitation {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'icone texte fleche';
+    align-items: center;
+    column-gap: 12px;
+    padding: 12px 14px;
+  }
+
+  /* Le fil de couleur passe sur le bord gauche. */
+  .chiffre-invitation::before {
+    top: 12px;
+    bottom: 12px;
+    left: 0;
+    right: auto;
+    width: 3px;
+    height: auto;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .chiffre-invitation__tete {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 8px;
+  }
+
+  .chiffre-invitation__valeur {
+    font-size: 24px;
+  }
+
+  .chiffre-invitation__libelle {
+    margin-top: 0;
+  }
+
+  .invitation__action {
+    align-self: stretch;
+    justify-content: center;
   }
 }
 

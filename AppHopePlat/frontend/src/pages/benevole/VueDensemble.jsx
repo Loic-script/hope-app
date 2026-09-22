@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
 import photoInvitation from '../../assets/hope-children.jpg';
@@ -53,15 +54,16 @@ function TachesDuProjet({ projet }) {
 /**
  * Accueil de l'espace benevole.
  *
- * La page ne liste pas : elle met en avant. En haut, sous les reperes,
- * l'invitation -- "Une tache pour chaque savoir-faire." -- et la tache
- * qu'il pourrait prendre ; puis les projets ; en bas, son journal. Des
- * elements, pas des listes : le reste de l'espace a ses propres ecrans,
- * et chaque bloc y renvoie. Sa prochaine tache a rendre se lit dans le
- * premier repere, et ses taches dans "Mes taches".
+ * La page ne liste pas : elle met en avant. En haut, l'invitation --
+ * "Une tache pour chaque savoir-faire." -- avec ses chiffres, et la
+ * tache qu'il pourrait prendre ; puis les projets ; en bas, son journal.
+ * Des elements, pas des listes : le reste de l'espace a ses propres
+ * ecrans, et chaque bloc y renvoie. Sa prochaine tache a rendre se lit
+ * dans le premier chiffre, et ses taches dans "Mes taches".
  *
- * Les trois reperes du haut parlent de lui d'abord : ce qu'il a en cours,
- * ce qu'il a deja livre, et seulement ensuite ce qui attend quelqu'un.
+ * Les trois chiffres de l'invitation parlent de lui d'abord : ce qu'il a
+ * en cours, ce qu'il a deja livre, et seulement ensuite ce qui attend
+ * quelqu'un. Ils remplacent les trois reperes qui la precedaient.
  */
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
@@ -104,56 +106,68 @@ export default function VueDensemble() {
         </Link>
       </header>
 
-      {/* ---------- Trois reperes ---------- */}
-      <div className="reperes">
-        <Repere
-          valeur={enCours.length}
-          libelle={enCours.length > 1 ? 'Tâches en cours' : 'Tâche en cours'}
-          Icone={PleineTaches}
-          teinte="violet"
-          detail={
-            prioritaire?.echeance
-              ? `La prochaine à rendre le ${fmt.date(prioritaire.echeance)}`
-              : 'Aucune pour le moment'
-          }
-        />
-        <Repere
-          valeur={nbLivrees}
-          libelle={nbLivrees > 1 ? 'Tâches livrées' : 'Tâche livrée'}
-          Icone={PleineJournal}
-          teinte="bleu"
-          detail={
-            journal?.derniereLivraison
-              ? `La dernière le ${fmt.date(journal.derniereLivraison)}`
-              : 'Pas encore'
-          }
-        />
-        <Repere
-          valeur={nbLibres}
-          libelle={nbLibres > 1 ? 'Tâches à prendre' : 'Tâche à prendre'}
-          Icone={PleineProjets}
-          teinte="orange"
-          detail={nbProjets > 0 ? `Sur ${pluriel(nbProjets, 'projet')}` : 'Tout est pris'}
-        />
-      </div>
-
-      {/* ---------- L'invitation, et la tache a prendre ---------- */}
+      {/* ---------- L'invitation et ses chiffres, et la tache a prendre ---------- */}
       <div className="accueil-benevole__paire">
-        <section className="invitation">
-          <div className="invitation__image">
+        <section className="invitation" aria-labelledby="invitation-titre">
+          <div className="invitation__photo" aria-hidden="true">
             <img src={photoInvitation} alt="" />
           </div>
+
           <div className="invitation__corps">
             <p className="surtitre surtitre--clair">
               <span className="trait-hope surtitre__trait" aria-hidden="true" />
               Envie de participer davantage ?
             </p>
-            <h2 className="invitation__titre">Une tâche pour chaque savoir-faire.</h2>
-            <p className="invitation__compte">
-              {pluriel(nbLibres, 'tâche')} à prendre
-              {nbProjets > 0 && ` · sur ${pluriel(nbProjets, 'projet')}`}
-            </p>
-            <Link className="lien-hope lien-hope--fleche" to="/benevole/projets">
+            <h2 className="invitation__titre" id="invitation-titre">
+              Une tâche pour chaque <span className="invitation__souligne">savoir-faire.</span>
+            </h2>
+
+            {/*
+              Les trois chiffres du benevole, du plus personnel au plus
+              ouvert : ce qu'il a en cours, ce qu'il a livre, ce qui attend
+              quelqu'un. Chacun mene a l'ecran qui le detaille.
+            */}
+            <ul className="invitation__chiffres">
+              <ChiffreInvitation
+                rang={0}
+                to="/benevole/taches"
+                valeur={taches ? enCours.length : null}
+                libelles={['Tâche en cours', 'Tâches en cours']}
+                detail={
+                  enCours.length === 0
+                    ? 'Aucune pour le moment'
+                    : prioritaire?.echeance
+                      ? `À rendre le ${fmt.date(prioritaire.echeance)}`
+                      : 'Sans échéance'
+                }
+                Icone={PleineTaches}
+                teinte="jaune"
+              />
+              <ChiffreInvitation
+                rang={1}
+                to="/benevole/journal"
+                valeur={journal ? nbLivrees : null}
+                libelles={['Tâche livrée', 'Tâches livrées']}
+                detail={
+                  journal?.derniereLivraison
+                    ? `Dernière le ${fmt.date(journal.derniereLivraison)}`
+                    : 'Pas encore'
+                }
+                Icone={PleineJournal}
+                teinte="bleu"
+              />
+              <ChiffreInvitation
+                rang={2}
+                to="/benevole/taches"
+                valeur={chiffres ? nbLibres : null}
+                libelles={['Tâche à prendre', 'Tâches à prendre']}
+                detail={nbProjets > 0 ? `Sur ${pluriel(nbProjets, 'projet')}` : 'Tout est pris'}
+                Icone={PleineProjets}
+                teinte="orange"
+              />
+            </ul>
+
+            <Link className="invitation__action" to="/benevole/projets">
               Explorer les projets
               <IconeChevronDroit />
             </Link>
@@ -282,25 +296,87 @@ export default function VueDensemble() {
   );
 }
 
+/** Delai d'entree d'un chiffre, apres la carte : ils arrivent l'un apres l'autre. */
+const DELAI_CHIFFRE = 260;
+const ECART_CHIFFRE = 110;
+
 /**
- * Un repere du haut : un nombre, ce qu'il compte, et une precision.
+ * Le nombre affiche monte de 0 a sa valeur, une seule fois, a l'arrivee
+ * des donnees -- en ralentissant, comme un compteur qui se pose.
+ *
+ * null tant que la valeur n'est pas connue : l'ecran montre un tiret.
+ * Rien ne bouge si l'appareil demande de reduire les animations.
+ *
+ * @param {number|null} valeur
+ * @param {number} delai  en millisecondes, avant de commencer a compter
+ */
+function useDecompte(valeur, delai = 0) {
+  const [affiche, setAffiche] = useState(null);
+  const depart = useRef(0);
+
+  useEffect(() => {
+    if (valeur === null || valeur === undefined) return undefined;
+
+    const reduit = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduit || valeur === depart.current) {
+      depart.current = valeur;
+      setAffiche(valeur);
+      return undefined;
+    }
+
+    const de = depart.current;
+    const duree = 900;
+    const debut = performance.now() + delai;
+    let image;
+    const avancer = (maintenant) => {
+      const t = Math.min(1, Math.max(0, (maintenant - debut) / duree));
+      const pose = 1 - (1 - t) ** 3;
+      setAffiche(Math.round(de + (valeur - de) * pose));
+      if (t < 1) image = requestAnimationFrame(avancer);
+      else depart.current = valeur;
+    };
+    image = requestAnimationFrame(avancer);
+    return () => cancelAnimationFrame(image);
+  }, [valeur, delai]);
+
+  return affiche;
+}
+
+/**
+ * Un chiffre de l'invitation : un nombre, ce qu'il compte, une precision,
+ * et le lien vers l'ecran qui le detaille.
  *
  * La precision n'est pas un ornement : "2 taches en cours" ne dit pas
  * laquelle presse, et c'est justement ce qu'on vient verifier.
+ *
+ * Le nombre anime est cache aux lecteurs d'ecran : ils lisent la phrase
+ * entiere, avec la valeur finale, et non chaque etape du compteur.
  */
-function Repere({ valeur, libelle, detail, Icone, teinte }) {
+function ChiffreInvitation({ rang, to, valeur, libelles, detail, Icone, teinte }) {
+  const delai = DELAI_CHIFFRE + rang * ECART_CHIFFRE;
+  const affiche = useDecompte(valeur, delai);
+  const libelle = (valeur ?? 0) > 1 ? libelles[1] : libelles[0];
+
   return (
-    <article className={`repere repere--${teinte}`}>
-      <div className="repere__corps">
-        <p className="repere__tete">
-          <strong className="repere__valeur">{valeur ?? '—'}</strong>
-          <span className="repere__libelle">{libelle}</span>
-        </p>
-        <p className="repere__detail">{detail}</p>
-      </div>
-      <span className={`carre-icone carre-icone--${teinte}`} aria-hidden="true">
-        <Icone />
-      </span>
-    </article>
+    <li className="invitation__chiffre" style={{ '--delai': `${delai}ms` }}>
+      <Link className={`chiffre-invitation chiffre-invitation--${teinte}`} to={to}>
+        <span className="chiffre-invitation__icone" aria-hidden="true">
+          <Icone />
+        </span>
+        <span className="chiffre-invitation__texte">
+          <span className="chiffre-invitation__tete">
+            <strong className="chiffre-invitation__valeur" aria-hidden="true">
+              {affiche ?? '—'}
+            </strong>
+            <span className="chiffre-invitation__libelle">
+              <span className="sr-only">{valeur ?? ''} </span>
+              {libelle}
+            </span>
+          </span>
+          <span className="chiffre-invitation__detail">{detail}</span>
+        </span>
+        <IconeChevronDroit className="chiffre-invitation__fleche" />
+      </Link>
+    </li>
   );
 }
