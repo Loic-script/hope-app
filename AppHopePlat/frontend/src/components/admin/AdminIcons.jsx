@@ -310,3 +310,30 @@ export const IconeLieu = creerIcone(
     <circle cx="12" cy="10.2" r="2.6" />
   </>
 );
+
+/**
+ * La poignee d'une carte qu'on peut deplacer : six points, le signe
+ * usuel du "prenez-moi et bougez-moi".
+ */
+export const IconePoignee = creerIcone(
+  'IconePoignee',
+  <>
+    <circle cx="9" cy="6.5" r="1.35" />
+    <circle cx="15" cy="6.5" r="1.35" />
+    <circle cx="9" cy="12" r="1.35" />
+    <circle cx="15" cy="12" r="1.35" />
+    <circle cx="9" cy="17.5" r="1.35" />
+    <circle cx="15" cy="17.5" r="1.35" />
+  </>,
+  { rempli: true }
+);
+
+/** Remettre une carte deplacee a sa place : une cible, un centre. */
+export const IconeRecentrer = creerIcone(
+  'IconeRecentrer',
+  <>
+    <circle cx="12" cy="12" r="6.4" />
+    <path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+  </>
+);

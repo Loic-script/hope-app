@@ -3,8 +3,11 @@ import { Link, useOutletContext } from 'react-router-dom';
 
 import {
   IconeCalendrier,
+  IconeChevronBas,
   IconeChevronDroit,
   IconePlus,
+  IconePoignee,
+  IconeRecentrer,
 } from '../../components/admin/AdminIcons.jsx';
 /*
  * Les carres de couleur portent des icones pleines, comme le menu : a
@@ -16,6 +19,7 @@ import { PleineJournal, PleineProjets, PleineTaches } from '../../components/Ico
 import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
 import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
+import { useCarteDeplacable } from '../../hooks/useCarteDeplacable.js';
 import { useChargement } from '../../hooks/useChargement.js';
 import { useColonneCollante } from '../../hooks/useColonneCollante.js';
 import { useDecompte } from '../../hooks/useDecompte.js';
@@ -73,6 +77,9 @@ function TachesDuProjet({ projet }) {
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
   const colonne = useColonneCollante();
+  // La carte des reperes : la personne la place ou elle veut, et son
+  // navigateur s'en souvient.
+  const carte = useCarteDeplacable('hope.benevole.reperes');
 
   const { donnees: chiffres } = useChargement(() => service.apercu(), []);
   const { donnees: taches } = useChargement(() => service.mesTaches(), []);
@@ -191,14 +198,66 @@ export default function VueDensemble() {
 
         {/* ---------- Ses chiffres, la tache a prendre, son journal ---------- */}
         <aside className="accueil__pile" ref={colonne} aria-label="Mes tâches">
+          {/*
+            La carte des trois reperes se deplace et se replie : chacun la
+            met ou il veut, ou la range quand il travaille dans le fil. Son
+            enveloppe porte le deplacement ; la carte garde son animation
+            d'entree.
+          */}
+          <div {...carte.enveloppe}>
           <section className="invitation" aria-labelledby="invitation-titre">
-            <div className="invitation__corps">
-              {/* La carte ne montre que ses chiffres ; le titre reste pour
-                  les lecteurs d'ecran, qui s'orientent par les titres. */}
-              <h2 className="sr-only" id="invitation-titre">
-                Vos tâches en chiffres
+            <div className="invitation__barre">
+              <button
+                type="button"
+                className="invitation__poignee"
+                title="Déplacer la carte — flèches du clavier, Origine pour la remettre en place"
+                aria-label="Déplacer la carte : glissez-la, ou déplacez-la avec les flèches du clavier"
+                {...carte.poignee}
+              >
+                <IconePoignee />
+              </button>
+
+              <h2 className="invitation__titre" id="invitation-titre">
+                Vos tâches
               </h2>
 
+              {/* Repliee, la carte garde ses trois nombres : elle se reduit
+                  sans rien perdre de ce qu'elle disait. */}
+              {carte.reduite && (
+                <ul className="invitation__resume">
+                  <Pastille teinte="jaune" valeur={taches ? enCours.length : null} quoi="en cours" />
+                  <Pastille teinte="bleu" valeur={journal ? nbLivrees : null} quoi="livrée(s)" />
+                  <Pastille teinte="orange" valeur={chiffres ? nbLibres : null} quoi="à prendre" />
+                </ul>
+              )}
+
+              {carte.deplacee && (
+                <button
+                  type="button"
+                  className="invitation__action"
+                  onClick={carte.remettre}
+                  aria-label="Remettre la carte à sa place"
+                  title="Remettre la carte à sa place"
+                >
+                  <IconeRecentrer />
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="invitation__action invitation__action--pliage"
+                onClick={carte.basculerReduction}
+                aria-expanded={!carte.reduite}
+                aria-controls="invitation-corps"
+                aria-label={carte.reduite ? 'Déplier la carte' : 'Réduire la carte'}
+                title={carte.reduite ? 'Déplier' : 'Réduire'}
+              >
+                <IconeChevronBas />
+              </button>
+            </div>
+
+            <div className="invitation__pliage" id="invitation-corps">
+            <div className="invitation__corps">
               {/*
                 Les trois chiffres du benevole, du plus personnel au plus
                 ouvert : ce qu'il a en cours, ce qu'il a livre, ce qui attend
@@ -244,7 +303,9 @@ export default function VueDensemble() {
                 />
               </ul>
             </div>
+            </div>
           </section>
+          </div>
 
           <section className="tache-active">
             <div className="tache-active__haut">
@@ -343,6 +404,25 @@ export default function VueDensemble() {
 /** Delai d'entree d'un chiffre, apres la carte : ils arrivent l'un apres l'autre. */
 const DELAI_CHIFFRE = 260;
 const ECART_CHIFFRE = 110;
+
+/**
+ * Un nombre de la carte repliee.
+ *
+ * Reduire ne doit pas effacer : la barre garde les trois nombres, aux
+ * couleurs de leurs tuiles. Le chiffre seul ne dit rien a qui n'a pas la
+ * couleur sous les yeux, d'ou la phrase complete pour les lecteurs
+ * d'ecran.
+ */
+function Pastille({ teinte, valeur, quoi }) {
+  return (
+    <li className={`invitation__pastille invitation__pastille--${teinte}`}>
+      <span aria-hidden="true">{valeur === null ? '—' : fmt.nombre(valeur)}</span>
+      <span className="sr-only">
+        {valeur === null ? 'chiffre en cours de chargement' : `${fmt.nombre(valeur)} ${quoi}`}
+      </span>
+    </li>
+  );
+}
 
 /**
  * Un chiffre de l'invitation : un nombre, ce qu'il compte, une precision,
