@@ -388,6 +388,14 @@ function Inscription({ types, navigate, onInscrit }) {
   const [succes, setSucces] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
+  /*
+   * Le bouton se desactive pendant l'envoi, mais un etat React n'arrive
+   * qu'au rendu suivant : deux clics tres rapproches -- ou un clic et la
+   * touche Entree -- partaient tous les deux. Le serveur creait le
+   * compte sur le premier et refusait le second, qui affichait une
+   * erreur alors que tout s'etait bien passe. Ce verrou-ci est immediat.
+   */
+  const enCours = useRef(false);
 
   // Le succes ramene a la connexion, le temps que le message se lise.
   useEffect(() => {
@@ -421,6 +429,8 @@ function Inscription({ types, navigate, onInscrit }) {
 
   async function soumettre(evenement) {
     evenement.preventDefault();
+    if (enCours.current) return;
+
     setErreur('');
     setSucces('');
 
@@ -431,6 +441,7 @@ function Inscription({ types, navigate, onInscrit }) {
       return;
     }
 
+    enCours.current = true;
     setEnvoi(true);
     try {
       const { message } = await utilisateurService.inscrire({
@@ -465,6 +476,7 @@ function Inscription({ types, navigate, onInscrit }) {
       setErreursChamps(echec?.response?.data?.details ?? {});
       setErreur(messageErreur(echec, 'L’inscription n’a pas pu être enregistrée.'));
     } finally {
+      enCours.current = false;
       setEnvoi(false);
     }
   }

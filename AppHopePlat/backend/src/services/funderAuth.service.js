@@ -19,7 +19,11 @@ import { config } from '../config/env.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { signalerNouveauCompte } from './notification.service.js';
-import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
+import {
+  ErreurAuthentification,
+  ErreurValidation,
+  estViolationUnicite,
+} from '../shared/errors.js';
 
 const AUDIENCE = 'hope-bailleur';
 
@@ -144,44 +148,64 @@ export async function inscrire(corps = {}) {
 
   const hash = await bcrypt.hash(motDePasse, config.admin.saltRounds);
 
-  return transaction(async (client) => {
-    // Le compte porte le role bailleur, pas benevole : aucune fiche de
-    // terrain n'est creee.
-    const compte = await volunteerRepository.creer(
-      { nom, prenom, email, motDePasse: hash },
-      ['bailleur'],
-      client
-    );
+  try {
+    return await transaction(async (client) => {
+      // Le compte porte le role bailleur, pas benevole : aucune fiche de
+      // terrain n'est creee.
+      const compte = await volunteerRepository.creer(
+        { nom, prenom, email, motDePasse: hash },
+        ['bailleur'],
+        client
+      );
 
-    await funderRepository.creerAvecContact(
-      {
-        raisonSociale,
-        typeOrganisation,
-        secteur: texte(corps.secteur) || null,
-        pays: texte(corps.pays) || 'Madagascar',
-        siteWeb: texte(corps.siteWeb) || null,
-      },
-      compte.id,
-      fonction || null,
-      client
-    );
+      await funderRepository.creerAvecContact(
+        {
+          raisonSociale,
+          typeOrganisation,
+          secteur: texte(corps.secteur) || null,
+          pays: texte(corps.pays) || 'Madagascar',
+          siteWeb: texte(corps.siteWeb) || null,
+        },
+        compte.id,
+        fonction || null,
+        client
+      );
 
-    // Meme cloche que pour l'inscription commune : l'equipe voit passer
-    // tous les comptes, d'ou qu'ils viennent.
-    await signalerNouveauCompte(
-      {
+      // Meme cloche que pour l'inscription commune : l'equipe voit passer
+      // tous les comptes, d'ou qu'ils viennent.
+      await signalerNouveauCompte(
+        {
+          utilisateurId: compte.id,
+          type: 'bailleur',
+          email,
+          nom: `${prenom} ${nom}`.trim(),
+          organisation: raisonSociale,
+        },
+        client
+      );
+
+      const fiche = await funderRepository.trouverParUtilisateur(compte.id, client);
+      return {
+        ...versBailleurPublic(fiche),
         utilisateurId: compte.id,
-        type: 'bailleur',
-        email,
-        nom: `${prenom} ${nom}`.trim(),
-        organisation: raisonSociale,
-      },
-      client
-    );
-
-    const fiche = await funderRepository.trouverParUtilisateur(compte.id, client);
-    return { ...versBailleurPublic(fiche), utilisateurId: compte.id, compteStatut: compte.statut };
-  });
+        compteStatut: compte.statut,
+      };
+    });
+  } catch (erreur) {
+    /*
+     * Deux inscriptions envoyees dans la meme seconde passent toutes
+     * les deux le controle d'unicite plus haut : la seconde bute alors
+     * sur l'index de l'adresse. Elle merite le meme message que la
+     * premiere, pas une erreur interne -- le compte existe, il n'y a
+     * plus qu'a se connecter.
+     */
+    if (estViolationUnicite(erreur, 'utilisateur_email_key')) {
+      throw new ErreurValidation('Cette adresse est déjà utilisée.', {
+        email: 'Adresse déjà inscrite',
+      });
+    }
+    throw erreur;
+  }
 }
 
 /** Connexion d'un contact de bailleur. */

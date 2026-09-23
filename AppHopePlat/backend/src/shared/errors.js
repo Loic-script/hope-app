@@ -54,3 +54,20 @@ export class ErreurRegleMetier extends ErreurApplicative {
     this.details = details;
   }
 }
+
+/**
+ * Une contrainte d'unicite violee par PostgreSQL (code 23505).
+ *
+ * Verifier "l'adresse existe-t-elle ?" avant d'inserer ne suffit pas :
+ * deux inscriptions envoyees en meme temps passent toutes les deux le
+ * controle, et la seconde bute sur l'index unique. Sans cette lecture,
+ * elle remonte en 500 "erreur interne" -- alors que le compte est bien
+ * cree, et que la personne n'a qu'a se connecter.
+ *
+ * @param {unknown} erreur
+ * @param {string} [contrainte] le nom exact de la contrainte a reconnaitre
+ */
+export function estViolationUnicite(erreur, contrainte = null) {
+  if (!erreur || erreur.code !== '23505') return false;
+  return contrainte === null || erreur.constraint === contrainte;
+}

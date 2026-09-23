@@ -40,6 +40,28 @@ export function gestionnaireErreurs(erreur, req, res, _next) {
     });
   }
 
+  /*
+   * Une valeur deja prise (PostgreSQL 23505).
+   *
+   * Un service qui sait de quel champ il s'agit traduit lui-meme la
+   * collision -- l'inscription le fait pour l'adresse electronique. Ce
+   * filet rattrape les autres : "cette valeur existe deja" est une
+   * information utile, "une erreur interne est survenue" n'en est pas
+   * une. Le nom de la contrainte reste dans les logs : il nomme des
+   * tables et des colonnes, qui ne regardent pas le client.
+   */
+  if (erreur.code === '23505') {
+    console.error(
+      `[HOPE] Valeur deja prise sur ${req.method} ${req.originalUrl} :`,
+      erreur.constraint ?? erreur.detail
+    );
+    return res.status(409).json({
+      success: false,
+      code: 'DEJA_ENREGISTRE',
+      message: 'Cette valeur est déjà enregistrée.',
+    });
+  }
+
   console.error(`[HOPE] Erreur non geree sur ${req.method} ${req.originalUrl} :`, erreur);
 
   return res.status(500).json({
@@ -49,3 +71,4 @@ export function gestionnaireErreurs(erreur, req, res, _next) {
     ...(estProduction ? {} : { detail: erreur.message }),
   });
 }
+

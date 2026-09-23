@@ -45,6 +45,7 @@ import {
   ErreurIntrouvable,
   ErreurRegleMetier,
   ErreurValidation,
+  estViolationUnicite,
 } from '../shared/errors.js';
 
 /**
@@ -128,6 +129,34 @@ function typeSaisi(valeur, details) {
 }
 
 /**
+ * L'adresse est deja prise : le meme message, que le controle prealable
+ * l'ait vu ou qu'un envoi simultane l'ait double.
+ */
+function adresseDejaPrise() {
+  return new ErreurValidation('Cette adresse est déjà utilisée.', {
+    email: 'Adresse déjà inscrite',
+  });
+}
+
+/**
+ * Joue la creation du compte, et traduit la collision d'unicite.
+ *
+ * Le controle prealable ("cette adresse existe-t-elle ?") laisse passer
+ * deux inscriptions envoyees dans la meme seconde : la premiere cree le
+ * compte, la seconde bute sur l'index unique de l'adresse. Sans cette
+ * traduction, la personne lisait "Une erreur interne est survenue"
+ * alors que son compte venait d'etre cree.
+ */
+async function inscrireOuRefuser(travail) {
+  try {
+    return await transaction(travail);
+  } catch (erreur) {
+    if (estViolationUnicite(erreur, 'utilisateur_email_key')) throw adresseDejaPrise();
+    throw erreur;
+  }
+}
+
+/**
  * Inscription.
  *
  * Quatre champs : l'adresse, le type, le mot de passe et sa
@@ -162,16 +191,12 @@ export async function inscrire(corps = {}) {
     throw new ErreurValidation('Le formulaire comporte des erreurs.', details);
   }
 
-  if (await volunteerRepository.emailExiste(email)) {
-    throw new ErreurValidation('Cette adresse est déjà utilisée.', {
-      email: 'Adresse déjà inscrite',
-    });
-  }
+  if (await volunteerRepository.emailExiste(email)) throw adresseDejaPrise();
 
   const hash = await bcrypt.hash(motDePasse, config.admin.saltRounds);
   const aValider = TYPES_A_VALIDER.includes(type);
 
-  const compte = await transaction(async (client) => {
+  const compte = await inscrireOuRefuser(async (client) => {
     const cree = await volunteerRepository.creer(
       { nom: '', prenom: '', email, telephone: null, motDePasse: hash },
       [type],
