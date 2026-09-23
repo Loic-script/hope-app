@@ -92,6 +92,7 @@ export const LIBELLES = {
     MESSAGE: 'Message',
     PROJECT_COMPLETED: 'Projet terminé',
     INVESTMENT: 'Investissement',
+    ACCOUNT_CREATED: 'Nouveau compte',
   },
   mediaType: { PHOTO: 'Photo', VIDEO: 'Vidéo' },
 

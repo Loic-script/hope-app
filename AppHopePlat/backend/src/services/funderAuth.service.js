@@ -18,6 +18,7 @@ import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
+import { signalerNouveauCompte } from './notification.service.js';
 import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
 
 const AUDIENCE = 'hope-bailleur';
@@ -162,6 +163,19 @@ export async function inscrire(corps = {}) {
       },
       compte.id,
       fonction || null,
+      client
+    );
+
+    // Meme cloche que pour l'inscription commune : l'equipe voit passer
+    // tous les comptes, d'ou qu'ils viennent.
+    await signalerNouveauCompte(
+      {
+        utilisateurId: compte.id,
+        type: 'bailleur',
+        email,
+        nom: `${prenom} ${nom}`.trim(),
+        organisation: raisonSociale,
+      },
       client
     );
 

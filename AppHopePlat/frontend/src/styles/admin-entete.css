@@ -203,17 +203,220 @@
   height: 19px;
 }
 
-.entete__point {
+/* ============================================================
+   La cloche des notifications
+
+   Un compteur qui monte en silence ne se voit pas : l'equipe passe a
+   cote d'une inscription toute la matinee. La cloche dit donc trois
+   choses -- combien, que c'est nouveau, et quoi :
+
+     * le nombre, en pastille, plutot qu'un point qui ne compte pas ;
+     * la sonnerie a l'arrivee : la cloche penche, une onde en part ;
+     * une bulle sous la cloche, le temps d'etre lue.
+   ============================================================ */
+
+.cloche {
+  position: relative;
+  display: flex;
+}
+
+/* La pastille : l'orange de la charte, le texte sombre de la charte.
+   Du blanc sur cet orange tombe a 2,6 -- il en faut 4,5. */
+.cloche__compte {
   position: absolute;
-  top: 8px;
-  right: 9px;
+  top: 3px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 2px solid var(--admin-surface);
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--hope-texte);
+  animation: cloche-compte-arrive 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* La sonnerie : la cloche penche de moins en moins, comme un battant
+   qui s'arrete. L'axe est en haut -- elle pivote a son attache. */
+.cloche__lien--sonne svg {
+  transform-origin: 50% 14%;
+  animation: cloche-sonne 1100ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.cloche__lien--sonne .cloche__compte {
+  animation: cloche-compte-arrive 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    cloche-compte-bat 1100ms ease-in-out 420ms;
+}
+
+/* L'onde part de la cloche et se dissipe : elle attire l'oeil sans
+   deplacer quoi que ce soit autour. */
+.cloche__onde {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--hope-orange);
+  border-radius: 12px;
+  animation: cloche-onde 1100ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  pointer-events: none;
+}
+
+@keyframes cloche-sonne {
+  0%   { transform: rotate(0deg); }
+  10%  { transform: rotate(15deg); }
+  26%  { transform: rotate(-12deg); }
+  42%  { transform: rotate(9deg); }
+  58%  { transform: rotate(-6deg); }
+  74%  { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes cloche-compte-arrive {
+  from { opacity: 0; transform: scale(0.3); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cloche-compte-bat {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.16); }
+}
+
+@keyframes cloche-onde {
+  from { opacity: 0.7; transform: scale(0.7); }
+  to   { opacity: 0; transform: scale(2.1); }
+}
+
+/* --- La bulle : ce qui vient d'arriver --- */
+
+.cloche__annonce-zone {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+}
+
+.cloche__annonce {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Ancree a une cloche de 38 px, la bulle se replierait sur trois
+     lignes : elle prend la largeur de sa phrase, plafonnee. */
+  width: max-content;
+  max-width: min(340px, calc(100vw - 28px));
+  padding: 9px 9px 9px 13px;
+  border-radius: 12px;
+  background-color: var(--hope-violet);
+  box-shadow: 0 20px 44px -20px rgba(43, 36, 94, 0.8);
+  font-size: 13.5px;
+  color: #ffffff;
+  animation: annonce-entree 420ms cubic-bezier(0.22, 0.9, 0.28, 1.06) both;
+}
+
+/* Une petite lueur qui bat : la bulle est vivante tant qu'elle est la. */
+.cloche__annonce-point {
+  flex: none;
   width: 8px;
   height: 8px;
-  /* Le liseré reprend le fond du bandeau, qui est clair depuis qu'il a
-     laissé la couleur au rail. */
-  border: 2px solid var(--admin-surface);
   border-radius: 50%;
-  background-color: var(--hope-orange);
+  background-color: var(--hope-jaune);
+  animation: annonce-bat 1600ms ease-in-out infinite;
+}
+
+.cloche__annonce-texte {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cloche__annonce-lien {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.16);
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  transition: background-color 180ms ease-out;
+}
+
+.cloche__annonce-lien:hover,
+.cloche__annonce-lien:focus-visible {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.cloche__annonce-fermer {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  transition: background-color 180ms ease-out, color 180ms ease-out;
+}
+
+/* 26 px a l'oeil, 44 au doigt. */
+.cloche__annonce-fermer::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+
+.cloche__annonce-fermer:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.cloche__annonce-fermer svg {
+  width: 15px;
+  height: 15px;
+}
+
+@keyframes annonce-entree {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes annonce-bat {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.8); }
+}
+
+/* Sur un telephone, la bulle prend la largeur disponible et passe a la
+   ligne plutot que de sortir de l'ecran. */
+@media (max-width: 620px) {
+  .cloche__annonce-zone {
+    position: fixed;
+    top: calc(var(--admin-entete-hauteur, 60px) + 8px);
+    left: 12px;
+    right: 12px;
+  }
+
+  .cloche__annonce {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloche__lien--sonne svg,
+  .cloche__compte,
+  .cloche__lien--sonne .cloche__compte,
+  .cloche__onde,
+  .cloche__annonce,
+  .cloche__annonce-point {
+    animation: none;
+  }
+
+  /* Sans mouvement, l'onde n'a plus de sens : elle disparait. */
+  .cloche__onde {
+    display: none;
+  }
 }
 
 /* --- Profil --- */

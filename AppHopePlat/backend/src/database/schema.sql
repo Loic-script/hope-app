@@ -1859,3 +1859,18 @@ ALTER TABLE donors
 
 CREATE UNIQUE INDEX IF NOT EXISTS donors_utilisateur_unique
   ON donors (utilisateur_id) WHERE utilisateur_id IS NOT NULL;
+
+/*
+ * L'ouverture d'un compte previent l'equipe.
+ *
+ * Un donateur, un benevole ou un bailleur qui s'inscrit depose une
+ * notification : c'est souvent la premiere chose a faire de la journee
+ * -- valider un benevole, prendre contact avec un partenaire. La
+ * notification pointe le compte, pour l'ouvrir d'un clic.
+ */
+ALTER TABLE notifications
+  ADD COLUMN IF NOT EXISTS utilisateur_id UUID REFERENCES utilisateur(id) ON DELETE CASCADE;
+
+ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_valide;
+ALTER TABLE notifications ADD CONSTRAINT notifications_type_valide CHECK (
+  type IN ('DONATION', 'MESSAGE', 'PROJECT_COMPLETED', 'INVESTMENT', 'ACCOUNT_CREATED'));

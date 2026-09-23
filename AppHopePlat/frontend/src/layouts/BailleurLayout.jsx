@@ -75,7 +75,9 @@ export default function BailleurLayout() {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0 });
+  // Vide tant que le serveur n'a pas repondu : un zero de depart
+  // ferait sonner la cloche au premier chargement.
+  const [compteurs, setCompteurs] = useState({});
 
   /** Recharge les pastilles : a chaque changement de page, et sur demande. */
   const rafraichirCompteurs = useCallback(async () => {

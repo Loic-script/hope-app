@@ -31,6 +31,7 @@ import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { garantirOrganisation } from './funderAuth.service.js';
+import { signalerNouveauCompte } from './notification.service.js';
 import {
   AUDIENCE_PAR_TYPE,
   EMETTEUR,
@@ -195,6 +196,13 @@ export async function inscrire(corps = {}) {
       await garantirOrganisation(cree.id, {}, client);
       await volunteerRepository.marquerProfilComplete(cree.id, client);
     }
+
+    // L'equipe l'apprend dans sa cloche : un benevole et un bailleur
+    // l'attendent pour etre valides, un donateur pour etre accueilli.
+    await signalerNouveauCompte(
+      { utilisateurId: cree.id, type, email, nom: '' },
+      client
+    );
 
     return volunteerRepository.trouverParId(cree.id, client);
   });

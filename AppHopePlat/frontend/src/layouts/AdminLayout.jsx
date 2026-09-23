@@ -121,7 +121,9 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  const [compteurs, setCompteurs] = useState({ notifications: 0, messages: 0, conversations: 0 });
+  // Vide tant que le serveur n'a pas repondu : un zero de depart
+  // ferait sonner la cloche au premier chargement.
+  const [compteurs, setCompteurs] = useState({});
 
   /** Recharge les pastilles : a chaque changement de page, et sur demande. */
   const rafraichirCompteurs = useCallback(async () => {
@@ -136,6 +138,33 @@ export default function AdminLayout() {
   useEffect(() => {
     rafraichirCompteurs();
   }, [emplacement.pathname, rafraichirCompteurs]);
+
+  /*
+   * Les pastilles se rafraichissent aussi toutes les 40 secondes : une
+   * inscription ou un message arrive pendant que l'equipe travaille, et
+   * la cloche doit le dire sans attendre un changement de page.
+   *
+   * Onglet en arriere-plan, on s'arrete : inutile d'interroger le
+   * serveur pour un ecran que personne ne regarde. On rattrape au
+   * retour, ou la cloche signale d'un coup ce qui est arrive entre-temps.
+   */
+  useEffect(() => {
+    let minuterie = null;
+
+    function battre() {
+      clearInterval(minuterie);
+      if (document.visibilityState !== 'visible') return;
+      rafraichirCompteurs();
+      minuterie = setInterval(rafraichirCompteurs, 40_000);
+    }
+
+    battre();
+    document.addEventListener('visibilitychange', battre);
+    return () => {
+      clearInterval(minuterie);
+      document.removeEventListener('visibilitychange', battre);
+    };
+  }, [rafraichirCompteurs]);
 
   async function seDeconnecter() {
     await authService.deconnecter();

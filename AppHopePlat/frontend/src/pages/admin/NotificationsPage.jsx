@@ -4,8 +4,10 @@ import {
   IconeBudgets,
   IconeDons,
   IconeMessages,
+  IconePersonne,
   IconeValide,
 } from '../../components/admin/AdminIcons.jsx';
+import { ONGLET_DU_ROLE } from '../../components/admin/GestionUtilisateur.jsx';
 import {
   Alerte,
   BarreOutils,
@@ -27,6 +29,7 @@ const FILTRES = [
   { valeur: 'INVESTMENT', label: 'Investissements' },
   { valeur: 'MESSAGE', label: 'Messages' },
   { valeur: 'PROJECT_COMPLETED', label: 'Projets terminés' },
+  { valeur: 'ACCOUNT_CREATED', label: 'Nouveaux comptes' },
 ];
 
 /** Icone et teinte de la pastille selon la nature de l'evenement. */
@@ -35,6 +38,7 @@ const APPARENCE = {
   INVESTMENT: { Icone: IconeBudgets, classe: 'investi' },
   MESSAGE: { Icone: IconeMessages, classe: 'message' },
   PROJECT_COMPLETED: { Icone: IconeValide, classe: 'projet' },
+  ACCOUNT_CREATED: { Icone: IconePersonne, classe: 'compte' },
 };
 
 /**
@@ -67,6 +71,12 @@ function destination(notification) {
   if (type === 'DONATION') {
     return projectId ? `/admin/projects/${projectId}?onglet=financement` : '/admin/dons';
   }
+  // Un compte qui vient de s'ouvrir mene a son profil, dans l'onglet de
+  // son role : c'est la qu'on le valide ou qu'on lui ecrit.
+  if (type === 'ACCOUNT_CREATED' && notification.utilisateurId) {
+    const onglet = ONGLET_DU_ROLE[notification.compteRole] ?? 'donateurs';
+    return `/admin/utilisateurs/compte/${notification.utilisateurId}?depuis=${onglet}`;
+  }
   return null;
 }
 
@@ -85,7 +95,9 @@ export default function NotificationsPage() {
     () =>
       notificationService.lister({
         unread: filtre === 'NON_LUES' ? true : undefined,
-        type: ['DONATION', 'INVESTMENT', 'MESSAGE', 'PROJECT_COMPLETED'].includes(filtre)
+        type: ['DONATION', 'INVESTMENT', 'MESSAGE', 'PROJECT_COMPLETED', 'ACCOUNT_CREATED'].includes(
+          filtre
+        )
           ? filtre
           : undefined,
       }),
@@ -133,7 +145,7 @@ export default function NotificationsPage() {
     <>
       <EntetePage
         titre="Notifications"
-        accroche="Chaque don reçu, chaque investissement du fonds, chaque message et chaque projet terminé."
+        accroche="Chaque compte ouvert, chaque don reçu, chaque investissement du fonds, chaque message et chaque projet terminé."
         actions={
           nonLues > 0 && (
             <button
@@ -172,7 +184,7 @@ export default function NotificationsPage() {
             titre={filtre === 'TOUTES' ? 'Aucune notification' : 'Aucune notification pour ce filtre'}
             texte={
               filtre === 'TOUTES'
-                ? 'Les événements apparaîtront ici dès le premier don enregistré.'
+                ? 'Les événements apparaîtront ici dès la première inscription ou le premier don.'
                 : 'Changez de filtre pour voir les autres événements.'
             }
           />

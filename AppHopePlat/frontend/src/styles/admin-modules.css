@@ -358,6 +358,8 @@
 .notif__marque--message  { color: #2668b8; background-color: #e4eefc; }
 .notif__marque--projet   { color: #6a58b8; background-color: #ece7fb; }
 .notif__marque--investi  { color: #c58116; background-color: #fdf1de; }
+/* Un compte qui s'ouvre : la teinte de la marque, comme les utilisateurs. */
+.notif__marque--compte   { color: #8a5c12; background-color: #fbf0dc; }
 
 .notif__contenu {
   flex: 1;

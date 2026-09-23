@@ -16,6 +16,7 @@ import {
   IconeMenu,
 } from '../components/admin/AdminIcons.jsx';
 import { PleineDeconnexion } from '../components/IconesPleines.jsx';
+import { useClocheQuiSonne } from '../hooks/useClocheQuiSonne.js';
 import { urlMedia } from '../services/api.js';
 import { initiales } from '../utils/format.js';
 
@@ -228,7 +229,11 @@ export default function CoqueEspace({
     };
   }, [menuOuvert]);
 
-  const nonLusNotifications = notifications ? (compteurs[notifications.cle] ?? 0) : 0;
+  // Undefined tant que les pastilles ne sont pas chargees : la cloche
+  // ne sonne que sur une hausse d'un nombre deja connu.
+  const compteNotifications = notifications ? compteurs[notifications.cle] : undefined;
+  const nonLusNotifications = compteNotifications ?? 0;
+  const cloche = useClocheQuiSonne(compteNotifications ?? null);
 
   // Tiroir ouvert, le reste de l'ecran sort du parcours clavier : le
   // focus ne peut pas s'echapper derriere le voile.
@@ -453,20 +458,56 @@ export default function CoqueEspace({
 
           <div className="entete__actions">
             {notifications && (
-              <Link
-                to={notifications.to}
-                className="entete__action"
-                aria-label={
-                  nonLusNotifications > 0
-                    ? `Notifications : ${nonLusNotifications} non lue(s)`
-                    : 'Notifications'
-                }
-              >
-                <IconeCloche />
-                {nonLusNotifications > 0 && (
-                  <span className="entete__point" aria-hidden="true" />
-                )}
-              </Link>
+              <div className="cloche">
+                <Link
+                  to={notifications.to}
+                  className={`entete__action cloche__lien${cloche.sonne ? ' cloche__lien--sonne' : ''}`}
+                  aria-label={
+                    nonLusNotifications > 0
+                      ? `Notifications : ${nonLusNotifications} non lue(s)`
+                      : 'Notifications'
+                  }
+                >
+                  {/* L'onde part de la cloche a chaque arrivee : elle
+                      attire l'oeil sans rien deplacer autour. */}
+                  {cloche.sonne && <span className="cloche__onde" aria-hidden="true" />}
+                  <IconeCloche />
+                  {nonLusNotifications > 0 && (
+                    <span className="cloche__compte" aria-hidden="true">
+                      {nonLusNotifications > 99 ? '99+' : nonLusNotifications}
+                    </span>
+                  )}
+                </Link>
+
+                {/*
+                  Ce qui vient d'arriver, une poignee de secondes, sous la
+                  cloche. La region est "polie" : un lecteur d'ecran
+                  l'annonce sans couper ce qu'il est en train de dire.
+                */}
+                <div className="cloche__annonce-zone" role="status" aria-live="polite">
+                  {cloche.arrivees > 0 && (
+                    <div className="cloche__annonce">
+                      <span className="cloche__annonce-point" aria-hidden="true" />
+                      <span className="cloche__annonce-texte">
+                        {cloche.arrivees === 1
+                          ? 'Une nouvelle notification'
+                          : `${cloche.arrivees} nouvelles notifications`}
+                      </span>
+                      <Link className="cloche__annonce-lien" to={notifications.to}>
+                        Voir
+                      </Link>
+                      <button
+                        type="button"
+                        className="cloche__annonce-fermer"
+                        onClick={cloche.fermer}
+                        aria-label="Masquer l’annonce"
+                      >
+                        <IconeCroix />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             <div className="profil" ref={profil}>

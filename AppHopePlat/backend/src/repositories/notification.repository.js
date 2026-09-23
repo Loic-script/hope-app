@@ -2,14 +2,15 @@
  * Repository des notifications de l'administrateur.
  *
  * Chaque evenement marquant depose une ligne ici : un don recu, un message
- * d'un donateur, un projet termine, un investissement du fonds HOPE.
+ * d'un donateur, un projet termine, un investissement du fonds HOPE, et
+ * l'ouverture d'un compte -- donateur, benevole ou bailleur.
  */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
 const COLONNES = `
   n.id, n.type, n.label, n.donation_id, n.message_id, n.project_id,
-  n.donor_id, n.is_read, n.created_at,
+  n.donor_id, n.utilisateur_id, n.is_read, n.created_at,
   d.reference AS donation_reference,
   d.amount    AS donation_amount,
   d.currency  AS donation_currency,
@@ -21,7 +22,12 @@ const COLONNES = `
   -- La messagerie s'ouvre par compte donateur, pas par message : sans
   -- cette colonne, une notification de message ne saurait pas quelle
   -- conversation designer.
-  m.donor_account_id
+  m.donor_account_id,
+  -- Le compte qui vient de s'ouvrir : de quoi le nommer et l'ouvrir.
+  NULLIF(TRIM(CONCAT_WS(' ', u.prenom, u.nom)), '') AS compte_nom,
+  u.email  AS compte_email,
+  u.statut AS compte_statut,
+  r.role   AS compte_role
 `;
 
 const JOINTURES = `
@@ -29,6 +35,12 @@ const JOINTURES = `
   LEFT JOIN projects p  ON p.id = n.project_id
   LEFT JOIN donors o    ON o.id = n.donor_id
   LEFT JOIN messages m  ON m.id = n.message_id
+  LEFT JOIN utilisateur u ON u.id = n.utilisateur_id
+  -- Un compte n'a qu'un role a l'inscription ; s'il en gagnait un
+  -- second, le premier enregistre nomme toujours l'espace d'origine.
+  LEFT JOIN LATERAL (
+    SELECT role FROM utilisateur_role WHERE utilisateur_id = u.id ORDER BY role LIMIT 1
+  ) r ON TRUE
 `;
 
 /** @param {{ type?: string, nonLues?: boolean, limite?: number }} filtres */
@@ -61,8 +73,9 @@ export async function lister(filtres = {}, client = null) {
  */
 export async function creer(donnees, client = null) {
   const resultat = await query(
-    `INSERT INTO notifications (type, label, donation_id, message_id, project_id, donor_id)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO notifications
+       (type, label, donation_id, message_id, project_id, donor_id, utilisateur_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     [
       donnees.type,
@@ -71,6 +84,7 @@ export async function creer(donnees, client = null) {
       donnees.messageId ?? null,
       donnees.projectId ?? null,
       donnees.donorId ?? null,
+      donnees.utilisateurId ?? null,
     ],
     client
   );
