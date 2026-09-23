@@ -15,6 +15,7 @@ import {
   ModaleFormulaire,
   optionsDepuisLibelles,
 } from './forms.jsx';
+import { IconeCroix } from './AdminIcons.jsx';
 import { useSoumission } from '../../hooks/useChargement.js';
 import ChampPhotoProfil from '../ChampPhotoProfil.jsx';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
@@ -1265,20 +1266,37 @@ export function TacheModale({
     setEquipe([]);
   }, [ouverte, projet, setErreur]);
 
-  function basculer(competence) {
+  /*
+   * Les deux listes se remplissent de la meme facon : on choisit dans la
+   * liste deroulante, la valeur rejoint ce qui est deja choisi, et la
+   * liste se remet sur son intitule -- prete pour le suivant. Ce qui est
+   * choisi s'affiche dessous, chacun avec sa croix.
+   */
+  function ajouter(competence) {
+    if (competence === '') return;
     setCompetences((choisies) =>
-      choisies.includes(competence)
-        ? choisies.filter((c) => c !== competence)
-        : [...choisies, competence]
+      choisies.includes(competence) ? choisies : [...choisies, competence]
     );
   }
 
-  function basculerBenevole(benevoleId) {
-    setEquipe((choisis) =>
-      choisis.includes(benevoleId)
-        ? choisis.filter((b) => b !== benevoleId)
-        : [...choisis, benevoleId]
-    );
+  function retirer(competence) {
+    setCompetences((choisies) => choisies.filter((c) => c !== competence));
+  }
+
+  function ajouterBenevole(benevoleId) {
+    if (benevoleId === '') return;
+    setEquipe((choisis) => (choisis.includes(benevoleId) ? choisis : [...choisis, benevoleId]));
+  }
+
+  function retirerBenevole(benevoleId) {
+    setEquipe((choisis) => choisis.filter((b) => b !== benevoleId));
+  }
+
+  /** Le nom d'un benevole, ou son adresse s'il n'en a pas encore. */
+  function nomBenevole(benevoleId) {
+    const trouve = (benevoles ?? []).find((b) => b.benevoleId === benevoleId);
+    if (!trouve) return benevoleId;
+    return `${trouve.prenom ?? ''} ${trouve.nom ?? ''}`.trim() || trouve.email;
   }
 
   async function enregistrer() {
@@ -1441,42 +1459,53 @@ export function TacheModale({
 
         {/*
           L'experience requise : les memes intitules que la fiche du
-          benevole. Ecrite dans la description, elle ne servait qu'a la
-          lecture ; cochee, elle dit a qui proposer la tache.
+          benevole, dans une liste deroulante rangee par famille. Ecrite
+          dans la description, elle ne servait qu'a la lecture ; choisie
+          ici, elle dit a qui proposer la tache.
         */}
-        <div className="champ-admin champ-admin--pleine-largeur">
-          <span className="champ-admin__label" id="tache-competences">
-            Expérience requise
-          </span>
-          <div className="competences-tache" role="group" aria-labelledby="tache-competences">
-            {FAMILLES_COMPETENCES.map((famille) => (
-              <section className="competences-tache__famille" key={famille.titre}>
-                <h4 className="competences-tache__titre">{famille.titre}</h4>
-                <div className="competences-tache__liste">
-                  {famille.competences.map((competence) => (
+        <ChampSelection
+          label="Expérience requise"
+          id="tache-competences"
+          vide="Ajouter une compétence"
+          groupes={FAMILLES_COMPETENCES.map((famille) => ({
+            libelle: famille.titre,
+            options: famille.competences
+              .filter((competence) => !competences.includes(competence))
+              .map((competence) => ({ valeur: competence, label: competence })),
+          })).filter((groupe) => groupe.options.length > 0)}
+          value=""
+          onChange={(e) => ajouter(e.target.value)}
+          aide={
+            competences.length === 0
+              ? 'Aucune : la tâche est ouverte à tout le monde.'
+              : `${competences.length} compétence(s) demandée(s) — le bénévole les voit avant de se proposer.`
+          }
+          disabled={envoi}
+          pleineLargeur
+        />
+
+        {competences.length > 0 && (
+          <div className="champ-admin champ-admin--pleine-largeur">
+            <ul className="choix-retirables" aria-label="Compétences demandées">
+              {competences.map((competence) => (
+                <li key={competence}>
+                  <span className="choix-retirable">
+                    {competence}
                     <button
-                      key={competence}
                       type="button"
-                      className={`puce-competence${
-                        competences.includes(competence) ? ' puce-competence--actif' : ''
-                      }`}
-                      aria-pressed={competences.includes(competence)}
-                      onClick={() => basculer(competence)}
+                      className="choix-retirable__croix"
+                      onClick={() => retirer(competence)}
+                      aria-label={`Retirer ${competence}`}
                       disabled={envoi}
                     >
-                      {competence}
+                      <IconeCroix />
                     </button>
-                  ))}
-                </div>
-              </section>
-            ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <p className="champ-admin__aide">
-            {competences.length === 0
-              ? 'Aucune : la tâche est ouverte à tout le monde.'
-              : `${competences.length} compétence(s) demandée(s) — le bénévole les voit avant de se proposer.`}
-          </p>
-        </div>
+        )}
 
         <ChampTexte
           label="Autre expérience requise"
@@ -1495,32 +1524,51 @@ export function TacheModale({
           aller-retour. Sinon, la tache reste ouverte aux demandes.
         */}
         {benevoles && benevoles.length > 0 && (
-          <div className="champ-admin champ-admin--pleine-largeur">
-            <span className="champ-admin__label" id="tache-affectation">
-              Affecter des bénévoles
-            </span>
-            <div className="affectation-tache" role="group" aria-labelledby="tache-affectation">
-              {benevoles.map((benevole) => (
-                <button
-                  key={benevole.benevoleId}
-                  type="button"
-                  className={`puce-competence${
-                    equipe.includes(benevole.benevoleId) ? ' puce-competence--actif' : ''
-                  }`}
-                  aria-pressed={equipe.includes(benevole.benevoleId)}
-                  onClick={() => basculerBenevole(benevole.benevoleId)}
-                  disabled={envoi}
-                >
-                  {`${benevole.prenom ?? ''} ${benevole.nom ?? ''}`.trim() || benevole.email}
-                </button>
-              ))}
-            </div>
-            <p className="champ-admin__aide">
-              {equipe.length === 0
-                ? 'Personne : la tâche reste ouverte, les bénévoles la demanderont.'
-                : `${equipe.length} bénévole(s) affecté(s) dès la création — ils en sont prévenus.`}
-            </p>
-          </div>
+          <>
+            <ChampSelection
+              label="Affecter des bénévoles"
+              id="tache-affectation"
+              vide="Ajouter un bénévole"
+              options={benevoles
+                .filter((benevole) => !equipe.includes(benevole.benevoleId))
+                .map((benevole) => ({
+                  valeur: benevole.benevoleId,
+                  label: `${benevole.prenom ?? ''} ${benevole.nom ?? ''}`.trim() || benevole.email,
+                }))}
+              value=""
+              onChange={(e) => ajouterBenevole(e.target.value)}
+              aide={
+                equipe.length === 0
+                  ? 'Personne : la tâche reste ouverte, les bénévoles la demanderont.'
+                  : `${equipe.length} bénévole(s) affecté(s) dès la création — ils en sont prévenus.`
+              }
+              disabled={envoi}
+              pleineLargeur
+            />
+
+            {equipe.length > 0 && (
+              <div className="champ-admin champ-admin--pleine-largeur">
+                <ul className="choix-retirables" aria-label="Bénévoles affectés">
+                  {equipe.map((benevoleId) => (
+                    <li key={benevoleId}>
+                      <span className="choix-retirable choix-retirable--personne">
+                        {nomBenevole(benevoleId)}
+                        <button
+                          type="button"
+                          className="choix-retirable__croix"
+                          onClick={() => retirerBenevole(benevoleId)}
+                          aria-label={`Retirer ${nomBenevole(benevoleId)}`}
+                          disabled={envoi}
+                        >
+                          <IconeCroix />
+                        </button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
         )}
       </div>
     </ModaleFormulaire>

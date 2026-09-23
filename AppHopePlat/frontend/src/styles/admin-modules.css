@@ -1810,3 +1810,87 @@
   font-weight: 600;
   color: var(--etat-rouge);
 }
+
+/* --- Ce qui a ete choisi dans une liste deroulante --- */
+
+/*
+ * Le choix se fait dans la liste, comme pour le projet ; ce qui est
+ * retenu s'affiche juste dessous, chacun avec sa croix. On voit alors
+ * d'un coup ce qu'on a demande, et on en retire un sans rouvrir la
+ * liste.
+ */
+.choix-retirables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.choix-retirable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 5px 5px 13px;
+  border-radius: 999px;
+  background-color: #ece7fb;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4a4479;
+  animation: choix-arrive 280ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* Une personne, ce n'est pas une competence : la teinte les distingue. */
+.choix-retirable--personne {
+  background-color: #e2f4ea;
+  color: #216b4a;
+}
+
+.choix-retirable__croix {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: background-color 0.16s ease-out, opacity 0.16s ease-out;
+}
+
+.choix-retirable__croix:hover:not(:disabled),
+.choix-retirable__croix:focus-visible {
+  background-color: rgba(255, 255, 255, 0.7);
+  opacity: 1;
+}
+
+.choix-retirable__croix svg {
+  width: 13px;
+  height: 13px;
+}
+
+@keyframes choix-arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choix-retirable {
+    animation: none;
+  }
+
+  .choix-retirable__croix {
+    transition: none;
+  }
+}

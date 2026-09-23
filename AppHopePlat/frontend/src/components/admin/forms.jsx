@@ -72,6 +72,10 @@ export function ChampSelection({
   label,
   id,
   options = [],
+  // Des options rangees par famille : [{ libelle, options }]. Le
+  // navigateur les presente en sections, dans la liste comme dans la
+  // roue d un telephone.
+  groupes = null,
   vide,
   obligatoire,
   aide,
@@ -90,11 +94,21 @@ export function ChampSelection({
     >
       <select id={id} name={id} {...reste}>
         {vide !== undefined && <option value="">{vide}</option>}
-        {options.map((option) => (
-          <option key={option.valeur} value={option.valeur}>
-            {option.label}
-          </option>
-        ))}
+        {groupes
+          ? groupes.map((groupe) => (
+              <optgroup key={groupe.libelle} label={groupe.libelle}>
+                {groupe.options.map((option) => (
+                  <option key={option.valeur} value={option.valeur}>
+                    {option.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : options.map((option) => (
+              <option key={option.valeur} value={option.valeur}>
+                {option.label}
+              </option>
+            ))}
       </select>
     </Champ>
   );
