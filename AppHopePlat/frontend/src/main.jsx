@@ -31,6 +31,7 @@ import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';
 import './styles/feuille.css';
 import './styles/parcours-donateur.css';
+import './styles/parcours-benevole.css';
 import './styles/choix-page.css';
 
 createRoot(document.getElementById('root')).render(

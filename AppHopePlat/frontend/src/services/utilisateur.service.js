@@ -59,7 +59,15 @@ export async function typesUtilisateur() {
  */
 export async function inscrire(corps) {
   const { data } = await apiAuth.post('/auth/inscription', corps);
-  return { message: data.message, aValider: data.aValider, utilisateur: data.utilisateur };
+  return {
+    message: data.message,
+    aValider: data.aValider,
+    utilisateur: data.utilisateur,
+    // Un benevole recoit de quoi remplir sa fiche tout de suite : un
+    // jeton limite a ce formulaire, et l'adresse ou aller.
+    jetonCompletion: data.jetonCompletion ?? null,
+    aCompleter: data.aCompleter ?? null,
+  };
 }
 
 /**

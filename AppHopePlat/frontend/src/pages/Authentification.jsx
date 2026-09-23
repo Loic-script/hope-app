@@ -14,6 +14,7 @@ import {
 } from '../components/HopeIcons.jsx';
 import { useChargement } from '../hooks/useChargement.js';
 import { messageErreur } from '../services/api.js';
+import { CLE_JETON_BENEVOLE, ecrireStockage } from '../services/apiBenevole.js';
 import { focusAutomatique } from '../utils/ecran.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 
@@ -444,12 +445,23 @@ function Inscription({ types, navigate, onInscrit }) {
     enCours.current = true;
     setEnvoi(true);
     try {
-      const { message } = await utilisateurService.inscrire({
+      const { message, jetonCompletion, aCompleter } = await utilisateurService.inscrire({
         email: champs.email.trim(),
         typeUtilisateur: champs.typeUtilisateur,
         motDePasse: champs.motDePasse,
         confirmation: champs.confirmation,
       });
+
+      /*
+       * Un benevole enchaine sur sa fiche : competences, disponibilites,
+       * pays. Son compte attend toujours la validation de HOPE, et le
+       * jeton remis ici ne vaut que pour ce formulaire.
+       */
+      if (jetonCompletion && aCompleter) {
+        ecrireStockage(CLE_JETON_BENEVOLE, jetonCompletion);
+        navigate(aCompleter, { replace: true });
+        return;
+      }
       /*
        * Le compte d'un donateur s'ouvre sans attendre HOPE : il entre
        * donc aussitot, et son parcours d'accueil commence. Lui faire

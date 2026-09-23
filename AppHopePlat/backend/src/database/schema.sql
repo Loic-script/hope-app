@@ -1874,3 +1874,17 @@ ALTER TABLE notifications
 ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_valide;
 ALTER TABLE notifications ADD CONSTRAINT notifications_type_valide CHECK (
   type IN ('DONATION', 'MESSAGE', 'PROJECT_COMPLETED', 'INVESTMENT', 'ACCOUNT_CREATED'));
+
+/*
+ * Le pays d'origine d'un benevole.
+ *
+ * Le formulaire d'accueil le demande, comme celui du donateur : la
+ * diaspora aide depuis l'etranger, et l'equipe doit savoir d'ou. Meme
+ * forme que chez le donateur : le code ISO a deux lettres, et non un
+ * nom libre qui s'ecrirait de dix facons.
+ */
+ALTER TABLE benevole ADD COLUMN IF NOT EXISTS pays CHAR(2);
+
+ALTER TABLE benevole DROP CONSTRAINT IF EXISTS benevole_pays_iso;
+ALTER TABLE benevole ADD CONSTRAINT benevole_pays_iso CHECK (
+  pays IS NULL OR pays ~ '^[A-Z]{2}$');

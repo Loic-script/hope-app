@@ -52,6 +52,7 @@ function versProfilPublic(fiche) {
     dateDeNaissance: fiche.dateDeNaissance,
     age: calculerAge(fiche.dateDeNaissance),
     profession: fiche.profession,
+    pays: fiche.pays ?? null,
     competences: fiche.competences ?? [],
     langues: fiche.langues ?? [],
     disponibilites: fiche.disponibilites ?? {},
@@ -213,12 +214,29 @@ function numeroDejaPris(erreur) {
   return erreur?.code === '23505' && String(erreur.constraint ?? '').includes('telephone');
 }
 
+/**
+ * Le pays d'origine, en code ISO a deux lettres.
+ *
+ * Meme forme que chez le donateur : "MG", jamais "Madagascar" ecrit de
+ * dix facons. Une chaine vide efface le choix.
+ */
+function paysIso(valeur) {
+  if (valeur === undefined) return undefined;
+  const code = String(valeur ?? '').trim().toUpperCase();
+  if (code === '') return null;
+  if (!/^[A-Z]{2}$/.test(code)) {
+    throw new ErreurValidation('Choisissez votre pays d’origine.', { pays: 'Pays inconnu' });
+  }
+  return code;
+}
+
 export async function mettreAJour(utilisateurId, corps = {}) {
   const fiche = await profileRepository.garantir(utilisateurId);
   if (!fiche) throw new ErreurIntrouvable('Le profil bénévole', utilisateurId);
 
   const colonnesFiche = {
     profession: texte(corps.profession, 'profession', 120),
+    pays: paysIso(corps.pays),
     competences: listeDeTextes(corps.competences, 'competences'),
     langues: listeDeTextes(corps.langues, 'langues'),
     disponibilites: disponibilitesValides(corps.disponibilites),
@@ -331,9 +349,22 @@ export async function completer(utilisateurId, corps = {}) {
   const profil = await mettreAJour(utilisateurId, corps);
   await volunteerRepository.marquerProfilComplete(utilisateurId);
 
+  /*
+   * Un benevole attend la validation de HOPE : sa fiche remplie, il ne
+   * rentre pas encore. La reponse dit lequel des deux ecrans montrer --
+   * l'espace, ou la page d'attente -- plutot que de laisser le client
+   * le deviner.
+   */
+  const compte = await volunteerRepository.trouverParId(utilisateurId);
+  const enAttente = compte?.statut === 'en_attente';
+
   return {
     ...profil,
     profilComplete: true,
-    message: 'Votre profil est enregistré. Bienvenue dans l’espace bénévole.',
+    statut: compte?.statut ?? 'en_attente',
+    enAttente,
+    message: enAttente
+      ? 'Votre fiche est enregistrée. L’équipe HOPE l’examine et active votre compte.'
+      : 'Votre profil est enregistré. Bienvenue dans l’espace bénévole.',
   };
 }

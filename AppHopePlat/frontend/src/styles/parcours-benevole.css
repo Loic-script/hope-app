@@ -1,0 +1,401 @@
+/* ============================================================
+   HOPE - La fiche d'accueil du benevole
+
+   Elle emprunte sa mise en page au parcours du donateur
+   (parcours-donateur.css) : meme colonne, meme progression, memes
+   champs. Ne sont ecrits ici que ses trois ecrans propres -- les
+   competences a cocher, la grille des disponibilites, et l'attente de
+   la validation.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Ce que vous savez faire
+   ------------------------------------------------------------ */
+
+.savoirs {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/*
+ * Les familles arrivent l'une apres l'autre : l'oeil suit la liste
+ * plutot que de la recevoir d'un bloc. Au-dela de la cinquieme, le
+ * decalage ne dirait plus rien.
+ */
+.savoirs__famille {
+  animation: savoirs-entree 0.45s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  animation-delay: calc(var(--rang, 0) * 70ms);
+}
+
+.savoirs__titre {
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hope-violet-lisible);
+}
+
+.savoirs__liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.savoirs__famille--langues {
+  margin-top: 4px;
+}
+
+/* Le compte des choix : il change, donc il se lit -- c'est une region
+   "polie", annoncee sans couper la lecture en cours. */
+.savoirs__compte {
+  margin-top: 2px;
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+  transition: color 0.2s ease-out;
+}
+
+.savoirs__compte--rempli {
+  font-weight: 600;
+  color: var(--hope-violet-lisible);
+}
+
+/* --- La puce d'une competence --- */
+
+.puce-savoir {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-height: 44px;
+  padding: 9px 15px;
+  border: 1.5px solid var(--hope-bordure);
+  border-radius: 999px;
+  background-color: #ffffff;
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--hope-texte);
+  cursor: pointer;
+  transition: border-color 0.18s ease-out, background-color 0.18s ease-out,
+    color 0.18s ease-out, transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.puce-savoir:hover:not(:disabled) {
+  border-color: var(--hope-violet);
+  transform: translateY(-1px);
+}
+
+.puce-savoir:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.puce-savoir:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/*
+ * Choisie : la puce se remplit et la coche apparait en glissant. Elle
+ * pousse le libelle plutot que de le recouvrir -- la largeur change,
+ * mais le mot reste entier.
+ */
+.puce-savoir--actif {
+  border-color: var(--hope-violet);
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.puce-savoir__coche {
+  display: grid;
+  place-items: center;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: width 0.22s cubic-bezier(0.22, 0.8, 0.3, 1), opacity 0.16s ease-out,
+    margin-right 0.22s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.puce-savoir--actif .puce-savoir__coche {
+  width: 15px;
+  margin-right: 8px;
+  opacity: 1;
+}
+
+.puce-savoir__coche svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+@keyframes savoirs-entree {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   Les disponibilites
+   ------------------------------------------------------------ */
+
+.dispo-parcours {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dispo-parcours__jour {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--hope-bordure);
+  border-radius: 14px;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
+  animation: savoirs-entree 0.4s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  animation-delay: calc(var(--rang, 0) * 45ms);
+}
+
+/* Un jour ou l'on est libre se voit d'un coup d'oeil dans la colonne. */
+.dispo-parcours__jour--pris {
+  border-color: var(--hope-violet);
+  background-color: #f7f5fe;
+}
+
+.dispo-parcours__nom {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--hope-texte);
+}
+
+.dispo-parcours__moments {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dispo-parcours__moment {
+  min-height: 44px;
+  padding: 8px 6px;
+  border: 1.5px solid var(--hope-bordure);
+  border-radius: 10px;
+  background-color: #ffffff;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+  transition: border-color 0.16s ease-out, background-color 0.16s ease-out,
+    color 0.16s ease-out, transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Le survol ne touche pas un creneau deja choisi : sa teinte violette
+   sur fond violet ne se lirait plus. */
+.dispo-parcours__moment:hover:not(:disabled):not(.dispo-parcours__moment--actif) {
+  border-color: var(--hope-violet);
+  color: var(--hope-violet-lisible);
+}
+
+.dispo-parcours__moment--actif {
+  border-color: var(--hope-violet);
+  background-color: var(--hope-violet);
+  font-weight: 600;
+  color: #ffffff;
+  transform: scale(1.02);
+}
+
+.dispo-parcours__moment:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Sur un telephone, le nom du jour passe au-dessus de ses creneaux :
+   quatre boutons lisibles valent mieux qu'une colonne ecrasee. */
+@media (max-width: 560px) {
+  .dispo-parcours__jour {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .dispo-parcours__moments {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------
+   Une note de bas d'etape
+   ------------------------------------------------------------ */
+
+.parcours__note {
+  margin-top: 2px;
+  padding-left: 13px;
+  border-left: 3px solid var(--hope-bordure);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-faible);
+}
+
+/* ------------------------------------------------------------
+   L'attente de la validation
+   ------------------------------------------------------------ */
+
+.attente-benevole {
+  margin-top: 36px;
+  text-align: center;
+  animation: attente-entree 0.6s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+/*
+ * Un sablier plutot qu'une coche : la fiche est bien partie, mais rien
+ * n'est encore ouvert. L'anneau respire lentement -- l'attente est
+ * calme, elle n'appelle aucune action.
+ */
+.attente-benevole__sceau {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  background-color: #ece9f8;
+  color: var(--hope-violet);
+}
+
+.attente-benevole__sceau::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border: 2px solid var(--hope-violet);
+  border-radius: 50%;
+  opacity: 0.25;
+  animation: attente-respire 2.8s ease-in-out infinite;
+}
+
+.attente-benevole__sceau svg {
+  width: 36px;
+  height: 36px;
+}
+
+.attente-benevole__titre {
+  font-size: clamp(25px, 6vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--hope-texte);
+}
+
+.attente-benevole__titre:focus-visible {
+  outline: 3px solid var(--hope-violet);
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+
+.attente-benevole__message {
+  margin: 12px auto 0;
+  max-width: 46ch;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+/* Ce qui va se passer, dans l'ordre : l'attente devient un chemin. */
+.attente-benevole__suite {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 28px auto 0;
+  padding: 0;
+  max-width: 44ch;
+  list-style: none;
+  text-align: left;
+}
+
+.attente-benevole__suite li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--hope-texte);
+  animation: savoirs-entree 0.45s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.attente-benevole__suite li:nth-child(1) { animation-delay: 180ms; }
+.attente-benevole__suite li:nth-child(2) { animation-delay: 280ms; }
+.attente-benevole__suite li:nth-child(3) { animation-delay: 380ms; }
+
+.attente-benevole__suite span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--hope-jaune);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--hope-violet-lisible);
+}
+
+.attente-benevole__lien {
+  display: inline-flex;
+  margin-top: 30px;
+  text-decoration: none;
+}
+
+@keyframes attente-entree {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes attente-respire {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.08;
+  }
+}
+
+/* ------------------------------------------------------------
+   Moins de mouvement
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .savoirs__famille,
+  .dispo-parcours__jour,
+  .attente-benevole,
+  .attente-benevole__suite li {
+    animation: none;
+  }
+
+  .attente-benevole__sceau::after {
+    animation: none;
+  }
+
+  .puce-savoir,
+  .puce-savoir__coche,
+  .dispo-parcours__moment {
+    transition: none;
+  }
+
+  .puce-savoir:hover:not(:disabled),
+  .dispo-parcours__moment--actif,
+  .dispo-parcours__moment:active:not(:disabled) {
+    transform: none;
+  }
+}

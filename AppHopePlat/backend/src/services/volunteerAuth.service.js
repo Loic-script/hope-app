@@ -97,6 +97,34 @@ function signerJeton(compte) {
   );
 }
 
+/** La portee d'un jeton qui ne sert qu'a remplir sa fiche. */
+export const PORTEE_COMPLETION = 'completion';
+
+/**
+ * Le jeton remis a l'inscription d'un benevole.
+ *
+ * Son compte attend la validation de HOPE : il n'ouvre donc aucun ecran
+ * de l'espace. Mais l'equipe a besoin de sa fiche -- competences,
+ * disponibilites, pays -- justement pour decider. Ce jeton n'autorise
+ * que cela : la marque "portee" le distingue, le verrou de l'espace le
+ * refuse, et seule la route de completion l'accepte.
+ *
+ * Il vit deux heures : le temps de remplir un formulaire, pas celui
+ * d'oublier un onglet ouvert.
+ */
+export function signerJetonCompletion(compte) {
+  return jwt.sign(
+    { utilisateurId: compte.id, email: compte.email, portee: PORTEE_COMPLETION },
+    config.jwt.secret,
+    {
+      subject: String(compte.id),
+      expiresIn: '2h',
+      issuer: 'hope-api',
+      audience: AUDIENCE,
+    }
+  );
+}
+
 /**
  * Inscription d'un benevole.
  *
@@ -239,6 +267,33 @@ export async function recupererBenevoleAuthentifie(utilisateurId) {
   }
   if (compte.statut !== 'actif') {
     throw new ErreurAuthentification('Ce compte n’est plus actif.', 'COMPTE_INACTIF');
+  }
+  return versBenevolePublic(compte);
+}
+
+/**
+ * Le compte qui remplit sa fiche, juste apres l'inscription.
+ *
+ * Il attend encore la validation de HOPE : le controle de statut est
+ * donc plus large qu'ailleurs -- "en attente" passe, "suspendu" non. La
+ * fiche une fois remplie, le jeton ne sert plus a rien : un compte deja
+ * complet est refuse, pour qu'un jeton oublie ne puisse pas la
+ * reecrire.
+ */
+export async function recupererBenevoleACompleter(utilisateurId) {
+  const compte = await volunteerRepository.trouverParId(utilisateurId);
+
+  if (!compte) {
+    throw new ErreurAuthentification('Compte introuvable.', 'COMPTE_INTROUVABLE');
+  }
+  if (!['actif', 'en_attente'].includes(compte.statut)) {
+    throw new ErreurAuthentification('Ce compte n’est plus actif.', 'COMPTE_INACTIF');
+  }
+  if (compte.profilComplete) {
+    throw new ErreurAuthentification(
+      'Votre fiche est déjà enregistrée. Connectez-vous pour la modifier.',
+      'PROFIL_DEJA_COMPLET'
+    );
   }
   return versBenevolePublic(compte);
 }

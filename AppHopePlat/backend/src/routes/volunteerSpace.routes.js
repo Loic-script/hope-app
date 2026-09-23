@@ -11,9 +11,25 @@ import { Router } from 'express';
 
 import { actualites, dons, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
 import { televerserMedia, televerserPreuve } from '../middleware/upload.middleware.js';
-import { authenticateVolunteer } from '../middleware/volunteerAuth.middleware.js';
+import {
+  authenticateVolunteer,
+  authenticateVolunteerACompleter,
+} from '../middleware/volunteerAuth.middleware.js';
 
 const router = Router();
+
+/*
+ * SEULE EXCEPTION au verrou pose juste en dessous.
+ *
+ * Remplir sa fiche se fait avant la validation de HOPE : c'est elle qui
+ * permet de decider. La route a donc son propre verrou, qui accepte un
+ * compte en attente -- mais uniquement avec le jeton limite remis a
+ * l'inscription, et uniquement tant que la fiche n'est pas enregistree.
+ *
+ * Elle est declaree avant "router.use" pour etre atteinte en premier :
+ * tout ce qui suit reste protege par defaut.
+ */
+router.post('/profil/completer', authenticateVolunteerACompleter, profil.completer);
 
 router.use(authenticateVolunteer);
 
@@ -58,7 +74,6 @@ router.get('/taches/:id/fichiers/:fileId', taches.fichier);
 // --- Profil et journal ------------------------------------------------
 // Completion apres la premiere connexion : meme contenu que la mise a
 // jour, plus le marqueur qui evite de le redemander.
-router.post('/profil/completer', profil.completer);
 router.get('/profil', profil.recuperer);
 router.patch('/profil', profil.mettreAJour);
 router.get('/journal', profil.journal);

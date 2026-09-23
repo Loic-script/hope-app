@@ -1,8 +1,18 @@
-import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { isValidPhoneNumber, parsePhoneNumberFromString } from 'libphonenumber-js';
 
 import ChoixSurPage, { parLettre } from '../../components/ChoixSurPage.jsx';
+import {
+  Champ as ChampParcours,
+  commeUneListe,
+  GROUPES_INDICATIF,
+  GROUPES_PAYS,
+  numeroAffiche,
+  numeroInternational,
+  paysDuNumero,
+  RayonsDecor,
+  SelecteurIndicatif as SelecteurIndicatifParcours,
+} from '../../components/parcours/champs.jsx';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
   IconeChevronBas,
@@ -60,33 +70,6 @@ const NOMBRE_ETAPES = 5;
  * sans "+". Sur ordinateur, les listes natives restent.
  */
 
-/**
- * Les pays sur la page de choix : Madagascar en suggestion, puis tous les
- * pays -- Madagascar compris -- ranges par lettre, chacun avec son
- * drapeau. Pour l'indicatif, chaque ligne porte aussi "+261", et se
- * cherche par "261" ou "+261".
- */
-function groupesDePays(avecIndicatif) {
-  const options = PAYS.map((pays) => {
-    const indicatif = indicatifDe(pays.code);
-    return {
-      valeur: pays.code,
-      libelle: pays.nom,
-      drapeau: pays.code,
-      detail: avecIndicatif ? indicatif : undefined,
-      motsCles: [nomAnglais(pays.code), ...(avecIndicatif ? [indicatif.slice(1)] : [])],
-    };
-  });
-  const alphabetique = [...options].sort((a, b) => a.libelle.localeCompare(b.libelle, 'fr'));
-  return [
-    { libelle: 'Suggestion', options: options.filter((option) => option.valeur === PAYS_PAR_DEFAUT) },
-    ...parLettre(alphabetique),
-  ];
-}
-
-const GROUPES_PAYS = groupesDePays(false);
-const GROUPES_INDICATIF = groupesDePays(true);
-
 const nomsDeLangueEnAnglais =
   typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
     ? new Intl.DisplayNames(['en'], { type: 'language' })
@@ -110,14 +93,6 @@ function deuxNomsDeLangue(libelle) {
   const trouve = /^(.+?) \((.+)\)$/.exec(libelle ?? '');
   return trouve ? [trouve[1], trouve[2]] : [libelle, undefined];
 }
-
-/**
- * Un choix fait sur la page de choix, rendu comme un changement de liste
- * native : les gestionnaires du formulaire n'ont pas a distinguer l'un de
- * l'autre.
- */
-const commeUneListe = (gestionnaire) => (valeur) =>
-  gestionnaire({ target: { value: valeur, tagName: 'SELECT' } });
 
 /**
  * Le parcours d'accueil du donateur.
@@ -273,28 +248,6 @@ const OBLIGATOIRES = ['nom', 'prenom', 'adresse', 'ville', 'pays', 'telephone'];
  * choisi, international sinon. Le serveur, lui, le garde au format
  * +261...
  */
-function numeroAffiche(telephone, indicatif) {
-  const numero = parsePhoneNumberFromString(telephone ?? '');
-  if (!numero) return telephone ?? '';
-  return numero.country === (indicatif || PAYS_PAR_DEFAUT)
-    ? numero.formatNational()
-    : numero.formatInternational();
-}
-
-/** Le numero saisi, au format international, ou null s'il ne vaut rien. */
-function numeroInternational(saisie, indicatif) {
-  const texte = String(saisie ?? '').trim();
-  if (texte === '') return null;
-  const code = indicatif || PAYS_PAR_DEFAUT;
-  if (!isValidPhoneNumber(texte, code)) return null;
-  return parsePhoneNumberFromString(texte, code)?.number ?? null;
-}
-
-/** Le pays d'un numero deja enregistre ("+33612..." -> "FR"), s'il se deduit. */
-function paysDuNumero(telephone) {
-  return parsePhoneNumberFromString(telephone ?? '')?.country ?? null;
-}
-
 /** Les erreurs du formulaire, champ par champ. */
 function verifier(champs) {
   const erreurs = {};
@@ -1839,137 +1792,13 @@ function EntetePas({ etape, titre, accroche }) {
 }
 
 /**
- * Un champ : libelle, icone, saisie, erreur.
- *
- * La saisie arrive en enfant ; ce composant lui donne son id, et la
- * relie a son message d'erreur pour les lecteurs d'ecran.
+ * Les deux pieces communes, avec le prefixe d'identifiant du donateur :
+ * les tests et les libelles visent "donateur-nom", "donateur-indicatif".
  */
-function Champ({
-  id,
-  libelle,
-  facultatif = false,
-  erreur,
-  aide,
-  Icone,
-  prefixe,
-  liste = false,
-  children,
-}) {
-  const identifiant = `donateur-${id}`;
-  const idErreur = `${identifiant}-erreur`;
-  const idAide = `${identifiant}-aide`;
-  const decrit = [erreur ? idErreur : null, aide && !erreur ? idAide : null]
-    .filter(Boolean)
-    .join(' ');
-  const saisie = cloneElement(children, {
-    id: identifiant,
-    name: id,
-    className: 'parcours__saisie',
-    'aria-invalid': Boolean(erreur),
-    'aria-describedby': decrit || undefined,
-    'aria-required': facultatif ? undefined : true,
-  });
-
-  return (
-    <div className={`parcours__champ${erreur ? ' parcours__champ--erreur' : ''}`}>
-      <label className="parcours__libelle" htmlFor={identifiant}>
-        {libelle}
-        {facultatif && <span className="parcours__facultatif">facultatif</span>}
-      </label>
-      <div className={`parcours__boite${prefixe ? ' parcours__boite--prefixe' : ''}`}>
-        <Icone className="parcours__icone" />
-        {prefixe && <div className="parcours__prefixe">{prefixe}</div>}
-        {saisie}
-        {liste && <IconeChevronBas className="parcours__chevron" />}
-      </div>
-      {erreur ? (
-        <p className="parcours__erreur" id={idErreur}>
-          {erreur}
-        </p>
-      ) : (
-        aide && (
-          <p className="parcours__aide" id={idAide}>
-            {aide}
-          </p>
-        )
-      )}
-    </div>
-  );
+function Champ(proprietes) {
+  return <ChampParcours prefixeId="donateur" {...proprietes} />;
 }
 
-/**
- * L'indicatif du telephone : tous les pays, Madagascar en tete.
- *
- * Replie, il ne montre que "+261" : le nom du pays ne tiendrait pas
- * devant le numero. Ouvert, c'est la liste native du systeme -- "Pays
- * (+indicatif)" -- que le clavier et les lecteurs d'ecran savent
- * parcourir, et qui s'ouvre en roue sur un telephone. Elle est posee,
- * transparente, sur l'affichage : c'est elle que l'on touche.
- */
-function SelecteurIndicatif({ valeur, onChange, disabled, surPage = false }) {
-  // Sur telephone : la meme case "+261", qui ouvre la page de choix.
-  if (surPage) {
-    return (
-      <>
-        <span className="parcours__indicatif" aria-hidden="true">
-          {indicatifDe(valeur)}
-          <IconeChevronBas className="parcours__indicatif-chevron" />
-        </span>
-        <ChoixSurPage
-          id="donateur-indicatif"
-          className="parcours__indicatif-liste"
-          nom="Indicatif téléphonique"
-          aria-label={`Indicatif téléphonique : ${nomDuPays(valeur || PAYS_PAR_DEFAUT)} ${indicatifDe(valeur)}`}
-          valeur={valeur}
-          groupes={GROUPES_INDICATIF}
-          indiceRecherche="Pays ou indicatif, par ex. +261…"
-          onChoisir={commeUneListe(onChange)}
-          disabled={disabled}
-          rendu={() => null}
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <span className="parcours__indicatif" aria-hidden="true">
-        {indicatifDe(valeur)}
-        <IconeChevronBas className="parcours__indicatif-chevron" />
-      </span>
-      <select
-        id="donateur-indicatif"
-        className="parcours__indicatif-liste"
-        value={valeur}
-        onChange={onChange}
-        disabled={disabled}
-        aria-label="Indicatif téléphonique"
-      >
-        {PAYS.map((pays) => (
-          <option key={pays.code} value={pays.code}>
-            {pays.nom} ({indicatifDe(pays.code)})
-          </option>
-        ))}
-      </select>
-    </>
-  );
-}
-
-/**
- * Les rayons du soleil HOPE, en filigrane dans les coins bas de la page.
- * Purement decoratifs.
- */
-function RayonsDecor({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 240 240" aria-hidden="true" focusable="false">
-      <circle cx="120" cy="240" r="62" />
-      <g strokeLinecap="round" strokeWidth="22">
-        <line x1="120" y1="150" x2="120" y2="96" />
-        <line x1="62" y1="176" x2="30" y2="140" />
-        <line x1="178" y1="176" x2="210" y2="140" />
-        <line x1="40" y1="228" x2="4" y2="214" />
-        <line x1="200" y1="228" x2="236" y2="214" />
-      </g>
-    </svg>
-  );
+function SelecteurIndicatif(proprietes) {
+  return <SelecteurIndicatifParcours id="donateur-indicatif" {...proprietes} />;
 }

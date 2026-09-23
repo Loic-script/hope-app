@@ -32,6 +32,7 @@ import { config } from '../config/env.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { garantirOrganisation } from './funderAuth.service.js';
 import { signalerNouveauCompte } from './notification.service.js';
+import { signerJetonCompletion } from './volunteerAuth.service.js';
 import {
   AUDIENCE_PAR_TYPE,
   EMETTEUR,
@@ -232,10 +233,21 @@ export async function inscrire(corps = {}) {
     return volunteerRepository.trouverParId(cree.id, client);
   });
 
+  /*
+   * Le benevole enchaine sur sa fiche : competences, disponibilites,
+   * pays. C'est elle qui permet a l'equipe de decider, et la demander
+   * apres la validation ferait attendre tout le monde pour rien.
+   *
+   * Son compte n'est pas ouvert pour autant : le jeton remis ici ne vaut
+   * que pour cette fiche (voir signerJetonCompletion).
+   */
+  const jetonCompletion = type === 'benevole' ? signerJetonCompletion(compte) : null;
+
   return {
     utilisateur: versUtilisateurPublic(compte, type),
     aValider,
     espace: ESPACE_PAR_TYPE[type],
+    ...(jetonCompletion ? { jetonCompletion, aCompleter: '/benevole/completer-profil' } : {}),
   };
 }
 

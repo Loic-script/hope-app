@@ -28,9 +28,13 @@ export async function types(_req, res) {
 /**
  * POST /api/auth/inscription
  *
- * Repond 201 sans jeton. Un donateur peut se connecter aussitot, un
- * benevole ou un bailleur attend la validation de HOPE : dans les deux
- * cas c'est l'ecran de connexion qui prend la suite.
+ * Repond 201. Un donateur peut se connecter aussitot ; un bailleur
+ * attend la validation de HOPE, et c'est l'ecran de connexion qui prend
+ * la suite.
+ *
+ * Un benevole, lui, enchaine sur sa fiche : la reponse porte alors un
+ * jeton limite a ce seul formulaire, et l'adresse ou aller. Son compte
+ * attend toujours la validation -- la fiche sert justement a decider.
  */
 export async function inscription(req, res, next) {
   try {
@@ -38,11 +42,16 @@ export async function inscription(req, res, next) {
 
     res.status(201).json({
       success: true,
-      message: resultat.aValider
-        ? 'Votre inscription est enregistrée. L’équipe HOPE validera votre compte avant votre première connexion.'
-        : 'Votre compte est créé. Vous pouvez vous connecter dès maintenant.',
+      message: resultat.jetonCompletion
+        ? 'Votre compte est créé. Complétez votre fiche : l’équipe HOPE l’examinera pour activer votre accès.'
+        : resultat.aValider
+          ? 'Votre inscription est enregistrée. L’équipe HOPE validera votre compte avant votre première connexion.'
+          : 'Votre compte est créé. Vous pouvez vous connecter dès maintenant.',
       aValider: resultat.aValider,
       utilisateur: resultat.utilisateur,
+      ...(resultat.jetonCompletion
+        ? { jetonCompletion: resultat.jetonCompletion, aCompleter: resultat.aCompleter }
+        : {}),
     });
   } catch (erreur) {
     next(erreur);

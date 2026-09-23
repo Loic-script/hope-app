@@ -181,11 +181,15 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      <Route element={<RequireBenevole />}>
-        {/* Hors de la coquille a onglets : on remplit sa fiche avant
-            d'entrer dans l'espace. */}
-        <Route path="/benevole/completer-profil" element={<CompleterProfil />} />
+      {/*
+        La fiche du benevole se remplit AVANT que HOPE ne valide le
+        compte : c'est elle qui permet de decider. La route est donc hors
+        de la garde de l'espace -- le jeton limite remis a l'inscription
+        n'ouvre rien d'autre, et le serveur le verifie.
+      */}
+      <Route path="/benevole/completer-profil" element={<CompleterProfil />} />
 
+      <Route element={<RequireBenevole />}>
         <Route element={<BenevoleLayout />}>
           <Route path="/benevole" element={<VueDensemble />} />
           {/* L'entree de l'espace : ce que HOPE mene, puis les taches
