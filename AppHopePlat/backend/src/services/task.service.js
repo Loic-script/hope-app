@@ -18,6 +18,7 @@ import * as espaceRepository from '../repositories/espace.repository.js';
 import * as profileRepository from '../repositories/volunteerProfile.repository.js';
 import * as taskRepository from '../repositories/task.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
+import { signalerDemandeDeTache, signalerTacheLivree } from './notification.service.js';
 
 const STATUTS = ['a_faire', 'en_cours', 'livree'];
 
@@ -109,6 +110,7 @@ export async function creerPourProjet(projetId, corps = {}) {
   const titre = String(corps.titre ?? '').trim();
   const description = String(corps.description ?? '').trim();
   const echeance = String(corps.echeance ?? '').trim();
+  const competencesRequises = competences(corps.competencesRequises);
 
   const details = {};
   if (titre === '') details.titre = 'Champ obligatoire';
@@ -125,7 +127,43 @@ export async function creerPourProjet(projetId, corps = {}) {
     titre,
     description: description === '' ? null : description,
     echeance: echeance === '' ? null : echeance,
+    competencesRequises,
   });
+}
+
+/** Comment nommer un benevole dans une notification. */
+function nomDuBenevole(fiche) {
+  return `${fiche.prenom ?? ''} ${fiche.nom ?? ''}`.trim() || fiche.email || 'Un bénévole';
+}
+
+/**
+ * Ce qu'une tache demande de savoir faire.
+ *
+ * Les memes intitules que la fiche du benevole : ce sont eux qui
+ * permettront de rapprocher l'une de l'autre. Les doublons et les
+ * blancs tombent, et la liste reste courte -- une tache qui exige dix
+ * competences n'en exige aucune.
+ */
+function competences(valeur) {
+  if (valeur === undefined || valeur === null) return [];
+  if (!Array.isArray(valeur)) {
+    throw new ErreurValidation('Les compétences requises doivent être une liste.', {
+      competencesRequises: 'Liste attendue',
+    });
+  }
+
+  const propres = [...new Set(valeur.map((v) => String(v ?? '').trim()).filter(Boolean))];
+  if (propres.some((v) => v.length > 60)) {
+    throw new ErreurValidation('Chaque compétence fait au plus 60 caractères.', {
+      competencesRequises: '60 caractères au maximum',
+    });
+  }
+  if (propres.length > 10) {
+    throw new ErreurValidation('Dix compétences au maximum pour une tâche.', {
+      competencesRequises: 'Dix au maximum',
+    });
+  }
+  return propres;
 }
 
 /**
@@ -352,7 +390,20 @@ export async function demander(id, utilisateurId) {
     }
 
     await taskRepository.demander(tache.id, fiche.id, client);
-    return taskRepository.trouverPourBenevole(tache.id, fiche.id, client);
+    const vue = await taskRepository.trouverPourBenevole(tache.id, fiche.id, client);
+
+    // Une demande qui dort est un benevole qui attend : la cloche le dit.
+    await signalerDemandeDeTache(
+      {
+        qui: nomDuBenevole(fiche),
+        tache: vue.titre,
+        projet: vue.projetNom,
+        tacheId: tache.id,
+      },
+      client
+    );
+
+    return vue;
   });
 }
 
@@ -470,7 +521,19 @@ export async function livrer(id, utilisateurId, fichiers = []) {
       client
     );
     await taskRepository.livrer(tache.id, fiche.id, client);
-    return taskRepository.trouverPourBenevole(tache.id, fiche.id, client);
+    const vue = await taskRepository.trouverPourBenevole(tache.id, fiche.id, client);
+
+    await signalerTacheLivree(
+      {
+        qui: nomDuBenevole(fiche),
+        tache: vue.titre,
+        projet: vue.projetNom,
+        tacheId: tache.id,
+      },
+      client
+    );
+
+    return vue;
   });
 }
 

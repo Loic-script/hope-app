@@ -19,6 +19,9 @@ import { DetailTacheModale, LivraisonModale } from './ModalesTache.jsx';
 export default function MesTaches() {
   const miennes = useChargement(() => service.mesTaches(), []);
   const libres = useChargement(() => service.tachesLibres(), []);
+  // Sa fiche : elle dit ce qu'il sait faire, et les taches marquent
+  // alors les competences qu'il possede deja.
+  const profil = useChargement(() => service.recupererProfil(), []);
 
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
@@ -49,6 +52,7 @@ export default function MesTaches() {
   const taches = miennes.donnees?.items ?? [];
   const compteurs = miennes.donnees?.counts ?? {};
   const aPrendre = libres.donnees ?? [];
+  const mesCompetences = profil.donnees?.competences ?? [];
 
   return (
     <>
@@ -65,6 +69,7 @@ export default function MesTaches() {
       <div className="colonnes-taches">
         <Colonne
           titre="À prendre"
+          mesCompetences={mesCompetences}
           sousTitre="demandez-la : l’équipe HOPE valide"
           compteur={aPrendre.length}
           vide="Aucune tâche à prendre pour l’instant. Revenez plus tard."
@@ -82,6 +87,7 @@ export default function MesTaches() {
 
         <Colonne
           titre="En cours"
+          mesCompetences={mesCompetences}
           sousTitre="vous faites partie de l’équipe"
           compteur={compteurs.en_cours ?? 0}
           vide="Rien en cours. Prenez une tâche à gauche."
@@ -110,6 +116,7 @@ export default function MesTaches() {
 
         <Colonne
           titre="Livrée"
+          mesCompetences={mesCompetences}
           sousTitre="en attente de validation"
           compteur={compteurs.livree ?? 0}
           vide="Rien de livré pour l’instant."
@@ -174,7 +181,16 @@ export default function MesTaches() {
 }
 
 /** Une colonne du tableau des taches. */
-function Colonne({ titre, sousTitre, compteur, vide, taches, rendreActions, onOuvrir = null }) {
+function Colonne({
+  titre,
+  sousTitre,
+  compteur,
+  vide,
+  taches,
+  rendreActions,
+  onOuvrir = null,
+  mesCompetences = [],
+}) {
   return (
     <section className="colonne-taches">
       <h2 className="colonne-taches__titre">
@@ -192,10 +208,43 @@ function Colonne({ titre, sousTitre, compteur, vide, taches, rendreActions, onOu
             tache={tache}
             actions={rendreActions(tache)}
             onOuvrir={onOuvrir}
+            mesCompetences={mesCompetences}
           />
         ))
       )}
     </section>
+  );
+}
+
+/**
+ * Ce qu'une tache demande de savoir faire.
+ *
+ * L'equipe coche ces intitules a la creation de la tache ; ce sont les
+ * memes que ceux de la fiche du benevole. Celles qu'il possede sont
+ * marquees : il voit d'un coup d'oeil s'il est attendu, au lieu de
+ * lire une description et de se demander.
+ */
+function CompetencesTache({ requises, acquises = [] }) {
+  if (!requises || requises.length === 0) return null;
+
+  const possede = (competence) =>
+    acquises.some((mienne) => mienne.toLowerCase() === competence.toLowerCase());
+
+  return (
+    <p className="tache-competences">
+      <span className="tache-competences__intitule">Expérience requise</span>
+      {requises.map((competence) => (
+        <span
+          className={`tache-competences__puce${
+            possede(competence) ? ' tache-competences__puce--acquise' : ''
+          }`}
+          key={competence}
+        >
+          {competence}
+          {possede(competence) && <span className="sr-only"> — vous l’avez</span>}
+        </span>
+      ))}
+    </p>
   );
 }
 
@@ -207,7 +256,7 @@ function Colonne({ titre, sousTitre, compteur, vide, taches, rendreActions, onOu
  * gardent leur propre clic -- "Prendre cette tache" ne doit pas ouvrir
  * la fenetre au passage.
  */
-function CarteTache({ tache, actions, onOuvrir = null }) {
+function CarteTache({ tache, actions, onOuvrir = null, mesCompetences = [] }) {
   // Une echeance depassee sur une tache non livree merite d'etre vue.
   const enRetard =
     tache.echeance && tache.statut !== 'livree' && new Date(tache.echeance) < new Date();
@@ -230,6 +279,7 @@ function CarteTache({ tache, actions, onOuvrir = null }) {
         )}
       </h3>
       {tache.description && <p className="carte-tache__texte">{tache.description}</p>}
+      <CompetencesTache requises={tache.competencesRequises} acquises={mesCompetences} />
       <EquipeTache tache={tache} className="carte-tache__equipe" />
 
       <div className="carte-tache__pied">

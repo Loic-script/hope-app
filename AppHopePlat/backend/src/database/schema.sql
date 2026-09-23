@@ -1888,3 +1888,27 @@ ALTER TABLE benevole ADD COLUMN IF NOT EXISTS pays CHAR(2);
 ALTER TABLE benevole DROP CONSTRAINT IF EXISTS benevole_pays_iso;
 ALTER TABLE benevole ADD CONSTRAINT benevole_pays_iso CHECK (
   pays IS NULL OR pays ~ '^[A-Z]{2}$');
+
+/*
+ * Ce qu'une tache demande de savoir faire.
+ *
+ * L'equipe ecrivait l'experience requise dans la description, en texte
+ * libre : impossible de rapprocher une tache d'un benevole. Les memes
+ * intitules que la fiche du benevole (competences) permettent de le
+ * faire d'un coup d'oeil -- et demain, automatiquement.
+ */
+ALTER TABLE tache
+  ADD COLUMN IF NOT EXISTS competences_requises TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+
+/*
+ * Une notification peut porter sur une tache : une demande a valider,
+ * une livraison a verifier. Sans ce lien, l'equipe lirait la phrase
+ * sans pouvoir ouvrir la tache dont elle parle.
+ */
+ALTER TABLE notifications
+  ADD COLUMN IF NOT EXISTS tache_id UUID REFERENCES tache(id) ON DELETE CASCADE;
+
+ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_valide;
+ALTER TABLE notifications ADD CONSTRAINT notifications_type_valide CHECK (
+  type IN ('DONATION', 'MESSAGE', 'PROJECT_COMPLETED', 'INVESTMENT', 'ACCOUNT_CREATED',
+           'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF'));

@@ -10,7 +10,7 @@ import { versListe, versObjet } from '../shared/mapping.js';
 
 const COLONNES = `
   n.id, n.type, n.label, n.donation_id, n.message_id, n.project_id,
-  n.donor_id, n.utilisateur_id, n.is_read, n.created_at,
+  n.donor_id, n.utilisateur_id, n.tache_id, n.is_read, n.created_at,
   d.reference AS donation_reference,
   d.amount    AS donation_amount,
   d.currency  AS donation_currency,
@@ -27,7 +27,10 @@ const COLONNES = `
   NULLIF(TRIM(CONCAT_WS(' ', u.prenom, u.nom)), '') AS compte_nom,
   u.email  AS compte_email,
   u.statut AS compte_statut,
-  r.role   AS compte_role
+  r.role   AS compte_role,
+  -- La tache dont parle la notification : son intitule, et son projet.
+  t.titre     AS tache_titre,
+  t.projet_id AS tache_projet_id
 `;
 
 const JOINTURES = `
@@ -35,6 +38,7 @@ const JOINTURES = `
   LEFT JOIN projects p  ON p.id = n.project_id
   LEFT JOIN donors o    ON o.id = n.donor_id
   LEFT JOIN messages m  ON m.id = n.message_id
+  LEFT JOIN tache t ON t.id = n.tache_id
   LEFT JOIN utilisateur u ON u.id = n.utilisateur_id
   -- Un compte n'a qu'un role a l'inscription ; s'il en gagnait un
   -- second, le premier enregistre nomme toujours l'espace d'origine.
@@ -74,8 +78,8 @@ export async function lister(filtres = {}, client = null) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO notifications
-       (type, label, donation_id, message_id, project_id, donor_id, utilisateur_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (type, label, donation_id, message_id, project_id, donor_id, utilisateur_id, tache_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
       donnees.type,
@@ -85,6 +89,7 @@ export async function creer(donnees, client = null) {
       donnees.projectId ?? null,
       donnees.donorId ?? null,
       donnees.utilisateurId ?? null,
+      donnees.tacheId ?? null,
     ],
     client
   );

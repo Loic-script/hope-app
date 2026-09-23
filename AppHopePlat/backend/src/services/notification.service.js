@@ -24,7 +24,79 @@ export const TYPES = [
   'PROJECT_COMPLETED',
   'INVESTMENT',
   'ACCOUNT_CREATED',
+  'TASK_REQUEST',
+  'TASK_DELIVERED',
+  'FUNDER_INTEREST',
+  'FIELD_PROOF',
 ];
+
+/**
+ * Quelqu'un attend une reponse : la cloche doit le dire.
+ *
+ * Une demande qui dort est une personne qui attend. Un benevole qui
+ * veut prendre une tache, une livraison a verifier, un partenaire qui
+ * se manifeste, une preuve deposee : chacun de ces gestes depose une
+ * notification, comme une inscription. L'equipe voit tout ce qui lui
+ * est adresse au meme endroit, et la cloche sonne pour chacun.
+ *
+ * Toutes prennent le client de la transaction en cours : la
+ * notification et le geste qui la provoque tiennent ou tombent
+ * ensemble.
+ */
+
+/** Un benevole veut prendre une tache, ou rejoindre son equipe. */
+export function signalerDemandeDeTache({ qui, tache, projet, tacheId }, client = null) {
+  return notificationRepository.creer(
+    {
+      type: 'TASK_REQUEST',
+      label: `Demande de tâche : ${qui} veut « ${tache} »${
+        projet ? ` (${projet})` : ''
+      } — à valider.`,
+      tacheId,
+    },
+    client
+  );
+}
+
+/** Un benevole declare une tache faite, preuve a l'appui. */
+export function signalerTacheLivree({ qui, tache, projet, tacheId }, client = null) {
+  return notificationRepository.creer(
+    {
+      type: 'TASK_DELIVERED',
+      label: `Tâche livrée : ${qui} a terminé « ${tache} »${
+        projet ? ` (${projet})` : ''
+      } — preuve à vérifier.`,
+      tacheId,
+    },
+    client
+  );
+}
+
+/** Un partenaire clique "Financer ce projet" sur un appel. */
+export function signalerInteretBailleur({ organisation, projet, projetId }, client = null) {
+  return notificationRepository.creer(
+    {
+      type: 'FUNDER_INTEREST',
+      label: `${organisation} souhaite financer${
+        projet ? ` « ${projet} »` : ' un projet'
+      } — à recontacter.`,
+      projectId: projetId ?? null,
+    },
+    client
+  );
+}
+
+/** Un benevole depose une preuve terrain sur un projet. */
+export function signalerPreuveTerrain({ qui, projet, projetId }, client = null) {
+  return notificationRepository.creer(
+    {
+      type: 'FIELD_PROOF',
+      label: `Preuve terrain : ${qui} a déposé une preuve sur « ${projet} » — à relire.`,
+      projectId: projetId ?? null,
+    },
+    client
+  );
+}
 
 /** Ce que l'equipe a a faire, selon le type de compte qui vient de s'ouvrir. */
 const SUITE_A_DONNER = {

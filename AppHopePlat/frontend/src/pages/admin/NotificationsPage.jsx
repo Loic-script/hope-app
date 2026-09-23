@@ -4,7 +4,10 @@ import {
   IconeBudgets,
   IconeDons,
   IconeMessages,
+  IconeOrganisation,
   IconePersonne,
+  IconePreuves,
+  IconeTaches,
   IconeValide,
 } from '../../components/admin/AdminIcons.jsx';
 import { ONGLET_DU_ROLE } from '../../components/admin/GestionUtilisateur.jsx';
@@ -30,7 +33,14 @@ const FILTRES = [
   { valeur: 'MESSAGE', label: 'Messages' },
   { valeur: 'PROJECT_COMPLETED', label: 'Projets terminés' },
   { valeur: 'ACCOUNT_CREATED', label: 'Nouveaux comptes' },
+  { valeur: 'TASK_REQUEST', label: 'Demandes de tâche' },
+  { valeur: 'TASK_DELIVERED', label: 'Tâches livrées' },
+  { valeur: 'FUNDER_INTEREST', label: 'Partenaires intéressés' },
+  { valeur: 'FIELD_PROOF', label: 'Preuves terrain' },
 ];
+
+/** Les types qui appellent une reponse de l'equipe. */
+const DEMANDES = ['ACCOUNT_CREATED', 'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF'];
 
 /** Icone et teinte de la pastille selon la nature de l'evenement. */
 const APPARENCE = {
@@ -39,6 +49,10 @@ const APPARENCE = {
   MESSAGE: { Icone: IconeMessages, classe: 'message' },
   PROJECT_COMPLETED: { Icone: IconeValide, classe: 'projet' },
   ACCOUNT_CREATED: { Icone: IconePersonne, classe: 'compte' },
+  TASK_REQUEST: { Icone: IconeTaches, classe: 'demande' },
+  TASK_DELIVERED: { Icone: IconeValide, classe: 'livraison' },
+  FUNDER_INTEREST: { Icone: IconeOrganisation, classe: 'partenaire' },
+  FIELD_PROOF: { Icone: IconePreuves, classe: 'preuve' },
 };
 
 /**
@@ -77,6 +91,20 @@ function destination(notification) {
     const onglet = ONGLET_DU_ROLE[notification.compteRole] ?? 'donateurs';
     return `/admin/utilisateurs/compte/${notification.utilisateurId}?depuis=${onglet}`;
   }
+  // Une demande de tache s'ouvre sur l'ecran des taches, filtre sur
+  // celles qui attendent une decision ; une livraison, sur la tache.
+  if (type === 'TASK_REQUEST') {
+    return notification.tacheId
+      ? `/admin/taches?demandes=1&tache=${notification.tacheId}`
+      : '/admin/taches?demandes=1';
+  }
+  if (type === 'TASK_DELIVERED') {
+    return notification.tacheId ? `/admin/taches?tache=${notification.tacheId}` : '/admin/taches';
+  }
+  // Un partenaire interesse : l'ecran ou l'equipe suit les
+  // manifestations, sous l'appel qui les a suscitees.
+  if (type === 'FUNDER_INTEREST') return '/admin/actualites';
+  if (type === 'FIELD_PROOF') return '/admin/proofs';
   return null;
 }
 
@@ -95,9 +123,7 @@ export default function NotificationsPage() {
     () =>
       notificationService.lister({
         unread: filtre === 'NON_LUES' ? true : undefined,
-        type: ['DONATION', 'INVESTMENT', 'MESSAGE', 'PROJECT_COMPLETED', 'ACCOUNT_CREATED'].includes(
-          filtre
-        )
+        type: FILTRES.some((f) => f.valeur === filtre && !['TOUTES', 'NON_LUES'].includes(filtre))
           ? filtre
           : undefined,
       }),
@@ -145,7 +171,7 @@ export default function NotificationsPage() {
     <>
       <EntetePage
         titre="Notifications"
-        accroche="Chaque compte ouvert, chaque don reçu, chaque investissement du fonds, chaque message et chaque projet terminé."
+        accroche="Tout ce qui attend une réponse : une inscription, une demande de tâche, une livraison, un partenaire intéressé — et chaque don reçu."
         actions={
           nonLues > 0 && (
             <button
@@ -194,12 +220,16 @@ export default function NotificationsPage() {
               const apparence = APPARENCE[notification.type] ?? APPARENCE.DONATION;
               const Icone = apparence.Icone;
               const cible = destination(notification);
+              // Quelqu'un attend une reponse tant qu'elle n'est pas lue :
+              // la ligne le dit, plutot que de se fondre dans le journal.
+              const aTraiter = !notification.isRead && DEMANDES.includes(notification.type);
 
               return (
                 <article
                   className={
                     `notif${notification.isRead ? '' : ' notif--non-lue'}` +
-                    (cible ? ' notif--cliquable' : '')
+                    (cible ? ' notif--cliquable' : '') +
+                    (aTraiter ? ' notif--demande' : '')
                   }
                   key={notification.id}
                 >
@@ -211,6 +241,7 @@ export default function NotificationsPage() {
                   </span>
 
                   <div className="notif__contenu">
+                    {aTraiter && <span className="notif__attente">À traiter</span>}
                     <p className="notif__texte">
                       {cible ? (
                         // Le lien s'etire sur toute la ligne via son ::after,

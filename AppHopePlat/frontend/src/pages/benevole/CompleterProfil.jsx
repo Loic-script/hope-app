@@ -30,6 +30,7 @@ import {
 } from '../../components/parcours/champs.jsx';
 import { messageErreur } from '../../services/api.js';
 import { apiBenevole, CLE_BENEVOLE, CLE_JETON_BENEVOLE, effacerStockage } from '../../services/apiBenevole.js';
+import { FAMILLES_COMPETENCES, LANGUES } from '../../utils/competences.js';
 import { focusAutomatique, useEcranTelephone } from '../../utils/ecran.js';
 import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomDuPays } from '../../utils/pays.js';
 
@@ -51,89 +52,6 @@ const MOMENTS = [
   { cle: 'apres-midi', label: 'Après-midi', heures: '12 h – 17 h' },
   { cle: 'soir', label: 'Soir', heures: 'après 17 h' },
   { cle: 'journee', label: 'Journée', heures: 'toute la journée' },
-];
-
-/**
- * Ce que HOPE a besoin de savoir faire, par famille.
- *
- * La liste n'est pas un catalogue de metiers : elle reprend ce que les
- * taches des projets demandent reellement -- servir des repas, faire du
- * soutien scolaire, traduire, tenir des comptes, photographier une
- * distribution. Cocher est plus rapide qu'ecrire, et surtout, deux
- * benevoles qui savent la meme chose l'ecrivent desormais pareil : une
- * tache se cherche alors par competence.
- *
- * "Autre" reste : aucune liste ne prevoit tout, et un savoir-faire
- * inattendu est precisement celui qu'il ne faut pas perdre.
- */
-const FAMILLES_COMPETENCES = [
-  {
-    titre: 'Sur le terrain',
-    competences: [
-      'Distribution de repas',
-      'Cuisine',
-      'Logistique et transport',
-      'Conduite',
-      'Bricolage et montage',
-      'Jardinage et agriculture',
-      'Construction',
-      'Eau et assainissement',
-    ],
-  },
-  {
-    titre: 'Enfance et éducation',
-    competences: [
-      'Soutien scolaire',
-      'Animation d’activités',
-      'Alphabétisation',
-      'Formation professionnelle',
-      'Encadrement de groupe',
-    ],
-  },
-  {
-    titre: 'Santé et accompagnement',
-    competences: [
-      'Premiers secours',
-      'Soins infirmiers',
-      'Écoute et soutien moral',
-      'Accompagnement social',
-      'Nutrition',
-    ],
-  },
-  {
-    titre: 'Communication',
-    competences: [
-      'Photographie',
-      'Vidéo',
-      'Réseaux sociaux',
-      'Rédaction',
-      'Traduction et interprétariat',
-      'Graphisme',
-    ],
-  },
-  {
-    titre: 'Gestion et bureau',
-    competences: [
-      'Gestion de projet',
-      'Comptabilité',
-      'Secrétariat',
-      'Collecte de fonds',
-      'Informatique',
-      'Saisie de données',
-    ],
-  },
-];
-
-/** Les langues qu'on entend le plus souvent sur les projets. */
-const LANGUES = [
-  'Malgache',
-  'Français',
-  'Anglais',
-  'Allemand',
-  'Italien',
-  'Espagnol',
-  'Chinois',
-  'Arabe',
 ];
 
 /** Les etapes, dans l'ordre : leur titre sert aussi de reperes. */

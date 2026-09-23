@@ -17,7 +17,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import * as funderRepository from '../repositories/funder.repository.js';
+import * as projectRepository from '../repositories/project.repository.js';
 import { TYPES_ORGANISATION } from './funderAuth.service.js';
+import { signalerInteretBailleur } from './notification.service.js';
 import * as ficheProjetService from './ficheProjet.service.js';
 import * as projectReportService from './projectReport.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
@@ -538,6 +540,19 @@ export async function manifesterUnInteret(bailleurId, corps = {}, contact = null
     projetId,
     message: message || null,
     contactId: contact?.contactId ?? null,
+  });
+
+  /*
+   * L'equipe doit le savoir le jour meme : un partenaire qui se
+   * manifeste et qu'on rappelle trois semaines plus tard est un
+   * partenaire perdu. La liste sous l'appel reste, la cloche s'y
+   * ajoute.
+   */
+  const projet = projetId ? await projectRepository.trouverParId(projetId) : null;
+  await signalerInteretBailleur({
+    organisation: contact?.raisonSociale || 'Un partenaire',
+    projet: projet?.name ?? null,
+    projetId,
   });
 
   return {

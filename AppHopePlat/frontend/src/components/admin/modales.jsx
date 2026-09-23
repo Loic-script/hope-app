@@ -19,6 +19,7 @@ import { useSoumission } from '../../hooks/useChargement.js';
 import ChampPhotoProfil from '../ChampPhotoProfil.jsx';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as taskService from '../../services/task.service.js';
+import { FAMILLES_COMPETENCES } from '../../utils/competences.js';
 import * as documentService from '../../services/document.service.js';
 import * as donationService from '../../services/donation.service.js';
 import * as donorService from '../../services/donor.service.js';
@@ -1232,6 +1233,8 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
   const [titre, setTitre] = useState('');
   const [description, setDescription] = useState('');
   const [echeance, setEcheance] = useState('');
+  const [competences, setCompetences] = useState([]);
+  const [autres, setAutres] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
   useEffect(() => {
@@ -1240,11 +1243,35 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
     setTitre('');
     setDescription('');
     setEcheance('');
+    setCompetences([]);
+    setAutres('');
   }, [ouverte, setErreur]);
 
+  function basculer(competence) {
+    setCompetences((choisies) =>
+      choisies.includes(competence)
+        ? choisies.filter((c) => c !== competence)
+        : [...choisies, competence]
+    );
+  }
+
   async function enregistrer() {
+    // Les memes intitules que la fiche du benevole, plus ce que l'equipe
+    // ajoute a la main : c'est ce rapprochement qui fait leur utilite.
+    const requises = [
+      ...new Set([
+        ...competences,
+        ...autres.split(',').map((valeur) => valeur.trim()).filter(Boolean),
+      ]),
+    ];
     await soumettre(
-      () => taskService.creer(projet.id, { titre, description, echeance }),
+      () =>
+        taskService.creer(projet.id, {
+          titre,
+          description,
+          echeance,
+          competencesRequises: requises,
+        }),
       { onSucces: onEnregistre }
     );
   }
@@ -1289,8 +1316,58 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
           type="date"
           value={echeance}
           onChange={(e) => setEcheance(e.target.value)}
-          aide="Facultative."
+          aide="Le jour où la tâche doit être rendue. Facultative."
           disabled={envoi}
+        />
+
+        {/*
+          L'experience requise : les memes intitules que la fiche du
+          benevole. Ecrite dans la description, elle ne servait qu'a la
+          lecture ; cochee, elle dit a qui proposer la tache.
+        */}
+        <div className="champ-admin champ-admin--pleine-largeur">
+          <span className="champ-admin__label" id="tache-competences">
+            Expérience requise
+          </span>
+          <div className="competences-tache" role="group" aria-labelledby="tache-competences">
+            {FAMILLES_COMPETENCES.map((famille) => (
+              <section className="competences-tache__famille" key={famille.titre}>
+                <h4 className="competences-tache__titre">{famille.titre}</h4>
+                <div className="competences-tache__liste">
+                  {famille.competences.map((competence) => (
+                    <button
+                      key={competence}
+                      type="button"
+                      className={`puce-competence${
+                        competences.includes(competence) ? ' puce-competence--actif' : ''
+                      }`}
+                      aria-pressed={competences.includes(competence)}
+                      onClick={() => basculer(competence)}
+                      disabled={envoi}
+                    >
+                      {competence}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+          <p className="champ-admin__aide">
+            {competences.length === 0
+              ? 'Aucune : la tâche est ouverte à tout le monde.'
+              : `${competences.length} compétence(s) demandée(s) — le bénévole les voit avant de se proposer.`}
+          </p>
+        </div>
+
+        <ChampTexte
+          label="Autre expérience requise"
+          id="tache-autres-competences"
+          value={autres}
+          onChange={(e) => setAutres(e.target.value)}
+          aide="Ce que la liste ne propose pas. Séparez par des virgules."
+          placeholder="permis poids lourd, plongée…"
+          disabled={envoi}
+          pleineLargeur
         />
       </div>
     </ModaleFormulaire>

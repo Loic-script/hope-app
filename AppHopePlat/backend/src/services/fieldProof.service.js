@@ -18,6 +18,7 @@ import * as activityLogRepository from '../repositories/activityLog.repository.j
 import * as volunteerProfileRepository from '../repositories/volunteerProfile.repository.js';
 
 import { plafondPreuve } from '../middleware/upload.middleware.js';
+import { signalerPreuveTerrain } from './notification.service.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import {
   dateFacultative,
@@ -246,6 +247,10 @@ export async function creerParBenevole(projetId, corps = {}, benevole = null, fi
       label: `a ajouté une preuve pour « ${projet.name} »`,
     }
   );
+
+  // Le journal garde la trace ; la cloche, elle, previent. Une preuve
+  // deposee attend une relecture.
+  await signalerPreuveTerrain({ qui: nom, projet: projet.name, projetId: projet.id });
 
   return { id: preuve.id };
 }

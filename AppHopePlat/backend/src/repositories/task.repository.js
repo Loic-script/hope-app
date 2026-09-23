@@ -20,6 +20,7 @@ import { versListe, versObjet } from '../shared/mapping.js';
 /** Ce que toute lecture rend. */
 const COLONNES = `
   t.id, t.projet_id, t.titre, t.description, t.echeance, t.statut,
+  t.competences_requises,
   t.prise_le, t.livree_le, t.livree_par, t.validee_par, t.cree_le,
   p.name      AS projet_nom,
   p.reference AS projet_reference,
@@ -177,12 +178,15 @@ export async function trouverPourBenevole(id, benevoleId, client = null) {
 }
 
 /** Cree une tache : elle nait a faire, sans equipe. */
-export async function creer({ projetId, titre, description = null, echeance = null }, client = null) {
+export async function creer(
+  { projetId, titre, description = null, echeance = null, competencesRequises = [] },
+  client = null
+) {
   const resultat = await query(
-    `INSERT INTO tache (projet_id, titre, description, echeance)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO tache (projet_id, titre, description, echeance, competences_requises)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING id`,
-    [projetId, titre, description, echeance],
+    [projetId, titre, description, echeance, competencesRequises],
     client
   );
   return trouverParId(resultat.rows[0].id, client);

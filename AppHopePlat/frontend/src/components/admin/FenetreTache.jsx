@@ -172,6 +172,19 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
               </p>
             )}
 
+            {/* Ce que la tache demande de savoir faire : les memes
+                intitules que les fiches des benevoles. */}
+            {(tache.competencesRequises ?? []).length > 0 && (
+              <p className="tache-competences">
+                <span className="tache-competences__intitule">Expérience requise</span>
+                {tache.competencesRequises.map((competence) => (
+                  <span className="tache-competences__puce" key={competence}>
+                    {competence}
+                  </span>
+                ))}
+              </p>
+            )}
+
             {/* ---------- Les demandes, d'abord : elles attendent ---------- */}
             {tache.demandes.length > 0 && (
               <section className="fenetre-tache__bloc fenetre-tache__bloc--demandes">

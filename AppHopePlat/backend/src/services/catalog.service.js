@@ -93,6 +93,10 @@ export const LIBELLES = {
     PROJECT_COMPLETED: 'Projet terminé',
     INVESTMENT: 'Investissement',
     ACCOUNT_CREATED: 'Nouveau compte',
+    TASK_REQUEST: 'Demande de tâche',
+    TASK_DELIVERED: 'Tâche livrée',
+    FUNDER_INTEREST: 'Intérêt d’un partenaire',
+    FIELD_PROOF: 'Preuve terrain',
   },
   mediaType: { PHOTO: 'Photo', VIDEO: 'Vidéo' },
 
