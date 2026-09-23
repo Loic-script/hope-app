@@ -1894,3 +1894,168 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   Choisir des personnes
+
+   On ne choisit pas quelqu'un dans une liste de mots : le visage, le
+   nom, et ce que la personne sait faire. La recherche filtre sur les
+   trois, et ceux qui sont deja choisis remontent en tete.
+   ============================================================ */
+
+.choix-personnes {
+  margin-top: 4px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+  overflow: hidden;
+}
+
+.choix-personnes__recherche {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface-douce);
+}
+
+.choix-personnes__recherche svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--admin-texte-faible);
+}
+
+.choix-personnes__recherche input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.choix-personnes__recherche input:focus {
+  outline: none;
+}
+
+.choix-personnes__liste {
+  margin: 0;
+  padding: 6px;
+  max-height: 270px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.choix-personnes__vide {
+  padding: 18px 14px;
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Une personne --- */
+
+.personne-choix {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background-color: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.14s ease-out;
+}
+
+.personne-choix:hover:not(:disabled) {
+  background-color: var(--admin-surface-douce);
+}
+
+/* Choisie : la ligne se teinte et porte sa coche, comme cochee. */
+.personne-choix--choisie {
+  background-color: #ece7fb;
+}
+
+.personne-choix--choisie:hover:not(:disabled) {
+  background-color: #e3ddf8;
+}
+
+.personne-choix__visage {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-bleu-clair);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hope-violet-lisible);
+}
+
+.personne-choix__visage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.personne-choix__texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.personne-choix__nom {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  overflow-wrap: anywhere;
+}
+
+/* Ce qu'elle sait faire : la ligne du dessous, en petit. */
+.personne-choix__detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.personne-choix__competence:not(:last-child)::after {
+  content: ' ·';
+}
+
+/* Une competence que la tache demande : c'est elle qu'on cherchait. */
+.personne-choix__competence--demandee {
+  font-weight: 700;
+  color: #216b4a;
+}
+
+.personne-choix__marque {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--hope-violet);
+}
+
+.personne-choix__marque svg {
+  width: 17px;
+  height: 17px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personne-choix {
+    transition: none;
+  }
+}

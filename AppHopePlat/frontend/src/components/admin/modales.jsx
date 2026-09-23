@@ -16,6 +16,7 @@ import {
   optionsDepuisLibelles,
 } from './forms.jsx';
 import { IconeCroix } from './AdminIcons.jsx';
+import ChoixBenevoles from './ChoixBenevoles.jsx';
 import { useSoumission } from '../../hooks/useChargement.js';
 import ChampPhotoProfil from '../ChampPhotoProfil.jsx';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
@@ -1283,20 +1284,12 @@ export function TacheModale({
     setCompetences((choisies) => choisies.filter((c) => c !== competence));
   }
 
-  function ajouterBenevole(benevoleId) {
-    if (benevoleId === '') return;
-    setEquipe((choisis) => (choisis.includes(benevoleId) ? choisis : [...choisis, benevoleId]));
-  }
-
-  function retirerBenevole(benevoleId) {
-    setEquipe((choisis) => choisis.filter((b) => b !== benevoleId));
-  }
-
-  /** Le nom d'un benevole, ou son adresse s'il n'en a pas encore. */
-  function nomBenevole(benevoleId) {
-    const trouve = (benevoles ?? []).find((b) => b.benevoleId === benevoleId);
-    if (!trouve) return benevoleId;
-    return `${trouve.prenom ?? ''} ${trouve.nom ?? ''}`.trim() || trouve.email;
+  function basculerBenevole(benevoleId) {
+    setEquipe((choisis) =>
+      choisis.includes(benevoleId)
+        ? choisis.filter((b) => b !== benevoleId)
+        : [...choisis, benevoleId]
+    );
   }
 
   async function enregistrer() {
@@ -1523,52 +1516,30 @@ export function TacheModale({
           qui confier la tache, la lui donner tout de suite evite un
           aller-retour. Sinon, la tache reste ouverte aux demandes.
         */}
+        {/*
+          On ne choisit pas une personne dans une liste de mots : le
+          visage, le nom et ce qu'elle sait faire, c'est la-dessus que
+          l'equipe decide a qui confier la tache. Les competences que la
+          tache demande sont mises en avant sur chaque ligne.
+        */}
         {benevoles && benevoles.length > 0 && (
-          <>
-            <ChampSelection
-              label="Affecter des bénévoles"
-              id="tache-affectation"
-              vide="Ajouter un bénévole"
-              options={benevoles
-                .filter((benevole) => !equipe.includes(benevole.benevoleId))
-                .map((benevole) => ({
-                  valeur: benevole.benevoleId,
-                  label: `${benevole.prenom ?? ''} ${benevole.nom ?? ''}`.trim() || benevole.email,
-                }))}
-              value=""
-              onChange={(e) => ajouterBenevole(e.target.value)}
-              aide={
-                equipe.length === 0
-                  ? 'Personne : la tâche reste ouverte, les bénévoles la demanderont.'
-                  : `${equipe.length} bénévole(s) affecté(s) dès la création — ils en sont prévenus.`
-              }
+          <div className="champ-admin champ-admin--pleine-largeur">
+            <span className="champ-admin__label" id="tache-affectation">
+              Affecter des bénévoles
+            </span>
+            <ChoixBenevoles
+              benevoles={benevoles}
+              choisis={equipe}
+              onBasculer={basculerBenevole}
               disabled={envoi}
-              pleineLargeur
+              competencesDemandees={competences}
             />
-
-            {equipe.length > 0 && (
-              <div className="champ-admin champ-admin--pleine-largeur">
-                <ul className="choix-retirables" aria-label="Bénévoles affectés">
-                  {equipe.map((benevoleId) => (
-                    <li key={benevoleId}>
-                      <span className="choix-retirable choix-retirable--personne">
-                        {nomBenevole(benevoleId)}
-                        <button
-                          type="button"
-                          className="choix-retirable__croix"
-                          onClick={() => retirerBenevole(benevoleId)}
-                          aria-label={`Retirer ${nomBenevole(benevoleId)}`}
-                          disabled={envoi}
-                        >
-                          <IconeCroix />
-                        </button>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
+            <p className="champ-admin__aide">
+              {equipe.length === 0
+                ? 'Personne : la tâche reste ouverte, les bénévoles la demanderont.'
+                : `${equipe.length} bénévole(s) affecté(s) dès la création — ils en sont prévenus.`}
+            </p>
+          </div>
         )}
       </div>
     </ModaleFormulaire>
