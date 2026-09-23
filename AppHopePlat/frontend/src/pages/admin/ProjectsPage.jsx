@@ -86,16 +86,32 @@ function ActionsProjet({ projet, onDemander }) {
           </button>
         </>
       )}
+      {/*
+        Termine, un projet s'archive -- on garde son histoire -- ou se
+        supprime, s'il n'a rien porte. Le serveur tranche : un projet
+        qui a recu un don ou paye une depense ne s'efface pas.
+      */}
       {projet.status === 'COMPLETED' && (
-        <button
-          type="button"
-          className="btn btn--neutre btn--petit"
-          onClick={() => onDemander('archiver', projet)}
-          aria-label={`Archiver le projet ${projet.name}`}
-        >
-          <IconeArchive />
-          Archiver
-        </button>
+        <>
+          <button
+            type="button"
+            className="btn btn--neutre btn--petit"
+            onClick={() => onDemander('archiver', projet)}
+            aria-label={`Archiver le projet ${projet.name}`}
+          >
+            <IconeArchive />
+            Archiver
+          </button>
+          <button
+            type="button"
+            className="btn btn--danger btn--petit"
+            onClick={() => onDemander('supprimer', projet)}
+            aria-label={`Supprimer le projet ${projet.name}`}
+          >
+            <IconeCorbeille />
+            Supprimer
+          </button>
+        </>
       )}
     </>
   );
@@ -286,8 +302,8 @@ export default function ProjectsPage() {
         message={
           modale.cible
             ? `« ${modale.cible.name} » sera définitivement effacé. La suppression n’est possible ` +
-              'que si aucun don, investissement ou dépense ne s’y rattache : sinon, terminez le ' +
-              'projet puis archivez-le pour conserver son historique.'
+              'que si aucun don, investissement ou dépense ne s’y rattache : sinon, archivez-le ' +
+              'pour conserver son historique.'
             : ''
         }
         onFermer={fermer}

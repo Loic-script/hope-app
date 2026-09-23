@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import { ModaleConfirmation } from '../../components/admin/forms.jsx';
@@ -74,6 +74,7 @@ const STATUTS_ENGAGEMENT = {
 const COULEURS_ENGAGEMENT = { en_cours: 'bleu', finalise: 'vert', suspendu: 'ambre', annule: 'gris' };
 
 export default function ProjectDetailPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [parametres, setParametres] = useSearchParams();
   const [ongletActif, setOngletActif] = useState(parametres.get('onglet') ?? 'general');
@@ -204,6 +205,16 @@ export default function ProjectDetailPage() {
   }
   async function archiver() {
     await soumettre(() => projectService.archiver(projet.id), { onSucces: rechargerTout });
+  }
+  /*
+   * Supprimer efface : on revient donc a la liste, et non a une fiche
+   * qui n'existe plus. Le serveur refuse si le projet a porte de
+   * l'argent -- c'est alors l'archivage qui conserve son histoire.
+   */
+  async function supprimerProjet() {
+    await soumettre(() => projectService.supprimer(projet.id), {
+      onSucces: () => navigate('/admin/projects', { replace: true }),
+    });
   }
   /**
    * Confirme la reception d'un don en attente.
@@ -437,6 +448,13 @@ export default function ProjectDetailPage() {
                   onClick={() => ouvrir('archiver')}
                 >
                   Archiver
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={() => ouvrir('supprimerProjet')}
+                >
+                  Supprimer
                 </button>
               </>
             )}
@@ -1595,6 +1613,18 @@ export default function ProjectDetailPage() {
         envoi={envoi}
         erreur={erreurAction}
         libelleConfirmer="Marquer comme reçu"
+      />
+
+      <ModaleConfirmation
+        ouverte={modale.nom === 'supprimerProjet'}
+        titre="Supprimer ce projet ?"
+        message={`« ${projet.name} » sera définitivement effacé. La suppression n’est possible que si aucun don, investissement ou dépense ne s’y rattache : sinon, archivez-le pour conserver son historique.`}
+        onFermer={fermer}
+        onConfirmer={supprimerProjet}
+        envoi={envoi}
+        erreur={erreurAction}
+        libelleConfirmer="Supprimer"
+        danger
       />
 
       <ModaleConfirmation
