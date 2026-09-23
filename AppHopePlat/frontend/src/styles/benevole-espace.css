@@ -2989,3 +2989,90 @@
   font-size: 12.5px;
   color: var(--admin-texte-faible);
 }
+
+/* ============================================================
+   Les reperes d'une tache, dans sa fenetre
+
+   Une carte dit le titre ; la fenetre doit dire de quoi decider.
+   Quatre reperes en tete -- ce qui presse, pour quand, a combien, et
+   ce qu'il faut savoir faire -- puis la consigne.
+   ============================================================ */
+
+.reperes-tache {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 14px;
+  border-radius: 14px;
+  background-color: var(--admin-surface-douce);
+}
+
+.reperes-tache__ligne {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* L'experience requise prend la ligne entiere : elle porte des puces. */
+.reperes-tache__ligne--large {
+  grid-column: 1 / -1;
+}
+
+.reperes-tache dt {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.reperes-tache dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+/* Le delai, la ou il complete la date : plus petit, en retrait. */
+.reperes-tache__delai {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+.reperes-tache__alerte {
+  color: var(--etat-rouge);
+}
+
+.reperes-tache__rien {
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+.reperes-tache__competences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-tache__intitule {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+/* Sur un telephone, les reperes s'empilent deux par deux. */
+@media (max-width: 620px) {
+  .reperes-tache {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

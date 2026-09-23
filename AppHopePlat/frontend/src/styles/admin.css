@@ -1857,3 +1857,8 @@ tr[id^='compte-'] {
     flex: none;
   }
 }
+
+/* Une date ne se coupe pas en deux : la colonne lui laisse sa ligne. */
+.table__centre .table__principal {
+  white-space: nowrap;
+}

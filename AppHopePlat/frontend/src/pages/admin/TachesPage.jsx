@@ -91,6 +91,9 @@ export default function TachesPage() {
             {
               cle: 'titre',
               titre: 'Tâche',
+              // La colonne qui porte le texte : tout ce qui reste de
+              // largeur lui revient.
+              largeur: '30%',
               rendu: (tache) => (
                 <div>
                   <button
@@ -108,6 +111,8 @@ export default function TachesPage() {
             {
               cle: 'priorite',
               titre: 'Priorité',
+              aligne: 'centre',
+              largeur: '110px',
               rendu: (tache) => (
                 <Badge
                   valeur={tache.priorite ?? 'moyenne'}
@@ -119,16 +124,24 @@ export default function TachesPage() {
             {
               cle: 'echeance',
               titre: 'Date de fin',
+              aligne: 'centre',
+              // La date tient sur une ligne, le delai sur la suivante :
+              // 175 px evitent que les deux se coupent en trois.
+              largeur: '175px',
               rendu: (tache) => <DateDeFin tache={tache} />,
             },
             {
               cle: 'equipeTaille',
               titre: 'Équipe voulue',
+              aligne: 'centre',
+              largeur: '120px',
               rendu: (tache) => tailleVoulue(tache),
             },
             {
               cle: 'statut',
               titre: 'Statut',
+              aligne: 'centre',
+              largeur: '110px',
               rendu: (tache) => (
                 <Badge valeur={tache.statut} libelles={STATUTS_TACHE} couleur={COULEURS_TACHE[tache.statut]} />
               ),
@@ -136,11 +149,14 @@ export default function TachesPage() {
             {
               cle: 'equipe',
               titre: 'Équipe',
+              largeur: '210px',
               rendu: (tache) => <EquipeEnBref equipe={tache.equipe} />,
             },
             {
               cle: 'demandes',
               titre: 'Demandes',
+              aligne: 'centre',
+              largeur: '120px',
               rendu: (tache) =>
                 tache.demandes.length > 0 ? (
                   <Badge
@@ -214,7 +230,9 @@ function DateDeFin({ tache }) {
       <div className="table__principal">{fmt.date(tache.echeance)}</div>
       {delai && (
         <div className={`table__secondaire${delai.pressant ? ' table__secondaire--alerte' : ''}`}>
-          {delai.texte}
+          {/* "À rendre dans 88 jours" tiendrait sur trois lignes dans une
+              colonne de tableau : le verbe est deja dans l entete. */}
+          {delai.texte.replace('À rendre ', '')}
         </div>
       )}
     </div>

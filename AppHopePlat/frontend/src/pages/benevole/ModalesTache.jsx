@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { Modale } from '../../components/admin/forms.jsx';
-import { PleineCalendrier, PleineLieu } from '../../components/IconesPleines.jsx';
+import { PleineLieu } from '../../components/IconesPleines.jsx';
 import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
+import { delaiRestant, LIBELLES_PRIORITE } from '../../utils/priorites.js';
 import { ActionDemande, EquipeTache } from './composants.jsx';
 
 /**
@@ -62,6 +63,8 @@ export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envo
   if (!tache) return null;
 
   const enRetard = tache.echeance && new Date(tache.echeance) < new Date();
+  const delai = delaiRestant(tache.echeance, tache.statut);
+  const equipeVoulue = tailleVoulue(tache);
 
   return (
     <Modale
@@ -89,8 +92,61 @@ export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envo
         </>
       }
     >
-      {/* La tache d'abord : c'est elle qu'on vient lire. */}
+      {/*
+        La tache d'abord : c'est elle qu'on vient lire, et c'est sur elle
+        qu'on decide. Quatre reperes, avant le texte : ce qui presse, pour
+        quand, ce qu'il faut savoir faire, et a combien.
+      */}
       <section className="detail-tache">
+        <dl className="reperes-tache">
+          <Repere intitule="Priorité">
+            <span className={`jeton-priorite jeton-priorite--${tache.priorite ?? 'moyenne'}`}>
+              {LIBELLES_PRIORITE[tache.priorite ?? 'moyenne']}
+            </span>
+          </Repere>
+
+          <Repere intitule="Date de fin">
+            {tache.echeance ? (
+              <>
+                <span className={enRetard ? 'reperes-tache__alerte' : undefined}>
+                  {fmt.date(tache.echeance)}
+                </span>
+                {delai && (
+                  <span className={`reperes-tache__delai${delai.pressant ? ' reperes-tache__alerte' : ''}`}>
+                    {delai.texte}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="reperes-tache__rien">Sans date</span>
+            )}
+          </Repere>
+
+          <Repere intitule="Bénévoles">
+            {equipeVoulue ?? <span className="reperes-tache__rien">Autant qu’il faudra</span>}
+            <span className="reperes-tache__delai">
+              {(tache.equipe ?? []).length > 0
+                ? `${(tache.equipe ?? []).length} déjà dessus`
+                : 'Personne pour l’instant'}
+            </span>
+          </Repere>
+
+          <Repere intitule="Expérience requise" large>
+            {(tache.competencesRequises ?? []).length > 0 ? (
+              <span className="reperes-tache__competences">
+                {tache.competencesRequises.map((competence) => (
+                  <span className="tache-competences__puce" key={competence}>
+                    {competence}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="reperes-tache__rien">Aucune : la tâche est ouverte à tout le monde</span>
+            )}
+          </Repere>
+        </dl>
+
+        <h3 className="detail-tache__intitule">Ce qu’il y a à faire</h3>
         {tache.description ? (
           <p className="detail-tache__texte">{tache.description}</p>
         ) : (
@@ -99,13 +155,6 @@ export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envo
           </p>
         )}
         <EquipeTache tache={tache} className="detail-tache__equipe" />
-        {tache.echeance && (
-          <p className={`detail-tache__echeance${enRetard ? ' detail-tache__echeance--retard' : ''}`}>
-            <PleineCalendrier />
-            {enRetard ? 'En retard depuis le ' : 'À rendre le '}
-            {fmt.date(tache.echeance)}
-          </p>
-        )}
       </section>
 
       {/* Puis le projet qu'elle sert. */}
@@ -377,4 +426,24 @@ export function LivraisonModale({ tache, onFermer, onLivree }) {
       </form>
     </Modale>
   );
+}
+
+/** Un repere de la tache : son intitule, et ce qu'il vaut. */
+function Repere({ intitule, large = false, children }) {
+  return (
+    <div className={`reperes-tache__ligne${large ? ' reperes-tache__ligne--large' : ''}`}>
+      <dt>{intitule}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
+/** "2 à 4", "au moins 2" : le monde que la tache demande. */
+function tailleVoulue({ benevolesMin, benevolesMax }) {
+  if (benevolesMin && benevolesMax) {
+    return benevolesMin === benevolesMax ? `${benevolesMin} bénévole(s)` : `${benevolesMin} à ${benevolesMax}`;
+  }
+  if (benevolesMin) return `Au moins ${benevolesMin}`;
+  if (benevolesMax) return `Au plus ${benevolesMax}`;
+  return null;
 }
