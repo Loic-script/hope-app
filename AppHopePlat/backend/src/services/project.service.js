@@ -579,13 +579,42 @@ export async function archiver(id) {
  * financier : dès qu'un don, un investissement ou une dépense s'y rattache,
  * l'historique comptable prime et le projet doit être terminé puis archivé.
  */
-export async function supprimer(id) {
+export async function supprimer(id, { force = false, admin = null } = {}) {
   const projectId = identifiantRequis(id, 'id');
   const projet = await projectRepository.trouverParId(projectId);
   if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
 
   const ecritures = await projectRepository.compterEcritures(projectId);
   const total = ecritures.dons + ecritures.investissements + ecritures.depenses;
+
+  /*
+   * La suppression forcee : l'equipe a lu ce qu'elle detruit et l'a
+   * confirme. Elle reste une exception, et se lit dans le journal --
+   * qui, quoi, combien -- parce qu'on ne retrouvera rien apres.
+   */
+  if (force && total > 0) {
+    await transaction(async (client) => {
+      const touche = await projectRepository.detacherEcritures(projectId, client);
+      await activityLogRepository.deposer(
+        admin,
+        {
+          action: 'DELETE',
+          entityType: 'PROJECT',
+          entityId: projectId,
+          label:
+            `a supprimé de force le projet « ${projet.name} » (${projet.reference}) : ` +
+            `${touche.donsDetaches} don(s) rendus aux fonds HOPE, ` +
+            `${touche.depenses} dépense(s), ${touche.investissements} investissement(s), ` +
+            `${touche.affectations} affectation(s) de partenaire et ${touche.missions} mission(s) effacés`,
+        },
+        client
+      );
+      await projectRepository.supprimer(projectId, client);
+    });
+
+    await mediaService.supprimer(projet.mediaUrl);
+    return { id: projectId, deleted: true, force: true };
+  }
 
   if (total > 0) {
     const details = [

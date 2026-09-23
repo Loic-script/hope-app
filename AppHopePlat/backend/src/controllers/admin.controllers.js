@@ -74,7 +74,17 @@ export const projects = {
   terminer: gerer((req) => projectService.terminer(req.params.id, req.body, req.admin)),
   rouvrir: gerer((req) => projectService.rouvrir(req.params.id)),
   archiver: gerer((req) => projectService.archiver(req.params.id)),
-  supprimer: gerer((req) => projectService.supprimer(req.params.id)),
+  /*
+   * "force=1" : la suppression malgre les ecritures. Reservee au role
+   * ADMIN par la route, confirmee deux fois a l ecran, et deposee au
+   * journal par le service -- on ne retrouvera rien apres.
+   */
+  supprimer: gerer((req) =>
+    projectService.supprimer(req.params.id, {
+      force: req.query.force === '1',
+      admin: req.admin,
+    })
+  ),
   listerTermines: gerer(() => projectService.listerTermines()),
 
   /** Televersement de la photo ou de la video qui illustre un projet. */

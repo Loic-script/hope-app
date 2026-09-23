@@ -100,8 +100,15 @@ export async function archiver(id) {
   return data;
 }
 
-export async function supprimer(id) {
-  const { data } = await api.delete(`/admin/projects/${id}`);
+/**
+ * Supprime un projet.
+ *
+ * @param {{ force?: boolean }} [options] force : supprimer malgre les
+ *   dons, depenses et investissements rattaches. Les dons rejoignent
+ *   les fonds de HOPE, le reste est efface. Irreversible.
+ */
+export async function supprimer(id, { force = false } = {}) {
+  const { data } = await api.delete(`/admin/projects/${id}${force ? '?force=1' : ''}`);
   return data;
 }
 

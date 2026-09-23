@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import { ModaleConfirmation } from '../../components/admin/forms.jsx';
+import ModaleSuppressionForcee from '../../components/admin/ModaleSuppressionForcee.jsx';
 import {
   BeneficiaireModale,
   DepenseModale,
@@ -29,7 +30,7 @@ import {
 import OngletRapport from '../../components/admin/OngletRapport.jsx';
 import VignettePreuve from '../../components/admin/VignettePreuve.jsx';
 import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
-import { urlMedia } from '../../services/api.js';
+import { messageErreur, urlMedia } from '../../services/api.js';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as catalogService from '../../services/catalog.service.js';
@@ -80,6 +81,9 @@ export default function ProjectDetailPage() {
   const [ongletActif, setOngletActif] = useState(parametres.get('onglet') ?? 'general');
 
   const [modale, setModale] = useState({ nom: null, cible: null });
+  // Les ecritures qui ont retenu la suppression : le second
+  // avertissement les nomme.
+  const [retenu, setRetenu] = useState(null);
   // La preuve d'une tache livree, ouverte en grand.
   const [preuveTache, setPreuveTache] = useState(null);
   // La tache ouverte dans sa fenetre : equipe, demandes, preuve.
@@ -212,7 +216,24 @@ export default function ProjectDetailPage() {
    * l'argent -- c'est alors l'archivage qui conserve son histoire.
    */
   async function supprimerProjet() {
-    await soumettre(() => projectService.supprimer(projet.id), {
+    try {
+      await projectService.supprimer(projet.id);
+      navigate('/admin/projects', { replace: true });
+    } catch (echec) {
+      // Refus pour cause d'ecritures : le second avertissement prend la
+      // suite et dit ce que la suppression forcee detruirait.
+      const donnees = echec?.response?.data;
+      if (donnees?.code === 'PROJET_AVEC_ECRITURES') {
+        setRetenu(donnees.details ?? {});
+        ouvrir('supprimerQuandMeme');
+        return;
+      }
+      setErreur(messageErreur(echec, 'Le projet n’a pas pu être supprimé.'));
+    }
+  }
+
+  async function supprimerQuandMeme() {
+    await soumettre(() => projectService.supprimer(projet.id, { force: true }), {
       onSucces: () => navigate('/admin/projects', { replace: true }),
     });
   }
@@ -1613,6 +1634,16 @@ export default function ProjectDetailPage() {
         envoi={envoi}
         erreur={erreurAction}
         libelleConfirmer="Marquer comme reçu"
+      />
+
+      <ModaleSuppressionForcee
+        ouverte={modale.nom === 'supprimerQuandMeme'}
+        projet={projet}
+        ecritures={retenu}
+        onFermer={fermer}
+        onConfirmer={supprimerQuandMeme}
+        envoi={envoi}
+        erreur={erreurAction}
       />
 
       <ModaleConfirmation

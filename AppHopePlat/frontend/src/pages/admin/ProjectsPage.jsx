@@ -9,6 +9,7 @@ import {
   IconeValide,
 } from '../../components/admin/AdminIcons.jsx';
 import { ModaleConfirmation } from '../../components/admin/forms.jsx';
+import ModaleSuppressionForcee from '../../components/admin/ModaleSuppressionForcee.jsx';
 import { TerminerProjetModale } from '../../components/admin/modales.jsx';
 import PublicationProjet from '../../components/admin/PublicationProjet.jsx';
 import {
@@ -22,6 +23,7 @@ import {
 } from '../../components/admin/ui.jsx';
 import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as catalogService from '../../services/catalog.service.js';
+import { messageErreur } from '../../services/api.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
@@ -168,16 +170,42 @@ export default function ProjectsPage() {
   const libellesType = catalogue?.labels?.projectType ?? {};
 
   const { envoi, erreur: erreurAction, setErreur, soumettre } = useSoumission();
+  // Les ecritures qui ont retenu la suppression : le second
+  // avertissement les nomme.
+  const [retenu, setRetenu] = useState(null);
 
   function demander(nom, projet) {
     setErreur('');
+    setRetenu(null);
     ouvrir(nom, projet);
   }
 
   async function supprimer() {
-    await soumettre(() => projectService.supprimer(modale.cible.id), {
+    try {
+      await projectService.supprimer(modale.cible.id);
+      fermer();
+      recharger();
+    } catch (echec) {
+      /*
+       * Refus pour cause d'ecritures : on ne s'arrete pas la. Le
+       * message dit ce qui retient, et le second avertissement propose
+       * la suppression forcee -- avec ce qu'elle detruit, en clair.
+       */
+      const donnees = echec?.response?.data;
+      if (donnees?.code === 'PROJET_AVEC_ECRITURES') {
+        setRetenu(donnees.details ?? {});
+        ouvrir('supprimerQuandMeme', modale.cible);
+        return;
+      }
+      setErreur(messageErreur(echec, 'Le projet n’a pas pu être supprimé.'));
+    }
+  }
+
+  async function supprimerQuandMeme() {
+    await soumettre(() => projectService.supprimer(modale.cible.id, { force: true }), {
       onSucces: () => {
         fermer();
+        setRetenu(null);
         recharger();
       },
     });
@@ -312,6 +340,16 @@ export default function ProjectsPage() {
         erreur={erreurAction}
         libelleConfirmer="Supprimer"
         danger
+      />
+
+      <ModaleSuppressionForcee
+        ouverte={modale.nom === 'supprimerQuandMeme'}
+        projet={modale.cible}
+        ecritures={retenu}
+        onFermer={fermer}
+        onConfirmer={supprimerQuandMeme}
+        envoi={envoi}
+        erreur={erreurAction}
       />
 
       <ModaleConfirmation

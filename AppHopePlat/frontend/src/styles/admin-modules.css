@@ -2059,3 +2059,103 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   Le dernier avertissement avant une suppression definitive
+
+   La fenetre ne demande pas "etes-vous sur ?" -- personne ne lit cette
+   question. Elle dit ce qui disparait, ce qui survit, et demande
+   d'ecrire le nom : le temps de l'ecrire est le temps de se raviser.
+   ============================================================ */
+
+.suppression-forcee {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+}
+
+.suppression-forcee__alerte {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: var(--etat-rouge-fond);
+  font-weight: 700;
+  color: var(--etat-rouge);
+}
+
+.suppression-forcee__alerte svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.suppression-forcee__intro {
+  font-weight: 600;
+}
+
+.suppression-forcee__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Ce qui survit, ce qui part : la couleur du liseré le dit avant le
+   texte, et le texte le confirme. */
+.suppression-forcee__liste li {
+  padding-left: 13px;
+  border-left: 3px solid var(--admin-bordure-forte);
+  color: var(--admin-texte-doux);
+}
+
+.suppression-forcee__garde {
+  border-left-color: var(--etat-vert) !important;
+}
+
+.suppression-forcee__efface {
+  border-left-color: var(--etat-rouge) !important;
+}
+
+.suppression-forcee__conseil {
+  padding: 11px 13px;
+  border-radius: 10px;
+  background-color: var(--admin-surface-douce);
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.suppression-forcee__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.suppression-forcee__champ input {
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--admin-texte);
+}
+
+.suppression-forcee__champ input:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 1px;
+}
+
+.suppression-forcee__aide {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}

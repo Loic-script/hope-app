@@ -451,13 +451,69 @@ export async function supprimer(id, client = null) {
   return resultat.rowCount > 0;
 }
 
+/**
+ * Detache et efface ce qui retient un projet, avant sa suppression
+ * forcee.
+ *
+ * Tout n'a pas le meme poids :
+ *
+ *   * un DON appartient a celui qui l'a fait. On ne l'efface pas : on le
+ *     detache du projet et il rejoint les fonds de HOPE. Le donateur le
+ *     garde dans "Mes dons", et la comptabilite ne perd pas un ariary ;
+ *   * un INVESTISSEMENT est une affectation interne : le retirer rend la
+ *     somme aux fonds disponibles ;
+ *   * une DEPENSE et une AFFECTATION de partenaire ne valent que par ce
+ *     projet : elles partent avec lui, comme les missions.
+ *
+ * Rend le compte de ce qui a ete touche, pour le journal.
+ */
+export async function detacherEcritures(id, client) {
+  const dons = await query(
+    `UPDATE donations SET project_id = NULL, allocation = 'HOPE'
+      WHERE project_id = $1
+      RETURNING id`,
+    [id],
+    client
+  );
+  const investissements = await query(
+    'DELETE FROM investments WHERE project_id = $1 RETURNING id',
+    [id],
+    client
+  );
+  const depenses = await query(
+    'DELETE FROM expenses WHERE project_id = $1 RETURNING id',
+    [id],
+    client
+  );
+  const affectations = await query(
+    'DELETE FROM affectation WHERE projet_id = $1 RETURNING id',
+    [id],
+    client
+  );
+  const missions = await query(
+    'DELETE FROM mission WHERE projet_id = $1 RETURNING id',
+    [id],
+    client
+  );
+
+  return {
+    donsDetaches: dons.rowCount,
+    investissements: investissements.rowCount,
+    depenses: depenses.rowCount,
+    affectations: affectations.rowCount,
+    missions: missions.rowCount,
+  };
+}
+
 /** Compte les ecritures rattachees, pour expliquer un refus de suppression. */
 export async function compterEcritures(id, client = null) {
   const resultat = await query(
     `SELECT
        (SELECT COUNT(*)::int FROM donations   WHERE project_id = $1) AS dons,
        (SELECT COUNT(*)::int FROM investments WHERE project_id = $1) AS investissements,
-       (SELECT COUNT(*)::int FROM expenses    WHERE project_id = $1) AS depenses`,
+       (SELECT COUNT(*)::int FROM expenses    WHERE project_id = $1) AS depenses,
+       (SELECT COUNT(*)::int FROM affectation WHERE projet_id = $1) AS affectations,
+       (SELECT COUNT(*)::int FROM mission     WHERE projet_id = $1) AS missions`,
     [id],
     client
   );
