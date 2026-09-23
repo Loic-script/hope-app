@@ -1232,14 +1232,24 @@ export function RattachementModale({ ouverte, projet, beneficiaires = [], onFerm
  * volontaire. Une tache attribuee d'office n'est pas du benevolat --
  * c'est celui qui la prend qui s'y engage.
  */
+/**
+ * Ajouter une tache, ou en modifier une.
+ *
+ * Le meme formulaire sert aux deux : ce qu'on demande a la creation est
+ * exactement ce qu'on corrige ensuite. Passer "tache" le remplit et fait
+ * basculer en modification -- le projet devient alors fixe, et l'equipe
+ * se gere depuis la fenetre de la tache, ou elle a ses propres gestes.
+ */
 export function TacheModale({
   ouverte,
   projet = null,
   projets = null,
   benevoles = null,
+  tache = null,
   onFermer,
   onEnregistre,
 }) {
+  const edition = Boolean(tache);
   const [titre, setTitre] = useState('');
   const [description, setDescription] = useState('');
   const [projetId, setProjetId] = useState('');
@@ -1255,17 +1265,18 @@ export function TacheModale({
   useEffect(() => {
     if (!ouverte) return;
     setErreur('');
-    setTitre('');
-    setDescription('');
-    setProjetId(projet ? String(projet.id) : '');
-    setEcheance('');
-    setPriorite('moyenne');
-    setMinimum('');
-    setMaximum('');
-    setCompetences([]);
+    setTitre(tache?.titre ?? '');
+    setDescription(tache?.description ?? '');
+    setProjetId(tache ? String(tache.projetId) : projet ? String(projet.id) : '');
+    // La date arrive en ISO ; le champ la veut en AAAA-MM-JJ.
+    setEcheance(tache?.echeance ? String(tache.echeance).slice(0, 10) : '');
+    setPriorite(tache?.priorite ?? 'moyenne');
+    setMinimum(tache?.benevolesMin ? String(tache.benevolesMin) : '');
+    setMaximum(tache?.benevolesMax ? String(tache.benevolesMax) : '');
+    setCompetences(tache?.competencesRequises ?? []);
     setAutres('');
     setEquipe([]);
-  }, [ouverte, projet, setErreur]);
+  }, [ouverte, projet, tache, setErreur]);
 
   /*
    * Les deux listes se remplissent de la meme facon : on choisit dans la
@@ -1301,6 +1312,21 @@ export function TacheModale({
         ...autres.split(',').map((valeur) => valeur.trim()).filter(Boolean),
       ]),
     ];
+    const commun = {
+      titre,
+      description,
+      echeance,
+      priorite,
+      benevolesMin: minimum === '' ? null : Number(minimum),
+      benevolesMax: maximum === '' ? null : Number(maximum),
+      competencesRequises: requises,
+    };
+
+    if (edition) {
+      await soumettre(() => taskService.modifier(tache.id, commun), { onSucces: onEnregistre });
+      return;
+    }
+
     const cible = projet ? projet.id : projetId;
     if (!cible) {
       setErreur('Choisissez le projet auquel rattacher la tâche.');
@@ -1308,17 +1334,7 @@ export function TacheModale({
     }
 
     await soumettre(
-      () =>
-        taskService.creer(cible, {
-          titre,
-          description,
-          echeance,
-          priorite,
-          benevolesMin: minimum === '' ? null : Number(minimum),
-          benevolesMax: maximum === '' ? null : Number(maximum),
-          competencesRequises: requises,
-          benevoleIds: equipe,
-        }),
+      () => taskService.creer(cible, { ...commun, benevoleIds: equipe }),
       { onSucces: onEnregistre }
     );
   }
@@ -1326,16 +1342,22 @@ export function TacheModale({
   return (
     <ModaleFormulaire
       ouverte={ouverte}
-      titre="Ajouter une tâche"
-      sousTitre={projet ? `Projet : ${projet.name}` : undefined}
+      titre={edition ? 'Modifier la tâche' : 'Ajouter une tâche'}
+      sousTitre={
+        edition
+          ? `Projet : ${tache.projetNom}`
+          : projet
+            ? `Projet : ${projet.name}`
+            : undefined
+      }
       onFermer={onFermer}
       onSoumettre={enregistrer}
       envoi={envoi}
       erreur={erreur}
-      libelleValider="Ajouter"
+      libelleValider={edition ? 'Enregistrer' : 'Ajouter'}
     >
       <div className="formulaire-grille">
-        {!projet && (
+        {!projet && !edition && (
           <ChampSelection
             label="Projet"
             id="tache-projet"
@@ -1522,7 +1544,7 @@ export function TacheModale({
           l'equipe decide a qui confier la tache. Les competences que la
           tache demande sont mises en avant sur chaque ligne.
         */}
-        {benevoles && benevoles.length > 0 && (
+        {!edition && benevoles && benevoles.length > 0 && (
           <div className="champ-admin champ-admin--pleine-largeur">
             <span className="champ-admin__label" id="tache-affectation">
               Affecter des bénévoles

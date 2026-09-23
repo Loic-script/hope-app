@@ -125,6 +125,7 @@ router.get('/tasks/:id/files/:fileId', tasks.fichier);
 router.get('/taches', tasks.listerTout);
 router.get('/taches/benevoles', tasks.benevoles);
 router.get('/taches/:id', tasks.recuperer);
+router.patch('/taches/:id', exigerEcriture, tasks.modifier);
 router.post('/taches/:id/equipe', tasks.affecter);
 router.delete('/taches/:id/equipe/:benevoleId', tasks.retirer);
 router.post('/taches/:id/demandes/:benevoleId/accepter', tasks.accepter);

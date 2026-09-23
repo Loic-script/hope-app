@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { IconeCrayon } from './AdminIcons.jsx';
 import { Modale } from './forms.jsx';
+import { TacheModale } from './modales.jsx';
 import { Badge } from './ui.jsx';
 import Visage from './Visage.jsx';
 import { Carrousel } from '../preuves/MediasPreuve.jsx';
@@ -36,6 +38,7 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
   const [envoi, setEnvoi] = useState(false);
   const [affectation, setAffectation] = useState(false);
   const [confirmerSuppression, setConfirmerSuppression] = useState(false);
+  const [enModification, setEnModification] = useState(false);
   const [preuve, setPreuve] = useState(null);
 
   useEffect(() => {
@@ -103,8 +106,15 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
             <div className="fenetre-tache__pied">
               {confirmerSuppression ? (
                 <span className="fenetre-tache__confirmer">
-                  Supprimer définitivement cette tâche ?
-                  <button type="button" className="btn btn--danger btn--petit" onClick={supprimer} disabled={envoi}>
+                  {tache.equipe.length > 0
+                    ? `${tache.equipe.length} bénévole(s) y travaillent : retirez l’équipe d’abord.`
+                    : 'Supprimer définitivement cette tâche ?'}
+                  <button
+                    type="button"
+                    className="btn btn--danger btn--petit"
+                    onClick={supprimer}
+                    disabled={envoi || tache.equipe.length > 0}
+                  >
                     Oui, supprimer
                   </button>
                   <button
@@ -117,8 +127,7 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
                   </button>
                 </span>
               ) : (
-                !archive &&
-                tache.equipe.length === 0 && (
+                !archive && (
                   <button
                     type="button"
                     className="lien-action lien-action--danger"
@@ -130,6 +139,17 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
                 )
               )}
               <span className="fenetre-tache__espace" />
+              {!archive && (
+                <button
+                  type="button"
+                  className="btn btn--neutre"
+                  onClick={() => setEnModification(true)}
+                  disabled={envoi}
+                >
+                  <IconeCrayon />
+                  Modifier
+                </button>
+              )}
               {lienProjet && (
                 <Link className="btn btn--neutre" to={`/admin/projects/${tache.projetId}`}>
                   Ouvrir le projet
@@ -318,6 +338,20 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
           rang={preuve.rang}
           onRang={(rang) => setPreuve({ rang })}
           onFermer={() => setPreuve(null)}
+        />
+      )}
+
+      {/* Le meme formulaire qu'a la creation, rempli de la tache. */}
+      {tache && (
+        <TacheModale
+          ouverte={enModification}
+          tache={tache}
+          onFermer={() => setEnModification(false)}
+          onEnregistre={(misAJour) => {
+            setEnModification(false);
+            if (misAJour?.id) setTache(misAJour);
+            onChange?.();
+          }}
         />
       )}
     </>

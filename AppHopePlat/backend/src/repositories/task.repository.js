@@ -237,6 +237,31 @@ export async function creer(
   return trouverParId(resultat.rows[0].id, client);
 }
 
+/**
+ * Met a jour ce que l'equipe a saisi : l'intitule, la consigne, la date
+ * de fin, la priorite, la taille voulue, l'experience requise.
+ *
+ * Ni le projet ni l'equipe ne passent par ici : l'un tient a l'histoire
+ * de la tache, l'autre a ses propres gestes (affecter, retirer).
+ */
+export async function mettreAJour(
+  id,
+  { titre, description, echeance, competencesRequises, priorite, benevolesMin, benevolesMax },
+  client = null
+) {
+  const resultat = await query(
+    `UPDATE tache
+        SET titre = $2, description = $3, echeance = $4, competences_requises = $5,
+            priorite = $6, benevoles_min = $7, benevoles_max = $8
+      WHERE id = $1
+      RETURNING id`,
+    [id, titre, description, echeance, competencesRequises, priorite, benevolesMin, benevolesMax],
+    client
+  );
+  if (!resultat.rows[0]) return null;
+  return trouverParId(id, client);
+}
+
 export async function supprimer(id, client = null) {
   const resultat = await query('DELETE FROM tache WHERE id = $1 RETURNING id', [id], client);
   return resultat.rowCount > 0;

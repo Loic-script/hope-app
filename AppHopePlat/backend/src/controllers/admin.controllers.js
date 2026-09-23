@@ -433,6 +433,7 @@ export const tasks = {
   listerTout: gerer((req) => taskService.listerPourAdmin(req.query)),
   recuperer: gerer((req) => taskService.recupererPourAdmin(req.params.id)),
   benevoles: gerer(() => taskService.benevolesAffectables()),
+  modifier: gerer((req) => taskService.modifier(req.params.id, req.body)),
   affecter: gerer((req) => taskService.affecter(req.params.id, req.body, req.admin)),
   retirer: gerer((req) => taskService.retirer(req.params.id, req.params.benevoleId, req.admin)),
   accepter: gerer((req) => taskService.accepter(req.params.id, req.params.benevoleId, req.admin)),

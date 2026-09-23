@@ -261,6 +261,77 @@ function competences(valeur) {
 }
 
 /**
+ * Modifie une tache deja creee.
+ *
+ * Les memes controles qu'a la creation : c'est le meme formulaire, et
+ * une regle qui ne vaudrait qu'a l'ouverture ne vaudrait rien. Deux
+ * differences seulement :
+ *
+ *   * le projet ne change pas. Une tache appartient a son projet depuis
+ *     sa naissance -- son equipe, ses preuves et son historique y sont
+ *     rattaches ;
+ *   * le maximum ne peut pas descendre sous l'equipe deja formee : on
+ *     ne met personne dehors par une modification de formulaire.
+ */
+export async function modifier(id, corps = {}) {
+  const identifiant = uuid(id, 'La tâche');
+  const titre = String(corps.titre ?? '').trim();
+  const description = String(corps.description ?? '').trim();
+  const echeance = String(corps.echeance ?? '').trim();
+  const competencesRequises = competences(corps.competencesRequises);
+  const priorite = String(corps.priorite ?? 'moyenne').trim().toLowerCase();
+  const benevolesMin = nombreDeBenevoles(corps.benevolesMin, 'benevolesMin');
+  const benevolesMax = nombreDeBenevoles(corps.benevolesMax, 'benevolesMax');
+
+  const details = {};
+  if (titre === '') details.titre = 'Champ obligatoire';
+  else if (titre.length > 160) details.titre = '160 caractères au maximum';
+  if (echeance !== '' && Number.isNaN(new Date(echeance).getTime())) {
+    details.echeance = 'Date invalide';
+  }
+  if (!PRIORITES.includes(priorite)) {
+    details.priorite = `Valeurs acceptées : ${PRIORITES.join(', ')}`;
+  }
+  if (benevolesMin !== null && benevolesMax !== null && benevolesMin > benevolesMax) {
+    details.benevolesMax = 'Le maximum ne peut pas être inférieur au minimum';
+  }
+  if (Object.keys(details).length > 0) {
+    throw new ErreurValidation('La tâche est incomplète.', details);
+  }
+
+  return transaction(async (client) => {
+    const tache = await verrouiller(identifiant, client);
+    if (tache.projetArchiveLe) {
+      throw new ErreurRegleMetier('Ce projet est archivé : ses tâches sont closes.', 'PROJET_ARCHIVE');
+    }
+
+    const dejaLa = Number(tache.equipeNombre ?? 0);
+    if (benevolesMax !== null && dejaLa > benevolesMax) {
+      throw new ErreurRegleMetier(
+        `L’équipe compte déjà ${dejaLa} bénévole(s) : le maximum ne peut pas être plus bas.`,
+        'EQUIPE_PLUS_GRANDE'
+      );
+    }
+
+    const misAJour = await taskRepository.mettreAJour(
+      identifiant,
+      {
+        titre,
+        description: description === '' ? null : description,
+        echeance: echeance === '' ? null : echeance,
+        competencesRequises,
+        priorite,
+        benevolesMin,
+        benevolesMax,
+      },
+      client
+    );
+    if (!misAJour) throw new ErreurIntrouvable('La tâche', id);
+    return misAJour;
+  });
+}
+
+/**
  * Retire une tache.
  *
  * Seulement si personne n'y travaille : effacer sous les pieds d'une

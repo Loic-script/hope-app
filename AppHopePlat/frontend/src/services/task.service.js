@@ -37,6 +37,12 @@ export async function benevoles() {
   return data.items ?? [];
 }
 
+/** PATCH /api/admin/taches/:id — modifie une tache deja creee. */
+export async function modifier(id, tache) {
+  const { data } = await api.patch(`/admin/taches/${id}`, tache);
+  return data;
+}
+
 /** POST /api/admin/taches/:id/equipe — affecte un ou plusieurs benevoles. */
 export async function affecter(id, benevoleIds) {
   const { data } = await api.post(`/admin/taches/${id}/equipe`, { benevoleIds });
