@@ -1296,16 +1296,26 @@
   box-shadow: var(--admin-ombre);
 }
 
+/*
+ * Le libelle prend la place qui reste et passe a la ligne ; le chiffre
+ * garde la sienne. Sans cela, "Delai moyen de publication" poussait
+ * "0,8 j" hors de la carte, qui le rognait.
+ */
 .carte-chiffre__libelle {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 13.5px;
   color: var(--admin-texte-doux);
+  overflow-wrap: anywhere;
 }
 
 .carte-chiffre__valeur {
+  flex: none;
   margin-top: 6px;
   font-size: 23px;
   font-weight: 700;
   line-height: 1.15;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   color: var(--admin-texte);
 }
