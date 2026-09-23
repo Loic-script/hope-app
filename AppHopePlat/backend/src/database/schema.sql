@@ -1912,3 +1912,36 @@ ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_valide;
 ALTER TABLE notifications ADD CONSTRAINT notifications_type_valide CHECK (
   type IN ('DONATION', 'MESSAGE', 'PROJECT_COMPLETED', 'INVESTMENT', 'ACCOUNT_CREATED',
            'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF'));
+
+/*
+ * La priorite d'une tache, et la taille de son equipe.
+ *
+ * "urgente, haute, moyenne, simple" : l'equipe le dit a la creation. Ce
+ * choix ne suffit pourtant pas -- une tache "moyenne" a rendre demain
+ * presse plus qu'une "haute" a rendre dans deux mois. L'ordre
+ * d'affichage combine donc les deux (voir ORDRE, task.repository).
+ *
+ * La date de fin, elle, existait deja sous le nom "echeance" : c'est la
+ * meme colonne, que les ecrans nomment desormais "date de fin".
+ */
+ALTER TABLE tache ADD COLUMN IF NOT EXISTS priorite VARCHAR(10) NOT NULL DEFAULT 'moyenne';
+
+ALTER TABLE tache DROP CONSTRAINT IF EXISTS tache_priorite_valide;
+ALTER TABLE tache ADD CONSTRAINT tache_priorite_valide CHECK (
+  priorite IN ('urgente', 'haute', 'moyenne', 'simple'));
+
+/*
+ * Combien de benevoles la tache demande.
+ *
+ * Le minimum dit a l'equipe quand la tache est prete a partir ; le
+ * maximum ferme l'equipe -- une demande de plus est refusee, plutot que
+ * de se decouvrir a douze pour un travail a deux.
+ */
+ALTER TABLE tache ADD COLUMN IF NOT EXISTS benevoles_min SMALLINT;
+ALTER TABLE tache ADD COLUMN IF NOT EXISTS benevoles_max SMALLINT;
+
+ALTER TABLE tache DROP CONSTRAINT IF EXISTS tache_equipe_coherente;
+ALTER TABLE tache ADD CONSTRAINT tache_equipe_coherente CHECK (
+  (benevoles_min IS NULL OR benevoles_min >= 1)
+  AND (benevoles_max IS NULL OR benevoles_max >= 1)
+  AND (benevoles_min IS NULL OR benevoles_max IS NULL OR benevoles_min <= benevoles_max));

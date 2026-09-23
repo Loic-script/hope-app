@@ -381,7 +381,7 @@ function ProfilBenevole({ benevole }) {
               titre: 'Statut',
               rendu: (t) => <Badge valeur={t.statut} libelles={STATUTS_TACHE} couleur={COULEURS_TACHE[t.statut]} />,
             },
-            { cle: 'echeance', titre: 'Échéance', rendu: (t) => fmt.date(t.echeance) },
+            { cle: 'echeance', titre: 'Date de fin', rendu: (t) => fmt.date(t.echeance) },
             { cle: 'priseLe', titre: 'Prise le', rendu: (t) => fmt.date(t.priseLe) },
             { cle: 'livreeLe', titre: 'Livrée le', rendu: (t) => fmt.date(t.livreeLe) },
           ]}

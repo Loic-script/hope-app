@@ -20,6 +20,7 @@ import ChampPhotoProfil from '../ChampPhotoProfil.jsx';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as taskService from '../../services/task.service.js';
 import { FAMILLES_COMPETENCES } from '../../utils/competences.js';
+import { PRIORITES } from '../../utils/priorites.js';
 import * as documentService from '../../services/document.service.js';
 import * as donationService from '../../services/donation.service.js';
 import * as donorService from '../../services/donor.service.js';
@@ -1229,12 +1230,24 @@ export function RattachementModale({ ouverte, projet, beneficiaires = [], onFerm
  * volontaire. Une tache attribuee d'office n'est pas du benevolat --
  * c'est celui qui la prend qui s'y engage.
  */
-export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
+export function TacheModale({
+  ouverte,
+  projet = null,
+  projets = null,
+  benevoles = null,
+  onFermer,
+  onEnregistre,
+}) {
   const [titre, setTitre] = useState('');
   const [description, setDescription] = useState('');
+  const [projetId, setProjetId] = useState('');
   const [echeance, setEcheance] = useState('');
+  const [priorite, setPriorite] = useState('moyenne');
+  const [minimum, setMinimum] = useState('');
+  const [maximum, setMaximum] = useState('');
   const [competences, setCompetences] = useState([]);
   const [autres, setAutres] = useState('');
+  const [equipe, setEquipe] = useState([]);
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
   useEffect(() => {
@@ -1242,16 +1255,29 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
     setErreur('');
     setTitre('');
     setDescription('');
+    setProjetId(projet ? String(projet.id) : '');
     setEcheance('');
+    setPriorite('moyenne');
+    setMinimum('');
+    setMaximum('');
     setCompetences([]);
     setAutres('');
-  }, [ouverte, setErreur]);
+    setEquipe([]);
+  }, [ouverte, projet, setErreur]);
 
   function basculer(competence) {
     setCompetences((choisies) =>
       choisies.includes(competence)
         ? choisies.filter((c) => c !== competence)
         : [...choisies, competence]
+    );
+  }
+
+  function basculerBenevole(benevoleId) {
+    setEquipe((choisis) =>
+      choisis.includes(benevoleId)
+        ? choisis.filter((b) => b !== benevoleId)
+        : [...choisis, benevoleId]
     );
   }
 
@@ -1264,13 +1290,23 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
         ...autres.split(',').map((valeur) => valeur.trim()).filter(Boolean),
       ]),
     ];
+    const cible = projet ? projet.id : projetId;
+    if (!cible) {
+      setErreur('Choisissez le projet auquel rattacher la tâche.');
+      return;
+    }
+
     await soumettre(
       () =>
-        taskService.creer(projet.id, {
+        taskService.creer(cible, {
           titre,
           description,
           echeance,
+          priorite,
+          benevolesMin: minimum === '' ? null : Number(minimum),
+          benevolesMax: maximum === '' ? null : Number(maximum),
           competencesRequises: requises,
+          benevoleIds: equipe,
         }),
       { onSucces: onEnregistre }
     );
@@ -1288,6 +1324,22 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
       libelleValider="Ajouter"
     >
       <div className="formulaire-grille">
+        {!projet && (
+          <ChampSelection
+            label="Projet"
+            id="tache-projet"
+            obligatoire
+            required
+            vide="Choisir le projet"
+            options={(projets ?? []).map((p) => ({ valeur: String(p.id), label: p.name }))}
+            value={projetId}
+            onChange={(e) => setProjetId(e.target.value)}
+            aide="La tâche apparaîtra dans l’onglet Tâches de ce projet."
+            disabled={envoi}
+            pleineLargeur
+          />
+        )}
+
         <ChampTexte
           label="Intitulé"
           id="tache-titre"
@@ -1311,7 +1363,7 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
           disabled={envoi}
         />
         <ChampTexte
-          label="Échéance"
+          label="Date de fin"
           id="tache-echeance"
           type="date"
           value={echeance}
@@ -1319,6 +1371,73 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
           aide="Le jour où la tâche doit être rendue. Facultative."
           disabled={envoi}
         />
+
+        {/*
+          La priorite dit ce qui passe devant. Elle ne suffit pourtant
+          pas : une tache moyenne a rendre demain presse plus qu'une
+          haute a rendre dans deux mois. Le serveur combine les deux
+          pour l'ordre d'affichage, ici comme chez le benevole.
+        */}
+        <div className="champ-admin">
+          <span className="champ-admin__label" id="tache-priorite">
+            Priorité
+          </span>
+          <div className="filtres priorites-tache" role="group" aria-labelledby="tache-priorite">
+            {PRIORITES.map((niveau) => (
+              <button
+                key={niveau.cle}
+                type="button"
+                className={`filtres__bouton priorites-tache__choix priorites-tache__choix--${niveau.teinte}${
+                  priorite === niveau.cle ? ' filtres__bouton--actif' : ''
+                }`}
+                aria-pressed={priorite === niveau.cle}
+                onClick={() => setPriorite(niveau.cle)}
+                disabled={envoi}
+              >
+                {niveau.label}
+              </button>
+            ))}
+          </div>
+          <p className="champ-admin__aide">
+            {PRIORITES.find((n) => n.cle === priorite)?.aide} — une date de fin proche la fait
+            monter d’elle-même.
+          </p>
+        </div>
+
+        <div className="champ-admin">
+          <span className="champ-admin__label" id="tache-equipe-taille">
+            Nombre de bénévoles
+          </span>
+          <div className="taille-equipe" role="group" aria-labelledby="tache-equipe-taille">
+            <label className="taille-equipe__champ">
+              <span>Minimum</span>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={minimum}
+                onChange={(e) => setMinimum(e.target.value)}
+                disabled={envoi}
+                placeholder="1"
+              />
+            </label>
+            <label className="taille-equipe__champ">
+              <span>Maximum</span>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={maximum}
+                onChange={(e) => setMaximum(e.target.value)}
+                disabled={envoi}
+                placeholder="—"
+              />
+            </label>
+          </div>
+          <p className="champ-admin__aide">
+            Facultatif. Le maximum ferme l’équipe : au-delà, une demande est refusée.
+          </p>
+        </div>
 
         {/*
           L'experience requise : les memes intitules que la fiche du
@@ -1369,6 +1488,40 @@ export function TacheModale({ ouverte, projet, onFermer, onEnregistre }) {
           disabled={envoi}
           pleineLargeur
         />
+
+        {/*
+          L'equipe peut etre posee des la creation : quand on sait deja a
+          qui confier la tache, la lui donner tout de suite evite un
+          aller-retour. Sinon, la tache reste ouverte aux demandes.
+        */}
+        {benevoles && benevoles.length > 0 && (
+          <div className="champ-admin champ-admin--pleine-largeur">
+            <span className="champ-admin__label" id="tache-affectation">
+              Affecter des bénévoles
+            </span>
+            <div className="affectation-tache" role="group" aria-labelledby="tache-affectation">
+              {benevoles.map((benevole) => (
+                <button
+                  key={benevole.benevoleId}
+                  type="button"
+                  className={`puce-competence${
+                    equipe.includes(benevole.benevoleId) ? ' puce-competence--actif' : ''
+                  }`}
+                  aria-pressed={equipe.includes(benevole.benevoleId)}
+                  onClick={() => basculerBenevole(benevole.benevoleId)}
+                  disabled={envoi}
+                >
+                  {`${benevole.prenom ?? ''} ${benevole.nom ?? ''}`.trim() || benevole.email}
+                </button>
+              ))}
+            </div>
+            <p className="champ-admin__aide">
+              {equipe.length === 0
+                ? 'Personne : la tâche reste ouverte, les bénévoles la demanderont.'
+                : `${equipe.length} bénévole(s) affecté(s) dès la création — ils en sont prévenus.`}
+            </p>
+          </div>
+        )}
       </div>
     </ModaleFormulaire>
   );

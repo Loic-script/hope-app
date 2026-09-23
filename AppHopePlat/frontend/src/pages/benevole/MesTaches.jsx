@@ -5,6 +5,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
+import { delaiRestant, LIBELLES_PRIORITE } from '../../utils/priorites.js';
 import { ActionDemande, EquipeTache, STATUTS_TACHE } from './composants.jsx';
 import { DetailTacheModale, LivraisonModale } from './ModalesTache.jsx';
 
@@ -257,13 +258,22 @@ function CompetencesTache({ requises, acquises = [] }) {
  * la fenetre au passage.
  */
 function CarteTache({ tache, actions, onOuvrir = null, mesCompetences = [] }) {
-  // Une echeance depassee sur une tache non livree merite d'etre vue.
+  // Une date de fin depassee sur une tache non livree merite d'etre vue.
   const enRetard =
     tache.echeance && tache.statut !== 'livree' && new Date(tache.echeance) < new Date();
+  const delai = delaiRestant(tache.echeance, tache.statut);
+  const equipeVoulue = tailleVoulue(tache);
 
   return (
     <article className={`carte-tache${onOuvrir ? ' carte-tache--ouvrable' : ''}`}>
-      <p className="carte-tache__projet">{tache.projetNom}</p>
+      <div className="carte-tache__haut">
+        <p className="carte-tache__projet">{tache.projetNom}</p>
+        {/* La priorite en tete : c'est elle qui explique pourquoi cette
+            tache est en haut de la colonne. */}
+        <span className={`jeton-priorite jeton-priorite--${tache.priorite ?? 'moyenne'}`}>
+          {LIBELLES_PRIORITE[tache.priorite ?? 'moyenne']}
+        </span>
+      </div>
       <h3 className="carte-tache__titre">
         {onOuvrir ? (
           <button
@@ -285,14 +295,27 @@ function CarteTache({ tache, actions, onOuvrir = null, mesCompetences = [] }) {
       <div className="carte-tache__pied">
         {tache.echeance && (
           <span className={`carte-tache__echeance${enRetard ? ' carte-tache__echeance--retard' : ''}`}>
-            {enRetard ? 'En retard depuis le ' : 'Échéance : '}
-            {fmt.date(tache.echeance)}
+            Date de fin : {fmt.date(tache.echeance)}
+            {delai && <span className="carte-tache__delai"> — {delai.texte}</span>}
           </span>
         )}
+        {equipeVoulue && <span className="carte-tache__equipe-voulue">{equipeVoulue}</span>}
         <span className="carte-tache__statut">{STATUTS_TACHE[tache.statut]}</span>
       </div>
 
       {actions && <div className="carte-tache__actions">{actions}</div>}
     </article>
   );
+}
+
+/** "Équipe de 2 à 4", "au moins 2" : ce que la tâche demande comme monde. */
+function tailleVoulue({ benevolesMin, benevolesMax }) {
+  if (benevolesMin && benevolesMax) {
+    return benevolesMin === benevolesMax
+      ? `Équipe de ${benevolesMin}`
+      : `Équipe de ${benevolesMin} à ${benevolesMax}`;
+  }
+  if (benevolesMin) return `Au moins ${benevolesMin} bénévole(s)`;
+  if (benevolesMax) return `Au plus ${benevolesMax} bénévole(s)`;
+  return null;
 }

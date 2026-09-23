@@ -1073,7 +1073,7 @@ export default function ProjectDetailPage() {
               },
               {
                 cle: 'echeance',
-                titre: 'Échéance',
+                titre: 'Date de fin',
                 rendu: (tache) =>
                   tache.echeance ? (
                     fmt.date(tache.echeance)

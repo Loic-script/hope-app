@@ -17,10 +17,34 @@
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
+/*
+ * Ce qui presse.
+ *
+ * La priorite pose la base ; la date de fin la rehausse. Une tache
+ * "moyenne" a rendre demain doit passer devant une "haute" a rendre
+ * dans deux mois -- sans quoi l'equipe classe des etiquettes au lieu de
+ * traiter ce qui brule.
+ */
+const URGENCE = `
+  CASE t.priorite
+    WHEN 'urgente' THEN 300 WHEN 'haute' THEN 200 WHEN 'moyenne' THEN 100 ELSE 0
+  END
+  + CASE
+      WHEN t.statut = 'livree' OR t.echeance IS NULL THEN 0
+      WHEN t.echeance < CURRENT_DATE THEN 150
+      WHEN t.echeance <= CURRENT_DATE + 3 THEN 100
+      WHEN t.echeance <= CURRENT_DATE + 7 THEN 50
+      ELSE 0
+    END
+`;
+
 /** Ce que toute lecture rend. */
 const COLONNES = `
   t.id, t.projet_id, t.titre, t.description, t.echeance, t.statut,
-  t.competences_requises,
+  t.competences_requises, t.priorite, t.benevoles_min, t.benevoles_max,
+  -- L'urgence, calculee ici pour que tous les ecrans s'accordent : la
+  -- priorite choisie, rehaussee par une date de fin proche ou passee.
+  (${URGENCE})::int AS urgence,
   t.prise_le, t.livree_le, t.livree_par, t.validee_par, t.cree_le,
   p.name      AS projet_nom,
   p.reference AS projet_reference,
@@ -89,6 +113,7 @@ const VUE_BENEVOLE = `
 
 /** Ce qui est en cours d'abord, puis a faire, puis livre ; l'echeance proche devant. */
 const ORDRE = `
+  ${URGENCE} DESC,
   CASE t.statut WHEN 'en_cours' THEN 0 WHEN 'a_faire' THEN 1 ELSE 2 END,
   t.echeance ASC NULLS LAST,
   t.cree_le DESC
@@ -179,14 +204,34 @@ export async function trouverPourBenevole(id, benevoleId, client = null) {
 
 /** Cree une tache : elle nait a faire, sans equipe. */
 export async function creer(
-  { projetId, titre, description = null, echeance = null, competencesRequises = [] },
+  {
+    projetId,
+    titre,
+    description = null,
+    echeance = null,
+    competencesRequises = [],
+    priorite = 'moyenne',
+    benevolesMin = null,
+    benevolesMax = null,
+  },
   client = null
 ) {
   const resultat = await query(
-    `INSERT INTO tache (projet_id, titre, description, echeance, competences_requises)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO tache
+       (projet_id, titre, description, echeance, competences_requises,
+        priorite, benevoles_min, benevoles_max)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
-    [projetId, titre, description, echeance, competencesRequises],
+    [
+      projetId,
+      titre,
+      description,
+      echeance,
+      competencesRequises,
+      priorite,
+      benevolesMin,
+      benevolesMax,
+    ],
     client
   );
   return trouverParId(resultat.rows[0].id, client);
@@ -203,7 +248,10 @@ export async function supprimer(id, client = null) {
  */
 export async function verrouiller(id, client) {
   const resultat = await query(
-    `SELECT t.id, t.titre, t.statut, t.projet_id, p.archived_at AS projet_archive_le
+    `SELECT t.id, t.titre, t.statut, t.projet_id, t.benevoles_min, t.benevoles_max,
+            p.archived_at AS projet_archive_le,
+            (SELECT COUNT(*)::int FROM tache_benevole tb
+              WHERE tb.tache_id = t.id AND tb.statut = 'affectee') AS equipe_nombre
        FROM tache t
        LEFT JOIN projects p ON p.id = t.projet_id
       WHERE t.id = $1

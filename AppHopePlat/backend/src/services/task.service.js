@@ -102,15 +102,25 @@ export async function benevolesAffectables() {
 /**
  * Cree une tache sur un projet.
  *
- * Elle nait sans equipe : visible de tous les benevoles, qui peuvent la
- * demander. L'echeance est facultative, mais si elle est donnee, elle
- * doit etre une date.
+ * Elle peut naitre sans equipe -- visible de tous les benevoles, qui la
+ * demandent -- ou avec : l'equipe HOPE sait parfois d'avance a qui elle
+ * la confie, et la lui poser tout de suite lui evite un aller-retour.
+ *
+ * La date de fin est facultative ; donnee, elle doit etre une date. La
+ * priorite, elle, a une valeur par defaut : une tache sans priorite
+ * declaree est une tache moyenne.
  */
 export async function creerPourProjet(projetId, corps = {}) {
   const titre = String(corps.titre ?? '').trim();
   const description = String(corps.description ?? '').trim();
   const echeance = String(corps.echeance ?? '').trim();
   const competencesRequises = competences(corps.competencesRequises);
+  const priorite = String(corps.priorite ?? 'moyenne').trim().toLowerCase();
+  const benevolesMin = nombreDeBenevoles(corps.benevolesMin, 'benevolesMin');
+  const benevolesMax = nombreDeBenevoles(corps.benevolesMax, 'benevolesMax');
+  const benevoleIds = [
+    ...new Set((Array.isArray(corps.benevoleIds) ? corps.benevoleIds : []).map((b) => String(b))),
+  ];
 
   const details = {};
   if (titre === '') details.titre = 'Champ obligatoire';
@@ -118,17 +128,101 @@ export async function creerPourProjet(projetId, corps = {}) {
   if (echeance !== '' && Number.isNaN(new Date(echeance).getTime())) {
     details.echeance = 'Date invalide';
   }
+  if (!PRIORITES.includes(priorite)) {
+    details.priorite = `Valeurs acceptées : ${PRIORITES.join(', ')}`;
+  }
+  if (benevolesMin !== null && benevolesMax !== null && benevolesMin > benevolesMax) {
+    details.benevolesMax = 'Le maximum ne peut pas être inférieur au minimum';
+  }
+  if (benevolesMax !== null && benevoleIds.length > benevolesMax) {
+    details.benevoleIds = `Cette tâche accepte au plus ${benevolesMax} bénévole(s)`;
+  }
+  if (benevoleIds.some((b) => !UUID.test(b))) {
+    details.benevoleIds = 'Identifiants invalides';
+  }
   if (Object.keys(details).length > 0) {
     throw new ErreurValidation('La tâche est incomplète.', details);
   }
 
-  return taskRepository.creer({
-    projetId,
-    titre,
-    description: description === '' ? null : description,
-    echeance: echeance === '' ? null : echeance,
-    competencesRequises,
+  if (benevoleIds.length > 0) {
+    const affectables = new Set((await taskRepository.benevolesAffectables()).map((b) => b.benevoleId));
+    if (benevoleIds.some((b) => !affectables.has(b))) {
+      throw new ErreurValidation('Un des bénévoles choisis n’a pas de compte actif.', {
+        benevoleIds: 'Bénévole inconnu ou inactif',
+      });
+    }
+  }
+
+  return transaction(async (client) => {
+    const tache = await taskRepository.creer(
+      {
+        projetId,
+        titre,
+        description: description === '' ? null : description,
+        echeance: echeance === '' ? null : echeance,
+        competencesRequises,
+        priorite,
+        benevolesMin,
+        benevolesMax,
+      },
+      client
+    );
+
+    // L'equipe posee des la creation : les benevoles en sont prevenus,
+    // comme lors d'une affectation ordinaire.
+    if (benevoleIds.length > 0) {
+      for (const benevoleId of benevoleIds) {
+        await taskRepository.affecter(tache.id, benevoleId, null, client);
+      }
+      await taskRepository.alignerStatut(tache.id, client);
+      await prevenir(
+        benevoleIds,
+        {
+          titre: 'Une tâche vous est confiée',
+          corps: `L’équipe HOPE vous a affecté à « ${titre} ».`,
+        },
+        client
+      );
+      return taskRepository.trouverParId(tache.id, client);
+    }
+
+    return tache;
   });
+}
+
+/** Les priorites, de la plus pressante a la moins pressante. */
+export const PRIORITES = ['urgente', 'haute', 'moyenne', 'simple'];
+
+/**
+ * L'equipe est-elle complete ?
+ *
+ * Le maximum pose a la creation ferme l'equipe : sans lui, une tache
+ * pour deux personnes se retrouve a douze, et onze repartent decues.
+ * Sans maximum, rien ne limite -- c'est le cas par defaut.
+ */
+function exigerDeLaPlace(tache, ajoutes = 1) {
+  const maximum = tache.benevolesMax ?? null;
+  if (maximum === null) return;
+
+  const dejaLa = Number(tache.equipeNombre ?? 0);
+  if (dejaLa + ajoutes > maximum) {
+    throw new ErreurRegleMetier(
+      `Cette tâche demande au plus ${maximum} bénévole(s) ; l’équipe en compte déjà ${dejaLa}.`,
+      'EQUIPE_COMPLETE'
+    );
+  }
+}
+
+/** Un nombre de benevoles : entier positif, ou rien. */
+function nombreDeBenevoles(valeur, champ) {
+  if (valeur === undefined || valeur === null || valeur === '') return null;
+  const nombre = Number(valeur);
+  if (!Number.isInteger(nombre) || nombre < 1 || nombre > 100) {
+    throw new ErreurValidation('Indiquez un nombre de bénévoles entre 1 et 100.', {
+      [champ]: 'Entre 1 et 100',
+    });
+  }
+  return nombre;
 }
 
 /** Comment nommer un benevole dans une notification. */
@@ -216,6 +310,14 @@ export async function affecter(id, corps = {}, admin = null) {
     const tache = await verrouiller(id, client);
     exigerNonLivree(tache);
 
+    // On ne compte que ceux qui vont vraiment entrer dans l'equipe.
+    const absents = [];
+    for (const benevoleId of benevoleIds) {
+      const place = await taskRepository.place(tache.id, benevoleId, client);
+      if (place?.statut !== 'affectee') absents.push(benevoleId);
+    }
+    exigerDeLaPlace(tache, absents.length);
+
     const nouveaux = [];
     for (const benevoleId of benevoleIds) {
       const actuelle = await taskRepository.place(tache.id, benevoleId, client);
@@ -273,6 +375,7 @@ export async function accepter(id, benevoleId, admin = null) {
 
     const actuelle = await taskRepository.place(tache.id, benevole, client);
     if (actuelle?.statut !== 'demandee') throw new ErreurIntrouvable('La demande', benevoleId);
+    exigerDeLaPlace(tache);
 
     await taskRepository.affecter(tache.id, benevole, admin?.id ?? null, client);
     await taskRepository.alignerStatut(tache.id, client);

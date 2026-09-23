@@ -1748,3 +1748,65 @@
     transition: none;
   }
 }
+
+/* --- Priorite, taille d'equipe, affectation : le formulaire de tache --- */
+
+.priorites-tache {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+/*
+ * Chaque degre porte sa teinte, meme non choisi : l'oeil apprend
+ * l'echelle avant de lire les mots. Choisi, le bouton prend la teinte
+ * pleine (filtres__bouton--actif s'en charge pour le fond).
+ */
+.priorites-tache__choix--rouge  { color: var(--etat-rouge); }
+.priorites-tache__choix--ambre  { color: var(--etat-ambre); }
+.priorites-tache__choix--bleu   { color: var(--hope-bleu-lisible); }
+.priorites-tache__choix--gris   { color: var(--admin-texte-doux); }
+
+.taille-equipe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.taille-equipe__champ {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.taille-equipe__champ input {
+  width: 84px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.affectation-tache {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface-douce);
+}
+
+/* Un delai qui presse ne se lit pas comme une date ordinaire. */
+.table__secondaire--alerte {
+  font-weight: 600;
+  color: var(--etat-rouge);
+}

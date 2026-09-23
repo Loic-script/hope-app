@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
 import FenetreTache, { COULEURS_TACHE, STATUTS_TACHE } from '../../components/admin/FenetreTache.jsx';
+import { TacheModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
   Badge,
+  BoutonAjout,
   EntetePage,
   EtatVide,
   Onglets,
@@ -12,8 +14,10 @@ import {
 } from '../../components/admin/ui.jsx';
 import Visage from '../../components/admin/Visage.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
+import * as projectService from '../../services/project.service.js';
 import * as taskService from '../../services/task.service.js';
 import * as fmt from '../../utils/format.js';
+import { delaiRestant, LIBELLES_PRIORITE, TEINTES_PRIORITE } from '../../utils/priorites.js';
 
 /** Les onglets, et le filtre que chacun envoie au serveur. */
 const FILTRES = {
@@ -35,11 +39,23 @@ const FILTRES = {
 export default function TachesPage() {
   const [filtre, setFiltre] = useState('toutes');
   const [ouverte, setOuverte] = useState(null);
+  const [ajout, setAjout] = useState(false);
 
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => taskService.listerTout(FILTRES[filtre]),
     [filtre]
   );
+
+  /*
+   * De quoi creer une tache d'ici : la liste des projets -- il faut bien
+   * en choisir un -- et celle des benevoles affectables, pour poser
+   * l'equipe tout de suite. Chargees une fois, a l'ouverture de la page.
+   */
+  const { donnees: projets } = useChargement(
+    () => projectService.lister({ status: 'IN_PROGRESS', pageSize: 200 }),
+    []
+  );
+  const { donnees: benevoles } = useChargement(() => taskService.benevoles(), []);
 
   const taches = donnees?.items ?? [];
   const compteurs = donnees?.counts ?? {};
@@ -57,7 +73,8 @@ export default function TachesPage() {
       <EntetePage
         fil={[{ label: 'Accueil', to: '/admin' }, { label: 'Tâches' }]}
         titre="Tâches"
-        accroche="Les tâches de tous les projets, leur équipe, et les demandes des bénévoles à valider."
+        accroche="Les tâches de tous les projets, leur équipe, et les demandes des bénévoles à valider. Les plus urgentes d’abord."
+        actions={<BoutonAjout onClick={() => setAjout(true)}>Ajouter une tâche</BoutonAjout>}
       />
 
       {erreur && <Alerte>{erreur}</Alerte>}
@@ -89,9 +106,25 @@ export default function TachesPage() {
               ),
             },
             {
+              cle: 'priorite',
+              titre: 'Priorité',
+              rendu: (tache) => (
+                <Badge
+                  valeur={tache.priorite ?? 'moyenne'}
+                  libelles={LIBELLES_PRIORITE}
+                  couleur={TEINTES_PRIORITE[tache.priorite ?? 'moyenne']}
+                />
+              ),
+            },
+            {
               cle: 'echeance',
-              titre: 'Échéance',
-              rendu: (tache) => (tache.echeance ? fmt.date(tache.echeance) : '—'),
+              titre: 'Date de fin',
+              rendu: (tache) => <DateDeFin tache={tache} />,
+            },
+            {
+              cle: 'equipeTaille',
+              titre: 'Équipe voulue',
+              rendu: (tache) => tailleVoulue(tache),
             },
             {
               cle: 'statut',
@@ -126,7 +159,7 @@ export default function TachesPage() {
               texte={
                 filtre === 'demandes'
                   ? 'Quand un bénévole demande une tâche, elle apparaît ici.'
-                  : 'Les tâches se créent depuis l’onglet Tâches de chaque projet.'
+                  : 'Créez-en une avec le bouton « Ajouter une tâche », ou depuis l’onglet Tâches d’un projet.'
               }
             />
           }
@@ -136,6 +169,17 @@ export default function TachesPage() {
       {ouverte && (
         <FenetreTache tacheId={ouverte} lienProjet onFermer={() => setOuverte(null)} onChange={recharger} />
       )}
+
+      <TacheModale
+        ouverte={ajout}
+        projets={projets?.items ?? []}
+        benevoles={benevoles ?? []}
+        onFermer={() => setAjout(false)}
+        onEnregistre={() => {
+          setAjout(false);
+          recharger();
+        }}
+      />
     </>
   );
 }
@@ -153,4 +197,34 @@ export function EquipeEnBref({ equipe = [] }) {
       {equipe.length === 1 && <span className="equipe-bref__nom">{nom(equipe[0])}</span>}
     </span>
   );
+}
+
+/**
+ * La date de fin, et ce qu'il en reste.
+ *
+ * Le seul jour ne dit pas s'il presse : "12/10" demande un calcul,
+ * "A rendre dans 2 jours" non. Les deux se lisent donc ensemble.
+ */
+function DateDeFin({ tache }) {
+  if (!tache.echeance) return '—';
+  const delai = delaiRestant(tache.echeance, tache.statut);
+
+  return (
+    <div>
+      <div className="table__principal">{fmt.date(tache.echeance)}</div>
+      {delai && (
+        <div className={`table__secondaire${delai.pressant ? ' table__secondaire--alerte' : ''}`}>
+          {delai.texte}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** "2 à 4", "au moins 2", "au plus 4" : la taille d'equipe voulue. */
+function tailleVoulue({ benevolesMin, benevolesMax }) {
+  if (benevolesMin && benevolesMax) return `${benevolesMin} à ${benevolesMax}`;
+  if (benevolesMin) return `au moins ${benevolesMin}`;
+  if (benevolesMax) return `au plus ${benevolesMax}`;
+  return '—';
 }
