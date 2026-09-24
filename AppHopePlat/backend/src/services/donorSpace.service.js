@@ -97,11 +97,21 @@ function identiteDonateur(compte) {
  * Rien de secret : c'est le numero auquel le donateur envoie son don.
  */
 export function compteMvola() {
-  const numero = String(config.mvola.numero ?? '').replace(/\D/g, '');
+  return compteOperateur(config.mvola);
+}
+
+/** GET /api/donateur/paiement/orange-money : le compte Orange Money de HOPE. */
+export function compteOrangeMoney() {
+  return compteOperateur(config.orangeMoney);
+}
+
+/** Un compte de paiement mobile : utilisable s'il porte un numero malgache. */
+function compteOperateur({ numero, titulaire }) {
+  const chiffres = String(numero ?? '').replace(/\D/g, '');
   return {
-    disponible: /^03[2-9]\d{7}$/.test(numero),
-    numero,
-    titulaire: config.mvola.titulaire,
+    disponible: /^03[2-9]\d{7}$/.test(chiffres),
+    numero: chiffres,
+    titulaire,
   };
 }
 

@@ -71,6 +71,12 @@ export async function compteMvola() {
   return data;
 }
 
+/** GET /api/donateur/paiement/orange-money : le compte Orange Money de HOPE. */
+export async function compteOrangeMoney() {
+  const { data } = await apiDonateur.get('/donateur/paiement/orange-money');
+  return data;
+}
+
 /** GET /api/donateur/actualites : les nouvelles de HOPE, sans argent. */
 export async function actualites() {
   const { data } = await apiDonateur.get('/donateur/actualites');

@@ -75,6 +75,11 @@ export const config = {
     numero: optionnel('HOPE_MVOLA_NUMERO', ''),
     titulaire: optionnel('HOPE_MVOLA_TITULAIRE', 'HOPE Madagascar'),
   },
+  // Le compte Orange Money de HOPE, sur le meme principe.
+  orangeMoney: {
+    numero: optionnel('HOPE_ORANGE_MONEY_NUMERO', ''),
+    titulaire: optionnel('HOPE_ORANGE_MONEY_TITULAIRE', 'HOPE Madagascar'),
+  },
 
   admin: {
     log: optionnel('ADMIN_LOG', 'AdminHope'),

@@ -35,6 +35,7 @@ export const dons = {
   lister: gerer((req) => donorSpaceService.mesDons(req.donateur.id)),
   faire: gerer((req) => donorSpaceService.faireUnDon(req.donateur, req.body), { statut: 201 }),
   mvola: gerer(async () => donorSpaceService.compteMvola()),
+  orangeMoney: gerer(async () => donorSpaceService.compteOrangeMoney()),
 };
 
 /** Les nouvelles de HOPE. */

@@ -175,9 +175,15 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
   };
 }
 
+/** Les numeros de chaque paiement mobile, sans le 0 : "341234567". */
+const OPERATEURS_MOBILES = {
+  mvola: { numero: /^3[48]\d{7}$/, aide: 'Un numéro Telma : 034 ou 038' },
+  orange_money: { numero: /^3[27]\d{7}$/, aide: 'Un numéro Orange : 032 ou 037' },
+};
+
 /**
  * Ce que le donateur declare de son paiement, quand il l'a deja fait :
- * la reference de la transaction (le SMS de MVola) et le numero qui a
+ * la reference de la transaction (le SMS de l'operateur) et le numero qui a
  * paye. L'equipe les rapproche de son releve avant de confirmer -- ils
  * ne valent pas preuve a eux seuls.
  */
@@ -193,10 +199,10 @@ function justificatif(corps, mode) {
   const saisi = String(corps.numeroPayeur ?? '').replace(/[\s.-]/g, '');
   if (saisi) {
     const national = saisi.replace(/^(\+?261|0)/, '');
-    // Un numero MVola : Telma, 034 ou 038.
-    if (mode.cle !== 'mvola' || !/^3[48]\d{7}$/.test(national)) {
-      throw new ErreurValidation('Ce numéro n’est pas un numéro MVola.', {
-        numeroPayeur: 'Un numéro Telma : 034 ou 038',
+    const operateur = OPERATEURS_MOBILES[mode.cle];
+    if (!operateur || !operateur.numero.test(national)) {
+      throw new ErreurValidation(`Ce numéro n’est pas un numéro ${mode.libelle}.`, {
+        numeroPayeur: operateur?.aide ?? 'Numéro de paiement mobile inattendu',
       });
     }
     numero = `+261${national}`;

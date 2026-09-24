@@ -94,6 +94,12 @@ function deuxNomsDeLangue(libelle) {
   return trouve ? [trouve[1], trouve[2]] : [libelle, undefined];
 }
 
+/** Les moyens qui ont leur page de paiement, ouverte apres l'etape 4. */
+const PAGES_DE_PAIEMENT = {
+  mvola: '/donateur/completer-profil/mvola',
+  orange_money: '/donateur/completer-profil/orange-money',
+};
+
 /**
  * Le parcours d'accueil du donateur.
  *
@@ -216,11 +222,12 @@ export default function Parcours() {
               allerA(3);
             }}
             onSuivante={async (reponse) => {
-              // MVola se paie sur sa propre page, puis le parcours
-              // reprend a la cinquieme etape.
-              if (reponse?.paiement?.mode === 'mvola') {
+              // Les paiements mobiles se font sur leur propre page,
+              // puis le parcours reprend a la cinquieme etape.
+              const page = PAGES_DE_PAIEMENT[reponse?.paiement?.mode];
+              if (page) {
                 await rafraichir?.();
-                navigate('/donateur/completer-profil/mvola');
+                navigate(page);
                 return;
               }
               await apresEnregistrement(4, reponse);

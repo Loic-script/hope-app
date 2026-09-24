@@ -33,6 +33,7 @@ router.get('/projets/:id', profil.projet);
 router.get('/dons', dons.lister);
 // Ou envoyer un don MVola : le numero de HOPE.
 router.get('/paiement/mvola', dons.mvola);
+router.get('/paiement/orange-money', dons.orangeMoney);
 router.post('/dons', dons.faire);
 
 // Les nouvelles de HOPE.
