@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
+import logoTaptapSend from '../../assets/plateformes/taptap-send.webp';
+import logoRemitly from '../../assets/plateformes/remitly.webp';
+import logoSendwave from '../../assets/plateformes/sendwave.webp';
+import logoWorldremit from '../../assets/plateformes/worldremit.webp';
+import logoPaysend from '../../assets/plateformes/paysend.webp';
+import logoOrangeMoneyEurope from '../../assets/plateformes/orange-money-europe.webp';
+import logoWesternUnion from '../../assets/plateformes/western-union.webp';
+import logoMoneygram from '../../assets/plateformes/moneygram.webp';
+import logoRia from '../../assets/plateformes/ria.webp';
+import logoXoom from '../../assets/plateformes/xoom.webp';
+import logoGlobalTransfert from '../../assets/plateformes/global-transfert.webp';
+import logoRevolut from '../../assets/plateformes/revolut.webp';
 import Copier from '../../components/paiement/Copier.jsx';
 import { montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
@@ -10,23 +22,26 @@ import * as fmt from '../../utils/format.js';
  * y arrive : sur un portefeuille mobile (MVola, Orange Money), en
  * especes au guichet, ou sur un compte bancaire.
  *
+ * Chaque service garde son logo et sa palette : le fond du bandeau est
+ * celui du logo, l'accent est la couleur de la marque.
+ *
  * Verifie sur les sites des services et la liste des partenaires
  * internationaux de MVola (septembre 2026). Ces offres changent : a
  * relire de temps en temps.
  */
 const PLATEFORMES = [
-  { cle: 'taptap_send', nom: 'Taptap Send', arrivees: ['mobile'], mobiles: ['mvola', 'orange'], depuis: 'Europe, Royaume-Uni, États-Unis, Canada', note: 'Envoi sans frais' },
-  { cle: 'remitly', nom: 'Remitly', arrivees: ['mobile'], mobiles: ['mvola', 'orange'] },
-  { cle: 'sendwave', nom: 'Sendwave', arrivees: ['mobile'], mobiles: ['mvola', 'orange'], depuis: 'France, Belgique, Espagne, Italie, Royaume-Uni, États-Unis, Canada' },
-  { cle: 'worldremit', nom: 'WorldRemit', arrivees: ['mobile'], mobiles: ['mvola', 'orange'] },
-  { cle: 'paysend', nom: 'Paysend', arrivees: ['mobile'], mobiles: ['mvola'] },
-  { cle: 'orange_money_europe', nom: 'Orange Money Europe', arrivees: ['mobile'], mobiles: ['orange'], depuis: 'France' },
-  { cle: 'western_union', nom: 'Western Union', arrivees: ['mobile', 'especes', 'banque'], mobiles: ['mvola', 'orange'] },
-  { cle: 'moneygram', nom: 'MoneyGram', arrivees: ['mobile', 'especes', 'banque'], mobiles: ['mvola', 'orange'] },
-  { cle: 'ria', nom: 'Ria', arrivees: ['especes', 'banque', 'mobile'], mobiles: ['mvola'], note: 'Retrait aussi dans les bureaux de Paositra Malagasy' },
-  { cle: 'xoom', nom: 'Xoom (PayPal)', arrivees: ['banque', 'especes', 'mobile'], mobiles: ['orange'], note: 'Le service de transfert de PayPal' },
-  { cle: 'global_transfert', nom: 'Global Transfert Océan Indien', arrivees: ['especes'], depuis: 'La Réunion, Maurice', note: 'Retrait dans les bureaux de Paositra Malagasy' },
-  { cle: 'revolut', nom: 'Revolut', arrivees: ['banque'] },
+  { cle: 'taptap_send', logo: logoTaptapSend, fond: '#ffffff', accent: '#0b6b2e', nom: 'Taptap Send', arrivees: ['mobile'], mobiles: ['mvola', 'orange'], depuis: 'Europe, Royaume-Uni, États-Unis, Canada', note: 'Envoi sans frais' },
+  { cle: 'remitly', logo: logoRemitly, fond: '#ffffff', accent: '#1f2a5c', nom: 'Remitly', arrivees: ['mobile'], mobiles: ['mvola', 'orange'] },
+  { cle: 'sendwave', logo: logoSendwave, fond: '#ffec02', accent: '#4a0f1e', nom: 'Sendwave', arrivees: ['mobile'], mobiles: ['mvola', 'orange'], depuis: 'France, Belgique, Espagne, Italie, Royaume-Uni, États-Unis, Canada' },
+  { cle: 'worldremit', logo: logoWorldremit, fond: '#ffffff', accent: '#5b2d86', nom: 'WorldRemit', arrivees: ['mobile'], mobiles: ['mvola', 'orange'] },
+  { cle: 'paysend', logo: logoPaysend, fond: '#7633ff', accent: '#7633ff', nom: 'Paysend', arrivees: ['mobile'], mobiles: ['mvola'] },
+  { cle: 'orange_money_europe', logo: logoOrangeMoneyEurope, fond: '#ffffff', accent: '#ff7900', nom: 'Orange Money Europe', arrivees: ['mobile'], mobiles: ['orange'], depuis: 'France' },
+  { cle: 'western_union', logo: logoWesternUnion, fond: '#ffdd00', accent: '#111111', nom: 'Western Union', arrivees: ['mobile', 'especes', 'banque'], mobiles: ['mvola', 'orange'] },
+  { cle: 'moneygram', logo: logoMoneygram, fond: '#ffffff', accent: '#e2231a', nom: 'MoneyGram', arrivees: ['mobile', 'especes', 'banque'], mobiles: ['mvola', 'orange'] },
+  { cle: 'ria', logo: logoRia, fond: '#ff6100', accent: '#ff6100', nom: 'Ria', arrivees: ['especes', 'banque', 'mobile'], mobiles: ['mvola'], note: 'Retrait aussi dans les bureaux de Paositra Malagasy' },
+  { cle: 'xoom', logo: logoXoom, fond: '#ffffff', accent: '#0d9ddb', nom: 'Xoom (PayPal)', arrivees: ['banque', 'especes', 'mobile'], mobiles: ['orange'], note: 'Le service de transfert de PayPal' },
+  { cle: 'global_transfert', logo: logoGlobalTransfert, fond: '#000000', accent: '#111111', nom: 'Global Transfert Océan Indien', arrivees: ['especes'], depuis: 'La Réunion, Maurice', note: 'Retrait dans les bureaux de Paositra Malagasy' },
+  { cle: 'revolut', logo: logoRevolut, fond: '#ffffff', accent: '#111111', nom: 'Revolut', arrivees: ['banque'] },
 ];
 
 const ARRIVEES = {
@@ -196,7 +211,11 @@ export default function PaiementPlateforme() {
                       className="plt__carte"
                       onClick={() => choisir(plateforme)}
                       disabled={possibles.length === 0}
+                      style={{ '--fond': plateforme.fond, '--accent': plateforme.accent }}
                     >
+                      <span className="plt__logo">
+                        <img src={plateforme.logo} alt="" decoding="async" />
+                      </span>
                       <span className="plt__nom">{plateforme.nom}</span>
                       <span className="plt__arrivees">
                         {plateforme.arrivees.map((a) => (
@@ -234,7 +253,14 @@ export default function PaiementPlateforme() {
 
         {/* ---------- 2. L'envoi ---------- */}
         {profil && choix && !don && (
-          <section className="plt__temps" key="envoi">
+          <section
+            className="plt__temps plt__temps--marque"
+            key="envoi"
+            style={{ '--fond': choix.fond, '--accent': choix.accent }}
+          >
+            <div className="plt__banniere">
+              <img src={choix.logo} alt={choix.nom} decoding="async" />
+            </div>
             <h1 className="plt__titre" ref={titre} tabIndex={-1}>
               Envoyer avec {choix.nom}
             </h1>

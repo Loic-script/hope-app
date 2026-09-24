@@ -196,6 +196,9 @@
 }
 
 .plt__carte {
+  --accent: var(--pl-violet);
+  --fond: #fff;
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -203,7 +206,8 @@
   width: 100%;
   height: 100%;
   min-height: 78px;
-  padding: 10px 12px;
+  overflow: hidden;
+  padding: 0 12px 10px;
   border: 1.5px solid var(--pl-trait);
   border-radius: 14px;
   background: #fff;
@@ -215,9 +219,41 @@
 }
 
 .plt__carte:hover:not(:disabled) {
-  border-color: var(--pl-violet);
-  box-shadow: 0 8px 20px rgba(93, 86, 150, 0.14);
+  border-color: var(--accent);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 22%, transparent);
   transform: translateY(-2px);
+}
+
+/* Le bandeau au logo : son fond est celui du logo, pour qu'il s'y fonde ;
+   un filet a la couleur de la marque le separe du corps de la carte. */
+.plt__logo {
+  display: block;
+  box-sizing: border-box;
+  align-self: stretch;
+  height: 64px;
+  margin: 0 -12px 4px;
+  padding: 6px 12px;
+  border-bottom: 3px solid var(--accent);
+  background: var(--fond);
+  transition: filter 0.2s;
+}
+
+/* Le cadre fixe la taille : l'image le remplit sans deborder. */
+.plt__logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  transition: transform 0.3s var(--pl-anime);
+}
+
+.plt__carte:hover:not(:disabled) .plt__logo img {
+  transform: scale(1.06);
+}
+
+.plt__carte:disabled .plt__logo {
+  filter: grayscale(1);
 }
 
 .plt__carte:disabled {
@@ -242,8 +278,8 @@
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: var(--pl-bleu-pale);
-  color: var(--pl-violet);
+  background: color-mix(in srgb, var(--accent, var(--pl-violet)) 12%, #fff);
+  color: var(--accent, var(--pl-violet));
 }
 
 .plt__arrivee .plt__icone {
@@ -282,6 +318,64 @@
   color: var(--pl-texte);
   font-style: normal;
   font-weight: 600;
+}
+
+/* ---------- L'envoi, aux couleurs du service ---------- */
+.plt__banniere {
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 84px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-bottom: 4px solid var(--accent);
+  border-radius: 16px;
+  background: var(--fond);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 18%, transparent);
+  animation: plt-banniere 0.5s var(--pl-anime) both;
+}
+
+@keyframes plt-banniere {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.plt__banniere img {
+  display: block;
+  width: 70%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.plt__temps--marque .plt__destination-titre {
+  color: var(--accent);
+}
+
+.plt__temps--marque .plt__copier {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.plt__temps--marque .plt__copier:hover,
+.plt__temps--marque .plt__copier--fait {
+  background: var(--accent);
+  color: #fff;
+}
+
+.plt__temps--marque .plt__saisie:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.plt__temps--marque .plt__bouton {
+  background: var(--accent);
+}
+
+.plt__temps--marque .plt__bouton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 82%, #000);
 }
 
 /* ---------- Les destinations ---------- */
@@ -526,8 +620,13 @@
   }
 
   .plt__carte {
-    min-height: 104px;
-    padding: 14px 16px;
+    min-height: 150px;
+    padding: 0 16px 14px;
+  }
+
+  .plt__logo {
+    height: 76px;
+    margin: 0 -16px 6px;
   }
 
   .plt__destinations {
@@ -551,7 +650,16 @@
 
   .plt__carte {
     min-height: 0;
-    padding: 8px 10px;
+    padding: 0 10px 8px;
+  }
+
+  .plt__logo {
+    height: 50px;
+    margin: 0 -10px 2px;
+  }
+
+  .plt__banniere {
+    height: 64px;
   }
 
   .plt__note {

@@ -141,12 +141,20 @@ export async function referencePaiementPrise(reference, client) {
 /** Genere une reference lisible : DON-2026-0007. */
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
+  /*
+   * Le plus grand numero de l'annee, plus un -- pas le nombre de dons :
+   * un don supprime ferait retomber le compte sur une reference deja
+   * prise. Dans une transaction, un verrou (libere a la fin de celle-ci)
+   * empeche deux dons simultanes de tirer le meme numero.
+   */
+  if (client) await query("SELECT pg_advisory_xact_lock(hashtext('donations.reference'))", [], client);
   const resultat = await query(
-    'SELECT COUNT(*)::int AS total FROM donations WHERE reference LIKE $1',
+    `SELECT COALESCE(MAX(SUBSTRING(reference FROM '[0-9]+$')::int), 0) AS dernier
+       FROM donations WHERE reference LIKE $1`,
     [`DON-${annee}-%`],
     client
   );
-  return `DON-${annee}-${String(resultat.rows[0].total + 1).padStart(4, '0')}`;
+  return `DON-${annee}-${String(resultat.rows[0].dernier + 1).padStart(4, '0')}`;
 }
 
 /**

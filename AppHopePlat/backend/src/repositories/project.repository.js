@@ -317,12 +317,16 @@ export async function trouverPourMiseAJour(id, client) {
 /** Genere une reference lisible : PRJ-2026-0007. */
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
+  // Le plus grand numero + 1 : apres une suppression, le compte + 1
+  // retomberait sur une reference deja prise (voir donation.repository).
+  if (client) await query("SELECT pg_advisory_xact_lock(hashtext('projects.reference'))", [], client);
   const resultat = await query(
-    'SELECT COUNT(*)::int AS total FROM projects WHERE reference LIKE $1',
+    `SELECT COALESCE(MAX(SUBSTRING(reference FROM '[0-9]+$')::int), 0) AS dernier
+       FROM projects WHERE reference LIKE $1`,
     [`PRJ-${annee}-%`],
     client
   );
-  return `PRJ-${annee}-${String(resultat.rows[0].total + 1).padStart(4, '0')}`;
+  return `PRJ-${annee}-${String(resultat.rows[0].dernier + 1).padStart(4, '0')}`;
 }
 
 export async function creer(donnees, client = null) {
