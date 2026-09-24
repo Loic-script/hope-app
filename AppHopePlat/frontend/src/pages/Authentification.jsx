@@ -100,7 +100,7 @@ export default function Authentification() {
   }, []);
 
   return (
-    <div className="connexion">
+    <div className="connexion connexion--defile">
       {/* ----- Panneau d'illustration ----- */}
       <section
         className="connexion__illustration connexion__illustration--utilisateur"
