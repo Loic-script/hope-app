@@ -579,8 +579,8 @@
    ------------------------------------------------------------ */
 
 /*
- * Page Authentification : l'illustration reste en place, seul le panneau
- * du formulaire defile -- un long formulaire d'inscription ne fait pas
+ * Pages d'authentification (utilisateurs et admin) : l'illustration
+ * reste en place, seul le panneau du formulaire defile -- un long formulaire d'inscription ne fait pas
  * glisser la photo hors de l'ecran. Sur grand ecran seulement : en
  * dessous de 860px, l'illustration devient une banniere et la page
  * defile d'un seul tenant.

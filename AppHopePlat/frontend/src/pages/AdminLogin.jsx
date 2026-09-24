@@ -93,7 +93,7 @@ export default function AdminLogin() {
   const champEnErreur = erreur === MESSAGE_ERREUR;
 
   return (
-    <div className="connexion">
+    <div className="connexion connexion--defile">
       {/* ----- Panneau d'illustration ----- */}
       <section
         className="connexion__illustration"
