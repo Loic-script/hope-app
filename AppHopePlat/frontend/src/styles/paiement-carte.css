@@ -554,8 +554,63 @@
   border-top: 1px solid var(--ct-trait);
 }
 
-.carte__groupe-rang > input + input {
+.carte__groupe-rang > input + input,
+.carte__groupe-rang > input + .carte__cvc {
   border-left: 1px solid var(--ct-trait);
+}
+
+/* Le numero : le champ, et les marques acceptees au bout. */
+.carte__numero,
+.carte__cvc {
+  display: flex;
+  align-items: center;
+  background: #fff;
+}
+
+.carte__numero input,
+.carte__cvc input {
+  flex: 1;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.carte__numero:focus-within,
+.carte__cvc:focus-within {
+  background: #f6f5fc;
+  box-shadow: inset 3px 0 0 var(--ct-violet);
+}
+
+.carte__numero:focus-within input,
+.carte__cvc:focus-within input {
+  box-shadow: none;
+}
+
+.logos-cartes {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  padding-right: 10px;
+}
+
+.logos-cartes__logo {
+  width: 30px;
+  height: 19px;
+  transition: opacity 0.25s, filter 0.25s, transform 0.25s;
+}
+
+/* Le reseau reconnu reste en couleur ; les autres s'effacent. */
+.logos-cartes__logo--efface {
+  opacity: 0.22;
+  filter: grayscale(1);
+  transform: scale(0.92);
+}
+
+.icone-cvc {
+  flex: none;
+  width: 30px;
+  height: 20px;
+  margin-right: 10px;
 }
 
 .carte__saisie {

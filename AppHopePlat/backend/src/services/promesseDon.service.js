@@ -316,20 +316,49 @@ export async function declarerJustificatif(compte, don, corps = {}) {
   return { don: presenter(lu), message: 'Merci ! L’équipe HOPE rapproche votre paiement de son relevé.' };
 }
 
+/** Les reseaux de carte que la page reconnait. */
+const RESEAUX_CARTE = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  amex: 'American Express',
+  jcb: 'JCB',
+  autre: 'bancaire',
+};
+
 /**
  * Le don par carte : ce qu'il faut a l'equipe pour envoyer un lien de
  * paiement securise -- l'adresse e-mail, le titulaire, l'adresse de
  * facturation.
  *
  * JAMAIS le numero de carte, la date d'expiration ni le cryptogramme :
- * ils se saisissent chez le prestataire de paiement, pas ici. Une carte
- * ne transite pas par ce serveur, et n'est pas conservee dans cette base.
+ * la page les fait saisir, mais ils restent dans le navigateur, destines
+ * au prestataire de paiement. Ici n'arrivent que le reseau et les quatre
+ * derniers chiffres -- ce qu'imprime un recu --, et un numero complet est
+ * refuse. Une carte ne transite pas par ce serveur, et n'est pas
+ * conservee dans cette base.
  *
  * Rend la phrase que la notification de l'equipe portera, ou null.
  */
 function facturation(corps, mode, identite) {
   if (mode.cle !== 'carte_bancaire' || !corps.facturation) return null;
   const f = corps.facturation;
+
+  // Garde-fou : un numero de carte complet (13 a 19 chiffres) n'a rien a
+  // faire ici. On refuse, sans rien enregistrer ni recopier.
+  if (/\d{13,19}/.test(JSON.stringify(f).replace(/[\s.-]/g, ''))) {
+    throw new ErreurValidation('Un numéro de carte ne s’envoie jamais à HOPE.', { carte: 'Numéro refusé' });
+  }
+
+  // Ce que la page transmet de la carte : son reseau et ses 4 derniers
+  // chiffres, comme un recu. Rien d'autre.
+  let carte = '';
+  if (f.carte) {
+    const reseau = RESEAUX_CARTE[f.carte.marque];
+    if (!reseau || !/^\d{4}$/.test(String(f.carte.fin ?? ''))) {
+      throw new ErreurValidation('La carte indiquée n’est pas reconnue.', { carte: 'Carte non reconnue' });
+    }
+    carte = `carte ${reseau} •••• ${f.carte.fin} ; `;
+  }
 
   const titulaire = texteFacultatif(f.titulaire, 'titulaire', { max: 120 });
   if (!titulaire) {
@@ -347,7 +376,7 @@ function facturation(corps, mode, identite) {
 
   return (
     `Lien de paiement par carte à envoyer${identite.email ? ` à ${identite.email}` : ''} ` +
-    `(titulaire : ${titulaire} ; facturation : ${adresse}).`
+    `(${carte}titulaire : ${titulaire} ; facturation : ${adresse}).`
   );
 }
 

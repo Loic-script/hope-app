@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
-import logoCartes from '../../assets/paiement/cartes-bancaires.webp';
+import LogosCartes, { IconeCvc } from '../../components/paiement/LogosCartes.jsx';
 import { montantInitial, usePromesseDon } from '../../hooks/usePromesseDon.js';
+import { formaterExpiration, formaterNumero, reseauDe, resumeCarte, verifierCarte } from '../../utils/carteBancaire.js';
 import * as fmt from '../../utils/format.js';
-import { PAYS, PAYS_PAR_DEFAUT, nomDuPays } from '../../utils/pays.js';
+import { PAYS, PAYS_PAR_DEFAUT } from '../../utils/pays.js';
 
 /** Les devises d'un don, et les montants proposes dans chacune. */
 const DEVISES = [
@@ -58,8 +59,12 @@ export default function PaiementCarte() {
   const [devise, setDevise] = useState('MGA');
   const [montant, setMontant] = useState('');
   const [titulaire, setTitulaire] = useState('');
-  const [adresse, setAdresse] = useState({ pays: PAYS_PAR_DEFAUT, ligne: '', codePostal: '', ville: '' });
-  const [adresseOuverte, setAdresseOuverte] = useState(false);
+  const [adresse, setAdresse] = useState({ pays: PAYS_PAR_DEFAUT, ligne: '', ligne2: '', codePostal: '', ville: '' });
+  // La carte : dans cet etat du navigateur, et nulle part ailleurs. Jamais
+  // envoyee au serveur de HOPE (voir utils/carteBancaire.js).
+  const [numero, setNumero] = useState('');
+  const [expiration, setExpiration] = useState('');
+  const [cvc, setCvc] = useState('');
   const [details, setDetails] = useState(false);
   const [soumis, setSoumis] = useState(false);
   const titre = useRef(null);
@@ -75,9 +80,7 @@ export default function PaiementCarte() {
     const pays = String(personne.pays || PAYS_PAR_DEFAUT).toUpperCase();
     // Un pays en toutes lettres (bailleur) : Madagascar par defaut.
     const code = /^[A-Z]{2}$/.test(pays) ? pays : PAYS_PAR_DEFAUT;
-    setAdresse({ pays: code, ligne: personne.adresse ?? '', codePostal: '', ville: personne.ville ?? '' });
-    // Sans adresse connue, les champs s'ouvrent d'emblee.
-    setAdresseOuverte(!personne.adresse || !personne.ville);
+    setAdresse({ pays: code, ligne: personne.adresse ?? '', ligne2: '', codePostal: '', ville: personne.ville ?? '' });
     // Seulement au chargement.
   }, [profil]);
 
@@ -95,10 +98,13 @@ export default function PaiementCarte() {
         : somme < reglage.minimum
           ? `Au moins ${fmt.montant(reglage.minimum, devise)}.`
           : '',
+    ...verifierCarte({ numero, expiration, cvc }),
     titulaire: titulaire.trim() ? '' : 'Indiquez le nom inscrit sur la carte.',
     adresse: adresse.ligne.trim() && adresse.ville.trim() ? '' : 'Complétez l’adresse de facturation.',
   };
-  const valide = !erreurs.montant && !erreurs.titulaire && !erreurs.adresse;
+  const erreurCarte = erreurs.numero || erreurs.expiration || erreurs.cvc;
+  const valide = !erreurs.montant && !erreurCarte && !erreurs.titulaire && !erreurs.adresse;
+  const reseau = reseauDe(numero);
 
   function changerDevise(code) {
     setDevise(code);
@@ -109,24 +115,41 @@ export default function PaiementCarte() {
     evenement.preventDefault();
     setSoumis(true);
     setRefus('');
-    if (erreurs.adresse) setAdresseOuverte(true);
     if (!valide) {
-      const premier = erreurs.montant ? '#carte-montant' : erreurs.titulaire ? '#carte-titulaire' : '#carte-adresse';
+      const premier = erreurs.montant
+        ? '#carte-montant'
+        : erreurs.numero
+          ? '#carte-numero'
+          : erreurs.expiration
+            ? '#carte-expiration'
+            : erreurs.cvc
+              ? '#carte-cvc'
+              : erreurs.titulaire
+                ? '#carte-titulaire'
+                : '#carte-adresse';
       requestAnimationFrame(() => document.querySelector(premier)?.focus());
       return;
     }
 
-    await promettre({
+    const cree = await promettre({
       montant: somme,
       devise,
       facturation: {
         titulaire: titulaire.trim(),
-        adresse: adresse.ligne.trim(),
+        adresse: [adresse.ligne.trim(), adresse.ligne2.trim()].filter(Boolean).join(', '),
         codePostal: adresse.codePostal.trim(),
         ville: adresse.ville.trim(),
         pays: adresse.pays,
+        // Le reseau et les 4 derniers chiffres : rien d'autre ne part.
+        carte: resumeCarte(numero),
       },
     });
+    // La carte n'a plus rien a faire dans la page.
+    if (cree) {
+      setNumero('');
+      setExpiration('');
+      setCvc('');
+    }
   }
 
 
@@ -305,21 +328,64 @@ export default function PaiementCarte() {
                     <path d="M2.5 9.5h19" />
                   </svg>
                   <span>Carte</span>
-                  <img src={logoCartes} alt="Visa, Mastercard et autres cartes acceptées" decoding="async" />
                 </div>
 
-                {/* Pas de champ de carte : la raison, dite au donateur. */}
-                <p className="carte__lien-securise">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="5" y="10.5" width="14" height="10" rx="2" />
-                    <path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" />
-                  </svg>
-                  <span>
-                    Vous recevrez à <strong>{email}</strong> un lien de paiement sécurisé
-                    <span className="carte__long"> : c’est là que vous saisirez votre carte</span>. HOPE ne voit ni ne
-                    conserve jamais son numéro.
+                {/* Les informations de la carte : numero, puis expiration et CVC. */}
+                <div className="carte__champ carte__champ--boite">
+                  <span className="carte__etiquette" id="carte-infos-titre">
+                    Informations de la carte
                   </span>
-                </p>
+                  <div
+                    className={`carte__groupe carte__groupe--carte${soumis && erreurCarte ? ' carte__groupe--erreur' : ''}`}
+                    role="group"
+                    aria-labelledby="carte-infos-titre"
+                  >
+                    <span className="carte__numero">
+                      <input
+                        id="carte-numero"
+                        aria-label="Numéro de carte"
+                        inputMode="numeric"
+                        autoComplete="cc-number"
+                        placeholder="1234 1234 1234 1234"
+                        value={numero}
+                        onChange={(e) => setNumero(formaterNumero(e.target.value))}
+                        disabled={envoi}
+                        aria-invalid={soumis && Boolean(erreurs.numero)}
+                        spellCheck={false}
+                      />
+                      <LogosCartes actif={reseau?.cle ?? null} />
+                    </span>
+                    <span className="carte__groupe-rang">
+                      <input
+                        id="carte-expiration"
+                        aria-label="Date d’expiration (MM / AA)"
+                        inputMode="numeric"
+                        autoComplete="cc-exp"
+                        placeholder="MM / AA"
+                        value={expiration}
+                        onChange={(e) => setExpiration(formaterExpiration(e.target.value, expiration))}
+                        disabled={envoi}
+                        aria-invalid={soumis && Boolean(erreurs.expiration)}
+                      />
+                      <span className="carte__cvc">
+                        <input
+                          id="carte-cvc"
+                          aria-label="Cryptogramme (CVC)"
+                          inputMode="numeric"
+                          autoComplete="cc-csc"
+                          placeholder="CVC"
+                          value={cvc}
+                          maxLength={reseau?.cvc ?? 4}
+                          onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, reseau?.cvc ?? 4))}
+                          disabled={envoi}
+                          aria-invalid={soumis && Boolean(erreurs.cvc)}
+                        />
+                        <IconeCvc />
+                      </span>
+                    </span>
+                  </div>
+                  {soumis && erreurCarte && <span className="carte__erreur">{erreurCarte}</span>}
+                </div>
 
                 <label className="carte__champ carte__champ--boite" htmlFor="carte-titulaire">
                   <span className="carte__etiquette">Nom du titulaire de la carte</span>
@@ -341,80 +407,81 @@ export default function PaiementCarte() {
                   <span className="carte__etiquette" id="carte-adresse-titre">
                     Adresse de facturation
                   </span>
-                  {adresseOuverte ? (
-                    <div
-                      className={`carte__groupe${soumis && erreurs.adresse ? ' carte__groupe--erreur' : ''}`}
-                      role="group"
-                      aria-labelledby="carte-adresse-titre"
-                    >
-                      <span className="carte__groupe-select">
-                        <select
-                          aria-label="Pays"
-                          value={adresse.pays}
-                          onChange={(e) => setAdresse((a) => ({ ...a, pays: e.target.value }))}
-                          disabled={envoi}
-                          autoComplete="country"
-                        >
-                          {PAYS.map((p) => (
-                            <option key={p.code} value={p.code}>
-                              {p.nom}
-                            </option>
-                          ))}
-                        </select>
-                      </span>
+                  <div
+                    className={`carte__groupe${soumis && erreurs.adresse ? ' carte__groupe--erreur' : ''}`}
+                    role="group"
+                    aria-labelledby="carte-adresse-titre"
+                  >
+                    <span className="carte__groupe-select">
+                      <select
+                        aria-label="Pays"
+                        value={adresse.pays}
+                        onChange={(e) => setAdresse((a) => ({ ...a, pays: e.target.value }))}
+                        disabled={envoi}
+                        autoComplete="country"
+                      >
+                        {PAYS.map((p) => (
+                          <option key={p.code} value={p.code}>
+                            {p.nom}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                    <input
+                      id="carte-adresse"
+                      aria-label="Ligne d’adresse n°1"
+                      placeholder="Ligne d’adresse n°1"
+                      autoComplete="address-line1"
+                      value={adresse.ligne}
+                      maxLength={200}
+                      onChange={(e) => setAdresse((a) => ({ ...a, ligne: e.target.value }))}
+                      disabled={envoi}
+                    />
+                    <input
+                      aria-label="Ligne d’adresse n°2"
+                      placeholder="Ligne d’adresse n°2"
+                      autoComplete="address-line2"
+                      value={adresse.ligne2}
+                      maxLength={50}
+                      onChange={(e) => setAdresse((a) => ({ ...a, ligne2: e.target.value }))}
+                      disabled={envoi}
+                    />
+                    <span className="carte__groupe-rang">
                       <input
-                        id="carte-adresse"
-                        aria-label="Adresse"
-                        placeholder="Adresse"
-                        autoComplete="address-line1"
-                        value={adresse.ligne}
-                        maxLength={255}
-                        onChange={(e) => setAdresse((a) => ({ ...a, ligne: e.target.value }))}
+                        aria-label="Code postal"
+                        placeholder="Code postal"
+                        autoComplete="postal-code"
+                        value={adresse.codePostal}
+                        maxLength={20}
+                        onChange={(e) => setAdresse((a) => ({ ...a, codePostal: e.target.value }))}
                         disabled={envoi}
                       />
-                      <span className="carte__groupe-rang">
-                        <input
-                          aria-label="Code postal"
-                          placeholder="Code postal"
-                          autoComplete="postal-code"
-                          value={adresse.codePostal}
-                          maxLength={20}
-                          onChange={(e) => setAdresse((a) => ({ ...a, codePostal: e.target.value }))}
-                          disabled={envoi}
-                        />
-                        <input
-                          aria-label="Ville"
-                          placeholder="Ville"
-                          autoComplete="address-level2"
-                          value={adresse.ville}
-                          maxLength={120}
-                          onChange={(e) => setAdresse((a) => ({ ...a, ville: e.target.value }))}
-                          disabled={envoi}
-                        />
-                      </span>
-                    </div>
-                  ) : (
-                    // L'adresse du profil, resumee : on ne la retape pas.
-                    <div className="carte__adresse-resumee">
-                      <span>
-                        {[adresse.ligne, adresse.ville, nomDuPays(adresse.pays)].filter(Boolean).join(', ')}
-                      </span>
-                      <button
-                        type="button"
-                        className="carte__modifier"
-                        onClick={() => {
-                          setAdresseOuverte(true);
-                          requestAnimationFrame(() => document.querySelector('#carte-adresse')?.focus());
-                        }}
+                      <input
+                        aria-label="Ville"
+                        placeholder="Ville"
+                        autoComplete="address-level2"
+                        value={adresse.ville}
+                        maxLength={120}
+                        onChange={(e) => setAdresse((a) => ({ ...a, ville: e.target.value }))}
                         disabled={envoi}
-                      >
-                        Modifier
-                      </button>
-                    </div>
-                  )}
+                      />
+                    </span>
+                  </div>
                   {soumis && erreurs.adresse && <span className="carte__erreur">{erreurs.adresse}</span>}
                 </div>
               </div>
+
+              {/* Ce qui arrive a la carte, dit sans detour. */}
+              <p className="carte__lien-securise">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="10.5" width="14" height="10" rx="2" />
+                  <path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" />
+                </svg>
+                <span>
+                  Votre carte n’est pas débitée sur cette page, et son numéro n’est ni envoyé ni conservé par HOPE.
+                  L’équipe vous envoie à <strong>{email}</strong> un lien de paiement sécurisé pour régler.
+                </span>
+              </p>
 
               <button type="submit" className="carte__payer" disabled={envoi} aria-busy={envoi}>
                 {envoi ? (
@@ -439,9 +506,7 @@ export default function PaiementCarte() {
                 {refus}
               </p>
 
-              <p className="carte__pied">
-                Aucun montant n’est débité sur cette page. Votre carte se règle uniquement depuis le lien sécurisé.
-              </p>
+
             </form>
           )}
 
