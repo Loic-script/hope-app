@@ -46,6 +46,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
+import { pageDePaiement } from '../../utils/pagesPaiement.js';
 import { focusAutomatique, useEcranTelephone } from '../../utils/ecran.js';
 import {
   decalage,
@@ -93,18 +94,6 @@ function deuxNomsDeLangue(libelle) {
   const trouve = /^(.+?) \((.+)\)$/.exec(libelle ?? '');
   return trouve ? [trouve[1], trouve[2]] : [libelle, undefined];
 }
-
-/** Les moyens qui ont leur page de paiement, ouverte apres l'etape 4. */
-const PAGES_DE_PAIEMENT = {
-  mvola: '/donateur/completer-profil/mvola',
-  orange_money: '/donateur/completer-profil/orange-money',
-  carte_bancaire: '/donateur/completer-profil/carte',
-  virement_bancaire: '/donateur/completer-profil/virement',
-  depot_bancaire: '/donateur/completer-profil/depot',
-  especes: '/donateur/completer-profil/especes',
-  virement_international: '/donateur/completer-profil/virement-international',
-  plateforme: '/donateur/completer-profil/plateforme',
-};
 
 /**
  * Le parcours d'accueil du donateur.
@@ -230,7 +219,7 @@ export default function Parcours() {
             onSuivante={async (reponse) => {
               // Les paiements mobiles se font sur leur propre page,
               // puis le parcours reprend a la cinquieme etape.
-              const page = PAGES_DE_PAIEMENT[reponse?.paiement?.mode];
+              const page = pageDePaiement('/donateur/completer-profil', reponse?.paiement?.mode);
               if (page) {
                 await rafraichir?.();
                 navigate(page);

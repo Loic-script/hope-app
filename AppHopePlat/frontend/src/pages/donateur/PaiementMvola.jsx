@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import logoMvola from '../../assets/paiement/mvola.webp';
 import { MONTANTS_RAPIDES, numeroLisible, usePaiementMobile } from '../../hooks/usePaiementMobile.js';
-import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
 
 /** MVola : un numero Yas (ex-Telma), 034 ou 038. */
@@ -11,7 +10,7 @@ const MVOLA = {
   mode: 'mvola',
   numeroValide: /^3[48]\d{7}$/,
   messageNumero: 'Un numéro MVola commence par 034 ou 038.',
-  chargerCompte: donateurService.compteMvola,
+  cleCompte: 'mvola',
 };
 
 /**
@@ -57,6 +56,8 @@ export default function PaiementMvola() {
     validerMontant,
     declarer,
     quitter,
+    libelleSuite,
+    libellePlusTard,
   } = usePaiementMobile(MVOLA);
 
   return (
@@ -240,7 +241,7 @@ export default function PaiementMvola() {
                   </svg>
                 </button>
                 <button type="button" className="mvola__plus-tard" onClick={() => quitter()}>
-                  Payer plus tard
+                  {libellePlusTard}
                 </button>
               </div>
             </form>
@@ -353,7 +354,7 @@ export default function PaiementMvola() {
                   )}
                 </button>
                 <button type="button" className="mvola__plus-tard" onClick={() => quitter()} disabled={envoi}>
-                  Payer plus tard
+                  {libellePlusTard}
                 </button>
               </div>
               <p className="mvola__erreur mvola__erreur--centre" role="alert">
@@ -411,7 +412,7 @@ export default function PaiementMvola() {
 
             <div className="mvola__actions">
               <button type="button" className="mvola__bouton" onClick={() => quitter()}>
-                Continuer mon inscription
+                {libelleSuite}
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>

@@ -357,6 +357,7 @@ export function identiteBailleur(bailleur) {
   return {
     utilisateurId: bailleur.utilisateurId,
     qui: bailleur.raisonSociale || contact || bailleur.email,
+    email: bailleur.email,
     origine: 'partenaire',
     nouvelleFiche: async () => ({
       prenom: bailleur.prenom || null,
@@ -376,6 +377,7 @@ export function identiteBenevole(benevole) {
   return {
     utilisateurId: benevole.id,
     qui: [benevole.prenom, benevole.nom].filter(Boolean).join(' ') || benevole.email,
+    email: benevole.email,
     origine: 'bénévole',
     nouvelleFiche: async () => ({
       prenom: benevole.prenom || null,

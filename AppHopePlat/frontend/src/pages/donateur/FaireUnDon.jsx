@@ -43,6 +43,7 @@ export default function FaireUnDon() {
       }}
       chargerProjets={async () => (await service.listerProjets()).items ?? []}
       envoyer={service.faireUnDon}
+      payer="/donateur/payer"
     />
   );
 }

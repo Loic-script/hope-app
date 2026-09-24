@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import Copier from '../../components/paiement/Copier.jsx';
 import Indisponible from '../../components/paiement/Indisponible.jsx';
-import { REFERENCE_PAIEMENT, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
+import { REFERENCE_PAIEMENT, montantInitial, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
 
 const RAPIDES = [25000, 50000, 100000, 250000];
@@ -64,6 +64,10 @@ export default function PaiementVirement() {
     promettre,
     declarer,
     quitter,
+    montantPrevu,
+    devisePrevue,
+    libelleSuite,
+    libellePlusTard,
   } = usePromesseDon('virement_bancaire');
 
   const [etape, setEtape] = useState(0);
@@ -72,6 +76,12 @@ export default function PaiementVirement() {
   const [soumis, setSoumis] = useState(false);
   const [signale, setSignale] = useState(false);
   const titre = useRef(null);
+
+  // Le montant du don prepare dans l'espace, s'il est en ariary.
+  useEffect(() => {
+    if (profil) setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
+    // Seulement au chargement.
+  }, [profil]);
 
   useEffect(() => {
     if (profil) titre.current?.focus();
@@ -220,7 +230,7 @@ export default function PaiementVirement() {
                 {envoi ? 'Enregistrement…' : 'Obtenir les coordonnées'}
               </button>
               <button type="button" className="vir__lien" onClick={() => quitter()} disabled={envoi}>
-                Payer plus tard
+                {libellePlusTard}
               </button>
               <p className="vir__erreur vir__erreur--centre" role="alert">
                 {refus}
@@ -335,7 +345,7 @@ export default function PaiementVirement() {
               </div>
             </dl>
             <button type="button" className="vir__bouton" onClick={() => quitter()}>
-              Continuer mon inscription
+              {libelleSuite}
             </button>
           </section>
         )}

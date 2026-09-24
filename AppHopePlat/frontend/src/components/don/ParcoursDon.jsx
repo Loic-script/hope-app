@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { pageDePaiement } from '../../utils/pagesPaiement.js';
 
 import {
   IconeCalendrierRenouvele,
@@ -63,6 +64,9 @@ function lireMontant(texte) {
  * @param {() => Promise<{ modes: object[], devises: object[], preferences?: object }>} props.chargerOptions
  * @param {() => Promise<object[]>} props.chargerProjets  projets : { id, nom, image, lieu, categorie, devise, taux?, restant?, atteint? }
  * @param {(don: object) => Promise<{ don: object }>} props.envoyer
+ * @param {string} [props.payer]  la base des pages de paiement de l'espace
+ *   ("/bailleur/payer") : la confirmation y mene, le don en brouillon,
+ *   et c'est la page du moyen choisi qui l'enregistre.
  */
 export default function ParcoursDon({
   prenom,
@@ -78,7 +82,9 @@ export default function ParcoursDon({
   titre,
   accroche,
   onEnvoye,
+  payer = null,
 }) {
+  const navigate = useNavigate();
   const [options, setOptions] = useState(null);
   const [projets, setProjets] = useState(null);
   const [erreurChargement, setErreurChargement] = useState('');
@@ -170,6 +176,25 @@ export default function ParcoursDon({
   }
 
   async function confirmer() {
+    // Le moyen a sa page : c'est elle qui fait payer, et enregistre le don.
+    const page = payer ? pageDePaiement(payer, mode) : null;
+    if (page) {
+      navigate(page, {
+        state: {
+          brouillon: {
+            mode,
+            affectation,
+            projetId: affectation === 'PROJECT' ? projetId : undefined,
+            projetNom: affectation === 'PROJECT' ? projetChoisi?.nom : undefined,
+            montant: valeur,
+            devise,
+            frequence: mensuel ? 'MONTHLY' : 'ONE_TIME',
+            message: message.trim() || undefined,
+          },
+        },
+      });
+      return;
+    }
     setEnvoi(true);
     setRefus('');
     try {
@@ -615,7 +640,7 @@ export default function ParcoursDon({
             ) : (
               <button type="button" className="don-cta don-cta--plein don-cta--confirmer" onClick={confirmer} disabled={envoi}>
                 <IconeCoeur />
-                {envoi ? 'Enregistrement…' : 'Confirmer ma promesse de don'}
+                {envoi ? 'Enregistrement…' : payer ? 'Continuer vers le paiement' : 'Confirmer ma promesse de don'}
               </button>
             )}
           </div>

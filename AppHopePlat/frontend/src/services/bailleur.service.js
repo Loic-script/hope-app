@@ -215,6 +215,18 @@ export async function faireUnDon(don) {
   return data;
 }
 
+/** GET /api/bailleur/paiement/coordonnees : ou envoyer un don. */
+export async function coordonneesDePaiement() {
+  const { data } = await apiBailleur.get('/bailleur/paiement/coordonnees');
+  return data;
+}
+
+/** PATCH /api/bailleur/dons/:id/justificatif : "j'ai paye", avec la reference. */
+export async function declarerPaiement(id, referencePaiement) {
+  const { data } = await apiBailleur.patch(`/bailleur/dons/${id}/justificatif`, { referencePaiement });
+  return data;
+}
+
 /** GET /api/bailleur/fil */
 export async function fil() {
   const { data } = await apiBailleur.get('/bailleur/fil');

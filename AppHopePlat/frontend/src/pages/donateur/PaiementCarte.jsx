@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
 import logoCartes from '../../assets/paiement/cartes-bancaires.webp';
-import { PARCOURS } from '../../hooks/usePaiementMobile.js';
-import { messageErreur } from '../../services/api.js';
-import * as donateurService from '../../services/donateur.service.js';
+import { montantInitial, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
 import { PAYS, PAYS_PAR_DEFAUT, nomDuPays } from '../../utils/pays.js';
 
@@ -40,12 +37,23 @@ function montantSaisi(texte) {
  * lui envoie un lien de paiement securise a son adresse e-mail.
  */
 export default function PaiementCarte() {
-  const navigate = useNavigate();
-  const { rafraichir } = useOutletContext() ?? {};
-
-  const [profil, setProfil] = useState(null);
-  const [projets, setProjets] = useState([]);
-  const [erreurChargement, setErreurChargement] = useState('');
+  const {
+    profil,
+    personne,
+    beneficiaire,
+    email,
+    erreurChargement,
+    don,
+    envoi,
+    refus,
+    setRefus,
+    promettre,
+    quitter,
+    montantPrevu,
+    devisePrevue,
+    libelleSuite,
+    libellePlusTard,
+  } = usePromesseDon('carte_bancaire');
 
   const [devise, setDevise] = useState('MGA');
   const [montant, setMontant] = useState('');
@@ -54,39 +62,24 @@ export default function PaiementCarte() {
   const [adresseOuverte, setAdresseOuverte] = useState(false);
   const [details, setDetails] = useState(false);
   const [soumis, setSoumis] = useState(false);
-  const [envoi, setEnvoi] = useState(false);
-  const [refus, setRefus] = useState('');
-  const [don, setDon] = useState(null);
   const titre = useRef(null);
 
+  // Une fois charge : la devise et le montant du don prepare (sinon la
+  // devise du profil), le titulaire et l'adresse de facturation.
   useEffect(() => {
-    let annule = false;
-    Promise.all([donateurService.recupererProfil(), donateurService.listerProjets()])
-      .then(([lu, liste]) => {
-        if (annule) return;
-        if (lu.paiement?.mode !== 'carte_bancaire' || lu.etapeSuivante < 5) {
-          navigate(PARCOURS, { replace: true });
-          return;
-        }
-        setProfil(lu);
-        setProjets(liste?.items ?? []);
-        // La devise du profil, si c'en est une qu'on sait recevoir.
-        const preferee = lu.profil?.devise;
-        if (DEVISES.some((d) => d.code === preferee)) setDevise(preferee);
-        const info = lu.informations ?? {};
-        setTitulaire([info.prenom, info.nom].filter(Boolean).join(' '));
-        const pays = String(info.pays || PAYS_PAR_DEFAUT).toUpperCase();
-        setAdresse({ pays, ligne: info.adresse ?? '', codePostal: '', ville: info.ville ?? '' });
-        // Sans adresse au profil, les champs s'ouvrent d'emblee.
-        setAdresseOuverte(!info.adresse || !info.ville);
-      })
-      .catch((echec) => {
-        if (!annule) setErreurChargement(messageErreur(echec, 'La page de paiement n’a pas pu être préparée.'));
-      });
-    return () => {
-      annule = true;
-    };
-  }, [navigate]);
+    if (!profil) return;
+    const choisie = [devisePrevue, personne.devise].find((d) => DEVISES.some((x) => x.code === d)) ?? 'MGA';
+    setDevise(choisie);
+    setMontant(montantInitial(montantPrevu, devisePrevue, choisie));
+    setTitulaire([personne.prenom, personne.nom].filter(Boolean).join(' '));
+    const pays = String(personne.pays || PAYS_PAR_DEFAUT).toUpperCase();
+    // Un pays en toutes lettres (bailleur) : Madagascar par defaut.
+    const code = /^[A-Z]{2}$/.test(pays) ? pays : PAYS_PAR_DEFAUT;
+    setAdresse({ pays: code, ligne: personne.adresse ?? '', codePostal: '', ville: personne.ville ?? '' });
+    // Sans adresse connue, les champs s'ouvrent d'emblee.
+    setAdresseOuverte(!personne.adresse || !personne.ville);
+    // Seulement au chargement.
+  }, [profil]);
 
   useEffect(() => {
     if (don) titre.current?.focus();
@@ -94,13 +87,6 @@ export default function PaiementCarte() {
 
   const reglage = DEVISES.find((d) => d.code === devise) ?? DEVISES[0];
   const somme = montantSaisi(montant);
-  const email = profil?.compte?.email ?? '';
-  const beneficiaire = useMemo(() => {
-    if (!profil) return '';
-    if (profil.don?.affectation !== 'PROJECT') return 'Les projets de HOPE';
-    const projet = projets.find((p) => Number(p.id) === Number(profil.don?.projetId));
-    return projet?.nom ?? 'Le projet choisi';
-  }, [profil, projets]);
 
   const erreurs = {
     montant:
@@ -130,35 +116,19 @@ export default function PaiementCarte() {
       return;
     }
 
-    setEnvoi(true);
-    try {
-      const reponse = await donateurService.faireUnDon({
-        affectation: profil.don?.affectation || 'HOPE',
-        projetId: profil.don?.affectation === 'PROJECT' ? profil.don.projetId : undefined,
-        montant: String(somme),
-        devise,
-        mode: 'carte_bancaire',
-        frequence: 'ONE_TIME',
-        facturation: {
-          titulaire: titulaire.trim(),
-          adresse: adresse.ligne.trim(),
-          codePostal: adresse.codePostal.trim(),
-          ville: adresse.ville.trim(),
-          pays: adresse.pays,
-        },
-      });
-      setDon(reponse.don);
-      await rafraichir?.();
-    } catch (echec) {
-      setRefus(messageErreur(echec, 'Votre don n’a pas pu être enregistré. Réessayez.'));
-    } finally {
-      setEnvoi(false);
-    }
+    await promettre({
+      montant: somme,
+      devise,
+      facturation: {
+        titulaire: titulaire.trim(),
+        adresse: adresse.ligne.trim(),
+        codePostal: adresse.codePostal.trim(),
+        ville: adresse.ville.trim(),
+        pays: adresse.pays,
+      },
+    });
   }
 
-  function quitter(etape) {
-    navigate(PARCOURS, { replace: true, state: etape ? { etape } : undefined });
-  }
 
   const total = somme ? fmt.montant(somme, devise) : fmt.montant(0, devise);
 
@@ -463,7 +433,7 @@ export default function PaiementCarte() {
                 )}
               </button>
               <button type="button" className="carte__plus-tard" onClick={() => quitter()} disabled={envoi}>
-                Payer plus tard
+                {libellePlusTard}
               </button>
               <p className="carte__erreur carte__erreur--centre" role="alert">
                 {refus}
@@ -511,7 +481,7 @@ export default function PaiementCarte() {
                 </div>
               </dl>
               <button type="button" className="carte__payer" onClick={() => quitter()}>
-                Continuer mon inscription
+                {libelleSuite}
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="carte__fleche">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>

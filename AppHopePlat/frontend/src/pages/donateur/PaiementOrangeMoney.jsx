@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
 import { MONTANTS_RAPIDES, numeroLisible, usePaiementMobile } from '../../hooks/usePaiementMobile.js';
-import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
 
 /** Orange Money : un numero Orange, 032 ou 037. */
@@ -11,7 +10,7 @@ const ORANGE_MONEY = {
   mode: 'orange_money',
   numeroValide: /^3[27]\d{7}$/,
   messageNumero: 'Un numéro Orange Money commence par 032 ou 037.',
-  chargerCompte: donateurService.compteOrangeMoney,
+  cleCompte: 'orangeMoney',
 };
 
 /** Les trois temps, tels que les chevrons les nomment. */
@@ -61,6 +60,8 @@ export default function PaiementOrangeMoney() {
     validerMontant,
     declarer,
     quitter,
+    libelleSuite,
+    libellePlusTard,
   } = usePaiementMobile(ORANGE_MONEY);
 
   // L'heure du recu : celle ou le don a ete enregistre.
@@ -233,7 +234,7 @@ export default function PaiementOrangeMoney() {
                   Suivant
                 </button>
                 <button type="button" className="om__lien" onClick={() => quitter()}>
-                  Payer plus tard
+                  {libellePlusTard}
                 </button>
               </div>
             </form>
@@ -323,7 +324,7 @@ export default function PaiementOrangeMoney() {
                     )}
                   </button>
                   <button type="button" className="om__lien" onClick={() => quitter()} disabled={envoi}>
-                    Payer plus tard
+                    {libellePlusTard}
                   </button>
                 </div>
                 <p className="om__erreur om__erreur--centre" role="alert">
@@ -403,7 +404,7 @@ export default function PaiementOrangeMoney() {
 
             <div className="om__actions om__actions--recu">
               <button type="button" className="om__bouton" onClick={() => quitter()}>
-                Continuer mon inscription
+                {libelleSuite}
               </button>
               <button type="button" className="om__bouton om__bouton--contour" onClick={() => window.print()}>
                 Imprimer le reçu

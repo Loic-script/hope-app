@@ -33,24 +33,6 @@ import ProjetsDonateur from '../pages/donateur/Projets.jsx';
  */
 const ParcoursDonateur = lazy(() => import('../pages/donateur/Parcours.jsx'));
 // Le paiement MVola, ouvert depuis l'etape 4 du parcours.
-const PaiementMvola = lazy(() => import('../pages/donateur/PaiementMvola.jsx'));
-const PaiementOrangeMoney = lazy(() => import('../pages/donateur/PaiementOrangeMoney.jsx'));
-const PaiementCarte = lazy(() => import('../pages/donateur/PaiementCarte.jsx'));
-const PaiementVirement = lazy(() => import('../pages/donateur/PaiementVirement.jsx'));
-const PaiementDepot = lazy(() => import('../pages/donateur/PaiementDepot.jsx'));
-const PaiementEspeces = lazy(() => import('../pages/donateur/PaiementEspeces.jsx'));
-const PaiementInternational = lazy(() => import('../pages/donateur/PaiementInternational.jsx'));
-const PaiementPlateforme = lazy(() => import('../pages/donateur/PaiementPlateforme.jsx'));
-
-/** L'attente d'une page de paiement, le temps qu'elle se charge. */
-function AttentePaiement() {
-  return (
-    <div className="verification" role="status" aria-live="polite">
-      <span className="verification__rotation" aria-hidden="true" />
-      <p>Préparation du paiement…</p>
-    </div>
-  );
-}
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
 import ConversationsEspace from '../pages/espace/Conversations.jsx';
@@ -79,6 +61,53 @@ import UtilisateursPage from '../pages/admin/UtilisateursPage.jsx';
 import StatisticsPage from '../pages/admin/StatisticsPage.jsx';
 import PublicationsPage from '../pages/admin/PublicationsPage.jsx';
 import RequireAuth from './RequireAuth.jsx';
+import ContextePaiement from '../components/paiement/ContextePaiement.jsx';
+
+/*
+ * Les pages de paiement, une par moyen. Chacune se charge a part : on
+ * n'embarque que celle du moyen choisi.
+ */
+const PAGES_DE_PAIEMENT = {
+  mvola: lazy(() => import('../pages/donateur/PaiementMvola.jsx')),
+  'orange-money': lazy(() => import('../pages/donateur/PaiementOrangeMoney.jsx')),
+  carte: lazy(() => import('../pages/donateur/PaiementCarte.jsx')),
+  virement: lazy(() => import('../pages/donateur/PaiementVirement.jsx')),
+  depot: lazy(() => import('../pages/donateur/PaiementDepot.jsx')),
+  especes: lazy(() => import('../pages/donateur/PaiementEspeces.jsx')),
+  'virement-international': lazy(() => import('../pages/donateur/PaiementInternational.jsx')),
+  plateforme: lazy(() => import('../pages/donateur/PaiementPlateforme.jsx')),
+};
+
+/** L'attente d'une page de paiement, le temps qu'elle se charge. */
+function AttentePaiement() {
+  return (
+    <div className="verification" role="status" aria-live="polite">
+      <span className="verification__rotation" aria-hidden="true" />
+      <p>Préparation du paiement…</p>
+    </div>
+  );
+}
+
+/**
+ * Les huit pages de paiement sous une base, dans leur contexte :
+ * "parcours" (le parcours d'accueil du donateur), ou l'espace d'ou l'on
+ * donne. Pleine page, hors de la mise en page de l'espace.
+ */
+function routesPaiement(base, espace) {
+  return Object.entries(PAGES_DE_PAIEMENT).map(([chemin, Page]) => (
+    <Route
+      key={`${espace}-${chemin}`}
+      path={`${base}/${chemin}`}
+      element={
+        <Suspense fallback={<AttentePaiement />}>
+          <ContextePaiement espace={espace}>
+            <Page />
+          </ContextePaiement>
+        </Suspense>
+      }
+    />
+  ));
+}
 
 /**
  * Table de routage de l'application HOPE.
@@ -153,91 +182,10 @@ export default function AppRoutes() {
             </Suspense>
           }
         />
-        <Route
-          path="/donateur/completer-profil/mvola"
-          element={
-            <Suspense
-              fallback={
-                <div className="verification" role="status" aria-live="polite">
-                  <span className="verification__rotation" aria-hidden="true" />
-                  <p>Préparation du paiement…</p>
-                </div>
-              }
-            >
-              <PaiementMvola />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/orange-money"
-          element={
-            <Suspense
-              fallback={
-                <div className="verification" role="status" aria-live="polite">
-                  <span className="verification__rotation" aria-hidden="true" />
-                  <p>Préparation du paiement…</p>
-                </div>
-              }
-            >
-              <PaiementOrangeMoney />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/carte"
-          element={
-            <Suspense
-              fallback={
-                <div className="verification" role="status" aria-live="polite">
-                  <span className="verification__rotation" aria-hidden="true" />
-                  <p>Préparation du paiement…</p>
-                </div>
-              }
-            >
-              <PaiementCarte />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/virement"
-          element={
-            <Suspense fallback={<AttentePaiement />}>
-              <PaiementVirement />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/depot"
-          element={
-            <Suspense fallback={<AttentePaiement />}>
-              <PaiementDepot />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/especes"
-          element={
-            <Suspense fallback={<AttentePaiement />}>
-              <PaiementEspeces />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/virement-international"
-          element={
-            <Suspense fallback={<AttentePaiement />}>
-              <PaiementInternational />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/donateur/completer-profil/plateforme"
-          element={
-            <Suspense fallback={<AttentePaiement />}>
-              <PaiementPlateforme />
-            </Suspense>
-          }
-        />
+        {/* Le moyen de paiement choisi a l'etape 4, puis la suite du parcours. */}
+        {routesPaiement('/donateur/completer-profil', 'parcours')}
+        {/* "Faire un don" dans l'espace : le paiement par le moyen choisi. */}
+        {routesPaiement('/donateur/payer', 'donateur')}
       </Route>
 
       {/*
@@ -258,6 +206,8 @@ export default function AppRoutes() {
           path="/bailleur/declarer-organisation"
           element={<Navigate to="/bailleur/organisation" replace />}
         />
+
+        {routesPaiement('/bailleur/payer', 'bailleur')}
 
         <Route element={<BailleurLayout />}>
           <Route path="/bailleur" element={<AccueilBailleur />} />
@@ -294,6 +244,8 @@ export default function AppRoutes() {
       <Route path="/benevole/completer-profil" element={<CompleterProfil />} />
 
       <Route element={<RequireBenevole />}>
+        {routesPaiement('/benevole/payer', 'benevole')}
+
         <Route element={<BenevoleLayout />}>
           <Route path="/benevole" element={<VueDensemble />} />
           {/* L'entree de l'espace : ce que HOPE mene, puis les taches

@@ -9,6 +9,7 @@ import path from 'node:path';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
 import * as fieldProofService from '../services/fieldProof.service.js';
+import * as donorSpaceService from '../services/donorSpace.service.js';
 import * as promesseDonService from '../services/promesseDon.service.js';
 import * as publicationService from '../services/publication.service.js';
 import * as taskService from '../services/task.service.js';
@@ -78,6 +79,8 @@ export const projets = {
  */
 export const dons = {
   options: gerer(() => promesseDonService.options()),
+  coordonnees: gerer(async () => donorSpaceService.coordonneesDePaiement()),
+  declarer: gerer((req) => donorSpaceService.declarerPaiement(req.benevole, req.params.id, req.body)),
   faire: gerer(
     (req) =>
       promesseDonService.promettreUnDon(promesseDonService.identiteBenevole(req.benevole), req.body, {

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import Copier from '../../components/paiement/Copier.jsx';
 import Indisponible from '../../components/paiement/Indisponible.jsx';
-import { REFERENCE_PAIEMENT, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
+import { REFERENCE_PAIEMENT, montantInitial, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
 import { nomDuPays } from '../../utils/pays.js';
 
@@ -28,8 +28,24 @@ function parQuatre(texte) {
  * long du trajet a mesure que le don avance.
  */
 export default function PaiementInternational() {
-  const { profil, coordonnees, erreurChargement, beneficiaire, don, envoi, refus, setRefus, promettre, declarer, quitter } =
-    usePromesseDon('virement_international');
+  const {
+    profil,
+    personne,
+    coordonnees,
+    erreurChargement,
+    beneficiaire,
+    don,
+    envoi,
+    refus,
+    setRefus,
+    promettre,
+    declarer,
+    quitter,
+    montantPrevu,
+    devisePrevue,
+    libelleSuite,
+    libellePlusTard,
+  } = usePromesseDon('virement_international');
 
   const [etape, setEtape] = useState(0);
   const [devise, setDevise] = useState('EUR');
@@ -40,7 +56,11 @@ export default function PaiementInternational() {
   const titre = useRef(null);
 
   useEffect(() => {
-    if (profil?.profil?.devise === 'USD') setDevise('USD');
+    if (!profil) return;
+    // La devise du don prepare, sinon celle du profil ; l'euro par defaut.
+    const choisie = ['EUR', 'USD'].includes(devisePrevue) ? devisePrevue : personne.devise === 'USD' ? 'USD' : 'EUR';
+    setDevise(choisie);
+    setMontant((m) => m || montantInitial(montantPrevu, devisePrevue, choisie));
   }, [profil]);
 
   useEffect(() => {
@@ -53,7 +73,7 @@ export default function PaiementInternational() {
   const erreurMontant = somme === null ? 'Indiquez le montant.' : somme < 5 ? `Au moins ${fmt.montant(5, devise)}.` : '';
   const erreurReference =
     reference.trim() && !REFERENCE_PAIEMENT.test(reference.trim()) ? 'Lettres, chiffres, points et tirets.' : '';
-  const paysDonateur = nomDuPays(profil?.informations?.pays) || 'Votre pays';
+  const paysDonateur = nomDuPays(personne.pays) || 'Votre pays';
 
   function aller(n) {
     setSoumis(false);
@@ -197,7 +217,7 @@ export default function PaiementInternational() {
                     {envoi ? 'Enregistrement…' : 'Obtenir les coordonnées SWIFT'}
                   </button>
                   <button type="button" className="int__lien" onClick={() => quitter()} disabled={envoi}>
-                    Payer plus tard
+                    {libellePlusTard}
                   </button>
                   <p className="int__erreur int__erreur--centre" role="alert">
                     {refus}
@@ -264,7 +284,7 @@ export default function PaiementInternational() {
                     : `Envoyez le virement quand vous le souhaitez, avec le motif ${don.reference}. Il se retrouve dans « Mes dons ».`}
                 </p>
                 <button type="button" className="int__bouton" onClick={() => quitter()}>
-                  Continuer mon inscription
+                  {libelleSuite}
                 </button>
               </section>
             )}

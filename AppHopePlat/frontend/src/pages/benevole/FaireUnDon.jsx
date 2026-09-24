@@ -20,7 +20,7 @@ export default function FaireUnDon() {
     <ParcoursDon
       prenom={benevole?.prenom}
       titre="Faire un don à ce projet"
-      accroche="Aucun paiement en ligne : vous promettez un don, et l’équipe HOPE vous contacte pour le paiement par le moyen choisi."
+      accroche="Choisissez le montant et le moyen de paiement : la page suivante vous guide pour régler, et l’équipe HOPE confirme votre don à réception."
       projetImpose={parametres.get('projet')}
       avecRythme={false}
       avecFinances={false}
@@ -40,6 +40,7 @@ export default function FaireUnDon() {
         }))
       }
       envoyer={service.faireUnDon}
+      payer="/benevole/payer"
     />
   );
 }

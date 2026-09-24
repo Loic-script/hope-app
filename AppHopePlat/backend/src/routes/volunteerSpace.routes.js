@@ -58,6 +58,8 @@ router.get('/actualites', actualites.lister);
 // confirme a reception.
 router.get('/dons/options', dons.options);
 router.post('/dons', dons.faire);
+router.get('/paiement/coordonnees', dons.coordonnees);
+router.patch('/dons/:id/justificatif', dons.declarer);
 
 // --- Taches -----------------------------------------------------------
 router.get('/taches/libres', taches.libres);

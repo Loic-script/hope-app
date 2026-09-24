@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
-import { montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
+import { montantInitial, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
 
 const RAPIDES = [10000, 25000, 50000, 100000];
@@ -31,8 +31,23 @@ function jourLisible(iso) {
  * le don.
  */
 export default function PaiementEspeces() {
-  const { profil, coordonnees, erreurChargement, beneficiaire, nom, don, envoi, refus, promettre, quitter } =
-    usePromesseDon('especes');
+  const {
+    profil,
+    personne,
+    coordonnees,
+    erreurChargement,
+    beneficiaire,
+    nom,
+    don,
+    envoi,
+    refus,
+    promettre,
+    quitter,
+    montantPrevu,
+    devisePrevue,
+    libelleSuite,
+    libellePlusTard,
+  } = usePromesseDon('especes');
 
   const [montant, setMontant] = useState('');
   const [lieu, setLieu] = useState('');
@@ -49,8 +64,8 @@ export default function PaiementEspeces() {
     // Sans bureau renseigne, l'equipe se deplace ; l'adresse du profil
     // sert de point de depart.
     setLieu((courant) => courant || (bureau?.disponible ? 'bureau' : 'domicile'));
-    const info = profil.informations ?? {};
-    setAdresse((a) => a || [info.adresse, info.ville].filter(Boolean).join(', '));
+    setAdresse((a) => a || [personne.adresse, personne.ville].filter(Boolean).join(', '));
+    setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
   }, [profil, bureau]);
 
   useEffect(() => {
@@ -235,7 +250,7 @@ export default function PaiementEspeces() {
               {envoi ? 'Enregistrement…' : 'Obtenir mon bon de remise'}
             </button>
             <button type="button" className="esp__lien" onClick={() => quitter()} disabled={envoi}>
-              Payer plus tard
+              {libellePlusTard}
             </button>
             <p className="esp__erreur esp__erreur--centre" role="alert">
               {refus}
@@ -290,7 +305,7 @@ export default function PaiementEspeces() {
               {bureau?.telephone ? ` Un empêchement ? ${bureau.telephone}.` : ''}
             </p>
             <button type="button" className="esp__bouton" onClick={() => quitter()}>
-              Continuer mon inscription
+              {libelleSuite}
             </button>
           </section>
         )}

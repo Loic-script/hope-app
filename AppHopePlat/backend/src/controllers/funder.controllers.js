@@ -8,6 +8,7 @@
 import * as funderAuthService from '../services/funderAuth.service.js';
 import * as funderService from '../services/funder.service.js';
 import * as mediaService from '../services/media.service.js';
+import * as donorSpaceService from '../services/donorSpace.service.js';
 import * as promesseDonService from '../services/promesseDon.service.js';
 
 import { gerer } from './handler.js';
@@ -97,6 +98,20 @@ export const espace = {
         mensuelPermis: false,
       }),
     { statut: 201 }
+  ),
+  coordonneesPaiement: gerer(async () => donorSpaceService.coordonneesDePaiement()),
+  // Le compte qui paie : celui de la personne connectee, pas l'organisation.
+  declarerPaiement: gerer((req) =>
+    donorSpaceService.declarerPaiement(
+      {
+        id: req.bailleur.utilisateurId,
+        prenom: req.bailleur.prenom,
+        nom: req.bailleur.nom,
+        email: req.bailleur.email,
+      },
+      req.params.id,
+      req.body
+    )
   ),
   rapportProjet: gerer((req) =>
     funderService.rapportProjet(req.bailleur.bailleurId, req.params.id)

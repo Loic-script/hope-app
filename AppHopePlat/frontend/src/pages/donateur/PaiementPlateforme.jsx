@@ -14,7 +14,7 @@ import logoXoom from '../../assets/plateformes/xoom.webp';
 import logoGlobalTransfert from '../../assets/plateformes/global-transfert.webp';
 import logoRevolut from '../../assets/plateformes/revolut.webp';
 import Copier from '../../components/paiement/Copier.jsx';
-import { montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
+import { montantInitial, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
 
 /**
@@ -81,8 +81,23 @@ function IconeArrivee({ type }) {
  * et le donateur note le numero de son transfert.
  */
 export default function PaiementPlateforme() {
-  const { profil, coordonnees, erreurChargement, beneficiaire, don, envoi, refus, setRefus, promettre, quitter } =
-    usePromesseDon('plateforme');
+  const {
+    profil,
+    personne,
+    coordonnees,
+    erreurChargement,
+    beneficiaire,
+    don,
+    envoi,
+    refus,
+    setRefus,
+    promettre,
+    quitter,
+    montantPrevu,
+    devisePrevue,
+    libelleSuite,
+    libellePlusTard,
+  } = usePromesseDon('plateforme');
 
   const [filtre, setFiltre] = useState('tous');
   const [choix, setChoix] = useState(null);
@@ -93,8 +108,10 @@ export default function PaiementPlateforme() {
   const titre = useRef(null);
 
   useEffect(() => {
-    const preferee = profil?.profil?.devise;
+    if (!profil) return;
+    const preferee = devisePrevue || personne.devise;
     if (['EUR', 'USD', 'MGA'].includes(preferee)) setDevise(preferee);
+    setMontant((m) => m || montantInitial(montantPrevu, devisePrevue, preferee));
   }, [profil]);
 
   useEffect(() => {
@@ -246,7 +263,7 @@ export default function PaiementPlateforme() {
             </aside>
 
             <button type="button" className="plt__lien" onClick={() => quitter()}>
-              Payer plus tard
+              {libellePlusTard}
             </button>
           </section>
         )}
@@ -385,7 +402,7 @@ export default function PaiementPlateforme() {
               {beneficiaire} est enregistré ({don.reference}). L’équipe HOPE le confirme dès réception.
             </p>
             <button type="button" className="plt__bouton" onClick={() => quitter()}>
-              Continuer mon inscription
+              {libelleSuite}
             </button>
           </section>
         )}

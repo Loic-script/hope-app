@@ -30,6 +30,18 @@ export async function faireUnDon(don) {
   return data;
 }
 
+/** GET /api/benevole/paiement/coordonnees : ou envoyer un don. */
+export async function coordonneesDePaiement() {
+  const { data } = await apiBenevole.get('/benevole/paiement/coordonnees');
+  return data;
+}
+
+/** PATCH /api/benevole/dons/:id/justificatif : "j'ai paye", avec la reference. */
+export async function declarerPaiement(id, referencePaiement) {
+  const { data } = await apiBenevole.patch(`/benevole/dons/${id}/justificatif`, { referencePaiement });
+  return data;
+}
+
 /* ------------------------------ Actualites ----------------------------- */
 
 /** GET /api/benevole/actualites — les nouvelles de HOPE, sans aucun chiffre. */

@@ -1,31 +1,29 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 
+import { useContextePaiement } from '../components/paiement/ContextePaiement.jsx';
 import { messageErreur } from '../services/api.js';
-import * as donateurService from '../services/donateur.service.js';
-import { PARCOURS } from './usePaiementMobile.js';
 
 /**
- * Les pages de paiement hors ligne du parcours donateur -- virement,
- * depot, especes, virement international, plateformes -- partagent la
- * meme mecanique :
+ * La mecanique commune des pages de paiement : charger qui paie et quel
+ * don, enregistrer la PROMESSE (le don part en attente), laisser le
+ * payeur signaler son paiement avec la reference de sa banque, et
+ * rendre la main.
  *
- *   * elles chargent la fiche du donateur et les coordonnees de HOPE ;
- *   * elles ne s'ouvrent qu'apres le choix de leur moyen a l'etape 4 ;
- *   * elles enregistrent une PROMESSE (le don part en attente), puis,
- *     quand le moyen s'y prete, le donateur signale son paiement avec
- *     la reference de sa banque ;
- *   * elles rendent la main au parcours, a l'etape 5.
+ * D'ou l'on paie -- le parcours d'accueil, ou "Faire un don" dans un
+ * espace donateur, bailleur, benevole -- c'est le ContextePaiement qui
+ * le sait ; ce hook ne fait que s'en servir.
  *
- * Chaque page garde son habit et ses champs ; ce hook tient le reste.
+ * @param {string} mode  la cle du moyen ("virement_bancaire", "especes"...)
  */
 export function usePromesseDon(mode) {
-  const navigate = useNavigate();
-  const { rafraichir } = useOutletContext() ?? {};
+  const contexte = useContextePaiement();
+  // Le contexte change quand l'espace se rafraichit ; le chargement, lui,
+  // ne se fait qu'une fois par page.
+  const ref = useRef(contexte);
+  ref.current = contexte;
 
   const [profil, setProfil] = useState(null);
   const [coordonnees, setCoordonnees] = useState(null);
-  const [projets, setProjets] = useState([]);
   const [erreurChargement, setErreurChargement] = useState('');
   const [don, setDon] = useState(null);
   const [envoi, setEnvoi] = useState(false);
@@ -33,20 +31,11 @@ export function usePromesseDon(mode) {
 
   useEffect(() => {
     let annule = false;
-    Promise.all([
-      donateurService.recupererProfil(),
-      donateurService.coordonneesDePaiement(),
-      donateurService.listerProjets(),
-    ])
-      .then(([lu, coord, liste]) => {
-        if (annule) return;
-        if (lu.paiement?.mode !== mode || lu.etapeSuivante < 5) {
-          navigate(PARCOURS, { replace: true });
-          return;
-        }
+    Promise.all([ref.current.charger(mode), ref.current.coordonnees()])
+      .then(([lu, coord]) => {
+        if (annule || !lu) return;
         setProfil(lu);
         setCoordonnees(coord);
-        setProjets(liste?.items ?? []);
       })
       .catch((echec) => {
         if (!annule) setErreurChargement(messageErreur(echec, 'La page de paiement n’a pas pu être préparée.'));
@@ -54,16 +43,9 @@ export function usePromesseDon(mode) {
     return () => {
       annule = true;
     };
-  }, [navigate, mode]);
+  }, [mode]);
 
-  const beneficiaire = useMemo(() => {
-    if (!profil) return '';
-    if (profil.don?.affectation !== 'PROJECT') return 'Les projets de HOPE';
-    const projet = projets.find((p) => Number(p.id) === Number(profil.don?.projetId));
-    return projet?.nom ?? 'Le projet choisi';
-  }, [profil, projets]);
-
-  const nom = profil ? [profil.informations?.prenom, profil.informations?.nom].filter(Boolean).join(' ') : '';
+  const personne = profil?.personne ?? {};
 
   /**
    * Enregistre la promesse. Rend le don, ou null si le serveur refuse
@@ -73,18 +55,18 @@ export function usePromesseDon(mode) {
     setRefus('');
     setEnvoi(true);
     try {
-      const reponse = await donateurService.faireUnDon({
-        affectation: profil.don?.affectation || 'HOPE',
-        projetId: profil.don?.affectation === 'PROJECT' ? profil.don.projetId : undefined,
+      const reponse = await ref.current.promettre({
+        affectation: profil.affectation,
+        projetId: profil.projetId,
         montant: String(montant),
         devise,
         mode,
-        // Le premier don ; la frequence se choisit a l'etape suivante.
-        frequence: 'ONE_TIME',
+        frequence: profil.frequence || 'ONE_TIME',
+        message: profil.message || undefined,
         ...extras,
       });
       setDon(reponse.don);
-      await rafraichir?.();
+      await ref.current.rafraichir?.();
       return reponse.don;
     } catch (echec) {
       setRefus(messageErreur(echec, 'Votre don n’a pas pu être enregistré. Réessayez.'));
@@ -94,12 +76,12 @@ export function usePromesseDon(mode) {
     }
   }
 
-  /** Le donateur signale son paiement : rend true si c'est enregistre. */
+  /** Le payeur signale son paiement : rend true si c'est enregistre. */
   async function declarer(referencePaiement) {
     setRefus('');
     setEnvoi(true);
     try {
-      const reponse = await donateurService.declarerPaiement(don.id, referencePaiement);
+      const reponse = await ref.current.declarer(don.id, referencePaiement);
       setDon(reponse.don);
       return true;
     } catch (echec) {
@@ -110,25 +92,26 @@ export function usePromesseDon(mode) {
     }
   }
 
-  /** Revenir au parcours : a l'etape 4, ou a la suite. */
-  function quitter(etape) {
-    navigate(PARCOURS, { replace: true, state: etape ? { etape } : undefined });
-  }
-
   return {
     profil,
+    personne,
     coordonnees,
     erreurChargement,
-    beneficiaire,
-    nom,
-    email: profil?.compte?.email ?? '',
+    beneficiaire: profil?.beneficiaire ?? '',
+    nom: [personne.prenom, personne.nom].filter(Boolean).join(' '),
+    email: personne.email ?? '',
+    // Ce que le don prepare apporte deja : montant et devise.
+    montantPrevu: profil?.montant ?? null,
+    devisePrevue: profil?.devise ?? null,
     don,
     envoi,
     refus,
     setRefus,
     promettre,
     declarer,
-    quitter,
+    quitter: (etape) => ref.current.quitter(etape),
+    libelleSuite: contexte.libelleSuite,
+    libellePlusTard: contexte.libellePlusTard,
   };
 }
 
@@ -144,3 +127,14 @@ export function montantSaisi(texte) {
 
 /** Une reference de paiement : lettres, chiffres, points, tirets, espaces. */
 export const REFERENCE_PAIEMENT = /^[A-Za-z0-9][A-Za-z0-9./ -]{3,39}$/;
+
+/**
+ * Le montant prevu, pour pre-remplir un champ -- s'il est dans la devise
+ * que la page encaisse. "25 000" pour 25000 en ariary.
+ */
+export function montantInitial(montantPrevu, devisePrevue, deviseDeLaPage = 'MGA') {
+  if (!montantPrevu || (devisePrevue && devisePrevue !== deviseDeLaPage)) return '';
+  const valeur = Number(montantPrevu);
+  if (!(valeur > 0)) return '';
+  return deviseDeLaPage === 'MGA' ? valeur.toLocaleString('fr-FR').replace(/ /g, ' ') : String(valeur);
+}

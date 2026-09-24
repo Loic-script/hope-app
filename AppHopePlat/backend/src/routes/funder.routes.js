@@ -64,6 +64,9 @@ router.get('/projets/:id', funder.espace.projet);
 // Faire un don a un projet : les modes de paiement, puis la promesse.
 router.get('/dons/options', funder.espace.optionsDon);
 router.post('/dons', funder.espace.faireUnDon);
+// Les pages de paiement : ou envoyer, puis "j'ai paye" apres coup.
+router.get('/paiement/coordonnees', funder.espace.coordonneesPaiement);
+router.patch('/dons/:id/justificatif', funder.espace.declarerPaiement);
 router.get('/projets/:id/rapport', funder.espace.rapportProjet);
 router.get('/projets/:id/rapport/pdf', funder.espace.pdfRapportProjet);
 

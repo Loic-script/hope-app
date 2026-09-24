@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
 import Indisponible from '../../components/paiement/Indisponible.jsx';
-import { REFERENCE_PAIEMENT, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
+import { REFERENCE_PAIEMENT, montantInitial, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import { enLettres } from '../../utils/enLettres.js';
 import * as fmt from '../../utils/format.js';
 
@@ -27,8 +27,24 @@ function ribEnCases(rib) {
  * inscrit sur le bordereau.
  */
 export default function PaiementDepot() {
-  const { profil, coordonnees, erreurChargement, beneficiaire, nom, don, envoi, refus, setRefus, promettre, declarer, quitter } =
-    usePromesseDon('depot_bancaire');
+  const {
+    profil,
+    coordonnees,
+    erreurChargement,
+    beneficiaire,
+    nom,
+    don,
+    envoi,
+    refus,
+    setRefus,
+    promettre,
+    declarer,
+    quitter,
+    montantPrevu,
+    devisePrevue,
+    libelleSuite,
+    libellePlusTard,
+  } = usePromesseDon('depot_bancaire');
 
   const [etape, setEtape] = useState(0);
   const [montant, setMontant] = useState('');
@@ -36,6 +52,12 @@ export default function PaiementDepot() {
   const [soumis, setSoumis] = useState(false);
   const [declare, setDeclare] = useState(false);
   const titre = useRef(null);
+
+  // Le montant du don prepare dans l'espace, s'il est en ariary.
+  useEffect(() => {
+    if (profil) setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
+    // Seulement au chargement.
+  }, [profil]);
 
   useEffect(() => {
     if (profil) titre.current?.focus();
@@ -175,7 +197,7 @@ export default function PaiementDepot() {
                 {envoi ? 'Préparation…' : 'Remplir mon bordereau'}
               </button>
               <button type="button" className="dep__lien" onClick={() => quitter()} disabled={envoi}>
-                Payer plus tard
+                {libellePlusTard}
               </button>
               <p className="dep__erreur dep__erreur--centre" role="alert">
                 {refus}
@@ -271,7 +293,7 @@ export default function PaiementDepot() {
                     : `Présentez ce bordereau au guichet de ${banque.nom}. Votre don ${don.reference} se retrouve dans « Mes dons ».`}
                 </p>
                 <button type="button" className="dep__bouton" onClick={() => quitter()}>
-                  Continuer mon inscription
+                  {libelleSuite}
                 </button>
               </>
             )}
