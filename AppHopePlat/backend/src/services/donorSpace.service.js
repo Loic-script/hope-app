@@ -74,6 +74,8 @@ function identiteDonateur(compte) {
   return {
     utilisateurId: compte.id,
     qui: [compte.prenom, compte.nom].filter(Boolean).join(' ') || compte.email,
+    // Ou envoyer un lien de paiement, quand le don se regle par carte.
+    email: compte.email,
     origine: 'donateur',
     nouvelleFiche: async (client) => {
       const fiche = (await donorProfileRepository.trouver(compte.id, client)) ?? {};

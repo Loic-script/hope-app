@@ -1,0 +1,1155 @@
+/* ==================================================================
+   Don par carte bancaire (pages/donateur/PaiementCarte.jsx)
+
+   La mise en page des caisses en ligne : a gauche, sur fond sombre, ce
+   que l'on paie ; a droite, sur fond clair, les coordonnees et le moyen
+   de paiement. Champs groupes a bords partages, gris tres doux, une
+   seule couleur d'action -- le violet de HOPE.
+   ================================================================== */
+
+.carte {
+  --ct-nuit: #0c0b12;
+  --ct-nuit-2: #1b1a24;
+  --ct-nuit-trait: rgba(255, 255, 255, 0.12);
+  --ct-violet: #5d5696;
+  --ct-violet-vif: #6f67b8;
+  --ct-jaune: #f5e389;
+  --ct-texte: #1a1a1f;
+  --ct-doux: #6b6b76;
+  --ct-trait: #e0e0e6;
+  --ct-fond: #f7f7f9;
+  --ct-rouge: #c0392b;
+  --ct-vert: #1f9d55;
+  --ct-anime: cubic-bezier(0.22, 1, 0.36, 1);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #fff;
+  color: var(--ct-texte);
+  font-family: var(--police-titre);
+}
+
+/* ---------- Le resume, sur fond sombre ---------- */
+.carte__resume {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(520px 320px at 0% 0%, rgba(111, 103, 184, 0.35), transparent 70%),
+    radial-gradient(420px 260px at 100% 100%, rgba(245, 227, 137, 0.1), transparent 70%),
+    var(--ct-nuit);
+  color: #fff;
+}
+
+.carte__resume-dedans {
+  position: relative;
+  padding: 16px;
+  animation: carte-entre 0.55s var(--ct-anime) both;
+}
+
+@keyframes carte-entre {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.carte__marque {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carte__retour {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-left: -8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.carte__retour svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.carte__retour:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+.carte__retour:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.carte__pastille {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.carte__pastille .hope-logo {
+  width: 24px;
+  height: auto;
+}
+
+.carte__marque-nom {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.carte__objet {
+  margin: 14px 0 2px;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.carte__grand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.carte__grand-valeur {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  animation: carte-chiffre 0.35s var(--ct-anime);
+}
+
+@keyframes carte-chiffre {
+  from {
+    opacity: 0.3;
+    transform: translateY(6px);
+  }
+}
+
+.carte__grand-devise {
+  font-size: 2.1rem;
+  font-weight: 700;
+}
+
+.carte__grand-frequence {
+  font-size: 0.72rem;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Les devises : un curseur glisse sous la devise choisie. */
+.carte__devises {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.carte__devises-curseur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc((100% - 12px) / 3);
+  height: 100%;
+  border: 1.5px solid #fff;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(calc(var(--rang) * (100% + 6px)));
+  transition: transform 0.4s var(--ct-anime);
+  pointer-events: none;
+}
+
+.carte__devise {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ct-nuit-2);
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.carte__devise--choisie {
+  background: transparent;
+  color: #fff;
+}
+
+.carte__devise:disabled {
+  cursor: default;
+}
+
+.carte__devise-symbole {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.72rem;
+}
+
+.carte__devise--choisie .carte__devise-symbole {
+  background: var(--ct-jaune);
+  color: var(--ct-nuit);
+}
+
+.carte__note {
+  display: none;
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Le detail : replie sur telephone, ouvert sur ordinateur. */
+.carte__details-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.carte__details-bouton svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: transform 0.3s var(--ct-anime);
+}
+
+.carte__details-bouton[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.carte__lignes-cadre {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s var(--ct-anime);
+}
+
+.carte__lignes-cadre--ouvert {
+  grid-template-rows: 1fr;
+}
+
+.carte__lignes {
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.carte__ligne {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  font-size: 0.88rem;
+}
+
+.carte__ligne + .carte__ligne {
+  border-top: 1px solid var(--ct-nuit-trait);
+}
+
+.carte__ligne dt {
+  font-weight: 600;
+}
+
+.carte__ligne dt small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.carte__ligne dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.carte__ligne--doux dt,
+.carte__ligne--doux dd {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.carte__ligne--total {
+  font-size: 0.95rem;
+}
+
+.carte__ligne--total dd {
+  color: var(--ct-jaune);
+}
+
+/* ---------- Le paiement, sur fond clair ---------- */
+.carte__paiement {
+  flex: 1;
+  background: #fff;
+}
+
+.carte__paiement-dedans {
+  padding: 16px;
+  animation: carte-entre 0.55s 0.08s var(--ct-anime) both;
+}
+
+.carte__formulaire {
+  display: flex;
+  flex-direction: column;
+}
+
+.carte__rubrique {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.carte__rubrique--section {
+  margin: 18px 0 8px;
+}
+
+.carte__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Le montant : un grand champ, la devise au bout. */
+.carte__montant {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--ct-trait);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(20, 20, 40, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.carte__montant:focus-within {
+  border-color: var(--ct-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.2);
+}
+
+.carte__montant--erreur {
+  border-color: var(--ct-rouge);
+}
+
+.carte__montant input {
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ct-texte);
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.carte__montant-devise {
+  padding: 0 14px;
+  color: var(--ct-doux);
+  font-weight: 600;
+}
+
+.carte__rapides {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.carte__rapide {
+  min-height: 40px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ct-texte);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s;
+}
+
+.carte__rapide:hover:not(:disabled) {
+  border-color: var(--ct-violet);
+  transform: translateY(-1px);
+}
+
+.carte__rapide--choisi {
+  border-color: var(--ct-violet);
+  background: var(--ct-violet);
+  color: #fff;
+}
+
+.carte__erreur {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--ct-rouge);
+}
+
+.carte__erreur:empty {
+  display: none;
+}
+
+.carte__erreur--centre {
+  text-align: center;
+}
+
+/* Coordonnees : la ligne grise des caisses en ligne. */
+.carte__gris {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 10px;
+  background: var(--ct-fond);
+  font-size: 0.9rem;
+}
+
+.carte__gris-libelle {
+  flex: none;
+  width: 72px;
+  color: var(--ct-doux);
+  font-size: 0.84rem;
+}
+
+.carte__gris-valeur {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Le moyen de paiement : une boite, la carte en tete. */
+.carte__boite {
+  padding: 14px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(20, 20, 40, 0.04);
+}
+
+.carte__boite-tete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.carte__boite-tete svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--ct-texte);
+  stroke-width: 1.8;
+}
+
+.carte__boite-tete img {
+  height: 24px;
+  width: auto;
+  margin-left: auto;
+}
+
+.carte__lien-securise {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f1f0f9;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #3b3760;
+}
+
+.carte__lien-securise svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--ct-violet);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.carte__lien-securise strong {
+  overflow-wrap: anywhere;
+}
+
+.carte__champ--boite {
+  margin-top: 14px;
+}
+
+.carte__etiquette {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #40404a;
+}
+
+.carte__saisie,
+.carte__groupe input,
+.carte__groupe select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: #fff;
+  color: var(--ct-texte);
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+/* Les filets entre champs groupes : declares apres la remise a zero des
+   bordures, pour l'emporter. */
+.carte__groupe > input,
+.carte__groupe > .carte__groupe-rang {
+  border-top: 1px solid var(--ct-trait);
+}
+
+.carte__groupe-rang > input + input {
+  border-left: 1px solid var(--ct-trait);
+}
+
+.carte__saisie {
+  border: 1px solid var(--ct-trait);
+  border-radius: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.carte__saisie:focus {
+  border-color: var(--ct-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.2);
+}
+
+.carte__saisie--erreur {
+  border-color: var(--ct-rouge);
+}
+
+/* Les champs groupes : un seul contour, des filets entre eux. */
+.carte__groupe {
+  overflow: hidden;
+  border: 1px solid var(--ct-trait);
+  border-radius: 8px;
+  animation: carte-entre 0.35s var(--ct-anime) both;
+}
+
+.carte__groupe--erreur {
+  border-color: var(--ct-rouge);
+}
+
+.carte__groupe-rang {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.carte__groupe input:focus,
+.carte__groupe select:focus {
+  background: #f6f5fc;
+  box-shadow: inset 3px 0 0 var(--ct-violet);
+}
+
+.carte__groupe-select {
+  display: block;
+}
+
+.carte__groupe select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a1a1f' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+.carte__adresse-resumee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 8px;
+  background: var(--ct-fond);
+  font-size: 0.88rem;
+}
+
+.carte__adresse-resumee span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.carte__modifier {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--ct-violet);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Le bouton ---------- */
+.carte__payer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--ct-violet-vif), var(--ct-violet));
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(93, 86, 150, 0.3);
+  transition: transform 0.2s var(--ct-anime), box-shadow 0.2s;
+}
+
+.carte__payer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.22), transparent 65%);
+  translate: -100% 0;
+  transition: translate 0.7s var(--ct-anime);
+}
+
+.carte__payer:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(93, 86, 150, 0.38);
+}
+
+.carte__payer:hover:not(:disabled)::after {
+  translate: 100% 0;
+}
+
+.carte__payer:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.carte__payer:disabled {
+  opacity: 0.75;
+  cursor: progress;
+}
+
+.carte__payer svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.carte__plus-tard {
+  min-height: 40px;
+  margin-top: 4px;
+  border: 0;
+  background: none;
+  color: var(--ct-doux);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.carte__plus-tard:hover {
+  color: var(--ct-texte);
+}
+
+.carte__pied {
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--ct-doux);
+  text-align: center;
+}
+
+.carte :focus-visible {
+  outline: 2px solid var(--ct-violet);
+  outline-offset: 2px;
+}
+
+.carte__resume :focus-visible {
+  outline-color: #fff;
+}
+
+.carte__montant input:focus-visible,
+.carte__saisie:focus-visible,
+.carte__groupe :focus-visible,
+.carte__merci-titre:focus-visible {
+  outline: none;
+}
+
+/* ---------- Attente ---------- */
+.carte__attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 0;
+  color: var(--ct-doux);
+}
+
+.carte__rotation {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--ct-trait);
+  border-top-color: var(--ct-violet);
+  border-radius: 50%;
+  animation: carte-tourne 0.8s linear infinite;
+}
+
+.carte__rotation--clair {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+}
+
+@keyframes carte-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.carte__alerte {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fdeceb;
+  color: var(--ct-rouge);
+}
+
+/* ---------- Merci ---------- */
+.carte__merci {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: center;
+  animation: carte-entre 0.5s var(--ct-anime) both;
+}
+
+.carte__merci-sceau {
+  width: 76px;
+  height: 76px;
+  margin: 12px auto 6px;
+}
+
+.carte__merci-sceau svg {
+  width: 100%;
+  height: 100%;
+  animation: carte-sceau 0.6s var(--ct-anime) both;
+}
+
+.carte__merci-sceau circle {
+  fill: #eeedf8;
+  stroke: var(--ct-violet);
+  stroke-width: 2;
+}
+
+.carte__merci-sceau path {
+  fill: none;
+  stroke: var(--ct-violet);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: carte-trace 0.5s 0.4s var(--ct-anime) forwards;
+}
+
+@keyframes carte-sceau {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes carte-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.carte__merci-titre {
+  margin: 8px 0 6px;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.carte__merci-texte {
+  margin: 0 0 16px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ct-doux);
+}
+
+.carte__merci-texte strong {
+  color: var(--ct-texte);
+  overflow-wrap: anywhere;
+}
+
+.carte__merci-recu {
+  margin: 0;
+  padding: 4px 16px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 12px;
+  background: var(--ct-fond);
+  text-align: left;
+}
+
+.carte__merci-recu > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 0.88rem;
+}
+
+.carte__merci-recu > div + div {
+  border-top: 1px solid var(--ct-trait);
+}
+
+.carte__merci-recu dt {
+  color: var(--ct-doux);
+}
+
+.carte__merci-recu dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.carte__statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ct-violet);
+}
+
+.carte__statut-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ct-violet);
+  animation: carte-pouls 1.8s infinite;
+}
+
+@keyframes carte-pouls {
+  0% {
+    box-shadow: 0 0 0 0 rgba(93, 86, 150, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(93, 86, 150, 0);
+  }
+}
+
+.carte__fleche {
+  transition: transform 0.2s;
+}
+
+.carte__payer:hover .carte__fleche {
+  transform: translateX(3px);
+}
+
+/* ==================================================================
+   Ordinateur : les deux volets cote a cote, sur toute la hauteur. Le
+   detail du don est toujours ouvert ; le montant s'affiche en grand.
+   ================================================================== */
+@media (min-width: 900px) {
+  .carte {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .carte__resume-dedans {
+    width: 100%;
+    max-width: 440px;
+    margin-left: auto;
+    padding: 56px 64px 48px 48px;
+  }
+
+  .carte__objet {
+    margin-top: 40px;
+    font-size: 1rem;
+  }
+
+  .carte__grand-valeur,
+  .carte__grand-devise {
+    font-size: 2.6rem;
+  }
+
+  .carte__grand {
+    margin-bottom: 26px;
+  }
+
+  .carte__note {
+    display: block;
+  }
+
+  .carte__details-bouton {
+    display: none;
+  }
+
+  .carte__lignes-cadre {
+    grid-template-rows: 1fr;
+    margin-top: 34px;
+  }
+
+  .carte__paiement {
+    box-shadow: -18px 0 40px rgba(12, 11, 18, 0.12);
+  }
+
+  .carte__paiement-dedans {
+    max-width: 480px;
+    padding: 56px 48px 40px 64px;
+  }
+
+  .carte__rubrique--section {
+    margin-top: 26px;
+  }
+
+  .carte__merci {
+    margin-top: 40px;
+  }
+}
+
+/* ==================================================================
+   Telephone : le resume se resserre en tete, le detail se replie, et
+   le formulaire tient dans l'ecran.
+   ================================================================== */
+@media (max-width: 600px) {
+  .carte__resume-dedans {
+    padding: 8px 14px 6px;
+  }
+
+  .carte__objet {
+    display: none;
+  }
+
+  .carte__marque {
+    gap: 8px;
+  }
+
+  .carte__grand {
+    margin: 4px 0 8px;
+  }
+
+  .carte__grand-valeur,
+  .carte__grand-devise {
+    font-size: 1.7rem;
+  }
+
+  .carte__devise {
+    min-height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .carte__details-bouton {
+    margin-top: 0;
+  }
+
+  .carte__paiement-dedans {
+    padding: 12px 14px 10px;
+  }
+
+  .carte__rubrique {
+    font-size: 0.88rem;
+  }
+
+  .carte__rubrique--section {
+    margin: 12px 0 6px;
+  }
+
+  .carte__montant input {
+    min-height: 46px;
+    font-size: 1.2rem;
+  }
+
+  .carte__gris {
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+
+  .carte__boite {
+    padding: 12px;
+  }
+
+  .carte__lien-securise {
+    margin-top: 10px;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .carte__champ--boite {
+    margin-top: 10px;
+  }
+
+  .carte__payer {
+    margin-top: 12px;
+  }
+
+  /* Ce qui se lit deja ailleurs : le montant dans son champ, les
+     titres de section dans ce qu'ils annoncent. Caches a l'oeil, gardes
+     pour les lecteurs d'ecran. */
+  .carte__grand,
+  .carte__rubrique--section,
+  .carte__champ > .carte__rubrique {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .carte__pied,
+  .carte__long,
+  .carte__rapide-devise {
+    display: none;
+  }
+
+  .carte__marque {
+    min-height: 40px;
+  }
+
+  .carte__devises {
+    margin-top: 6px;
+  }
+
+  .carte__rapides {
+    gap: 5px;
+  }
+
+  .carte__rapide {
+    font-size: 0.78rem;
+  }
+
+  .carte__gris {
+    margin-top: 10px;
+  }
+
+  .carte__boite {
+    margin-top: 10px;
+  }
+
+  .carte__etiquette {
+    font-size: 0.78rem;
+  }
+
+  .carte__champ--boite {
+    gap: 4px;
+  }
+
+  /* "Voir le detail" monte sur la ligne du logo, a droite. */
+  .carte__resume-dedans {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .carte__marque {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .carte__details-bouton {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .carte__devises,
+  .carte__lignes-cadre {
+    grid-column: 1 / -1;
+  }
+
+  .carte__lien-securise {
+    padding: 7px 10px;
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  .carte__boite {
+    padding: 10px 12px 12px;
+  }
+
+  .carte__plus-tard {
+    margin-top: 0;
+  }
+}
+
+/* Moins de mouvement : les etats restent, les animations s'effacent. */
+@media (prefers-reduced-motion: reduce) {
+  .carte *,
+  .carte *::before,
+  .carte *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .carte__merci-sceau path {
+    stroke-dashoffset: 0;
+  }
+}

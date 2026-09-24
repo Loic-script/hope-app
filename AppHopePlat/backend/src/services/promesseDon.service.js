@@ -106,6 +106,7 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
     : 'ONE_TIME';
   const message = texteFacultatif(corps.message, 'message', { max: 500 });
   const paiement = justificatif(corps, mode);
+  const carte = facturation(corps, mode, identite);
 
   const don = await transaction(async (client) => {
     const existante = await donorSpaceRepository.ficheDuCompte(identite.utilisateurId, client);
@@ -155,7 +156,8 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
           `(${identite.origine}, ${mode.libelle})` +
           `${projet ? ` pour « ${projet.nom} »` : ''}` +
           `${paiement.reference ? `, réf. ${paiement.reference}` : ''}` +
-          `${paiement.numero ? ` depuis le ${paiement.numero}` : ''} — à confirmer à réception.`,
+          `${paiement.numero ? ` depuis le ${paiement.numero}` : ''} — à confirmer à réception.` +
+          `${carte ? ` ${carte}` : ''}`,
         donationId: cree.id,
         donorId,
         projectId: projet ? Number(projet.id) : null,
@@ -209,6 +211,41 @@ function justificatif(corps, mode) {
   }
 
   return { reference: reference ? reference.toUpperCase() : null, numero };
+}
+
+/**
+ * Le don par carte : ce qu'il faut a l'equipe pour envoyer un lien de
+ * paiement securise -- l'adresse e-mail, le titulaire, l'adresse de
+ * facturation.
+ *
+ * JAMAIS le numero de carte, la date d'expiration ni le cryptogramme :
+ * ils se saisissent chez le prestataire de paiement, pas ici. Une carte
+ * ne transite pas par ce serveur, et n'est pas conservee dans cette base.
+ *
+ * Rend la phrase que la notification de l'equipe portera, ou null.
+ */
+function facturation(corps, mode, identite) {
+  if (mode.cle !== 'carte_bancaire' || !corps.facturation) return null;
+  const f = corps.facturation;
+
+  const titulaire = texteFacultatif(f.titulaire, 'titulaire', { max: 120 });
+  if (!titulaire) {
+    throw new ErreurValidation('Indiquez le nom du titulaire de la carte.', { titulaire: 'Champ obligatoire' });
+  }
+  const adresse = [
+    texteFacultatif(f.adresse, 'adresse', { max: 255 }),
+    [texteFacultatif(f.codePostal, 'codePostal', { max: 20 }), texteFacultatif(f.ville, 'ville', { max: 120 })]
+      .filter(Boolean)
+      .join(' '),
+    nomDuPays(texteFacultatif(f.pays, 'pays', { max: 60 })),
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  return (
+    `Lien de paiement par carte à envoyer${identite.email ? ` à ${identite.email}` : ''} ` +
+    `(titulaire : ${titulaire} ; facturation : ${adresse}).`
+  );
 }
 
 /** Qui donne, depuis l'espace bailleur : l'organisation, par son contact. */

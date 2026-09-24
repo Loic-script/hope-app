@@ -33,6 +33,7 @@ import './styles/feuille.css';
 import './styles/parcours-donateur.css';
 import './styles/paiement-mvola.css';
 import './styles/paiement-orange-money.css';
+import './styles/paiement-carte.css';
 import './styles/parcours-benevole.css';
 import './styles/choix-page.css';
 

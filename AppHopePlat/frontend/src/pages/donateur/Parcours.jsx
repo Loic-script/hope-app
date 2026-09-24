@@ -98,6 +98,7 @@ function deuxNomsDeLangue(libelle) {
 const PAGES_DE_PAIEMENT = {
   mvola: '/donateur/completer-profil/mvola',
   orange_money: '/donateur/completer-profil/orange-money',
+  carte_bancaire: '/donateur/completer-profil/carte',
 };
 
 /**
