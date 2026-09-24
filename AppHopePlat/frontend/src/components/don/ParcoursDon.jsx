@@ -22,6 +22,15 @@ const TOUTES_LES_ETAPES = [
   { cle: 'confirmation', libelle: 'Confirmation' },
 ];
 
+/**
+ * Avec des pages de paiement (les espaces) : le moyen d'abord, puis la
+ * destination si elle n'est pas deja donnee -- et le rythme avec elle.
+ */
+const ETAPES_AVEC_PAGES = [
+  { cle: 'paiement', libelle: 'Paiement' },
+  { cle: 'destination', libelle: 'Destination' },
+];
+
 /** Des montants pour commencer, selon la devise ; on peut toujours saisir le sien. */
 const MONTANTS_PROPOSES = {
   MGA: [10000, 25000, 50000, 100000, 250000],
@@ -89,10 +98,13 @@ export default function ParcoursDon({
   const [projets, setProjets] = useState(null);
   const [erreurChargement, setErreurChargement] = useState('');
 
-  const etapes = useMemo(
-    () => TOUTES_LES_ETAPES.filter((e) => !(projetImpose && e.cle === 'destination')),
-    [projetImpose]
-  );
+  const etapes = useMemo(() => {
+    const sansDestination = (e) => !(projetImpose && e.cle === 'destination');
+    // Avec des pages de paiement, comme au formulaire d'inscription : le
+    // moyen d'abord, puis sa page, ou se disent le montant et le reste.
+    if (payer) return ETAPES_AVEC_PAGES.filter(sansDestination);
+    return TOUTES_LES_ETAPES.filter(sansDestination);
+  }, [projetImpose, payer]);
   const [rang, setRang] = useState(0);
   const [sens, setSens] = useState('avance');
   const [pret, setPret] = useState(false);
@@ -153,6 +165,7 @@ export default function ParcoursDon({
   const modeChoisi = modes.find((m) => m.cle === mode) ?? null;
   const valeur = lireMontant(montant);
   const etape = etapes[rang]?.cle;
+  const derniere = rang === etapes.length - 1;
   const mensuel = avecRythme && frequence === 'MONTHLY';
 
   function aller(vers) {
@@ -175,26 +188,34 @@ export default function ParcoursDon({
     return aller(rang + 1);
   }
 
-  async function confirmer() {
-    // Le moyen a sa page : c'est elle qui fait payer, et enregistre le don.
-    const page = payer ? pageDePaiement(payer, mode) : null;
-    if (page) {
-      navigate(page, {
-        state: {
-          brouillon: {
-            mode,
-            affectation,
-            projetId: affectation === 'PROJECT' ? projetId : undefined,
-            projetNom: affectation === 'PROJECT' ? projetChoisi?.nom : undefined,
-            montant: valeur,
-            devise,
-            frequence: mensuel ? 'MONTHLY' : 'ONE_TIME',
-            message: message.trim() || undefined,
-          },
+  /**
+   * Avec des pages de paiement : la derniere etape verifiee, on part sur
+   * la page du moyen, le don en brouillon. C'est elle qui demande le
+   * montant, fait payer et enregistre le don.
+   */
+  function versLaPage() {
+    if (!mode) return setRefus('Choisissez votre mode de paiement.');
+    if (!affectation) return setRefus('Choisissez à quoi servira votre don.');
+    if (affectation === 'PROJECT' && !projetChoisi) return setRefus('Choisissez le projet à soutenir.');
+    const page = pageDePaiement(payer, mode);
+    if (!page) return setRefus('Ce moyen de paiement n’a pas encore sa page.');
+    return navigate(page, {
+      state: {
+        brouillon: {
+          mode,
+          affectation,
+          projetId: affectation === 'PROJECT' ? projetId : undefined,
+          projetNom: affectation === 'PROJECT' ? projetChoisi?.nom : undefined,
+          montant: null,
+          devise,
+          frequence: mensuel ? 'MONTHLY' : 'ONE_TIME',
+          message: message.trim() || undefined,
         },
-      });
-      return;
-    }
+      },
+    });
+  }
+
+  async function confirmer() {
     setEnvoi(true);
     setRefus('');
     try {
@@ -331,6 +352,7 @@ export default function ParcoursDon({
       )}
 
       {/* La progression : les pas, et la ligne qui se remplit. */}
+      {etapes.length > 1 && (
       <ol
         className="don-pas"
         style={{
@@ -349,6 +371,7 @@ export default function ParcoursDon({
           </li>
         ))}
       </ol>
+      )}
 
       <div className="don-disposition">
         <div key={etape} className={`don-etape don-etape--${sens}`}>
@@ -435,6 +458,32 @@ export default function ParcoursDon({
                     </button>
                   ))}
                 </div>
+              )}
+
+              {/* Sans etape montant, le rythme se choisit ici. */}
+              {payer && avecRythme && (
+                <>
+                  <h3 className="don-etape__sous-titre">À quel rythme ?</h3>
+                  <div className="don-rythmes" role="group" aria-label="Fréquence">
+                    {['ONE_TIME', 'MONTHLY'].map((cle) => (
+                      <button
+                        key={cle}
+                        type="button"
+                        aria-pressed={frequence === cle}
+                        className={`don-rythme${frequence === cle ? ' don-rythme--actif' : ''}`}
+                        onClick={() => setFrequence(cle)}
+                      >
+                        {cle === 'MONTHLY' ? <IconeCalendrierRenouvele /> : <IconeCoeur />}
+                        <strong>{cle === 'MONTHLY' ? 'Chaque mois' : 'Une fois'}</strong>
+                        <span>
+                          {cle === 'MONTHLY'
+                            ? 'Un soutien régulier, qui permet de prévoir.'
+                            : 'Un don payé en une seule fois.'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </section>
           )}
@@ -632,7 +681,12 @@ export default function ParcoursDon({
                 Annuler
               </Link>
             )}
-            {etape !== 'confirmation' ? (
+            {payer && derniere ? (
+              <button type="button" className="don-cta don-cta--plein" onClick={versLaPage}>
+                Continuer vers le paiement
+                <IconeFleche />
+              </button>
+            ) : etape !== 'confirmation' ? (
               <button type="button" className="don-cta don-cta--plein" onClick={suivante}>
                 Continuer
                 <IconeFleche />
@@ -640,7 +694,7 @@ export default function ParcoursDon({
             ) : (
               <button type="button" className="don-cta don-cta--plein don-cta--confirmer" onClick={confirmer} disabled={envoi}>
                 <IconeCoeur />
-                {envoi ? 'Enregistrement…' : payer ? 'Continuer vers le paiement' : 'Confirmer ma promesse de don'}
+                {envoi ? 'Enregistrement…' : 'Confirmer ma promesse de don'}
               </button>
             )}
           </div>
@@ -649,10 +703,14 @@ export default function ParcoursDon({
         {/* Le recapitulatif qui suit la saisie, sur grand ecran. */}
         <aside className="don-resume" aria-label="Votre don">
           <p className="don-resume__titre">Votre don</p>
-          <p className="don-resume__montant">
-            {valeur >= 1 ? fmt.montant(valeur, devise) : '—'}
-            {valeur >= 1 && mensuel && <span> / mois</span>}
-          </p>
+          {payer ? (
+            <p className="don-resume__montant don-resume__montant--suite">Le montant, à l’étape suivante</p>
+          ) : (
+            <p className="don-resume__montant">
+              {valeur >= 1 ? fmt.montant(valeur, devise) : '—'}
+              {valeur >= 1 && mensuel && <span> / mois</span>}
+            </p>
+          )}
           <ul className="don-resume__lignes">
             <li>
               <span>Pour</span>

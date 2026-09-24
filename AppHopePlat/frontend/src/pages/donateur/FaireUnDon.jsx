@@ -20,7 +20,8 @@ export default function FaireUnDon() {
   return (
     <ParcoursDon
       prenom={donateur?.prenom}
-      titre="Votre don, en quatre gestes"
+      titre="Faire un don"
+      accroche="Choisissez votre moyen de paiement : la page suivante vous guide pour le montant et le règlement."
       projetPropose={parametres.get('projet')}
       avecRythme
       avecFinances
