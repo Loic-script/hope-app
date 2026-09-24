@@ -26,6 +26,7 @@ import './styles/messagerie.css';
 // Apres admin.css : l'espace benevole connecte reprend ses variables
 // (--admin-*), ses boutons et son tableau.
 import './styles/benevole-espace.css';
+import './styles/mes-taches.css';
 import './styles/bailleur.css';
 import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';

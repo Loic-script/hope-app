@@ -30,7 +30,7 @@ import { ActionDemande, EquipeTache } from './composants.jsx';
  * pas, et le charger pour chaque carte serait payer pour des fenetres
  * que personne n'ouvre.
  */
-export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envoi = false }) {
+export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envoi = false, actions = null }) {
   const [projet, setProjet] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [refus, setRefus] = useState('');
@@ -79,7 +79,10 @@ export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envo
           <button type="button" className="btn btn--neutre" onClick={onFermer} disabled={envoi}>
             Fermer
           </button>
-          {onDemander && (
+          {/* Les actions de la colonne d'ou l'on vient (en cours, livree),
+              ou, pour une tache a prendre, la demande. */}
+          {actions}
+          {!actions && onDemander && (
             <ActionDemande
               tache={tache}
               envoi={envoi}
