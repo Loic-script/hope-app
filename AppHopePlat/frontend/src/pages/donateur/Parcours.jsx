@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import ChoixSurPage, { parLettre } from '../../components/ChoixSurPage.jsx';
 import {
@@ -111,6 +111,7 @@ function deuxNomsDeLangue(libelle) {
  */
 export default function Parcours() {
   const navigate = useNavigate();
+  const emplacement = useLocation();
   const { rafraichir } = useOutletContext();
   const { donnees, chargement, erreur } = useChargement(() => donateurService.recupererProfil(), []);
 
@@ -138,8 +139,12 @@ export default function Parcours() {
       navigate('/donateur', { replace: true });
       return;
     }
-    setEtape((courante) => courante ?? donnees.etapeSuivante);
-  }, [donnees, navigate]);
+    // Un retour depuis la page MVola peut demander une etape deja
+    // franchie : le choix du paiement, a corriger.
+    const demandee = Number(emplacement.state?.etape);
+    const retour = demandee >= 1 && demandee <= donnees.etapeSuivante ? demandee : null;
+    setEtape((courante) => courante ?? retour ?? donnees.etapeSuivante);
+  }, [donnees, navigate, emplacement.state]);
 
   /** Change d'etape en ramenant le haut de la page sous les yeux. */
   function allerA(numero) {
@@ -210,7 +215,16 @@ export default function Parcours() {
               setBrouillons((precedents) => ({ ...precedents, 4: valeurs }));
               allerA(3);
             }}
-            onSuivante={(reponse) => apresEnregistrement(4, reponse)}
+            onSuivante={async (reponse) => {
+              // MVola se paie sur sa propre page, puis le parcours
+              // reprend a la cinquieme etape.
+              if (reponse?.paiement?.mode === 'mvola') {
+                await rafraichir?.();
+                navigate('/donateur/completer-profil/mvola');
+                return;
+              }
+              await apresEnregistrement(4, reponse);
+            }}
           />
         )}
         {profil && etape === 5 && (

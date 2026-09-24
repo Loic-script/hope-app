@@ -105,6 +105,7 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
     ? valeurParmi(corps.frequence, 'frequence', FREQUENCES.map((f) => f.cle))
     : 'ONE_TIME';
   const message = texteFacultatif(corps.message, 'message', { max: 500 });
+  const paiement = justificatif(corps, mode);
 
   const don = await transaction(async (client) => {
     const existante = await donorSpaceRepository.ficheDuCompte(identite.utilisateurId, client);
@@ -116,6 +117,13 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
           client
         )
       ).id;
+
+    // Une reference de transaction ne justifie qu'un seul don.
+    if (paiement.reference && (await donationRepository.referencePaiementPrise(paiement.reference, client))) {
+      throw new ErreurValidation('Cette référence de transaction a déjà été déclarée pour un autre don.', {
+        referencePaiement: 'Référence déjà utilisée',
+      });
+    }
 
     const reference = await donationRepository.genererReference(client);
     const cree = await donationRepository.creer(
@@ -129,7 +137,7 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
         projectId: projet ? Number(projet.id) : null,
         frequency: frequence,
         paymentMethod: mode.libelle,
-        paymentReference: null,
+        paymentReference: paiement.reference,
         status: 'PENDING',
         receivedAt: null,
         message: message || null,
@@ -145,7 +153,9 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
         label:
           `Promesse de don : ${centimesVersTexte(montant)} ${devise} de ${identite.qui} ` +
           `(${identite.origine}, ${mode.libelle})` +
-          `${projet ? ` pour « ${projet.nom} »` : ''} — à confirmer à réception.`,
+          `${projet ? ` pour « ${projet.nom} »` : ''}` +
+          `${paiement.reference ? `, réf. ${paiement.reference}` : ''}` +
+          `${paiement.numero ? ` depuis le ${paiement.numero}` : ''} — à confirmer à réception.`,
         donationId: cree.id,
         donorId,
         projectId: projet ? Number(projet.id) : null,
@@ -163,6 +173,36 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
       'Merci ! Votre promesse de don est enregistrée. L’équipe HOPE la confirme dès réception ' +
       'de votre paiement.',
   };
+}
+
+/**
+ * Ce que le donateur declare de son paiement, quand il l'a deja fait :
+ * la reference de la transaction (le SMS de MVola) et le numero qui a
+ * paye. L'equipe les rapproche de son releve avant de confirmer -- ils
+ * ne valent pas preuve a eux seuls.
+ */
+function justificatif(corps, mode) {
+  const reference = texteFacultatif(corps.referencePaiement, 'referencePaiement', { max: 40 });
+  if (reference && !/^[A-Za-z0-9][A-Za-z0-9.\-]{3,39}$/.test(reference)) {
+    throw new ErreurValidation('La référence de transaction n’est pas valide.', {
+      referencePaiement: 'Lettres, chiffres, points et tirets uniquement',
+    });
+  }
+
+  let numero = null;
+  const saisi = String(corps.numeroPayeur ?? '').replace(/[\s.-]/g, '');
+  if (saisi) {
+    const national = saisi.replace(/^(\+?261|0)/, '');
+    // Un numero MVola : Telma, 034 ou 038.
+    if (mode.cle !== 'mvola' || !/^3[48]\d{7}$/.test(national)) {
+      throw new ErreurValidation('Ce numéro n’est pas un numéro MVola.', {
+        numeroPayeur: 'Un numéro Telma : 034 ou 038',
+      });
+    }
+    numero = `+261${national}`;
+  }
+
+  return { reference: reference ? reference.toUpperCase() : null, numero };
 }
 
 /** Qui donne, depuis l'espace bailleur : l'organisation, par son contact. */

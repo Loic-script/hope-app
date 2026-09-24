@@ -31,6 +31,8 @@ router.get('/projets/:id', profil.projet);
 // Ses dons, et un nouveau don : une promesse, que l'equipe confirme a
 // reception du paiement.
 router.get('/dons', dons.lister);
+// Ou envoyer un don MVola : le numero de HOPE.
+router.get('/paiement/mvola', dons.mvola);
 router.post('/dons', dons.faire);
 
 // Les nouvelles de HOPE.

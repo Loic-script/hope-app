@@ -32,6 +32,8 @@ import ProjetsDonateur from '../pages/donateur/Projets.jsx';
  * ecran n'a besoin. Les autres espaces ne les telechargent pas.
  */
 const ParcoursDonateur = lazy(() => import('../pages/donateur/Parcours.jsx'));
+// Le paiement MVola, ouvert depuis l'etape 4 du parcours.
+const PaiementMvola = lazy(() => import('../pages/donateur/PaiementMvola.jsx'));
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
 import ConversationsEspace from '../pages/espace/Conversations.jsx';
@@ -131,6 +133,21 @@ export default function AppRoutes() {
               }
             >
               <ParcoursDonateur />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/donateur/completer-profil/mvola"
+          element={
+            <Suspense
+              fallback={
+                <div className="verification" role="status" aria-live="polite">
+                  <span className="verification__rotation" aria-hidden="true" />
+                  <p>Préparation du paiement…</p>
+                </div>
+              }
+            >
+              <PaiementMvola />
             </Suspense>
           }
         />

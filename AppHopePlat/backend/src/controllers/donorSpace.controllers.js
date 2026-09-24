@@ -34,6 +34,7 @@ export const profil = {
 export const dons = {
   lister: gerer((req) => donorSpaceService.mesDons(req.donateur.id)),
   faire: gerer((req) => donorSpaceService.faireUnDon(req.donateur, req.body), { statut: 201 }),
+  mvola: gerer(async () => donorSpaceService.compteMvola()),
 };
 
 /** Les nouvelles de HOPE. */

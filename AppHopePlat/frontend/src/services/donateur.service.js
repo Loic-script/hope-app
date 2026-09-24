@@ -60,6 +60,17 @@ export async function faireUnDon(don) {
   return data;
 }
 
+/**
+ * GET /api/donateur/paiement/mvola : le compte MVola de HOPE, ou le
+ * donateur envoie son don.
+ *
+ * @returns {Promise<{ disponible: boolean, numero: string, titulaire: string }>}
+ */
+export async function compteMvola() {
+  const { data } = await apiDonateur.get('/donateur/paiement/mvola');
+  return data;
+}
+
 /** GET /api/donateur/actualites : les nouvelles de HOPE, sans argent. */
 export async function actualites() {
   const { data } = await apiDonateur.get('/donateur/actualites');

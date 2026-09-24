@@ -65,6 +65,17 @@ export const config = {
     siteWeb: optionnel('EQUIPE_SITE', ''),
   },
 
+  /*
+   * Le compte MVola de HOPE, ou les donateurs envoient leur don. Ce
+   * numero est public -- on le donne a qui veut payer --, mais il
+   * change d'une installation a l'autre : il vit dans .env. Vide, la
+   * page de paiement MVola le dit et n'accepte rien.
+   */
+  mvola: {
+    numero: optionnel('HOPE_MVOLA_NUMERO', ''),
+    titulaire: optionnel('HOPE_MVOLA_TITULAIRE', 'HOPE Madagascar'),
+  },
+
   admin: {
     log: optionnel('ADMIN_LOG', 'AdminHope'),
     password: optionnel('ADMIN_PASSWORD', ''),

@@ -10,6 +10,7 @@
  * quand l'argent arrive. Seuls les dons recus comptent dans les totaux ;
  * une promesse se lit a part, "en attente".
  */
+import { config } from '../config/env.js';
 import * as donorProfileRepository from '../repositories/donorProfile.repository.js';
 import * as donorSpaceRepository from '../repositories/donorSpace.repository.js';
 import * as publicationRepository from '../repositories/publication.repository.js';
@@ -87,6 +88,20 @@ function identiteDonateur(compte) {
         origine: origineDuPays(fiche.pays),
       };
     },
+  };
+}
+
+/**
+ * GET /api/donateur/paiement/mvola : le compte MVola de HOPE.
+ *
+ * Rien de secret : c'est le numero auquel le donateur envoie son don.
+ */
+export function compteMvola() {
+  const numero = String(config.mvola.numero ?? '').replace(/\D/g, '');
+  return {
+    disponible: /^03[2-9]\d{7}$/.test(numero),
+    numero,
+    titulaire: config.mvola.titulaire,
   };
 }
 

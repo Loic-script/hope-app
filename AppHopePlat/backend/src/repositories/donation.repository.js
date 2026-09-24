@@ -129,6 +129,16 @@ export async function mettreAJour(id, colonnes, client = null) {
 }
 
 /** Genere une reference lisible : DON-2026-0007. */
+/** Une reference de transaction deja declaree pour un don ? */
+export async function referencePaiementPrise(reference, client) {
+  const { rows } = await query(
+    'SELECT 1 FROM donations WHERE UPPER(payment_reference) = UPPER($1) LIMIT 1',
+    [reference],
+    client
+  );
+  return rows.length > 0;
+}
+
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
   const resultat = await query(
