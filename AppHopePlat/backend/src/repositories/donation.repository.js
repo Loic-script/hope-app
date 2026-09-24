@@ -128,6 +128,62 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
+/**
+ * Le don d'une session de paiement en ligne, avec le compte qui l'a
+ * ouverte : c'est lui, et lui seul, qui a le droit d'en lire l'etat.
+ */
+export async function parSessionFournisseur(sessionId, client = null) {
+  const resultat = await query(
+    `SELECT ${COLONNES}, d.payment_provider, d.provider_session_id,
+            d.provider_payment_id, d.provider_status, o.utilisateur_id
+       FROM donations d ${JOINTURES}
+      WHERE d.provider_session_id = $1`,
+    [sessionId],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
+/**
+ * Passe un don a "recu" apres un paiement en ligne abouti.
+ *
+ * La condition sur le statut fait tout le travail : Stripe annonce un
+ * paiement deux fois -- la page de retour et le webhook, parfois dans le
+ * desordre --, et seule la premiere annonce a l'arriver change la ligne.
+ * Rend le don si c'est bien cette fois-ci, null sinon : l'equipe n'est
+ * alors prevenue qu'une fois.
+ */
+export async function confirmerPaiementEnLigne(id, donnees, client = null) {
+  const resultat = await query(
+    `UPDATE donations
+        SET status = 'RECEIVED',
+            received_at = NOW(),
+            payment_reference = COALESCE(payment_reference, $2),
+            provider_payment_id = $3,
+            provider_status = $4,
+            provider_updated_at = NOW()
+      WHERE id = $1 AND status <> 'RECEIVED'
+      RETURNING id`,
+    [id, donnees.referencePaiement ?? null, donnees.paiementId ?? null, donnees.statutFournisseur ?? null],
+    client
+  );
+  return resultat.rows.length > 0 ? trouverParId(id, client) : null;
+}
+
+/** Ou en est le paiement en ligne, quand il n'aboutit pas (encore). */
+export async function noterEtatFournisseur(id, donnees, client = null) {
+  await query(
+    `UPDATE donations
+        SET provider_payment_id = COALESCE($2, provider_payment_id),
+            provider_status = $3,
+            provider_updated_at = NOW()
+      WHERE id = $1`,
+    [id, donnees.paiementId ?? null, donnees.statutFournisseur ?? null],
+    client
+  );
+  return trouverParId(id, client);
+}
+
 /** Une reference de transaction deja declaree pour un don ? */
 export async function referencePaiementPrise(reference, client) {
   const { rows } = await query(

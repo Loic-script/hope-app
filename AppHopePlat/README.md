@@ -12,6 +12,9 @@ autonomie durable.
 
 ## 1. Le modèle : où va l'argent
 
+
+
+
 C'est le cœur de la plateforme. Tout le reste en découle.
 
 ```
@@ -318,7 +321,9 @@ Page React → Service frontend → Axios → Route → Controller → Service �
 | CORS | seule l'origine `http://localhost:5173` est acceptée |
 | Téléversement | PDF/JPG/PNG, 10 Mo max, **nom de fichier généré**, chemin reconstruit avec `path.basename` |
 | Données des bénéficiaires | routes admin uniquement, jamais publiées |
-| Secrets | `DB_PASSWORD` et `JWT_SECRET` dans `backend/.env`, couvert par `.gitignore` |
+| Secrets | `DB_PASSWORD`, `JWT_SECRET` et `STRIPE_SECRET_KEY` dans `backend/.env`, couvert par `.gitignore` |
+| Numéros de carte | saisis dans le cadre de Stripe, jamais reçus ni stockés par HOPE (PCI-DSS, SAQ-A) |
+| Paiement annoncé | message Stripe signé (`STRIPE_WEBHOOK_SECRET`), montant recoupé avec le don avant confirmation |
 | Concurrence financière | contrôle + écriture dans une transaction, lignes verrouillées |
 
 ---

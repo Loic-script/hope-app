@@ -76,7 +76,7 @@ export async function mesDons(utilisateurId) {
  * d'accueil -- nom, pays, structure. La raison sociale d'une entreprise
  * ou d'une association figurera sur ses recus.
  */
-function identiteDonateur(compte) {
+export function identiteDonateur(compte) {
   return {
     utilisateurId: compte.id,
     qui: [compte.prenom, compte.nom].filter(Boolean).join(' ') || compte.email,

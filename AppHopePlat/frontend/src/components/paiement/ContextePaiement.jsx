@@ -73,6 +73,13 @@ export default function ContextePaiement({ espace, children }) {
   const emplacement = useLocation();
   const exterieur = useOutletContext() ?? {};
   const brouillon = emplacement.state?.brouillon ?? null;
+  /*
+   * Le retour de Stripe : la banque a pu demander une confirmation au
+   * donateur, et le ramener ici par une adresse -- sans l'etat de la
+   * page, donc sans brouillon. La session suffit alors : le don est
+   * deja enregistre, il ne reste qu'a en montrer le recu.
+   */
+  const sessionPayee = new URLSearchParams(emplacement.search).get('session');
 
   const valeur = useMemo(() => {
     // ----- Le parcours d'accueil -----
@@ -117,6 +124,12 @@ export default function ContextePaiement({ espace, children }) {
         coordonnees: () => donateurService.coordonneesDePaiement(),
         promettre: (corps) => donateurService.faireUnDon(corps),
         declarer: (id, reference) => donateurService.declarerPaiement(id, reference),
+        carte: {
+          reglages: () => donateurService.reglagesCarte(),
+          ouvrir: (corps) => donateurService.ouvrirPaiementCarte(corps),
+          etat: (session) => donateurService.etatPaiementCarte(session),
+        },
+        sessionPayee,
         quitter(etape) {
           navigate(PARCOURS, { replace: true, state: etape ? { etape } : undefined });
         },
@@ -132,8 +145,9 @@ export default function ContextePaiement({ espace, children }) {
       rafraichir: exterieur.rafraichirCompteurs ?? exterieur.rafraichir,
       async charger(mode) {
         // Sans brouillon -- une adresse tapee, une page rechargee --, ou
-        // pour un autre moyen : le don se prepare d'abord.
-        if (!brouillon || brouillon.mode !== mode) {
+        // pour un autre moyen : le don se prepare d'abord. Sauf au
+        // retour d'un paiement : le don est fait, on montre son recu.
+        if ((!brouillon || brouillon.mode !== mode) && !sessionPayee) {
           navigate(reglage.faireUnDon, { replace: true });
           return null;
         }
@@ -142,20 +156,28 @@ export default function ContextePaiement({ espace, children }) {
           const profil = await donateurService.recupererProfil();
           source = { ...profil.informations, email: profil.compte?.email, devise: profil.profil?.devise };
         }
+        const prepare = brouillon ?? {};
         return {
           personne: personneDe(source),
-          affectation: brouillon.affectation || 'HOPE',
-          projetId: brouillon.affectation === 'PROJECT' ? brouillon.projetId : undefined,
-          beneficiaire: brouillon.projetNom || (brouillon.affectation === 'PROJECT' ? 'Le projet choisi' : 'Les projets de HOPE'),
-          frequence: brouillon.frequence || 'ONE_TIME',
-          message: brouillon.message,
-          montant: brouillon.montant ?? null,
-          devise: brouillon.devise ?? null,
+          affectation: prepare.affectation || 'HOPE',
+          projetId: prepare.affectation === 'PROJECT' ? prepare.projetId : undefined,
+          beneficiaire:
+            prepare.projetNom || (prepare.affectation === 'PROJECT' ? 'Le projet choisi' : 'Les projets de HOPE'),
+          frequence: prepare.frequence || 'ONE_TIME',
+          message: prepare.message,
+          montant: prepare.montant ?? null,
+          devise: prepare.devise ?? null,
         };
       },
       coordonnees: () => reglage.service.coordonneesDePaiement(),
       promettre: (corps) => reglage.service.faireUnDon(corps),
       declarer: (id, reference) => reglage.service.declarerPaiement(id, reference),
+      carte: {
+        reglages: () => reglage.service.reglagesCarte(),
+        ouvrir: (corps) => reglage.service.ouvrirPaiementCarte(corps),
+        etat: (session) => reglage.service.etatPaiementCarte(session),
+      },
+      sessionPayee,
       quitter(etape) {
         if (etape) {
           // Revenir au choix du moyen : le don se reprend la ou il etait.
@@ -166,7 +188,17 @@ export default function ContextePaiement({ espace, children }) {
         navigate(reglage.suite, { replace: true });
       },
     };
-  }, [espace, brouillon, navigate, exterieur.rafraichir, exterieur.rafraichirCompteurs, exterieur.donateur, exterieur.bailleur, exterieur.benevole]);
+  }, [
+    espace,
+    brouillon,
+    sessionPayee,
+    navigate,
+    exterieur.rafraichir,
+    exterieur.rafraichirCompteurs,
+    exterieur.donateur,
+    exterieur.bailleur,
+    exterieur.benevole,
+  ]);
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }

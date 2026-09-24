@@ -467,35 +467,6 @@
   white-space: nowrap;
 }
 
-/* Le moyen de paiement : une boite, la carte en tete. */
-.carte__boite {
-  padding: 14px;
-  border: 1px solid var(--ct-trait);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(20, 20, 40, 0.04);
-}
-
-.carte__boite-tete {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-}
-
-.carte__boite-tete svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: var(--ct-texte);
-  stroke-width: 1.8;
-}
-
-.carte__boite-tete img {
-  height: 24px;
-  width: auto;
-  margin-left: auto;
-}
-
 .carte__lien-securise {
   display: flex;
   gap: 10px;
@@ -521,148 +492,6 @@
 
 .carte__lien-securise strong {
   overflow-wrap: anywhere;
-}
-
-.carte__champ--boite {
-  margin-top: 14px;
-}
-
-.carte__etiquette {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: #40404a;
-}
-
-.carte__saisie,
-.carte__groupe input,
-.carte__groupe select {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 0;
-  background: #fff;
-  color: var(--ct-texte);
-  font: inherit;
-  font-size: 0.95rem;
-  outline: none;
-}
-
-/* Les filets entre champs groupes : declares apres la remise a zero des
-   bordures, pour l'emporter. */
-.carte__groupe > input,
-.carte__groupe > .carte__groupe-rang {
-  border-top: 1px solid var(--ct-trait);
-}
-
-.carte__groupe-rang > input + input,
-.carte__groupe-rang > input + .carte__cvc {
-  border-left: 1px solid var(--ct-trait);
-}
-
-/* Le numero : le champ, et les marques acceptees au bout. */
-.carte__numero,
-.carte__cvc {
-  display: flex;
-  align-items: center;
-  background: #fff;
-}
-
-.carte__numero input,
-.carte__cvc input {
-  flex: 1;
-  min-width: 0;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-}
-
-.carte__numero:focus-within,
-.carte__cvc:focus-within {
-  background: #f6f5fc;
-  box-shadow: inset 3px 0 0 var(--ct-violet);
-}
-
-.carte__numero:focus-within input,
-.carte__cvc:focus-within input {
-  box-shadow: none;
-}
-
-.logos-cartes {
-  display: flex;
-  flex: none;
-  gap: 4px;
-  padding-right: 10px;
-}
-
-.logos-cartes__logo {
-  width: 30px;
-  height: 19px;
-  transition: opacity 0.25s, filter 0.25s, transform 0.25s;
-}
-
-/* Le reseau reconnu reste en couleur ; les autres s'effacent. */
-.logos-cartes__logo--efface {
-  opacity: 0.22;
-  filter: grayscale(1);
-  transform: scale(0.92);
-}
-
-.icone-cvc {
-  flex: none;
-  width: 30px;
-  height: 20px;
-  margin-right: 10px;
-}
-
-.carte__saisie {
-  border: 1px solid var(--ct-trait);
-  border-radius: 8px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.carte__saisie:focus {
-  border-color: var(--ct-violet);
-  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.2);
-}
-
-.carte__saisie--erreur {
-  border-color: var(--ct-rouge);
-}
-
-/* Les champs groupes : un seul contour, des filets entre eux. */
-.carte__groupe {
-  overflow: hidden;
-  border: 1px solid var(--ct-trait);
-  border-radius: 8px;
-  animation: carte-entre 0.35s var(--ct-anime) both;
-}
-
-.carte__groupe--erreur {
-  border-color: var(--ct-rouge);
-}
-
-.carte__groupe-rang {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.carte__groupe input:focus,
-.carte__groupe select:focus {
-  background: #f6f5fc;
-  box-shadow: inset 3px 0 0 var(--ct-violet);
-}
-
-.carte__groupe-select {
-  display: block;
-}
-
-.carte__groupe select {
-  appearance: none;
-  padding-right: 36px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a1a1f' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  cursor: pointer;
 }
 
 .carte__adresse-resumee {
@@ -791,8 +620,6 @@
 }
 
 .carte__montant input:focus-visible,
-.carte__saisie:focus-visible,
-.carte__groupe :focus-visible,
 .carte__merci-titre:focus-visible {
   outline: none;
 }
@@ -1084,21 +911,11 @@
     min-height: 44px;
     font-size: 0.85rem;
   }
-
-  .carte__boite {
-    padding: 12px;
-  }
-
   .carte__lien-securise {
     margin-top: 10px;
     padding: 8px 10px;
     font-size: 0.75rem;
   }
-
-  .carte__champ--boite {
-    margin-top: 10px;
-  }
-
   .carte__payer {
     margin-top: 12px;
   }
@@ -1143,18 +960,6 @@
     margin-top: 10px;
   }
 
-  .carte__boite {
-    margin-top: 10px;
-  }
-
-  .carte__etiquette {
-    font-size: 0.78rem;
-  }
-
-  .carte__champ--boite {
-    gap: 4px;
-  }
-
   /* "Voir le detail" monte sur la ligne du logo, a droite. */
   .carte__resume-dedans {
     display: grid;
@@ -1183,11 +988,6 @@
     font-size: 0.72rem;
     line-height: 1.45;
   }
-
-  .carte__boite {
-    padding: 10px 12px 12px;
-  }
-
   .carte__plus-tard {
     margin-top: 0;
   }
@@ -1207,4 +1007,107 @@
   .carte__merci-sceau path {
     stroke-dashoffset: 0;
   }
+}
+
+/* ==================================================================
+   Le cadre de Stripe, et le montant fixe au-dessus
+   ================================================================== */
+
+/*
+ * Le cadre ou l'on tape sa carte appartient a Stripe : il vit dans une
+ * fenetre a lui, que cette page ne peut ni lire ni recopier. On lui
+ * donne seulement sa place, et les couleurs de HOPE (voir APPARENCE
+ * dans PaiementCarte.jsx).
+ */
+.carte__stripe {
+  min-height: 220px;
+  padding: 16px 14px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(20, 20, 40, 0.04);
+}
+
+/* Le montant est arrete : il se rappelle, et se corrige d'un clic. */
+.carte__somme-fixe {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 1px solid var(--ct-trait);
+  border-radius: 10px;
+  background: var(--ct-fond);
+  font-size: 0.92rem;
+}
+
+.carte__somme-fixe strong {
+  font-weight: 700;
+}
+
+.carte__modifier {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--ct-violet);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.carte__modifier:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ==================================================================
+   La carte indisponible : aucune cle de paiement n'est configuree
+   ================================================================== */
+
+.carte__temps {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.carte__texte {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ct-doux);
+}
+
+/* Les deux sorties : un autre moyen, ou plus tard. */
+.carte__bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--ct-violet-vif), var(--ct-violet));
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(93, 86, 150, 0.3);
+}
+
+.carte__lien {
+  min-height: 40px;
+  border: 0;
+  background: none;
+  color: var(--ct-doux);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }

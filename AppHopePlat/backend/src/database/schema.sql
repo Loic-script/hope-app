@@ -1871,10 +1871,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS donors_utilisateur_unique
 ALTER TABLE notifications
   ADD COLUMN IF NOT EXISTS utilisateur_id UUID REFERENCES utilisateur(id) ON DELETE CASCADE;
 
-ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_valide;
-ALTER TABLE notifications ADD CONSTRAINT notifications_type_valide CHECK (
-  type IN ('DONATION', 'MESSAGE', 'PROJECT_COMPLETED', 'INVESTMENT', 'ACCOUNT_CREATED'));
-
 /*
  * Le pays d'origine d'un benevole.
  *
@@ -1945,3 +1941,34 @@ ALTER TABLE tache ADD CONSTRAINT tache_equipe_coherente CHECK (
   (benevoles_min IS NULL OR benevoles_min >= 1)
   AND (benevoles_max IS NULL OR benevoles_max >= 1)
   AND (benevoles_min IS NULL OR benevoles_max IS NULL OR benevoles_min <= benevoles_max));
+
+/*
+ * Le paiement en ligne d'un don, par carte bancaire (Stripe).
+ *
+ * Les autres moyens sont declaratifs : le donateur paie de son cote, et
+ * l'equipe rapproche de son releve. La carte, elle, se paie sur la page
+ * meme : Stripe encaisse, puis previent HOPE. Ces colonnes gardent le
+ * fil de cette conversation -- qui encaisse, quelle session de paiement,
+ * quel paiement, ou il en est, et quand Stripe l'a dit pour la derniere
+ * fois.
+ *
+ * Aucun numero de carte n'entre ici, ni nulle part ailleurs : le numero
+ * est saisi dans le cadre de Stripe, jamais sur le serveur de HOPE.
+ *
+ * Le statut du don, lui, reste celui de la plateforme (status) : un
+ * paiement abouti le passe a RECEIVED, un paiement refuse le laisse en
+ * PENDING -- le donateur peut reessayer.
+ */
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS payment_provider VARCHAR(20);
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS provider_session_id VARCHAR(120);
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS provider_payment_id VARCHAR(120);
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS provider_status VARCHAR(40);
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS provider_updated_at TIMESTAMPTZ;
+
+ALTER TABLE donations DROP CONSTRAINT IF EXISTS donations_provider_valide;
+ALTER TABLE donations ADD CONSTRAINT donations_provider_valide CHECK (
+  payment_provider IS NULL OR payment_provider IN ('stripe'));
+
+/* Une session de paiement ne vaut que pour un don. */
+CREATE UNIQUE INDEX IF NOT EXISTS donations_provider_session_unique
+  ON donations (provider_session_id) WHERE provider_session_id IS NOT NULL;

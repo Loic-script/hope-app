@@ -221,6 +221,32 @@ export async function coordonneesDePaiement() {
   return data;
 }
 
+/* ---------------------------------------------------------------
+   Le paiement par carte, encaisse en ligne par Stripe
+   --------------------------------------------------------------- */
+
+/** GET /bailleur/paiement/carte : la carte est-elle acceptee ici ? */
+export async function reglagesCarte() {
+  const { data } = await apiBailleur.get('/bailleur/paiement/carte');
+  return data;
+}
+
+/**
+ * POST /bailleur/paiement/carte/session : enregistre le don et ouvre une
+ * session de paiement chez Stripe. Rend le "client secret" du cadre de
+ * saisie -- le numero de carte, lui, ne passe jamais par HOPE.
+ */
+export async function ouvrirPaiementCarte(corps) {
+  const { data } = await apiBailleur.post('/bailleur/paiement/carte/session', corps);
+  return data;
+}
+
+/** GET /bailleur/paiement/carte/session/:id : ou en est ce paiement. */
+export async function etatPaiementCarte(sessionId) {
+  const { data } = await apiBailleur.get(`/bailleur/paiement/carte/session/${sessionId}`);
+  return data;
+}
+
 /** PATCH /api/bailleur/dons/:id/justificatif : "j'ai paye", avec la reference. */
 export async function declarerPaiement(id, referencePaiement) {
   const { data } = await apiBailleur.patch(`/bailleur/dons/${id}/justificatif`, { referencePaiement });

@@ -12,6 +12,8 @@
 import { Router } from 'express';
 
 import * as funder from '../controllers/funder.controllers.js';
+import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
+import { identiteBailleur } from '../services/promesseDon.service.js';
 import {
   authenticateFunder,
   exigerConsultation,
@@ -21,6 +23,9 @@ import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 import { televerserMedia } from '../middleware/upload.middleware.js';
 
 const router = Router();
+
+// Le paiement par carte : un bailleur donne une fois, jamais par mois.
+const carte = controleursCarte((req) => identiteBailleur(req.bailleur), { mensuelPermis: false });
 
 /* ---------------------------- Public ---------------------------------- */
 
@@ -66,6 +71,10 @@ router.get('/dons/options', funder.espace.optionsDon);
 router.post('/dons', funder.espace.faireUnDon);
 // Les pages de paiement : ou envoyer, puis "j'ai paye" apres coup.
 router.get('/paiement/coordonnees', funder.espace.coordonneesPaiement);
+// La carte, encaissee en ligne par Stripe -- un don ponctuel.
+router.get('/paiement/carte', carte.reglages);
+router.post('/paiement/carte/session', carte.ouvrir);
+router.get('/paiement/carte/session/:id', carte.etat);
 router.patch('/dons/:id/justificatif', funder.espace.declarerPaiement);
 router.get('/projets/:id/rapport', funder.espace.rapportProjet);
 router.get('/projets/:id/rapport/pdf', funder.espace.pdfRapportProjet);

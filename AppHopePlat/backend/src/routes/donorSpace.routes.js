@@ -4,10 +4,15 @@
 import { Router } from 'express';
 
 import { actualites, dons, profil } from '../controllers/donorSpace.controllers.js';
+import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
+import { identiteDonateur } from '../services/donorSpace.service.js';
 import { authenticateDonor } from '../middleware/donorAuth.middleware.js';
 import { televerserMedia } from '../middleware/upload.middleware.js';
 
 const router = Router();
+
+// Le paiement par carte : un donateur peut donner une fois ou tous les mois.
+const carte = controleursCarte((req) => identiteDonateur(req.donateur));
 
 router.use(authenticateDonor);
 
@@ -36,6 +41,12 @@ router.get('/paiement/mvola', dons.mvola);
 router.get('/paiement/orange-money', dons.orangeMoney);
 // Les coordonnees de HOPE pour les moyens hors ligne.
 router.get('/paiement/coordonnees', dons.coordonnees);
+// La carte : le seul moyen encaisse en ligne. La page demande d'abord
+// si elle est disponible, ouvre une session de paiement chez Stripe,
+// puis lit ce qu'il en est au retour.
+router.get('/paiement/carte', carte.reglages);
+router.post('/paiement/carte/session', carte.ouvrir);
+router.get('/paiement/carte/session/:id', carte.etat);
 // Apres coup : "j'ai fait le virement", avec sa reference.
 router.patch('/dons/:id/justificatif', dons.declarer);
 router.post('/dons', dons.faire);

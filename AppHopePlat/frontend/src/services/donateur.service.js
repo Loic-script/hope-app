@@ -87,6 +87,32 @@ export async function coordonneesDePaiement() {
   return data;
 }
 
+/* ---------------------------------------------------------------
+   Le paiement par carte, encaisse en ligne par Stripe
+   --------------------------------------------------------------- */
+
+/** GET /donateur/paiement/carte : la carte est-elle acceptee ici ? */
+export async function reglagesCarte() {
+  const { data } = await apiDonateur.get('/donateur/paiement/carte');
+  return data;
+}
+
+/**
+ * POST /donateur/paiement/carte/session : enregistre le don et ouvre une
+ * session de paiement chez Stripe. Rend le "client secret" du cadre de
+ * saisie -- le numero de carte, lui, ne passe jamais par HOPE.
+ */
+export async function ouvrirPaiementCarte(corps) {
+  const { data } = await apiDonateur.post('/donateur/paiement/carte/session', corps);
+  return data;
+}
+
+/** GET /donateur/paiement/carte/session/:id : ou en est ce paiement. */
+export async function etatPaiementCarte(sessionId) {
+  const { data } = await apiDonateur.get(`/donateur/paiement/carte/session/${sessionId}`);
+  return data;
+}
+
 /**
  * PATCH /api/donateur/dons/:id/justificatif : le donateur signale avoir
  * paye une promesse, avec la reference de sa banque ou du transfert.

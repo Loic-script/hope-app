@@ -1,11 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+  CheckoutElementsProvider,
+  PaymentElement,
+  useCheckoutElements,
+} from '@stripe/react-stripe-js/checkout';
 
 import HopeLogo from '../../components/HopeLogo.jsx';
-import LogosCartes, { IconeCvc } from '../../components/paiement/LogosCartes.jsx';
+import Indisponible from '../../components/paiement/Indisponible.jsx';
+import { useContextePaiement } from '../../components/paiement/ContextePaiement.jsx';
 import { montantInitial, usePromesseDon } from '../../hooks/usePromesseDon.js';
-import { formaterExpiration, formaterNumero, reseauDe, resumeCarte, verifierCarte } from '../../utils/carteBancaire.js';
+import { messageErreur } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
-import { PAYS, PAYS_PAR_DEFAUT } from '../../utils/pays.js';
 
 /** Les devises d'un don, et les montants proposes dans chacune. */
 const DEVISES = [
@@ -16,26 +23,49 @@ const DEVISES = [
 
 /** Un montant saisi "25 000" -> 25000 ; "12,50" -> 12.5. */
 function montantSaisi(texte) {
-  const propre = String(texte ?? '').replace(/[\s  ]/g, '').replace(',', '.');
+  const propre = String(texte ?? '')
+    .replace(/[\s  ]/g, '')
+    .replace(',', '.');
   if (!/^\d+(\.\d{0,2})?$/.test(propre)) return null;
   const valeur = Number(propre);
   return valeur > 0 ? valeur : null;
 }
 
+/** Les couleurs de HOPE, portees dans le cadre de Stripe. */
+const APPARENCE = {
+  theme: 'stripe',
+  variables: {
+    colorPrimary: '#4a3f8c',
+    colorText: '#2a2839',
+    colorDanger: '#c0392b',
+    fontFamily: "'Poppins', 'Segoe UI', system-ui, sans-serif",
+    fontSizeBase: '15px',
+    borderRadius: '10px',
+    spacingUnit: '4px',
+  },
+};
+
 /**
- * Le don par carte bancaire, ouvert depuis l'etape 4 du parcours.
+ * Le don par carte bancaire, encaisse par Stripe.
  *
  * La mise en page des caisses en ligne qu'on connait : a gauche, sur
  * fond sombre, ce que l'on paie -- le montant en grand, la devise, le
- * detail ; a droite, sur fond clair, les coordonnees et le moyen de
- * paiement, champs groupes a bords partages.
+ * detail ; a droite, le paiement en deux temps :
  *
- * Ce que la page ne fait PAS, et ne fera jamais : recevoir un numero de
- * carte. Un numero, une date d'expiration, un cryptogramme ne se tapent
- * que chez un prestataire de paiement certifie ; ils ne passent pas par
- * le serveur de HOPE et ne dorment dans aucune base. Ici, le donateur
- * enregistre sa promesse et ses coordonnees de facturation ; l'equipe
- * lui envoie un lien de paiement securise a son adresse e-mail.
+ *   1. le montant, et la devise ;
+ *   2. la carte, saisie DANS le cadre de Stripe -- numero, date,
+ *      cryptogramme, adresse de facturation. Ce cadre appartient a
+ *      Stripe : le numero part chez lui, directement, sans passer par le
+ *      serveur de HOPE ni dormir dans sa base. C'est ce qui evite a
+ *      l'association toute la charge de la norme PCI-DSS, et au donateur
+ *      de confier son numero a plus petit que Stripe ;
+ *   3. le recu, une fois le paiement abouti.
+ *
+ * Si la banque demande une confirmation (3-D Secure), elle emmene le
+ * donateur puis le ramene sur cette page avec "?session=..." : on lit
+ * alors l'etat du paiement aupres du serveur, qui le tient de Stripe.
+ *
+ * Sans cles Stripe, la page le dit et propose un autre moyen.
  */
 export default function PaiementCarte() {
   const {
@@ -44,45 +74,85 @@ export default function PaiementCarte() {
     beneficiaire,
     email,
     erreurChargement,
-    don,
-    envoi,
-    refus,
-    setRefus,
-    promettre,
     quitter,
     montantPrevu,
     devisePrevue,
     libelleSuite,
     libellePlusTard,
   } = usePromesseDon('carte_bancaire');
+  const contexte = useContextePaiement();
+  // Le contexte se reconstruit a chaque rafraichissement de l'espace ;
+  // les chargements, eux, ne se font qu'une fois par page.
+  const ref = useRef(contexte);
+  ref.current = contexte;
+  const emplacement = useLocation();
 
   const [devise, setDevise] = useState('MGA');
   const [montant, setMontant] = useState('');
-  const [titulaire, setTitulaire] = useState('');
-  const [adresse, setAdresse] = useState({ pays: PAYS_PAR_DEFAUT, ligne: '', ligne2: '', codePostal: '', ville: '' });
-  // La carte : dans cet etat du navigateur, et nulle part ailleurs. Jamais
-  // envoyee au serveur de HOPE (voir utils/carteBancaire.js).
-  const [numero, setNumero] = useState('');
-  const [expiration, setExpiration] = useState('');
-  const [cvc, setCvc] = useState('');
   const [details, setDetails] = useState(false);
   const [soumis, setSoumis] = useState(false);
+  // Ce que le serveur dit de la carte : acceptee ici, et avec quelle cle.
+  const [reglages, setReglages] = useState(null);
+  // La session de paiement ouverte chez Stripe, et le don qu'elle regle.
+  const [paiement, setPaiement] = useState(null);
+  const [don, setDon] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+  const [refus, setRefus] = useState('');
   const titre = useRef(null);
 
-  // Une fois charge : la devise et le montant du don prepare (sinon la
-  // devise du profil), le titulaire et l'adresse de facturation.
+  const sessionPayee = contexte.sessionPayee;
+
+  // Une fois charge : la devise et le montant du don prepare, sinon la
+  // devise du profil.
   useEffect(() => {
     if (!profil) return;
     const choisie = [devisePrevue, personne.devise].find((d) => DEVISES.some((x) => x.code === d)) ?? 'MGA';
     setDevise(choisie);
     setMontant(montantInitial(montantPrevu, devisePrevue, choisie));
-    setTitulaire([personne.prenom, personne.nom].filter(Boolean).join(' '));
-    const pays = String(personne.pays || PAYS_PAR_DEFAUT).toUpperCase();
-    // Un pays en toutes lettres (bailleur) : Madagascar par defaut.
-    const code = /^[A-Z]{2}$/.test(pays) ? pays : PAYS_PAR_DEFAUT;
-    setAdresse({ pays: code, ligne: personne.adresse ?? '', ligne2: '', codePostal: '', ville: personne.ville ?? '' });
     // Seulement au chargement.
   }, [profil]);
+
+  // La carte est-elle acceptee sur cette installation ?
+  useEffect(() => {
+    let annule = false;
+    ref.current.carte
+      .reglages()
+      .then((lus) => {
+        if (!annule) setReglages(lus);
+      })
+      .catch(() => {
+        if (!annule) setReglages({ disponible: false, clePublique: null });
+      });
+    return () => {
+      annule = true;
+    };
+  }, []);
+
+  /*
+   * Le retour de la banque : Stripe ramene le donateur avec la session
+   * dans l'adresse. Le serveur, lui, va chercher la verite chez Stripe.
+   */
+  useEffect(() => {
+    if (!sessionPayee) return undefined;
+    let annule = false;
+    setEnvoi(true);
+    ref.current.carte
+      .etat(sessionPayee)
+      .then((etat) => {
+        if (annule) return;
+        if (etat.paiement === 'paid') setDon(etat.don);
+        else setRefus(etat.erreur || 'Le paiement n’a pas abouti. Vous pouvez réessayer.');
+      })
+      .catch((echec) => {
+        if (!annule) setRefus(messageErreur(echec, 'L’état de votre paiement n’a pas pu être lu.'));
+      })
+      .finally(() => {
+        if (!annule) setEnvoi(false);
+      });
+    return () => {
+      annule = true;
+    };
+  }, [sessionPayee]);
 
   useEffect(() => {
     if (don) titre.current?.focus();
@@ -90,70 +160,73 @@ export default function PaiementCarte() {
 
   const reglage = DEVISES.find((d) => d.code === devise) ?? DEVISES[0];
   const somme = montantSaisi(montant);
+  const erreurMontant =
+    somme === null
+      ? 'Indiquez le montant de votre don.'
+      : somme < reglage.minimum
+        ? `Au moins ${fmt.montant(reglage.minimum, devise)}.`
+        : '';
 
-  const erreurs = {
-    montant:
-      somme === null
-        ? 'Indiquez le montant de votre don.'
-        : somme < reglage.minimum
-          ? `Au moins ${fmt.montant(reglage.minimum, devise)}.`
-          : '',
-    ...verifierCarte({ numero, expiration, cvc }),
-    titulaire: titulaire.trim() ? '' : 'Indiquez le nom inscrit sur la carte.',
-    adresse: adresse.ligne.trim() && adresse.ville.trim() ? '' : 'Complétez l’adresse de facturation.',
-  };
-  const erreurCarte = erreurs.numero || erreurs.expiration || erreurs.cvc;
-  const valide = !erreurs.montant && !erreurCarte && !erreurs.titulaire && !erreurs.adresse;
-  const reseau = reseauDe(numero);
+  const stripe = useMemo(
+    () => (reglages?.clePublique ? loadStripe(reglages.clePublique) : null),
+    [reglages?.clePublique]
+  );
 
   function changerDevise(code) {
     setDevise(code);
     setMontant('');
   }
 
-  async function soumettre(evenement) {
+  /** Enregistre le don, et ouvre la session de paiement chez Stripe. */
+  async function ouvrirLePaiement(evenement) {
     evenement.preventDefault();
     setSoumis(true);
     setRefus('');
-    if (!valide) {
-      const premier = erreurs.montant
-        ? '#carte-montant'
-        : erreurs.numero
-          ? '#carte-numero'
-          : erreurs.expiration
-            ? '#carte-expiration'
-            : erreurs.cvc
-              ? '#carte-cvc'
-              : erreurs.titulaire
-                ? '#carte-titulaire'
-                : '#carte-adresse';
-      requestAnimationFrame(() => document.querySelector(premier)?.focus());
+    if (erreurMontant) {
+      requestAnimationFrame(() => document.querySelector('#carte-montant')?.focus());
       return;
     }
+    // Le meme montant deux fois : la session ouverte sert encore.
+    if (paiement && paiement.montant === somme && paiement.devise === devise) return;
 
-    const cree = await promettre({
-      montant: somme,
-      devise,
-      facturation: {
-        titulaire: titulaire.trim(),
-        adresse: [adresse.ligne.trim(), adresse.ligne2.trim()].filter(Boolean).join(', '),
-        codePostal: adresse.codePostal.trim(),
-        ville: adresse.ville.trim(),
-        pays: adresse.pays,
-        // Le reseau et les 4 derniers chiffres : rien d'autre ne part.
-        carte: resumeCarte(numero),
-      },
-    });
-    // La carte n'a plus rien a faire dans la page.
-    if (cree) {
-      setNumero('');
-      setExpiration('');
-      setCvc('');
+    setEnvoi(true);
+    try {
+      const ouverte = await ref.current.carte.ouvrir({
+        affectation: profil.affectation,
+        projetId: profil.projetId,
+        montant: String(somme),
+        devise,
+        frequence: profil.frequence || 'ONE_TIME',
+        message: profil.message || undefined,
+        // Ou Stripe ramene le donateur apres une verification 3-D Secure.
+        retour: emplacement.pathname,
+      });
+      setPaiement({ ...ouverte, montant: somme, devise });
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Le paiement n’a pas pu être préparé. Réessayez.'));
+    } finally {
+      setEnvoi(false);
     }
   }
 
+  /** Le paiement est passe : le serveur en donne le don confirme. */
+  async function paiementAbouti() {
+    setEnvoi(true);
+    try {
+      const etat = await ref.current.carte.etat(paiement.sessionId);
+      setDon(etat.don ?? paiement.don);
+      await ref.current.rafraichir?.();
+    } catch {
+      // Stripe a encaisse : le don est fait, meme si la relecture echoue.
+      setDon(paiement.don);
+    } finally {
+      setEnvoi(false);
+    }
+  }
 
   const total = somme ? fmt.montant(somme, devise) : fmt.montant(0, devise);
+  const carteIndisponible = reglages && !reglages.disponible;
+  const enPaiement = Boolean(paiement) && !don;
 
   return (
     <div className="carte">
@@ -205,7 +278,7 @@ export default function PaiementCarte() {
                 aria-checked={devise === d.code}
                 className={`carte__devise${devise === d.code ? ' carte__devise--choisie' : ''}`}
                 onClick={() => changerDevise(d.code)}
-                disabled={envoi || Boolean(don)}
+                disabled={envoi || enPaiement || Boolean(don)}
               >
                 <span className="carte__devise-symbole" aria-hidden="true">
                   {d.symbole}
@@ -272,13 +345,22 @@ export default function PaiementCarte() {
             </p>
           )}
 
-          {profil && !don && (
-            <form className="carte__formulaire" onSubmit={soumettre} noValidate aria-label="Paiement par carte">
+          {profil && carteIndisponible && !don && (
+            <Indisponible
+              prefixe="carte"
+              quitter={quitter}
+              texte="Le paiement par carte bancaire n’est pas encore ouvert sur cette plateforme. Vous pouvez donner par un autre moyen."
+            />
+          )}
+
+          {/* ---------- 1. Le montant ---------- */}
+          {profil && !don && !carteIndisponible && !enPaiement && (
+            <form className="carte__formulaire" onSubmit={ouvrirLePaiement} noValidate aria-label="Montant du don">
               <h1 className="sr-only">Don par carte bancaire</h1>
 
               <label className="carte__champ" htmlFor="carte-montant">
                 <span className="carte__rubrique">Montant du don</span>
-                <span className={`carte__montant${soumis && erreurs.montant ? ' carte__montant--erreur' : ''}`}>
+                <span className={`carte__montant${soumis && erreurMontant ? ' carte__montant--erreur' : ''}`}>
                   <input
                     id="carte-montant"
                     inputMode="decimal"
@@ -287,7 +369,7 @@ export default function PaiementCarte() {
                     value={montant}
                     onChange={(e) => setMontant(e.target.value.replace(/[^\d\s,.]/g, ''))}
                     disabled={envoi}
-                    aria-invalid={soumis && Boolean(erreurs.montant)}
+                    aria-invalid={soumis && Boolean(erreurMontant)}
                     aria-describedby="carte-montant-erreur"
                   />
                   <span className="carte__montant-devise" aria-hidden="true">
@@ -311,7 +393,7 @@ export default function PaiementCarte() {
                 ))}
               </div>
               <p className="carte__erreur" id="carte-montant-erreur" aria-live="polite">
-                {soumis ? erreurs.montant : ''}
+                {soumis ? erreurMontant : ''}
               </p>
 
               <h2 className="carte__rubrique carte__rubrique--section">Coordonnées</h2>
@@ -320,166 +402,14 @@ export default function PaiementCarte() {
                 <span className="carte__gris-valeur">{email}</span>
               </div>
 
-              <h2 className="carte__rubrique carte__rubrique--section">Moyen de paiement</h2>
-              <div className="carte__boite">
-                <div className="carte__boite-tete">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="2.5" y="5" width="19" height="14" rx="2" />
-                    <path d="M2.5 9.5h19" />
-                  </svg>
-                  <span>Carte</span>
-                </div>
-
-                {/* Les informations de la carte : numero, puis expiration et CVC. */}
-                <div className="carte__champ carte__champ--boite">
-                  <span className="carte__etiquette" id="carte-infos-titre">
-                    Informations de la carte
-                  </span>
-                  <div
-                    className={`carte__groupe carte__groupe--carte${soumis && erreurCarte ? ' carte__groupe--erreur' : ''}`}
-                    role="group"
-                    aria-labelledby="carte-infos-titre"
-                  >
-                    <span className="carte__numero">
-                      <input
-                        id="carte-numero"
-                        aria-label="Numéro de carte"
-                        inputMode="numeric"
-                        autoComplete="cc-number"
-                        placeholder="1234 1234 1234 1234"
-                        value={numero}
-                        onChange={(e) => setNumero(formaterNumero(e.target.value))}
-                        disabled={envoi}
-                        aria-invalid={soumis && Boolean(erreurs.numero)}
-                        spellCheck={false}
-                      />
-                      <LogosCartes actif={reseau?.cle ?? null} />
-                    </span>
-                    <span className="carte__groupe-rang">
-                      <input
-                        id="carte-expiration"
-                        aria-label="Date d’expiration (MM / AA)"
-                        inputMode="numeric"
-                        autoComplete="cc-exp"
-                        placeholder="MM / AA"
-                        value={expiration}
-                        onChange={(e) => setExpiration(formaterExpiration(e.target.value, expiration))}
-                        disabled={envoi}
-                        aria-invalid={soumis && Boolean(erreurs.expiration)}
-                      />
-                      <span className="carte__cvc">
-                        <input
-                          id="carte-cvc"
-                          aria-label="Cryptogramme (CVC)"
-                          inputMode="numeric"
-                          autoComplete="cc-csc"
-                          placeholder="CVC"
-                          value={cvc}
-                          maxLength={reseau?.cvc ?? 4}
-                          onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, reseau?.cvc ?? 4))}
-                          disabled={envoi}
-                          aria-invalid={soumis && Boolean(erreurs.cvc)}
-                        />
-                        <IconeCvc />
-                      </span>
-                    </span>
-                  </div>
-                  {soumis && erreurCarte && <span className="carte__erreur">{erreurCarte}</span>}
-                </div>
-
-                <label className="carte__champ carte__champ--boite" htmlFor="carte-titulaire">
-                  <span className="carte__etiquette">Nom du titulaire de la carte</span>
-                  <input
-                    id="carte-titulaire"
-                    className={`carte__saisie${soumis && erreurs.titulaire ? ' carte__saisie--erreur' : ''}`}
-                    autoComplete="cc-name"
-                    placeholder="Nom complet"
-                    value={titulaire}
-                    maxLength={120}
-                    onChange={(e) => setTitulaire(e.target.value)}
-                    disabled={envoi}
-                    aria-invalid={soumis && Boolean(erreurs.titulaire)}
-                  />
-                  {soumis && erreurs.titulaire && <span className="carte__erreur">{erreurs.titulaire}</span>}
-                </label>
-
-                <div className="carte__champ carte__champ--boite">
-                  <span className="carte__etiquette" id="carte-adresse-titre">
-                    Adresse de facturation
-                  </span>
-                  <div
-                    className={`carte__groupe${soumis && erreurs.adresse ? ' carte__groupe--erreur' : ''}`}
-                    role="group"
-                    aria-labelledby="carte-adresse-titre"
-                  >
-                    <span className="carte__groupe-select">
-                      <select
-                        aria-label="Pays"
-                        value={adresse.pays}
-                        onChange={(e) => setAdresse((a) => ({ ...a, pays: e.target.value }))}
-                        disabled={envoi}
-                        autoComplete="country"
-                      >
-                        {PAYS.map((p) => (
-                          <option key={p.code} value={p.code}>
-                            {p.nom}
-                          </option>
-                        ))}
-                      </select>
-                    </span>
-                    <input
-                      id="carte-adresse"
-                      aria-label="Ligne d’adresse n°1"
-                      placeholder="Ligne d’adresse n°1"
-                      autoComplete="address-line1"
-                      value={adresse.ligne}
-                      maxLength={200}
-                      onChange={(e) => setAdresse((a) => ({ ...a, ligne: e.target.value }))}
-                      disabled={envoi}
-                    />
-                    <input
-                      aria-label="Ligne d’adresse n°2"
-                      placeholder="Ligne d’adresse n°2"
-                      autoComplete="address-line2"
-                      value={adresse.ligne2}
-                      maxLength={50}
-                      onChange={(e) => setAdresse((a) => ({ ...a, ligne2: e.target.value }))}
-                      disabled={envoi}
-                    />
-                    <span className="carte__groupe-rang">
-                      <input
-                        aria-label="Code postal"
-                        placeholder="Code postal"
-                        autoComplete="postal-code"
-                        value={adresse.codePostal}
-                        maxLength={20}
-                        onChange={(e) => setAdresse((a) => ({ ...a, codePostal: e.target.value }))}
-                        disabled={envoi}
-                      />
-                      <input
-                        aria-label="Ville"
-                        placeholder="Ville"
-                        autoComplete="address-level2"
-                        value={adresse.ville}
-                        maxLength={120}
-                        onChange={(e) => setAdresse((a) => ({ ...a, ville: e.target.value }))}
-                        disabled={envoi}
-                      />
-                    </span>
-                  </div>
-                  {soumis && erreurs.adresse && <span className="carte__erreur">{erreurs.adresse}</span>}
-                </div>
-              </div>
-
-              {/* Ce qui arrive a la carte, dit sans detour. */}
               <p className="carte__lien-securise">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <rect x="5" y="10.5" width="14" height="10" rx="2" />
                   <path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" />
                 </svg>
                 <span>
-                  Votre carte n’est pas débitée sur cette page, et son numéro n’est ni envoyé ni conservé par HOPE.
-                  L’équipe vous envoie à <strong>{email}</strong> un lien de paiement sécurisé pour régler.
+                  Votre carte se règle à l’écran suivant, dans le cadre sécurisé de Stripe. Son numéro va
+                  directement chez lui : ni HOPE ni cette page ne le voient.
                 </span>
               </p>
 
@@ -487,15 +417,14 @@ export default function PaiementCarte() {
                 {envoi ? (
                   <>
                     <span className="carte__rotation carte__rotation--clair" aria-hidden="true" />
-                    Enregistrement…
+                    Préparation…
                   </>
                 ) : (
                   <>
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <rect x="5" y="10.5" width="14" height="10" rx="2" />
-                      <path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" />
+                    Continuer vers le paiement
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="carte__fleche">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>
-                    {somme && !erreurs.montant ? `Donner ${fmt.montant(somme, devise)}` : 'Faire mon don'}
                   </>
                 )}
               </button>
@@ -505,12 +434,36 @@ export default function PaiementCarte() {
               <p className="carte__erreur carte__erreur--centre" role="alert">
                 {refus}
               </p>
-
-
             </form>
           )}
 
-          {/* ---------- Merci ---------- */}
+          {/* ---------- 2. La carte, chez Stripe ---------- */}
+          {profil && enPaiement && stripe && (
+            <CheckoutElementsProvider
+              stripe={stripe}
+              options={{
+                clientSecret: paiement.clientSecret,
+                elementsOptions: { appearance: APPARENCE },
+                defaultValues: { email },
+              }}
+            >
+              <FormulaireStripe
+                somme={somme}
+                devise={devise}
+                reference={paiement.don?.reference}
+                retour={`${window.location.origin}${emplacement.pathname}?session=${paiement.sessionId}`}
+                onModifier={() => {
+                  setPaiement(null);
+                  setRefus('');
+                }}
+                onPaye={paiementAbouti}
+                libellePlusTard={libellePlusTard}
+                quitter={quitter}
+              />
+            </CheckoutElementsProvider>
+          )}
+
+          {/* ---------- 3. Merci ---------- */}
           {profil && don && (
             <section className="carte__merci">
               <div className="carte__merci-sceau" aria-hidden="true">
@@ -523,8 +476,8 @@ export default function PaiementCarte() {
                 Merci pour votre don
               </h1>
               <p className="carte__merci-texte">
-                Votre promesse de <strong>{fmt.montant(don.montant ?? somme, don.devise ?? devise)}</strong> est
-                enregistrée. L’équipe HOPE vous envoie un lien de paiement sécurisé à <strong>{email}</strong>.
+                Votre don de <strong>{fmt.montant(don.montant ?? somme, don.devise ?? devise)}</strong> est
+                encaissé. Un reçu part à <strong>{email}</strong>.
               </p>
               <dl className="carte__merci-recu">
                 <div>
@@ -540,7 +493,7 @@ export default function PaiementCarte() {
                   <dd>
                     <span className="carte__statut">
                       <span className="carte__statut-point" aria-hidden="true" />
-                      Lien de paiement à venir
+                      {don.statutLibelle ?? 'Reçu'}
                     </span>
                   </dd>
                 </div>
@@ -553,8 +506,137 @@ export default function PaiementCarte() {
               </button>
             </section>
           )}
+
+          {/* Le retour de la banque, avant que l'etat ne soit lu. */}
+          {profil && sessionPayee && !don && !refus && (
+            <p className="carte__attente" role="status">
+              <span className="carte__rotation" aria-hidden="true" />
+              Vérification de votre paiement…
+            </p>
+          )}
+          {profil && sessionPayee && !don && refus && (
+            <section className="carte__merci">
+              <p className="carte__alerte" role="alert">
+                {refus}
+              </p>
+              <button type="button" className="carte__payer" onClick={() => quitter(4)}>
+                Choisir un autre moyen
+              </button>
+            </section>
+          )}
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * Le cadre de Stripe : la carte, et le bouton qui paie.
+ *
+ * Tout ce qui touche au numero vit ici, dans des cadres qui
+ * appartiennent a Stripe -- cette page ne peut ni les lire ni les
+ * recopier. "confirm" demande le paiement ; si la banque veut une
+ * confirmation du porteur, elle emmene le donateur et le ramene a
+ * "retour".
+ */
+function FormulaireStripe({ somme, devise, reference, retour, onModifier, onPaye, libellePlusTard, quitter }) {
+  const etat = useCheckoutElements();
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState('');
+
+  if (etat.type === 'loading') {
+    return (
+      <p className="carte__attente" role="status">
+        <span className="carte__rotation" aria-hidden="true" />
+        Ouverture du paiement sécurisé…
+      </p>
+    );
+  }
+  if (etat.type === 'error') {
+    return (
+      <section className="carte__merci">
+        <p className="carte__alerte" role="alert">
+          {etat.error?.message ?? 'Le paiement sécurisé n’a pas pu s’ouvrir.'}
+        </p>
+        <button type="button" className="carte__payer" onClick={onModifier}>
+          Reprendre
+        </button>
+      </section>
+    );
+  }
+
+  const checkout = etat.checkout;
+
+  async function payer(evenement) {
+    evenement.preventDefault();
+    setErreur('');
+    setEnvoi(true);
+    try {
+      const resultat = await checkout.confirm({ returnUrl: retour, redirect: 'if_required' });
+      if (resultat.type === 'error') {
+        setErreur(resultat.error?.message ?? 'Votre paiement n’a pas abouti.');
+        return;
+      }
+      await onPaye();
+    } catch (echec) {
+      setErreur(echec?.message ?? 'Votre paiement n’a pas abouti.');
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <form className="carte__formulaire" onSubmit={payer} aria-label="Paiement par carte">
+      <h1 className="sr-only">Payer par carte</h1>
+
+      <div className="carte__somme-fixe">
+        <span>
+          Vous donnez <strong>{fmt.montant(somme, devise)}</strong>
+          {reference ? ` · réf. ${reference}` : ''}
+        </span>
+        <button type="button" className="carte__modifier" onClick={onModifier} disabled={envoi}>
+          Modifier
+        </button>
+      </div>
+
+      <h2 className="carte__rubrique carte__rubrique--section">Moyen de paiement</h2>
+      <div className="carte__stripe">
+        <PaymentElement options={{ layout: 'tabs' }} />
+      </div>
+
+      <p className="carte__lien-securise">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="10.5" width="14" height="10" rx="2" />
+          <path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" />
+        </svg>
+        <span>
+          Paiement sécurisé par <strong>Stripe</strong>. Le numéro de votre carte ne passe ni par HOPE ni par
+          cette page.
+        </span>
+      </p>
+
+      <button type="submit" className="carte__payer" disabled={envoi} aria-busy={envoi}>
+        {envoi ? (
+          <>
+            <span className="carte__rotation carte__rotation--clair" aria-hidden="true" />
+            Paiement en cours…
+          </>
+        ) : (
+          <>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="10.5" width="14" height="10" rx="2" />
+              <path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" />
+            </svg>
+            Donner {fmt.montant(somme, devise)}
+          </>
+        )}
+      </button>
+      <button type="button" className="carte__plus-tard" onClick={() => quitter()} disabled={envoi}>
+        {libellePlusTard}
+      </button>
+      <p className="carte__erreur carte__erreur--centre" role="alert">
+        {erreur}
+      </p>
+    </form>
   );
 }

@@ -36,6 +36,32 @@ export async function coordonneesDePaiement() {
   return data;
 }
 
+/* ---------------------------------------------------------------
+   Le paiement par carte, encaisse en ligne par Stripe
+   --------------------------------------------------------------- */
+
+/** GET /benevole/paiement/carte : la carte est-elle acceptee ici ? */
+export async function reglagesCarte() {
+  const { data } = await apiBenevole.get('/benevole/paiement/carte');
+  return data;
+}
+
+/**
+ * POST /benevole/paiement/carte/session : enregistre le don et ouvre une
+ * session de paiement chez Stripe. Rend le "client secret" du cadre de
+ * saisie -- le numero de carte, lui, ne passe jamais par HOPE.
+ */
+export async function ouvrirPaiementCarte(corps) {
+  const { data } = await apiBenevole.post('/benevole/paiement/carte/session', corps);
+  return data;
+}
+
+/** GET /benevole/paiement/carte/session/:id : ou en est ce paiement. */
+export async function etatPaiementCarte(sessionId) {
+  const { data } = await apiBenevole.get(`/benevole/paiement/carte/session/${sessionId}`);
+  return data;
+}
+
 /** PATCH /api/benevole/dons/:id/justificatif : "j'ai paye", avec la reference. */
 export async function declarerPaiement(id, referencePaiement) {
   const { data } = await apiBenevole.patch(`/benevole/dons/${id}/justificatif`, { referencePaiement });

@@ -110,6 +110,30 @@ export const config = {
     titulaire: optionnel('HOPE_ORANGE_MONEY_TITULAIRE', 'HOPE Madagascar'),
   },
 
+  /*
+   * Stripe : le paiement par carte, le seul moyen encaisse en ligne.
+   *
+   * La cle secrete parle a Stripe au nom de HOPE : elle ne quitte jamais
+   * le serveur. La cle publique, elle, est faite pour le navigateur --
+   * elle ne permet que d'ouvrir le cadre de saisie de Stripe. Le secret
+   * du webhook signe les messages que Stripe nous renvoie : sans lui,
+   * n'importe qui pourrait annoncer un paiement.
+   *
+   * Sans ces cles, la page carte le dit et n'encaisse rien -- comme un
+   * numero MVola absent.
+   */
+  stripe: {
+    cleSecrete: optionnel('STRIPE_SECRET_KEY', ''),
+    clePublique: optionnel('STRIPE_PUBLISHABLE_KEY', ''),
+    secretWebhook: optionnel('STRIPE_WEBHOOK_SECRET', ''),
+  },
+
+  /*
+   * L'adresse publique du site, ou Stripe ramene le donateur apres un
+   * paiement qui demande une confirmation de sa banque (3-D Secure).
+   */
+  siteUrl: optionnel('HOPE_SITE_URL', 'http://localhost:5173'),
+
   admin: {
     log: optionnel('ADMIN_LOG', 'AdminHope'),
     password: optionnel('ADMIN_PASSWORD', ''),

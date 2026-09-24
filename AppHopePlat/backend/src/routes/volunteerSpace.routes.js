@@ -10,6 +10,8 @@
 import { Router } from 'express';
 
 import { actualites, dons, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
+import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
+import { identiteBenevole } from '../services/promesseDon.service.js';
 import { televerserMedia, televerserPreuve } from '../middleware/upload.middleware.js';
 import {
   authenticateVolunteer,
@@ -17,6 +19,9 @@ import {
 } from '../middleware/volunteerAuth.middleware.js';
 
 const router = Router();
+
+// Le paiement par carte : un benevole donne une fois.
+const carte = controleursCarte((req) => identiteBenevole(req.benevole), { mensuelPermis: false });
 
 /*
  * SEULE EXCEPTION au verrou pose juste en dessous.
@@ -59,6 +64,10 @@ router.get('/actualites', actualites.lister);
 router.get('/dons/options', dons.options);
 router.post('/dons', dons.faire);
 router.get('/paiement/coordonnees', dons.coordonnees);
+// La carte, encaissee en ligne par Stripe -- un don ponctuel.
+router.get('/paiement/carte', carte.reglages);
+router.post('/paiement/carte/session', carte.ouvrir);
+router.get('/paiement/carte/session/:id', carte.etat);
 router.patch('/dons/:id/justificatif', dons.declarer);
 
 // --- Taches -----------------------------------------------------------

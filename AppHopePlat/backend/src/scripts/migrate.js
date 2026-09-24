@@ -107,6 +107,7 @@ const COLONNES_ATTENDUES = [
   ['donateur', 'affectation'],
   ['donateur', 'mode_paiement'],
   ['donateur', 'frequence'],
+  ['donations', 'provider_session_id'],
 ];
 
 async function executer() {

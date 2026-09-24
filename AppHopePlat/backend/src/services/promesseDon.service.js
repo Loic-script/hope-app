@@ -74,9 +74,16 @@ export function options() {
  *   qui donne : son compte, son nom tel que l'equipe le lira, l'espace
  *   d'ou il donne ("bailleur Telma"), et de quoi creer sa fiche de don
  * @param {{ affectation, projetId?, montant, devise?, mode, frequence?, message? }} corps
- * @param {{ mensuelPermis?: boolean }} [reglages]
+ * @param {{ mensuelPermis?: boolean, enLigne?: boolean }} [reglages]
+ *   enLigne : le don part se payer tout de suite par carte, chez Stripe.
+ *   La promesse est la meme ; seule la cloche de l'equipe change -- rien
+ *   n'est a rapprocher a la main, la confirmation viendra du paiement.
  */
-export async function promettreUnDon(identite, corps = {}, { mensuelPermis = true } = {}) {
+export async function promettreUnDon(
+  identite,
+  corps = {},
+  { mensuelPermis = true, enLigne = false } = {}
+) {
   const affectation = valeurParmi(corps.affectation, 'affectation', ['PROJECT', 'HOPE']);
 
   let projet = null;
@@ -147,25 +154,33 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
       client
     );
 
-    // L'equipe l'apprend dans sa cloche : c'est elle qui confirme la
-    // reception, et la personne attend ce retour.
-    await notificationRepository.creer(
-      {
-        type: 'DONATION',
-        label:
-          `Promesse de don : ${centimesVersTexte(montant)} ${devise} de ${identite.qui} ` +
-          `(${identite.origine}, ${mode.libelle})` +
-          `${projet ? ` pour « ${projet.nom} »` : ''}` +
-          `${paiement.reference ? `, réf. ${paiement.reference}` : ''}` +
-          `${paiement.numero ? ` depuis le ${paiement.numero}` : ''} — à confirmer à réception.` +
-          `${carte ? ` ${carte}` : ''}` +
-          `${precision ? ` ${precision}` : ''}`,
-        donationId: cree.id,
-        donorId,
-        projectId: projet ? Number(projet.id) : null,
-      },
-      client
-    );
+    /*
+     * L'equipe l'apprend dans sa cloche : c'est elle qui confirme la
+     * reception, et la personne attend ce retour.
+     *
+     * Un paiement en ligne ne previent qu'une fois abouti (voir
+     * paiementCarte.service) : une carte abandonnee en chemin ne doit
+     * pas laisser dans la cloche une ligne a traiter.
+     */
+    if (!enLigne) {
+      await notificationRepository.creer(
+        {
+          type: 'DONATION',
+          label:
+            `Promesse de don : ${centimesVersTexte(montant)} ${devise} de ${identite.qui} ` +
+            `(${identite.origine}, ${mode.libelle})` +
+            `${projet ? ` pour « ${projet.nom} »` : ''}` +
+            `${paiement.reference ? `, réf. ${paiement.reference}` : ''}` +
+            `${paiement.numero ? ` depuis le ${paiement.numero}` : ''} — à confirmer à réception.` +
+            `${carte ? ` ${carte}` : ''}` +
+            `${precision ? ` ${precision}` : ''}`,
+          donationId: cree.id,
+          donorId,
+          projectId: projet ? Number(projet.id) : null,
+        },
+        client
+      );
+    }
 
     return cree;
   });
@@ -173,9 +188,10 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
   const lu = await donorSpaceRepository.unDeMesDons(identite.utilisateurId, don.id);
   return {
     don: presenter(lu),
-    message:
-      'Merci ! Votre promesse de don est enregistrée. L’équipe HOPE la confirme dès réception ' +
-      'de votre paiement.',
+    message: enLigne
+      ? 'Votre don est enregistré. Il ne reste qu’à le régler par carte.'
+      : 'Merci ! Votre promesse de don est enregistrée. L’équipe HOPE la confirme dès réception ' +
+        'de votre paiement.',
   };
 }
 

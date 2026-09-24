@@ -31,7 +31,19 @@ export function creerApplication() {
     })
   );
 
-  app.use(express.json({ limit: '100kb' }));
+  /*
+   * Le corps brut est garde de cote : la signature des messages de
+   * Stripe porte sur les octets recus, pas sur l'objet relu. Une virgule
+   * deplacee par le relecteur suffirait a la faire echouer.
+   */
+  app.use(
+    express.json({
+      limit: '100kb',
+      verify: (req, _res, corps) => {
+        if (req.originalUrl.startsWith('/api/paiements/stripe/')) req.corpsBrut = corps;
+      },
+    })
+  );
 
   // Journal minimal des requetes en developpement.
   if (config.env !== 'production') {
