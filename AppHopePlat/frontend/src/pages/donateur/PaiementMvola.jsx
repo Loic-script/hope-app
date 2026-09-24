@@ -184,6 +184,18 @@ export default function PaiementMvola() {
       <div className="mvola__halo" aria-hidden="true" />
 
       <main className="mvola__cadre">
+        {/* Sur ordinateur seulement : la colonne jaune qui resume le don. */}
+        {profil && compte?.disponible && (
+          <Resume
+            indice={indice}
+            montant={somme}
+            beneficiaire={beneficiaire}
+            titulaire={compte.titulaire}
+            numero={numero}
+          />
+        )}
+
+        <div className="mvola__principal">
         <header className="mvola__entete">
           <button
             type="button"
@@ -203,6 +215,9 @@ export default function PaiementMvola() {
             </span>
           </div>
           <img className="mvola__logo" src={logoMvola} alt="MVola" decoding="async" />
+          <span className="mvola__etape-texte" aria-hidden="true">
+            Étape {indice + 1} sur 3
+          </span>
         </header>
 
         {/* Ou l'on en est : la pilule noire avance, comme "A ne pas manquer". */}
@@ -359,8 +374,12 @@ export default function PaiementMvola() {
               Envoyez {fmt.montant(somme)} depuis MVola
             </h1>
             <p className="mvola__texte">
-              Depuis le <strong>{numeroLisible(`0${numero}`)}</strong>, en trois gestes. Votre code secret ne se
-              tape que dans MVola : HOPE ne vous le demandera jamais.
+              Depuis le <strong>{numeroLisible(`0${numero}`)}</strong>, en trois gestes.
+              {/* Le pied de page le redit : le telephone s'en passe ici. */}
+              <span className="mvola__hors-telephone">
+                {' '}
+                Votre code secret ne se tape que dans MVola : HOPE ne vous le demandera jamais.
+              </span>
             </p>
 
             <ol className="mvola__gestes">
@@ -399,7 +418,11 @@ export default function PaiementMvola() {
             </ol>
 
             <div className="mvola__destinataire">
-              <Copiable libelle="Numéro MVola de HOPE" valeur={compte.numero} affiche={numeroLisible(compte.numero)} />
+              <Copiable
+                libelle={`Numéro MVola de ${compte.titulaire}`}
+                valeur={compte.numero}
+                affiche={numeroLisible(compte.numero)}
+              />
               <Copiable libelle="Montant exact" valeur={String(somme)} affiche={fmt.montant(somme)} />
               <p className="mvola__destinataire-nom">
                 Au nom de <strong>{compte.titulaire}</strong> — vérifiez-le avant de valider.
@@ -524,8 +547,93 @@ export default function PaiementMvola() {
           </svg>
           HOPE ne vous demandera jamais votre code secret MVola.
         </p>
+        </div>
       </main>
     </div>
+  );
+}
+
+/** Les trois temps, tels que la colonne du resume les raconte. */
+const ETAPES = [
+  { nom: 'Montant', texte: 'Ce que vous donnez, et depuis quel numéro.' },
+  { nom: 'Envoi', texte: 'Depuis #111#, vers le numéro de HOPE.' },
+  { nom: 'Merci', texte: 'L’équipe confirme dès réception.' },
+];
+
+/**
+ * La colonne jaune de l'ordinateur : les deux marques, les trois temps,
+ * et le don tel qu'il se precise. Le telephone ne l'affiche pas -- il
+ * a la pilule et la carte "solde", et pas de place a perdre.
+ */
+function Resume({ indice, montant, beneficiaire, titulaire, numero }) {
+  return (
+    <aside className="mvola__cote" aria-label="Récapitulatif du don">
+      <div className="mvola__marques">
+        <span className="mvola__marque-hope">
+          <HopeLogo />
+        </span>
+        <span className="mvola__croix" aria-hidden="true">
+          ×
+        </span>
+        <img className="mvola__marque-mvola" src={logoMvola} alt="MVola" decoding="async" />
+      </div>
+
+      <h2 className="mvola__cote-titre">Votre don, en trois gestes</h2>
+      <p className="mvola__cote-texte">
+        Le paiement se fait dans MVola, depuis votre téléphone. HOPE reçoit votre don et vous le confirme.
+      </p>
+
+      <ol className="mvola__etapes">
+        {ETAPES.map((etape, i) => (
+          <li
+            key={etape.nom}
+            className={`mvola__etape${i === indice ? ' mvola__etape--active' : ''}${i < indice ? ' mvola__etape--faite' : ''}`}
+            aria-current={i === indice ? 'step' : undefined}
+          >
+            <span className="mvola__etape-rond" aria-hidden="true">
+              {i < indice ? (
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 12.5l4 4 8-9" />
+                </svg>
+              ) : (
+                i + 1
+              )}
+            </span>
+            <span className="mvola__etape-corps">
+              <strong>{etape.nom}</strong>
+              <small>{etape.texte}</small>
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      <dl className="mvola__resume">
+        <div className="mvola__resume-montant">
+          <dt>Montant</dt>
+          <dd key={montant ?? 0}>{montant ? fmt.montant(montant) : '—'}</dd>
+        </div>
+        <div>
+          <dt>Pour</dt>
+          <dd>{beneficiaire}</dd>
+        </div>
+        <div>
+          <dt>Vers</dt>
+          <dd>{titulaire}</dd>
+        </div>
+        <div>
+          <dt>Depuis</dt>
+          <dd>{/^3[48]\d{7}$/.test(numero) ? numeroLisible(`0${numero}`) : '—'}</dd>
+        </div>
+      </dl>
+
+      <p className="mvola__cote-pied">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+        HOPE ne vous demandera jamais votre code secret MVola.
+      </p>
+    </aside>
   );
 }
 
