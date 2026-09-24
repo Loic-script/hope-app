@@ -174,7 +174,54 @@
   text-align: center;
 }
 
+/* Un groupe de contacts : son titre, et combien il compte de personnes. */
+.msg-contacts + .msg-contacts .msg-liste__section,
+.msg-liste__lignes + .msg-contacts .msg-liste__section {
+  margin-top: 4px;
+  border-top: 1px solid var(--admin-bordure, #e6e8f0);
+}
+
+.msg-liste__compte {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(93, 86, 150, 0.1);
+  color: var(--hope-violet, #5d5696);
+  font-size: 10.5px;
+  letter-spacing: 0;
+}
+
+/* "Ecrire" apparait au survol d'un contact : un clic ouvre la conversation. */
+.msg-ligne__ecrire {
+  flex: none;
+  align-self: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--hope-violet, #5d5696);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.msg-ligne--nouvelle:hover .msg-ligne__ecrire,
+.msg-ligne--nouvelle:focus-visible .msg-ligne__ecrire {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: none) {
+  .msg-ligne__ecrire {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .msg-liste__section {
+  display: flex;
+  align-items: center;
   padding: 14px 16px 6px;
   font-size: 11.5px;
   font-weight: 700;

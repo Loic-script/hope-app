@@ -4,13 +4,31 @@ import { IconeRecherche } from '../admin/AdminIcons.jsx';
 import Avatar from './Avatar.jsx';
 import { apercu, correspond, heureRelative } from './outils.js';
 
+/** Les groupes de contacts, dans l'ordre ou ils se lisent. */
+const GROUPES = [
+  { cle: 'equipe', titre: 'Équipe HOPE' },
+  { cle: 'donateur', titre: 'Donateurs' },
+  { cle: 'bailleur', titre: 'Partenaires' },
+  { cle: 'benevole', titre: 'Bénévoles' },
+  { cle: 'autre', titre: 'Autres' },
+];
+
+/** Le groupe d'une personne de l'annuaire. */
+function groupeDe(personne) {
+  if (personne.type === 'equipe' || personne.role === 'equipe') return 'equipe';
+  return GROUPES.some((g) => g.cle === personne.role) ? personne.role : 'autre';
+}
+
 /**
- * La liste des conversations.
+ * La liste des conversations, et sous elle les contacts.
+ *
+ * Les conversations d'abord, par activite. Puis, sans attendre de
+ * recherche, les personnes avec qui aucun echange n'existe encore --
+ * l'equipe HOPE en tete, puis donateurs, partenaires, benevoles : on
+ * voit a qui l'on peut ecrire, et un clic ouvre la conversation.
  *
  * La recherche porte sur le nom, le sous-titre et l'apercu, sans accents
- * ni casse. Elle propose aussi, sous "Nouvelle conversation", les
- * personnes avec qui aucun echange n'existe encore : chercher quelqu'un
- * et lui ecrire sont le meme geste.
+ * ni casse, et filtre les deux listes a la fois.
  *
  * @param {{
  *   fils: object[], actif: number|null, chargement: boolean,
@@ -26,10 +44,10 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
   const [ouverture, setOuverture] = useState(null);
   const liste = useRef(null);
 
-  // L'annuaire ne se charge qu'au premier caractere tape : la plupart des
-  // visites ne cherchent personne.
+  // L'annuaire se charge a l'ouverture : les contacts s'affichent sous
+  // les conversations, sans qu'il faille chercher.
   useEffect(() => {
-    if (recherche.trim() === '' || joignables !== null) return;
+    if (joignables !== null) return undefined;
     let annule = false;
     chargerJoignables()
       .then((items) => {
@@ -41,17 +59,40 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
     return () => {
       annule = true;
     };
-  }, [recherche, joignables, chargerJoignables]);
+  }, [joignables, chargerJoignables]);
+
+  // Une conversation de plus (on vient d'ecrire a un contact) : l'annuaire
+  // se relit, et ce contact passe de la liste des contacts a celle des
+  // conversations.
+  const nombreFils = fils.length;
+  const premierLu = useRef(true);
+  useEffect(() => {
+    if (premierLu.current) {
+      premierLu.current = false;
+      return;
+    }
+    setJoignables(null);
+  }, [nombreFils]);
 
   const filsFiltres = useMemo(
     () => fils.filter((fil) => correspond(recherche, fil.nom, fil.sousTitre, apercu(fil))),
     [fils, recherche]
   );
 
-  const nouvelles = useMemo(() => {
-    if (recherche.trim() === '' || !joignables) return [];
-    return joignables.filter((p) => !p.filId && correspond(recherche, p.nom, p.sousTitre));
+  // Les contacts sans conversation, filtres par la recherche, par groupe.
+  const contacts = useMemo(() => {
+    if (!joignables) return [];
+    const libres = joignables.filter(
+      (p) => !p.filId && (recherche.trim() === '' || correspond(recherche, p.nom, p.sousTitre))
+    );
+    return GROUPES.map((g) => ({
+      ...g,
+      personnes: libres
+        .filter((p) => groupeDe(p) === g.cle)
+        .sort((a, b) => String(a.nom).localeCompare(String(b.nom), 'fr')),
+    })).filter((g) => g.personnes.length > 0);
   }, [joignables, recherche]);
+  const nombreContacts = contacts.reduce((total, g) => total + g.personnes.length, 0);
 
   /** Fleches haut et bas pour passer d'une ligne a l'autre. */
   function surTouche(evenement) {
@@ -97,7 +138,9 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
           <>
             {filsFiltres.length === 0 && recherche.trim() === '' && (
               <p className="msg-liste__vide">
-                Aucune conversation. Cherchez une personne pour lui écrire.
+                {nombreContacts > 0
+                  ? 'Aucune conversation pour l’instant. Écrivez à l’une des personnes ci-dessous.'
+                  : 'Aucune conversation pour l’instant.'}
               </p>
             )}
 
@@ -136,15 +179,18 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
               ))}
             </ul>
 
-            {recherche.trim() !== '' && filsFiltres.length === 0 && nouvelles.length === 0 && joignables !== null && (
+            {recherche.trim() !== '' && filsFiltres.length === 0 && nombreContacts === 0 && joignables !== null && (
               <p className="msg-liste__vide">Rien ne correspond à « {recherche} ».</p>
             )}
 
-            {nouvelles.length > 0 && (
-              <>
-                <p className="msg-liste__section">Nouvelle conversation</p>
+            {contacts.map((groupe) => (
+              <div key={groupe.cle} className="msg-contacts">
+                <p className="msg-liste__section">
+                  {groupe.titre}
+                  <span className="msg-liste__compte">{groupe.personnes.length}</span>
+                </p>
                 <ul className="msg-liste__lignes">
-                  {nouvelles.map((personne) => {
+                  {groupe.personnes.map((personne) => {
                     const cle = `${personne.type}:${personne.id}`;
                     return (
                       <li key={cle}>
@@ -154,6 +200,7 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
                           className="msg-ligne msg-ligne--nouvelle"
                           onClick={() => nouvelle(personne)}
                           disabled={ouverture !== null}
+                          aria-label={`Écrire à ${personne.nom}`}
                         >
                           <Avatar nom={personne.nom} photoUrl={personne.photoUrl} equipe={personne.type === 'equipe'} />
                           <span className="msg-ligne__corps">
@@ -164,13 +211,16 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
                               {ouverture === cle ? 'Ouverture…' : personne.sousTitre}
                             </span>
                           </span>
+                          <span className="msg-ligne__ecrire" aria-hidden="true">
+                            Écrire
+                          </span>
                         </button>
                       </li>
                     );
                   })}
                 </ul>
-              </>
-            )}
+              </div>
+            ))}
           </>
         )}
       </div>
