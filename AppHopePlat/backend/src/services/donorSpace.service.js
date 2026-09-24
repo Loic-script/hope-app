@@ -19,7 +19,13 @@ import { centimesVersTexte, depuisBase } from '../shared/money.js';
 import { identifiantRequis } from '../shared/validation.js';
 import { projetsProposes } from './donorProfile.service.js';
 import * as ficheProjetService from './ficheProjet.service.js';
-import { nomDuPays, origineDuPays, presenter, promettreUnDon } from './promesseDon.service.js';
+import {
+  declarerJustificatif,
+  nomDuPays,
+  origineDuPays,
+  presenter,
+  promettreUnDon,
+} from './promesseDon.service.js';
 
 /**
  * Les totaux du donateur, par devise : un don en euros ne s'additionne
@@ -105,6 +111,64 @@ export function compteMvola() {
 /** GET /api/donateur/paiement/orange-money : le compte Orange Money de HOPE. */
 export function compteOrangeMoney() {
   return compteOperateur(config.orangeMoney);
+}
+
+/**
+ * GET /api/donateur/paiement/coordonnees : ou envoyer un don hors ligne.
+ *
+ * Le compte bancaire, le bureau, les comptes sur les plateformes, et
+ * les numeros mobiles (certaines plateformes versent sur MVola ou
+ * Orange Money). Chaque bloc dit s'il est utilisable.
+ */
+export function coordonneesDePaiement() {
+  const { banque, bureau, plateformes, equipe } = config;
+  const rib = String(banque.rib ?? '').replace(/\D/g, '');
+  const iban = String(banque.iban ?? '').replace(/\s/g, '').toUpperCase();
+  return {
+    banque: {
+      disponible: rib.length === 23,
+      internationalDisponible: /^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(iban) && /^[A-Z0-9]{8}([A-Z0-9]{3})?$/.test(banque.bic),
+      nom: banque.nom,
+      agence: banque.agence,
+      titulaire: banque.titulaire,
+      rib,
+      iban,
+      bic: String(banque.bic ?? '').toUpperCase(),
+      adresse: banque.adresse,
+    },
+    bureau: {
+      disponible: Boolean(bureau.adresse),
+      adresse: bureau.adresse,
+      horaires: bureau.horaires,
+      telephone: equipe.telephone,
+    },
+    plateformes: {
+      retrait: plateformes.retraitNom
+        ? { nom: plateformes.retraitNom, ville: plateformes.retraitVille }
+        : null,
+      mvola: compteMvola(),
+      orangeMoney: compteOrangeMoney(),
+    },
+  };
+}
+
+/**
+ * PATCH /api/donateur/dons/:id/justificatif : le donateur signale qu'il
+ * a paye une promesse deja enregistree -- un virement, un depot --, avec
+ * la reference que sa banque lui a donnee.
+ *
+ * Seulement sur ses propres dons, et tant qu'ils sont en attente.
+ */
+export async function declarerPaiement(compte, donId, corps = {}) {
+  const id = identifiantRequis(donId, 'id');
+  const don = await donorSpaceRepository.unDeMesDons(compte.id, id);
+  if (!don) throw new ErreurIntrouvable('Le don', donId);
+  if (don.statut !== 'PENDING') {
+    throw new ErreurValidation('Ce don n’est plus en attente : il a déjà été traité par l’équipe.', {
+      statut: 'Don déjà traité',
+    });
+  }
+  return declarerJustificatif(compte, don, corps);
 }
 
 /** Un compte de paiement mobile : utilisable s'il porte un numero malgache. */

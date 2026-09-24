@@ -36,6 +36,21 @@ const ParcoursDonateur = lazy(() => import('../pages/donateur/Parcours.jsx'));
 const PaiementMvola = lazy(() => import('../pages/donateur/PaiementMvola.jsx'));
 const PaiementOrangeMoney = lazy(() => import('../pages/donateur/PaiementOrangeMoney.jsx'));
 const PaiementCarte = lazy(() => import('../pages/donateur/PaiementCarte.jsx'));
+const PaiementVirement = lazy(() => import('../pages/donateur/PaiementVirement.jsx'));
+const PaiementDepot = lazy(() => import('../pages/donateur/PaiementDepot.jsx'));
+const PaiementEspeces = lazy(() => import('../pages/donateur/PaiementEspeces.jsx'));
+const PaiementInternational = lazy(() => import('../pages/donateur/PaiementInternational.jsx'));
+const PaiementPlateforme = lazy(() => import('../pages/donateur/PaiementPlateforme.jsx'));
+
+/** L'attente d'une page de paiement, le temps qu'elle se charge. */
+function AttentePaiement() {
+  return (
+    <div className="verification" role="status" aria-live="polite">
+      <span className="verification__rotation" aria-hidden="true" />
+      <p>Préparation du paiement…</p>
+    </div>
+  );
+}
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
 import ConversationsEspace from '../pages/espace/Conversations.jsx';
@@ -180,6 +195,46 @@ export default function AppRoutes() {
               }
             >
               <PaiementCarte />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/donateur/completer-profil/virement"
+          element={
+            <Suspense fallback={<AttentePaiement />}>
+              <PaiementVirement />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/donateur/completer-profil/depot"
+          element={
+            <Suspense fallback={<AttentePaiement />}>
+              <PaiementDepot />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/donateur/completer-profil/especes"
+          element={
+            <Suspense fallback={<AttentePaiement />}>
+              <PaiementEspeces />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/donateur/completer-profil/virement-international"
+          element={
+            <Suspense fallback={<AttentePaiement />}>
+              <PaiementInternational />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/donateur/completer-profil/plateforme"
+          element={
+            <Suspense fallback={<AttentePaiement />}>
+              <PaiementPlateforme />
             </Suspense>
           }
         />

@@ -128,7 +128,6 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
-/** Genere une reference lisible : DON-2026-0007. */
 /** Une reference de transaction deja declaree pour un don ? */
 export async function referencePaiementPrise(reference, client) {
   const { rows } = await query(
@@ -139,6 +138,7 @@ export async function referencePaiementPrise(reference, client) {
   return rows.length > 0;
 }
 
+/** Genere une reference lisible : DON-2026-0007. */
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
   const resultat = await query(

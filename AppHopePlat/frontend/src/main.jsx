@@ -34,6 +34,11 @@ import './styles/parcours-donateur.css';
 import './styles/paiement-mvola.css';
 import './styles/paiement-orange-money.css';
 import './styles/paiement-carte.css';
+import './styles/paiement-virement.css';
+import './styles/paiement-depot.css';
+import './styles/paiement-especes.css';
+import './styles/paiement-international.css';
+import './styles/paiement-plateforme.css';
 import './styles/parcours-benevole.css';
 import './styles/choix-page.css';
 

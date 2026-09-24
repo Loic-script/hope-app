@@ -75,6 +75,35 @@ export const config = {
     numero: optionnel('HOPE_MVOLA_NUMERO', ''),
     titulaire: optionnel('HOPE_MVOLA_TITULAIRE', 'HOPE Madagascar'),
   },
+  /*
+   * Le compte bancaire de HOPE, pour les virements et les depots. Rien
+   * de secret : ce sont les coordonnees qu'on donne a qui veut payer.
+   * RIB malgache : 23 chiffres (banque 5, guichet 5, compte 11, cle 2).
+   */
+  banque: {
+    nom: optionnel('HOPE_BANQUE_NOM', ''),
+    agence: optionnel('HOPE_BANQUE_AGENCE', ''),
+    titulaire: optionnel('HOPE_BANQUE_TITULAIRE', 'HOPE Madagascar'),
+    rib: optionnel('HOPE_BANQUE_RIB', ''),
+    iban: optionnel('HOPE_BANQUE_IBAN', ''),
+    bic: optionnel('HOPE_BANQUE_BIC', ''),
+    adresse: optionnel('HOPE_BANQUE_ADRESSE', ''),
+  },
+  // Le bureau de HOPE, ou l'on remet un don en especes.
+  bureau: {
+    adresse: optionnel('HOPE_BUREAU_ADRESSE', ''),
+    horaires: optionnel('HOPE_BUREAU_HORAIRES', ''),
+  },
+  /*
+   * Les transferts internationaux arrivent sur MVola, Orange Money, le
+   * compte bancaire, ou en especes au guichet : pour ces derniers, le
+   * nom de la personne qui retire, et sa ville.
+   */
+  plateformes: {
+    retraitNom: optionnel('HOPE_RETRAIT_NOM', ''),
+    retraitVille: optionnel('HOPE_RETRAIT_VILLE', 'Antananarivo'),
+  },
+
   // Le compte Orange Money de HOPE, sur le meme principe.
   orangeMoney: {
     numero: optionnel('HOPE_ORANGE_MONEY_NUMERO', ''),

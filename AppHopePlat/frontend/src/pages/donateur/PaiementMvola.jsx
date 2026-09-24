@@ -6,7 +6,7 @@ import { MONTANTS_RAPIDES, numeroLisible, usePaiementMobile } from '../../hooks/
 import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** MVola : un numero Telma, 034 ou 038. */
+/** MVola : un numero Yas (ex-Telma), 034 ou 038. */
 const MVOLA = {
   mode: 'mvola',
   numeroValide: /^3[48]\d{7}$/,
@@ -228,7 +228,7 @@ export default function PaiementMvola() {
                   className={`mvola__aide${soumis && erreurs.numero ? ' mvola__aide--erreur' : ''}`}
                   id="mvola-numero-aide"
                 >
-                  {soumis && erreurs.numero ? erreurs.numero : 'Le numéro Telma depuis lequel vous payez.'}
+                  {soumis && erreurs.numero ? erreurs.numero : 'Le numéro Yas (ex-Telma) depuis lequel vous payez.'}
                 </span>
               </label>
 

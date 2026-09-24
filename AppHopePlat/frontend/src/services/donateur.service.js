@@ -77,6 +77,25 @@ export async function compteOrangeMoney() {
   return data;
 }
 
+/**
+ * GET /api/donateur/paiement/coordonnees : ou envoyer un don hors ligne --
+ * le compte bancaire, le bureau, le retrait au guichet, les numeros
+ * mobiles.
+ */
+export async function coordonneesDePaiement() {
+  const { data } = await apiDonateur.get('/donateur/paiement/coordonnees');
+  return data;
+}
+
+/**
+ * PATCH /api/donateur/dons/:id/justificatif : le donateur signale avoir
+ * paye une promesse, avec la reference de sa banque ou du transfert.
+ */
+export async function declarerPaiement(id, referencePaiement) {
+  const { data } = await apiDonateur.patch(`/donateur/dons/${id}/justificatif`, { referencePaiement });
+  return data;
+}
+
 /** GET /api/donateur/actualites : les nouvelles de HOPE, sans argent. */
 export async function actualites() {
   const { data } = await apiDonateur.get('/donateur/actualites');

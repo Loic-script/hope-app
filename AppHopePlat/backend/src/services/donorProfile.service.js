@@ -156,7 +156,7 @@ export const MODES_PAIEMENT = [
     cle: 'mvola',
     libelle: 'MVola',
     zone: 'madagascar',
-    description: 'Paiement mobile depuis un numéro Telma (034 ou 038).',
+    description: 'Paiement mobile depuis un numéro Yas, ex-Telma (034 ou 038).',
   },
   {
     cle: 'orange_money',

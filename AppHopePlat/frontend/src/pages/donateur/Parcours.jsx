@@ -99,6 +99,11 @@ const PAGES_DE_PAIEMENT = {
   mvola: '/donateur/completer-profil/mvola',
   orange_money: '/donateur/completer-profil/orange-money',
   carte_bancaire: '/donateur/completer-profil/carte',
+  virement_bancaire: '/donateur/completer-profil/virement',
+  depot_bancaire: '/donateur/completer-profil/depot',
+  especes: '/donateur/completer-profil/especes',
+  virement_international: '/donateur/completer-profil/virement-international',
+  plateforme: '/donateur/completer-profil/plateforme',
 };
 
 /**

@@ -107,6 +107,7 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
   const message = texteFacultatif(corps.message, 'message', { max: 500 });
   const paiement = justificatif(corps, mode);
   const carte = facturation(corps, mode, identite);
+  const precision = precisionDuMoyen(corps, mode);
 
   const don = await transaction(async (client) => {
     const existante = await donorSpaceRepository.ficheDuCompte(identite.utilisateurId, client);
@@ -157,7 +158,8 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
           `${projet ? ` pour « ${projet.nom} »` : ''}` +
           `${paiement.reference ? `, réf. ${paiement.reference}` : ''}` +
           `${paiement.numero ? ` depuis le ${paiement.numero}` : ''} — à confirmer à réception.` +
-          `${carte ? ` ${carte}` : ''}`,
+          `${carte ? ` ${carte}` : ''}` +
+          `${precision ? ` ${precision}` : ''}`,
         donationId: cree.id,
         donorId,
         projectId: projet ? Number(projet.id) : null,
@@ -179,7 +181,7 @@ export async function promettreUnDon(identite, corps = {}, { mensuelPermis = tru
 
 /** Les numeros de chaque paiement mobile, sans le 0 : "341234567". */
 const OPERATEURS_MOBILES = {
-  mvola: { numero: /^3[48]\d{7}$/, aide: 'Un numéro Telma : 034 ou 038' },
+  mvola: { numero: /^3[48]\d{7}$/, aide: 'Un numéro Yas (ex-Telma) : 034 ou 038' },
   orange_money: { numero: /^3[27]\d{7}$/, aide: 'Un numéro Orange : 032 ou 037' },
 };
 
@@ -211,6 +213,107 @@ function justificatif(corps, mode) {
   }
 
   return { reference: reference ? reference.toUpperCase() : null, numero };
+}
+
+/** Les plateformes de transfert qu'un donateur peut nommer. */
+export const PLATEFORMES = {
+  taptap_send: 'Taptap Send',
+  remitly: 'Remitly',
+  sendwave: 'Sendwave',
+  worldremit: 'WorldRemit',
+  paysend: 'Paysend',
+  orange_money_europe: 'Orange Money Europe',
+  western_union: 'Western Union',
+  moneygram: 'MoneyGram',
+  ria: 'Ria',
+  xoom: 'Xoom (PayPal)',
+  global_transfert: 'Global Transfert Océan Indien',
+  revolut: 'Revolut',
+};
+
+/**
+ * Ce que certains moyens precisent, pour l'equipe :
+ *
+ *   * plateforme : laquelle (PayPal, Western Union...) ;
+ *   * especes : ou et quand le don sera remis -- au bureau, ou chez le
+ *     donateur, a la date et au moment de la journee qu'il propose.
+ *
+ * Rend la phrase de la notification, ou null.
+ */
+function precisionDuMoyen(corps, mode) {
+  if (mode.cle === 'plateforme' && corps.plateforme !== undefined) {
+    const nom = PLATEFORMES[corps.plateforme];
+    if (!nom) {
+      throw new ErreurValidation('Choisissez une plateforme de la liste.', { plateforme: 'Plateforme inconnue' });
+    }
+    return `Via ${nom}.`;
+  }
+
+  if (mode.cle === 'especes' && corps.remise) {
+    const { lieu, date, moment, adresse } = corps.remise;
+    if (!['bureau', 'domicile'].includes(lieu)) {
+      throw new ErreurValidation('Choisissez où remettre votre don.', { lieu: 'Au bureau ou chez vous' });
+    }
+    const jour = new Date(`${date}T12:00:00`);
+    const demain = new Date();
+    demain.setHours(0, 0, 0, 0);
+    const limite = new Date(demain);
+    limite.setDate(limite.getDate() + 90);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || Number.isNaN(jour.getTime()) || jour < demain || jour > limite) {
+      throw new ErreurValidation('Choisissez une date dans les trois prochains mois.', { date: 'Date invalide' });
+    }
+    if (!['matin', 'apres-midi'].includes(moment)) {
+      throw new ErreurValidation('Choisissez le matin ou l’après-midi.', { moment: 'Moment invalide' });
+    }
+    let ou = 'au bureau de HOPE';
+    if (lieu === 'domicile') {
+      const texte = texteFacultatif(adresse, 'adresse', { max: 255 });
+      if (!texte) throw new ErreurValidation('Indiquez l’adresse où passer.', { adresse: 'Champ obligatoire' });
+      ou = `chez le donateur : ${texte}`;
+    }
+    const quand = jour.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return `Remise en espèces ${ou}, le ${quand} ${moment === 'matin' ? 'au matin' : 'l’après-midi'}.`;
+  }
+
+  return null;
+}
+
+/**
+ * Le donateur signale avoir paye une promesse : la reference de sa
+ * banque (ou du bordereau, ou du transfert) s'ajoute au don, et
+ * l'equipe l'apprend dans sa cloche. Une reference ne vaut qu'une fois.
+ */
+export async function declarerJustificatif(compte, don, corps = {}) {
+  const reference = texteFacultatif(corps.referencePaiement, 'referencePaiement', { max: 40 });
+  if (!reference || !/^[A-Za-z0-9][A-Za-z0-9./ -]{3,39}$/.test(reference)) {
+    throw new ErreurValidation('Recopiez la référence de votre paiement.', {
+      referencePaiement: 'Lettres, chiffres, points, tirets',
+    });
+  }
+  const propre = reference.toUpperCase().replace(/\s+/g, ' ');
+
+  await transaction(async (client) => {
+    if (await donationRepository.referencePaiementPrise(propre, client)) {
+      throw new ErreurValidation('Cette référence a déjà été déclarée pour un autre don.', {
+        referencePaiement: 'Référence déjà utilisée',
+      });
+    }
+    await donationRepository.mettreAJour(don.id, { payment_reference: propre }, client);
+    await notificationRepository.creer(
+      {
+        type: 'DONATION',
+        label:
+          `Paiement signalé : ${[compte.prenom, compte.nom].filter(Boolean).join(' ') || compte.email} ` +
+          `dit avoir réglé ${don.reference} (${centimesVersTexte(enCentimes(don.montant, 'montant'))} ${don.devise}), ` +
+          `réf. ${propre} — à rapprocher du relevé.`,
+        donationId: don.id,
+      },
+      client
+    );
+  });
+
+  const lu = await donorSpaceRepository.unDeMesDons(compte.id, don.id);
+  return { don: presenter(lu), message: 'Merci ! L’équipe HOPE rapproche votre paiement de son relevé.' };
 }
 
 /**

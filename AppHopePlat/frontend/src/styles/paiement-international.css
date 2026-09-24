@@ -1,0 +1,606 @@
+/* ==================================================================
+   Virement international (pages/donateur/PaiementInternational.jsx)
+
+   L'objet de reference : l'enveloppe "par avion". Sa bordure de
+   chevrons rouges et bleus encadre tout le parcours -- c'est la
+   signature ; un cachet bleu "Par avion" dans l'angle. Dessous, le
+   trajet de l'argent, un arc de la banque du donateur jusqu'a
+   Antananarivo. Le reste : un bleu postal, un fond d'aerogramme.
+   ================================================================== */
+
+.int {
+  --in-bleu: #1f4e9c;
+  --in-bleu-fonce: #173b77;
+  --in-rouge: #d33a2c;
+  --in-fond: #e8eef7;
+  --in-texte: #14213d;
+  --in-doux: #56627a;
+  --in-trait: #d7deea;
+  --in-anime: cubic-bezier(0.22, 1, 0.36, 1);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--in-fond);
+  color: var(--in-texte);
+  font-family: var(--police-titre);
+}
+
+.int__tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 14px 16px 10px;
+}
+
+.int__retour {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--in-bleu);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--in-bleu);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.int__retour svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.int__retour:hover:not(:disabled) {
+  background: var(--in-bleu);
+  color: #fff;
+}
+
+.int__retour:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.int__tete-titre {
+  flex: 1;
+  font-weight: 700;
+  color: var(--in-bleu);
+}
+
+.int__tete-hope {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.int__tete-hope .hope-logo {
+  width: 56px;
+  height: auto;
+}
+
+.int__page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+}
+
+/* ---------- L'enveloppe : la signature ---------- */
+.avion {
+  position: relative;
+  padding: 18px 18px 14px;
+  border: 10px solid transparent;
+  border-radius: 6px;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    repeating-linear-gradient(
+        -45deg,
+        var(--in-rouge) 0 12px,
+        #fff 12px 18px,
+        var(--in-bleu) 18px 30px,
+        #fff 30px 36px
+      )
+      border-box;
+  box-shadow: 0 16px 40px rgba(20, 33, 61, 0.14);
+  animation: int-arrive 0.6s var(--in-anime) both;
+}
+
+@keyframes int-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-1.5deg);
+  }
+}
+
+.avion__cachet {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  border: 2px solid var(--in-bleu);
+  border-radius: 4px;
+  color: var(--in-bleu);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: rotate(6deg);
+  opacity: 0.85;
+}
+
+.avion__cachet small {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.int__temps {
+  animation: int-entre 0.4s var(--in-anime) both;
+}
+
+@keyframes int-entre {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+.int__titre {
+  max-width: calc(100% - 100px);
+  margin: 0 0 14px;
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.25;
+  outline: none;
+}
+
+.int__texte {
+  margin: 0 0 4px;
+  color: var(--in-doux);
+  line-height: 1.55;
+}
+
+.int__devises {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--in-bleu);
+  border-radius: 999px;
+}
+
+.int__devise {
+  min-width: 72px;
+  min-height: 40px;
+  border: 0;
+  background: #fff;
+  color: var(--in-bleu);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+
+.int__devise--choisie {
+  background: var(--in-bleu);
+  color: #fff;
+}
+
+.int__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.int__libelle {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.int__libelle em {
+  margin-left: 4px;
+  color: var(--in-doux);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.int__montant {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--in-trait);
+  border-radius: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.int__montant:focus-within,
+.int__saisie:focus {
+  border-color: var(--in-bleu);
+  box-shadow: 0 0 0 3px rgba(31, 78, 156, 0.16);
+}
+
+.int__montant--erreur,
+.int__saisie--erreur {
+  border-color: var(--in-rouge);
+}
+
+.int__montant input {
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--in-texte);
+  font: inherit;
+  font-size: 1.45rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.int__montant span {
+  padding: 0 14px;
+  color: var(--in-doux);
+  font-weight: 600;
+}
+
+.int__rapides {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.int__rapide {
+  min-height: 40px;
+  border: 1.5px solid var(--in-trait);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--in-texte);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.int__rapide--choisi {
+  border-color: var(--in-bleu);
+  background: var(--in-bleu);
+  color: #fff;
+}
+
+.int__saisie {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1.5px solid var(--in-trait);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--in-texte);
+  font: inherit;
+  outline: none;
+}
+
+.int__pour {
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+  color: var(--in-doux);
+}
+
+.int__pour strong {
+  color: var(--in-texte);
+}
+
+.int__erreur {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--in-rouge);
+}
+
+.int__erreur:empty {
+  display: none;
+}
+
+.int__erreur--centre {
+  text-align: center;
+}
+
+/* Les coordonnees SWIFT : une fiche a lignes, chiffres en chasse fixe. */
+.int__coord {
+  margin: 0;
+  border-top: 1px solid var(--in-trait);
+}
+
+.int__coord-ligne {
+  display: grid;
+  grid-template-columns: 7.5em 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--in-trait);
+}
+
+.int__coord-ligne dt {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--in-doux);
+}
+
+.int__coord-ligne dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.int__chiffres {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  letter-spacing: 0.03em;
+}
+
+.int__coord-ligne--fort dd {
+  color: var(--in-rouge);
+  font-size: 1.05rem;
+}
+
+.int__copier {
+  min-width: 64px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1.5px solid var(--in-bleu);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--in-bleu);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.int__copier:hover,
+.int__copier--fait {
+  background: var(--in-bleu);
+  color: #fff;
+}
+
+.int__frais {
+  margin: 12px 0 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f1f5fb;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--in-doux);
+}
+
+.int__frais strong {
+  color: var(--in-texte);
+}
+
+.int__bouton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--in-bleu);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.int__bouton:hover:not(:disabled) {
+  background: var(--in-bleu-fonce);
+  transform: translateY(-1px);
+}
+
+.int__bouton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.int__lien {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 2px;
+  border: 0;
+  background: none;
+  color: var(--in-doux);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.int :focus-visible {
+  outline: 2px solid var(--in-bleu);
+  outline-offset: 2px;
+}
+
+.int__titre:focus-visible,
+.int__montant input:focus-visible,
+.int__saisie:focus-visible {
+  outline: none;
+}
+
+/* ---------- Le trajet ---------- */
+.trajet {
+  margin: 16px 0 0;
+}
+
+.trajet svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.trajet__fil {
+  fill: none;
+  stroke: var(--in-bleu);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+  animation: int-fil 1.2s linear infinite;
+}
+
+@keyframes int-fil {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.trajet__point {
+  fill: var(--in-rouge);
+  offset-path: path('M20 50 C 90 -5, 230 -5, 300 50');
+  offset-distance: calc(var(--avancee) * 50%);
+  transition: offset-distance 1.4s var(--in-anime);
+  animation: int-pouls 1.8s ease-out infinite;
+}
+
+@keyframes int-pouls {
+  50% {
+    r: 8;
+  }
+}
+
+.trajet__etapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trajet__etapes li {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.72rem;
+  color: var(--in-doux);
+}
+
+.trajet__etapes li:nth-child(2) {
+  text-align: center;
+}
+
+.trajet__etapes li:nth-child(3) {
+  text-align: right;
+}
+
+.trajet__etapes strong {
+  font-size: 0.8rem;
+  color: var(--in-texte);
+}
+
+.trajet__etape--fait strong,
+.trajet__etape--encours strong {
+  color: var(--in-bleu);
+}
+
+.int__attente {
+  padding: 40px 0;
+  color: var(--in-doux);
+  text-align: center;
+}
+
+.int__alerte {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fdeceb;
+  color: var(--in-rouge);
+}
+
+/* ---------- Ordinateur ---------- */
+@media (min-width: 900px) {
+  .int__tete {
+    padding-top: 30px;
+  }
+
+  .avion {
+    padding: 28px 30px 22px;
+    border-width: 14px;
+  }
+
+  .trajet {
+    margin-top: 24px;
+  }
+}
+
+/* ---------- Telephone ---------- */
+@media (max-width: 600px) {
+  .int__tete {
+    padding: 10px 12px 8px;
+  }
+
+  .int__page {
+    padding: 0 10px 12px;
+  }
+
+  .avion {
+    padding: 12px 12px 10px;
+    border-width: 7px;
+  }
+
+  .avion__cachet {
+    top: 8px;
+    right: 8px;
+    font-size: 0.6rem;
+  }
+
+  .int__coord-ligne {
+    grid-template-columns: 5.6em 1fr auto;
+    gap: 6px;
+    padding: 5px 0;
+  }
+
+  .int__coord-ligne dd {
+    font-size: 0.82rem;
+  }
+
+  .int__frais {
+    margin: 8px 0 10px;
+    padding: 8px 10px;
+    font-size: 0.74rem;
+  }
+
+  .int__bouton {
+    margin-top: 12px;
+  }
+
+  .trajet {
+    margin-top: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .int *,
+  .int *::before,
+  .int *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}

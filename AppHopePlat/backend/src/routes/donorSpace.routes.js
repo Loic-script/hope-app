@@ -34,6 +34,10 @@ router.get('/dons', dons.lister);
 // Ou envoyer un don MVola : le numero de HOPE.
 router.get('/paiement/mvola', dons.mvola);
 router.get('/paiement/orange-money', dons.orangeMoney);
+// Les coordonnees de HOPE pour les moyens hors ligne.
+router.get('/paiement/coordonnees', dons.coordonnees);
+// Apres coup : "j'ai fait le virement", avec sa reference.
+router.patch('/dons/:id/justificatif', dons.declarer);
 router.post('/dons', dons.faire);
 
 // Les nouvelles de HOPE.
