@@ -4,9 +4,12 @@ Plateforme de donation et de suivi des activités de **HOPE**, association qui a
 enfants orphelins, les mères célibataires et les familles vulnérables à Madagascar vers une
 autonomie durable.
 
-> **Périmètre livré : connexion administrateur + espace administrateur complet.**
-> À venir : l'espace donateur (formulaire de don, historique, projets soutenus, profil) et le
-> paiement en ligne.
+> **Périmètre livré** : l'espace administrateur, les espaces donateur, bénévole et bailleur, les
+> pages de paiement (MVola, Orange Money, carte bancaire via Stripe, virement, dépôt, espèces,
+> virement international, plateformes de transfert), la messagerie, le mot de passe oublié, la
+> politique de confidentialité et les conditions d'utilisation.
+>
+> **Mise en ligne** : voir [DEPLOIEMENT.md](DEPLOIEMENT.md) (Railway, un seul service).
 
 ---
 
@@ -351,6 +354,19 @@ Page React → Service frontend → Axios → Route → Controller → Service �
 
 ## 10. Tests
 
+### Automatiques — `npm test` et `npm run lint`
+
+Depuis `AppHopePlat` : `npm run lint` (ESLint, backend et frontend) et `npm test`
+(`node --test`, sans dépendance de plus). Ils couvrent les montants en centimes, les
+validations, le consentement à l'inscription, le mot de passe oublié, les en-têtes de sécurité,
+et vérifient que **toutes** les routes `/api/admin/*` refusent une requête sans session (la liste
+est lue dans le routeur : une route ajoutée demain est vérifiée d'office). Côté frontend : le
+montant en lettres, les formats, l'adresse de chaque page de paiement.
+
+L'intégration continue (`.github/workflows/ci.yml`, à la racine du dépôt) les joue à chaque
+envoi sur `dev` et `main`, applique le schéma sur une base PostgreSQL neuve et construit le
+frontend.
+
 ### API — `npm run test:admin` : **94 assertions**
 
 Fermeture des 12 routes sans jeton · création de projet avec budget nécessaire · donateurs
@@ -416,12 +432,11 @@ horizontal en 430 px, la déconnexion.
 
 ## 12. Reste à faire
 
-- **Espace donateur** : formulaire de don public, historique des dons et transactions, projets
-  soutenus, gestion du profil, connexion au compte donateur (les comptes existent déjà en base) ;
-- paiement en ligne et module Transactions alimenté par un fournisseur ;
-- prélèvement automatique des dons mensuels (aujourd'hui saisis un par un) ;
+- **Stockage des fichiers téléversés** : un volume Railway sur `backend/uploads` (voir
+  [DEPLOIEMENT.md](DEPLOIEMENT.md)), ou plus tard un stockage objet (S3, Cloudflare R2) ;
+- prélèvement automatique des dons mensuels chez un prestataire (les échéances sont
+  aujourd'hui générées puis suivies à la main) ;
 - journal d'audit des actions administrateur ;
-- jeton en cookie `httpOnly` + `SameSite` plutôt qu'en `localStorage` ;
-- jeton de rafraîchissement, HTTPS, `helmet` ;
-- changement du mot de passe administrateur depuis l'interface ;
-- comptes administrateurs multiples et rôles.
+- jeton de session en cookie `httpOnly` + `SameSite` plutôt qu'en stockage du navigateur ;
+- comptes administrateurs multiples et rôles ;
+- relecture juridique des textes légaux par le bureau de l'association.

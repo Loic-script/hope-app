@@ -1,0 +1,168 @@
+# Déployer HOPE sur Railway
+
+HOPE se déploie en **un seul service** : le serveur Express sert l'API sous `/api` et le
+frontend React construit (`frontend/dist`). Une base **PostgreSQL** l'accompagne.
+
+Tout est déjà prêt dans le dépôt :
+
+| Fichier | Rôle |
+|---|---|
+| `package.json` (racine de `AppHopePlat`) | `build`, `start`, `db:preparer`, `db:premier-deploiement` |
+| `railway.json` | commande de construction, de démarrage, migration avant chaque mise en ligne, sonde de santé `/api/sante` |
+| `backend/.env.example` | la liste commentée de toutes les variables |
+
+Durée : une trentaine de minutes la première fois.
+
+---
+
+## 1. Créer le projet
+
+1. Sur [railway.com](https://railway.com), **New Project → Deploy from GitHub repo**, et choisir
+   `Loic-script/hope-app`.
+2. Dans le service créé, **Settings** :
+   - **Root Directory** : `AppHopePlat` (le dépôt contient d'autres dossiers) ;
+   - **Branch** : `main` pour la production (ou `dev` pour une préproduction) ;
+   - Railway lit alors `AppHopePlat/railway.json` tout seul.
+3. **+ New → Database → PostgreSQL** dans le même projet.
+
+## 2. Les variables du service
+
+Dans le service HOPE, onglet **Variables**. Les valeurs entre `${{ }}` sont des références
+Railway : elles se mettent à jour seules.
+
+### Obligatoires
+
+| Variable | Valeur |
+|---|---|
+| `NODE_ENV` | `production` |
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `JWT_SECRET` | 48 octets aléatoires (voir ci-dessous). Le serveur **refuse de démarrer** en production avec un secret court ou d'exemple. |
+| `ADMIN_LOG` | l'identifiant de connexion de l'administrateur |
+| `ADMIN_PASSWORD` | son mot de passe (long, unique). Il n'est lu qu'à la création du compte. |
+| `HOPE_SITE_URL` | l'adresse publique, ex. `https://hope-production.up.railway.app` (sert aux liens des courriels et au retour de Stripe) |
+| `CORS_ORIGIN` | la même adresse |
+
+Générer le secret JWT :
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+`PORT` est fourni par Railway : ne pas le définir. `DB_SSL` n'est utile que si la base impose
+TLS (réseau privé Railway : inutile).
+
+### Les coordonnées de paiement de HOPE
+
+Affichées au donateur sur les pages de paiement. Tant qu'un moyen n'est pas renseigné, sa page
+le dit (« pas encore ouvert ») au lieu d'afficher des coordonnées fausses.
+
+| Moyen | Variables |
+|---|---|
+| MVola | `HOPE_MVOLA_NUMERO`, `HOPE_MVOLA_TITULAIRE` |
+| Orange Money | `HOPE_ORANGE_MONEY_NUMERO`, `HOPE_ORANGE_MONEY_TITULAIRE` |
+| Virement / dépôt | `HOPE_BANQUE_NOM`, `HOPE_BANQUE_AGENCE`, `HOPE_BANQUE_TITULAIRE`, `HOPE_BANQUE_RIB`, `HOPE_BANQUE_IBAN`, `HOPE_BANQUE_BIC`, `HOPE_BANQUE_ADRESSE` |
+| Espèces au bureau | `HOPE_BUREAU_ADRESSE`, `HOPE_BUREAU_HORAIRES` |
+| Plateformes de transfert | `HOPE_RETRAIT_NOM`, `HOPE_RETRAIT_VILLE` |
+
+> Les valeurs du `.env` local sont **des valeurs d'essai** : ne pas les recopier.
+
+### Les courriels (mot de passe oublié)
+
+N'importe quel fournisseur SMTP : Brevo, Mailjet, Resend…
+
+| Variable | Exemple |
+|---|---|
+| `SMTP_HOST` | `smtp-relay.brevo.com` |
+| `SMTP_PORT` | `587` (ou `465` avec `SMTP_SECURE=true`) |
+| `SMTP_USER`, `SMTP_PASSWORD` | fournis par le service |
+| `SMTP_FROM` | `HOPE <no-reply@votre-domaine>` — une adresse d'un domaine vérifié chez le fournisseur |
+
+Sans SMTP, la plateforme fonctionne, mais aucun courriel ne part (un avertissement l'écrit dans
+le journal, sans jamais y mettre le lien).
+
+### La carte bancaire (Stripe)
+
+1. Dans le tableau de bord Stripe, **Développeurs → Clés API** : `STRIPE_SECRET_KEY` (`sk_live_…`)
+   et `STRIPE_PUBLISHABLE_KEY` (`pk_live_…`).
+2. **Développeurs → Webhooks → Ajouter un endpoint** :
+   - URL : `https://<votre-adresse>/api/paiements/stripe/webhook`
+   - événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+     `checkout.session.async_payment_failed`, `checkout.session.expired` ;
+   - copier le **secret de signature** dans `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
+
+Sans ces trois clés, la page carte bancaire annonce que le paiement par carte n'est pas encore
+ouvert ; les autres moyens restent disponibles. Faire un premier essai avec les clés **de test**
+(`sk_test_…`) et la carte `4242 4242 4242 4242`.
+
+### Facultatives
+
+| Variable | Rôle |
+|---|---|
+| `EQUIPE_EMAIL`, `EQUIPE_TELEPHONE`, `EQUIPE_SITE` | coordonnées affichées dans les fils d'assistance de la messagerie |
+| `VITE_HOPE_CONTACT` | adresse de contact affichée dans la politique de confidentialité et les conditions d'utilisation (lue **à la construction** : redéployer après l'avoir changée) |
+| `JWT_EXPIRES_IN` | durée d'une session (défaut `2h`) |
+| `BCRYPT_SALT_ROUNDS` | coût du hachage des mots de passe (défaut raisonnable déjà fixé) |
+
+## 3. Les fichiers téléversés
+
+Photos, preuves de terrain, justificatifs et photos de bénéficiaires sont écrits dans
+`backend/uploads`. **Le disque d'un service Railway est effacé à chaque déploiement** : sans
+volume, ces fichiers disparaissent.
+
+Service HOPE → **+ New → Volume**, point de montage :
+
+```
+/app/backend/uploads
+```
+
+(Railway place le dossier racine du service dans `/app` : avec la racine `AppHopePlat`, le
+dossier des fichiers est `/app/backend/uploads`.)
+
+## 4. Premier déploiement
+
+1. Lancer le déploiement (il part tout seul après la configuration, sinon **Deploy**).
+   - construction : `npm run build` installe le backend, le frontend, et construit le frontend ;
+   - avant la mise en ligne : `npm run db:preparer` crée la table administrateur et applique le
+     schéma (sans risque : il est rejouable) ;
+   - démarrage : `npm start`, puis Railway attend que `/api/sante` réponde.
+2. **Une seule fois**, créer le compte administrateur et les catégories de projet. Depuis un
+   poste où la CLI Railway est installée :
+
+   ```bash
+   railway link             # choisir le projet et le service HOPE
+   railway run npm run db:premier-deploiement
+   ```
+
+   (ou, dans l'interface, un déploiement ponctuel avec cette commande.)
+3. **Settings → Networking → Generate Domain** pour obtenir l'adresse publique, puis reporter
+   cette adresse dans `HOPE_SITE_URL` et `CORS_ORIGIN` (et dans le webhook Stripe).
+
+Les données de démonstration (`db:seed-demo`, `db:seed-espace`…) ne sont **pas** jouées en
+production.
+
+## 5. Vérifier
+
+| Contrôle | Attendu |
+|---|---|
+| `https://<adresse>/api/sante` | `{"statut":"ok"}` |
+| `https://<adresse>/` | la page de connexion |
+| `https://<adresse>/admin/login` | connexion avec `ADMIN_LOG` / `ADMIN_PASSWORD` |
+| inscription d'un donateur | la case de consentement est exigée, le compte s'ouvre |
+| « Mot de passe oublié ? » | un courriel arrive (si SMTP est configuré) |
+| une photo téléversée, puis un redéploiement | la photo est toujours là (volume monté) |
+
+## 6. Ensuite
+
+- **Chaque envoi sur la branche suivie redéploie** : la migration passe avant la mise en ligne,
+  et Railway garde l'ancienne version tant que la nouvelle ne répond pas sur `/api/sante`.
+- **L'intégration continue** (GitHub Actions, `.github/workflows/ci.yml` à la racine du dépôt)
+  relit le code, applique le schéma sur une base neuve, lance les tests et construit le
+  frontend à chaque envoi : ne fusionner sur `main` qu'avec une coche verte.
+- **Sauvegardes** : l'offre PostgreSQL de Railway propose des sauvegardes ; les activer, et
+  faire de temps en temps un `pg_dump` conservé ailleurs.
+- **Nom de domaine** : **Settings → Networking → Custom Domain**, puis mettre à jour
+  `HOPE_SITE_URL`, `CORS_ORIGIN` et le webhook Stripe.
+- **Textes légaux** : la politique de confidentialité et les conditions d'utilisation
+  (`frontend/src/pages/Legal.jsx`) sont une base de travail ; les faire relire par le bureau de
+  l'association avant l'ouverture au public. Si elles changent, changer aussi
+  `VERSION_CONDITIONS` dans `backend/src/shared/conditions.js` et dans `Legal.jsx`.
