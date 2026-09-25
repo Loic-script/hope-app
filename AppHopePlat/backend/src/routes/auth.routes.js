@@ -27,6 +27,19 @@ router.post(
   auth.inscription
 );
 
+// Le mot de passe oublie : demander un lien, puis le nouveau mot de passe.
+// Limites serrees : la demande envoie un courriel, la seconde essaie un jeton.
+router.post(
+  '/auth/mot-de-passe-oublie',
+  limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 5 }),
+  auth.motDePasseOublie
+);
+router.post(
+  '/auth/reinitialiser-mot-de-passe',
+  limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }),
+  auth.reinitialiserMotDePasse
+);
+
 router.post(
   '/auth/login',
   limiterTentatives({ fenetreMs: 60_000, maximum: 10 }),

@@ -175,6 +175,19 @@ export const config = {
    */
   siteUrl: optionnel('HOPE_SITE_URL', 'http://localhost:5173'),
 
+  /*
+   * L'envoi des courriels (mot de passe oublie...). Vide : en
+   * developpement, le courriel s'ecrit dans le journal du serveur.
+   */
+  smtp: {
+    host: optionnel('SMTP_HOST', ''),
+    port: Number.parseInt(optionnel('SMTP_PORT', '587'), 10),
+    secure: optionnel('SMTP_SECURE', 'false') === 'true',
+    user: optionnel('SMTP_USER', ''),
+    password: optionnel('SMTP_PASSWORD', ''),
+    from: optionnel('SMTP_FROM', 'HOPE <no-reply@hope.mg>'),
+  },
+
   admin: {
     log: optionnel('ADMIN_LOG', 'AdminHope'),
     password: optionnel('ADMIN_PASSWORD', ''),

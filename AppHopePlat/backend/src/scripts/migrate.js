@@ -50,7 +50,7 @@ const TABLES_ATTENDUES = {
     'field_proof_files',
     'activity_log',
   ],
-  'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role'],
+  'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role', 'reinitialisation_mot_de_passe'],
   'Espace benevole': [
     'benevole',
     'mission',

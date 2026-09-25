@@ -5,6 +5,7 @@
  * metier ici.
  */
 import * as authService from '../services/auth.service.js';
+import * as motDePasseService from '../services/motDePasse.service.js';
 import { LIBELLES_TYPE, TYPES_UTILISATEUR } from '../shared/audiences.js';
 
 /**
@@ -80,6 +81,24 @@ export async function login(req, res, next) {
       profilComplete: resultat.profilComplete,
       completionRequise: resultat.completionRequise,
     });
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** POST /api/auth/mot-de-passe-oublie : toujours la meme reponse. */
+export async function motDePasseOublie(req, res, next) {
+  try {
+    res.status(200).json(await motDePasseService.demander(req.body));
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** POST /api/auth/reinitialiser-mot-de-passe : le jeton du lien, et le nouveau mot de passe. */
+export async function reinitialiserMotDePasse(req, res, next) {
+  try {
+    res.status(200).json(await motDePasseService.reinitialiser(req.body));
   } catch (erreur) {
     next(erreur);
   }

@@ -943,3 +943,19 @@
     display: none;
   }
 }
+
+/* ------------------------------------------------------------
+   Mot de passe oublie : la confirmation d'envoi
+   ------------------------------------------------------------ */
+.mot-de-passe__envoye {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mot-de-passe__aide {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #6b6880;
+}

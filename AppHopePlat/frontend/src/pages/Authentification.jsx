@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import HopeLogo from '../components/HopeLogo.jsx';
 import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
@@ -348,6 +348,9 @@ function Connexion({ navigate, types }) {
           <span className="case-a-cocher__repere" />
           Se souvenir de moi
         </label>
+        <Link className="formulaire__lien" to="/mot-de-passe-oublie">
+          Mot de passe oublié ?
+        </Link>
       </div>
 
       {erreur && (

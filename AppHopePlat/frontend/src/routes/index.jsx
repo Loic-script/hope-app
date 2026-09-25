@@ -18,6 +18,7 @@ import ProofDetailPage from '../pages/admin/ProofDetailPage.jsx';
 import ProofsPage from '../pages/admin/ProofsPage.jsx';
 import Redirection from '../pages/Redirection.jsx';
 import Authentification from '../pages/Authentification.jsx';
+import { MotDePasseOublie, ReinitialiserMotDePasse } from '../pages/MotDePasse.jsx';
 import DonateurLayout from '../layouts/DonateurLayout.jsx';
 import ActualitesDonateur from '../pages/donateur/Actualites.jsx';
 import FaireUnDon from '../pages/donateur/FaireUnDon.jsx';
@@ -150,6 +151,9 @@ export default function AppRoutes() {
 
       {/* ----- Porte unique des utilisateurs ----- */}
       <Route path="/authentification" element={<Authentification />} />
+      {/* Le mot de passe oublie : demander un lien, puis en choisir un nouveau. */}
+      <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+      <Route path="/reinitialiser-mot-de-passe" element={<ReinitialiserMotDePasse />} />
 
       {/* ----- Espace donateur ----- */}
       <Route element={<RequireDonateur />}>

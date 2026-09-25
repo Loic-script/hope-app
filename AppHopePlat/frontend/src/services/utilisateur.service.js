@@ -45,6 +45,21 @@ export const COMPLETION_PAR_TYPE = {
   donateur: '/donateur/completer-profil',
 };
 
+/**
+ * POST /api/auth/mot-de-passe-oublie : un lien par courriel. La reponse
+ * est la meme que le compte existe ou non.
+ */
+export async function demanderReinitialisation(email) {
+  const { data } = await apiAuth.post('/auth/mot-de-passe-oublie', { email });
+  return data.message;
+}
+
+/** POST /api/auth/reinitialiser-mot-de-passe : le jeton du lien, et le nouveau mot de passe. */
+export async function reinitialiserMotDePasse(jeton, motDePasse) {
+  const { data } = await apiAuth.post('/auth/reinitialiser-mot-de-passe', { jeton, motDePasse });
+  return data.message;
+}
+
 /** GET /api/auth/types — les trois types, pour la liste du formulaire. */
 export async function typesUtilisateur() {
   const { data } = await apiAuth.get('/auth/types');

@@ -1972,3 +1972,22 @@ ALTER TABLE donations ADD CONSTRAINT donations_provider_valide CHECK (
 /* Une session de paiement ne vaut que pour un don. */
 CREATE UNIQUE INDEX IF NOT EXISTS donations_provider_session_unique
   ON donations (provider_session_id) WHERE provider_session_id IS NOT NULL;
+
+/*
+ * Le mot de passe oublie (comptes des espaces).
+ *
+ * Un lien envoye par courriel porte un jeton aleatoire ; la base n'en
+ * garde que l'empreinte SHA-256. Valable une heure, une seule fois : un
+ * nouveau lien, ou un mot de passe change, consomme les autres.
+ */
+CREATE TABLE IF NOT EXISTS reinitialisation_mot_de_passe (
+  id               BIGSERIAL    PRIMARY KEY,
+  utilisateur_id   UUID         NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  jeton_empreinte  CHAR(64)     NOT NULL UNIQUE,
+  expire_le        TIMESTAMPTZ  NOT NULL,
+  utilise_le       TIMESTAMPTZ,
+  cree_le          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS reinitialisation_utilisateur_idx
+  ON reinitialisation_mot_de_passe (utilisateur_id) WHERE utilise_le IS NULL;
