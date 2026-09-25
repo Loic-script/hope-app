@@ -62,6 +62,20 @@ export function gestionnaireErreurs(erreur, req, res, _next) {
     });
   }
 
+  /*
+   * Une erreur HTTP deja qualifiee par Express ou un intergiciel -- un
+   * fichier absent de /assets ou /media (404), un corps trop gros (413).
+   * Ce n'est pas une panne du serveur : on rend son statut, sans detail.
+   */
+  const statut = Number(erreur.status ?? erreur.statusCode);
+  if (statut >= 400 && statut < 500) {
+    return res.status(statut).json({
+      success: false,
+      code: statut === 404 ? 'FICHIER_INTROUVABLE' : 'REQUETE_INVALIDE',
+      message: statut === 404 ? 'Ressource introuvable.' : 'Requête refusée.',
+    });
+  }
+
   console.error(`[HOPE] Erreur non geree sur ${req.method} ${req.originalUrl} :`, erreur);
 
   return res.status(500).json({

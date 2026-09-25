@@ -98,13 +98,20 @@ async function creerBaseSiNecessaire() {
 
 /** Cree la table admins et son declencheur. */
 async function creerSchema() {
-  const client = new Client({
-    host: config.database.host,
-    port: config.database.port,
-    user: config.database.user,
-    password: config.database.password,
-    database: config.database.name,
-  });
+  const client = new Client(
+    config.database.url
+      ? {
+          connectionString: config.database.url,
+          ssl: config.database.ssl ? { rejectUnauthorized: false } : undefined,
+        }
+      : {
+          host: config.database.host,
+          port: config.database.port,
+          user: config.database.user,
+          password: config.database.password,
+          database: config.database.name,
+        }
+  );
 
   await client.connect();
   try {
@@ -120,11 +127,16 @@ async function creerSchema() {
 
 async function executer() {
   console.log('[HOPE] Initialisation de la base de donnees...');
-  console.log(
-    `[HOPE] Cible : ${config.database.user}@${config.database.host}:${config.database.port}/${config.database.name}`
-  );
-
-  await creerBaseSiNecessaire();
+  // Une adresse complete (DATABASE_URL) designe une base deja creee par
+  // l'hebergeur : il n'y a qu'a y poser le schema.
+  if (config.database.url) {
+    console.log('[HOPE] Cible : la base de DATABASE_URL (fournie par l hebergeur).');
+  } else {
+    console.log(
+      `[HOPE] Cible : ${config.database.user}@${config.database.host}:${config.database.port}/${config.database.name}`
+    );
+    await creerBaseSiNecessaire();
+  }
   await creerSchema();
 
   console.log('[HOPE] Initialisation terminee.');

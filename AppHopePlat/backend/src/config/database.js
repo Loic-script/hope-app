@@ -22,12 +22,24 @@ const { Pool } = pg;
  */
 pg.types.setTypeParser(1082, (valeur) => valeur);
 
+/*
+ * L'adresse complete (DATABASE_URL) si elle est donnee, sinon ses
+ * morceaux. Le chiffrement, s'il est demande, accepte le certificat de
+ * l'hebergeur (souvent auto-signe).
+ */
+const connexion = config.database.url
+  ? { connectionString: config.database.url }
+  : {
+      host: config.database.host,
+      port: config.database.port,
+      database: config.database.name,
+      user: config.database.user,
+      password: config.database.password,
+    };
+
 export const pool = new Pool({
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.name,
-  user: config.database.user,
-  password: config.database.password,
+  ...connexion,
+  ssl: config.database.ssl ? { rejectUnauthorized: false } : undefined,
   max: 10,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,

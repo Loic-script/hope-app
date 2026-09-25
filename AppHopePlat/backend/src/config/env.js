@@ -36,21 +36,62 @@ function optionnel(nom, defaut) {
   return valeur === undefined || valeur === '' ? defaut : valeur;
 }
 
+const enProduction = optionnel('NODE_ENV', 'development') === 'production';
+
+/*
+ * La base : une adresse complete (DATABASE_URL, celle que fournit un
+ * hebergeur comme Railway), ou ses morceaux (DB_HOST, DB_NAME...). L'une
+ * ou les autres ; l'adresse l'emporte si les deux sont la.
+ */
+const adresseBase = optionnel('DATABASE_URL', '');
+
+function morceauBase(nom) {
+  return adresseBase ? optionnel(nom, '') : requis(nom);
+}
+
+/*
+ * Le secret JWT signe toutes les sessions. En production, un secret
+ * court ou reste a sa valeur d'exemple se devine : on refuse de demarrer.
+ */
+function secretJwt() {
+  const secret = requis('JWT_SECRET');
+  if (enProduction && (secret.length < 32 || /change|exemple|secret/i.test(secret))) {
+    console.error(
+      '[HOPE] JWT_SECRET trop faible pour la production : 32 caracteres aleatoires au moins.\n' +
+        "       node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\""
+    );
+    process.exit(1);
+  }
+  return secret;
+}
+
 export const config = {
   env: optionnel('NODE_ENV', 'development'),
+  enProduction,
   port: Number.parseInt(optionnel('PORT', '3000'), 10),
   corsOrigin: optionnel('CORS_ORIGIN', 'http://localhost:5173'),
 
   database: {
-    host: requis('DB_HOST'),
+    url: adresseBase,
+    host: morceauBase('DB_HOST'),
     port: Number.parseInt(optionnel('DB_PORT', '5432'), 10),
-    name: requis('DB_NAME'),
-    user: requis('DB_USER'),
-    password: requis('DB_PASSWORD'),
+    name: morceauBase('DB_NAME'),
+    user: morceauBase('DB_USER'),
+    password: morceauBase('DB_PASSWORD'),
+    // Une base jointe par Internet (et non par le reseau prive de
+    // l'hebergeur) exige souvent le chiffrement : DB_SSL=true.
+    ssl: optionnel('DB_SSL', 'false') === 'true',
   },
 
+  /*
+   * Le frontend construit (frontend/dist), servi par ce meme serveur : un
+   * seul service a heberger, une seule adresse, pas de CORS entre les
+   * deux. Actif si le dossier existe ; SERVIR_FRONTEND=false le coupe.
+   */
+  servirFrontend: optionnel('SERVIR_FRONTEND', 'true') !== 'false',
+
   jwt: {
-    secret: requis('JWT_SECRET'),
+    secret: secretJwt(),
     expiresIn: optionnel('JWT_EXPIRES_IN', '2h'),
   },
 

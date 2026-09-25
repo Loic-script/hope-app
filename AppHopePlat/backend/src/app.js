@@ -4,21 +4,76 @@
  * Separee de server.js pour pouvoir etre montee dans des tests sans ouvrir
  * de port.
  */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 
 import { config } from './config/env.js';
+import { query } from './config/database.js';
 import apiRoutes from './routes/index.js';
 import { gestionnaireErreurs, routeIntrouvable } from './middleware/error.middleware.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from './middleware/upload.middleware.js';
 
+/** frontend/dist : le frontend construit par "npm run build". */
+const DOSSIER_FRONTEND = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'frontend',
+  'dist'
+);
+
+/**
+ * Les en-tetes de securite, sur toutes les reponses.
+ *
+ * - nosniff : le navigateur ne devine pas un type de fichier ;
+ * - frame-ancestors / X-Frame-Options : la plateforme ne s'affiche pas
+ *   dans le cadre d'un autre site (vol de clics) ;
+ * - Referrer-Policy : l'adresse des pages ne fuit pas vers les liens
+ *   sortants ;
+ * - Permissions-Policy : ni camera, ni micro, ni geolocalisation ;
+ * - HSTS, en production : HTTPS seulement, pendant un an.
+ *
+ * Pas de politique de contenu stricte (script-src...) : Stripe et les
+ * polices Google en demanderaient une liste a tenir a jour ; la regle
+ * frame-ancestors, elle, est sans risque.
+ */
+function enTetesDeSecurite(req, res, suite) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  if (config.enProduction) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  suite();
+}
+
 export function creerApplication() {
   const app = express();
 
-  // req.ip correct derriere un eventuel proxy local.
+  // req.ip correct derriere le proxy de l'hebergeur (ou un proxy local).
   app.set('trust proxy', 1);
   // Ne pas annoncer la technologie utilisee.
   app.disable('x-powered-by');
+  app.use(enTetesDeSecurite);
+
+  /*
+   * La sante du service : l'hebergeur l'interroge pour savoir si le
+   * serveur repond et si la base suit. Aucune donnee, aucun secret.
+   */
+  app.get('/api/sante', async (_req, res) => {
+    try {
+      await query('SELECT 1');
+      res.json({ statut: 'ok' });
+    } catch {
+      res.status(503).json({ statut: 'base indisponible' });
+    }
+  });
 
   // CORS : seul le frontend Vite est autorise a appeler l'API.
   app.use(
@@ -75,6 +130,32 @@ export function creerApplication() {
   );
 
   app.use('/api', apiRoutes);
+
+  /*
+   * Le frontend construit, s'il est la. Les fichiers d'assets portent une
+   * empreinte dans leur nom : ils se gardent un an. index.html, lui, ne se
+   * garde pas -- c'est lui qui pointe vers la derniere version.
+   *
+   * Toute autre adresse (hors /api et /media) renvoie index.html : c'est
+   * le routeur de React qui la lit (/donateur/mes-dons, /admin/...).
+   */
+  const index = path.join(DOSSIER_FRONTEND, 'index.html');
+  if (config.servirFrontend && fs.existsSync(index)) {
+    app.use(
+      '/assets',
+      express.static(path.join(DOSSIER_FRONTEND, 'assets'), {
+        immutable: true,
+        maxAge: '365d',
+        fallthrough: false,
+      })
+    );
+    app.use(express.static(DOSSIER_FRONTEND, { index: false, maxAge: '1h' }));
+    app.get(/^\/(?!api\/|api$|media\/).*/, (req, res, suite) => {
+      if (!req.accepts('html')) return suite();
+      res.setHeader('Cache-Control', 'no-cache');
+      return res.sendFile(index);
+    });
+  }
 
   app.use(routeIntrouvable);
   app.use(gestionnaireErreurs);
