@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
@@ -12,6 +12,7 @@ import {
 import { apiBenevole } from '../services/apiBenevole.js';
 import * as benevoleService from '../services/benevole.service.js';
 import * as espaceService from '../services/espace.service.js';
+import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
@@ -122,19 +123,22 @@ export default function BenevoleLayout() {
       compteurs={compteurs}
       notifications={{ to: '/benevole/notifications', cle: 'notifications' }}
     >
-      <Outlet
-        context={{
-          benevole,
-          api: apiBenevole,
-          rafraichirCompteurs,
-          racineConversations: '/espace',
-          // Le chemin de la messagerie dans CET espace : l'ecran est
-          // partage par les trois, et c'est lui qui construit le lien
-          // vers une conversation.
-          cheminMessages: '/benevole/messages',
-          titreMessagerie: 'Messages',
-        }}
-      />
+      {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
+      <Suspense fallback={<ChargementPage />}>
+        <Outlet
+          context={{
+            benevole,
+            api: apiBenevole,
+            rafraichirCompteurs,
+            racineConversations: '/espace',
+            // Le chemin de la messagerie dans CET espace : l'ecran est
+            // partage par les trois, et c'est lui qui construit le lien
+            // vers une conversation.
+            cheminMessages: '/benevole/messages',
+            titreMessagerie: 'Messages',
+          }}
+        />
+      </Suspense>
     </CoqueEspace>
   );
 }

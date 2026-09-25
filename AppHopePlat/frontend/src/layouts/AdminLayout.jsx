@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import { IconeParametres } from '../components/admin/AdminIcons.jsx';
@@ -17,6 +17,7 @@ import {
 } from '../components/IconesPleines.jsx';
 import { api } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
+import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
@@ -187,23 +188,26 @@ export default function AdminLayout() {
       notifications={{ to: '/admin/notifications', cle: 'notifications' }}
       entreesProfil={ENTREES_PROFIL}
     >
-      <Outlet
-        context={{
-          admin,
-          // Les parametres s'en servent apres un changement de photo.
-          rafraichirAdmin: rafraichir,
-          rafraichirCompteurs,
-          // La messagerie commune est le meme ecran dans les trois
-          // espaces : elle prend son client et sa racine du contexte.
-          api,
-          racineConversations: '/admin',
-          // Le chemin de la messagerie dans CET espace : l'ecran est
-          // partage par les trois, et c'est lui qui construit le lien
-          // vers une conversation.
-          cheminMessages: '/admin/conversations',
-          titreMessagerie: 'Messages',
-        }}
-      />
+      {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
+      <Suspense fallback={<ChargementPage />}>
+        <Outlet
+          context={{
+            admin,
+            // Les parametres s'en servent apres un changement de photo.
+            rafraichirAdmin: rafraichir,
+            rafraichirCompteurs,
+            // La messagerie commune est le meme ecran dans les trois
+            // espaces : elle prend son client et sa racine du contexte.
+            api,
+            racineConversations: '/admin',
+            // Le chemin de la messagerie dans CET espace : l'ecran est
+            // partage par les trois, et c'est lui qui construit le lien
+            // vers une conversation.
+            cheminMessages: '/admin/conversations',
+            titreMessagerie: 'Messages',
+          }}
+        />
+      </Suspense>
     </CoqueEspace>
   );
 }

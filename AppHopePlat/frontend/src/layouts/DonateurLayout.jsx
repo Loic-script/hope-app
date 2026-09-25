@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import {
@@ -12,6 +12,7 @@ import {
 import { apiDonateur } from '../services/apiDonateur.js';
 import * as espaceService from '../services/espace.service.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
+import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
 
 /**
@@ -99,20 +100,23 @@ export default function DonateurLayout() {
       compteurs={compteurs}
       notifications={{ to: '/donateur/notifications', cle: 'notifications' }}
     >
-      <Outlet
-        context={{
-          donateur,
-          rafraichirDonateur: rafraichir,
-          api: apiDonateur,
-          rafraichirCompteurs,
-          racineConversations: '/espace',
-          // Le chemin de la messagerie dans CET espace : l'ecran est
-          // partage, et c'est lui qui construit le lien vers une
-          // conversation.
-          cheminMessages: '/donateur/messages',
-          titreMessagerie: 'Messages',
-        }}
-      />
+      {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
+      <Suspense fallback={<ChargementPage />}>
+        <Outlet
+          context={{
+            donateur,
+            rafraichirDonateur: rafraichir,
+            api: apiDonateur,
+            rafraichirCompteurs,
+            racineConversations: '/espace',
+            // Le chemin de la messagerie dans CET espace : l'ecran est
+            // partage, et c'est lui qui construit le lien vers une
+            // conversation.
+            cheminMessages: '/donateur/messages',
+            titreMessagerie: 'Messages',
+          }}
+        />
+      </Suspense>
     </CoqueEspace>
   );
 }

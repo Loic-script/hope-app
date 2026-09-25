@@ -2,30 +2,9 @@ import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import AdminLayout from '../layouts/AdminLayout.jsx';
-import AdminLogin from '../pages/AdminLogin.jsx';
-import AdminLoginSuccess from '../pages/AdminLoginSuccess.jsx';
-import AdminHome from '../pages/admin/AdminHome.jsx';
-import BeneficiariesPage from '../pages/admin/BeneficiariesPage.jsx';
-import BudgetPage from '../pages/admin/BudgetPage.jsx';
-import DonsPage from '../pages/admin/DonsPage.jsx';
-import ImpactPage from '../pages/admin/ImpactPage.jsx';
-import NotificationsPage from '../pages/admin/NotificationsPage.jsx';
-import ProjectDetailPage from '../pages/admin/ProjectDetailPage.jsx';
-import ProjectFormPage from '../pages/admin/ProjectFormPage.jsx';
-import ProjectsPage from '../pages/admin/ProjectsPage.jsx';
-import TachesPage from '../pages/admin/TachesPage.jsx';
-import ProofDetailPage from '../pages/admin/ProofDetailPage.jsx';
-import ProofsPage from '../pages/admin/ProofsPage.jsx';
 import Redirection from '../pages/Redirection.jsx';
 import Authentification from '../pages/Authentification.jsx';
-import { MotDePasseOublie, ReinitialiserMotDePasse } from '../pages/MotDePasse.jsx';
 import DonateurLayout from '../layouts/DonateurLayout.jsx';
-import ActualitesDonateur from '../pages/donateur/Actualites.jsx';
-import FaireUnDon from '../pages/donateur/FaireUnDon.jsx';
-import MesDons from '../pages/donateur/MesDons.jsx';
-import ProfilDonateur from '../pages/donateur/Profil.jsx';
-import ProjetDonateur from '../pages/donateur/ProjetDetail.jsx';
-import ProjetsDonateur from '../pages/donateur/Projets.jsx';
 
 /*
  * Le parcours d'accueil du donateur se charge a part : il embarque la
@@ -36,33 +15,64 @@ const ParcoursDonateur = lazy(() => import('../pages/donateur/Parcours.jsx'));
 // Le paiement MVola, ouvert depuis l'etape 4 du parcours.
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
-import ConversationsEspace from '../pages/espace/Conversations.jsx';
-import NotificationsEspace from '../pages/espace/NotificationsEspace.jsx';
-import MesTaches from '../pages/benevole/MesTaches.jsx';
-import ProjetDetail from '../pages/benevole/ProjetDetail.jsx';
-import FaireUnDonBenevole from '../pages/benevole/FaireUnDon.jsx';
-import ProjetsBenevole from '../pages/benevole/Projets.jsx';
-import MonJournal from '../pages/benevole/MonJournal.jsx';
-import CompleterProfil from '../pages/benevole/CompleterProfil.jsx';
-import MonProfil from '../pages/benevole/MonProfil.jsx';
-import VueDensemble from '../pages/benevole/VueDensemble.jsx';
 import RequireBenevole from './RequireBenevole.jsx';
 import BailleurLayout from '../layouts/BailleurLayout.jsx';
-import OrganisationBailleur from '../pages/bailleur/Organisation.jsx';
-import PartenariatBailleur from '../pages/bailleur/Partenariat.jsx';
-import ProjetsBailleur from '../pages/bailleur/Projets.jsx';
-import ProjetBailleur from '../pages/bailleur/ProjetDetail.jsx';
-import FaireUnDonBailleur from '../pages/bailleur/FaireUnDon.jsx';
-import RapportsBailleur from '../pages/bailleur/Rapports.jsx';
-import AccueilBailleur from '../pages/bailleur/Accueil.jsx';
 import RequireBailleur from './RequireBailleur.jsx';
-import SettingsPage from '../pages/admin/SettingsPage.jsx';
-import ProfilUtilisateurPage from '../pages/admin/ProfilUtilisateurPage.jsx';
-import UtilisateursPage from '../pages/admin/UtilisateursPage.jsx';
-import StatisticsPage from '../pages/admin/StatisticsPage.jsx';
-import PublicationsPage from '../pages/admin/PublicationsPage.jsx';
 import RequireAuth from './RequireAuth.jsx';
 import ContextePaiement from '../components/paiement/ContextePaiement.jsx';
+import ChargementPage from '../components/ChargementPage.jsx';
+
+/*
+ * Les pages se chargent a la demande : un donateur ne telecharge pas
+ * l'espace administrateur, ni un benevole celui du bailleur. Seules la
+ * porte d'entree (Authentification) et la redirection partent d'emblee.
+ */
+const AdminLogin = lazy(() => import('../pages/AdminLogin.jsx'));
+const AdminLoginSuccess = lazy(() => import('../pages/AdminLoginSuccess.jsx'));
+const AdminHome = lazy(() => import('../pages/admin/AdminHome.jsx'));
+const BeneficiariesPage = lazy(() => import('../pages/admin/BeneficiariesPage.jsx'));
+const BudgetPage = lazy(() => import('../pages/admin/BudgetPage.jsx'));
+const DonsPage = lazy(() => import('../pages/admin/DonsPage.jsx'));
+const ImpactPage = lazy(() => import('../pages/admin/ImpactPage.jsx'));
+const NotificationsPage = lazy(() => import('../pages/admin/NotificationsPage.jsx'));
+const ProjectDetailPage = lazy(() => import('../pages/admin/ProjectDetailPage.jsx'));
+const ProjectFormPage = lazy(() => import('../pages/admin/ProjectFormPage.jsx'));
+const ProjectsPage = lazy(() => import('../pages/admin/ProjectsPage.jsx'));
+const TachesPage = lazy(() => import('../pages/admin/TachesPage.jsx'));
+const ProofDetailPage = lazy(() => import('../pages/admin/ProofDetailPage.jsx'));
+const ProofsPage = lazy(() => import('../pages/admin/ProofsPage.jsx'));
+const ActualitesDonateur = lazy(() => import('../pages/donateur/Actualites.jsx'));
+const FaireUnDon = lazy(() => import('../pages/donateur/FaireUnDon.jsx'));
+const MesDons = lazy(() => import('../pages/donateur/MesDons.jsx'));
+const ProfilDonateur = lazy(() => import('../pages/donateur/Profil.jsx'));
+const ProjetDonateur = lazy(() => import('../pages/donateur/ProjetDetail.jsx'));
+const ProjetsDonateur = lazy(() => import('../pages/donateur/Projets.jsx'));
+const ConversationsEspace = lazy(() => import('../pages/espace/Conversations.jsx'));
+const NotificationsEspace = lazy(() => import('../pages/espace/NotificationsEspace.jsx'));
+const MesTaches = lazy(() => import('../pages/benevole/MesTaches.jsx'));
+const ProjetDetail = lazy(() => import('../pages/benevole/ProjetDetail.jsx'));
+const FaireUnDonBenevole = lazy(() => import('../pages/benevole/FaireUnDon.jsx'));
+const ProjetsBenevole = lazy(() => import('../pages/benevole/Projets.jsx'));
+const MonJournal = lazy(() => import('../pages/benevole/MonJournal.jsx'));
+const CompleterProfil = lazy(() => import('../pages/benevole/CompleterProfil.jsx'));
+const MonProfil = lazy(() => import('../pages/benevole/MonProfil.jsx'));
+const VueDensemble = lazy(() => import('../pages/benevole/VueDensemble.jsx'));
+const OrganisationBailleur = lazy(() => import('../pages/bailleur/Organisation.jsx'));
+const PartenariatBailleur = lazy(() => import('../pages/bailleur/Partenariat.jsx'));
+const ProjetsBailleur = lazy(() => import('../pages/bailleur/Projets.jsx'));
+const ProjetBailleur = lazy(() => import('../pages/bailleur/ProjetDetail.jsx'));
+const FaireUnDonBailleur = lazy(() => import('../pages/bailleur/FaireUnDon.jsx'));
+const RapportsBailleur = lazy(() => import('../pages/bailleur/Rapports.jsx'));
+const AccueilBailleur = lazy(() => import('../pages/bailleur/Accueil.jsx'));
+const SettingsPage = lazy(() => import('../pages/admin/SettingsPage.jsx'));
+const ProfilUtilisateurPage = lazy(() => import('../pages/admin/ProfilUtilisateurPage.jsx'));
+const UtilisateursPage = lazy(() => import('../pages/admin/UtilisateursPage.jsx'));
+const StatisticsPage = lazy(() => import('../pages/admin/StatisticsPage.jsx'));
+const PublicationsPage = lazy(() => import('../pages/admin/PublicationsPage.jsx'));
+const MotDePasseOublie = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.MotDePasseOublie })));
+const ReinitialiserMotDePasse = lazy(() =>
+  import('../pages/MotDePasse.jsx').then((m) => ({ default: m.ReinitialiserMotDePasse }))
+);
 
 /*
  * Les pages de paiement, une par moyen. Chacune se charge a part : on
@@ -145,6 +155,7 @@ function VersUtilisateurs({ onglet }) {
 
 export default function AppRoutes() {
   return (
+    <Suspense fallback={<ChargementPage />}>
     <Routes>
       <Route path="/" element={<Redirection />} />
       <Route path="/admin/login" element={<AdminLogin />} />
@@ -327,5 +338,6 @@ export default function AppRoutes() {
 
       <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
+    </Suspense>
   );
 }

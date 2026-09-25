@@ -46,32 +46,38 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
 
   // L'annuaire se charge a l'ouverture : les contacts s'affichent sous
   // les conversations, sans qu'il faille chercher.
+  //
+  // Il se relit quand une conversation s'ajoute (on vient d'ecrire a un
+  // contact : il passe dans les conversations). La liste affichee n'est
+  // jamais videe pendant ce temps : la nouvelle la remplace a son arrivee.
+  // Un echec (reseau coupe, serveur qui redemarre) est retente trois fois,
+  // a intervalles croissants.
+  const [version, setVersion] = useState(0);
+  const [essai, setEssai] = useState(0);
   useEffect(() => {
-    if (joignables !== null) return undefined;
     let annule = false;
+    let reprise = null;
     chargerJoignables()
       .then((items) => {
         if (!annule) setJoignables(items);
       })
       .catch(() => {
-        if (!annule) setJoignables([]);
+        if (annule) return;
+        if (essai < 3) reprise = setTimeout(() => setEssai((n) => n + 1), 1500 * (essai + 1));
+        else setJoignables((actuels) => actuels ?? []);
       });
     return () => {
       annule = true;
+      clearTimeout(reprise);
     };
-  }, [joignables, chargerJoignables]);
+  }, [chargerJoignables, version, essai]);
 
-  // Une conversation de plus (on vient d'ecrire a un contact) : l'annuaire
-  // se relit, et ce contact passe de la liste des contacts a celle des
-  // conversations.
   const nombreFils = fils.length;
-  const premierLu = useRef(true);
+  const nombreConnu = useRef(null);
   useEffect(() => {
-    if (premierLu.current) {
-      premierLu.current = false;
-      return;
-    }
-    setJoignables(null);
+    // Le premier nombre connu n'est pas un ajout.
+    if (nombreConnu.current !== null && nombreConnu.current !== nombreFils) setVersion((v) => v + 1);
+    nombreConnu.current = nombreFils;
   }, [nombreFils]);
 
   const filsFiltres = useMemo(
