@@ -24,7 +24,6 @@ import {
   LigneFiche,
   Onglets,
   Panneau,
-  Progression,
   Tableau,
 } from '../../components/admin/ui.jsx';
 import OngletRapport from '../../components/admin/OngletRapport.jsx';
@@ -35,6 +34,7 @@ import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as documentService from '../../services/document.service.js';
+import * as donationService from '../../services/donation.service.js';
 import * as expenseService from '../../services/expense.service.js';
 import { Carrousel } from '../../components/preuves/MediasPreuve.jsx';
 import * as taskService from '../../services/task.service.js';
@@ -263,10 +263,6 @@ export default function ProjectDetailPage() {
   }
   async function supprimerPreuve() {
     await soumettre(() => fieldProofService.supprimer(modale.cible.id), { onSucces: rechargerTout });
-  }
-  async function ouvrirJustificatif(document) {
-    setErreur('');
-    await soumettre(() => documentService.ouvrir(document));
   }
 
   if (chargement && !donnees) return <Chargement texte="Chargement du projet…" />;

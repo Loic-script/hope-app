@@ -1,0 +1,13 @@
+# Fins de ligne : LF dans le depot, quel que soit le poste (Windows compris).
+* text=auto eol=lf
+
+# Les fichiers binaires ne se convertissent jamais.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

@@ -30,7 +30,7 @@ export function montant(valeur, devise = 'MGA') {
     nombre.toLocaleString('fr-FR', {
       minimumFractionDigits: reglage.decimales,
       maximumFractionDigits: reglage.decimales,
-    }).replace(/ /g, ' ') + reglage.suffixe
+    }).replace(/\u202f/g, '\u00a0') + reglage.suffixe
   );
 }
 
@@ -44,7 +44,7 @@ export function nombre(valeur, decimales = 0) {
       minimumFractionDigits: decimales,
       maximumFractionDigits: decimales,
     })
-    .replace(/ /g, ' ');
+    .replace(/\u202f/g, '\u00a0');
 }
 
 /** Formate un pourcentage : 42.5 -> "42,5 %". */

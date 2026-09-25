@@ -46,7 +46,7 @@ const CONFETTIS = [
 
 /** "25 000", "25000,50" -> 25000.5 ; NaN si ce n'est pas un montant. */
 function lireMontant(texte) {
-  const propre = String(texte ?? '').replace(/[\s  ]/g, '').replace(',', '.');
+  const propre = String(texte ?? '').replace(/[\s\u202f\u00a0]/g, '').replace(',', '.');
   if (!/^\d+(\.\d{1,2})?$/.test(propre)) return Number.NaN;
   return Number(propre);
 }

@@ -367,7 +367,6 @@ export default function ProjectFormPage() {
                   // L'index sert de cle faute de mieux : ces lignes n'ont
                   // pas d'identite tant qu'elles ne sont pas enregistrees,
                   // et elles ne se reordonnent pas.
-                  // eslint-disable-next-line react/no-array-index-key
                   <li className="liste-champs__ligne" key={rang}>
                     <input
                       id={`objective-${rang}`}
@@ -462,7 +461,6 @@ export default function ProjectFormPage() {
                   {formulaire.quoteItems.map((poste, rang) => (
                     // L'index sert de cle faute de mieux : ces lignes n'ont
                     // pas d'identite tant qu'elles ne sont pas enregistrees.
-                    // eslint-disable-next-line react/no-array-index-key
                     <li className="devis__ligne" key={rang}>
                       <select
                         className="devis__categorie"

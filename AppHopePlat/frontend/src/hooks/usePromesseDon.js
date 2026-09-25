@@ -118,7 +118,7 @@ export function usePromesseDon(mode) {
 /** Un montant saisi "25 000" -> 25000 ; "12,50" -> 12.5 ; sinon null. */
 export function montantSaisi(texte) {
   const propre = String(texte ?? '')
-    .replace(/[\s  ]/g, '')
+    .replace(/[\s\u202f\u00a0]/g, '')
     .replace(',', '.');
   if (!/^\d+(\.\d{0,2})?$/.test(propre)) return null;
   const valeur = Number(propre);
@@ -136,5 +136,5 @@ export function montantInitial(montantPrevu, devisePrevue, deviseDeLaPage = 'MGA
   if (!montantPrevu || (devisePrevue && devisePrevue !== deviseDeLaPage)) return '';
   const valeur = Number(montantPrevu);
   if (!(valeur > 0)) return '';
-  return deviseDeLaPage === 'MGA' ? valeur.toLocaleString('fr-FR').replace(/ /g, ' ') : String(valeur);
+  return deviseDeLaPage === 'MGA' ? valeur.toLocaleString('fr-FR').replace(/\u202f/g, ' ') : String(valeur);
 }

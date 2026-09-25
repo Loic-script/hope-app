@@ -110,6 +110,8 @@ export default function PaiementCarte() {
     setDevise(choisie);
     setMontant(montantInitial(montantPrevu, devisePrevue, choisie));
     // Seulement au chargement.
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
   // La carte est-elle acceptee sur cette installation ?

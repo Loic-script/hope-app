@@ -70,6 +70,8 @@ export default function Organisation() {
       siteWeb: bailleur.siteWeb ?? '',
       nif: bailleur.nif ?? '',
     });
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bailleur?.bailleurId, bailleur?.raisonSociale, bailleur?.typeOrganisation]);
 
   function modifier(nom, valeur) {

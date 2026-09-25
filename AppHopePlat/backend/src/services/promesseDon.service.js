@@ -209,7 +209,7 @@ const OPERATEURS_MOBILES = {
  */
 function justificatif(corps, mode) {
   const reference = texteFacultatif(corps.referencePaiement, 'referencePaiement', { max: 40 });
-  if (reference && !/^[A-Za-z0-9][A-Za-z0-9.\-]{3,39}$/.test(reference)) {
+  if (reference && !/^[A-Za-z0-9][A-Za-z0-9.-]{3,39}$/.test(reference)) {
     throw new ErreurValidation('La référence de transaction n’est pas valide.', {
       referencePaiement: 'Lettres, chiffres, points et tirets uniquement',
     });

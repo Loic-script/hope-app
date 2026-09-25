@@ -69,7 +69,7 @@ const APPARENCE = {
  *          notification reste alors affichee, simplement non cliquable.
  */
 function destination(notification) {
-  const { type, projectId, donorAccountId } = notification;
+  const { type, projectId } = notification;
 
   if (type === 'INVESTMENT' && projectId) {
     return `/admin/projects/${projectId}?onglet=financement`;

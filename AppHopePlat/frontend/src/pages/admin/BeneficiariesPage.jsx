@@ -60,7 +60,7 @@ export default function BeneficiariesPage() {
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
 
   const libelles = catalogue?.labels ?? {};
-  const tous = donnees?.items ?? [];
+  const tous = useMemo(() => donnees?.items ?? [], [donnees]);
 
   /*
    * Recherche et filtre s'appliquent ici plutot que cote serveur : la

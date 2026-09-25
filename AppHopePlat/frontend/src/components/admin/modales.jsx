@@ -718,6 +718,8 @@ export function DepenseModale({
           }
         : { ...DEPENSE_VIDE, expenseDate: fmt.aujourdhui() }
     );
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ouverte, depense, setErreur]);
 
   function modifier(champ, valeur) {

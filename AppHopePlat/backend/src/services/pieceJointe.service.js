@@ -110,6 +110,8 @@ function decoderNom(nom) {
 
 /** Un nom d'origine presentable : decode, sans chemin, sans caractere de controle. */
 export function nomPropre(nom, repli = 'fichier') {
+  // Les caracteres de controle sont justement ce qu'on retire.
+  // eslint-disable-next-line no-control-regex
   const base = path.basename(decoderNom(nom)).replace(/[\u0000-\u001f\u007f]/g, '').trim();
   return (base || repli).slice(0, 200);
 }

@@ -9,7 +9,6 @@ import {
   IconeFleche,
   IconeOeil,
   IconeOeilBarre,
-  IconeBouclier,
   IconeUtilisateur,
 } from '../components/HopeIcons.jsx';
 import * as authService from '../services/auth.service.js';

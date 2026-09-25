@@ -81,6 +81,8 @@ export default function PaiementVirement() {
   useEffect(() => {
     if (profil) setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
     // Seulement au chargement.
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
   useEffect(() => {

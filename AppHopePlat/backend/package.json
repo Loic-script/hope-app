@@ -20,7 +20,9 @@
     "db:seed-volunteers": "node src/scripts/seedVolunteerData.js",
     "db:seed-funders": "node src/scripts/seedFunderData.js",
     "db:seed-espace": "node src/scripts/seedEspaceData.js",
-    "db:seed-rapports": "node src/scripts/seedRapportsBailleur.js"
+    "db:seed-rapports": "node src/scripts/seedRapportsBailleur.js",
+    "lint": "eslint .",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
@@ -36,5 +38,10 @@
     "pg": "^8.16.3",
     "sharp": "^0.35.4",
     "stripe": "^22.6.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.12.0"
   }
 }

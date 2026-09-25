@@ -88,6 +88,8 @@ export default function MesTaches() {
     if (vue || !miennes.donnees || !libres.donnees) return;
     setVue(parColonne.cours.length > 0 ? 'cours' : 'prendre');
     // Une fois les deux listes arrivees.
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [miennes.donnees, libres.donnees]);
 
   /**

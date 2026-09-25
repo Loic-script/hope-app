@@ -61,6 +61,8 @@ export default function PaiementInternational() {
     const choisie = ['EUR', 'USD'].includes(devisePrevue) ? devisePrevue : personne.devise === 'USD' ? 'USD' : 'EUR';
     setDevise(choisie);
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue, choisie));
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
   useEffect(() => {

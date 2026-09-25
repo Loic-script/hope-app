@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 import ChoixSurPage, { parLettre } from '../../components/ChoixSurPage.jsx';
 import {
   Champ as ChampParcours,
   commeUneListe,
-  GROUPES_INDICATIF,
   GROUPES_PAYS,
   numeroAffiche,
   numeroInternational,
@@ -15,7 +15,6 @@ import {
 } from '../../components/parcours/champs.jsx';
 import HopeLogo from '../../components/HopeLogo.jsx';
 import {
-  IconeChevronBas,
   IconeCoche,
   IconeCoeur,
   IconeFleche,

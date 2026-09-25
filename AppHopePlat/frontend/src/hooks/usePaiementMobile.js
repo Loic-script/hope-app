@@ -71,6 +71,8 @@ export function usePaiementMobile({ mode, numeroValide, messageNumero, cleCompte
     setNumero((n) => n || (numeroValide.test(national) ? national : ''));
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
     // Seulement au chargement.
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
   // A chaque temps, le titre reprend le focus : un lecteur d'ecran

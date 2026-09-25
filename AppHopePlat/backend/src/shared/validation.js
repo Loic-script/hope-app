@@ -53,8 +53,10 @@ export function valeurParmi(valeur, champ, valeursAutorisees, { defaut } = {}) {
 
 /** Identifiant entier strictement positif. */
 export function identifiantRequis(valeur, champ) {
-  const nombre = Number.parseInt(valeur, 10);
-  if (!Number.isInteger(nombre) || nombre <= 0) {
+  // Des chiffres, rien d'autre : parseInt seul lirait "12abc" comme 12.
+  const texte = String(valeur ?? '').trim();
+  const nombre = /^\d{1,15}$/.test(texte) ? Number(texte) : Number.NaN;
+  if (!Number.isSafeInteger(nombre) || nombre <= 0) {
     throw new ErreurValidation(`Le champ "${champ}" doit etre un identifiant valide.`, {
       [champ]: 'Identifiant invalide',
     });

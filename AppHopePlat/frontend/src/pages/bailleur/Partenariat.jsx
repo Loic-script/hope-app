@@ -4,7 +4,6 @@ import * as fmt from '../../utils/format.js';
 import {
   ChaineEngagement,
   EntetePage,
-  Panneau,
   Pastille,
   STATUTS_ENGAGEMENT,
   STATUTS_VERSEMENT,

@@ -66,6 +66,8 @@ export default function PaiementEspeces() {
     setLieu((courant) => courant || (bureau?.disponible ? 'bureau' : 'domicile'));
     setAdresse((a) => a || [personne.adresse, personne.ville].filter(Boolean).join(', '));
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil, bureau]);
 
   useEffect(() => {

@@ -41,7 +41,7 @@ function instant(decalage) {
 
 /** "9 000 000 Ar" -- espaces simples : l'espace fine n'existe pas en WinAnsi. */
 function ariary(montant) {
-  return `${Number(montant).toLocaleString('fr-FR').replace(/[  ]/g, ' ')} Ar`;
+  return `${Number(montant).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ')} Ar`;
 }
 
 /** "12/05/2026" */

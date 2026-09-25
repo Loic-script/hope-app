@@ -112,6 +112,8 @@ export default function PaiementPlateforme() {
     const preferee = devisePrevue || personne.devise;
     if (['EUR', 'USD', 'MGA'].includes(preferee)) setDevise(preferee);
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue, preferee));
+  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
   useEffect(() => {

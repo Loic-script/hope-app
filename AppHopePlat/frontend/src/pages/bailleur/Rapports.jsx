@@ -32,7 +32,7 @@ export default function Rapports() {
   const [onglet, setOnglet] = useState('rapport_impact');
   const projets = useChargement(() => service.projets(), []);
   const [rapportDe, setRapportDe] = useState(null);
-  const { donnees, chargement, erreur, recharger } = useChargement(
+  const { donnees, chargement, recharger } = useChargement(
     () => service.documents(onglet === 'tous' ? {} : { type: onglet }),
     [onglet]
   );

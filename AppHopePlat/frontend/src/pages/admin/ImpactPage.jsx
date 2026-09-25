@@ -7,7 +7,6 @@ import { ImpactModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
   Badge,
-  Chargement,
   EntetePage,
   EtatVide,
   Onglets,

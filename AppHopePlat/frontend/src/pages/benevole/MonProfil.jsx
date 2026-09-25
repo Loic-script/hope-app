@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import { PhotoAgrandissable } from '../../components/VisionneuseImage.jsx';
 import ChampPhotoProfil from '../../components/ChampPhotoProfil.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
-import { messageErreur, urlMedia } from '../../services/api.js';
+import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 

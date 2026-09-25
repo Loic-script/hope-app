@@ -412,7 +412,7 @@ export async function affecter(id, corps = {}, admin = null) {
 }
 
 /** Retire un benevole de l'equipe. Le dernier parti, la tache redevient a faire. */
-export async function retirer(id, benevoleId, admin = null) {
+export async function retirer(id, benevoleId, _admin = null) {
   const benevole = uuid(benevoleId, 'Le bénévole');
   return transaction(async (client) => {
     const tache = await verrouiller(id, client);
