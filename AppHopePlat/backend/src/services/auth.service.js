@@ -33,6 +33,7 @@ import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { garantirOrganisation } from './funderAuth.service.js';
 import { signalerNouveauCompte } from './notification.service.js';
 import { signerJetonCompletion } from './volunteerAuth.service.js';
+import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
 import {
   AUDIENCE_PAR_TYPE,
   EMETTEUR,
@@ -187,6 +188,7 @@ export async function inscrire(corps = {}) {
   if (confirmation !== motDePasse) {
     details.confirmation = 'Les deux mots de passe ne correspondent pas';
   }
+  verifierConsentement(corps, details);
 
   if (Object.keys(details).length > 0) {
     throw new ErreurValidation('Le formulaire comporte des erreurs.', details);
@@ -199,7 +201,7 @@ export async function inscrire(corps = {}) {
 
   const compte = await inscrireOuRefuser(async (client) => {
     const cree = await volunteerRepository.creer(
-      { nom: '', prenom: '', email, telephone: null, motDePasse: hash },
+      { nom: '', prenom: '', email, telephone: null, motDePasse: hash, conditionsVersion: VERSION_CONDITIONS },
       [type],
       client
     );

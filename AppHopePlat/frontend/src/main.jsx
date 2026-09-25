@@ -42,6 +42,7 @@ import './styles/paiement-international.css';
 import './styles/paiement-plateforme.css';
 import './styles/parcours-benevole.css';
 import './styles/choix-page.css';
+import './styles/legal.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

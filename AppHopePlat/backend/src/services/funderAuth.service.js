@@ -19,6 +19,7 @@ import { config } from '../config/env.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { signalerNouveauCompte } from './notification.service.js';
+import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
 import {
   ErreurAuthentification,
   ErreurValidation,
@@ -135,6 +136,7 @@ export async function inscrire(corps = {}) {
   if (confirmation !== motDePasse) {
     details.confirmation = 'Les deux mots de passe ne correspondent pas';
   }
+  verifierConsentement(corps, details);
 
   if (Object.keys(details).length > 0) {
     throw new ErreurValidation('Le formulaire comporte des erreurs.', details);
@@ -153,7 +155,7 @@ export async function inscrire(corps = {}) {
       // Le compte porte le role bailleur, pas benevole : aucune fiche de
       // terrain n'est creee.
       const compte = await volunteerRepository.creer(
-        { nom, prenom, email, motDePasse: hash },
+        { nom, prenom, email, motDePasse: hash, conditionsVersion: VERSION_CONDITIONS },
         ['bailleur'],
         client
       );

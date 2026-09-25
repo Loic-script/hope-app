@@ -16,6 +16,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
+import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
 
 /** Audience des jetons de cet espace. */
 const AUDIENCE = 'hope-benevole';
@@ -153,6 +154,7 @@ export async function inscrire(corps = {}) {
   if (confirmation !== motDePasse) {
     details.confirmation = 'Les deux mots de passe ne correspondent pas';
   }
+  verifierConsentement(corps, details);
 
   if (Object.keys(details).length > 0) {
     throw new ErreurValidation('Le formulaire comporte des erreurs.', details);
@@ -167,7 +169,7 @@ export async function inscrire(corps = {}) {
   const hash = await bcrypt.hash(motDePasse, config.admin.saltRounds);
 
   const compte = await volunteerRepository.creer(
-    { nom, prenom, email, motDePasse: hash },
+    { nom, prenom, email, motDePasse: hash, conditionsVersion: VERSION_CONDITIONS },
     ['benevole']
   );
 

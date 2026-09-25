@@ -41,8 +41,9 @@ const JOINTURES = `
 export async function creer(donnees, roles = ['benevole'], clientExterne = null) {
   const travail = async (client) => {
     const resultat = await query(
-      `INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, telephone)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, telephone,
+                                conditions_version, conditions_acceptees_le)
+       VALUES ($1, $2, $3, $4, $5, $6::varchar, CASE WHEN $6::varchar IS NULL THEN NULL ELSE NOW() END)
        RETURNING id`,
       [
         donnees.nom,
@@ -50,6 +51,9 @@ export async function creer(donnees, roles = ['benevole'], clientExterne = null)
         donnees.email,
         donnees.motDePasse,
         donnees.telephone ?? null,
+        // La version des conditions acceptees a l'inscription (null pour
+        // un compte cree par un script ou par l'equipe).
+        donnees.conditionsVersion ?? null,
       ],
       client
     );

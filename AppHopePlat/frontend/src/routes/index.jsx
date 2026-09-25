@@ -69,6 +69,12 @@ const ProfilUtilisateurPage = lazy(() => import('../pages/admin/ProfilUtilisateu
 const UtilisateursPage = lazy(() => import('../pages/admin/UtilisateursPage.jsx'));
 const StatisticsPage = lazy(() => import('../pages/admin/StatisticsPage.jsx'));
 const PublicationsPage = lazy(() => import('../pages/admin/PublicationsPage.jsx'));
+const PolitiqueConfidentialite = lazy(() =>
+  import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
+);
+const ConditionsUtilisation = lazy(() =>
+  import('../pages/Legal.jsx').then((m) => ({ default: m.ConditionsUtilisation }))
+);
 const MotDePasseOublie = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.MotDePasseOublie })));
 const ReinitialiserMotDePasse = lazy(() =>
   import('../pages/MotDePasse.jsx').then((m) => ({ default: m.ReinitialiserMotDePasse }))
@@ -165,6 +171,9 @@ export default function AppRoutes() {
       {/* Le mot de passe oublie : demander un lien, puis en choisir un nouveau. */}
       <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
       <Route path="/reinitialiser-mot-de-passe" element={<ReinitialiserMotDePasse />} />
+      {/* Les textes legaux, publics. */}
+      <Route path="/confidentialite" element={<PolitiqueConfidentialite />} />
+      <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
 
       {/* ----- Espace donateur ----- */}
       <Route element={<RequireDonateur />}>

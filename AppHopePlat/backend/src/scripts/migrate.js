@@ -91,6 +91,7 @@ const TABLES_ATTENDUES = {
 const COLONNES_ATTENDUES = [
   ['supporting_documents', 'admin_id'],
   ['utilisateur', 'profil_complete'],
+  ['utilisateur', 'conditions_acceptees_le'],
   ['admins', 'photo_url'],
   ['beneficiaries', 'photo_fichier'],
   ['tache', 'livree_par'],

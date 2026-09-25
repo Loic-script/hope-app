@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
+import LiensLegaux from '../components/LiensLegaux.jsx';
 import HopeLogo from '../components/HopeLogo.jsx';
 import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
 import photoHope from '../assets/hope-couverture.jpg';
@@ -56,6 +57,7 @@ function CadreMotDePasse({ titre, accroche, children }) {
         </div>
         <p className="connexion__signature">Ensemble pour un avenir meilleur</p>
         <span className="trait-hope trait-hope--centre" aria-hidden="true" />
+        <LiensLegaux />
       </section>
     </div>
   );

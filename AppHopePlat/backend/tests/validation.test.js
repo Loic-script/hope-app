@@ -14,6 +14,7 @@ import {
 } from '../src/shared/validation.js';
 import { ErreurValidation } from '../src/shared/errors.js';
 import * as motDePasse from '../src/services/motDePasse.service.js';
+import { verifierConsentement } from '../src/shared/conditions.js';
 
 test('texteRequis nettoie et borne', () => {
   assert.equal(texteRequis('  Antsirabe  ', 'ville'), 'Antsirabe');
@@ -50,4 +51,15 @@ test('mot de passe oublie : une adresse invalide est refusee', async () => {
 test('mot de passe oublie : moins de 8 caracteres, ou un jeton mal forme, sont refuses', async () => {
   await assert.rejects(motDePasse.reinitialiser({ jeton: 'a'.repeat(64), motDePasse: 'court' }), ErreurValidation);
   await assert.rejects(motDePasse.reinitialiser({ jeton: 'zzz', motDePasse: 'assez-long-2026' }), ErreurValidation);
+});
+
+test('inscription : le consentement doit valoir true, rien d approchant', () => {
+  for (const valeur of [undefined, false, 'true', 'oui', 1]) {
+    const details = {};
+    verifierConsentement({ accepteConditions: valeur }, details);
+    assert.ok(details.accepteConditions, String(valeur));
+  }
+  const details = {};
+  verifierConsentement({ accepteConditions: true }, details);
+  assert.deepEqual(details, {});
 });

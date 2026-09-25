@@ -625,6 +625,13 @@ CREATE TABLE IF NOT EXISTS utilisateur_role (
 ALTER TABLE utilisateur
   ADD COLUMN IF NOT EXISTS profil_complete BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- Le consentement a l'inscription : la version des conditions
+-- d'utilisation et de la politique de confidentialite acceptee, et
+-- quand. NULL pour un compte ouvert par l'equipe ou avant ces textes.
+ALTER TABLE utilisateur
+  ADD COLUMN IF NOT EXISTS conditions_version      VARCHAR(20),
+  ADD COLUMN IF NOT EXISTS conditions_acceptees_le TIMESTAMPTZ;
+
 -- La liste des comptes a activer est la requete la plus frequente.
 CREATE INDEX IF NOT EXISTS utilisateur_statut_idx ON utilisateur (statut);
 CREATE INDEX IF NOT EXISTS utilisateur_role_idx   ON utilisateur_role (role);

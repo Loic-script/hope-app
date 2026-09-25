@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import LiensLegaux from '../components/LiensLegaux.jsx';
 import HopeLogo from '../components/HopeLogo.jsx';
 import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
 import photoHope from '../assets/hope-couverture.jpg';
@@ -49,6 +50,7 @@ const FORMULAIRE_VIDE = {
   typeUtilisateur: '',
   motDePasse: '',
   confirmation: '',
+  accepteConditions: false,
 };
 
 /**
@@ -198,6 +200,7 @@ export default function Authentification() {
 
         <p className="connexion__signature">Ensemble pour un avenir meilleur</p>
         <span className="trait-hope trait-hope--centre" aria-hidden="true" />
+        <LiensLegaux />
       </section>
     </div>
   );
@@ -427,6 +430,9 @@ function Inscription({ types, navigate, onInscrit }) {
     if (champs.confirmation !== champs.motDePasse) {
       details.confirmation = 'Les deux mots de passe ne correspondent pas';
     }
+    if (!champs.accepteConditions) {
+      details.accepteConditions = 'Cochez la case pour créer votre compte';
+    }
     return details;
   }
 
@@ -452,6 +458,7 @@ function Inscription({ types, navigate, onInscrit }) {
         typeUtilisateur: champs.typeUtilisateur,
         motDePasse: champs.motDePasse,
         confirmation: champs.confirmation,
+        accepteConditions: champs.accepteConditions,
       });
 
       /*
@@ -569,6 +576,46 @@ function Inscription({ types, navigate, onInscrit }) {
         autoComplete="new-password"
         placeholder="Saisissez-le à nouveau"
       />
+
+      {/*
+        Le consentement : sans lui, pas de compte (le serveur le verifie
+        aussi). Les textes s'ouvrent dans un nouvel onglet, pour ne pas
+        perdre ce qui est deja saisi.
+      */}
+      <div className="consentement">
+        <label className={`case-a-cocher case-a-cocher--texte${erreursChamps.accepteConditions ? ' case-a-cocher--erreur' : ''}`}>
+          <input
+            type="checkbox"
+            name="accepteConditions"
+            checked={champs.accepteConditions}
+            onChange={(e) => {
+              const coche = e.target.checked;
+              setChamps((precedents) => ({ ...precedents, accepteConditions: coche }));
+              setErreursChamps((precedentes) => ({ ...precedentes, accepteConditions: undefined }));
+            }}
+            disabled={envoi}
+            aria-invalid={Boolean(erreursChamps.accepteConditions)}
+            aria-describedby={erreursChamps.accepteConditions ? 'erreur-consentement' : undefined}
+          />
+          <span className="case-a-cocher__repere" />
+          <span>
+            J’accepte les{' '}
+            <Link to="/conditions-utilisation" target="_blank" rel="noopener">
+              conditions d’utilisation
+            </Link>{' '}
+            et la{' '}
+            <Link to="/confidentialite" target="_blank" rel="noopener">
+              politique de confidentialité
+            </Link>{' '}
+            de HOPE.
+          </span>
+        </label>
+        {erreursChamps.accepteConditions && (
+          <p className="champ__erreur" id="erreur-consentement">
+            {erreursChamps.accepteConditions}
+          </p>
+        )}
+      </div>
 
       {erreur && (
         <p className="formulaire__erreur" role="alert">

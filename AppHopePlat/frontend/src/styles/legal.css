@@ -1,0 +1,607 @@
+/* ============================================================
+   Textes legaux : confidentialite et conditions d'utilisation.
+
+   Une page de lecture : une colonne de texte a largeur confortable
+   (70 caracteres environ), le sommaire colle a gauche sur ordinateur,
+   replie en tete sur telephone. Sobre, aux couleurs de HOPE.
+   ============================================================ */
+
+.legal {
+  --legal-fond: #f5f6fb;
+  --legal-surface: #ffffff;
+  --legal-bordure: #e3e6f2;
+  --legal-texte: var(--hope-texte);
+  --legal-doux: var(--hope-texte-doux);
+  --legal-accent: var(--hope-violet);
+  --legal-accent-pale: #efeefa;
+  --legal-barre: 64px;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(1200px 380px at 12% -120px, rgba(134, 185, 222, 0.28), transparent 70%),
+    radial-gradient(900px 340px at 100% -80px, rgba(245, 227, 137, 0.3), transparent 70%),
+    var(--legal-fond);
+  color: var(--legal-texte);
+}
+
+/* ---------- La barre du haut ---------- */
+.legal__barre {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--legal-barre);
+  padding: 0 max(16px, calc((100% - 1160px) / 2));
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--legal-bordure);
+}
+
+.legal__logo {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  border-radius: 10px;
+}
+
+.legal__logo .hope-logo {
+  height: 38px;
+  width: auto;
+}
+
+.legal__bascule {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 auto;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--legal-accent-pale);
+}
+
+.legal__onglet {
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hope-violet-lisible);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.legal__onglet:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.legal__onglet--actif {
+  background: var(--legal-surface);
+  color: var(--legal-accent);
+  box-shadow: 0 2px 8px rgba(74, 68, 121, 0.14);
+}
+
+.legal__retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  min-height: 40px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--legal-bordure);
+  border-radius: 10px;
+  background: var(--legal-surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--legal-texte);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.legal__retour:hover {
+  border-color: var(--legal-accent);
+}
+
+.legal__retour svg,
+.legal__sommaire-bouton svg,
+.legal__suivant svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- L'entete du texte ---------- */
+.legal__tete {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 48px 16px 28px;
+  animation: legal-entree 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.legal__surtitre {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hope-orange-lisible);
+}
+
+.legal__titre {
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: clamp(28px, 4.2vw, 42px);
+  line-height: 1.15;
+  color: var(--hope-violet-fonce);
+}
+
+.legal__chapeau {
+  max-width: 62ch;
+  margin: 14px 0 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--legal-doux);
+}
+
+.legal__version {
+  display: inline-block;
+  margin: 18px 0 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--legal-surface);
+  border: 1px solid var(--legal-bordure);
+  font-size: 13px;
+  color: var(--legal-doux);
+}
+
+/* ---------- Sommaire + corps ---------- */
+.legal__cadre {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 36px;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 16px 72px;
+}
+
+.legal__sommaire {
+  position: sticky;
+  top: calc(var(--legal-barre) + 20px);
+  align-self: start;
+  max-height: calc(100dvh - var(--legal-barre) - 40px);
+  overflow-y: auto;
+  animation: legal-entree 0.5s 0.08s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.legal__sommaire-bouton {
+  display: none;
+}
+
+.legal__liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 2px solid var(--legal-bordure);
+}
+
+.legal__entree {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  margin-left: -2px;
+  padding: 8px 12px;
+  border-left: 2px solid transparent;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--legal-doux);
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.legal__entree:hover {
+  color: var(--legal-texte);
+  background: rgba(93, 86, 150, 0.05);
+}
+
+.legal__entree--active {
+  border-left-color: var(--legal-accent);
+  color: var(--legal-accent);
+  font-weight: 600;
+  background: var(--legal-accent-pale);
+}
+
+.legal__rang {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hope-orange-lisible);
+  padding-top: 1px;
+}
+
+.legal__corps {
+  min-width: 0;
+  padding: 8px 40px 32px;
+  border: 1px solid var(--legal-bordure);
+  border-radius: var(--rayon-carte);
+  background: var(--legal-surface);
+  box-shadow: 0 18px 50px rgba(53, 51, 67, 0.06);
+  animation: legal-entree 0.5s 0.12s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.legal__article {
+  max-width: 70ch;
+  padding: 30px 0 6px;
+  border-bottom: 1px solid #eef0f7;
+  scroll-margin-top: calc(var(--legal-barre) + 16px);
+  outline: none;
+}
+
+.legal__article:last-of-type {
+  border-bottom: 0;
+}
+
+.legal__article h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-family: var(--police-titre);
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--hope-violet-fonce);
+}
+
+.legal__article h2 .legal__rang {
+  font-size: 14px;
+}
+
+.legal__article p,
+.legal__article li {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.legal__article p {
+  margin: 0 0 14px;
+}
+
+.legal__article ul {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+
+.legal__article li {
+  margin-bottom: 6px;
+}
+
+.legal__article li::marker {
+  color: var(--hope-orange);
+}
+
+.legal__article a {
+  color: var(--hope-lien);
+  text-underline-offset: 3px;
+}
+
+.legal__article:focus-visible h2 {
+  text-decoration: underline;
+  text-decoration-color: var(--hope-bleu);
+  text-underline-offset: 6px;
+}
+
+.legal__encadre {
+  margin: 4px 0 18px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--hope-bleu);
+  border-radius: 0 12px 12px 0;
+  background: #eef5fb;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.legal__suivant {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 16px;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: linear-gradient(120deg, var(--hope-violet), var(--hope-violet-2));
+  color: #ffffff;
+  text-decoration: none;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease;
+}
+
+.legal__suivant span {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.legal__suivant strong {
+  grid-column: 1;
+  font-size: 17px;
+}
+
+.legal__suivant svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 22px;
+  height: 22px;
+  transition: transform 0.25s ease;
+}
+
+.legal__suivant:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(74, 68, 121, 0.28);
+}
+
+.legal__suivant:hover svg {
+  transform: translateX(4px);
+}
+
+.legal a:focus-visible,
+.legal button:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+@keyframes legal-entree {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Tablette et telephone ---------- */
+@media (max-width: 900px) {
+  .legal__cadre {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .legal__sommaire {
+    position: sticky;
+    top: var(--legal-barre);
+    z-index: 5;
+    max-height: none;
+    overflow: visible;
+    margin: 0 -16px;
+    padding: 8px 16px;
+    background: rgba(245, 246, 251, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .legal__sommaire-bouton {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--legal-bordure);
+    border-radius: 12px;
+    background: var(--legal-surface);
+    font: inherit;
+    font-weight: 600;
+    color: var(--legal-texte);
+    cursor: pointer;
+  }
+
+  .legal__sommaire-bouton svg {
+    transition: transform 0.25s ease;
+  }
+
+  .legal__sommaire--ouvert .legal__sommaire-bouton svg {
+    transform: rotate(180deg);
+  }
+
+  /* La liste s'ouvre par-dessus le texte : dans le flux, elle le
+     decalerait au moment meme ou l'on saute a un article. */
+  .legal__liste {
+    display: none;
+    position: absolute;
+    top: calc(100% - 2px);
+    left: 16px;
+    right: 16px;
+    max-height: 60dvh;
+    overflow-y: auto;
+    padding: 6px 0;
+    border: 1px solid var(--legal-bordure);
+    border-radius: 12px;
+    background: var(--legal-surface);
+    box-shadow: 0 16px 40px rgba(53, 51, 67, 0.12);
+  }
+
+  .legal__sommaire--ouvert .legal__liste {
+    display: block;
+    animation: legal-entree 0.22s ease both;
+  }
+
+  .legal__entree {
+    margin-left: 0;
+    padding: 11px 14px;
+  }
+
+  .legal__corps {
+    padding: 4px 20px 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .legal__barre {
+    gap: 10px;
+  }
+
+  .legal__logo .hope-logo {
+    height: 32px;
+  }
+
+  .legal__onglet {
+    padding: 7px 11px;
+    font-size: 13px;
+  }
+
+  .legal__retour {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .legal__tete {
+    padding-top: 30px;
+  }
+
+  .legal__chapeau {
+    font-size: 16px;
+  }
+
+  .legal__corps {
+    margin: 0 -16px;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    padding: 0 16px 20px;
+  }
+
+  .legal__article p,
+  .legal__article li {
+    font-size: 15.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .legal__logo {
+    display: none;
+  }
+
+  .legal__bascule {
+    margin-left: 0;
+    min-width: 0;
+  }
+
+  .legal__onglet {
+    padding: 7px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .legal__tete,
+  .legal__sommaire,
+  .legal__corps,
+  .legal__sommaire--ouvert .legal__liste {
+    animation: none;
+  }
+
+  .legal__suivant,
+  .legal__suivant svg,
+  .legal__entree {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Le consentement a l'inscription, et les liens de pied.
+   ============================================================ */
+.consentement {
+  margin: 2px 0 4px;
+}
+
+.case-a-cocher--texte {
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+  user-select: auto;
+}
+
+.case-a-cocher--texte .case-a-cocher__repere {
+  margin-top: 1px;
+}
+
+.case-a-cocher--texte a {
+  color: var(--hope-lien);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.case-a-cocher input:focus-visible + .case-a-cocher__repere {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.case-a-cocher--erreur .case-a-cocher__repere {
+  border-color: var(--hope-erreur);
+  animation: consentement-secousse 0.35s ease;
+}
+
+.consentement .champ__erreur {
+  margin: 6px 0 0 32px;
+}
+
+@keyframes consentement-secousse {
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-a-cocher--erreur .case-a-cocher__repere {
+    animation: none;
+  }
+}
+
+.liens-legaux {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--hope-texte-doux);
+}
+
+.liens-legaux a {
+  color: var(--hope-texte-doux);
+  text-decoration: none;
+  padding: 4px 2px;
+}
+
+.liens-legaux a:hover,
+.liens-legaux a:focus-visible {
+  color: var(--hope-violet);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Sur petit ecran, l'onglet des conditions dit juste "Conditions". */
+.legal__onglet-court {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .legal__onglet-long {
+    display: none;
+  }
+
+  .legal__onglet-court {
+    display: inline;
+  }
+}
