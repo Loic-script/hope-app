@@ -381,7 +381,7 @@
 
 .champ-type__phrase {
   font-size: 12px;
-  color: #7c8098;
+  color: #5f6478;
 }
 
 .champ-type__tuile--active .champ-type__phrase {
@@ -684,7 +684,8 @@
 .bouton--principal {
   height: 56px;
   margin-top: 26px;
-  color: var(--hope-blanc);
+  /* Texte fonce sur l'orange : 6,5:1 (le blanc n'atteignait que 2,4:1). */
+  color: #2b2112;
   background-color: var(--hope-orange);
   box-shadow: 0 8px 20px rgba(224, 151, 53, 0.28);
 }

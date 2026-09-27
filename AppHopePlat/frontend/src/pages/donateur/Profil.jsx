@@ -200,6 +200,7 @@ export default function Profil() {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="sr-only"
+            aria-label="Choisir une photo de profil"
             onChange={choisirPhoto}
             tabIndex={-1}
           />

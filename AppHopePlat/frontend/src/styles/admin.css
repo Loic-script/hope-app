@@ -19,8 +19,9 @@
 
   /* Texte */
   --admin-texte: #2b3244;
-  --admin-texte-doux: #6b7285;
-  --admin-texte-faible: #9099ad;
+  /* Contraste AA (4,5:1) garanti sur les fonds de l'espace. */
+  --admin-texte-doux: #5f6678;
+  --admin-texte-faible: #646b7e;
 
   /* Etats */
   --etat-vert: #2c8f63;
@@ -471,12 +472,13 @@
   white-space: nowrap;
 }
 
-.badge--vert   { color: var(--etat-vert);   background-color: var(--etat-vert-fond); }
-.badge--bleu   { color: var(--etat-bleu);   background-color: var(--etat-bleu-fond); }
-.badge--ambre  { color: var(--etat-ambre);  background-color: var(--etat-ambre-fond); }
-.badge--rouge  { color: var(--etat-rouge);  background-color: var(--etat-rouge-fond); }
-.badge--gris   { color: var(--etat-gris);   background-color: var(--etat-gris-fond); }
-.badge--violet { color: var(--etat-violet); background-color: var(--etat-violet-fond); }
+/* Le texte des pastilles, plus fonce que leur teinte : contraste AA. */
+.badge--vert   { color: #1d6b48; background-color: var(--etat-vert-fond); }
+.badge--bleu   { color: #1f5aa0; background-color: var(--etat-bleu-fond); }
+.badge--ambre  { color: #7f5210; background-color: var(--etat-ambre-fond); }
+.badge--rouge  { color: #9c3024; background-color: var(--etat-rouge-fond); }
+.badge--gris   { color: #545b6e; background-color: var(--etat-gris-fond); }
+.badge--violet { color: #4a4479; background-color: var(--etat-violet-fond); }
 
 /* ============================================================
    6. Barre de progression

@@ -514,6 +514,7 @@ export default function CoqueEspace({
               <button
                 type="button"
                 className="profil__bouton"
+                aria-label={`Menu du compte${identite?.nom ? ` de ${identite.nom}` : ''}`}
                 onClick={() => setMenuOuvert((ouvert) => !ouvert)}
                 aria-expanded={menuOuvert}
                 aria-haspopup="menu"

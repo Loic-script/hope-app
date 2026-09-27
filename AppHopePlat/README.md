@@ -362,7 +362,7 @@ Depuis `AppHopePlat` :
 |---|---|
 | `npm run lint` | ESLint, backend et frontend : zéro erreur |
 | `npm test` | **55 tests** (`node --test`) : 50 côté serveur, 5 côté frontend |
-| `npm run test:e2e` | **10 scénarios de bout en bout** (Playwright), joués sur ordinateur et sur téléphone |
+| `npm run test:e2e` | **13 scénarios de bout en bout** (Playwright), joués sur ordinateur et sur téléphone, dont un audit d'accessibilité WCAG 2.1 AA (axe-core) de 13 pages |
 | `npm run couverture --prefix backend` | la couverture des tests serveur (≈ 67 % des lignes) |
 
 **Serveur** (`backend/tests/`) :
@@ -384,7 +384,9 @@ Depuis `AppHopePlat` :
 production, avec sa propre base jetable. Pages publiques et portes fermées ; inscription avec
 consentement, session en cookie, adresse confirmée par le lien du courriel ; mot de passe
 oublié ; changement de mot de passe (l'autre appareil est déconnecté) et suppression du compte ;
-don jusqu'à la page MVola ; administration et journal d'audit.
+don jusqu'à la page MVola ; administration et journal d'audit ; accessibilité (aucune violation
+grave ou critique relevée par axe-core sur les pages publiques, l'espace donateur et
+l'administration).
 
 L'intégration continue (`.github/workflows/ci.yml`, à la racine du dépôt) joue tout cela à chaque
 envoi sur `dev` et `main` : lint, schéma sur une base neuve, tests, construction du frontend,
