@@ -3,6 +3,8 @@
  */
 import { Router } from 'express';
 
+import { config } from '../config/env.js';
+
 import authRoutes from './auth.routes.js';
 import adminAuthRoutes from './adminAuth.routes.js';
 import adminRoutes from './admin.routes.js';
@@ -37,6 +39,12 @@ router.get('/fichiers/beneficiaires/:fichier', photosBeneficiaires.lire);
  * signature est verifiee avant d'en croire un mot.
  */
 router.post('/paiements/stripe/webhook', webhookStripe);
+
+// L'adresse de contact de l'association, publique : les pages legales
+// l'affichent (EQUIPE_EMAIL). Vide, elles renvoient vers la messagerie.
+router.get('/public/contact', (_req, res) => {
+  res.json({ email: config.equipe.email || null });
+});
 
 // Authentification des utilisateurs : un seul formulaire pour les trois
 // types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.

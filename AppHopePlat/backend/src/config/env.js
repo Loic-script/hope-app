@@ -100,6 +100,14 @@ export const config = {
    * Facultatives : rien n'est invente -- seules celles renseignees
    * s'affichent.
    */
+  /*
+   * La surveillance : l'adresse qui recoit les alertes d'erreur du
+   * serveur en production (a defaut, celle de l'equipe).
+   */
+  surveillance: {
+    alerteEmail: optionnel('ALERTE_EMAIL', ''),
+  },
+
   equipe: {
     email: optionnel('EQUIPE_EMAIL', ''),
     telephone: optionnel('EQUIPE_TELEPHONE', ''),

@@ -98,8 +98,8 @@ ouvert ; les autres moyens restent disponibles. Faire un premier essai avec les 
 
 | Variable | Rôle |
 |---|---|
-| `EQUIPE_EMAIL`, `EQUIPE_TELEPHONE`, `EQUIPE_SITE` | coordonnées affichées dans les fils d'assistance de la messagerie |
-| `VITE_HOPE_CONTACT` | adresse de contact affichée dans la politique de confidentialité et les conditions d'utilisation (lue **à la construction** : redéployer après l'avoir changée) |
+| `EQUIPE_EMAIL`, `EQUIPE_TELEPHONE`, `EQUIPE_SITE` | coordonnées de l'association : fils d'assistance de la messagerie, et **adresse de contact des pages légales** (confidentialité, conditions d'utilisation) |
+| `ALERTE_EMAIL` | adresse qui reçoit une alerte quand le serveur rencontre une erreur interne (au plus une par quart d'heure). Vide : `EQUIPE_EMAIL` |
 | `JWT_EXPIRES_IN` | durée d'une session (défaut `2h`) |
 | `BCRYPT_SALT_ROUNDS` | coût du hachage des mots de passe (défaut raisonnable déjà fixé) |
 
@@ -158,8 +158,20 @@ production.
 - **L'intégration continue** (GitHub Actions, `.github/workflows/ci.yml` à la racine du dépôt)
   relit le code, applique le schéma sur une base neuve, lance les tests et construit le
   frontend à chaque envoi : ne fusionner sur `main` qu'avec une coche verte.
-- **Sauvegardes** : l'offre PostgreSQL de Railway propose des sauvegardes ; les activer, et
-  faire de temps en temps un `pg_dump` conservé ailleurs.
+- **Surveillance** : en production, chaque requête écrit une ligne JSON dans les journaux de
+  Railway (méthode, chemin sans paramètres, statut, durée) ; filtrer sur `"niveau":"erreur"`
+  pour voir les pannes. Une erreur interne envoie en plus un courriel à `ALERTE_EMAIL`. Les
+  actions de l'équipe sont dans le **journal d'audit** (Paramètres → Journal d'audit complet).
+- **Sauvegardes** : dans le service PostgreSQL, onglet **Backups**, activer les sauvegardes
+  automatiques (quotidiennes). En plus, une fois par mois, une copie conservée hors de Railway :
+
+  ```bash
+  railway link                      # le service PostgreSQL
+  railway run pg_dump --format=custom --file=hope-$(date +%F).dump "$DATABASE_URL"
+  ```
+
+  Restaurer : `pg_restore --clean --no-owner --dbname "$DATABASE_URL" hope-AAAA-MM-JJ.dump`.
+  Essayer une restauration sur une base de test une fois, pour savoir qu'elle marche.
 - **Nom de domaine** : **Settings → Networking → Custom Domain**, puis mettre à jour
   `HOPE_SITE_URL`, `CORS_ORIGIN` et le webhook Stripe.
 - **Textes légaux** : la politique de confidentialité et les conditions d'utilisation

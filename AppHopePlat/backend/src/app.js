@@ -16,6 +16,7 @@ import apiRoutes from './routes/index.js';
 import { gestionnaireErreurs, routeIntrouvable } from './middleware/error.middleware.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from './middleware/upload.middleware.js';
 import { verifierOrigine } from './shared/session.js';
+import { journalDesRequetes } from './services/surveillance.service.js';
 
 /** frontend/dist : le frontend construit par "npm run build". */
 const DOSSIER_FRONTEND = path.resolve(
@@ -101,12 +102,15 @@ export function creerApplication() {
     })
   );
 
-  // Journal minimal des requetes en developpement.
+  // Journal des requetes : lisible en developpement, une ligne JSON par
+  // requete en production (services/surveillance.service.js).
   if (config.env !== 'production') {
     app.use((req, _res, suite) => {
       console.log(`[HOPE] ${req.method} ${req.originalUrl}`);
       suite();
     });
+  } else {
+    app.use(journalDesRequetes);
   }
 
   /**

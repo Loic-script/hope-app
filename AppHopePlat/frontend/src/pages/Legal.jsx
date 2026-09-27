@@ -19,15 +19,41 @@ export const VERSION_CONDITIONS = '2026-09-25';
 const DATE_VERSION = '25 septembre 2026';
 
 /*
- * L'adresse de contact, si l'association en publie une (variable de
- * construction VITE_HOPE_CONTACT). Sinon, la messagerie des espaces.
+ * L'adresse de contact de l'association : celle que le serveur publie
+ * (EQUIPE_EMAIL, lue par /api/public/contact), sinon VITE_HOPE_CONTACT
+ * fixee a la construction. Aucune : la messagerie des espaces.
  */
-const CONTACT = import.meta.env.VITE_HOPE_CONTACT ?? '';
+let contactConnu = import.meta.env.VITE_HOPE_CONTACT ?? '';
+const abonnes = new Set();
+let demande = null;
+
+function chargerContact() {
+  demande ??= fetch('/api/public/contact')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (d?.email) {
+        contactConnu = d.email;
+        abonnes.forEach((f) => f(contactConnu));
+      }
+    })
+    .catch(() => {});
+}
+
+function useContact() {
+  const [contact, setContact] = useState(contactConnu);
+  useEffect(() => {
+    abonnes.add(setContact);
+    chargerContact();
+    return () => abonnes.delete(setContact);
+  }, []);
+  return contact;
+}
 
 function Contact() {
-  return CONTACT ? (
+  const contact = useContact();
+  return contact ? (
     <>
-      à l’adresse <a href={`mailto:${CONTACT}`}>{CONTACT}</a>, ou depuis la messagerie de votre espace
+      à l’adresse <a href={`mailto:${contact}`}>{contact}</a>, ou depuis la messagerie de votre espace
     </>
   ) : (
     <>depuis la messagerie de votre espace HOPE, adressée à l’équipe</>

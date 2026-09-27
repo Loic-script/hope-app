@@ -84,3 +84,9 @@ test('un jeton signe d une autre cle, ou d un autre espace, est refuse', async (
     assert.equal(reponse.status, 401, jeton.slice(0, 20));
   }
 });
+
+test('le contact public repond sans session, sans rien d autre que l adresse', async () => {
+  const reponse = await fetch(`${base}/public/contact`);
+  assert.equal(reponse.status, 200);
+  assert.deepEqual(Object.keys(await reponse.json()), ['email']);
+});

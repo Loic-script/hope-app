@@ -3,6 +3,7 @@
  */
 import { ErreurApplicative } from '../shared/errors.js';
 import { estProduction } from '../config/env.js';
+import { signalerErreur } from '../services/surveillance.service.js';
 
 /** 404 : aucune route ne correspond a l'URL demandee. */
 export function routeIntrouvable(req, res) {
@@ -76,7 +77,9 @@ export function gestionnaireErreurs(erreur, req, res, _next) {
     });
   }
 
-  console.error(`[HOPE] Erreur non geree sur ${req.method} ${req.originalUrl} :`, erreur);
+  console.error(`[HOPE] Erreur non geree sur ${req.method} ${req.originalUrl.split('?')[0]} :`, erreur);
+  // En production, l'equipe technique est prevenue (au plus une fois par quart d'heure).
+  signalerErreur(req, erreur);
 
   return res.status(500).json({
     success: false,
