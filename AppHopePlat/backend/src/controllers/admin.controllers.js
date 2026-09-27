@@ -42,6 +42,7 @@ import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middlewa
 import { envoyerFichierLivraison } from './fichierLivraison.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
+import * as auditService from '../services/audit.service.js';
 import { poserSession } from '../shared/session.js';
 import * as adminAuthService from '../services/adminAuth.service.js';
 
@@ -216,6 +217,7 @@ export const team = {
   // multer, une adresse rendue.
   televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
   journal: gerer((req) => teamService.journal(req.query)),
+  audit: gerer((req) => auditService.lister(req.query)),
 };
 
 /* ================================================================

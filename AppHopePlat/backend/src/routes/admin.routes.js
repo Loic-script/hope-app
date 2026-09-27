@@ -49,10 +49,14 @@ import {
   consultation,
 } from '../controllers/admin.controllers.js';
 
+import { journaliserAdmin } from '../services/audit.service.js';
 const router = Router();
 
 // --- Verrou global de l'espace administrateur ------------------------
 router.use(authenticateAdmin);
+
+// Le journal d'audit : chaque modification est consignee (qui, quoi, quand).
+router.use(journaliserAdmin);
 
 /*
  * Changer SON mot de passe reste ouvert a tous les roles, y compris la
@@ -230,6 +234,8 @@ router.patch('/team/:id/password', exigerRole('ADMIN'), team.reinitialiserMotDeP
 
 // Le journal se lit ; personne ne l'ecrit a la main.
 router.get('/activity', team.journal);
+// Le journal d'audit complet, reserve au role ADMIN.
+router.get('/audit', exigerRole('ADMIN'), team.audit);
 
 // --- Utilisateurs : donateurs, benevoles, bailleurs --------------------
 // Un compte se designe par son UUID, une fiche donateur par son numero.

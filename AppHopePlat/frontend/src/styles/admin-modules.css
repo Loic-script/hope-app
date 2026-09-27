@@ -2159,3 +2159,38 @@
   font-size: 12.5px;
   color: var(--admin-texte-faible);
 }
+
+/* ---------- Journal d'audit ---------- */
+.audit__qui {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.audit__cible {
+  color: var(--admin-texte-doux);
+}
+
+.audit__details {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.audit__ip {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.audit__pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}

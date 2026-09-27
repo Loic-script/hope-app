@@ -12,6 +12,7 @@ import { jetonNeuf } from '../services/auth.service.js';
 import { AUDIENCE_PAR_TYPE } from '../shared/audiences.js';
 import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 import * as verificationCourriel from '../services/verificationCourriel.service.js';
+import * as audit from '../services/audit.service.js';
 
 /** Le type d'espace (donateur, benevole, bailleur) d'une audience de jeton. */
 function typeDeLAudience(audience) {
@@ -104,6 +105,13 @@ export async function badges(req, res, next) {
 export async function changerMotDePasse(req, res, next) {
   try {
     const resultat = await compteService.changerMotDePasse(req.utilisateurId, req.body ?? {});
+    audit.consignerRequete(req, {
+      acteurType: 'utilisateur',
+      acteurId: req.utilisateurId,
+      action: 'MOT_DE_PASSE',
+      libelle: 'a changé son mot de passe (autres sessions fermées)',
+      statut: 200,
+    });
     const type = typeDeLAudience(req.espace);
     if (type) poserSession(res, type, await jetonNeuf(req.utilisateurId, type));
     res.status(200).json(resultat);
@@ -116,6 +124,13 @@ export async function changerMotDePasse(req, res, next) {
 export async function supprimerCompte(req, res, next) {
   try {
     const resultat = await compteService.supprimerSonCompte(req.utilisateurId, req.body ?? {});
+    audit.consignerRequete(req, {
+      acteurType: 'utilisateur',
+      acteurId: req.utilisateurId,
+      action: 'SUPPRESSION_COMPTE',
+      libelle: 'a supprimé son compte',
+      statut: 200,
+    });
     effacerSessionsUtilisateur(res);
     res.status(200).json(resultat);
   } catch (erreur) {

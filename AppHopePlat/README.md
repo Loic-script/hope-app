@@ -436,5 +436,4 @@ horizontal en 430 px, la déconnexion.
   [DEPLOIEMENT.md](DEPLOIEMENT.md)), ou plus tard un stockage objet (S3, Cloudflare R2) ;
 - prélèvement automatique des dons mensuels chez un prestataire (les échéances sont
   aujourd'hui générées puis suivies à la main) ;
-- journal d'audit des actions administrateur ;
 - relecture juridique des textes légaux par le bureau de l'association.

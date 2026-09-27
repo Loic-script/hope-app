@@ -65,6 +65,7 @@ const FaireUnDonBailleur = lazy(() => import('../pages/bailleur/FaireUnDon.jsx')
 const RapportsBailleur = lazy(() => import('../pages/bailleur/Rapports.jsx'));
 const AccueilBailleur = lazy(() => import('../pages/bailleur/Accueil.jsx'));
 const SettingsPage = lazy(() => import('../pages/admin/SettingsPage.jsx'));
+const AuditPage = lazy(() => import('../pages/admin/AuditPage.jsx'));
 const ProfilUtilisateurPage = lazy(() => import('../pages/admin/ProfilUtilisateurPage.jsx'));
 const UtilisateursPage = lazy(() => import('../pages/admin/UtilisateursPage.jsx'));
 const StatisticsPage = lazy(() => import('../pages/admin/StatisticsPage.jsx'));
@@ -344,6 +345,7 @@ export default function AppRoutes() {
           <Route path="/admin/actualites" element={<PublicationsPage />} />
           <Route path="/admin/statistics" element={<StatisticsPage />} />
           <Route path="/admin/settings" element={<SettingsPage />} />
+          <Route path="/admin/audit" element={<AuditPage />} />
         </Route>
       </Route>
 

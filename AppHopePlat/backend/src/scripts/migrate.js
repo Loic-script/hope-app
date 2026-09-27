@@ -51,7 +51,8 @@ const TABLES_ATTENDUES = {
     'activity_log',
   ],
   'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role', 'reinitialisation_mot_de_passe',
-    'verification_courriel'],
+    'verification_courriel',
+    'journal_audit'],
   'Espace benevole': [
     'benevole',
     'mission',

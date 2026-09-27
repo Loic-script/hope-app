@@ -6,15 +6,24 @@
  */
 import * as adminAuthService from '../services/adminAuth.service.js';
 import { effacerSession, poserSession } from '../shared/session.js';
+import * as audit from '../services/audit.service.js';
 
 /**
  * POST /api/admin/login
  * Corps attendu : { adminLog, password }
  */
 export async function login(req, res, next) {
+  const { adminLog, password } = req.body ?? {};
   try {
-    const { adminLog, password } = req.body ?? {};
     const resultat = await adminAuthService.connecter({ adminLog, password });
+    audit.consignerRequete(req, {
+      acteurType: 'admin',
+      acteurId: resultat.admin.id,
+      acteurLibelle: resultat.admin.fullName ?? resultat.admin.adminLog,
+      action: 'CONNEXION',
+      libelle: 's’est connecté à l’administration',
+      statut: 200,
+    });
 
     // La session part dans un cookie httpOnly : JavaScript ne la voit pas.
     poserSession(res, 'admin', resultat.token, { persistant: req.body?.seSouvenir !== false });
@@ -28,6 +37,16 @@ export async function login(req, res, next) {
       admin: resultat.admin,
     });
   } catch (erreur) {
+    // Une tentative refusee : l'identifiant saisi, jamais le mot de passe.
+    if (erreur?.statut === 401) {
+      audit.consignerRequete(req, {
+        acteurType: 'admin',
+        acteurLibelle: typeof adminLog === 'string' ? adminLog.slice(0, 80) : null,
+        action: 'CONNEXION_REFUSEE',
+        libelle: 'connexion à l’administration refusée',
+        statut: 401,
+      });
+    }
     next(erreur);
   }
 }

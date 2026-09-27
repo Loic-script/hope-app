@@ -2019,3 +2019,24 @@ CREATE TABLE IF NOT EXISTS verification_courriel (
 
 CREATE INDEX IF NOT EXISTS verification_courriel_utilisateur_idx
   ON verification_courriel (utilisateur_id) WHERE utilise_le IS NULL;
+
+-- Le journal d'audit : toute modification faite par l'equipe, et les
+-- evenements de securite des comptes. Factuel, exhaustif, sans secret.
+CREATE TABLE IF NOT EXISTS journal_audit (
+  id              BIGSERIAL     PRIMARY KEY,
+  acteur_type     VARCHAR(12)   NOT NULL,
+  acteur_id       VARCHAR(64),
+  acteur_libelle  VARCHAR(160),
+  action          VARCHAR(160)  NOT NULL,
+  libelle         VARCHAR(300)  NOT NULL,
+  cible           VARCHAR(120),
+  details         JSONB,
+  statut_http     INTEGER,
+  ip              VARCHAR(64),
+  cree_le         TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT journal_audit_acteur_valide CHECK (acteur_type IN ('admin', 'utilisateur', 'systeme'))
+);
+
+CREATE INDEX IF NOT EXISTS journal_audit_date_idx ON journal_audit (cree_le DESC);
+CREATE INDEX IF NOT EXISTS journal_audit_acteur_idx ON journal_audit (acteur_type, acteur_id);

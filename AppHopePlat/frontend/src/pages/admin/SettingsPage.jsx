@@ -236,6 +236,13 @@ export default function SettingsPage() {
       <Panneau
         titre="Activité récente"
         sousTitre="Qui a fait quoi. Le fil de l’accueil dit ce qui s’est passé ; celui-ci dit par qui."
+        actions={
+          estAdministrateur && (
+            <Link className="btn btn--secondaire btn--petit" to="/admin/audit">
+              Journal d’audit complet
+            </Link>
+          )
+        }
       >
         {(activite?.items ?? []).length === 0 ? (
           <p className="champ-admin__aide">Aucune action enregistrée pour l’instant.</p>
