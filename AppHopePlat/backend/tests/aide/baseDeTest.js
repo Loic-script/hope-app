@@ -100,7 +100,9 @@ export async function nettoyerBasesOrphelines(prefixe) {
   const m = new pg.Client({ connectionString: adresse('postgres', origine) });
   await m.connect();
   try {
-    const { rows } = await m.query('SELECT datname FROM pg_database WHERE datname LIKE $1', [`${prefixe}_%`]);
+    // Le _ est un joker pour LIKE : il est echappe, le prefixe est pris a la lettre.
+    const motif = `${prefixe.replace(/_/g, '!_')}!_%`;
+    const { rows } = await m.query("SELECT datname FROM pg_database WHERE datname LIKE $1 ESCAPE '!'", [motif]);
     for (const { datname } of rows) await m.query(`DROP DATABASE IF EXISTS "${datname}" WITH (FORCE)`);
   } finally {
     await m.end();
