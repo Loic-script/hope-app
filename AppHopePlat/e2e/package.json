@@ -1,0 +1,14 @@
+{
+  "name": "hope-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tests de bout en bout de HOPE : un vrai navigateur sur l'application construite, avec une base jetable.",
+  "scripts": {
+    "test": "playwright test",
+    "rapport": "playwright show-report sortie/rapport"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0"
+  }
+}

@@ -36,3 +36,6 @@ Thumbs.db
 
 # Justificatifs televerses : fichiers de l'association, jamais versionnes
 backend/uploads/
+
+# Tests de bout en bout : rapports, captures et journal du serveur de test
+e2e/sortie/

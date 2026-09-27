@@ -22,7 +22,8 @@
     "db:seed-espace": "node src/scripts/seedEspaceData.js",
     "db:seed-rapports": "node src/scripts/seedRapportsBailleur.js",
     "lint": "eslint .",
-    "test": "node --test"
+    "test": "node --test",
+    "couverture": "node --test --experimental-test-coverage --test-coverage-exclude=tests/**"
   },
   "engines": {
     "node": ">=18"

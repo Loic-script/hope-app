@@ -42,6 +42,19 @@ export function gestionnaireErreurs(erreur, req, res, _next) {
   }
 
   /*
+   * Une valeur mal formee pour PostgreSQL (22P02) : un identifiant qui
+   * n'est pas un UUID ou un nombre, venu de l'adresse. C'est la requete
+   * qui est fausse, pas le serveur.
+   */
+  if (erreur.code === '22P02') {
+    return res.status(400).json({
+      success: false,
+      code: 'IDENTIFIANT_INVALIDE',
+      message: 'Identifiant invalide.',
+    });
+  }
+
+  /*
    * Une valeur deja prise (PostgreSQL 23505).
    *
    * Un service qui sait de quel champ il s'agit traduit lui-meme la

@@ -12,6 +12,7 @@
     "db:preparer": "npm run db:init --prefix backend && npm run db:migrate --prefix backend",
     "db:premier-deploiement": "npm run db:preparer && npm run db:seed --prefix backend && npm run db:categories --prefix backend",
     "test": "npm test --prefix backend && npm test --prefix frontend",
-    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend"
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
+    "test:e2e": "npm run build --prefix frontend && npm test --prefix e2e"
   }
 }

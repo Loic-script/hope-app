@@ -274,3 +274,58 @@ describe('la limitation des tentatives (429)', () => {
     assert.equal(statuts[6], 429);
   });
 });
+
+describe('aucune lecture ne plante (fumee)', () => {
+  /** Les routes GET d'un routeur, parametres remplaces. */
+  async function routesDeLecture(module, prefixe, valeurs) {
+    const { default: routeur } = await import(module);
+    const routes = [];
+    for (const couche of routeur.stack) {
+      if (!couche.route?.methods?.get) continue;
+      const chemins = Array.isArray(couche.route.path) ? couche.route.path : [couche.route.path];
+      for (const chemin of chemins) {
+        routes.push(prefixe + chemin.replace(/:([A-Za-z_]+)/g, (_, nom) => String(valeurs[nom] ?? valeurs.id ?? 1)));
+      }
+    }
+    return routes;
+  }
+
+  async function verifierLectures(routes, jeton, entetes = {}) {
+    const pannes = [];
+    for (const route of routes) {
+      const { statut, corps } = await appel('GET', route, { jeton, entetes });
+      if (statut >= 500) pannes.push(`${route} -> ${statut} ${corps?.detail ?? corps?.message ?? ''}`);
+    }
+    assert.deepEqual(pannes, []);
+  }
+
+  test('toutes les lectures de l administration repondent sans erreur interne', async () => {
+    const projet = await creerProjet('Projet de fumee', 500_000);
+    const routes = await routesDeLecture('../src/routes/admin.routes.js', '/admin', { id: projet, projectId: projet });
+    assert.ok(routes.length > 40, `${routes.length} routes`);
+    await verifierLectures(routes, jetonAdmin);
+  });
+
+  test('toutes les lectures des trois espaces repondent sans erreur interne', async () => {
+    const { inscrire } = await import('../src/services/auth.service.js');
+    const comptes = {};
+    for (const type of ['donateur', 'benevole', 'bailleur']) {
+      const email = `fumee.${type}.${Date.now()}@hope.test`;
+      const motDePasse = `fumee-${type}-2026`;
+      // Par le service d'inscription lui-meme : le limiteur HTTP (5 par
+      // minute) a deja servi aux tests precedents.
+      await inscrire({ email, typeUtilisateur: type, motDePasse, confirmation: motDePasse, accepteConditions: true });
+      await base.sql("UPDATE utilisateur SET statut = 'actif', profil_complete = TRUE WHERE email = $1", [email]);
+      const { corps } = await appel('POST', '/auth/login', { corps: { email, motDePasse, typeUtilisateur: type } });
+      comptes[type] = corps.token;
+    }
+    await verifierLectures(await routesDeLecture('../src/routes/donorSpace.routes.js', '/donateur', {}), comptes.donateur);
+    await verifierLectures(await routesDeLecture('../src/routes/volunteerSpace.routes.js', '/benevole', {}), comptes.benevole);
+    await verifierLectures(await routesDeLecture('../src/routes/funder.routes.js', '/bailleur', {}), comptes.bailleur);
+    for (const type of ['donateur', 'benevole', 'bailleur']) {
+      await verifierLectures(await routesDeLecture('../src/routes/espace.routes.js', '/espace', {}), comptes[type], {
+        'X-Hope-Espace': type,
+      });
+    }
+  });
+});

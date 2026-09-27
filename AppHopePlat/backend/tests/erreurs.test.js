@@ -91,3 +91,10 @@ test('500 : toute autre erreur, message generique', () => {
   assert.equal(corps.code, 'ERREUR_SERVEUR');
   assert.equal(corps.message, 'Une erreur interne est survenue.');
 });
+
+test('400 : identifiant mal forme pour PostgreSQL (22P02), sans le message de la base', () => {
+  const { statut, corps } = traduire(Object.assign(new Error('syntaxe en entree invalide pour le type uuid'), { code: '22P02' }));
+  assert.equal(statut, 400);
+  assert.equal(corps.code, 'IDENTIFIANT_INVALIDE');
+  assert.ok(!JSON.stringify(corps).includes('uuid'));
+});

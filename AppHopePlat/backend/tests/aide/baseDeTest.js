@@ -47,11 +47,12 @@ function jouer(script, env) {
 
 /**
  * Cree la base, la prepare, et bascule DATABASE_URL dessus.
+ * @param {{ prefixe?: string }} options le debut du nom de la base
  * @returns {Promise<{ url: string, sql: (texte: string, valeurs?: unknown[]) => Promise<object[]>, detruire: () => Promise<void> }>}
  */
-export async function preparerBaseDeTest() {
+export async function preparerBaseDeTest({ prefixe = 'hope_test' } = {}) {
   const origine = process.env.DATABASE_URL || null;
-  const nom = `hope_test_${process.pid}_${Date.now().toString(36)}`;
+  const nom = `${prefixe}_${process.pid}_${Date.now().toString(36)}`;
   const maintenance = new pg.Client({ connectionString: adresse('postgres', origine) });
   await maintenance.connect();
   await maintenance.query(`CREATE DATABASE "${nom}"`);
@@ -87,4 +88,21 @@ export async function preparerBaseDeTest() {
       await m.end();
     },
   };
+}
+
+/**
+ * Supprime les bases de test laissees par un arret brutal (un processus
+ * tue sous Windows ne passe pas par son nettoyage).
+ * @param {string} prefixe
+ */
+export async function nettoyerBasesOrphelines(prefixe) {
+  const origine = process.env.DATABASE_URL || null;
+  const m = new pg.Client({ connectionString: adresse('postgres', origine) });
+  await m.connect();
+  try {
+    const { rows } = await m.query('SELECT datname FROM pg_database WHERE datname LIKE $1', [`${prefixe}_%`]);
+    for (const { datname } of rows) await m.query(`DROP DATABASE IF EXISTS "${datname}" WITH (FORCE)`);
+  } finally {
+    await m.end();
+  }
 }

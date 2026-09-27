@@ -354,18 +354,41 @@ Page React → Service frontend → Axios → Route → Controller → Service �
 
 ## 10. Tests
 
-### Automatiques — `npm test` et `npm run lint`
+### Automatiques — `npm test`, `npm run test:e2e`, `npm run lint`
 
-Depuis `AppHopePlat` : `npm run lint` (ESLint, backend et frontend) et `npm test`
-(`node --test`, sans dépendance de plus). Ils couvrent les montants en centimes, les
-validations, le consentement à l'inscription, le mot de passe oublié, les en-têtes de sécurité,
-et vérifient que **toutes** les routes `/api/admin/*` refusent une requête sans session (la liste
-est lue dans le routeur : une route ajoutée demain est vérifiée d'office). Côté frontend : le
-montant en lettres, les formats, l'adresse de chaque page de paiement.
+Depuis `AppHopePlat` :
 
-L'intégration continue (`.github/workflows/ci.yml`, à la racine du dépôt) les joue à chaque
-envoi sur `dev` et `main`, applique le schéma sur une base PostgreSQL neuve et construit le
-frontend.
+| Commande | Ce qu'elle vérifie |
+|---|---|
+| `npm run lint` | ESLint, backend et frontend : zéro erreur |
+| `npm test` | **55 tests** (`node --test`) : 50 côté serveur, 5 côté frontend |
+| `npm run test:e2e` | **10 scénarios de bout en bout** (Playwright), joués sur ordinateur et sur téléphone |
+| `npm run couverture --prefix backend` | la couverture des tests serveur (≈ 67 % des lignes) |
+
+**Serveur** (`backend/tests/`) :
+
+- *unitaires* — montants en centimes, validations, sessions (cookie, fermeture, origine),
+  consentement, journal des requêtes, et la traduction de **chaque code d'erreur** (400, 401,
+  403, 404, 409, 413, 422, 500) au même format, sans fuite de détail interne ;
+- *sécurité HTTP* — en-têtes, et **toutes** les routes `/api/admin/*` refusées sans session (la
+  liste est lue dans le routeur : une route ajoutée demain est vérifiée d'office) ;
+- *intégration* — sur une **base PostgreSQL jetable** créée puis supprimée par le test
+  (`tests/aide/baseDeTest.js`) : règles sur l'argent (dépense plafonnée au centime près, fonds
+  HOPE ni sur-investi ni au-delà du besoin, moyen de paiement hors zone), droits (lecture
+  seule, bailleur suspendu, audit réservé à ADMIN), doublons, aucun hash dans les réponses,
+  limitation des tentatives (429), et un test de fumée qui appelle **toutes les routes de
+  lecture** de l'administration et des trois espaces sur une base neuve (aucune ne doit
+  répondre 500).
+
+**Bout en bout** (`e2e/`) : un vrai navigateur sur l'application construite, servie comme en
+production, avec sa propre base jetable. Pages publiques et portes fermées ; inscription avec
+consentement, session en cookie, adresse confirmée par le lien du courriel ; mot de passe
+oublié ; changement de mot de passe (l'autre appareil est déconnecté) et suppression du compte ;
+don jusqu'à la page MVola ; administration et journal d'audit.
+
+L'intégration continue (`.github/workflows/ci.yml`, à la racine du dépôt) joue tout cela à chaque
+envoi sur `dev` et `main` : lint, schéma sur une base neuve, tests, construction du frontend,
+puis les scénarios de bout en bout (rapport joint en cas d'échec).
 
 ### API — `npm run test:admin` : **94 assertions**
 
