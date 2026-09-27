@@ -834,7 +834,14 @@ export default function ProfilUtilisateurPage() {
             <LigneFiche terme="Prénom">{compte.prenom || null}</LigneFiche>
             <LigneFiche terme="Nom">{compte.nom || null}</LigneFiche>
             {role === 'bailleur' && <LigneFiche terme="Fonction">{organisation?.fonction}</LigneFiche>}
-            <LigneFiche terme="Adresse électronique">{compte.email}</LigneFiche>
+            <LigneFiche terme="Adresse électronique">
+              {compte.email}{' '}
+              <Badge
+                valeur={compte.emailVerifieLe ? 'OUI' : 'NON'}
+                libelles={{ OUI: 'confirmée', NON: 'non confirmée' }}
+                couleur={compte.emailVerifieLe ? 'vert' : 'ambre'}
+              />
+            </LigneFiche>
             <LigneFiche terme="Téléphone">{compte.telephone}</LigneFiche>
             <LigneFiche terme="Adresse">{compte.adresse}</LigneFiche>
             {role === 'donateur' && (

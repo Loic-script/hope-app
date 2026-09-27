@@ -50,7 +50,8 @@ const TABLES_ATTENDUES = {
     'field_proof_files',
     'activity_log',
   ],
-  'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role', 'reinitialisation_mot_de_passe'],
+  'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role', 'reinitialisation_mot_de_passe',
+    'verification_courriel'],
   'Espace benevole': [
     'benevole',
     'mission',
@@ -93,6 +94,7 @@ const COLONNES_ATTENDUES = [
   ['utilisateur', 'profil_complete'],
   ['utilisateur', 'conditions_acceptees_le'],
   ['utilisateur', 'sessions_valides_depuis'],
+  ['utilisateur', 'email_verifie_le'],
   ['admins', 'sessions_valides_depuis'],
   ['admins', 'photo_url'],
   ['beneficiaries', 'photo_fichier'],

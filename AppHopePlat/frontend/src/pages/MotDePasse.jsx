@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import LiensLegaux from '../components/LiensLegaux.jsx';
@@ -17,7 +17,13 @@ import * as utilisateurService from '../services/utilisateur.service.js';
  *   /reinitialiser-mot-de-passe   : le lien du courriel y mene, on choisit
  *                                   le nouveau mot de passe.
  */
-function CadreMotDePasse({ titre, accroche, children }) {
+function CadreMotDePasse({
+  titre,
+  accroche,
+  children,
+  illustration = ['Un oubli,', 'ça arrive'],
+  sousTitre = 'Un lien par courriel, un nouveau mot de passe, et vous retrouvez votre espace.',
+}) {
   return (
     <div className="connexion connexion--defile">
       <section
@@ -27,14 +33,12 @@ function CadreMotDePasse({ titre, accroche, children }) {
         <div className="illustration__principal">
           <p className="illustration__surtitre">Votre compte HOPE</p>
           <h1 className="illustration__titre">
-            Un oubli,
+            {illustration[0]}
             <br />
-            ça arrive
+            {illustration[1]}
           </h1>
           <div className="trait-hope trait-hope--renverse illustration__barre" aria-hidden="true" />
-          <p className="illustration__sous-titre">
-            Un lien par courriel, un nouveau mot de passe, et vous retrouvez votre espace.
-          </p>
+          <p className="illustration__sous-titre">{sousTitre}</p>
         </div>
         <div className="illustration__pied">
           <MadagascarSilhouette className="illustration__madagascar" />
@@ -288,6 +292,78 @@ export function ReinitialiserMotDePasse() {
           )}
         </form>
       )}
+    </CadreMotDePasse>
+  );
+}
+
+/**
+ * /verifier-courriel : le lien du courriel d'inscription. La page
+ * confirme l'adresse des son ouverture.
+ */
+export function VerifierCourriel() {
+  const [parametres] = useSearchParams();
+  const jeton = parametres.get('jeton') ?? '';
+  const lienValide = /^[a-f0-9]{64}$/.test(jeton);
+  const [etat, setEtat] = useState(lienValide ? 'envoi' : 'invalide');
+  const [message, setMessage] = useState('');
+
+  /*
+   * Le jeton ne sert qu'une fois : l'appel part une seule fois par jeton,
+   * meme si l'effet est rejoue (mode strict de React en developpement).
+   */
+  const appel = useRef({ jeton: null, promesse: null });
+
+  useEffect(() => {
+    if (!lienValide) return undefined;
+    let actif = true;
+    if (appel.current.jeton !== jeton) {
+      appel.current = { jeton, promesse: utilisateurService.verifierCourriel(jeton) };
+    }
+    appel.current.promesse
+      .then((texte) => {
+        if (!actif) return;
+        setMessage(texte);
+        setEtat('fait');
+      })
+      .catch((echec) => {
+        if (!actif) return;
+        setMessage(messageErreur(echec, 'L’adresse n’a pas pu être confirmée.'));
+        setEtat('refus');
+      });
+    return () => {
+      actif = false;
+    };
+  }, [jeton, lienValide]);
+
+  const titres = {
+    envoi: ['Confirmation…', 'Un instant : nous vérifions le lien.'],
+    fait: ['Adresse confirmée', 'Tout est en ordre.'],
+    refus: ['Lien expiré', 'Ce lien ne peut plus servir.'],
+    invalide: ['Lien incomplet', 'Ce lien ne contient pas ce qu’il faut.'],
+  };
+
+  return (
+    <CadreMotDePasse
+      titre={titres[etat][0]}
+      accroche={titres[etat][1]}
+      illustration={['Bienvenue', 'chez HOPE']}
+      sousTitre="Une adresse confirmée, et HOPE peut vous écrire au sujet de votre compte et de vos dons."
+    >
+      <div className="formulaire" role="status">
+        {etat === 'fait' && <p className="note-acces note-acces--ok">{message}</p>}
+        {(etat === 'refus' || etat === 'invalide') && (
+          <p className="formulaire__erreur" role="alert">
+            {message || 'Ouvrez le lien directement depuis le courriel reçu.'} Connectez-vous : votre espace permet d’en
+            demander un nouveau.
+          </p>
+        )}
+        {etat !== 'envoi' && (
+          <Link className="bouton bouton--principal" to="/authentification">
+            Aller à mon espace
+            <IconeFleche />
+          </Link>
+        )}
+      </div>
     </CadreMotDePasse>
   );
 }

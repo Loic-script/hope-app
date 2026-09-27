@@ -14,6 +14,7 @@ import * as benevoleService from '../services/benevole.service.js';
 import * as espaceService from '../services/espace.service.js';
 import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
+import BandeauVerification from '../components/compte/BandeauVerification.jsx';
 
 /**
  * Les ecrans de l'espace benevole, dans l'ordre du parcours : on
@@ -124,6 +125,7 @@ export default function BenevoleLayout() {
       notifications={{ to: '/benevole/notifications', cle: 'notifications' }}
     >
       {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
+      <BandeauVerification espace="benevole" />
       <Suspense fallback={<ChargementPage />}>
         <Outlet
           context={{

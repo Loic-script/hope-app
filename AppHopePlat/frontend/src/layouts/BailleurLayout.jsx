@@ -14,6 +14,7 @@ import * as bailleurService from '../services/bailleur.service.js';
 import * as espaceService from '../services/espace.service.js';
 import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
+import BandeauVerification from '../components/compte/BandeauVerification.jsx';
 
 /**
  * Les ecrans de l'espace, dans l'ordre de la lecture : les actualites --
@@ -124,6 +125,7 @@ export default function BailleurLayout() {
       notifications={{ to: '/bailleur/notifications', cle: 'notifications' }}
     >
       {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
+      <BandeauVerification espace="bailleur" />
       <Suspense fallback={<ChargementPage />}>
         <Outlet
           context={{

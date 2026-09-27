@@ -18,6 +18,7 @@ import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
+import * as verificationCourriel from './verificationCourriel.service.js';
 import { signalerNouveauCompte } from './notification.service.js';
 import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
 import {
@@ -151,7 +152,7 @@ export async function inscrire(corps = {}) {
   const hash = await bcrypt.hash(motDePasse, config.admin.saltRounds);
 
   try {
-    return await transaction(async (client) => {
+    const resultat = await transaction(async (client) => {
       // Le compte porte le role bailleur, pas benevole : aucune fiche de
       // terrain n'est creee.
       const compte = await volunteerRepository.creer(
@@ -193,6 +194,9 @@ export async function inscrire(corps = {}) {
         compteStatut: compte.statut,
       };
     });
+    // Le lien de confirmation de l'adresse (un echec d'envoi n'annule rien).
+    await verificationCourriel.envoyerLien({ id: resultat.utilisateurId, email, prenom });
+    return resultat;
   } catch (erreur) {
     /*
      * Deux inscriptions envoyees dans la meme seconde passent toutes

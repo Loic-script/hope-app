@@ -170,3 +170,9 @@ export async function deconnecterDonateur() {
     effacerStockage(CLE_DONATEUR);
   }
 }
+
+/** POST /api/auth/verifier-courriel : le jeton du lien d'inscription. */
+export async function verifierCourriel(jeton) {
+  const { data } = await apiAuth.post('/auth/verifier-courriel', { jeton });
+  return data.message;
+}

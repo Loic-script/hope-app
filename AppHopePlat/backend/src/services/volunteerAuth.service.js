@@ -17,6 +17,7 @@ import { config } from '../config/env.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
 import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
+import * as verificationCourriel from './verificationCourriel.service.js';
 
 /** Audience des jetons de cet espace. */
 const AUDIENCE = 'hope-benevole';
@@ -172,6 +173,7 @@ export async function inscrire(corps = {}) {
     { nom, prenom, email, motDePasse: hash, conditionsVersion: VERSION_CONDITIONS },
     ['benevole']
   );
+  await verificationCourriel.envoyerLien({ id: compte.id, email, prenom });
 
   return versBenevolePublic(compte);
 }

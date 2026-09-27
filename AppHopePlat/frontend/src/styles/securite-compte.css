@@ -356,3 +356,112 @@
     animation: none;
   }
 }
+
+/* ============================================================
+   Le rappel de confirmer son adresse, en tete des espaces.
+   ============================================================ */
+.bandeau-verif {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #f3dcb4;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #fff8ea, #fffdf6);
+  animation: securite-entree 0.35s ease both;
+}
+
+.bandeau-verif__icone {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #fdebc8;
+  color: var(--hope-orange-lisible);
+}
+
+.bandeau-verif__icone svg,
+.bandeau-verif__fermer svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bandeau-verif__texte {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--hope-texte);
+  overflow-wrap: anywhere;
+}
+
+.bandeau-verif__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bandeau-verif__bouton {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--hope-orange);
+  border-radius: 10px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hope-orange-lisible);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.18s ease;
+}
+
+.bandeau-verif__bouton:hover:not(:disabled) {
+  background: #fdebc8;
+}
+
+.bandeau-verif__fermer {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--hope-texte-doux);
+  cursor: pointer;
+}
+
+.bandeau-verif__fermer:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.bandeau-verif__bouton:focus-visible,
+.bandeau-verif__fermer:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .bandeau-verif {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'icone texte fermer' 'actions actions actions';
+  }
+
+  .bandeau-verif__icone { grid-area: icone; }
+  .bandeau-verif__texte { grid-area: texte; }
+  .bandeau-verif__actions { display: contents; }
+  .bandeau-verif__fermer { grid-area: fermer; }
+  .bandeau-verif__bouton { grid-area: actions; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandeau-verif { animation: none; }
+}

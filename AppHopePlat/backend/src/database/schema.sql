@@ -2003,3 +2003,19 @@ CREATE TABLE IF NOT EXISTS reinitialisation_mot_de_passe (
 
 CREATE INDEX IF NOT EXISTS reinitialisation_utilisateur_idx
   ON reinitialisation_mot_de_passe (utilisateur_id) WHERE utilise_le IS NULL;
+
+-- La verification de l'adresse electronique : meme principe, un lien
+-- de 48 heures, et la date de confirmation sur le compte.
+ALTER TABLE utilisateur ADD COLUMN IF NOT EXISTS email_verifie_le TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS verification_courriel (
+  id               BIGSERIAL    PRIMARY KEY,
+  utilisateur_id   UUID         NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  jeton_empreinte  CHAR(64)     NOT NULL UNIQUE,
+  expire_le        TIMESTAMPTZ  NOT NULL,
+  utilise_le       TIMESTAMPTZ,
+  cree_le          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS verification_courriel_utilisateur_idx
+  ON verification_courriel (utilisateur_id) WHERE utilise_le IS NULL;

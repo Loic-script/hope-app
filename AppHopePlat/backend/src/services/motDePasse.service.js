@@ -113,7 +113,12 @@ export async function reinitialiser(corps = {}) {
     const demande = rows[0];
     if (!demande) throw lienInvalide();
 
-    await query('UPDATE utilisateur SET mot_de_passe = $2 WHERE id = $1', [demande.utilisateur_id, hash], client);
+    // Le lien est arrive dans la boite : l'adresse est confirmee du meme coup.
+    await query(
+      'UPDATE utilisateur SET mot_de_passe = $2, email_verifie_le = COALESCE(email_verifie_le, NOW()) WHERE id = $1',
+      [demande.utilisateur_id, hash],
+      client
+    );
     // Quelqu'un avait peut-etre le mot de passe : ses sessions tombent.
     await fermerSessionsUtilisateur(demande.utilisateur_id, client);
     // Ce lien, et tout autre encore ouvert pour ce compte, est consomme.

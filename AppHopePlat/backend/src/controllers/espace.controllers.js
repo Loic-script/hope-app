@@ -11,6 +11,7 @@ import * as compteService from '../services/compte.service.js';
 import { jetonNeuf } from '../services/auth.service.js';
 import { AUDIENCE_PAR_TYPE } from '../shared/audiences.js';
 import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
+import * as verificationCourriel from '../services/verificationCourriel.service.js';
 
 /** Le type d'espace (donateur, benevole, bailleur) d'une audience de jeton. */
 function typeDeLAudience(audience) {
@@ -117,6 +118,24 @@ export async function supprimerCompte(req, res, next) {
     const resultat = await compteService.supprimerSonCompte(req.utilisateurId, req.body ?? {});
     effacerSessionsUtilisateur(res);
     res.status(200).json(resultat);
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** GET /api/espace/compte : l'adresse et sa confirmation. */
+export async function etatCompte(req, res, next) {
+  try {
+    res.status(200).json(await verificationCourriel.etat(req.utilisateurId));
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** POST /api/espace/compte/verification : renvoyer le lien de confirmation. */
+export async function renvoyerVerification(req, res, next) {
+  try {
+    res.status(200).json(await verificationCourriel.renvoyer(req.utilisateurId));
   } catch (erreur) {
     next(erreur);
   }

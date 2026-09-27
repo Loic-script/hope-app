@@ -14,6 +14,7 @@ import * as espaceService from '../services/espace.service.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
+import BandeauVerification from '../components/compte/BandeauVerification.jsx';
 
 /**
  * Les ecrans de l'espace donateur, dans l'ordre de la lecture : ce qui se
@@ -101,6 +102,7 @@ export default function DonateurLayout() {
       notifications={{ to: '/donateur/notifications', cle: 'notifications' }}
     >
       {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
+      <BandeauVerification espace="donateur" />
       <Suspense fallback={<ChargementPage />}>
         <Outlet
           context={{

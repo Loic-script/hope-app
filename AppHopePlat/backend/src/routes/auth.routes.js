@@ -40,6 +40,13 @@ router.post(
   auth.reinitialiserMotDePasse
 );
 
+// Le lien de confirmation de l'adresse, recu par courriel.
+router.post(
+  '/auth/verifier-courriel',
+  limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }),
+  auth.verifierCourriel
+);
+
 router.post(
   '/auth/login',
   limiterTentatives({ fenetreMs: 60_000, maximum: 10 }),

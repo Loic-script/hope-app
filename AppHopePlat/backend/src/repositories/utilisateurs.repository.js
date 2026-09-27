@@ -94,7 +94,7 @@ export async function trouverCompte(id, client = null) {
   const resultat = await query(
     `SELECT u.id, u.nom, u.prenom, u.email, u.telephone, u.adresse,
             u.date_de_naissance::text AS date_de_naissance, u.photo_url,
-            u.statut, u.cree_le, u.derniere_connexion, u.active_le,
+            u.statut, u.cree_le, u.derniere_connexion, u.active_le, u.email_verifie_le,
             a.admin_log AS active_par_log,
             COALESCE(r.roles, ARRAY[]::TEXT[]) AS roles
        FROM utilisateur u

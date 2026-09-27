@@ -22,6 +22,8 @@ router.get('/badges', espace.badges);
 
 // Le compte : changer son mot de passe, supprimer son compte. Limites :
 // le mot de passe actuel y est essaye.
+router.get('/compte', espace.etatCompte);
+router.post('/compte/verification', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 3 }), espace.renvoyerVerification);
 router.post('/compte/mot-de-passe', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }), espace.changerMotDePasse);
 router.post('/compte/suppression', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 5 }), espace.supprimerCompte);
 

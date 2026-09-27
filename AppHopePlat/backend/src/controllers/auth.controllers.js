@@ -8,6 +8,7 @@ import * as authService from '../services/auth.service.js';
 import * as motDePasseService from '../services/motDePasse.service.js';
 import { LIBELLES_TYPE, TYPES_UTILISATEUR } from '../shared/audiences.js';
 import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
+import * as verificationCourriel from '../services/verificationCourriel.service.js';
 
 /**
  * GET /api/auth/types
@@ -117,4 +118,13 @@ export async function reinitialiserMotDePasse(req, res, next) {
 export function logout(_req, res) {
   effacerSessionsUtilisateur(res);
   res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
+}
+
+/** POST /api/auth/verifier-courriel : le jeton du lien. */
+export async function verifierCourriel(req, res, next) {
+  try {
+    res.status(200).json(await verificationCourriel.verifier(req.body ?? {}));
+  } catch (erreur) {
+    next(erreur);
+  }
 }
