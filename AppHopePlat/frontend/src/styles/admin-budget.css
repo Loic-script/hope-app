@@ -1,0 +1,431 @@
+/* ============================================================
+   Ecran Budget : les quatre cartes des sommes, et le detail des
+   depenses.
+   ============================================================ */
+
+.cartes-budget {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.carte-budget {
+  --teinte: #5d5696;
+  --teinte-pale: #efeefa;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px 20px 18px;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 18px;
+  background: var(--admin-surface);
+  box-shadow: 0 10px 28px rgba(43, 50, 68, 0.06);
+  animation: carte-budget-entree 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--rang, 0) * 90ms);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+/* Le filet de couleur en tete, et un halo discret dans le coin. */
+.carte-budget::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--teinte);
+}
+
+.carte-budget::after {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--teinte-pale) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.carte-budget:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--teinte) 35%, var(--admin-bordure));
+  box-shadow: 0 18px 38px rgba(43, 50, 68, 0.11);
+}
+
+.carte-budget--violet { --teinte: #5d5696; --teinte-pale: #efeefa; }
+.carte-budget--bleu { --teinte: #2b6484; --teinte-pale: #e3f0f9; }
+.carte-budget--orange { --teinte: #c9822a; --teinte-pale: #fdf0dc; }
+.carte-budget--vert { --teinte: #2c8f63; --teinte-pale: #e3f5ec; }
+
+.carte-budget__entete {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.carte-budget__icone {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: var(--teinte-pale);
+  color: var(--teinte);
+  transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.carte-budget:hover .carte-budget__icone {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.carte-budget__icone svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.carte-budget__libelle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--admin-texte-doux);
+}
+
+.carte-budget__montant {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: clamp(21px, 1.9vw, 27px);
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--admin-texte);
+  overflow-wrap: anywhere;
+}
+
+.carte-budget__jauge {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 3px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf0f6;
+}
+
+.carte-budget__segment {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.carte-budget__segment--violet { background: #5d5696; }
+.carte-budget__segment--bleu-clair { background: #86b9de; }
+.carte-budget__segment--bleu { background: linear-gradient(90deg, #86b9de, #2b6484); }
+.carte-budget__segment--orange { background: linear-gradient(90deg, #f5c77e, #c9822a); }
+.carte-budget__segment--vert { background: linear-gradient(90deg, #7fcfa8, #2c8f63); }
+
+.carte-budget__detail {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+}
+
+@keyframes carte-budget-entree {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .cartes-budget {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cartes-budget {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .carte-budget {
+    padding: 16px;
+  }
+}
+
+/* ---------- Le detail des depenses ---------- */
+.depenses-budget {
+  display: grid;
+  gap: 18px;
+  padding: 18px 20px 20px;
+}
+
+.depenses-budget__chiffres {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.depenses-budget__chiffre {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--admin-surface-douce);
+  border: 1px solid var(--admin-bordure);
+}
+
+.depenses-budget__chiffre strong {
+  font-family: var(--police-titre);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+}
+
+.depenses-budget__chiffre--alerte {
+  border-color: #f3d19a;
+  background: #fff8ec;
+}
+
+.depenses-budget__chiffre--alerte strong {
+  color: #7f5210;
+}
+
+.depenses-budget__etiquette {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.depenses-budget__note {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.depenses-budget__titre {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.depenses-budget__categories ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.depenses-budget__categorie {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  animation: carte-budget-entree 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--rang, 0) * 60ms);
+}
+
+.depenses-budget__nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--admin-texte);
+}
+
+.depenses-budget__barre {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf0f6;
+}
+
+.depenses-budget__barre span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #a9a4d6, #5d5696);
+  transition: width 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.depenses-budget__valeur {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--admin-texte);
+}
+
+.depenses-budget__valeur em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--admin-texte-doux);
+}
+
+.depenses-budget__outils {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.depenses-budget__recherche {
+  position: relative;
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+}
+
+.depenses-budget__recherche svg {
+  position: absolute;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--admin-texte-doux);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.depenses-budget__recherche input,
+.depenses-budget__filtre select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 11px;
+  background: var(--admin-surface);
+  font: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.depenses-budget__recherche input {
+  padding: 0 12px 0 38px;
+}
+
+.depenses-budget__filtre {
+  flex: 0 1 240px;
+}
+
+.depenses-budget__filtre select {
+  padding: 0 12px;
+}
+
+.depenses-budget__recherche input:focus-visible,
+.depenses-budget__filtre select:focus-visible {
+  outline: 3px solid #86b9de;
+  outline-offset: 1px;
+}
+
+.depenses-budget__pastille {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #efeefa;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4a4479;
+  white-space: nowrap;
+}
+
+.depenses-budget__justifie {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #e3f5ec;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d6b48;
+}
+
+.depenses-budget__manquant {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff1dc;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #7f5210;
+  white-space: nowrap;
+}
+
+.depenses-budget__vide {
+  margin: 0;
+  padding: 18px 0;
+  text-align: center;
+  color: var(--admin-texte-doux);
+}
+
+.depenses-budget__suite {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .depenses-budget {
+    padding: 14px;
+  }
+
+  .depenses-budget__chiffres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .depenses-budget__categorie {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .depenses-budget__barre {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .depenses-budget__filtre {
+    flex: 1 1 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte-budget,
+  .depenses-budget__categorie {
+    animation: none;
+  }
+
+  .carte-budget,
+  .carte-budget__icone,
+  .carte-budget__segment,
+  .depenses-budget__barre span {
+    transition: none;
+  }
+
+  .carte-budget:hover {
+    transform: none;
+  }
+}

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
+import CartesBudget from '../../components/admin/CartesBudget.jsx';
+import DetailDepenses from '../../components/admin/DetailDepenses.jsx';
 import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
 import { DepenseModale, DonModale, InvestirModale } from '../../components/admin/modales.jsx';
 import {
@@ -16,6 +18,7 @@ import {
 import { useChargement } from '../../hooks/useChargement.js';
 import * as catalogService from '../../services/catalog.service.js';
 import * as donorService from '../../services/donor.service.js';
+import * as expenseService from '../../services/expense.service.js';
 import * as fundService from '../../services/fund.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
@@ -109,6 +112,11 @@ export default function BudgetPage() {
     []
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
+  // Le detail des depenses : les plus recentes d'abord.
+  const { donnees: listeDepenses, chargement: chargementDepenses, recharger: rechargerDepenses } = useChargement(
+    () => expenseService.lister({ pageSize: 200 }),
+    []
+  );
   // Un fonds s'alimente d'un don : il faut donc savoir de qui il vient.
   const { donnees: donateurs, recharger: rechargerDonateurs } = useChargement(
     () => donorService.lister({ pageSize: 200 }),
@@ -187,42 +195,18 @@ export default function BudgetPage() {
 
       {/*
         ---------- Les quatre sommes du budget ----------
-        Ce qu'il faut, ce qui est arrive, ce qui manque encore, ce qui est
-        sorti : le total du tableau "Budget des projets", plus bas. Le
-        detail des dons -- affectes, fonds HOPE, disponible a investir --
-        se lit dans "Ou va l'argent".
+        Ce que HOPE a recu, ce qu'il faut aux projets, ce qui reste a
+        trouver, ce que le fonds HOPE a deja investi. Le detail suit :
+        ou va l'argent, le budget de chaque projet, les depenses.
       */}
-      <div className="resume-financier" style={{ marginBottom: '18px' }}>
-        <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Budget nécessaire</p>
-          <p className="resume-financier__valeur">{somme(totaux, 'requiredBudget')}</p>
-          <p className="resume-financier__detail">
-            {fmt.nombre(budgets.length)} projet{budgets.length > 1 ? 's' : ''} en cours ou terminé
-            {budgets.length > 1 ? 's' : ''}
-          </p>
-        </div>
-        <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Sommes reçues</p>
-          <p className="resume-financier__valeur">{somme(totaux, 'fundedTotal')}</p>
-          <p className="resume-financier__detail">
-            {unique ? `dont ${fmt.montant(unique.investedHopeTotal, unique.currency)} du fonds HOPE` : 'Dons affectés et fonds HOPE investi'}
-          </p>
-        </div>
-        <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Reste à financer</p>
-          <p className="resume-financier__valeur">{somme(totaux, 'remainingNeed')}</p>
-          <p className="resume-financier__detail">
-            {unique ? `${part(unique.fundedTotal, unique.requiredBudget)} du budget financé` : 'Budget nécessaire moins sommes reçues'}
-          </p>
-        </div>
-        <div className="resume-financier__bloc">
-          <p className="resume-financier__libelle">Sommes dépensées</p>
-          <p className="resume-financier__valeur">{somme(totaux, 'spentTotal')}</p>
-          <p className="resume-financier__detail">
-            {unique ? `${part(unique.spentTotal, unique.fundedTotal)} des sommes reçues` : 'Dépenses enregistrées sur les projets'}
-          </p>
-        </div>
-      </div>
+      <CartesBudget
+        resume={resume}
+        // Aucun projet : des sommes nulles plutot qu'un tiret.
+        total={totaux.length === 0 ? { requiredBudget: 0, fundedTotal: 0, remainingNeed: 0, currency: 'MGA' } : unique}
+        texteNecessaire={somme(totaux, 'requiredBudget')}
+        texteRestant={somme(totaux, 'remainingNeed')}
+        nombreProjets={budgets.length}
+      />
 
       {/* ---------- Lecture visuelle du budget ---------- */}
       <Panneau
@@ -346,6 +330,19 @@ export default function BudgetPage() {
         />
       </Panneau>
 
+      {/* ---------- Le detail des depenses ---------- */}
+      <Panneau
+        titre="Détail des dépenses"
+        sousTitre="Chaque sortie d’argent, sa catégorie et son justificatif. Une ligne mène à l’onglet Dépenses du projet."
+        serre
+      >
+        <DetailDepenses
+          depenses={listeDepenses?.items}
+          chargement={chargementDepenses && !listeDepenses}
+          sommesRecues={unique?.fundedTotal ?? null}
+        />
+      </Panneau>
+
       {/* ---------- Historique des investissements ---------- */}
       <Panneau
         titre="Investissements du fonds HOPE"
@@ -437,6 +434,7 @@ export default function BudgetPage() {
           recharger();
           rechargerProjets();
           rechargerBudgets();
+          rechargerDepenses();
         }}
       />
 
