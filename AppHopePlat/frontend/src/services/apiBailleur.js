@@ -16,16 +16,11 @@ export const CLE_BAILLEUR = 'hope.bailleur.profil';
 
 export const apiBailleur = axios.create({
   baseURL: URL_API,
-  headers: { 'Content-Type': 'application/json' },
+  // X-Hope-Espace dit au serveur quel cookie lire sur les routes
+  // communes (/espace) ; le jeton, lui, voyage dans le cookie httpOnly.
+  headers: { 'Content-Type': 'application/json', 'X-Hope-Espace': 'bailleur' },
   timeout: 10000,
-});
-
-apiBailleur.interceptors.request.use((requete) => {
-  const jeton = lireStockage(CLE_JETON_BAILLEUR);
-  if (jeton) {
-    requete.headers.Authorization = `Bearer ${jeton}`;
-  }
-  return requete;
+  withCredentials: true,
 });
 
 /**

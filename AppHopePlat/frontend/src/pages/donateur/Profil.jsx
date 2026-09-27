@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 
 import { IconeCoche, IconeMainsCoeur, IconeSoleil } from '../../components/HopeIcons.jsx';
 import { VisuelPaiement } from '../../components/VisuelsPaiement.jsx';
+import SecuriteCompte from '../../components/compte/SecuriteCompte.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/donateur.service.js';
@@ -446,6 +447,8 @@ export default function Profil() {
           </div>
         </Bloc>
       </div>
+
+      <SecuriteCompte espace="donateur" />
     </div>
   );
 }

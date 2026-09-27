@@ -43,6 +43,7 @@ import './styles/paiement-plateforme.css';
 import './styles/parcours-benevole.css';
 import './styles/choix-page.css';
 import './styles/legal.css';
+import './styles/securite-compte.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

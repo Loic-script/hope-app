@@ -15,16 +15,11 @@ export const CLE_DONATEUR = 'hope.donateur.profil';
 
 export const apiDonateur = axios.create({
   baseURL: URL_API,
-  headers: { 'Content-Type': 'application/json' },
+  // X-Hope-Espace dit au serveur quel cookie lire sur les routes
+  // communes (/espace) ; le jeton, lui, voyage dans le cookie httpOnly.
+  headers: { 'Content-Type': 'application/json', 'X-Hope-Espace': 'donateur' },
   timeout: 10000,
-});
-
-apiDonateur.interceptors.request.use((requete) => {
-  const jeton = lireStockage(CLE_JETON_DONATEUR);
-  if (jeton) {
-    requete.headers.Authorization = `Bearer ${jeton}`;
-  }
-  return requete;
+  withCredentials: true,
 });
 
 /**

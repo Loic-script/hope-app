@@ -5,6 +5,7 @@
  * reponse JSON. Aucune regle metier, aucun acces base de donnees ici.
  */
 import * as adminAuthService from '../services/adminAuth.service.js';
+import { effacerSession, poserSession } from '../shared/session.js';
 
 /**
  * POST /api/admin/login
@@ -14,6 +15,9 @@ export async function login(req, res, next) {
   try {
     const { adminLog, password } = req.body ?? {};
     const resultat = await adminAuthService.connecter({ adminLog, password });
+
+    // La session part dans un cookie httpOnly : JavaScript ne la voit pas.
+    poserSession(res, 'admin', resultat.token, { persistant: req.body?.seSouvenir !== false });
 
     // La reponse ne contient jamais password_hash.
     res.status(200).json({
@@ -53,6 +57,7 @@ export async function me(req, res, next) {
  * et pourra plus tard alimenter une liste de revocation ou un journal d'audit.
  */
 export async function logout(req, res) {
+  effacerSession(res, 'admin');
   res.status(200).json({
     success: true,
     message: 'Deconnexion effectuee.',

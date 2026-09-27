@@ -7,6 +7,7 @@
 import * as authService from '../services/auth.service.js';
 import * as motDePasseService from '../services/motDePasse.service.js';
 import { LIBELLES_TYPE, TYPES_UTILISATEUR } from '../shared/audiences.js';
+import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 
 /**
  * GET /api/auth/types
@@ -40,6 +41,8 @@ export async function types(_req, res) {
 export async function inscription(req, res, next) {
   try {
     const resultat = await authService.inscrire(req.body ?? {});
+    // Le benevole enchaine sur sa fiche : son jeton limite part en cookie.
+    if (resultat.jetonCompletion) poserSession(res, 'benevole', resultat.jetonCompletion, { persistant: false });
 
     res.status(201).json({
       success: true,
@@ -69,6 +72,9 @@ export async function login(req, res, next) {
   try {
     const { email, motDePasse, typeUtilisateur } = req.body ?? {};
     const resultat = await authService.connecter({ email, motDePasse, typeUtilisateur });
+    // Une seule session d'utilisateur a la fois : les autres sont effacees.
+    effacerSessionsUtilisateur(res);
+    poserSession(res, resultat.type, resultat.token, { persistant: req.body?.seSouvenir !== false });
 
     res.status(200).json({
       success: true,
@@ -102,4 +108,13 @@ export async function reinitialiserMotDePasse(req, res, next) {
   } catch (erreur) {
     next(erreur);
   }
+}
+
+/**
+ * POST /api/auth/logout : efface la session d'utilisateur, quelle
+ * qu'elle soit. Public : un cookie expire doit pouvoir s'effacer aussi.
+ */
+export function logout(_req, res) {
+  effacerSessionsUtilisateur(res);
+  res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
 }

@@ -16,17 +16,8 @@ import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { AUDIENCE_DONATEUR, EMETTEUR } from '../shared/audiences.js';
 import { ErreurAuthentification } from '../shared/errors.js';
 import { versUtilisateurPublic } from '../services/auth.service.js';
-
-function lireJeton(req) {
-  const entete = req.headers.authorization;
-  if (!entete || typeof entete !== 'string') return null;
-
-  const [schema, valeur] = entete.split(' ');
-  if (!valeur || schema.toLowerCase() !== 'bearer') return null;
-
-  const jeton = valeur.trim();
-  return jeton === '' ? null : jeton;
-}
+import { exigerSessionFraicheUtilisateur } from '../services/session.service.js';
+import { lireJeton } from '../shared/session.js';
 
 /** Verifie un JWT de l'espace donateur. */
 export function verifierJeton(token) {
@@ -48,7 +39,7 @@ export function verifierJeton(token) {
 
 export async function authenticateDonor(req, _res, next) {
   try {
-    const jeton = lireJeton(req);
+    const jeton = lireJeton(req, 'donateur');
     if (!jeton) {
       throw new ErreurAuthentification(
         'Jeton d’authentification manquant.',
@@ -73,6 +64,8 @@ export async function authenticateDonor(req, _res, next) {
         'ROLE_MANQUANT'
       );
     }
+
+    await exigerSessionFraicheUtilisateur(compte.id, charge);
 
     req.donateur = versUtilisateurPublic(compte, 'donateur');
     next();

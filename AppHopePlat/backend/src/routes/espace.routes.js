@@ -11,6 +11,7 @@ import { conversations } from '../controllers/conversation.controllers.js';
 import { televerserGroupe, televerserMessage } from '../middleware/upload.middleware.js';
 import * as espace from '../controllers/espace.controllers.js';
 import { authenticateEspace } from '../middleware/espaceAuth.middleware.js';
+import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 
 const router = Router();
 
@@ -18,6 +19,11 @@ const router = Router();
 router.use(authenticateEspace);
 
 router.get('/badges', espace.badges);
+
+// Le compte : changer son mot de passe, supprimer son compte. Limites :
+// le mot de passe actuel y est essaye.
+router.post('/compte/mot-de-passe', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }), espace.changerMotDePasse);
+router.post('/compte/suppression', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 5 }), espace.supprimerCompte);
 
 router.get('/notifications', espace.listerNotifications);
 // "lues" avant ":id/lue" : sans cet ordre, Express verrait "lues" comme

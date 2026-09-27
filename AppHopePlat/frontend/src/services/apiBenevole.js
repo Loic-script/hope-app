@@ -18,17 +18,11 @@ export const CLE_BENEVOLE = 'hope.benevole.profil';
 
 export const apiBenevole = axios.create({
   baseURL: URL_API,
-  headers: { 'Content-Type': 'application/json' },
+  // X-Hope-Espace dit au serveur quel cookie lire sur les routes
+  // communes (/espace) ; le jeton, lui, voyage dans le cookie httpOnly.
+  headers: { 'Content-Type': 'application/json', 'X-Hope-Espace': 'benevole' },
   timeout: 10000,
-});
-
-/** Ajoute le jeton du benevole a chaque requete sortante. */
-apiBenevole.interceptors.request.use((requete) => {
-  const jeton = lireStockage(CLE_JETON_BENEVOLE);
-  if (jeton) {
-    requete.headers.Authorization = `Bearer ${jeton}`;
-  }
-  return requete;
+  withCredentials: true,
 });
 
 /**

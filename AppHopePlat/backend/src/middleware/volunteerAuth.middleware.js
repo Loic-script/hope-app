@@ -8,22 +8,12 @@
  */
 import * as volunteerAuthService from '../services/volunteerAuth.service.js';
 import { ErreurAuthentification } from '../shared/errors.js';
-
-/** Extrait le jeton de l'en-tete Authorization. */
-function lireJeton(req) {
-  const entete = req.headers.authorization;
-  if (!entete || typeof entete !== 'string') return null;
-
-  const [schema, valeur] = entete.split(' ');
-  if (!valeur || schema.toLowerCase() !== 'bearer') return null;
-
-  const jeton = valeur.trim();
-  return jeton === '' ? null : jeton;
-}
+import { lireJeton } from '../shared/session.js';
+import { exigerSessionFraicheUtilisateur } from '../services/session.service.js';
 
 export async function authenticateVolunteer(req, _res, next) {
   try {
-    const jeton = lireJeton(req);
+    const jeton = lireJeton(req, 'benevole');
     if (!jeton) {
       throw new ErreurAuthentification(
         'Jeton d’authentification manquant.',
@@ -51,6 +41,7 @@ export async function authenticateVolunteer(req, _res, next) {
     req.benevole = await volunteerAuthService.recupererBenevoleAuthentifie(
       charge.utilisateurId
     );
+    await exigerSessionFraicheUtilisateur(charge.utilisateurId, charge);
 
     next();
   } catch (erreur) {
@@ -73,7 +64,7 @@ export async function authenticateVolunteer(req, _res, next) {
  */
 export async function authenticateVolunteerACompleter(req, _res, next) {
   try {
-    const jeton = lireJeton(req);
+    const jeton = lireJeton(req, 'benevole');
     if (!jeton) {
       throw new ErreurAuthentification(
         'Jeton d’authentification manquant.',
@@ -85,6 +76,7 @@ export async function authenticateVolunteerACompleter(req, _res, next) {
     req.benevole = await volunteerAuthService.recupererBenevoleACompleter(
       charge.utilisateurId
     );
+    await exigerSessionFraicheUtilisateur(charge.utilisateurId, charge);
 
     next();
   } catch (erreur) {

@@ -6,6 +6,7 @@
  * lectures, plus quelques ecritures -- la fiche de contact, la
  * manifestation d'interet et la promesse de don.
  */
+import { TEMOIN_SESSION } from './api.js';
 import {
   apiBailleur,
   CLE_BAILLEUR,
@@ -17,8 +18,9 @@ import {
 
 /* --------------------------- Session ---------------------------------- */
 
-function memoriserSession(token, bailleur, persistant) {
-  ecrireStockage(CLE_JETON_BAILLEUR, token, persistant);
+function memoriserSession(bailleur, persistant) {
+  // Le jeton est dans le cookie httpOnly : ici, le seul temoin.
+  ecrireStockage(CLE_JETON_BAILLEUR, TEMOIN_SESSION, persistant);
   ecrireStockage(CLE_BAILLEUR, JSON.stringify(bailleur), persistant);
 }
 
@@ -62,8 +64,8 @@ export async function inscrire(corps) {
 
 /** POST /api/bailleur/login */
 export async function connecter(email, motDePasse, persistant = true) {
-  const { data } = await apiBailleur.post('/bailleur/login', { email, motDePasse });
-  memoriserSession(data.token, data.bailleur, persistant);
+  const { data } = await apiBailleur.post('/bailleur/login', { email, motDePasse, seSouvenir: persistant });
+  memoriserSession(data.bailleur, persistant);
   return data.bailleur;
 }
 

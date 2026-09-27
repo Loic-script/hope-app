@@ -5,7 +5,6 @@
  * l'en-tete multipart et sa frontiere, d'ou le Content-Type mis a undefined.
  */
 import { api, URL_API } from './api.js';
-import { lireJeton } from './auth.service.js';
 
 export async function lister(filtres = {}) {
   const { data } = await api.get('/admin/documents', { params: filtres });
@@ -42,14 +41,12 @@ export async function supprimer(id) {
 /**
  * Ouvre un justificatif dans un nouvel onglet.
  *
- * La route de telechargement est protegee par le JWT : un simple lien ne
+ * La route de telechargement est protegee par la session : un simple lien ne
  * suffit pas, le navigateur n'enverrait pas l'en-tete Authorization. On
  * telecharge donc le fichier puis on l'affiche depuis une URL locale.
  */
 export async function ouvrir(document) {
-  const reponse = await fetch(`${URL_API}/admin/documents/${document.id}/download`, {
-    headers: { Authorization: `Bearer ${lireJeton()}` },
-  });
+  const reponse = await fetch(`${URL_API}/admin/documents/${document.id}/download`, { credentials: 'same-origin' });
 
   if (!reponse.ok) {
     throw new Error("Le fichier est introuvable sur le serveur.");

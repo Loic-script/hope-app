@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import LiensLegaux from '../components/LiensLegaux.jsx';
 import HopeLogo from '../components/HopeLogo.jsx';
@@ -15,6 +15,7 @@ import {
 import { useChargement } from '../hooks/useChargement.js';
 import { messageErreur } from '../services/api.js';
 import { CLE_JETON_BENEVOLE, ecrireStockage } from '../services/apiBenevole.js';
+import { TEMOIN_SESSION } from '../services/api.js';
 import { focusAutomatique } from '../utils/ecran.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 
@@ -66,6 +67,8 @@ const FORMULAIRE_VIDE = {
  */
 export default function Authentification() {
   const navigate = useNavigate();
+  // Arrivee apres la suppression de son compte : on le confirme.
+  const compteSupprime = Boolean(useLocation().state?.compteSupprime);
   const { donnees: typesServeur } = useChargement(() => utilisateurService.typesUtilisateur(), []);
   const types = typesServeur?.length ? typesServeur : TYPES_PAR_DEFAUT;
 
@@ -149,6 +152,12 @@ export default function Authentification() {
                 : 'Choisissez ce que vous venez faire chez HOPE : la suite s’adapte.'}
             </p>
           </header>
+
+          {compteSupprime && (
+            <p className="formulaire__succes" role="status">
+              Votre compte est supprimé. Merci pour ce que vous avez fait avec HOPE.
+            </p>
+          )}
 
           {/* Deux sections, un seul jeu d'onglets : on voit d'un coup
               d'oeil qu'il y a les deux, et laquelle est ouverte. */}
@@ -467,7 +476,8 @@ function Inscription({ types, navigate, onInscrit }) {
        * jeton remis ici ne vaut que pour ce formulaire.
        */
       if (jetonCompletion && aCompleter) {
-        ecrireStockage(CLE_JETON_BENEVOLE, jetonCompletion);
+        // Le jeton limite est deja dans le cookie ; ici, le temoin.
+        ecrireStockage(CLE_JETON_BENEVOLE, TEMOIN_SESSION);
         navigate(aCompleter, { replace: true });
         return;
       }

@@ -136,6 +136,13 @@ export async function recupererAdminAuthentifie(adminId) {
   return versAdminPublic(admin);
 }
 
+/** Un jeton neuf pour un administrateur, apres un changement de mot de passe. */
+export async function jetonNeuf(adminId) {
+  const admin = await adminRepository.trouverParId(adminId);
+  if (!admin) throw new ErreurAuthentification('Compte administrateur introuvable.', 'COMPTE_INTROUVABLE');
+  return signerJeton(admin);
+}
+
 /** Hash un mot de passe en clair (utilise par le seed). */
 export function hasherMotDePasse(motDePasseEnClair) {
   return bcrypt.hash(motDePasseEnClair, config.admin.saltRounds);

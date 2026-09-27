@@ -3,7 +3,6 @@
  * Les pages n'appellent jamais Axios directement : elles passent par ici.
  */
 import { api, URL_API } from './api.js';
-import { lireJeton } from './auth.service.js';
 
 /** @param {{ status?, categoryId?, search?, includeArchived?, page?, pageSize? }} filtres */
 export async function lister(filtres = {}) {
@@ -53,9 +52,7 @@ export async function publierRapport(id) {
  * navigateur comme un telechargement nomme.
  */
 export async function telechargerRapportPdf(id, reference) {
-  const reponse = await fetch(`${URL_API}/admin/projects/${id}/rapport/pdf`, {
-    headers: { Authorization: `Bearer ${lireJeton()}` },
-  });
+  const reponse = await fetch(`${URL_API}/admin/projects/${id}/rapport/pdf`, { credentials: 'same-origin' });
   if (!reponse.ok) throw new Error('Le PDF du rapport n’a pas pu être préparé.');
 
   const url = URL.createObjectURL(await reponse.blob());

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import ChampPhotoProfil from '../../components/ChampPhotoProfil.jsx';
+import SecuriteCompte from '../../components/compte/SecuriteCompte.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
@@ -366,6 +367,8 @@ export default function Organisation() {
           </ul>
         )}
       </Panneau>
+
+      <SecuriteCompte espace="bailleur" />
     </>
   );
 }

@@ -5,6 +5,7 @@
  * la reponse. Aucune regle metier, aucun acces base de donnees ici.
  */
 import * as volunteerAuthService from '../services/volunteerAuth.service.js';
+import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 
 /**
  * POST /api/benevole/inscription
@@ -36,6 +37,8 @@ export async function login(req, res, next) {
   try {
     const { email, motDePasse } = req.body ?? {};
     const resultat = await volunteerAuthService.connecter({ email, motDePasse });
+    effacerSessionsUtilisateur(res);
+    poserSession(res, 'benevole', resultat.token, { persistant: req.body?.seSouvenir !== false });
 
     // La reponse ne contient jamais le hash du mot de passe.
     res.status(200).json({
@@ -67,5 +70,6 @@ export async function me(req, res, next) {
  * tard alimenter un journal.
  */
 export async function logout(_req, res) {
+  effacerSessionsUtilisateur(res);
   res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
 }

@@ -3,23 +3,23 @@
  *
  * Encapsule les appels a /api/admin/* et la conservation du jeton.
  *
- * Note : pour cette premiere version locale, le JWT est conserve dans le
- * navigateur (localStorage si "Se souvenir de moi" est coche, sessionStorage
- * sinon). C'est acceptable pour une demonstration ; une mise en production
- * utiliserait un cookie httpOnly + SameSite.
+ * Le JWT vit dans un cookie httpOnly pose par le serveur : le navigateur
+ * ne garde que le profil (affichage) et un temoin de session, dans
+ * localStorage si "Se souvenir de moi" est coche, sessionStorage sinon.
  */
 import {
   api,
   CLE_ADMIN,
   CLE_JETON,
+  TEMOIN_SESSION,
   ecrireStockage,
   effacerStockage,
   lireStockage,
 } from './api.js';
 
-/** Enregistre le jeton et le profil retournes par le backend. */
-function memoriserSession(token, admin, persistant) {
-  ecrireStockage(CLE_JETON, token, persistant);
+/** Enregistre le temoin et le profil (le jeton est dans le cookie). */
+function memoriserSession(admin, persistant) {
+  ecrireStockage(CLE_JETON, TEMOIN_SESSION, persistant);
   ecrireStockage(CLE_ADMIN, JSON.stringify(admin), persistant);
 }
 
@@ -29,7 +29,7 @@ export function effacerSession() {
   effacerStockage(CLE_ADMIN);
 }
 
-/** Retourne le jeton stocke, ou null. */
+/** Le temoin de session, ou null : une session est-elle ouverte ? */
 export function lireJeton() {
   return lireStockage(CLE_JETON);
 }
@@ -55,8 +55,8 @@ export function lireAdminLocal() {
  * @returns {Promise<{ id: number, adminLog: string }>}
  */
 export async function connecter(adminLog, password, persistant = true) {
-  const { data } = await api.post('/admin/login', { adminLog, password });
-  memoriserSession(data.token, data.admin, persistant);
+  const { data } = await api.post('/admin/login', { adminLog, password, seSouvenir: persistant });
+  memoriserSession(data.admin, persistant);
   return data.admin;
 }
 

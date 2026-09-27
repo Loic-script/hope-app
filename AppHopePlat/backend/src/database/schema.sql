@@ -632,6 +632,11 @@ ALTER TABLE utilisateur
   ADD COLUMN IF NOT EXISTS conditions_version      VARCHAR(20),
   ADD COLUMN IF NOT EXISTS conditions_acceptees_le TIMESTAMPTZ;
 
+-- Les jetons emis avant cette date ne valent plus : un changement de
+-- mot de passe ferme ainsi les sessions ouvertes sur d'autres appareils.
+ALTER TABLE utilisateur ADD COLUMN IF NOT EXISTS sessions_valides_depuis TIMESTAMPTZ;
+ALTER TABLE admins      ADD COLUMN IF NOT EXISTS sessions_valides_depuis TIMESTAMPTZ;
+
 -- La liste des comptes a activer est la requete la plus frequente.
 CREATE INDEX IF NOT EXISTS utilisateur_statut_idx ON utilisateur (statut);
 CREATE INDEX IF NOT EXISTS utilisateur_role_idx   ON utilisateur_role (role);

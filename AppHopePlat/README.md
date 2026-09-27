@@ -437,6 +437,4 @@ horizontal en 430 px, la déconnexion.
 - prélèvement automatique des dons mensuels chez un prestataire (les échéances sont
   aujourd'hui générées puis suivies à la main) ;
 - journal d'audit des actions administrateur ;
-- jeton de session en cookie `httpOnly` + `SameSite` plutôt qu'en stockage du navigateur ;
-- comptes administrateurs multiples et rôles ;
 - relecture juridique des textes légaux par le bureau de l'association.

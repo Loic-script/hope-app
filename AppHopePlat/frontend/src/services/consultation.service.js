@@ -11,7 +11,7 @@
  * que la session d'administration reste intacte -- on revient a /admin
  * sans s'etre deconnecte.
  */
-import { api, ecrireStockage } from './api.js';
+import { api, ecrireStockage, TEMOIN_SESSION } from './api.js';
 import { CLE_JETON_BAILLEUR } from './apiBailleur.js';
 import { CLE_JETON_BENEVOLE } from './apiBenevole.js';
 import { CLE_JETON_DONATEUR } from './apiDonateur.js';
@@ -35,7 +35,8 @@ export async function consulter(utilisateurId) {
   if (!cle) {
     throw new Error(`Aucun espace ne correspond au type « ${data.type} ».`);
   }
-  ecrireStockage(cle, data.token, true);
+  // La session de consultation est dans un cookie ; ici, le temoin.
+  ecrireStockage(cle, TEMOIN_SESSION, true);
 
   return data;
 }

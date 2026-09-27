@@ -7,6 +7,7 @@
  * pour cette version locale ; une mise en production utiliserait un
  * cookie httpOnly + SameSite.
  */
+import { TEMOIN_SESSION } from './api.js';
 import {
   apiBenevole,
   CLE_BENEVOLE,
@@ -17,8 +18,9 @@ import {
 } from './apiBenevole.js';
 
 /** Enregistre le jeton et le profil retournes par le backend. */
-function memoriserSession(token, benevole, persistant) {
-  ecrireStockage(CLE_JETON_BENEVOLE, token, persistant);
+function memoriserSession(benevole, persistant) {
+  // Le jeton est dans le cookie httpOnly : ici, le seul temoin.
+  ecrireStockage(CLE_JETON_BENEVOLE, TEMOIN_SESSION, persistant);
   ecrireStockage(CLE_BENEVOLE, JSON.stringify(benevole), persistant);
 }
 
@@ -71,8 +73,8 @@ export async function inscrire({ nom, prenom, email, motDePasse, confirmation })
  * @param {boolean} persistant conserver la session apres fermeture
  */
 export async function connecter(email, motDePasse, persistant = true) {
-  const { data } = await apiBenevole.post('/benevole/login', { email, motDePasse });
-  memoriserSession(data.token, data.benevole, persistant);
+  const { data } = await apiBenevole.post('/benevole/login', { email, motDePasse, seSouvenir: persistant });
+  memoriserSession(data.benevole, persistant);
   return data.benevole;
 }
 

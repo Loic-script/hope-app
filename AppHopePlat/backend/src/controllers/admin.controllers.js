@@ -42,6 +42,8 @@ import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middlewa
 import { envoyerFichierLivraison } from './fichierLivraison.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
+import { poserSession } from '../shared/session.js';
+import * as adminAuthService from '../services/adminAuth.service.js';
 
 /* ================================================================
    Accueil, references, statistiques
@@ -203,7 +205,12 @@ export const team = {
   reinitialiserMotDePasse: gerer((req) =>
     teamService.reinitialiserMotDePasse(req.params.id, req.body, req.admin)
   ),
-  changerSonMotDePasse: gerer((req) => teamService.changerSonMotDePasse(req.admin, req.body)),
+  changerSonMotDePasse: gerer(async (req, res) => {
+    const resultat = await teamService.changerSonMotDePasse(req.admin, req.body);
+    // Les autres sessions sont fermees ; celle-ci repart avec un jeton neuf.
+    poserSession(res, 'admin', await adminAuthService.jetonNeuf(req.admin.id));
+    return resultat;
+  }),
   changerSaPhoto: gerer((req) => teamService.changerSaPhoto(req.admin.id, req.body)),
   // Le meme service que les medias de projet : un fichier ecrit par
   // multer, une adresse rendue.
@@ -323,8 +330,11 @@ export const volunteers = {
  * coup.
  */
 export const consultation = {
-  ouvrir: gerer(async (req) => {
+  ouvrir: gerer(async (req, res) => {
     const session = await authService.consulterEspace(req.params.id, req.admin);
+    // La session de consultation part en cookie, comme une connexion :
+    // un cookie de session, oublie a la fermeture du navigateur.
+    poserSession(res, session.type, session.token, { persistant: false });
 
     await activityLogRepository.deposer(req.admin, {
       action: 'CONSULT',

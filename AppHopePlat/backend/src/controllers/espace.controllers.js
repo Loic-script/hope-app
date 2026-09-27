@@ -7,6 +7,15 @@
  * autre en changeant un parametre.
  */
 import * as espaceService from '../services/espace.service.js';
+import * as compteService from '../services/compte.service.js';
+import { jetonNeuf } from '../services/auth.service.js';
+import { AUDIENCE_PAR_TYPE } from '../shared/audiences.js';
+import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
+
+/** Le type d'espace (donateur, benevole, bailleur) d'une audience de jeton. */
+function typeDeLAudience(audience) {
+  return Object.keys(AUDIENCE_PAR_TYPE).find((type) => AUDIENCE_PAR_TYPE[type] === audience) ?? null;
+}
 
 /** GET /api/espace/notifications */
 export async function listerNotifications(req, res, next) {
@@ -82,6 +91,32 @@ export async function repondre(req, res, next) {
 export async function badges(req, res, next) {
   try {
     res.status(200).json(await espaceService.compteurs(req.utilisateurId));
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/**
+ * POST /api/espace/compte/mot-de-passe
+ * Les autres sessions sont fermees ; celle-ci repart avec un jeton neuf.
+ */
+export async function changerMotDePasse(req, res, next) {
+  try {
+    const resultat = await compteService.changerMotDePasse(req.utilisateurId, req.body ?? {});
+    const type = typeDeLAudience(req.espace);
+    if (type) poserSession(res, type, await jetonNeuf(req.utilisateurId, type));
+    res.status(200).json(resultat);
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** POST /api/espace/compte/suppression : mot de passe et le mot SUPPRIMER. */
+export async function supprimerCompte(req, res, next) {
+  try {
+    const resultat = await compteService.supprimerSonCompte(req.utilisateurId, req.body ?? {});
+    effacerSessionsUtilisateur(res);
+    res.status(200).json(resultat);
   } catch (erreur) {
     next(erreur);
   }

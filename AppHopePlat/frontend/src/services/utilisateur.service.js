@@ -7,7 +7,7 @@
  */
 import axios from 'axios';
 
-import { URL_API, ecrireStockage, effacerStockage, lireStockage } from './api.js';
+import { TEMOIN_SESSION, URL_API, ecrireStockage, effacerStockage, lireStockage } from './api.js';
 import { CLE_BAILLEUR, CLE_JETON_BAILLEUR } from './apiBailleur.js';
 import { CLE_BENEVOLE, CLE_JETON_BENEVOLE } from './apiBenevole.js';
 import { CLE_DONATEUR, CLE_JETON_DONATEUR } from './apiDonateur.js';
@@ -94,7 +94,7 @@ export async function inscrire(corps) {
 export async function connecter(email, motDePasse, typeUtilisateur, persistant = true) {
   // Le type designe l'espace : un compte peut porter plusieurs roles, et
   // le serveur refuse un type que le compte n'a pas.
-  const { data } = await apiAuth.post('/auth/login', { email, motDePasse, typeUtilisateur });
+  const { data } = await apiAuth.post('/auth/login', { email, motDePasse, typeUtilisateur, seSouvenir: persistant });
 
   const cles = CLES[data.type];
   if (!cles) {
@@ -110,7 +110,8 @@ export async function connecter(email, motDePasse, typeUtilisateur, persistant =
     }
   }
 
-  ecrireStockage(cles.jeton, data.token, persistant);
+  // Le jeton est dans le cookie httpOnly ; ici, le seul temoin.
+  ecrireStockage(cles.jeton, TEMOIN_SESSION, persistant);
   ecrireStockage(cles.profil, JSON.stringify(data.utilisateur), persistant);
 
   return {
@@ -160,7 +161,7 @@ export async function deconnecterDonateur() {
   const { apiDonateur } = await import('./apiDonateur.js');
   try {
     if (lireStockage(CLE_JETON_DONATEUR)) {
-      await apiDonateur.post('/donateur/logout');
+      await apiDonateur.post('/auth/logout');
     }
   } catch {
     // Jeton deja expire ou API injoignable : on continue.

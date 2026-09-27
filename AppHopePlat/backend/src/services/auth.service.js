@@ -393,4 +393,15 @@ export async function marquerProfilComplete(utilisateurId, client = null) {
   await volunteerRepository.marquerProfilComplete(utilisateurId, client);
 }
 
+/**
+ * Un jeton neuf pour un compte deja authentifie : apres un changement de
+ * mot de passe, les anciennes sessions sont fermees et celle en cours
+ * repart avec ce jeton.
+ */
+export async function jetonNeuf(utilisateurId, type) {
+  const compte = await volunteerRepository.trouverParId(utilisateurId);
+  if (!compte) throw new ErreurIntrouvable('Le compte', utilisateurId);
+  return signerJeton(compte, type);
+}
+
 export { versUtilisateurPublic, typeDuCompte };

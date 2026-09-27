@@ -14,22 +14,12 @@
 import * as adminAuthService from '../services/adminAuth.service.js';
 import * as adminRepository from '../repositories/admin.repository.js';
 import { ErreurAuthentification, ErreurRegleMetier } from '../shared/errors.js';
-
-/** Extrait le jeton de l'en-tete Authorization. */
-function lireJeton(req) {
-  const entete = req.headers.authorization;
-  if (!entete || typeof entete !== 'string') return null;
-
-  const [schema, valeur] = entete.split(' ');
-  if (!valeur || schema.toLowerCase() !== 'bearer') return null;
-
-  const jeton = valeur.trim();
-  return jeton === '' ? null : jeton;
-}
+import { lireJeton } from '../shared/session.js';
+import { exigerSessionFraicheAdmin } from '../services/session.service.js';
 
 export async function authenticateAdmin(req, _res, next) {
   try {
-    const jeton = lireJeton(req);
+    const jeton = lireJeton(req, 'admin');
     if (!jeton) {
       throw new ErreurAuthentification('Jeton d\'authentification manquant.', 'JETON_MANQUANT');
     }
@@ -44,6 +34,8 @@ export async function authenticateAdmin(req, _res, next) {
     if (admin.status === 'SUSPENDED') {
       throw new ErreurAuthentification('Ce compte est suspendu.', 'COMPTE_SUSPENDU');
     }
+    // Un mot de passe change ferme les sessions ouvertes avant.
+    await exigerSessionFraicheAdmin(admin.id, charge);
 
     req.admin = {
       id: admin.id,

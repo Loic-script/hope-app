@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import ChampPhotoProfil from '../../components/ChampPhotoProfil.jsx';
+import SecuriteCompte from '../../components/compte/SecuriteCompte.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
@@ -284,6 +285,8 @@ export default function MonProfil() {
           </button>
         </div>
       </form>
+
+      <SecuriteCompte espace="benevole" />
     </>
   );
 }

@@ -12,6 +12,7 @@ import * as donorSpaceService from '../services/donorSpace.service.js';
 import * as promesseDonService from '../services/promesseDon.service.js';
 
 import { gerer } from './handler.js';
+import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 
 /* ---------------------------- Authentification ------------------------- */
 
@@ -41,6 +42,8 @@ export async function login(req, res, next) {
   try {
     const { email, motDePasse } = req.body ?? {};
     const resultat = await funderAuthService.connecter({ email, motDePasse });
+    effacerSessionsUtilisateur(res);
+    poserSession(res, 'bailleur', resultat.token, { persistant: req.body?.seSouvenir !== false });
 
     res.status(200).json({
       success: true,
@@ -65,6 +68,7 @@ export async function me(req, res, next) {
 
 /** POST /api/bailleur/logout  (protege) */
 export async function logout(_req, res) {
+  effacerSessionsUtilisateur(res);
   res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
 }
 

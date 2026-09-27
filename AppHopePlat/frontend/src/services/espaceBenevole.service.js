@@ -5,7 +5,7 @@
  * pas celui de l'administrateur.
  */
 import { URL_API } from './api.js';
-import { apiBenevole, CLE_JETON_BENEVOLE, lireStockage } from './apiBenevole.js';
+import { apiBenevole } from './apiBenevole.js';
 
 /* ---------------------------- Vue d'ensemble --------------------------- */
 
@@ -104,7 +104,7 @@ export async function urlDuFichierPreuve(projetId, preuve, fichier) {
 
   const reponse = await fetch(
     `${URL_API}/benevole/projets/${projetId}/preuves/${preuve.id}/fichiers/${fichier.id}`,
-    { headers: { Authorization: `Bearer ${lireStockage(CLE_JETON_BENEVOLE)}` } }
+    { credentials: 'same-origin' }
   );
   if (!reponse.ok) return null;
   return URL.createObjectURL(await reponse.blob());
@@ -210,9 +210,7 @@ export async function livrerTache(id, fichiers = []) {
 export async function urlDuFichierTache(tache, fichier) {
   if (!tache?.id || !fichier?.id) return null;
 
-  const reponse = await fetch(`${URL_API}/benevole/taches/${tache.id}/fichiers/${fichier.id}`, {
-    headers: { Authorization: `Bearer ${lireStockage(CLE_JETON_BENEVOLE)}` },
-  });
+  const reponse = await fetch(`${URL_API}/benevole/taches/${tache.id}/fichiers/${fichier.id}`, { credentials: 'same-origin' });
   if (!reponse.ok) return null;
   return URL.createObjectURL(await reponse.blob());
 }

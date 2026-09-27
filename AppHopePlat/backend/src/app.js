@@ -15,6 +15,7 @@ import { query } from './config/database.js';
 import apiRoutes from './routes/index.js';
 import { gestionnaireErreurs, routeIntrouvable } from './middleware/error.middleware.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from './middleware/upload.middleware.js';
+import { verifierOrigine } from './shared/session.js';
 
 /** frontend/dist : le frontend construit par "npm run build". */
 const DOSSIER_FRONTEND = path.resolve(
@@ -80,7 +81,7 @@ export function creerApplication() {
     cors({
       origin: config.corsOrigin.split(',').map((origine) => origine.trim()),
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Hope-Espace'],
       credentials: true,
       maxAge: 86_400,
     })
@@ -129,6 +130,9 @@ export function creerApplication() {
     })
   );
 
+  // Les sessions sont en cookie : une requete qui modifie et qui vient
+  // d'une autre origine est refusee (voir shared/session.js).
+  app.use('/api', verifierOrigine);
   app.use('/api', apiRoutes);
 
   /*

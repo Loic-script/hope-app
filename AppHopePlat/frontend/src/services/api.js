@@ -34,8 +34,18 @@ export function urlMedia(adresse) {
   return `${URL_SERVEUR}${adresse.startsWith('/') ? '' : '/'}${adresse}`;
 }
 
-/** Cle de stockage du jeton JWT. */
+/**
+ * Cle du temoin de session de l'administrateur.
+ *
+ * Le jeton JWT lui-meme n'est plus dans le navigateur : le serveur le
+ * range dans un cookie httpOnly, que JavaScript ne peut pas lire. Cette
+ * cle ne garde que TEMOIN_SESSION -- "une session est ouverte" -- pour
+ * que les pages sachent s'il faut afficher l'espace ou la connexion.
+ */
 export const CLE_JETON = 'hope.admin.token';
+
+/** La valeur du temoin : rien de secret. */
+export const TEMOIN_SESSION = 'session';
 /** Cle de stockage du profil administrateur (affichage uniquement). */
 export const CLE_ADMIN = 'hope.admin.profil';
 
@@ -65,18 +75,8 @@ export const api = axios.create({
   baseURL: URL_API,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
-});
-
-/**
- * Ajoute automatiquement le jeton a chaque requete sortante.
- * Le backend attend l'en-tete "Authorization: Bearer <jwt>".
- */
-api.interceptors.request.use((requete) => {
-  const jeton = lireStockage(CLE_JETON);
-  if (jeton) {
-    requete.headers.Authorization = `Bearer ${jeton}`;
-  }
-  return requete;
+  // Le cookie de session accompagne chaque appel.
+  withCredentials: true,
 });
 
 /**

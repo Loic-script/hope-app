@@ -11,21 +11,12 @@
  */
 import * as funderAuthService from '../services/funderAuth.service.js';
 import { ErreurAuthentification } from '../shared/errors.js';
-
-function lireJeton(req) {
-  const entete = req.headers.authorization;
-  if (!entete || typeof entete !== 'string') return null;
-
-  const [schema, valeur] = entete.split(' ');
-  if (!valeur || schema.toLowerCase() !== 'bearer') return null;
-
-  const jeton = valeur.trim();
-  return jeton === '' ? null : jeton;
-}
+import { lireJeton } from '../shared/session.js';
+import { exigerSessionFraicheUtilisateur } from '../services/session.service.js';
 
 export async function authenticateFunder(req, _res, next) {
   try {
-    const jeton = lireJeton(req);
+    const jeton = lireJeton(req, 'bailleur');
     if (!jeton) {
       throw new ErreurAuthentification(
         'Jeton d’authentification manquant.',
@@ -40,6 +31,7 @@ export async function authenticateFunder(req, _res, next) {
     req.bailleur = await funderAuthService.recupererBailleurAuthentifie(
       charge.utilisateurId
     );
+    await exigerSessionFraicheUtilisateur(charge.utilisateurId, charge);
 
     next();
   } catch (erreur) {

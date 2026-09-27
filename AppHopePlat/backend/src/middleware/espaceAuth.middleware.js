@@ -22,24 +22,14 @@ import {
   EMETTEUR,
 } from '../shared/audiences.js';
 import { ErreurAuthentification } from '../shared/errors.js';
+import { lireJetonEspace } from '../shared/session.js';
+import { exigerSessionFraicheUtilisateur } from '../services/session.service.js';
 
 const AUDIENCES = [AUDIENCE_BENEVOLE, AUDIENCE_BAILLEUR, AUDIENCE_DONATEUR];
 
-/** Extrait le jeton de l'en-tete Authorization. */
-function lireJeton(req) {
-  const entete = req.headers.authorization;
-  if (!entete || typeof entete !== 'string') return null;
-
-  const [schema, valeur] = entete.split(' ');
-  if (!valeur || schema.toLowerCase() !== 'bearer') return null;
-
-  const jeton = valeur.trim();
-  return jeton === '' ? null : jeton;
-}
-
-export function authenticateEspace(req, _res, next) {
+export async function authenticateEspace(req, _res, next) {
   try {
-    const jeton = lireJeton(req);
+    const jeton = lireJetonEspace(req);
     if (!jeton) {
       throw new ErreurAuthentification(
         'Jeton d’authentification manquant.',
@@ -66,6 +56,8 @@ export function authenticateEspace(req, _res, next) {
     if (!charge.utilisateurId) {
       throw new ErreurAuthentification('Jeton invalide.', 'JETON_INVALIDE');
     }
+
+    await exigerSessionFraicheUtilisateur(charge.utilisateurId, charge);
 
     req.utilisateurId = charge.utilisateurId;
     // L'audience dit de quel espace vient la demande. Rien ne s'en sert

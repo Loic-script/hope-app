@@ -5,7 +5,6 @@
  * des demandes que les benevoles envoient depuis leur espace.
  */
 import { api, URL_API } from './api.js';
-import { lireJeton } from './auth.service.js';
 
 /** GET /api/admin/projects/:id/tasks */
 export async function listerParProjet(projetId) {
@@ -82,9 +81,7 @@ export async function supprimer(id) {
 export async function urlDuFichier(tache, fichier) {
   if (!tache?.id || !fichier?.id) return null;
 
-  const reponse = await fetch(`${URL_API}/admin/tasks/${tache.id}/files/${fichier.id}`, {
-    headers: { Authorization: `Bearer ${lireJeton()}` },
-  });
+  const reponse = await fetch(`${URL_API}/admin/tasks/${tache.id}/files/${fichier.id}`, { credentials: 'same-origin' });
   if (!reponse.ok) return null;
   return URL.createObjectURL(await reponse.blob());
 }

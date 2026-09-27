@@ -11,7 +11,6 @@
  * document.service.js pour ouvrir un justificatif.
  */
 import { api, URL_API } from './api.js';
-import { lireJeton } from './auth.service.js';
 
 export async function lister(filtres = {}) {
   const { data } = await api.get('/admin/field-proofs', { params: filtres });
@@ -74,9 +73,7 @@ export async function urlDuFichier(preuve, fichier = null) {
   const cible = fichier ?? fichierPrincipal(preuve);
   if (!preuve?.id || !cible?.id) return null;
 
-  const reponse = await fetch(`${URL_API}/admin/field-proofs/${preuve.id}/files/${cible.id}`, {
-    headers: { Authorization: `Bearer ${lireJeton()}` },
-  });
+  const reponse = await fetch(`${URL_API}/admin/field-proofs/${preuve.id}/files/${cible.id}`, { credentials: 'same-origin' });
   if (!reponse.ok) return null;
 
   return URL.createObjectURL(await reponse.blob());

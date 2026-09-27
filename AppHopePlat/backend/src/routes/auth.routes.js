@@ -56,8 +56,7 @@ router.get('/donateur/me', authenticateDonor, (req, res) => {
   res.status(200).json({ authenticated: true, donateur: req.donateur });
 });
 
-router.post('/donateur/logout', authenticateDonor, (_req, res) => {
-  res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
-});
+router.post('/donateur/logout', auth.logout);
+router.post('/auth/logout', auth.logout);
 
 export default router;

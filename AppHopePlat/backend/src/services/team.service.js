@@ -22,6 +22,7 @@ import { config } from '../config/env.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { identifiantRequis, texteFacultatif, texteRequis, valeurParmi } from '../shared/validation.js';
+import { fermerSessionsAdmin } from './session.service.js';
 
 export const ROLES = ['ADMIN', 'COORDINATOR', 'VIEWER'];
 export const STATUTS = ['ACTIVE', 'SUSPENDED'];
@@ -220,6 +221,7 @@ export async function changerSonMotDePasse(admin, corps = {}) {
   }
 
   await adminRepository.mettreAJourMotDePasse(complet.id, await hasher(nouveau));
+  await fermerSessionsAdmin(complet.id);
 
   await activityLogRepository.deposer(admin, {
     action: 'CHANGE_PASSWORD',

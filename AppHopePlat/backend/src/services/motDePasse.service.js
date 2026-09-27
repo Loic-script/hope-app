@@ -19,6 +19,7 @@ import { config } from '../config/env.js';
 import { query, transaction } from '../config/database.js';
 import { ErreurValidation } from '../shared/errors.js';
 import * as courriel from './courriel.service.js';
+import { fermerSessionsUtilisateur } from './session.service.js';
 
 /** La duree de vie d'un lien : une heure. */
 const DUREE_MS = 60 * 60 * 1000;
@@ -113,6 +114,8 @@ export async function reinitialiser(corps = {}) {
     if (!demande) throw lienInvalide();
 
     await query('UPDATE utilisateur SET mot_de_passe = $2 WHERE id = $1', [demande.utilisateur_id, hash], client);
+    // Quelqu'un avait peut-etre le mot de passe : ses sessions tombent.
+    await fermerSessionsUtilisateur(demande.utilisateur_id, client);
     // Ce lien, et tout autre encore ouvert pour ce compte, est consomme.
     await query(
       `UPDATE reinitialisation_mot_de_passe SET utilise_le = NOW()
