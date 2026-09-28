@@ -7,7 +7,7 @@ import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 import { LIBELLES_PRIORITE } from '../../utils/priorites.js';
 import { ActionDemande } from './composants.jsx';
-import { DetailTacheModale, LivraisonModale } from './ModalesTache.jsx';
+import { DetailTacheModale, FormulaireLivraison } from './ModalesTache.jsx';
 
 /**
  * Les trois colonnes, dans l'ordre ou une tache les traverse : on la
@@ -51,9 +51,9 @@ export default function MesTaches() {
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
 
-  // La tache ouverte (et sa colonne), la livraison en cours, la preuve.
+  // La tache ouverte (sa colonne, et si sa livraison est depliee), la preuve.
   const [ouverte, setOuverte] = useState(null);
-  const [aLivrer, setALivrer] = useState(null);
+  const [livraisonEnvoi, setLivraisonEnvoi] = useState(false);
   const [preuve, setPreuve] = useState(null);
   // Sur telephone : la colonne affichee.
   const [vue, setVue] = useState(null);
@@ -118,19 +118,21 @@ export default function MesTaches() {
     }
 
     if (colonne === 'cours') {
+      // Dans la fenetre, une fois la livraison depliee en bas, le bouton
+      // s'efface : c'est la livraison qui porte l'action.
+      const livraisonOuverte = dansFenetre && ouverte?.livrer;
       return (
         <>
-          <button
-            type="button"
-            className={principal}
-            disabled={envoi}
-            onClick={() => {
-              setOuverte(null);
-              setALivrer(tache);
-            }}
-          >
-            Marquer livrée
-          </button>
+          {!livraisonOuverte && (
+            <button
+              type="button"
+              className={principal}
+              disabled={envoi}
+              onClick={() => setOuverte({ tache, colonne: 'cours', livrer: true })}
+            >
+              Marquer livrée
+            </button>
+          )}
           <button
             type="button"
             className={neutre}
@@ -246,20 +248,23 @@ export default function MesTaches() {
       {ouverte && (
         <DetailTacheModale
           tache={ouverte.tache}
-          envoi={envoi}
-          onFermer={() => setOuverte(null)}
+          envoi={envoi || livraisonEnvoi}
+          // Pendant un televersement, fermer l'abandonnerait.
+          onFermer={() => !livraisonEnvoi && setOuverte(null)}
           actions={actionsDe(ouverte.colonne, ouverte.tache, true)}
-        />
-      )}
-
-      {aLivrer && (
-        <LivraisonModale
-          tache={aLivrer}
-          onFermer={() => setALivrer(null)}
-          onLivree={() => {
-            setALivrer(null);
-            miennes.recharger();
-          }}
+          livraison={
+            ouverte.livrer && ouverte.colonne === 'cours' ? (
+              <FormulaireLivraison
+                tache={ouverte.tache}
+                onEnvoi={setLivraisonEnvoi}
+                onAnnuler={() => setOuverte((actuelle) => ({ ...actuelle, livrer: false }))}
+                onLivree={() => {
+                  setOuverte(null);
+                  miennes.recharger();
+                }}
+              />
+            ) : null
+          }
         />
       )}
 

@@ -30,8 +30,20 @@ import { ActionDemande, EquipeTache } from './composants.jsx';
  * pas, et le charger pour chaque carte serait payer pour des fenetres
  * que personne n'ouvre.
  */
-export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envoi = false, actions = null }) {
+export function DetailTacheModale({
+  tache,
+  onFermer,
+  onDemander,
+  onAnnuler,
+  envoi = false,
+  actions = null,
+  // La livraison, ouverte en bas de la fenetre par « Marquer livree ».
+  livraison = null,
+}) {
   const [projet, setProjet] = useState(null);
+  const blocLivraison = useRef(null);
+
+
   const [chargement, setChargement] = useState(false);
   const [refus, setRefus] = useState('');
 
@@ -59,6 +71,24 @@ export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envo
       annule = true;
     };
   }, [tache]);
+
+  /*
+   * La livraison s'ouvre en bas : on y descend, et le depot prend le
+   * focus. Une fois a l'ouverture, puis encore quand le projet a fini de
+   * charger -- sa photo et son texte repoussent la section vers le bas.
+   */
+  const livraisonOuverte = Boolean(livraison);
+  useEffect(() => {
+    if (!livraisonOuverte) return undefined;
+    const minuterie = setTimeout(() => {
+      const bloc = blocLivraison.current;
+      if (!bloc) return;
+      const calme = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      bloc.scrollIntoView({ behavior: calme ? 'auto' : 'smooth', block: 'start' });
+      bloc.querySelector('input[type="file"]')?.focus({ preventScroll: true });
+    }, 60);
+    return () => clearTimeout(minuterie);
+  }, [livraisonOuverte, chargement]);
 
   if (!tache) return null;
 
@@ -210,6 +240,16 @@ export function DetailTacheModale({ tache, onFermer, onDemander, onAnnuler, envo
           </div>
         ) : null}
       </section>
+
+      {livraison && (
+        <section className="detail-livraison" ref={blocLivraison} aria-labelledby="detail-livraison-titre">
+          <p className="detail-projet__surtitre" id="detail-livraison-titre">
+            <span className="trait-hope surtitre__trait" aria-hidden="true" />
+            Livrer la tâche
+          </p>
+          {livraison}
+        </section>
+      )}
     </Modale>
   );
 }
@@ -250,7 +290,7 @@ function refusDuFichier(fichier) {
  * s'affiche avant l'envoi -- on verifie ce qu'on envoie, et on retire ce
  * qui n'aurait pas du partir.
  */
-export function LivraisonModale({ tache, onFermer, onLivree }) {
+export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () => {} }) {
   const [fichiers, setFichiers] = useState([]);
   const [refus, setRefus] = useState('');
   const [envoi, setEnvoi] = useState(false);
@@ -308,6 +348,7 @@ export function LivraisonModale({ tache, onFermer, onLivree }) {
     }
 
     setEnvoi(true);
+    onEnvoi(true);
     setRefus('');
     try {
       await service.livrerTache(tache.id, fichiers);
@@ -316,118 +357,110 @@ export function LivraisonModale({ tache, onFermer, onLivree }) {
       setRefus(messageErreur(echec, 'La livraison n’a pas pu être enregistrée.'));
     } finally {
       setEnvoi(false);
+      onEnvoi(false);
     }
   }
 
   if (!tache) return null;
 
   return (
-    <Modale
-      ouverte
-      titre="Livrer la tâche"
-      sousTitre={`${tache.titre} · ${tache.projetNom}`}
-      // Pendant l'envoi, fermer abandonnerait un televersement en cours.
-      onFermer={envoi ? () => {} : onFermer}
-      erreur={refus}
-      pied={
-        <>
-          <button type="button" className="btn btn--neutre" onClick={onFermer} disabled={envoi}>
-            Annuler
-          </button>
-          <button
-            type="submit"
-            form="formulaire-livraison"
-            className="btn btn--principal"
-            disabled={envoi || fichiers.length === 0}
-          >
-            {envoi ? 'Envoi en cours…' : 'Livrer la tâche'}
-          </button>
-        </>
-      }
-    >
-      <form id="formulaire-livraison" onSubmit={livrer}>
-        <p className="livraison__consigne">
-          Montrez ce que vous avez fait : une photo du résultat, une courte vidéo. L’équipe HOPE
-          s’en sert pour valider la livraison.
-        </p>
+    <form className="livraison" id="formulaire-livraison" onSubmit={livrer}>
+      <p className="livraison__consigne">
+        Montrez ce que vous avez fait : une photo du résultat, une courte vidéo. L’équipe HOPE
+        s’en sert pour valider la livraison.
+      </p>
 
-        {/* La zone de depot est aussi un bouton : on clique, ou on glisse. */}
-        <label
-          className={`livraison__depot${survol ? ' livraison__depot--survol' : ''}${
-            fichiers.length >= MAX_FICHIERS ? ' livraison__depot--plein' : ''
-          }`}
-          onDragOver={(evenement) => {
-            evenement.preventDefault();
-            setSurvol(true);
+      {/* La zone de depot est aussi un bouton : on clique, ou on glisse. */}
+      <label
+        className={`livraison__depot${survol ? ' livraison__depot--survol' : ''}${
+          fichiers.length >= MAX_FICHIERS ? ' livraison__depot--plein' : ''
+        }`}
+        onDragOver={(evenement) => {
+          evenement.preventDefault();
+          setSurvol(true);
+        }}
+        onDragLeave={() => setSurvol(false)}
+        onDrop={(evenement) => {
+          evenement.preventDefault();
+          setSurvol(false);
+          if (!envoi) ajouter([...evenement.dataTransfer.files]);
+        }}
+      >
+        <input
+          ref={champ}
+          type="file"
+          accept="image/*,video/*"
+          multiple
+          disabled={envoi || fichiers.length >= MAX_FICHIERS}
+          onChange={(evenement) => {
+            ajouter([...(evenement.target.files ?? [])]);
+            // Sans cela, rechoisir le meme fichier n'emettrait rien.
+            evenement.target.value = '';
           }}
-          onDragLeave={() => setSurvol(false)}
-          onDrop={(evenement) => {
-            evenement.preventDefault();
-            setSurvol(false);
-            if (!envoi) ajouter([...evenement.dataTransfer.files]);
-          }}
-        >
-          <input
-            ref={champ}
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            disabled={envoi || fichiers.length >= MAX_FICHIERS}
-            onChange={(evenement) => {
-              ajouter([...(evenement.target.files ?? [])]);
-              // Sans cela, rechoisir le meme fichier n'emettrait rien.
-              evenement.target.value = '';
-            }}
-          />
-          <span className="livraison__depot-titre">
-            {fichiers.length >= MAX_FICHIERS
-              ? 'Six fichiers : c’est le maximum'
-              : 'Importer une photo ou une vidéo'}
-          </span>
-          <span className="livraison__depot-aide">
-            Cliquez ou glissez vos fichiers ici · Photos 10 Mo, vidéos 50 Mo · 6 fichiers au plus
-          </span>
-        </label>
+        />
+        <span className="livraison__depot-titre">
+          {fichiers.length >= MAX_FICHIERS
+            ? 'Six fichiers : c’est le maximum'
+            : 'Importer une photo ou une vidéo'}
+        </span>
+        <span className="livraison__depot-aide">
+          Cliquez ou glissez vos fichiers ici · Photos 10 Mo, vidéos 50 Mo · 6 fichiers au plus
+        </span>
+      </label>
 
-        {fichiers.length > 0 && (
-          <ul className="livraison__fichiers">
-            {fichiers.map((fichier) => {
-              const estVideo = fichier.type.startsWith('video/');
-              return (
-                <li className="livraison__fichier" key={`${fichier.name}-${fichier.lastModified}`}>
-                  <span className="livraison__apercu">
-                    {estVideo ? (
-                      <video src={apercu(fichier)} muted playsInline preload="metadata" />
-                    ) : (
-                      <img src={apercu(fichier)} alt="" />
-                    )}
-                    {estVideo && (
-                      <span className="livraison__lecture" aria-hidden="true">
-                        ▶
-                      </span>
-                    )}
-                  </span>
-                  <span className="livraison__infos">
-                    <span className="livraison__nom">{fichier.name}</span>
-                    <span className="livraison__taille">
-                      {estVideo ? 'Vidéo' : 'Photo'} · {fmt.tailleFichier(fichier.size)}
+      {fichiers.length > 0 && (
+        <ul className="livraison__fichiers">
+          {fichiers.map((fichier) => {
+            const estVideo = fichier.type.startsWith('video/');
+            return (
+              <li className="livraison__fichier" key={`${fichier.name}-${fichier.lastModified}`}>
+                <span className="livraison__apercu">
+                  {estVideo ? (
+                    <video src={apercu(fichier)} muted playsInline preload="metadata" />
+                  ) : (
+                    <img src={apercu(fichier)} alt="" />
+                  )}
+                  {estVideo && (
+                    <span className="livraison__lecture" aria-hidden="true">
+                      ▶
                     </span>
+                  )}
+                </span>
+                <span className="livraison__infos">
+                  <span className="livraison__nom">{fichier.name}</span>
+                  <span className="livraison__taille">
+                    {estVideo ? 'Vidéo' : 'Photo'} · {fmt.tailleFichier(fichier.size)}
                   </span>
-                  <button
-                    type="button"
-                    className="lien-action lien-action--danger"
-                    onClick={() => retirer(fichier)}
-                    disabled={envoi}
-                  >
-                    Retirer
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </form>
-    </Modale>
+                </span>
+                <button
+                  type="button"
+                  className="lien-action lien-action--danger"
+                  onClick={() => retirer(fichier)}
+                  disabled={envoi}
+                >
+                  Retirer
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {refus && (
+        <p className="livraison__refus" role="alert">
+          {refus}
+        </p>
+      )}
+
+      <div className="livraison__actions">
+        <button type="button" className="btn btn--neutre" onClick={onAnnuler} disabled={envoi}>
+          Annuler
+        </button>
+        <button type="submit" className="btn btn--principal" disabled={envoi || fichiers.length === 0}>
+          {envoi ? 'Envoi en cours…' : `Livrer la tâche${fichiers.length ? ` (${fichiers.length})` : ''}`}
+        </button>
+      </div>
+    </form>
   );
 }
 

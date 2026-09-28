@@ -416,3 +416,63 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   La livraison, depliee en bas de la fenetre de la tache
+   ============================================================ */
+
+.detail-livraison {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-bordure, #e5eaf3);
+  scroll-margin-top: 12px;
+  animation: detail-livraison-entree 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.detail-livraison .livraison {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-livraison .livraison__consigne {
+  margin: 0;
+}
+
+.livraison__refus {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--hope-erreur-fond, #fdeceb);
+  font-size: 14px;
+  color: var(--hope-erreur, #c0392b);
+}
+
+.livraison__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@keyframes detail-livraison-entree {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .livraison__actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-livraison {
+    animation: none;
+  }
+}
