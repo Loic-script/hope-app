@@ -16,6 +16,7 @@ import donorSpaceRoutes from './donorSpace.routes.js';
 import { webhookStripe } from '../controllers/paiementCarte.controllers.js';
 import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
 import { photosBeneficiaires } from '../controllers/admin.controllers.js';
+import * as vitrineService from '../services/vitrine.service.js';
 
 const router = Router();
 
@@ -44,6 +45,16 @@ router.post('/paiements/stripe/webhook', webhookStripe);
 // l'affichent (EQUIPE_EMAIL). Vide, elles renvoient vers la messagerie.
 router.get('/public/contact', (_req, res) => {
   res.json({ email: config.equipe.email || null });
+});
+
+// Les actualites de HOPE pour le site vitrine public : titre, extrait,
+// date, photo -- rien d'autre (vitrine.service).
+router.get('/public/actualites', async (req, res, next) => {
+  try {
+    res.json(await vitrineService.actualites(req.query));
+  } catch (erreur) {
+    next(erreur);
+  }
 });
 
 // Authentification des utilisateurs : un seul formulaire pour les trois

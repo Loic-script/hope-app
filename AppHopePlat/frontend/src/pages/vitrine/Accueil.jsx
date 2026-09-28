@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import couverture from '../../assets/hope-couverture.jpg';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition, useCompteur } from '../../hooks/useApparition.js';
+import { Actualites as ActualitesAccueil, Contribuer, Partenaires, Realisations } from './SectionsAccueil.jsx';
 
 /**
  * L'accueil du site vitrine : le bandeau d'appel, les quatre activites
@@ -253,6 +254,10 @@ export default function Accueil() {
       <Hero />
       <Activites />
       <Impacts />
+      <Realisations />
+      <ActualitesAccueil />
+      <Partenaires />
+      <Contribuer />
     </>
   );
 }

@@ -33,6 +33,7 @@ import './styles/bailleur.css';
 import './styles/don-flottant.css';
 import './styles/vitrine.css';
 import './styles/vitrine-accueil.css';
+import './styles/vitrine-accueil-suite.css';
 import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';
 import './styles/feuille.css';
