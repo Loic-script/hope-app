@@ -20,9 +20,12 @@ Durée : une trentaine de minutes la première fois.
 1. Sur [railway.com](https://railway.com), **New Project → Deploy from GitHub repo**, et choisir
    `Loic-script/hope-app`.
 2. Dans le service créé, **Settings** :
-   - **Root Directory** : `AppHopePlat` (le dépôt contient d'autres dossiers) ;
-   - **Branch** : `main` pour la production (ou `dev` pour une préproduction) ;
-   - Railway lit alors `AppHopePlat/railway.json` tout seul.
+   - **Root Directory** : `AppHopePlat` (le dépôt contient d'autres dossiers ; sans ce réglage,
+     Railway construit la racine du dépôt, n'y trouve rien et échoue — voir « Dépannage ») ;
+   - **Railway Config File** (rubrique *Config-as-code*) : `/AppHopePlat/railway.json`. Ce
+     chemin part de la racine du dépôt : il ne suit pas le *Root Directory*. Sans lui, la
+     migration avant mise en ligne et la sonde de santé `/api/sante` ne s'appliquent pas ;
+   - **Branch** : `main` pour la production (ou `dev` pour une préproduction).
 3. **+ New → Database → PostgreSQL** dans le même projet.
 
 ## 2. Les variables du service
@@ -165,11 +168,20 @@ production.
 | Contrôle | Attendu |
 |---|---|
 | `https://<adresse>/api/sante` | `{"statut":"ok"}` |
-| `https://<adresse>/` | la page de connexion |
+| `https://<adresse>/` | le site vitrine de HOPE (accueil) |
+| `https://<adresse>/authentification` | la page de connexion des donateurs, bénévoles et bailleurs |
 | `https://<adresse>/admin/login` | connexion avec `ADMIN_LOG` / `ADMIN_PASSWORD` |
 | inscription d'un donateur | la case de consentement est exigée, le compte s'ouvre |
 | « Mot de passe oublié ? » | un courriel arrive (si SMTP est configuré) |
 | une photo téléversée, puis un redéploiement | la photo est toujours là (volume monté) |
+
+### Dépannage
+
+| Message dans Railway | Cause et remède |
+|---|---|
+| `Script start.sh not found` / `Railpack could not determine how to build the app` | Le service construit la racine du dépôt. **Settings → Root Directory** : `AppHopePlat`, puis redéployer. |
+| La construction passe, mais pas de migration ni de sonde de santé | `railway.json` n'est pas lu : **Settings → Railway Config File** : `/AppHopePlat/railway.json`. |
+| Le service redémarre en boucle au démarrage | Une variable obligatoire manque (section 2) : les journaux du déploiement la nomment. |
 
 ## 6. Ensuite
 
