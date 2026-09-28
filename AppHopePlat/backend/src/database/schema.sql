@@ -2058,3 +2058,28 @@ CREATE TABLE IF NOT EXISTS journal_audit (
 
 CREATE INDEX IF NOT EXISTS journal_audit_date_idx ON journal_audit (cree_le DESC);
 CREATE INDEX IF NOT EXISTS journal_audit_acteur_idx ON journal_audit (acteur_type, acteur_id);
+
+
+-- ------------------------------------------------------------
+-- Reactions aux actualites, dans les accueils des espaces.
+-- Un J'aime par personne et par publication ; les commentaires ne sont
+-- lus que par l'equipe (page Actualites de l'administration).
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS publication_jaime (
+  publication_id UUID        NOT NULL REFERENCES publication(id) ON DELETE CASCADE,
+  utilisateur_id UUID        NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  cree_le        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (publication_id, utilisateur_id)
+);
+
+CREATE TABLE IF NOT EXISTS publication_commentaire (
+  id             BIGSERIAL     PRIMARY KEY,
+  publication_id UUID          NOT NULL REFERENCES publication(id) ON DELETE CASCADE,
+  utilisateur_id UUID          REFERENCES utilisateur(id) ON DELETE SET NULL,
+  espace         VARCHAR(12),
+  texte          VARCHAR(1000) NOT NULL,
+  cree_le        TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  lu_le          TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS publication_commentaire_pub_idx ON publication_commentaire (publication_id, cree_le DESC);

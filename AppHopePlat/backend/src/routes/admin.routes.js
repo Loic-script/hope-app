@@ -278,6 +278,8 @@ router.get('/funders', funders.lister);
 router.get('/publications', publications.lister);
 router.post('/publications', publications.creer);
 router.post('/publications/photo', televerserMedia, publications.televerserPhoto);
+// Les commentaires laisses sur une actualite : l'equipe seule les lit.
+router.get('/publications/:id/commentaires', publications.commentaires);
 router.patch('/publications/:id', publications.modifier);
 router.delete('/publications/:id', publications.supprimer);
 router.patch('/publications/interets/:id', publications.changerStatutInteret);

@@ -387,6 +387,8 @@ function CarteActualite({
           </div>
         </div>
 
+        <Reactions publication={publication} />
+
         {appel && (
           <section className="interets-admin" aria-label="Bailleurs intéressés">
             <h3 className="interets-admin__titre">
@@ -418,6 +420,93 @@ function CarteActualite({
         )}
       </div>
     </article>
+  );
+}
+
+const ESPACES_AUTEUR = { donateur: 'Donateur', benevole: 'Bénévole', bailleur: 'Bailleur' };
+
+/**
+ * Les J'aime et les commentaires d'une publication. Les commentaires ne
+ * se lisent qu'ici : dans les espaces, personne d'autre ne les voit. Les
+ * ouvrir les marque comme lus.
+ */
+function Reactions({ publication }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [liste, setListe] = useState(null);
+  const [chargement, setChargement] = useState(false);
+  const [refus, setRefus] = useState('');
+  const [nonLus, setNonLus] = useState(publication.commentairesNonLus ?? 0);
+  const jaimes = publication.jaimes ?? 0;
+  const total = publication.commentaires ?? 0;
+
+  useEffect(() => {
+    setNonLus(publication.commentairesNonLus ?? 0);
+  }, [publication.commentairesNonLus]);
+
+  async function basculer() {
+    const suivant = !ouvert;
+    setOuvert(suivant);
+    if (!suivant) return;
+    setChargement(true);
+    setRefus('');
+    try {
+      const { data } = await api.get(`/admin/publications/${publication.id}/commentaires`);
+      setListe(data.items ?? []);
+      setNonLus(0);
+    } catch {
+      setRefus('Les commentaires n’ont pas pu être chargés.');
+    } finally {
+      setChargement(false);
+    }
+  }
+
+  return (
+    <section className="reactions-admin" aria-label="Réactions des utilisateurs">
+      <div className="reactions-admin__barre">
+        <span className={`reactions-admin__chiffre${jaimes > 0 ? ' reactions-admin__chiffre--jaime' : ''}`}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" />
+          </svg>
+          <strong>{fmt.nombre(jaimes)}</strong> j’aime
+        </span>
+        <button
+          type="button"
+          className="reactions-admin__bouton"
+          aria-expanded={ouvert}
+          onClick={basculer}
+          disabled={total === 0}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v8a2.5 2.5 0 01-2.5 2.5H10l-4.5 4v-4h0A2.5 2.5 0 014 13.5z" />
+          </svg>
+          <strong>{fmt.nombre(total)}</strong> commentaire{total > 1 ? 's' : ''}
+          {nonLus > 0 && <span className="reactions-admin__nouveaux">{nonLus} nouveau{nonLus > 1 ? 'x' : ''}</span>}
+          {total > 0 && <span className="reactions-admin__fleche" aria-hidden="true" />}
+        </button>
+      </div>
+
+      {ouvert && (
+        <div className="reactions-admin__liste">
+          {chargement && !liste && <p className="reactions-admin__vide">Chargement…</p>}
+          {refus && <p className="reactions-admin__vide">{refus}</p>}
+          {liste && (
+            <ul>
+              {liste.map((c, rang) => (
+                <li key={c.id} className="reactions-admin__commentaire" style={{ '--rang': Math.min(rang, 6) }}>
+                  <p className="reactions-admin__auteur">
+                    <strong>{c.auteur ?? c.auteurEmail ?? 'Compte supprimé'}</strong>
+                    {c.espace && <span className="reactions-admin__espace">{ESPACES_AUTEUR[c.espace] ?? c.espace}</span>}
+                    {!c.luLe && <span className="reactions-admin__point" title="Nouveau" />}
+                    <time dateTime={c.creeLe}>{fmt.depuis(c.creeLe)}</time>
+                  </p>
+                  <p className="reactions-admin__texte">{c.texte}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

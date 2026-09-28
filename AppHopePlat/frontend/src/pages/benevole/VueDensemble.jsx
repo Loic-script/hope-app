@@ -16,6 +16,7 @@ import {
  * trait : ils accompagnent du texte gris, et ne doivent pas le dominer.
  */
 import { PleineJournal, PleineProjets, PleineTaches } from '../../components/IconesPleines.jsx';
+import ActionsActualite, { idsActualites, useReactionsActualites } from '../../components/ActionsActualite.jsx';
 import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
 import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
@@ -93,8 +94,7 @@ export default function VueDensemble() {
   const { donnees: actualites } = useChargement(() => service.actualites(), []);
   const [filtre, setFiltre] = useState('tout');
   const fil = elementsDuFil(projets ?? [], actualites ?? [], filtre);
-  // Les projets en cours : chacun se soutient depuis le fil ("Faire un don").
-  const enCoursIds = new Set((projets ?? []).filter((p) => p.status === 'IN_PROGRESS').map((p) => p.id));
+  const reactions = useReactionsActualites('benevole', idsActualites(actualites));
 
   const enCours = (taches?.items ?? []).filter((t) => t.statut === 'en_cours');
   const prioritaire = [...enCours].sort(parEcheance)[0];
@@ -186,8 +186,14 @@ export default function VueDensemble() {
                       key={cle}
                       publication={element}
                       rang={Math.min(rang, 5)}
-                      lienProjet={element.projetId ? `/benevole/projets/${element.projetId}` : null}
-                      lienDon={enCoursIds.has(element.projetId) ? `/benevole/faire-un-don?projet=${element.projetId}` : null}
+                      actions={
+                        <ActionsActualite
+                          publication={element}
+                          etat={reactions.etats[element.id]}
+                          onJaime={reactions.basculer}
+                          onCommenter={reactions.commenter}
+                        />
+                      }
                     />
                   )
                 )

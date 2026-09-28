@@ -990,3 +990,252 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   J'aime et Commenter, au pied d'une actualite (ActionsActualite.jsx)
+
+   Le coeur se remplit d'orange et bat quand on aime ; la zone de
+   commentaire se deplie sous les boutons. Un commentaire ne va qu'a
+   l'equipe HOPE : la zone le rappelle.
+   ============================================================ */
+
+.actualite-action {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actualite-action svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    transform 0.2s ease;
+}
+
+.actualite-action--aime {
+  color: var(--hope-orange-lisible);
+}
+
+.actualite-action--aime svg {
+  fill: var(--hope-orange);
+  stroke: var(--hope-orange);
+}
+
+.actualite-action--bat svg {
+  animation: actualite-coeur 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.actualite-action--actif {
+  background-color: #f3f1fb;
+  color: var(--hope-violet);
+}
+
+.actualite-action__nombre {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fbefdc;
+  color: var(--hope-orange-lisible);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  animation: actualite-nombre 260ms ease-out;
+}
+
+@keyframes actualite-coeur {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes actualite-nombre {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.actualite-commentaire {
+  margin: 0 12px 12px;
+  padding: 12px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 12px;
+  background: #fafbfe;
+  animation: actualite-deplie 240ms ease-out;
+}
+
+.actualite-commentaire textarea {
+  display: block;
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--hope-texte);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.actualite-commentaire textarea:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+.actualite-commentaire__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.actualite-commentaire__aide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hope-texte-doux);
+  font-size: 13px;
+}
+
+.actualite-commentaire__aide::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hope-violet);
+  opacity: 0.55;
+}
+
+.actualite-commentaire__boutons {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.actualite-commentaire__annuler,
+.actualite-commentaire__envoyer {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.actualite-commentaire__annuler {
+  border: 1px solid var(--hope-bordure);
+  background: #fff;
+  color: var(--hope-texte);
+}
+
+.actualite-commentaire__envoyer {
+  border: 0;
+  background: var(--hope-violet);
+  color: #fff;
+}
+
+.actualite-commentaire__envoyer:hover:not(:disabled) {
+  background: var(--hope-violet-fonce);
+}
+
+.actualite-commentaire__envoyer:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.actualite-commentaire__envoyer:disabled,
+.actualite-commentaire__annuler:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.actualite-commentaire__annuler:focus-visible,
+.actualite-commentaire__envoyer:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.actualite-commentaire__refus {
+  margin: 8px 0 0;
+  color: var(--hope-erreur);
+  font-size: 13.5px;
+}
+
+.actualite-commentaire__merci {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf6ee;
+  color: #1f6b3a;
+  font-size: 14px;
+  font-weight: 600;
+  animation: actualite-deplie 240ms ease-out;
+}
+
+.actualite-commentaire__merci::before {
+  content: '\2713';
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2e8b57;
+  color: #fff;
+  font-size: 12px;
+}
+
+@keyframes actualite-deplie {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actualite-action svg,
+  .actualite-action--bat svg,
+  .actualite-action__nombre,
+  .actualite-commentaire,
+  .actualite-commentaire__merci,
+  .actualite-commentaire textarea,
+  .actualite-commentaire__envoyer {
+    animation: none;
+    transition: none;
+  }
+}

@@ -13,6 +13,7 @@ import { AUDIENCE_PAR_TYPE } from '../shared/audiences.js';
 import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 import * as verificationCourriel from '../services/verificationCourriel.service.js';
 import * as audit from '../services/audit.service.js';
+import * as reactions from '../services/reactionsActualite.service.js';
 
 /** Le type d'espace (donateur, benevole, bailleur) d'une audience de jeton. */
 function typeDeLAudience(audience) {
@@ -151,6 +152,35 @@ export async function etatCompte(req, res, next) {
 export async function renvoyerVerification(req, res, next) {
   try {
     res.status(200).json(await verificationCourriel.renvoyer(req.utilisateurId));
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/* ---------------- Reactions aux actualites (J'aime, commentaire) ---------------- */
+
+/** GET /api/espace/actualites/reactions?ids=... */
+export async function reactionsActualites(req, res, next) {
+  try {
+    res.status(200).json(await reactions.etat(req.utilisateurId, req.query.ids));
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** POST /api/espace/actualites/:id/jaime */
+export async function jaimerActualite(req, res, next) {
+  try {
+    res.status(200).json(await reactions.basculerJaime(req.utilisateurId, req.params.id));
+  } catch (erreur) {
+    next(erreur);
+  }
+}
+
+/** POST /api/espace/actualites/:id/commentaires : lu par l'equipe seulement. */
+export async function commenterActualite(req, res, next) {
+  try {
+    res.status(201).json(await reactions.commenter(req.utilisateurId, req.espace, req.params.id, req.body ?? {}));
   } catch (erreur) {
     next(erreur);
   }

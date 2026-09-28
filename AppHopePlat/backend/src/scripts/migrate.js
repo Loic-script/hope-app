@@ -52,7 +52,7 @@ const TABLES_ATTENDUES = {
   ],
   'Comptes des espaces utilisateurs': ['utilisateur', 'utilisateur_role', 'reinitialisation_mot_de_passe',
     'verification_courriel',
-    'journal_audit'],
+    'journal_audit', 'publication_jaime', 'publication_commentaire'],
   'Espace benevole': [
     'benevole',
     'mission',

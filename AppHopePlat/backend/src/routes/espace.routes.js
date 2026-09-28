@@ -22,6 +22,11 @@ router.get('/badges', espace.badges);
 
 // Le compte : changer son mot de passe, supprimer son compte. Limites :
 // le mot de passe actuel y est essaye.
+// Les reactions aux actualites : J'aime (public), commentaire (pour l'equipe).
+router.get('/actualites/reactions', espace.reactionsActualites);
+router.post('/actualites/:id/jaime', espace.jaimerActualite);
+router.post('/actualites/:id/commentaires', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }), espace.commenterActualite);
+
 router.get('/compte', espace.etatCompte);
 router.post('/compte/verification', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 3 }), espace.renvoyerVerification);
 router.post('/compte/mot-de-passe', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }), espace.changerMotDePasse);

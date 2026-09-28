@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 
 import { IconeChevronDroit } from '../../components/admin/AdminIcons.jsx';
+import ActionsActualite, { idsActualites, useReactionsActualites } from '../../components/ActionsActualite.jsx';
 import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
 import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
@@ -97,7 +98,7 @@ function FinancementDuProjet({ projet }) {
  * reel. L'ecran le dit explicitement : personne ne doit croire avoir
  * paye en cliquant.
  */
-function ActualiteDuFil({ publication, rang, onInteret, ouverts }) {
+function ActualiteDuFil({ publication, rang, onInteret, reactions }) {
   const appel = publication.type === 'appel_financement';
   const devise = publication.devise ?? 'MGA';
   const budget = Number(publication.budgetProjet) || 0;
@@ -203,22 +204,24 @@ function ActualiteDuFil({ publication, rang, onInteret, ouverts }) {
       </div>
     ) : undefined;
 
-  // Une actualite liee a un projet en cours se soutient depuis le fil ;
-  // un appel a son propre bouton, "Financer ce projet".
-  const lienDon =
-    !appel && publication.projetId && ouverts?.has(publication.projetId)
-      ? `/bailleur/faire-un-don?projet=${publication.projetId}`
-      : null;
-
+  // Un appel garde son bouton, "Financer ce projet" ; une actualite se
+  // commente et s'aime.
   return (
     <PublicationActualite
       publication={publication}
       rang={rang}
       appel={appel}
-      lienDon={lienDon}
-      lienProjet={publication.projetId ? `/bailleur/projets/${publication.projetId}` : null}
       compteurs={collecte}
-      actions={actions}
+      actions={
+        actions ?? (
+          <ActionsActualite
+            publication={publication}
+            etat={reactions.etats[publication.id]}
+            onJaime={reactions.basculer}
+            onCommenter={reactions.commenter}
+          />
+        )
+      }
     />
   );
 }
@@ -255,8 +258,7 @@ export default function Accueil() {
   const projets = (donnees?.projets ?? []).filter((p) => p.status === 'IN_PROGRESS');
   const actualites = publications ?? [];
   const fil = elementsDuFil(projets, actualites, filtre);
-  // Les projets qu'on peut encore soutenir : en cours, budget non atteint.
-  const ouverts = new Set(projets.filter((p) => Number(p.tauxFinancement) < 100).map((p) => p.id));
+  const reactions = useReactionsActualites('bailleur', idsActualites(actualites));
   const versements = (donnees?.versements ?? []).slice(0, VERSEMENTS_ACCUEIL);
   const origine = donnees?.origineDesFonds ?? {};
   const distinctions = donnees?.distinctions ?? [];
@@ -371,7 +373,7 @@ export default function Accueil() {
                         publication={element}
                         rang={Math.min(rang, 5)}
                         onInteret={rechargerFil}
-                        ouverts={ouverts}
+                        reactions={reactions}
                       />
                     )
                   )

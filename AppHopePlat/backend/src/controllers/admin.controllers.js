@@ -43,6 +43,7 @@ import { envoyerFichierLivraison } from './fichierLivraison.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
 import * as auditService from '../services/audit.service.js';
+import * as reactionsService from '../services/reactionsActualite.service.js';
 import * as backofficeService from '../services/backoffice.service.js';
 import * as compteParEquipeService from '../services/compteParEquipe.service.js';
 import { poserSession } from '../shared/session.js';
@@ -109,10 +110,7 @@ export const projectReports = {
     statut: 201,
   }),
 
-  /**
-   * Le PDF du jour, en piece jointe : c'est un telechargement demande,
-   * pas un apercu -- la lecture se fait dans l'onglet.
-   */
+
   pdf: gerer(async (req, res) => {
     const { contenu, nomFichier } = await projectReportService.pdf(req.params.id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -236,6 +234,7 @@ export const team = {
 
 export const publications = {
   lister: gerer(() => publicationService.lister()),
+  commentaires: gerer((req) => reactionsService.commentaires(req.params.id)),
   creer: gerer((req) => publicationService.creer(req.body, req.admin), { statut: 201 }),
   modifier: gerer((req) => publicationService.modifier(req.params.id, req.body, req.admin)),
   supprimer: gerer((req) => publicationService.supprimer(req.params.id, req.admin)),

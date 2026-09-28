@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useOutletContext } from 'react-router-dom';
 
 import { IconeChevronDroit } from '../../components/admin/AdminIcons.jsx';
+import ActionsActualite, { idsActualites, useReactionsActualites } from '../../components/ActionsActualite.jsx';
 import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
 import PublicationActualite from '../../components/admin/PublicationActualite.jsx';
 import PublicationFil from '../../components/admin/PublicationFil.jsx';
@@ -39,11 +40,6 @@ function FinancementDuProjet({ projet }) {
   );
 }
 
-/** Les projets ouverts aux dons, par identifiant : une actualite liee s'y soutient aussi. */
-function ouvertsAuxDons(projets) {
-  return new Set(projets.filter((p) => !p.atteint).map((p) => p.id));
-}
-
 /**
  * Actualites : la page d'entree de l'espace donateur.
  *
@@ -66,9 +62,9 @@ export default function Actualites() {
 
   const projets = projetsBruts?.items ?? [];
   const fil = elementsDuFil(projets, actualites ?? [], filtre);
+  const reactions = useReactionsActualites('donateur', idsActualites(actualites));
   const principal = totalPrincipal(dons?.synthese);
   const aSoutenir = projets.find((p) => !p.atteint);
-  const ouverts = ouvertsAuxDons(projets);
   const derniers = (dons?.items ?? []).slice(0, 3);
 
   return (
@@ -195,8 +191,14 @@ export default function Actualites() {
                     key={cle}
                     publication={element}
                     rang={Math.min(rang, 5)}
-                    lienProjet={element.projetId ? `/donateur/projets/${element.projetId}` : null}
-                    lienDon={ouverts.has(element.projetId) ? `/donateur/faire-un-don?projet=${element.projetId}` : null}
+                    actions={
+                      <ActionsActualite
+                        publication={element}
+                        etat={reactions.etats[element.id]}
+                        onJaime={reactions.basculer}
+                        onCommenter={reactions.commenter}
+                      />
+                    }
                   />
                 )
               )

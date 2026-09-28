@@ -27,6 +27,7 @@ import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { depuisBase, pourcentage } from '../shared/money.js';
 import { identifiantFacultatif, texteFacultatif, texteRequis } from '../shared/validation.js';
 import * as mediaService from './media.service.js';
+import * as reactions from './reactionsActualite.service.js';
 
 export const TYPES = {
   actualite: 'Actualité',
@@ -140,7 +141,11 @@ async function effacerPhoto(adresse) {
    ================================================================ */
 
 export async function lister() {
-  const items = (await publicationRepository.lister()).map(presenter);
+  // J'aime et commentaires des accueils, a cote de chaque publication.
+  const chiffres = await reactions.chiffresParPublication();
+  const items = (await publicationRepository.lister())
+    .map(presenter)
+    .map((p) => ({ ...p, ...(chiffres.get(p.id) ?? { jaimes: 0, commentaires: 0, commentairesNonLus: 0 }) }));
   return {
     items,
     counts: {

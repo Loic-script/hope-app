@@ -250,3 +250,194 @@
     justify-content: flex-start;
   }
 }
+
+/* ------------------------------------------------------------
+   Les reactions des utilisateurs : J'aime, et les commentaires que
+   seule l'equipe lit. La liste se deplie sous la carte.
+   ------------------------------------------------------------ */
+
+.reactions-admin {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.reactions-admin__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+
+.reactions-admin__chiffre,
+.reactions-admin__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--admin-texte-doux);
+  font-size: 14px;
+}
+
+.reactions-admin__chiffre strong,
+.reactions-admin__bouton strong {
+  color: var(--hope-texte);
+  font-variant-numeric: tabular-nums;
+}
+
+.reactions-admin svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+}
+
+.reactions-admin__chiffre--jaime svg {
+  fill: var(--hope-orange);
+  stroke: var(--hope-orange);
+}
+
+.reactions-admin__bouton {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.reactions-admin__bouton:hover:not(:disabled) {
+  border-color: var(--admin-bordure);
+  background: #f3f1fb;
+  color: var(--hope-violet);
+}
+
+.reactions-admin__bouton:disabled {
+  cursor: default;
+}
+
+.reactions-admin__bouton:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.reactions-admin__nouveaux {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fbefdc;
+  color: var(--hope-orange-lisible);
+  font-size: 12px;
+  font-weight: 700;
+  animation: reactions-pulse 1.8s ease-in-out 2;
+}
+
+.reactions-admin__fleche {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.reactions-admin__bouton[aria-expanded='true'] .reactions-admin__fleche {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.reactions-admin__liste ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reactions-admin__commentaire {
+  padding: 10px 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+  background: #fafbfe;
+  animation: reactions-entree 260ms ease-out both;
+  animation-delay: calc(var(--rang, 0) * 40ms);
+}
+
+.reactions-admin__auteur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0 0 4px;
+  font-size: 13.5px;
+}
+
+.reactions-admin__auteur time {
+  margin-left: auto;
+  color: var(--admin-texte-doux);
+  font-size: 12.5px;
+}
+
+.reactions-admin__espace {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--hope-bleu-clair);
+  color: var(--hope-bleu-lisible);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.reactions-admin__point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hope-orange);
+}
+
+.reactions-admin__texte {
+  margin: 0;
+  color: var(--hope-texte);
+  font-size: 14.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.reactions-admin__vide {
+  margin: 10px 0 0;
+  color: var(--admin-texte-doux);
+  font-size: 13.5px;
+}
+
+@keyframes reactions-entree {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reactions-pulse {
+  50% {
+    box-shadow: 0 0 0 4px rgba(224, 151, 53, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reactions-admin__commentaire,
+  .reactions-admin__nouveaux {
+    animation: none;
+  }
+
+  .reactions-admin__fleche,
+  .reactions-admin__bouton {
+    transition: none;
+  }
+}
