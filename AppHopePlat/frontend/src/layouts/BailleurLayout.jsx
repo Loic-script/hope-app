@@ -40,7 +40,8 @@ const GROUPES = [
   {
     titre: 'Notre partenariat',
     entrees: [
-      { to: '/bailleur/partenariat', label: 'Partenariat', Icone: PleineDons },
+      // Ce que l'organisation a paye : dons en ligne et versements.
+      { to: '/bailleur/paiements', label: 'Paiements effectués', Icone: PleineDons },
       { to: '/bailleur/rapports', label: 'Rapports', Icone: PleineGraphique },
     ],
   },

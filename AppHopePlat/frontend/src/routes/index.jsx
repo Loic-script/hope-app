@@ -61,7 +61,7 @@ const CompleterProfil = lazy(() => import('../pages/benevole/CompleterProfil.jsx
 const MonProfil = lazy(() => import('../pages/benevole/MonProfil.jsx'));
 const VueDensemble = lazy(() => import('../pages/benevole/VueDensemble.jsx'));
 const OrganisationBailleur = lazy(() => import('../pages/bailleur/Organisation.jsx'));
-const PartenariatBailleur = lazy(() => import('../pages/bailleur/Partenariat.jsx'));
+const PaiementsBailleur = lazy(() => import('../pages/bailleur/Paiements.jsx'));
 const ProjetsBailleur = lazy(() => import('../pages/bailleur/Projets.jsx'));
 const ProjetBailleur = lazy(() => import('../pages/bailleur/ProjetDetail.jsx'));
 const FaireUnDonBailleur = lazy(() => import('../pages/bailleur/FaireUnDon.jsx'));
@@ -241,7 +241,9 @@ export default function AppRoutes() {
 
         <Route element={<BailleurLayout />}>
           <Route path="/bailleur" element={<AccueilBailleur />} />
-          <Route path="/bailleur/partenariat" element={<PartenariatBailleur />} />
+          <Route path="/bailleur/paiements" element={<PaiementsBailleur />} />
+          {/* L'ancienne page Partenariat : un favori y mene encore. */}
+          <Route path="/bailleur/partenariat" element={<Navigate to="/bailleur/paiements" replace />} />
           <Route path="/bailleur/rapports" element={<RapportsBailleur />} />
           <Route path="/bailleur/projets" element={<ProjetsBailleur />} />
           {/* La fiche d'un projet : ce qu'il est, son financement, son impact. */}

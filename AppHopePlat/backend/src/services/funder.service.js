@@ -16,6 +16,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import * as donorSpaceRepository from '../repositories/donorSpace.repository.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import { TYPES_ORGANISATION } from './funderAuth.service.js';
@@ -24,7 +25,7 @@ import * as ficheProjetService from './ficheProjet.service.js';
 import * as projectReportService from './projectReport.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
-import { depuisBase, pourcentage } from '../shared/money.js';
+import { centimesVersTexte, depuisBase, pourcentage } from '../shared/money.js';
 
 /** Types de document, et leurs libelles. */
 export const TYPES_DOCUMENT = {
@@ -166,6 +167,84 @@ export async function versements(bailleurId, requete = {}) {
   const recusSeulement = requete.recus === 'true' || requete.recus === true;
   const items = await funderRepository.listerVersements(bailleurId, { recusSeulement });
   return { items };
+}
+
+/* ================================================================
+   Paiements effectues
+   ================================================================ */
+
+/** Etat d'un don de la plateforme, lu comme un paiement. */
+const ETAT_DON = { RECEIVED: 'recu', PENDING: 'en_attente' };
+/** Etat d'un versement de convention, lu comme un paiement. */
+const ETAT_VERSEMENT = { recu: 'recu', attendu: 'en_attente', en_retard: 'en_attente' };
+
+/**
+ * Ce que le bailleur a paye a HOPE, en une liste : ses dons faits depuis
+ * l'espace (au nom de la personne connectee) et les versements des
+ * conventions de son organisation. Un don echoue ou rembourse, un
+ * versement annule, n'y figurent pas.
+ *
+ * Les totaux sont par devise, en centimes : on n'additionne pas des
+ * euros et des ariary, et jamais en virgule flottante.
+ */
+export async function paiements(bailleur) {
+  const [dons, versements] = await Promise.all([
+    bailleur.utilisateurId ? donorSpaceRepository.mesDons(bailleur.utilisateurId) : [],
+    funderRepository.listerVersements(bailleur.bailleurId),
+  ]);
+
+  const items = [
+    ...dons
+      .filter((don) => ETAT_DON[don.statut])
+      .map((don) => ({
+        id: `don-${don.id}`,
+        source: 'don',
+        montant: don.montant,
+        devise: don.devise,
+        etat: ETAT_DON[don.statut],
+        date: don.recuLe ?? don.creeLe,
+        libelle: don.projetNom ?? 'Fonds général de HOPE',
+        projetId: don.projetId ?? null,
+        moyen: don.modePaiement ?? null,
+        reference: don.reference ?? null,
+      })),
+    ...versements
+      .filter((v) => ETAT_VERSEMENT[v.statut])
+      .map((v) => ({
+        id: `versement-${v.id}`,
+        source: 'convention',
+        montant: v.montant,
+        devise: v.devise,
+        etat: ETAT_VERSEMENT[v.statut],
+        enRetard: v.statut === 'en_retard',
+        date: v.dateRecue ?? v.datePrevue,
+        libelle: v.engagementIntitule,
+        tranche: v.numeroTranche ?? null,
+        moyen: v.moyen ?? null,
+        reference: v.referenceBancaire ?? null,
+      })),
+  ].sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0));
+
+  const parDevise = new Map();
+  for (const p of items) {
+    const ligne = parDevise.get(p.devise) ?? { devise: p.devise, paye: 0, enAttente: 0 };
+    if (p.etat === 'recu') ligne.paye += depuisBase(p.montant);
+    else ligne.enAttente += depuisBase(p.montant);
+    parDevise.set(p.devise, ligne);
+  }
+  const recus = items.filter((p) => p.etat === 'recu');
+
+  return {
+    items,
+    synthese: {
+      totaux: [...parDevise.values()]
+        .map((l) => ({ devise: l.devise, paye: centimesVersTexte(l.paye), enAttente: centimesVersTexte(l.enAttente) }))
+        .sort((a, b) => Number(b.paye) - Number(a.paye)),
+      nombrePayes: recus.length,
+      nombreEnAttente: items.length - recus.length,
+      dernierPaiement: recus[0]?.date ?? null,
+    },
+  };
 }
 
 /* ================================================================

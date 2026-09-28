@@ -22,7 +22,7 @@ import {
 
 import photoBandeau from '../../assets/hope-bandeau.jpg';
 
-/** Sur l'accueil, les cinq derniers versements ; la page Partenariat a le reste. */
+/** Sur l'accueil, les cinq derniers versements ; la page Paiements effectues a le reste. */
 const VERSEMENTS_ACCUEIL = 5;
 
 /**
@@ -239,8 +239,8 @@ function ActualiteDuFil({ publication, rang, onInteret, reactions }) {
  *
  * Ce qui reste propre au partenaire l'encadre : ses chiffres en tete, et
  * dans la colonne de droite ses derniers versements, ou vont les fonds,
- * et d'ou viennent ceux de HOPE. Le detail des engagements --
- * promis, recu, affecte -- est sur la page Partenariat.
+ * et d'ou viennent ceux de HOPE. Le detail de ce qui a ete paye est sur
+ * la page Paiements effectues.
  *
  * Les chiffres sont des agregats calcules a la volee : aucun n'est
  * stocke, sinon ils se desynchroniseraient des la saisie du versement
@@ -386,7 +386,7 @@ export default function Accueil() {
               <Panneau
                 titre="Derniers versements reçus"
                 actions={
-                  <Link className="lien-bailleur" to="/bailleur/partenariat">
+                  <Link className="lien-bailleur" to="/bailleur/paiements">
                     Tout l’historique
                   </Link>
                 }

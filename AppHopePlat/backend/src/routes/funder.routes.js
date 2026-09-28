@@ -60,6 +60,8 @@ router.use(exigerOrganisation);
 router.get('/tableau-de-bord', funder.espace.tableauDeBord);
 router.get('/partenariat', funder.espace.partenariat);
 router.get('/versements', funder.espace.versements);
+// Paiements effectues : ses dons faits ici et les versements de ses conventions.
+router.get('/paiements', funder.espace.paiements);
 
 // Les projets HOPE, la fiche de chacun -- ce qu'il est, son financement,
 // son impact -- et son rapport a jour : lu dans l'espace ou enregistre

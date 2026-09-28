@@ -94,9 +94,9 @@ export async function tableauDeBord() {
   return data;
 }
 
-/** GET /api/bailleur/partenariat */
-export async function partenariat() {
-  const { data } = await apiBailleur.get('/bailleur/partenariat');
+/** GET /api/bailleur/paiements : ses dons et les versements de ses conventions. */
+export async function paiements() {
+  const { data } = await apiBailleur.get('/bailleur/paiements');
   return data;
 }
 

@@ -1356,3 +1356,263 @@
   line-height: 1.55;
   color: var(--admin-texte-faible);
 }
+
+/* ============================================================
+   Paiements effectues (pages/bailleur/Paiements.jsx)
+
+   Trois chiffres qui entrent l'un apres l'autre, trois filtres en
+   pastilles, puis la liste : chaque paiement glisse a son tour.
+   ============================================================ */
+
+.paiements__carte {
+  animation: paiements-entree 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 70ms);
+}
+
+.paiements__filtres {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #eef0f7;
+}
+
+.paiements__filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-texte-doux);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.paiements__filtre:hover {
+  color: var(--hope-violet);
+}
+
+.paiements__filtre--actif {
+  background: #fff;
+  color: var(--hope-violet);
+  box-shadow: 0 1px 4px rgba(43, 50, 68, 0.12);
+}
+
+.paiements__filtre:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.paiements__compte {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e4e6f0;
+  color: var(--hope-texte);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.paiements__filtre--actif .paiements__compte {
+  background: #ece9f8;
+  color: var(--hope-violet);
+}
+
+.paiements__liste {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paiement {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background: var(--admin-surface);
+  animation: paiements-entree 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 40ms);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .paiement:hover {
+    transform: translateY(-2px);
+    border-color: #d4d1ea;
+    box-shadow: 0 8px 20px rgba(93, 86, 150, 0.1);
+  }
+}
+
+.paiement__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #e2f4ea;
+  color: #2c8f63;
+}
+
+.paiement--en_attente .paiement__icone {
+  background: #fdf1de;
+  color: #b5731a;
+}
+
+.paiement__icone svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.paiement__libelle {
+  margin: 0;
+  overflow: hidden;
+  color: var(--hope-texte);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paiement__libelle a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.paiement__libelle a:hover {
+  color: var(--hope-violet);
+}
+
+.paiement__meta {
+  margin: 3px 0 0;
+  color: var(--admin-texte-doux);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.paiement__droite {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.paiement__montant {
+  color: var(--hope-texte);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.paiement--recu .paiement__montant {
+  color: #2c8f63;
+}
+
+.paiement__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-texte-doux);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .paiement {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .paiement__droite {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px dashed var(--admin-bordure);
+  }
+
+  .paiement__date {
+    justify-self: end;
+  }
+
+  .paiement__libelle {
+    white-space: normal;
+  }
+}
+
+@keyframes paiements-entree {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paiements__carte,
+  .paiement {
+    animation: none;
+    transition: none;
+  }
+
+  .paiements__filtre {
+    transition: none;
+  }
+}
+
+/* Sur telephone, les trois filtres tiennent sur une ligne, a parts egales. */
+@media (max-width: 560px) {
+  .paiements__filtres {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .paiements__filtre {
+    justify-content: center;
+    gap: 5px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 560px) {
+  .paiements__filtre {
+    white-space: nowrap;
+  }
+
+  /* Le montant a gauche, la pastille et la date a droite, qui passent a
+     la ligne plutot que de toucher le bord. */
+  .paiement__date {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    white-space: normal;
+    text-align: right;
+  }
+}

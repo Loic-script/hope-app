@@ -91,6 +91,7 @@ export const espace = {
   tableauDeBord: gerer((req) => funderService.tableauDeBord(req.bailleur.bailleurId)),
   partenariat: gerer((req) => funderService.partenariat(req.bailleur.bailleurId)),
   versements: gerer((req) => funderService.versements(req.bailleur.bailleurId, req.query)),
+  paiements: gerer((req) => funderService.paiements(req.bailleur)),
   projets: gerer((req) => funderService.projets(req.bailleur.bailleurId)),
   projet: gerer((req) => funderService.projet(req.bailleur.bailleurId, req.params.id)),
   // Faire un don a un projet : une promesse, ponctuelle -- le bailleur
