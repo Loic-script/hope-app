@@ -148,17 +148,32 @@ dossier des fichiers est `/app/backend/uploads`.)
    - avant la mise en ligne : `npm run db:preparer` crée la table administrateur et applique le
      schéma (sans risque : il est rejouable) ;
    - démarrage : `npm start`, puis Railway attend que `/api/sante` réponde.
-2. **Une seule fois**, créer le compte administrateur et les catégories de projet. Depuis un
-   poste où la CLI Railway est installée :
+2. **Settings → Networking → Generate Domain** pour obtenir l'adresse publique (tant qu'il n'y
+   en a pas, Railway affiche « Unexposed service »). Si Railway demande un port, donner celui
+   du journal de démarrage (`[HOPE] API demarree sur …:8080`). Reporter ensuite cette adresse
+   dans `HOPE_SITE_URL` et `CORS_ORIGIN` (et dans le webhook Stripe).
+3. **Une seule fois**, créer le compte administrateur (à partir de `ADMIN_LOG` et
+   `ADMIN_PASSWORD`) et les catégories de projet. La commande doit tourner **dans** le service :
+   la base est sur le réseau privé de Railway, qu'un poste ne joint pas (`railway run` exécute
+   en local et échouerait sur `postgres.railway.internal`).
+
+   - dans l'interface : onglet **Console** du service, s'il ouvre un terminal ;
+   - sinon, avec la CLI Railway (`npm install -g @railway/cli`) :
+
+     ```bash
+     railway login
+     railway link             # choisir le projet et le service HOPE
+     railway ssh              # un terminal dans le service
+     ```
+
+   puis, dans ce terminal :
 
    ```bash
-   railway link             # choisir le projet et le service HOPE
-   railway run npm run db:premier-deploiement
+   npm run db:premier-deploiement
    ```
 
-   (ou, dans l'interface, un déploiement ponctuel avec cette commande.)
-3. **Settings → Networking → Generate Domain** pour obtenir l'adresse publique, puis reporter
-   cette adresse dans `HOPE_SITE_URL` et `CORS_ORIGIN` (et dans le webhook Stripe).
+   Les deux étapes sont sans risque si on les rejoue : un administrateur existant n'est pas
+   modifié, une catégorie présente n'est pas dupliquée.
 
 Les données de démonstration (`db:seed-demo`, `db:seed-espace`…) ne sont **pas** jouées en
 production.
