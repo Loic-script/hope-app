@@ -23,6 +23,7 @@ import { ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, enCentimes, normaliserDevise } from '../shared/money.js';
 import { identifiantRequis, texteFacultatif, valeurParmi } from '../shared/validation.js';
 import { DEVISES, FREQUENCES, MODES_PAIEMENT, projetsProposes } from './donorProfile.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 /** Les statuts d'un don, tels que les espaces les lisent. */
 export const STATUTS_DON = {
@@ -184,6 +185,12 @@ export async function promettreUnDon(
 
     return cree;
   });
+
+  // Le donateur recoit sa reference ; l'equipe, de quoi confirmer.
+  if (!enLigne) {
+    void courrielsAuto.promesseEnregistree(don.id);
+    void courrielsAuto.promesseAConfirmer(don.id);
+  }
 
   const lu = await donorSpaceRepository.unDeMesDons(identite.utilisateurId, don.id);
   return {

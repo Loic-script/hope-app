@@ -32,6 +32,7 @@ import { config } from '../config/env.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { garantirOrganisation } from './funderAuth.service.js';
 import * as verificationCourriel from './verificationCourriel.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import { signalerNouveauCompte } from './notification.service.js';
 import { signerJetonCompletion } from './volunteerAuth.service.js';
 import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
@@ -239,6 +240,7 @@ export async function inscrire(corps = {}) {
   // Le lien de confirmation de l'adresse. Un echec d'envoi n'annule pas
   // l'inscription : le lien se renvoie depuis l'espace.
   await verificationCourriel.envoyerLien(compte);
+  if (aValider) void courrielsAuto.compteAValider({ email, type });
 
   /*
    * Le benevole enchaine sur sa fiche : competences, disponibilites,

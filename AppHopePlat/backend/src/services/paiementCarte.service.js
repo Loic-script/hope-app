@@ -34,6 +34,7 @@ import * as notificationRepository from '../repositories/notification.repository
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, enCentimes } from '../shared/money.js';
 import { presenter, promettreUnDon } from './promesseDon.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 /** Le mode de paiement, tel que le parcours et la base le nomment. */
 const MODE = 'carte_bancaire';
@@ -369,6 +370,7 @@ async function synchroniser(don, session) {
     donorId: don.donorId ?? null,
     projectId: don.projectId ?? null,
   });
+  void courrielsAuto.donRecu(don.id);
   return confirme;
 }
 

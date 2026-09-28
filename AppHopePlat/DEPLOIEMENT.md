@@ -80,6 +80,26 @@ N'importe quel fournisseur SMTP : Brevo, Mailjet, Resend…
 Sans SMTP, la plateforme fonctionne, mais aucun courriel ne part (un avertissement l'écrit dans
 le journal, sans jamais y mettre le lien).
 
+Une fois SMTP configuré, la plateforme écrit d'elle-même :
+
+| Événement | Destinataire |
+|---|---|
+| inscription : lien de confirmation de l'adresse | la personne |
+| mot de passe oublié : lien de réinitialisation | la personne |
+| promesse de don enregistrée (référence, suite) | le donateur |
+| don reçu (confirmé par l'équipe ou payé par carte) : remerciement | le donateur |
+| compte bénévole ou bailleur validé | la personne |
+| compte à valider, promesse de don à confirmer | l'équipe (`EQUIPE_EMAIL`) |
+| erreur interne du serveur | `ALERTE_EMAIL` |
+
+Un compte d'utilisateur ne reçoit ces courriels qu'une fois son adresse confirmée. Les
+adresses des domaines réservés (`.test`, `.example`) des comptes de démonstration ne sont
+jamais envoyées : elles s'écrivent dans le journal.
+
+Avec Gmail, `SMTP_USER` et l'adresse de `SMTP_FROM` doivent être la même, et
+`SMTP_PASSWORD` est un **mot de passe d'application** (compte Google → Sécurité →
+Validation en deux étapes → Mots de passe d'application), pas le mot de passe du compte.
+
 ### La carte bancaire (Stripe)
 
 1. Dans le tableau de bord Stripe, **Développeurs → Clés API** : `STRIPE_SECRET_KEY` (`sk_live_…`)

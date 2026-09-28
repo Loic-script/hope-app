@@ -11,6 +11,7 @@ import { query, transaction } from '../config/database.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { versListe } from '../shared/mapping.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 const STATUTS_ADMIN = ['actif', 'suspendu', 'supprime'];
 const STATUTS = ['en_attente', ...STATUTS_ADMIN];
@@ -93,7 +94,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
     throw new ErreurValidation(`Ce compte est déjà « ${statut} ».`, { statut: 'Sans effet' });
   }
 
-  return transaction(async (client) => {
+  const resultat = await transaction(async (client) => {
     const compte = await volunteerRepository.changerStatut(
       id,
       statut,
@@ -119,6 +120,8 @@ export async function changerStatut(id, corps = {}, admin = null) {
 
     return compte;
   });
+  if (statut === 'actif') void courrielsAuto.compteValide(id, 'bailleur');
+  return resultat;
 }
 
 /** Raccourci de l'action la plus courante. */

@@ -26,7 +26,9 @@ export async function dernierLien(email, page) {
   const motif = new RegExp(`${page}\\?jeton=([a-f0-9]{64})`);
   for (let essai = 0; essai < 20; essai += 1) {
     const texte = fs.existsSync(JOURNAL) ? fs.readFileSync(JOURNAL, 'utf8') : '';
-    const blocs = texte.split('[HOPE] Courriel (SMTP non configure, affiche ici) a ').slice(1);
+    // Le serveur ecrit les courriels non envoyes (SMTP absent, ou domaine
+    // reserve comme .test) sous la forme « [HOPE] Courriel (...) a <adresse> ».
+    const blocs = texte.split(/\[HOPE\] Courriel \([^)]*\) a /).slice(1);
     const liens = blocs.filter((b) => b.startsWith(`${email} `)).map((b) => b.slice(0, 2000).match(motif)?.[1]).filter(Boolean);
     if (liens.length > 0) return liens[liens.length - 1];
     await new Promise((r) => setTimeout(r, 250));

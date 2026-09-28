@@ -71,6 +71,10 @@ export async function preparerBaseDeTest({ prefixe = 'hope_test' } = {}) {
 
   process.env.DATABASE_URL = url;
   process.env.DB_SSL = '';
+  // Jamais de vrai courriel depuis un test, meme si le .env du poste
+  // configure un serveur d'envoi : les courriels s'ecrivent dans le journal.
+  process.env.SMTP_HOST = '';
+  process.env.EQUIPE_EMAIL = '';
   // Les tests verifient aussi la limitation des tentatives : jamais desactivee ici.
   delete process.env.DESACTIVER_LIMITEUR;
 

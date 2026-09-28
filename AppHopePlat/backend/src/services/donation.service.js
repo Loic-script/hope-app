@@ -14,6 +14,7 @@ import * as donationRepository from '../repositories/donation.repository.js';
 import * as donorRepository from '../repositories/donor.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
@@ -88,7 +89,7 @@ export async function creer(corps = {}) {
   const frequence = valeurParmi(corps.frequency, 'frequency', FREQUENCES, { defaut: 'ONE_TIME' });
   const statut = valeurParmi(corps.status, 'status', STATUTS, { defaut: 'RECEIVED' });
 
-  return transaction(async (client) => {
+  const cree = await transaction(async (client) => {
     const donateur = await donorRepository.trouverParId(donorId, client);
     if (!donateur) throw new ErreurIntrouvable('Le donateur', donorId);
 
@@ -154,6 +155,10 @@ export async function creer(corps = {}) {
 
     return don;
   });
+  // Le donateur est remercie des que le don est encaisse (hors transaction :
+  // le courriel ne retient ni ne defait rien).
+  if (cree.status === 'RECEIVED') void courrielsAuto.donRecu(cree.id);
+  return cree;
 }
 
 /**
@@ -230,7 +235,7 @@ export async function changerStatut(id, corps = {}) {
   const statut = valeurParmi(corps.status, 'status', STATUTS);
   if (statut === don.status) return don;
 
-  return transaction(async (client) => {
+  const misAJourFinal = await transaction(async (client) => {
     // Retirer un don encaisse d'un projet ne doit pas rendre ses depenses
     // impossibles a couvrir.
     if (don.status === 'RECEIVED' && statut !== 'RECEIVED' && don.projectId) {
@@ -272,4 +277,6 @@ export async function changerStatut(id, corps = {}) {
 
     return misAJour;
   });
+  if (statut === 'RECEIVED') void courrielsAuto.donRecu(donationId);
+  return misAJourFinal;
 }

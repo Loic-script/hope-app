@@ -78,6 +78,17 @@ export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, not
     .filter((ligne) => ligne !== undefined)
     .join('\n');
 
+  /*
+   * Les domaines reserves (RFC 2606 : .test, .example, .invalid,
+   * .localhost) n'existent pas : les comptes de demonstration et
+   * d'essai les utilisent. Un envoi reel ne ferait que revenir en echec
+   * dans la boite de l'expediteur ; le courriel s'ecrit dans le journal.
+   */
+  if (/\.(test|example|invalid|localhost)$/i.test(String(a ?? '').trim())) {
+    if (!config.enProduction) console.log(`[HOPE] Courriel (domaine reserve, non envoye) a ${a} — ${sujet}\n${texte}\n`);
+    return false;
+  }
+
   const smtp = transporteur();
   if (!smtp) {
     if (config.enProduction) {

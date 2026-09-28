@@ -7,6 +7,7 @@
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { versBenevolePublic } from './volunteerAuth.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 /** Statuts qu'un administrateur peut poser depuis son espace. */
 const STATUTS_ADMIN = ['actif', 'suspendu', 'supprime'];
@@ -72,6 +73,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
   }
 
   const compte = await volunteerRepository.changerStatut(id, statut, admin?.id ?? null);
+  if (statut === 'actif') void courrielsAuto.compteValide(id, 'benevole');
 
   // La table notifications n'accepte que quatre types metier : pas de
   // trace ici. L'activation reste inscrite sur le compte lui-meme, par
