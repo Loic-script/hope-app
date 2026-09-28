@@ -15,10 +15,14 @@ import { ErreurIntrouvable } from '../shared/errors.js';
 
 import { gerer } from './handler.js';
 
-/** Qui parle, d'apres ce que le verrou a etabli. */
+/**
+ * Qui parle, d'apres ce que le verrou a etabli. L'espace d'un utilisateur
+ * (l'audience de son jeton) decide de qui il peut joindre : voir
+ * conversationRepository.joignables.
+ */
 export function acteurDe(req) {
   if (req.admin?.id) return { type: 'admin', id: req.admin.id };
-  return { type: 'utilisateur', id: req.utilisateurId ?? req.benevole?.utilisateurId };
+  return { type: 'utilisateur', id: req.utilisateurId ?? req.benevole?.utilisateurId, espace: req.espace ?? null };
 }
 
 /** "moi" accompagne chaque reponse : l'ecran n'a pas a deviner qui il est. */

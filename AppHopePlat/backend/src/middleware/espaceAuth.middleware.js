@@ -60,9 +60,8 @@ export async function authenticateEspace(req, _res, next) {
     await exigerSessionFraicheUtilisateur(charge.utilisateurId, charge);
 
     req.utilisateurId = charge.utilisateurId;
-    // L'audience dit de quel espace vient la demande. Rien ne s'en sert
-    // encore ; elle est la pour les journaux et pour le jour ou une
-    // notification devra pointer vers le bon espace.
+    // L'audience dit de quel espace vient la demande. La messagerie s'en
+    // sert : on ne joint pas les memes personnes depuis chaque espace.
     req.espace = charge.aud;
 
     next();

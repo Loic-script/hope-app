@@ -108,6 +108,10 @@ export default function Conversations() {
   );
 
   const pleinEcran = etroit && affiche !== null;
+  // Donateurs et bailleurs n'ont que l'equipe HOPE pour contact : un
+  // groupe n'aurait personne a reunir. Le serveur le refuserait de toute
+  // facon (conversationRepository.joignables).
+  const groupesPermis = !/^\/(donateur|bailleur)\//.test(cheminMessages ?? '');
 
   return (
     <div className={`msg-page${pleinEcran ? ' msg-page--fil-ouvert' : ''}`}>
@@ -134,14 +138,16 @@ export default function Conversations() {
           onNouvelle={nouvelle}
           chargerJoignables={chargerJoignables}
           actions={
-            <BoutonCreerGroupe
-              api={api}
-              racine={racine}
-              onCree={async (id) => {
-                await charger();
-                ouvrir(id);
-              }}
-            />
+            groupesPermis && (
+              <BoutonCreerGroupe
+                api={api}
+                racine={racine}
+                onCree={async (id) => {
+                  await charger();
+                  ouvrir(id);
+                }}
+              />
+            )
           }
         />
 

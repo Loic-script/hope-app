@@ -568,17 +568,34 @@ export async function modifierGroupe(conversationId, { nom, photoFichier }, clie
    ================================================================ */
 
 /**
+ * Qui chaque espace peut joindre, en plus de l'equipe HOPE (le fil
+ * d'assistance, propose a tout utilisateur) :
+ *   - espace benevole : les autres benevoles ;
+ *   - espaces donateur et bailleur : personne d'autre que l'equipe.
+ * L'administration, elle, joint tout le monde.
+ */
+const ROLE_JOIGNABLE_PAR_ESPACE = { 'hope-benevole': 'benevole' };
+
+/**
  * Les personnes qu'un acteur peut joindre.
  *
- * Un utilisateur joint les comptes actifs ; l'equipe joint aussi ceux
- * qui attendent leur activation -- un candidat a qui l'on doit une
- * reponse. Les administrateurs actifs ne sont proposes qu'a l'equipe :
- * un utilisateur les joint en bloc, par le fil d'assistance.
+ * L'equipe joint tous les comptes, y compris ceux qui attendent leur
+ * activation -- un candidat a qui l'on doit une reponse --, et les autres
+ * administrateurs. Un utilisateur ne joint que ce que son espace permet
+ * (ROLE_JOIGNABLE_PAR_ESPACE) ; les administrateurs, il les joint en bloc,
+ * par le fil d'assistance.
+ *
+ * Toute ouverture de fil passe par ici (nouvelle conversation, groupe,
+ * ajout de membres, transfert, bouton d'une fiche) : la regle vaut
+ * partout.
  *
  * On s'exclut soi-meme : s'ecrire n'a pas de sens.
  */
 export async function joignables(acteur, client = null) {
   const equipe = acteur.type === 'admin';
+  const roleJoignable = equipe ? null : ROLE_JOIGNABLE_PAR_ESPACE[acteur.espace] ?? null;
+  // Un utilisateur dont l'espace ne joint personne : inutile d'interroger.
+  if (!equipe && !roleJoignable) return [];
   const resultat = await query(
     `SELECT ${PERSONNE} AS personne
        FROM (
@@ -586,6 +603,8 @@ export async function joignables(acteur, client = null) {
            FROM utilisateur u2
           WHERE u2.statut = ANY($1::text[])
             AND ($2::text IS NULL OR u2.id::text <> $2::text)
+            AND ($5::text IS NULL OR EXISTS (
+                  SELECT 1 FROM utilisateur_role r WHERE r.utilisateur_id = u2.id AND r.role = $5::text))
          UNION ALL
          SELECT NULL::uuid, a2.id
            FROM admins a2
@@ -598,6 +617,7 @@ export async function joignables(acteur, client = null) {
       acteur.type === 'utilisateur' ? String(acteur.id) : null,
       equipe,
       acteur.type === 'admin' ? Number(acteur.id) : null,
+      roleJoignable,
     ],
     client
   );
