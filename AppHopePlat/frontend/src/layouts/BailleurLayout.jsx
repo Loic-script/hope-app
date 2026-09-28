@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router
 
 import {
   PleineAccueil,
+  PleineBudget,
   PleineDons,
   PleineGraphique,
   PleineMessages,
@@ -35,13 +36,18 @@ const GROUPES = [
     // "Accueil" : une seule page, ou les projets et les publications
     // de l'equipe se suivent dans un meme fil. Meme entree chez le
     // benevole et chez le donateur.
-    entrees: [{ to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true }],
+    entrees: [
+      { to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true },
+      // L'appel a donner, mis en avant : "vedette" lui donne son fond
+      // orange, son reflet et son coeur qui bat (admin-entete.css).
+      { to: '/bailleur/faire-un-don', label: 'Faire un don', Icone: PleineDons, vedette: true },
+    ],
   },
   {
     titre: 'Notre partenariat',
     entrees: [
       // Ce que l'organisation a paye : dons en ligne et versements.
-      { to: '/bailleur/paiements', label: 'Paiements effectués', Icone: PleineDons },
+      { to: '/bailleur/paiements', label: 'Paiements effectués', Icone: PleineBudget },
       { to: '/bailleur/rapports', label: 'Rapports', Icone: PleineGraphique },
     ],
   },

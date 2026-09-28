@@ -9,7 +9,6 @@ import PublicationFil from '../../components/admin/PublicationFil.jsx';
 import { JaugeHorizon } from '../../components/admin/PublicationProjet.jsx';
 import { useChargement } from '../../hooks/useChargement.js';
 import { useColonneCollante } from '../../hooks/useColonneCollante.js';
-import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import {
@@ -92,47 +91,14 @@ function FinancementDuProjet({ projet }) {
  * financement.
  *
  * L'appel porte la collecte du projet lie -- la somme investie, dons et
- * fonds HOPE, face a son budget -- et le bouton "Financer ce projet".
- * Le bouton ne debite rien : il enregistre une intention et previent
- * l'equipe, qui prend contact hors ligne et cree ensuite l'engagement
- * reel. L'ecran le dit explicitement : personne ne doit croire avoir
- * paye en cliquant.
+ * fonds HOPE, face a son budget. Au pied, comme toute actualite : J'aime
+ * et Commenter.
  */
-function ActualiteDuFil({ publication, rang, onInteret, reactions }) {
+function ActualiteDuFil({ publication, rang, reactions }) {
   const appel = publication.type === 'appel_financement';
   const devise = publication.devise ?? 'MGA';
   const budget = Number(publication.budgetProjet) || 0;
   const finance = Number(publication.montantFinance) || 0;
-
-  const [ouvert, setOuvert] = useState(false);
-  const [message, setMessage] = useState('');
-  const [envoi, setEnvoi] = useState(false);
-  const [refus, setRefus] = useState('');
-  const [confirmation, setConfirmation] = useState('');
-
-  async function envoyer() {
-    setEnvoi(true);
-    setRefus('');
-    try {
-      const resultat = await service.manifesterUnInteret({
-        publicationId: publication.id,
-        projetId: publication.projetId ?? undefined,
-        message,
-      });
-      setConfirmation(resultat.message);
-      setOuvert(false);
-      onInteret();
-    } catch (echec) {
-      setRefus(messageErreur(echec, 'Votre intérêt n’a pas pu être transmis.'));
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  // Un budget atteint ou un projet termine ne cherche plus de partenaire :
-  // pas de bouton. Un interet deja exprime reste affiche.
-  const proposeLeBouton =
-    appel && (publication.interetManifeste || !(publication.objectifAtteint || publication.projetTermine));
 
   // La barre suit le projet lie ; un appel dont le projet a ete supprime
   // n'en a plus.
@@ -155,57 +121,8 @@ function ActualiteDuFil({ publication, rang, onInteret, reactions }) {
       </>
     ) : null;
 
-  const actions =
-    appel && (proposeLeBouton || confirmation || refus) ? (
-      <div className="fil-post__interet">
-        {refus && <p className="alerte-bailleur">{refus}</p>}
-        {confirmation ? (
-          <p className="succes-bailleur">{confirmation}</p>
-        ) : publication.interetManifeste ? (
-          <p className="actu__deja">
-            Votre intérêt est enregistré. L’équipe HOPE vous contacte pour formaliser le partenariat.
-          </p>
-        ) : ouvert ? (
-          <div className="interet">
-            <label className="interet__label" htmlFor={`message-${publication.id}`}>
-              Un mot pour l’équipe ? (facultatif)
-            </label>
-            <textarea
-              id={`message-${publication.id}`}
-              className="interet__saisie"
-              rows={3}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Le montant que nous pourrions engager, nos contraintes de calendrier…"
-            />
-            <p className="interet__avertissement">
-              Aucun montant ne sera débité. Vous manifestez un intérêt ; l’équipe HOPE vous contacte
-              pour établir la convention.
-            </p>
-            <div className="interet__actions">
-              <button type="button" className="bouton-bailleur" onClick={envoyer} disabled={envoi}>
-                {envoi ? 'Envoi…' : 'Transmettre mon intérêt'}
-              </button>
-              <button
-                type="button"
-                className="bouton-bailleur bouton-bailleur--discret"
-                onClick={() => setOuvert(false)}
-                disabled={envoi}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" className="bouton-bailleur" onClick={() => setOuvert(true)}>
-            Financer ce projet
-          </button>
-        )}
-      </div>
-    ) : undefined;
-
-  // Un appel garde son bouton, "Financer ce projet" ; une actualite se
-  // commente et s'aime.
+  // Actualite comme appel : on aime, on commente. Pour financer, le
+  // bailleur passe par "Faire un don", au menu.
   return (
     <PublicationActualite
       publication={publication}
@@ -213,14 +130,12 @@ function ActualiteDuFil({ publication, rang, onInteret, reactions }) {
       appel={appel}
       compteurs={collecte}
       actions={
-        actions ?? (
-          <ActionsActualite
-            publication={publication}
-            etat={reactions.etats[publication.id]}
-            onJaime={reactions.basculer}
-            onCommenter={reactions.commenter}
-          />
-        )
+        <ActionsActualite
+          publication={publication}
+          etat={reactions.etats[publication.id]}
+          onJaime={reactions.basculer}
+          onCommenter={reactions.commenter}
+        />
       }
     />
   );
@@ -251,7 +166,7 @@ export default function Accueil() {
   // La colonne de droite suit l'ecran, comme celle de l'administrateur.
   const colonne = useColonneCollante();
   const { donnees, chargement, erreur } = useChargement(() => service.tableauDeBord(), []);
-  const { donnees: publications, recharger: rechargerFil } = useChargement(() => service.fil(), []);
+  const { donnees: publications } = useChargement(() => service.fil(), []);
   const [filtre, setFiltre] = useState('tout');
 
   const i = donnees?.indicateurs ?? {};
@@ -372,7 +287,6 @@ export default function Accueil() {
                         key={cle}
                         publication={element}
                         rang={Math.min(rang, 5)}
-                        onInteret={rechargerFil}
                         reactions={reactions}
                       />
                     )

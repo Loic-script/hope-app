@@ -2616,3 +2616,27 @@
     display: none;
   }
 }
+
+/* L'etiquette d'un choix de destination ("Don affecte", "Don non
+   affecte" chez le bailleur), en haut a droite de la carte. */
+.don-choix__etiquette {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: #fdf1de;
+  color: var(--hope-orange-lisible);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition:
+    background-color 220ms ease-out,
+    color 220ms ease-out;
+}
+
+.don-choix--actif .don-choix__etiquette {
+  background-color: var(--hope-violet);
+  color: var(--hope-jaune);
+}

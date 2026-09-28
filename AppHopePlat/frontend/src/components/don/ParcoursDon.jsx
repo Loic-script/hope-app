@@ -67,7 +67,13 @@ function lireMontant(texte) {
  *   - avecRythme : le donateur peut donner chaque mois ; le bailleur et le
  *     benevole donnent une fois ;
  *   - avecFinances : le financement du projet (jauge, ce qu'il manque) --
- *     jamais chez le benevole, qui ne voit pas l'argent des projets.
+ *     jamais chez le benevole, qui ne voit pas l'argent des projets ;
+ *   - etiquettesDestination : une etiquette sur chaque choix de l'etape
+ *     Destination, { HOPE, PROJECT } -- "Don non affecte" / "Don affecte"
+ *     chez le bailleur, qui parle ce vocabulaire ;
+ *   - destinationDabord : avec des pages de paiement, la destination se
+ *     choisit avant le moyen (le bailleur : affecte ou non, puis comment
+ *     payer).
  *
  * @param {object} props
  * @param {() => Promise<{ modes: object[], devises: object[], preferences?: object }>} props.chargerOptions
@@ -86,6 +92,8 @@ export default function ParcoursDon({
   projetPropose = null,
   avecRythme = true,
   avecFinances = true,
+  etiquettesDestination = null,
+  destinationDabord = false,
   lienSuivi = null,
   lienRetour,
   titre,
@@ -102,9 +110,12 @@ export default function ParcoursDon({
     const sansDestination = (e) => !(projetImpose && e.cle === 'destination');
     // Avec des pages de paiement, comme au formulaire d'inscription : le
     // moyen d'abord, puis sa page, ou se disent le montant et le reste.
-    if (payer) return ETAPES_AVEC_PAGES.filter(sansDestination);
+    if (payer) {
+      const ordre = destinationDabord ? [...ETAPES_AVEC_PAGES].reverse() : ETAPES_AVEC_PAGES;
+      return ordre.filter(sansDestination);
+    }
     return TOUTES_LES_ETAPES.filter(sansDestination);
-  }, [projetImpose, payer]);
+  }, [projetImpose, payer, destinationDabord]);
   const [rang, setRang] = useState(0);
   const [sens, setSens] = useState('avance');
   const [pret, setPret] = useState(false);
@@ -392,6 +403,9 @@ export default function ParcoursDon({
                     setRefus('');
                   }}
                 >
+                  {etiquettesDestination?.HOPE && (
+                    <span className="don-choix__etiquette">{etiquettesDestination.HOPE}</span>
+                  )}
                   <span className="don-choix__icone" aria-hidden="true">
                     <IconeSoleil />
                   </span>
@@ -407,6 +421,9 @@ export default function ParcoursDon({
                     setRefus('');
                   }}
                 >
+                  {etiquettesDestination?.PROJECT && (
+                    <span className="don-choix__etiquette">{etiquettesDestination.PROJECT}</span>
+                  )}
                   <span className="don-choix__icone" aria-hidden="true">
                     <IconeCoeur />
                   </span>

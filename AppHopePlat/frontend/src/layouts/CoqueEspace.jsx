@@ -323,7 +323,7 @@ export default function CoqueEspace({
                 </p>
               )}
 
-              {groupe.entrees.map(({ to, label, Icone, exact, compteur, annonce }) => {
+              {groupe.entrees.map(({ to, label, Icone, exact, compteur, annonce, vedette }) => {
                 const nonLus = compteur ? (compteurs[compteur] ?? 0) : 0;
 
                 return (
@@ -340,9 +340,11 @@ export default function CoqueEspace({
                       nonLus > 0 ? `${label} : ${annonce ? annonce(nonLus) : `${nonLus} non lu(s)`}` : label
                     }
                     className={({ isActive }) =>
-                      `lateral__lien${isActive ? ' lateral__lien--actif' : ''}`
+                      `lateral__lien${vedette ? ' lateral__lien--vedette' : ''}${isActive ? ' lateral__lien--actif' : ''}`
                     }
                   >
+                    {/* L'entree vedette : un reflet traverse son fond. */}
+                    {vedette && <span className="lateral__reflet" aria-hidden="true" />}
                     {/*
                       L'icone dans son cercle. Le cercle est dans le DOM
                       et non dessine en CSS sur le lien : replie, le rail
