@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 
 import couverture from '../../assets/hope-couverture.jpg';
+import filigraneDiplome from '../../assets/vitrine/impact-diplome.png';
+import filigraneEmploi from '../../assets/vitrine/impact-emploi.png';
+import filigraneFournitures from '../../assets/vitrine/impact-fournitures.png';
+import filigraneSante from '../../assets/vitrine/impact-sante.png';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition, useCompteur } from '../../hooks/useApparition.js';
 import { Actualites as ActualitesAccueil, Contribuer, Partenaires, Realisations } from './SectionsAccueil.jsx';
@@ -201,48 +205,50 @@ function Activites() {
 
 /* ============================ Les impacts ============================ */
 
-const FILIGRANES = {
-  fournitures: (
-    <>
-      <path d="M5 3h9l4 4v14H5z" />
-      <path d="M14 3v4h4M8 11h7M8 14.5h7M8 18h4" />
-      <path d="M20.5 9.5 23 12l-5 5-2.8.4.4-2.8z" />
-    </>
-  ),
-  panier: (
-    <>
-      <path d="M3 9h18l-1.8 11H4.8z" />
-      <path d="M8 9V6.5a4 4 0 0 1 8 0V9M9 13v3.5M15 13v3.5" />
-    </>
-  ),
-  diplome: (
-    <>
-      <path d="M1.5 9.5 12 4l10.5 5.5L12 15z" />
-      <path d="M5.5 11.7v5c0 1.6 3 3.3 6.5 3.3s6.5-1.7 6.5-3.3v-5M22 9.8v6" />
-    </>
-  ),
-  sante: (
-    <>
-      <path d="M12 21s-8-4.9-9.5-10.1C1.6 7.2 3.8 4 7.2 4c2 0 3.7 1.1 4.8 2.9C13.1 5.1 14.8 4 16.8 4c3.4 0 5.6 3.2 4.7 6.9C20 16.1 12 21 12 21z" />
-      <path d="M4.5 12h4l1.8-3.2 3.2 6 1.8-2.8h4.2" />
-    </>
-  ),
-};
-
+/*
+ * Les icones en filigrane, fournies par HOPE : blanches, deja
+ * transparentes (10 % environ). `largeur` est leur taille naturelle, celle
+ * de la maquette sur grand ecran ; elles retrecissent avec l'ecran.
+ */
 const IMPACTS = [
-  { nombre: 300, libelle: 'Enfants orphelins', texte: 'Bénéficient de nos fournitures scolaires.', filigrane: 'fournitures' },
-  { nombre: 100, libelle: 'Mères célibataires', texte: 'Bénéficient de produits de première nécessité (PPN) et de formations professionnelles.', filigrane: 'panier' },
-  { nombre: 5, libelle: 'Orphelins', texte: 'Profitent d’un appui éducatif durable et d’une formation professionnelle.', filigrane: 'diplome' },
-  { nombre: null, enLettres: 'Un', libelle: 'Jeune orphelin', texte: 'Bénéficie d’une opération chirurgicale après 3 ans de maladie.', filigrane: 'sante' },
+  {
+    nombre: 300,
+    libelle: 'Enfants orphelins',
+    texte: 'Bénéficient de nos fournitures scolaires.',
+    filigrane: { src: filigraneFournitures, largeur: 206 },
+  },
+  {
+    nombre: 100,
+    libelle: 'Mères célibataires',
+    texte: 'Bénéficient de produits de première nécessité (PPN) et de formations professionnelles.',
+    filigrane: { src: filigraneEmploi, largeur: 260 },
+  },
+  {
+    nombre: 5,
+    libelle: 'Orphelins',
+    texte: 'Profitent d’un appui éducatif durable et d’une formation professionnelle.',
+    filigrane: { src: filigraneDiplome, largeur: 260 },
+  },
+  {
+    nombre: null,
+    enLettres: 'Un',
+    libelle: 'Jeune orphelin',
+    texte: 'Bénéficie d’une opération chirurgicale après 3 ans de maladie.',
+    filigrane: { src: filigraneSante, largeur: 260 },
+  },
 ];
 
 function Impact({ impact, rang, demarre }) {
   const valeur = useCompteur(impact.nombre ?? 0, demarre);
   return (
     <li className="impact" style={{ '--rang': rang }}>
-      <svg className="impact__filigrane" viewBox="0 0 24 24" aria-hidden="true">
-        {FILIGRANES[impact.filigrane]}
-      </svg>
+      <img
+        className="impact__filigrane"
+        src={impact.filigrane.src}
+        alt=""
+        aria-hidden="true"
+        style={{ '--largeur': impact.filigrane.largeur }}
+      />
       <p className="impact__chiffre">
         {/* Le lecteur d'ecran lit la valeur finale, pas le decompte. */}
         <span aria-hidden="true">{impact.nombre === null ? impact.enLettres : valeur}</span>
