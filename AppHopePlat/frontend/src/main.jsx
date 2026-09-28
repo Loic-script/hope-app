@@ -28,6 +28,7 @@ import './styles/messagerie.css';
 // (--admin-*), ses boutons et son tableau.
 import './styles/benevole-espace.css';
 import './styles/mes-taches.css';
+import './styles/annuaire-benevoles.css';
 import './styles/bailleur.css';
 import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';

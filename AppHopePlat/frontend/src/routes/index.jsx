@@ -55,6 +55,8 @@ const ProjetDetail = lazy(() => import('../pages/benevole/ProjetDetail.jsx'));
 const FaireUnDonBenevole = lazy(() => import('../pages/benevole/FaireUnDon.jsx'));
 const ProjetsBenevole = lazy(() => import('../pages/benevole/Projets.jsx'));
 const MonJournal = lazy(() => import('../pages/benevole/MonJournal.jsx'));
+const BenevolesAnnuaire = lazy(() => import('../pages/benevole/Benevoles.jsx'));
+const ProfilBenevole = lazy(() => import('../pages/benevole/ProfilBenevole.jsx'));
 const CompleterProfil = lazy(() => import('../pages/benevole/CompleterProfil.jsx'));
 const MonProfil = lazy(() => import('../pages/benevole/MonProfil.jsx'));
 const VueDensemble = lazy(() => import('../pages/benevole/VueDensemble.jsx'));
@@ -296,6 +298,8 @@ export default function AppRoutes() {
           />
           <Route path="/benevole/taches" element={<MesTaches />} />
           <Route path="/benevole/journal" element={<MonJournal />} />
+          <Route path="/benevole/benevoles" element={<BenevolesAnnuaire />} />
+          <Route path="/benevole/benevoles/:id" element={<ProfilBenevole />} />
           <Route path="/benevole/profil" element={<MonProfil />} />
           {/* Communs aux espaces : le meme ecran, servi par le client
               axios que la coque fournit. */}

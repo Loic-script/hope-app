@@ -256,3 +256,15 @@ export async function journal() {
   const { data } = await apiBenevole.get('/benevole/journal');
   return data;
 }
+
+/** L'annuaire : les autres benevoles actifs, en cartes. */
+export async function listerBenevoles() {
+  const { data } = await apiBenevole.get('/benevole/benevoles');
+  return data.items ?? [];
+}
+
+/** Le profil public d'un benevole : ni courriel, ni telephone. */
+export async function profilBenevole(id) {
+  const { data } = await apiBenevole.get(`/benevole/benevoles/${id}`);
+  return data;
+}

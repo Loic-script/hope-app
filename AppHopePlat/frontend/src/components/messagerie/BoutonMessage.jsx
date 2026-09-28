@@ -14,9 +14,20 @@ import * as service from '../../services/messagerie.service.js';
  *
  * @param {{ api: object, racine: string, cheminMessages: string,
  *           cible: {personne?: object, entreprise?: string},
- *           libelle?: string, onErreur?: (message: string) => void }} props
+ *           libelle?: string, onErreur?: (message: string) => void,
+ *           className?: string, children?: React.ReactNode }} props
+ *   children : une icone, posee avant le libelle.
  */
-export default function BoutonMessage({ api, racine, cheminMessages, cible, libelle = 'Envoyer un message', onErreur }) {
+export default function BoutonMessage({
+  api,
+  racine,
+  cheminMessages,
+  cible,
+  libelle = 'Envoyer un message',
+  onErreur,
+  className = 'btn btn--neutre btn--petit',
+  children = null,
+}) {
   const [envoi, setEnvoi] = useState(false);
   const enCours = useRef(false);
   const navigate = useNavigate();
@@ -37,7 +48,8 @@ export default function BoutonMessage({ api, racine, cheminMessages, cible, libe
   }
 
   return (
-    <button type="button" className="btn btn--neutre btn--petit" onClick={ouvrir} disabled={envoi} aria-busy={envoi}>
+    <button type="button" className={className} onClick={ouvrir} disabled={envoi} aria-busy={envoi}>
+      {children}
       {envoi ? 'Ouverture…' : libelle}
     </button>
   );

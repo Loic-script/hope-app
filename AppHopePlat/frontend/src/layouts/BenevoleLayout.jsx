@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router
 
 import {
   PleineAccueil,
+  PleineGroupe,
   PleineJournal,
   PleineMessages,
   PleinePersonne,
@@ -45,6 +46,8 @@ const GROUPES = [
       { to: '/benevole/projets', label: 'Projets', Icone: PleineProjets },
       { to: '/benevole/taches', label: 'Mes tâches', Icone: PleineTaches },
       { to: '/benevole/journal', label: 'Mon journal', Icone: PleineJournal },
+      // Les autres membres : leur profil, et leur ecrire.
+      { to: '/benevole/benevoles', label: 'Bénévoles', Icone: PleineGroupe },
     ],
   },
   {

@@ -8,6 +8,7 @@
 import path from 'node:path';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
+import * as annuaireService from '../services/annuaireBenevoles.service.js';
 import * as fieldProofService from '../services/fieldProof.service.js';
 import * as donorSpaceService from '../services/donorSpace.service.js';
 import * as promesseDonService from '../services/promesseDon.service.js';
@@ -128,6 +129,12 @@ export const taches = {
     );
     envoyerFichierLivraison(res, fichier);
   }),
+};
+
+/** L'annuaire des benevoles : les autres membres, et leur profil public. */
+export const benevoles = {
+  lister: gerer((req) => annuaireService.lister(req.benevole.id)),
+  profil: gerer((req) => annuaireService.profil(req.benevole.id, req.params.id)),
 };
 
 export const profil = {

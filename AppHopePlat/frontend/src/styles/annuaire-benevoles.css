@@ -1,0 +1,631 @@
+/* ============================================================
+   Les benevoles : l'annuaire et le profil public
+   (pages/benevole/Benevoles.jsx, ProfilBenevole.jsx)
+
+   Des cartes qui entrent l'une apres l'autre, une recherche et trois
+   filtres ; le profil s'ouvre sur un bandeau violet, ses chiffres et
+   un bouton pour ecrire.
+   ============================================================ */
+
+/* ---------- Recherche et filtres ---------- */
+
+.annuaire__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 20px;
+}
+
+.annuaire__recherche {
+  position: relative;
+  flex: 1 1 280px;
+  display: flex;
+  align-items: center;
+}
+
+.annuaire__recherche svg {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--hope-texte-doux);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.annuaire__recherche input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px 0 42px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--hope-texte);
+  font: inherit;
+  font-size: 15px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.annuaire__recherche input:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+.annuaire__filtres {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #eef0f7;
+}
+
+.annuaire__filtre {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hope-texte-doux);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.annuaire__filtre:hover {
+  color: var(--hope-violet);
+}
+
+.annuaire__filtre--actif {
+  background: #fff;
+  color: var(--hope-violet);
+  box-shadow: 0 1px 4px rgba(53, 51, 67, 0.12);
+}
+
+.annuaire__filtre:focus-visible,
+.annuaire-carte__lien:focus-visible,
+.annuaire-carte__profil:focus-visible,
+.annuaire-carte__ecrire:focus-visible,
+.profil-public__retour:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+/* ---------- La grille de cartes ---------- */
+
+.annuaire__grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.annuaire-carte {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(53, 51, 67, 0.05);
+  animation: annuaire-entree 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 45ms);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .annuaire-carte:hover {
+    transform: translateY(-3px);
+    border-color: #d4d1ea;
+    box-shadow: 0 10px 24px rgba(93, 86, 150, 0.12);
+  }
+
+  .annuaire-carte:hover .annuaire-avatar {
+    transform: scale(1.05);
+  }
+}
+
+.annuaire-carte__haut {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.annuaire-carte__identite {
+  min-width: 0;
+}
+
+.annuaire-carte__nom {
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.3;
+}
+
+.annuaire-carte__lien {
+  color: var(--hope-texte);
+  text-decoration: none;
+}
+
+.annuaire-carte__lien:hover {
+  color: var(--hope-violet);
+}
+
+.annuaire-carte__metier,
+.annuaire-carte__pays {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--hope-texte-doux);
+  font-size: 13.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.annuaire-carte__pays {
+  font-size: 12.5px;
+}
+
+/* L'avatar : la photo, ou les initiales sur un degrade de la charte. */
+.annuaire-avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--hope-violet), #7d76b8);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px var(--hope-jaune);
+  transition: transform 0.25s ease;
+}
+
+.annuaire-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.annuaire-avatar--moyen {
+  width: 54px;
+  height: 54px;
+  font-size: 18px;
+}
+
+.annuaire-avatar--grand {
+  width: 104px;
+  height: 104px;
+  font-size: 34px;
+}
+
+.annuaire-carte__puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.annuaire-carte__puces li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1effa;
+  color: var(--hope-violet-lisible);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.annuaire-carte__puces--langues li {
+  background: var(--hope-bleu-clair);
+  color: var(--hope-bleu-lisible);
+}
+
+.annuaire-carte__puces .annuaire-carte__plus {
+  background: #eef0f7;
+  color: var(--hope-texte-doux);
+}
+
+.annuaire-carte__chiffres {
+  display: flex;
+  gap: 16px;
+  margin: auto 0 0;
+  color: var(--hope-texte-doux);
+  font-size: 13px;
+}
+
+.annuaire-carte__chiffres strong {
+  color: var(--hope-texte);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.annuaire-carte__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hope-bordure);
+}
+
+.annuaire-carte__profil,
+.annuaire-carte__ecrire {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.annuaire-carte__profil {
+  border: 1px solid var(--hope-bordure);
+  background: #fff;
+  color: var(--hope-texte);
+}
+
+.annuaire-carte__profil:hover {
+  border-color: var(--hope-violet);
+  color: var(--hope-violet);
+}
+
+.annuaire-carte__ecrire {
+  border: 0;
+  background: var(--hope-violet);
+  color: #fff;
+}
+
+.annuaire-carte__ecrire:hover:not(:disabled) {
+  background: var(--hope-violet-fonce);
+}
+
+.annuaire-carte__ecrire:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.annuaire-carte__ecrire:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.annuaire__icone {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* ---------- Le profil public ---------- */
+
+.profil-public__retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  color: var(--hope-violet);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.profil-public__retour span {
+  transition: transform 0.2s ease;
+}
+
+.profil-public__retour:hover span {
+  transform: translateX(-3px);
+}
+
+.profil-public__entete {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--hope-violet) 0%, var(--hope-violet-fonce) 100%);
+  color: #fff;
+  animation: annuaire-entree 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Un soleil discret dans l'angle, qui respire lentement. */
+.profil-public__halo {
+  position: absolute;
+  top: -70px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 227, 137, 0.45), rgba(245, 227, 137, 0) 70%);
+  animation: profil-halo 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.profil-public__entete .annuaire-avatar {
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.9),
+    0 0 0 8px rgba(245, 227, 137, 0.7);
+}
+
+.profil-public__identite {
+  position: relative;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.profil-public__role {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(245, 227, 137, 0.2);
+  color: var(--hope-jaune);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.profil-public__nom {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.profil-public__metier {
+  margin: 6px 0 0;
+  font-size: 15.5px;
+  opacity: 0.92;
+}
+
+.profil-public__depuis {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.profil-public__action {
+  position: relative;
+}
+
+.profil-public__ecrire {
+  min-height: 46px;
+  padding: 0 20px;
+  background: var(--hope-jaune);
+  color: var(--hope-texte);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.profil-public__ecrire:hover:not(:disabled) {
+  background: #fbeea8;
+}
+
+.profil-public__chiffres {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.profil-public__chiffre {
+  display: grid;
+  gap: 2px;
+  padding: 16px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 14px;
+  background: #fff;
+  text-align: center;
+  animation: annuaire-entree 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(120ms + var(--rang, 0) * 70ms);
+}
+
+.profil-public__chiffre strong {
+  color: var(--hope-violet);
+  font-size: 28px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.profil-public__chiffre span {
+  color: var(--hope-texte-doux);
+  font-size: 13px;
+}
+
+.profil-public__grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+
+.profil-public__bloc {
+  padding: 18px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 16px;
+  background: #fff;
+  animation: annuaire-entree 420ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+}
+
+.profil-public__bloc h2 {
+  margin: 0 0 10px;
+  color: var(--hope-texte);
+  font-size: 15px;
+}
+
+.profil-public__bloc h2:not(:first-child) {
+  margin-top: 18px;
+}
+
+.profil-public__vide {
+  margin: 0;
+  color: var(--hope-texte-doux);
+  font-size: 13.5px;
+}
+
+.profil-public__facons {
+  margin: 0 0 10px;
+  color: var(--hope-violet);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.profil-public__jours,
+.profil-public__projets,
+.profil-public__badges {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profil-public__jours li,
+.profil-public__projets li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f7f8fc;
+  font-size: 14px;
+}
+
+.profil-public__jour {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.profil-public__projets a {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--hope-texte);
+  font-weight: 600;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profil-public__projets a:hover {
+  color: var(--hope-violet);
+}
+
+.profil-public__projets span {
+  flex: none;
+  color: var(--hope-texte-doux);
+  font-size: 13px;
+}
+
+.profil-public__badges {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.profil-public__badges li {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fdf6dd;
+  color: var(--hope-jaune-lisible);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .profil-public__entete {
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .profil-public__action,
+  .profil-public__ecrire {
+    width: 100%;
+  }
+
+  .profil-public__chiffre {
+    padding: 12px 6px;
+  }
+
+  .profil-public__chiffre strong {
+    font-size: 22px;
+  }
+}
+
+@keyframes annuaire-entree {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes profil-halo {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .annuaire-carte,
+  .profil-public__entete,
+  .profil-public__halo,
+  .profil-public__chiffre,
+  .profil-public__bloc {
+    animation: none;
+  }
+
+  .annuaire-carte,
+  .annuaire-avatar,
+  .annuaire__filtre,
+  .annuaire-carte__ecrire,
+  .profil-public__retour span {
+    transition: none;
+  }
+}
+
+/* Un long nom de projet se coupe au lieu de pousser la carte. */
+.profil-public__bloc,
+.profil-public__projets li {
+  min-width: 0;
+}
+
+.profil-public__projets {
+  grid-template-columns: minmax(0, 1fr);
+}

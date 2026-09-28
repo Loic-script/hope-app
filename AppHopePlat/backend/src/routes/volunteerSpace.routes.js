@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 
-import { actualites, dons, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
+import { actualites, benevoles, dons, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
 import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
 import { identiteBenevole } from '../services/promesseDon.service.js';
 import { televerserMedia, televerserPreuve } from '../middleware/upload.middleware.js';
@@ -81,6 +81,12 @@ router.post('/taches/:id/relacher', taches.relacher);
 // Livrer, c'est joindre la preuve : photos et videos sous "files".
 router.post('/taches/:id/livrer', televerserPreuve, taches.livrer);
 router.get('/taches/:id/fichiers/:fileId', taches.fichier);
+
+// --- Les benevoles -----------------------------------------------------
+// L'annuaire des autres membres et leur profil public. Pour leur ecrire,
+// la messagerie (/api/espace/conversations/depuis-fiche).
+router.get('/benevoles', benevoles.lister);
+router.get('/benevoles/:id', benevoles.profil);
 
 // --- Profil et journal ------------------------------------------------
 // Completion apres la premiere connexion : meme contenu que la mise a
