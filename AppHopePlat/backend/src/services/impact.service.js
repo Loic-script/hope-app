@@ -89,6 +89,15 @@ async function objectifDuProjet(projectId, valeur) {
  * colonne. Une mesure generale, elle, garde son indicateur propre --
  * c'est lui qui la range dans les totaux du projet.
  */
+/** Le titre d'une mesure : celui qui est donne, sinon ce qu'elle mesure. */
+function titreDeLaMesure(corps, objectif, indicateur) {
+  const donne = texteFacultatif(corps.title, 'title', { max: 200 });
+  if (donne) return donne;
+  if (objectif) return objectif.label.slice(0, 200);
+  const suggere = INDICATEURS_SUGGERES.find((element) => element.code === indicateur);
+  return (suggere?.label ?? indicateur).slice(0, 200);
+}
+
 function indicateurDeLaMesure(corps, objectif) {
   const saisi = String(corps.indicator ?? '').trim();
   if (saisi !== '') return texteRequis(corps.indicator, 'indicator', { max: 120 });
@@ -123,13 +132,17 @@ export async function creer(corps = {}) {
 
   const objectif = await objectifDuProjet(projectId, corps.objectiveId);
 
+  const indicateur = indicateurDeLaMesure(corps, objectif);
+
   return impactRepository.creer({
     projectId,
     objectiveId: objectif?.id ?? null,
     beneficiaryId,
-    title: texteRequis(corps.title, 'title', { max: 200 }),
+    // Le titre ne se saisit plus : il se deduit de ce qu'on mesure --
+    // l'objectif, sinon le nom de l'indicateur (ou son code).
+    title: titreDeLaMesure(corps, objectif, indicateur),
     description: texteFacultatif(corps.description, 'description', { max: 5000 }),
-    indicator: indicateurDeLaMesure(corps, objectif),
+    indicator: indicateur,
     value: nombreRequis(corps.value, 'value'),
     unit: texteFacultatif(corps.unit, 'unit', { max: 60 }),
     measuredAt: dateFacultative(corps.measuredAt, 'measuredAt'),
@@ -142,12 +155,19 @@ export async function mettreAJour(id, corps = {}) {
   if (!existant) throw new ErreurIntrouvable("L'impact", impactId);
 
   const colonnes = {};
-  if (corps.title !== undefined) colonnes.title = texteRequis(corps.title, 'title', { max: 200 });
+  // Un titre vide garde l'ancien : le formulaire ne le saisit plus.
+  if (corps.title !== undefined && String(corps.title ?? '').trim() !== '') {
+    colonnes.title = texteRequis(corps.title, 'title', { max: 200 });
+  }
   if (corps.description !== undefined) {
     colonnes.description = texteFacultatif(corps.description, 'description', { max: 5000 });
   }
   if (corps.indicator !== undefined) {
     colonnes.indicator = texteRequis(corps.indicator, 'indicator', { max: 120 });
+    // Sans titre donne, il suit le nouvel indicateur.
+    if (colonnes.title === undefined && colonnes.indicator !== existant.indicator) {
+      colonnes.title = titreDeLaMesure({}, null, colonnes.indicator);
+    }
   }
   if (corps.value !== undefined) colonnes.value = nombreRequis(corps.value, 'value');
   if (corps.unit !== undefined) colonnes.unit = texteFacultatif(corps.unit, 'unit', { max: 60 });

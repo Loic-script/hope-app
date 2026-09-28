@@ -1767,7 +1767,8 @@ export function ImpactModale({
       ...actuel,
       indicator: code,
       unit: suggere?.unit ?? actuel.unit,
-      title: actuel.title || (suggere?.label ?? ''),
+      // Le titre suit l'indicateur choisi (il n'est plus saisi).
+      title: suggere?.label ?? '',
     }));
   }
 
@@ -1898,17 +1899,8 @@ export function ImpactModale({
           />
         )}
 
-        <ChampTexte
-          label="Titre"
-          id="impact-titre"
-          obligatoire
-          required
-          value={formulaire.title}
-          onChange={(e) => modifier('title', e.target.value)}
-          placeholder="Habitants desservis en eau potable"
-          disabled={envoi}
-          pleineLargeur
-        />
+        {/* Plus de champ Titre : le serveur le deduit de l'objectif ou de
+            l'indicateur mesure. */}
 
         {/*
           L'indicateur ne se saisit que pour une mesure generale : quand
