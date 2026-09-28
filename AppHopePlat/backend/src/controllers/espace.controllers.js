@@ -93,7 +93,7 @@ export async function repondre(req, res, next) {
 /** GET /api/espace/badges */
 export async function badges(req, res, next) {
   try {
-    res.status(200).json(await espaceService.compteurs(req.utilisateurId));
+    res.status(200).json(await espaceService.compteurs(req.utilisateurId, req.espace));
   } catch (erreur) {
     next(erreur);
   }

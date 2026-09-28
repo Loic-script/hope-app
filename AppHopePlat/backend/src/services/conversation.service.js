@@ -202,8 +202,28 @@ export function presenterMessage(message, acteur) {
   };
 }
 
+/** Les personnes que l'acteur peut joindre, en cles "type:id". */
+async function clesJoignables(acteur, client = null) {
+  const personnes = await conversationRepository.joignables(acteur, client);
+  return new Set(personnes.map((p) => `${p.type}:${p.id}`));
+}
+
 /**
- * Charge un fil et verifie que l'acteur y participe.
+ * Un fil a deux qui ne respecte plus les regles de l'espace : ouvert
+ * avant elles, avec quelqu'un que cet espace ne joint pas (un donateur
+ * face a un autre donateur, un bailleur face a un benevole...). Il
+ * disparait de la liste et ne s'ouvre plus. L'assistance et les groupes
+ * ne sont pas concernes ; l'equipe voit tout.
+ */
+function horsRegle(acteur, fil, cles) {
+  if (acteur.type !== 'utilisateur' || fil.type !== 'individuel' || fil.assistance) return false;
+  const autre = (fil.participants ?? []).find((p) => !memeActeur(p, acteur));
+  return Boolean(autre) && !cles.has(`${autre.type}:${autre.id}`);
+}
+
+/**
+ * Charge un fil et verifie que l'acteur y participe, et que le fil
+ * respecte les regles de son espace (horsRegle).
  *
  * La seule porte d'entree : toutes les actions sur un fil passent par
  * ici avant de toucher a quoi que ce soit.
@@ -215,6 +235,9 @@ export async function filAccessible(acteur, id, client = null) {
 
   const fil = await conversationRepository.trouver(conversationId, client);
   if (!fil) throw new ErreurIntrouvable('La conversation', id);
+  if (acteur.type === 'utilisateur' && horsRegle(acteur, fil, await clesJoignables(acteur, client))) {
+    throw new ErreurIntrouvable('La conversation', id);
+  }
   return fil;
 }
 
@@ -234,7 +257,8 @@ export async function lister(acteur) {
   // un compte d'administrateur a ete cree depuis.
   if (acteur.type === 'admin') await conversationRepository.rattacherEquipeAuxAssistances();
 
-  const fils = await conversationRepository.lister(acteur);
+  const cles = acteur.type === 'utilisateur' ? await clesJoignables(acteur) : null;
+  const fils = (await conversationRepository.lister(acteur)).filter((fil) => !horsRegle(acteur, fil, cles));
   const items = fils.map((fil) => ({
     id: nombre(fil.id),
     type: fil.type,
@@ -351,8 +375,16 @@ export async function marquerLu(acteur, id, corps = {}) {
 
 /** Le total des non-lus et le fil du plus recent : la pastille et la notification. */
 export async function nonLus(acteur) {
-  const { total, dernierFil } = await conversationRepository.nonLus(acteur);
+  const { total, dernierFil } = await conversationRepository.nonLus(acteur, null, await filsHorsRegle(acteur));
   return { total, dernierFil: nombre(dernierFil) };
+}
+
+/** Les fils de l'acteur que son espace ne montre plus (horsRegle). */
+export async function filsHorsRegle(acteur) {
+  if (acteur.type !== 'utilisateur') return [];
+  const cles = await clesJoignables(acteur);
+  const fils = await conversationRepository.lister(acteur);
+  return fils.filter((fil) => horsRegle(acteur, fil, cles)).map((fil) => fil.id);
 }
 
 /**
@@ -558,8 +590,11 @@ export async function pieceLisible(acteur, pieceId) {
   const piece = await conversationRepository.trouverPiece(numero);
   if (!piece || piece.supprimeLe) throw new ErreurIntrouvable('Le fichier', pieceId);
 
-  const participe = await conversationRepository.estParticipant(acteur, piece.conversationId);
-  if (!participe) throw new ErreurIntrouvable('Le fichier', pieceId);
+  try {
+    await filAccessible(acteur, piece.conversationId);
+  } catch {
+    throw new ErreurIntrouvable('Le fichier', pieceId);
+  }
 
   return piece;
 }
@@ -707,8 +742,7 @@ export async function transferer(acteur, filId, messageId, corps = {}) {
   // Verifications prealables, hors transaction : un refus ne cree rien.
   for (const cible of cibles) {
     if (cible.type === 'fil') {
-      const participe = await conversationRepository.estParticipant(acteur, cible.id);
-      if (!participe) throw new ErreurIntrouvable('La conversation', cible.id);
+      await filAccessible(acteur, cible.id);
     } else {
       await verifierJoignable(acteur, cible);
     }

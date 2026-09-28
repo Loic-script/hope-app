@@ -127,7 +127,7 @@ function pasDeMoi(acteur, rang) {
  * derniere lecture. Le fil du plus recent sert a la notification, qui y
  * mene directement.
  */
-export async function nonLus(acteur, client = null) {
+export async function nonLus(acteur, client = null, exclus = []) {
   const resultat = await query(
     `SELECT COUNT(*)::int AS total,
             (ARRAY_AGG(m.conversation_id ORDER BY m.cree_le DESC, m.id DESC))[1] AS dernier_fil
@@ -136,8 +136,11 @@ export async function nonLus(acteur, client = null) {
       WHERE p.${colonne(acteur)} = $1
         AND m.supprime_le IS NULL
         AND ${pasDeMoi(acteur, 1)}
-        AND (p.lu_jusqu_a IS NULL OR m.cree_le > p.lu_jusqu_a)`,
-    [acteur.id],
+        AND (p.lu_jusqu_a IS NULL OR m.cree_le > p.lu_jusqu_a)
+        -- Les fils que l'espace ne montre plus (voir conversation.service,
+        -- horsRegle) ne comptent pas.
+        AND NOT (m.conversation_id = ANY($2::bigint[]))`,
+    [acteur.id, exclus],
     client
   );
   return { total: resultat.rows[0].total, dernierFil: resultat.rows[0].dernier_fil ?? null };

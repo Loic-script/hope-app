@@ -6,7 +6,7 @@
  * lequel des deux l'appelle -- il ne recoit qu'un identifiant
  * d'utilisateur, deja verifie par le middleware.
  */
-import * as conversationRepository from '../repositories/conversation.repository.js';
+import * as conversationService from './conversation.service.js';
 import * as espaceRepository from '../repositories/espace.repository.js';
 import {
   ErreurIntrouvable,
@@ -184,10 +184,11 @@ export async function marquerReponsesLues(utilisateurId) {
    Pastilles
    ================================================================ */
 
-export async function compteurs(utilisateurId) {
+export async function compteurs(utilisateurId, espace = null) {
+  const acteur = { type: 'utilisateur', id: utilisateurId, espace };
   const [base, conversations] = await Promise.all([
     espaceRepository.compteurs(utilisateurId),
-    conversationRepository.compterNonLues({ type: 'utilisateur', id: utilisateurId }),
+    conversationService.nonLus(acteur).then((r) => r.total),
   ]);
   // "messages" designe desormais les conversations non lues : c'est la
   // meme pastille, sur la meme entree de menu.
