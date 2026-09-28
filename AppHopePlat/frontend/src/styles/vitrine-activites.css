@@ -1,0 +1,341 @@
+/* ============================================================
+   Site vitrine : "Nos activites" (pages/vitrine/Accueil.jsx)
+
+   Releve sur la maquette, au pixel pres. Une carte y fait 167 unites
+   de large ; tout le decor est exprime dans cette unite (--u), qui suit
+   la largeur de la carte -- le medaillon garde ses proportions quelle
+   que soit la taille de l'ecran. Sur une carte plus large que ce que le
+   bureau affiche (tablette, telephone), --u plafonne : le decor ne
+   grossit plus, seules les barres d'horizon s'allongent.
+
+   Le centre du medaillon est l'origine : la carte commence 4 unites
+   sous lui, l'encoche blanche a un rayon de 36,8, l'anneau de 25,4.
+   ============================================================ */
+
+.accueil-activites {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(64px, 8vw, 104px) 32px;
+}
+
+.accueil-activites__grille {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* L'ecart de la maquette : 25 unites pour 167 de carte. */
+  gap: 39px;
+  max-width: 1170px;
+  margin: 40px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Les couleurs de chaque carte, celles de la maquette. */
+.v-activite--scolarite {
+  --v-fond: var(--hope-bleu);
+  --v-titre: var(--hope-violet);
+  /* Le violet de la maquette, un ton plus profond pour le texte courant :
+     meme teinte a l'oeil, lisible sur le bleu (WCAG AA). */
+  --v-texte: #3f3a6e;
+  --v-horizon: var(--hope-violet);
+  --v-anneau: var(--hope-jaune);
+  --v-icone: var(--hope-bleu);
+}
+
+.v-activite--employabilite {
+  --v-fond: var(--hope-violet);
+  --v-titre: #ffffff;
+  --v-texte: #ffffff;
+  --v-horizon: var(--hope-bleu);
+  --v-anneau: var(--hope-jaune);
+  --v-icone: var(--hope-violet);
+}
+
+/* Blanc sur l'orange et bleu clair sur le jaune : les couleurs de la
+   maquette, retenues telles quelles a la demande de HOPE, bien que leur
+   contraste soit sous le seuil WCAG AA (voir e2e/tests/accessibilite). */
+.v-activite--soins {
+  --v-fond: var(--hope-orange);
+  --v-titre: #ffffff;
+  --v-texte: #ffffff;
+  --v-horizon: var(--hope-bleu);
+  --v-anneau: var(--hope-jaune);
+  --v-icone: var(--hope-orange);
+}
+
+.v-activite--alimentation {
+  --v-fond: var(--hope-jaune);
+  --v-titre: var(--hope-bleu);
+  --v-texte: var(--hope-violet);
+  --v-horizon: var(--hope-bleu);
+  --v-anneau: var(--hope-violet);
+  --v-icone: var(--hope-jaune);
+}
+
+/* La carte entre a l'ecran l'une apres l'autre. Le li porte le
+   conteneur : --u se calcule sur sa largeur. */
+.v-activite {
+  display: flex;
+  container-type: inline-size;
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 700ms ease,
+    transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 120ms);
+}
+
+.accueil-activites--vu .v-activite {
+  opacity: 1;
+  transform: none;
+}
+
+/* Le cadre : le decor et la carte, qui se soulevent ensemble. */
+.v-activite__cadre {
+  --u: 1.55px;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-top: calc(var(--u) * 62);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@supports (width: 1cqi) {
+  .v-activite__cadre {
+    --u: min(calc(100cqi / 167), 1.6px);
+  }
+}
+
+.v-activite__carte {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: calc(var(--u) * 41) calc(var(--u) * 19) calc(var(--u) * 30);
+  border-radius: calc(var(--u) * 12);
+  background: var(--v-fond);
+  box-shadow: 0 18px 40px -26px rgba(53, 51, 67, 0.55);
+  transition: box-shadow 0.35s ease;
+}
+
+.v-activite__titre {
+  margin: 0;
+  color: var(--v-titre);
+  font-family: var(--vitrine-titre);
+  font-size: calc(var(--u) * 17);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.v-activite__texte {
+  margin: calc(var(--u) * 26) 0 0;
+  color: var(--v-texte);
+  font-size: calc(var(--u) * 11);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* ------------------------------ Le soleil ------------------------------ */
+
+/* Son centre est 58 unites sous le haut du cadre, 4 au-dessus de la
+   carte : le haut du viewBox (y = -60) tombe 2 unites au-dessus du cadre. */
+.v-activite__soleil {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--u) * -2);
+  left: 50%;
+  width: calc(var(--u) * 100);
+  height: calc(var(--u) * 98);
+  overflow: visible;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.v-activite__rayons rect {
+  fill: var(--hope-orange);
+}
+
+/* Le disque blanc : il creuse l'encoche dans la carte. */
+.v-activite__halo {
+  fill: #ffffff;
+}
+
+.v-activite__anneau {
+  fill: none;
+  stroke: var(--v-anneau);
+  stroke-width: 6.2;
+}
+
+.v-activite__icone {
+  fill: var(--v-icone);
+}
+
+.v-activite__creux {
+  fill: #ffffff;
+}
+
+.v-activite__pouls {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Les barres d'horizon : 8 unites d'epaisseur, 7,5 au-dessus du centre
+   du medaillon ; du bord de la carte (9,5 unites en retrait) jusqu'a
+   l'encoche. */
+.v-activite__barre {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--u) * 46.5);
+  height: calc(var(--u) * 8);
+  border-radius: 999px;
+  background: var(--v-horizon);
+}
+
+.v-activite__barre--gauche {
+  left: calc(var(--u) * 9.5);
+  right: calc(50% + var(--u) * 36.5);
+  transform-origin: right center;
+}
+
+.v-activite__barre--droite {
+  right: calc(var(--u) * 9.5);
+  left: calc(50% + var(--u) * 36.5);
+  transform-origin: left center;
+}
+
+/* ------------------------------ Mouvement ------------------------------ */
+
+/* A l'arrivee : la carte monte, puis les rayons se levent, les barres
+   se deploient depuis le medaillon et l'icone apparait. Les groupes
+   "-vif" portent le survol, sans heriter des delais d'entree. */
+.v-activite__rayons,
+.v-activite__icone {
+  opacity: 0;
+}
+
+.v-activite__barre {
+  transform: scaleX(0);
+}
+
+.accueil-activites--vu .v-activite__rayons {
+  animation: activite-rayons 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 120ms + 350ms);
+}
+
+.accueil-activites--vu .v-activite__barre {
+  animation: activite-barre 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 120ms + 450ms);
+}
+
+.accueil-activites--vu .v-activite__icone {
+  animation: activite-icone 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 120ms + 250ms);
+}
+
+.v-activite__rayons-vif,
+.v-activite__icone-vif {
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .v-activite:hover .v-activite__cadre {
+    transform: translateY(-8px);
+  }
+
+  .v-activite:hover .v-activite__carte {
+    box-shadow: 0 30px 50px -28px rgba(53, 51, 67, 0.6);
+  }
+
+  /* Les rayons s'ecartent du medaillon, l'icone grandit un peu. */
+  .v-activite:hover .v-activite__rayons-vif {
+    transform: scale(1.12);
+  }
+
+  .v-activite:hover .v-activite__icone-vif {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes activite-rayons {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes activite-barre {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes activite-icone {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------ Petits ecrans ------------------------------ */
+
+@media (max-width: 1100px) {
+  .accueil-activites__grille {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 36px;
+    max-width: 760px;
+  }
+}
+
+@media (max-width: 760px) {
+  .accueil-activites {
+    padding-inline: 20px;
+  }
+
+  .accueil-activites__grille {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 400px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-activite,
+  .v-activite__rayons,
+  .v-activite__icone,
+  .v-activite__barre {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  .accueil-activites--vu .v-activite__rayons,
+  .accueil-activites--vu .v-activite__icone,
+  .accueil-activites--vu .v-activite__barre {
+    animation: none;
+  }
+
+  .v-activite__cadre,
+  .v-activite__carte,
+  .v-activite__rayons-vif,
+  .v-activite__icone-vif {
+    transition: none;
+  }
+}

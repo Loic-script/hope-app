@@ -66,34 +66,52 @@ function Hero() {
 
 /* ============================ Les activites ============================ */
 
+/*
+ * Les icones du medaillon, pleines comme sur la maquette. Elles sont
+ * dessinees dans le repere du medaillon : l'origine (0, 0) est son centre,
+ * l'unite est celle de la maquette (une carte fait 167 unites de large).
+ * Les details blancs (.v-activite__creux) sont des creux dans la forme.
+ */
 const ICONES = {
+  // Le mortier du diplome : le plateau, la calotte, le gland.
   scolarite: (
     <>
-      <path d="M2 9.5 12 4.5l10 5-10 5z" />
-      <path d="M6 11.6v4.6c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8v-4.6" />
-      <path d="M21.5 9.8v5.2" />
+      <path d="M-14.5 -3.8 0 -10.4 14.5 -3.8 0 2.7Z" />
+      <path d="M-9.6 -0.2 0 4.2 9.6 -0.2C9.6 6.2 5.6 10.3 0 10.3S-9.6 6.2-9.6 -0.2Z" />
+      <path d="M-14.3 -3.3H-12.6V3L-12.1 5.4H-14.8L-14.3 3Z" />
     </>
   ),
+  // La mallette, posee sur une main ouverte.
   employabilite: (
     <>
-      <path d="M8.5 7V5.8A1.3 1.3 0 0 1 9.8 4.5h4.4a1.3 1.3 0 0 1 1.3 1.3V7" />
-      <rect x="4.5" y="7" width="15" height="8" rx="1.6" />
-      <path d="M4.5 10.5h15" />
-      <path d="M2.5 20.5h3.6l2.6-1.3h6.6a1.4 1.4 0 0 0 0-2.8h-3.8" />
+      <path d="M-0.3 -8.2V-10.6C-0.3 -12.2 0.7 -13.4 2.4 -13.4H4.6C6.3 -13.4 7.3 -12.2 7.3 -10.6V-8.2H5.6V-10.4C5.6 -11.3 5.2 -11.7 4.4 -11.7H2.6C1.8 -11.7 1.4 -11.3 1.4 -10.4V-8.2Z" />
+      <rect x="-6" y="-8.2" width="18.5" height="11.6" rx="2.2" />
+      <rect className="v-activite__creux" x="-6" y="-3.9" width="18.5" height="1.1" />
+      <rect className="v-activite__creux" x="2.1" y="-4.9" width="2.8" height="3.1" rx="0.7" />
+      <path d="M-13.5 7.4 -11 6.9V12.5L-13.5 12Z" />
+      <path d="M-10.2 7.3C-8 7-6.4 7.6-4.8 8.3H1.4C2.6 8.3 2.6 9.9 1.4 9.9H-2.8V10.4H4.6C5 10.4 5.4 10.2 5.8 10L10.2 7C11.2 6.4 12.3 7.6 11.4 8.5L7.5 11.9C7 12.3 6.4 12.5 5.8 12.5H-10.2Z" />
     </>
   ),
+  // Le coeur, traverse par le trace d'un pouls.
   soins: (
     <>
-      <path d="M12 20.3s-7.4-4.5-8.8-9.3C2.3 7.6 4.3 4.6 7.5 4.6c1.9 0 3.4 1 4.5 2.7 1.1-1.7 2.6-2.7 4.5-2.7 3.2 0 5.2 3 4.3 6.4-1.4 4.8-8.8 9.3-8.8 9.3z" />
-      <path d="M5.5 12h3.2l1.6-3 3 5.6 1.6-2.6h3.6" />
+      <path d="M0 11.5C-5 7.8-12 3.4-12 -3.6-12 -8.4-8.6 -11.5-5 -11.5-2.6 -11.5-0.9 -10.2 0 -8.4 0.9 -10.2 2.6 -11.5 5 -11.5 8.6 -11.5 12 -8.4 12 -3.6 12 3.4 5 7.8 0 11.5Z" />
+      <path className="v-activite__pouls" d="M-9.5 0.2H-4.4L-2.6 -3.8 0.4 4.4 2.4 -1 3.6 0.2H8" />
     </>
   ),
+  // La fourchette, l'assiette et la cuillere.
   alimentation: (
     <>
-      <circle cx="12.5" cy="12" r="6.2" />
-      <circle cx="12.5" cy="12" r="3.4" />
-      <path d="M3.5 4v5.2M2 4v3.4a1.5 1.5 0 0 0 3 0V4M3.5 10v10" />
-      <path d="M21.5 4c-1.3.9-1.9 2.8-1.9 5h1.9v11" />
+      <rect x="-16.4" y="-8" width="1.15" height="5.8" rx="0.55" />
+      <rect x="-15.07" y="-8" width="1.15" height="5.8" rx="0.55" />
+      <rect x="-13.75" y="-8" width="1.15" height="5.8" rx="0.55" />
+      <path d="M-16.4 -3.2H-12.6V-1.8C-12.6 -0.7-13.4 0-14.5 0S-16.4 -0.7-16.4 -1.8Z" />
+      <rect x="-15.25" y="-1" width="1.5" height="12" rx="0.75" />
+      <circle cx="0" cy="1.4" r="8.8" />
+      <circle className="v-activite__creux" cx="0" cy="1.4" r="6.6" />
+      <circle cx="0" cy="1.4" r="5.6" />
+      <ellipse cx="14.3" cy="-4.4" rx="2.3" ry="3.6" />
+      <rect x="13.55" y="-1.6" width="1.5" height="12.6" rx="0.75" />
     </>
   ),
 };
@@ -125,23 +143,28 @@ const ACTIVITES = [
   },
 ];
 
-/** Le soleil qui coiffe une carte : rayons, horizon, et l'icone en medaillon. */
-function Medaillon({ cle }) {
+/**
+ * Le soleil qui coiffe une carte, releve sur la maquette : trois rayons,
+ * un anneau autour de l'icone, et un disque blanc qui creuse une encoche
+ * dans le haut de la carte. Les deux barres d'horizon sont a part
+ * (.v-activite__barre) : elles s'etirent jusqu'aux bords de la carte.
+ */
+function Soleil({ cle }) {
   return (
-    <div className="v-activite__medaillon" aria-hidden="true">
-      <svg className="v-activite__soleil" viewBox="0 0 200 110">
-        <g className="v-activite__rayons">
-          <rect x="95" y="4" width="10" height="26" rx="5" />
-          <rect x="95" y="4" width="10" height="26" rx="5" transform="rotate(-38 100 78)" />
-          <rect x="95" y="4" width="10" height="26" rx="5" transform="rotate(38 100 78)" />
+    <svg className="v-activite__soleil" viewBox="-50 -60 100 98" aria-hidden="true">
+      <g className="v-activite__rayons">
+        <g className="v-activite__rayons-vif">
+          <rect x="-4.3" y="-56.05" width="8.6" height="22.3" rx="4.3" />
+          <rect x="-39.2" y="-41.85" width="8.6" height="22.3" rx="4.3" transform="rotate(-37 -34.9 -30.7)" />
+          <rect x="30.6" y="-41.85" width="8.6" height="22.3" rx="4.3" transform="rotate(37 34.9 -30.7)" />
         </g>
-        <rect className="v-activite__horizon" x="8" y="72" width="54" height="11" rx="5.5" />
-        <rect className="v-activite__horizon" x="138" y="72" width="54" height="11" rx="5.5" />
-      </svg>
-      <span className="v-activite__pastille">
-        <svg viewBox="0 0 24 24">{ICONES[cle]}</svg>
-      </span>
-    </div>
+      </g>
+      <circle className="v-activite__halo" r="36.8" />
+      <circle className="v-activite__anneau" r="25.4" />
+      <g className="v-activite__icone">
+        <g className="v-activite__icone-vif">{ICONES[cle]}</g>
+      </g>
+    </svg>
   );
 }
 
@@ -160,11 +183,15 @@ function Activites() {
       <ul className="accueil-activites__grille">
         {ACTIVITES.map((a, rang) => (
           <li key={a.cle} className={`v-activite v-activite--${a.cle}`} style={{ '--rang': rang }}>
-            <Medaillon cle={a.cle} />
-            <article className="v-activite__carte">
-              <h3 className="v-activite__titre">{a.titre}</h3>
-              <p className="v-activite__texte">{a.texte}</p>
-            </article>
+            <div className="v-activite__cadre">
+              <span className="v-activite__barre v-activite__barre--gauche" aria-hidden="true" />
+              <span className="v-activite__barre v-activite__barre--droite" aria-hidden="true" />
+              <Soleil cle={a.cle} />
+              <article className="v-activite__carte">
+                <h3 className="v-activite__titre">{a.titre}</h3>
+                <p className="v-activite__texte">{a.texte}</p>
+              </article>
+            </div>
           </li>
         ))}
       </ul>

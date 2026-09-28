@@ -10,8 +10,29 @@ import { ADMIN, adresseUnique, connecter, donateurPret } from './outils.js';
 // Sans animation : axe mesure les couleurs au repos, pas pendant un fondu.
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
+const REGLES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+
+/*
+ * Des elements dont le contraste est connu et accepte : les couleurs de
+ * la maquette du site vitrine, retenues a la demande de HOPE (28/09/2026)
+ * -- blanc sur l'orange de la carte Soins (2,4:1), bleu clair sur le
+ * jaune du titre Alimentation (1,6:1). Seule la regle de contraste leur
+ * est epargnee : toutes les autres s'y appliquent.
+ */
+const CONTRASTE_ACCEPTE = {
+  '/': ['.v-activite--soins .v-activite__carte', '.v-activite--alimentation .v-activite__titre'],
+};
+
 async function auditer(page, nom) {
-  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  const acceptes = CONTRASTE_ACCEPTE[nom] ?? [];
+  let audit = new AxeBuilder({ page }).withTags(REGLES);
+  for (const selecteur of acceptes) audit = audit.exclude(selecteur);
+  const { violations } = await audit.analyze();
+  if (acceptes.length > 0) {
+    let reste = new AxeBuilder({ page }).withTags(REGLES).disableRules(['color-contrast']);
+    for (const selecteur of acceptes) reste = reste.include(selecteur);
+    violations.push(...(await reste.analyze()).violations);
+  }
   const graves = violations.filter((v) => ['serious', 'critical'].includes(v.impact));
   const resume = graves.map((v) => `${v.id} (${v.impact}) x${v.nodes.length} : ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
   expect.soft(resume, `${nom} : violations graves`).toEqual([]);
