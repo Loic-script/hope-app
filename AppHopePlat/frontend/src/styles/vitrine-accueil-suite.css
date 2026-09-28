@@ -92,13 +92,17 @@
 
 /* ---------------------------- Nos realisations ---------------------------- */
 
-/* Le fond bleu pale, seme de petits soleils qui derivent lentement. */
+/* Le fond de la page d'authentification, a l'identique : le motif
+   officiel de soleils (theme.css), delave par le voile blanc et teinte
+   par le voile bleu, sur le bleu des panneaux. */
 .v-realisations {
   padding: clamp(56px, 7vw, 88px) 0 clamp(64px, 8vw, 96px);
-  background-color: var(--hope-bleu-clair);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='110' viewBox='0 0 140 110'%3E%3Cg fill='%23ffffff' fill-opacity='0.55'%3E%3Crect x='67' y='18' width='6' height='16' rx='3'/%3E%3Crect x='67' y='18' width='6' height='16' rx='3' transform='rotate(-40 70 58)'/%3E%3Crect x='67' y='18' width='6' height='16' rx='3' transform='rotate(40 70 58)'/%3E%3Cpath d='M52 62a18 18 0 0 1 36 0z'/%3E%3Crect x='20' y='60' width='26' height='5' rx='2.5'/%3E%3Crect x='94' y='60' width='26' height='5' rx='2.5'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 140px 110px;
-  animation: v-motif 60s linear infinite;
+  background-color: var(--hope-fond-panneau);
+  background-image:
+    linear-gradient(var(--voile-bleu), var(--voile-bleu)),
+    linear-gradient(var(--voile-blanc), var(--voile-blanc)),
+    var(--motif-soleils);
+  background-size: auto, auto, var(--motif-soleils-taille) auto;
 }
 
 .v-realisations__grille {
@@ -607,25 +611,12 @@
   }
 }
 
-@keyframes v-motif {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 140px 110px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .v-entree,
   .v-apparu .v-entree {
     opacity: 1;
     transform: none;
     transition: none;
-  }
-
-  .v-realisations {
-    animation: none;
   }
 
   .v-contribuer__photo,
