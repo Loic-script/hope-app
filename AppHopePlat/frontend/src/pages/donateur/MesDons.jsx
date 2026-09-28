@@ -39,7 +39,6 @@ export default function MesDons() {
   const autres = (synthese?.totaux ?? []).slice(1).filter((t) => Number(t.recu) > 0);
   const actif = FILTRES.find((f) => f.cle === filtre) ?? FILTRES[0];
   const affiches = dons.filter(actif.garde);
-  const enAttente = (synthese?.totaux ?? []).filter((t) => Number(t.enAttente) > 0);
 
   return (
     <div className="espace-donateur">
@@ -87,11 +86,6 @@ export default function MesDons() {
           <strong className="don-stat__valeur">
             <NombreAnime valeur={synthese ? synthese.nombreEnAttente : null} delai={120} />
           </strong>
-          <span className="don-stat__note">
-            {enAttente.length > 0
-              ? enAttente.map((t) => fmt.montant(t.enAttente, t.devise)).join(', ') + ' promis'
-              : 'Aucune promesse en cours'}
-          </span>
         </li>
         <li className="don-stat don-stat--bleu" style={{ '--rang': 2 }}>
           <span className="don-stat__icone" aria-hidden="true">
