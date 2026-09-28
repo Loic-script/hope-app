@@ -102,6 +102,9 @@ export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, not
   try {
     await smtp.sendMail({
       from: config.smtp.from,
+      // Une reponse de l'utilisateur arrive a l'adresse de HOPE (EQUIPE_EMAIL),
+      // quel que soit le compte qui envoie.
+      ...(config.equipe.email ? { replyTo: config.equipe.email } : {}),
       to: a,
       subject: sujet,
       text: texte,
