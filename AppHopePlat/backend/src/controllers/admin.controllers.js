@@ -44,6 +44,7 @@ import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
 import * as auditService from '../services/audit.service.js';
 import * as backofficeService from '../services/backoffice.service.js';
+import * as compteParEquipeService from '../services/compteParEquipe.service.js';
 import { poserSession } from '../shared/session.js';
 import * as adminAuthService from '../services/adminAuth.service.js';
 
@@ -295,6 +296,7 @@ export const funders = {
  */
 export const utilisateurs = {
   lister: gerer((req) => utilisateursService.lister(req.params.onglet, req.query)),
+  creerCompte: gerer((req) => compteParEquipeService.creer(req.body, req.admin), { statut: 201 }),
   profilCompte: gerer((req) => utilisateursService.profilCompte(req.params.id)),
   profilFiche: gerer((req) => utilisateursService.profilFiche(req.params.id)),
   modifierCompte: gerer((req) => utilisateursService.modifierCompte(req.params.id, req.body)),

@@ -37,7 +37,7 @@ const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * qu'on confond (0/O, 1/l/I), avec majuscules, minuscules, chiffres et
  * un signe.
  */
-function motDePasseGenere() {
+export function motDePasseGenere() {
   const lettres = 'abcdefghijkmnpqrstuvwxyz';
   const majuscules = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const chiffres = '23456789';

@@ -244,6 +244,8 @@ router.post('/backoffice/:id/acces', exigerRole('ADMIN'), backoffice.renouvelerA
 // Un compte se designe par son UUID, une fiche donateur par son numero.
 // Les ecritures passent par le verrou global pose plus haut ; supprimer
 // un compte le retire des listes sans effacer ce qu'il a fait.
+// Un benevole ou un bailleur cree par l'equipe : ouvert d'emblee, acces par courriel.
+router.post('/utilisateurs/comptes', utilisateurs.creerCompte);
 router.get('/utilisateurs/comptes/:id', utilisateurs.profilCompte);
 router.patch('/utilisateurs/comptes/:id', utilisateurs.modifierCompte);
 router.delete('/utilisateurs/comptes/:id', utilisateurs.supprimerCompte);

@@ -435,3 +435,36 @@ describe('back office : Admin et Manager', () => {
     assert.notEqual((await appel('POST', '/admin/login', { corps: { adminLog: 'manager@hope.test', password: manager.corps.motDePasseProvisoire } })).statut, 200);
   });
 });
+
+describe('comptes crees par l equipe', () => {
+  test('un benevole et un bailleur ouverts d emblee, connectables avec le mot de passe genere', async () => {
+    const benevole = await appel('POST', '/admin/utilisateurs/comptes', {
+      jeton: jetonAdmin,
+      corps: { type: 'BENEVOLE', prenom: 'Mialy', nom: 'Rabe', email: 'mialy.equipe@hope.test' },
+    });
+    assert.equal(benevole.statut, 201, JSON.stringify(benevole.corps));
+    const bailleur = await appel('POST', '/admin/utilisateurs/comptes', {
+      jeton: jetonAdmin,
+      corps: { type: 'BAILLEUR', prenom: 'Hery', nom: 'Rabe', email: 'hery.equipe@hope.test', organisation: 'Fondation Essai', typeOrganisation: 'ong' },
+    });
+    assert.equal(bailleur.statut, 201, JSON.stringify(bailleur.corps));
+    assert.equal(
+      (await appel('POST', '/admin/utilisateurs/comptes', { jeton: jetonAdmin, corps: { type: 'BAILLEUR', prenom: 'X', nom: 'Y', email: 'z@hope.test' } })).statut,
+      400,
+      'un bailleur sans organisation est refuse'
+    );
+    for (const [email, type, resultat] of [
+      ['mialy.equipe@hope.test', 'benevole', benevole],
+      ['hery.equipe@hope.test', 'bailleur', bailleur],
+    ]) {
+      const connexion = await appel('POST', '/auth/login', {
+        corps: { email, motDePasse: resultat.corps.motDePasseProvisoire, typeUtilisateur: type },
+      });
+      assert.equal(connexion.statut, 200, `${type} : ${JSON.stringify(connexion.corps)}`);
+    }
+    const [org] = await base.sql(
+      "SELECT b.type_organisation FROM bailleur b JOIN bailleur_contact c ON c.bailleur_id = b.id JOIN utilisateur u ON u.id = c.utilisateur_id WHERE u.email = 'hery.equipe@hope.test'"
+    );
+    assert.equal(org.type_organisation, 'ong');
+  });
+});

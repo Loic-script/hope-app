@@ -220,8 +220,13 @@ export default function Authentification() {
    ================================================================ */
 
 function Connexion({ navigate, types }) {
-  const [email, setEmail] = useState('');
-  const [typeUtilisateur, setTypeUtilisateur] = useState('');
+  // Le lien d'un courriel d'acces (compte ouvert par l'equipe) porte
+  // l'adresse et le type : ?email=...&type=benevole.
+  const [email, setEmail] = useState(() => new URLSearchParams(window.location.search).get('email') ?? '');
+  const [typeUtilisateur, setTypeUtilisateur] = useState(() => {
+    const type = new URLSearchParams(window.location.search).get('type') ?? '';
+    return ['donateur', 'benevole', 'bailleur'].includes(type) ? type : '';
+  });
   // Le type choisi ne correspond pas au compte : c'est ce champ-la
   // qu'on designe, pas l'adresse ni le mot de passe.
   const [typeEnErreur, setTypeEnErreur] = useState(false);

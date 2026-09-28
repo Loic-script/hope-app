@@ -1,4 +1,5 @@
-import BackOffice from '../../components/admin/BackOffice.jsx';
+import BackOffice, { MotDePasseATransmettre } from '../../components/admin/BackOffice.jsx';
+import CompteParEquipeModale from '../../components/admin/CompteParEquipe.jsx';
 import { useEffect, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 
@@ -79,6 +80,8 @@ export default function UtilisateursPage() {
   const [recherche, setRecherche] = useState('');
   const [rechercheAppliquee, setRechercheAppliquee] = useState('');
   const [fenetre, setFenetre] = useState(null);
+  // Le resultat de la creation d'un benevole ou d'un bailleur (accès envoyés).
+  const [cree, setCree] = useState(null);
 
   useEffect(() => {
     const minuterie = setTimeout(() => setRechercheAppliquee(recherche.trim()), 300);
@@ -242,7 +245,16 @@ export default function UtilisateursPage() {
         titre="Utilisateurs"
         accroche="Donateurs, bénévoles et bailleurs : leurs comptes, leurs profils, et ce qu’ils ont apporté à HOPE."
         actions={
-          onglet === 'donateurs' && (
+          surBackOffice ? null : onglet !== 'donateurs' ? (
+            <button
+              type="button"
+              className="btn btn--principal"
+              onClick={() => setFenetre(onglet === 'bailleurs' ? 'bailleur' : 'benevole')}
+            >
+              <IconePlus />
+              {onglet === 'bailleurs' ? 'Nouveau bailleur' : 'Nouveau bénévole'}
+            </button>
+          ) : (
             <>
               <Link className="btn btn--neutre" to="/admin/dons">
                 Dons reçus
@@ -261,6 +273,7 @@ export default function UtilisateursPage() {
 
       {erreur && <Alerte>{erreur}</Alerte>}
       {gestion.erreur && <Alerte>{gestion.erreur}</Alerte>}
+      {!surBackOffice && <MotDePasseATransmettre resultat={cree} onFermer={() => setCree(null)} />}
 
       <Onglets
         onglets={[
@@ -316,6 +329,17 @@ export default function UtilisateursPage() {
       )}
 
       {gestion.fenetres}
+
+      <CompteParEquipeModale
+        type={fenetre === 'bailleur' ? 'bailleur' : 'benevole'}
+        ouverte={fenetre === 'benevole' || fenetre === 'bailleur'}
+        onFermer={() => setFenetre(null)}
+        onCree={(resultat) => {
+          setFenetre(null);
+          setCree(resultat);
+          recharger();
+        }}
+      />
 
       <DonateurModale
         ouverte={fenetre === 'donateur'}

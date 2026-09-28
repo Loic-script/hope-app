@@ -30,7 +30,7 @@ const ROLES = [
 const CLE_DU_ROLE = { GESTIONNAIRE: 'ADMIN', MANAGER: 'MANAGER' };
 
 /** Le mot de passe a transmettre en personne, quand le courriel n'est pas parti. */
-function MotDePasseATransmettre({ resultat, onFermer }) {
+export function MotDePasseATransmettre({ resultat, onFermer }) {
   const [copie, setCopie] = useState(false);
   if (!resultat) return null;
   return (

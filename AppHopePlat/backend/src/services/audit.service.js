@@ -78,6 +78,7 @@ const LIBELLES = {
   'POST /backoffice': 'a créé un compte back office',
   'PATCH /backoffice/:id': 'a modifié un compte back office',
   'POST /backoffice/:id/acces': 'a renvoyé un mot de passe back office',
+  'POST /utilisateurs/comptes': 'a créé un compte bénévole ou bailleur',
   'PATCH /utilisateurs/comptes/:id': 'a modifié le compte d’un utilisateur',
   'DELETE /utilisateurs/comptes/:id': 'a supprimé le compte d’un utilisateur',
   'DELETE /utilisateurs/fiches/:id': 'a supprimé une fiche donateur',

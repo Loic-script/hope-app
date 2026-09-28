@@ -2324,3 +2324,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Le bandeau des accès envoyés, hors d'un panneau (page Utilisateurs). */
+.page-entete ~ .backoffice__resultat,
+.onglets ~ .backoffice__resultat {
+  margin: 0 0 14px;
+}
