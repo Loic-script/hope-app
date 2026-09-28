@@ -54,7 +54,7 @@ const GROUPES = [
   {
     titre: 'Sur le terrain',
     entrees: [
-      { to: '/bailleur/projets', label: 'Projets', Icone: PleineProjets },
+      { to: '/bailleur/projets', label: 'Découvrir le projet', Icone: PleineProjets },
     ],
   },
   {

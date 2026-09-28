@@ -66,11 +66,6 @@ export default function Paiements() {
       <EntetePage
         titre="Paiements effectués"
         accroche="Ce que vous avez versé à HOPE : vos dons faits depuis l’espace et les versements de vos conventions."
-        actions={
-          <Link className="bouton-bailleur" to="/bailleur/faire-un-don">
-            Faire un don
-          </Link>
-        }
       />
 
       <div className="kpi paiements__kpi">
