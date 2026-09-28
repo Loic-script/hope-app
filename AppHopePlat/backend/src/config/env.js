@@ -17,14 +17,20 @@ dotenv.config({ path: cheminEnv, quiet: true });
 /**
  * Lit une variable obligatoire et arrete le processus si elle est absente.
  * Mieux vaut echouer au demarrage que servir des requetes mal configurees.
+ *
+ * Le message dit ou la renseigner : chez l'hebergeur, il n'y a pas de
+ * fichier .env, ce sont les variables du service.
+ *
+ * @param {string} nom
+ * @param {string} [conseil] une indication propre a cette variable
  */
-function requis(nom) {
+function requis(nom, conseil) {
   const valeur = process.env[nom];
   if (valeur === undefined || valeur === '') {
-    console.error(
-      `[HOPE] Variable d'environnement manquante : ${nom}\n` +
-        `       Verifiez le fichier ${cheminEnv} (modele : .env.example).`
-    );
+    const ou =
+      conseil ??
+      `Chez l'hebergeur : les variables du service (Railway : onglet Variables). En local : ${cheminEnv} (modele : .env.example).`;
+    console.error(`[HOPE] Variable d'environnement manquante : ${nom}\n       ${ou}`);
     process.exit(1);
   }
   return valeur;
@@ -45,8 +51,15 @@ const enProduction = optionnel('NODE_ENV', 'development') === 'production';
  */
 const adresseBase = optionnel('DATABASE_URL', '');
 
+// Ni DATABASE_URL ni les morceaux : le plus souvent, l'adresse de la base
+// n'a pas ete reportee dans les variables du service.
+const CONSEIL_BASE =
+  'Aucune base configuree : DATABASE_URL est absente. Sur Railway, ajouter DATABASE_URL = ' +
+  '${{Postgres.DATABASE_URL}} dans les variables du service ; en local, DB_HOST, DB_NAME, ' +
+  'DB_USER et DB_PASSWORD dans backend/.env.';
+
 function morceauBase(nom) {
-  return adresseBase ? optionnel(nom, '') : requis(nom);
+  return adresseBase ? optionnel(nom, '') : requis(nom, CONSEIL_BASE);
 }
 
 /*
