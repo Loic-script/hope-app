@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import FenetreTache, { COULEURS_TACHE, STATUTS_TACHE } from '../../components/admin/FenetreTache.jsx';
 import { TacheModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
   Badge,
+  BarreOutils,
   BoutonAjout,
   EntetePage,
   EtatVide,
@@ -38,6 +39,7 @@ const FILTRES = {
  */
 export default function TachesPage() {
   const [filtre, setFiltre] = useState('toutes');
+  const [recherche, setRecherche] = useState('');
   const [ouverte, setOuverte] = useState(null);
   const [ajout, setAjout] = useState(false);
 
@@ -57,8 +59,35 @@ export default function TachesPage() {
   );
   const { donnees: benevoles } = useChargement(() => taskService.benevoles(), []);
 
-  const taches = donnees?.items ?? [];
+  const toutes = useMemo(() => donnees?.items ?? [], [donnees]);
   const compteurs = donnees?.counts ?? {};
+
+  /*
+   * La recherche filtre la liste de l'onglet, sans aller-retour : le
+   * titre, le projet, l'equipe (prenom, nom), la priorite et le statut.
+   * Les accents et la casse ne comptent pas : « equipe » trouve « Équipe ».
+   */
+  const taches = useMemo(() => {
+    const plier = (texte) =>
+      String(texte ?? '')
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+    const mots = plier(recherche).split(/\s+/).filter(Boolean);
+    if (mots.length === 0) return toutes;
+    return toutes.filter((tache) => {
+      const texte = plier(
+        [
+          tache.titre,
+          tache.projetNom,
+          LIBELLES_PRIORITE[tache.priorite],
+          STATUTS_TACHE[tache.statut],
+          ...(tache.equipe ?? []).map((p) => `${p.prenom ?? ''} ${p.nom ?? ''}`),
+        ].join(' ')
+      );
+      return mots.every((mot) => texte.includes(mot));
+    });
+  }, [toutes, recherche]);
 
   const onglets = [
     { cle: 'toutes', label: 'Toutes', compteur: compteurs.toutes ?? 0 },
@@ -81,6 +110,13 @@ export default function TachesPage() {
 
       <Panneau>
         <Onglets onglets={onglets} actif={filtre} onChange={setFiltre} />
+
+        <BarreOutils
+          recherche={recherche}
+          onRecherche={setRecherche}
+          placeholder="Rechercher une tâche, un projet, un bénévole…"
+          compteur={recherche.trim() ? `${taches.length} sur ${toutes.length}` : `${toutes.length} tâche(s)`}
+        />
 
         <Tableau
           chargement={chargement && !donnees}
@@ -171,9 +207,17 @@ export default function TachesPage() {
           ]}
           vide={
             <EtatVide
-              titre={filtre === 'demandes' ? 'Aucune demande à valider' : 'Aucune tâche'}
+              titre={
+                recherche.trim() && toutes.length > 0
+                  ? 'Aucune tâche ne correspond'
+                  : filtre === 'demandes'
+                    ? 'Aucune demande à valider'
+                    : 'Aucune tâche'
+              }
               texte={
-                filtre === 'demandes'
+                recherche.trim() && toutes.length > 0
+                  ? 'Essayez un autre mot : titre, projet, bénévole, priorité ou statut.'
+                  : filtre === 'demandes'
                   ? 'Quand un bénévole demande une tâche, elle apparaît ici.'
                   : 'Créez-en une avec le bouton « Ajouter une tâche », ou depuis l’onglet Tâches d’un projet.'
               }
