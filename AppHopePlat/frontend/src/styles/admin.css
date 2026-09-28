@@ -1996,3 +1996,41 @@ tr[id^='compte-'] {
   .champ-combo__liste { animation: none; }
   .champ-combo__bascule svg { transition: none; }
 }
+
+/*
+ * Une carte d'impact : en colonne. Le chiffre s'accompagne d'une unite
+ * parfois longue (« 340 consultations ») ; cote a cote avec le libelle,
+ * elle l'ecrasait lettre par lettre. Le libelle en haut, le chiffre en
+ * grand et son unite plus petite, puis le nombre de mesures.
+ */
+.carte-chiffre--impact {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.carte-chiffre--impact .carte-chiffre__libelle {
+  overflow-wrap: anywhere;
+}
+
+.carte-chiffre--impact .carte-chiffre__valeur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin-top: 2px;
+  white-space: normal;
+  font-size: 28px;
+}
+
+.carte-chiffre__unite {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  overflow-wrap: anywhere;
+}
+
+.carte-chiffre--impact .carte-chiffre__variation {
+  margin-top: auto;
+}

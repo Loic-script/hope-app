@@ -1299,16 +1299,13 @@ export default function ProjectDetailPage() {
           {donnees.impactSummary.length > 0 && (
             <div className="cartes-chiffres">
               {donnees.impactSummary.map((ligne) => (
-                <div className="carte-chiffre" key={`${ligne.indicator}|${ligne.unit ?? ''}`}>
-                  <div>
-                    <p className="carte-chiffre__libelle">{libelleIndicateur(ligne.indicator)}</p>
-                    <p className="carte-chiffre__variation">
-                      {fmt.nombre(ligne.entriesCount)} mesure(s)
-                    </p>
-                  </div>
+                <div className="carte-chiffre carte-chiffre--impact" key={`${ligne.indicator}|${ligne.unit ?? ''}`}>
+                  <p className="carte-chiffre__libelle">{libelleIndicateur(ligne.indicator)}</p>
                   <p className="carte-chiffre__valeur">
-                    {fmt.nombre(ligne.total)} {ligne.unit ?? ''}
+                    {fmt.nombre(ligne.total)}
+                    {ligne.unit && <span className="carte-chiffre__unite">{ligne.unit}</span>}
                   </p>
+                  <p className="carte-chiffre__variation">{fmt.nombre(ligne.entriesCount)} mesure(s)</p>
                 </div>
               ))}
             </div>

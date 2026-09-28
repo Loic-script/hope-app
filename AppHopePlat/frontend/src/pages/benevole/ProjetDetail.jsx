@@ -377,16 +377,13 @@ function OngletImpact({
       {synthese.length > 0 && (
         <div className="cartes-chiffres">
           {synthese.map((ligne) => (
-            <div className="carte-chiffre" key={`${ligne.indicator}|${ligne.unit ?? ''}`}>
-              <div>
-                <p className="carte-chiffre__libelle">
-                  {fmt.libelleIndicateur(ligne.indicator, indicateurs)}
-                </p>
-                <p className="carte-chiffre__variation">{fmt.nombre(ligne.entriesCount)} mesure(s)</p>
-              </div>
+            <div className="carte-chiffre carte-chiffre--impact" key={`${ligne.indicator}|${ligne.unit ?? ''}`}>
+              <p className="carte-chiffre__libelle">{fmt.libelleIndicateur(ligne.indicator, indicateurs)}</p>
               <p className="carte-chiffre__valeur">
-                {fmt.nombre(ligne.total)} {ligne.unit ?? ''}
+                {fmt.nombre(ligne.total)}
+                {ligne.unit && <span className="carte-chiffre__unite">{ligne.unit}</span>}
               </p>
+              <p className="carte-chiffre__variation">{fmt.nombre(ligne.entriesCount)} mesure(s)</p>
             </div>
           ))}
         </div>
