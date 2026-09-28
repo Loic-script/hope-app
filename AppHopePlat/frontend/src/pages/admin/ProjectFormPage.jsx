@@ -80,7 +80,7 @@ const FORMULAIRE_VIDE = {
   // Une ligne vide au depart : le champ doit se voir sans qu'il faille
   // deviner qu'un bouton l'ouvre.
   objectives: [''],
-  categoryId: '',
+  categoryName: '',
   location: '',
   managerName: '',
   requiredBudget: '',
@@ -108,7 +108,7 @@ export default function ProjectFormPage() {
 
   const [formulaire, setFormulaire] = useState(FORMULAIRE_VIDE);
 
-  const { donnees: catalogue, chargement: chargementCatalogue } = useChargement(
+  const { donnees: catalogue } = useChargement(
     () => catalogService.recuperer(),
     []
   );
@@ -127,7 +127,7 @@ export default function ProjectFormPage() {
       description: projet.description ?? '',
       objectives:
         projet.objectives?.length > 0 ? projet.objectives.map((o) => o.label) : [''],
-      categoryId: projet.categoryId ?? '',
+      categoryName: projet.categoryName ?? '',
       location: projet.location ?? '',
       managerName: projet.managerName ?? '',
       requiredBudget: projet.requiredBudget ?? '',
@@ -227,7 +227,8 @@ export default function ProjectFormPage() {
 
     const charge = {
       ...formulaire,
-      categoryId: formulaire.categoryId === '' ? null : Number(formulaire.categoryId),
+      // Un nom tape librement : le serveur retrouve ou cree la categorie.
+      categoryName: formulaire.categoryName.trim() || null,
       descriptionTitre: formulaire.descriptionTitre || null,
       description: formulaire.description || null,
       location: formulaire.location || null,
@@ -249,11 +250,6 @@ export default function ProjectFormPage() {
       { onSucces: (resultat) => navigate(`/admin/projects/${resultat.id}`) }
     );
   }
-
-  const categories = (catalogue?.categories ?? []).map((categorie) => ({
-    valeur: categorie.id,
-    label: categorie.name,
-  }));
 
   if (edition && chargementProjet) return <Chargement texte="Chargement du projet…" />;
   if (edition && erreurProjet) return <Alerte>{erreurProjet}</Alerte>;
@@ -406,13 +402,13 @@ export default function ProjectFormPage() {
               </button>
             </Champ>
 
-            <ChampSelection
+            <ChampTexte
               label="Catégorie"
-              id="categoryId"
-              value={formulaire.categoryId}
-              onChange={(e) => modifier('categoryId', e.target.value)}
-              options={categories}
-              vide={chargementCatalogue ? 'Chargement…' : 'Aucune catégorie'}
+              id="categoryName"
+              value={formulaire.categoryName}
+              onChange={(e) => modifier('categoryName', e.target.value)}
+              placeholder="Ex. Scolarité, Santé, Agriculture…"
+              maxLength={120}
               disabled={envoi}
             />
 

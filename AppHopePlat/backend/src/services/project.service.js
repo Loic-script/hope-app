@@ -256,7 +256,12 @@ async function preparerDonnees(corps, { creation }) {
   if (creation || corps.description !== undefined) {
     donnees.description = texteFacultatif(corps.description, 'description', { max: 5000 });
   }
-  if (creation || corps.categoryId !== undefined) {
+  // La categorie se tape librement (categoryName) : elle est retrouvee par
+  // son nom, ou creee. categoryId reste accepte pour les autres clients.
+  if (corps.categoryName !== undefined) {
+    const nom = texteFacultatif(corps.categoryName, 'categoryName', { max: 120 });
+    donnees.categoryId = nom === null ? null : (await categoryRepository.trouverOuCreerParNom(nom)).id;
+  } else if (creation || corps.categoryId !== undefined) {
     donnees.categoryId = identifiantFacultatif(corps.categoryId, 'categoryId');
     if (donnees.categoryId !== null) {
       const categorie = await categoryRepository.trouverParId(donnees.categoryId);

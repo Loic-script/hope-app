@@ -50,3 +50,19 @@ export async function creerSiAbsente({ name, description }, client = null) {
   const existante = await query('SELECT * FROM project_categories WHERE name = $1', [name], client);
   return versObjet(existante.rows[0]);
 }
+
+/**
+ * La categorie d'un nom tape librement : celle qui porte deja ce nom
+ * (sans tenir compte des majuscules ni des espaces en trop), sinon une
+ * nouvelle. Deux saisies « Santé » et « santé » menent a la meme.
+ */
+export async function trouverOuCreerParNom(nom, client = null) {
+  const propre = String(nom).trim().replace(/\s+/g, ' ');
+  const existante = await query(
+    'SELECT * FROM project_categories WHERE LOWER(name) = LOWER($1) LIMIT 1',
+    [propre],
+    client
+  );
+  if (existante.rows[0]) return versObjet(existante.rows[0]);
+  return creerSiAbsente({ name: propre, description: null }, client);
+}
