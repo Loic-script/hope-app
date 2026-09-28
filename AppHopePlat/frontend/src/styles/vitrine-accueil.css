@@ -1,0 +1,695 @@
+/* ============================================================
+   Site vitrine : la page d'accueil (pages/vitrine/Accueil.jsx)
+
+   Trois temps : le bandeau d'appel sur la photo, les quatre activites
+   en cartes coiffees d'un soleil, les impacts sur le violet de la
+   charte. Titres en Montserrat, texte en Quicksand.
+   ============================================================ */
+
+.vitrine {
+  --vitrine-titre: 'Montserrat', 'Poppins', system-ui, sans-serif;
+}
+
+/* Les boutons d'appel de la page. */
+.accueil-bouton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 26px;
+  overflow: hidden;
+  border-radius: 10px;
+  font-family: var(--vitrine-police);
+  font-size: 15.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.accueil-bouton--orange {
+  background: var(--hope-orange);
+  color: #1f1a33;
+  box-shadow: 0 10px 24px -10px rgba(224, 151, 53, 0.9);
+}
+
+.accueil-bouton--orange:hover {
+  background: #eaa44a;
+}
+
+.accueil-bouton--bleu {
+  background: var(--hope-bleu);
+  color: #1f1a33;
+  box-shadow: 0 10px 24px -10px rgba(134, 185, 222, 0.9);
+}
+
+.accueil-bouton--bleu:hover {
+  background: #9cc7e6;
+}
+
+.accueil-bouton:hover {
+  transform: translateY(-3px);
+}
+
+.accueil-bouton:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.accueil-bouton:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* Les titres de section. */
+.accueil-section__titre {
+  margin: 0;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-titre);
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 800;
+  text-align: center;
+}
+
+.accueil-section__titre--clair {
+  color: #fff;
+}
+
+/* ============================ Le bandeau ============================ */
+
+.accueil-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(760px, calc(100vh - 72px));
+  overflow: hidden;
+  background: #2a2240;
+  isolation: isolate;
+}
+
+/* La photo s'approche doucement : un zoom lent, puis elle se pose. */
+.accueil-hero__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 30% 40%;
+  animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+/* Le voile assombrit la droite, ou se lit le texte, et laisse les
+   enfants dans la lumiere a gauche. */
+.accueil-hero__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(24, 18, 44, 0.1) 0%, rgba(24, 18, 44, 0.35) 38%, rgba(24, 18, 44, 0.78) 72%, rgba(24, 18, 44, 0.85) 100%),
+    linear-gradient(0deg, rgba(24, 18, 44, 0.55) 0%, transparent 35%);
+}
+
+.accueil-hero__contenu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 72px 48px;
+  color: #fff;
+}
+
+.accueil-hero__titre {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-weight: 800;
+  line-height: 1.08;
+  text-align: right;
+  text-transform: uppercase;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.accueil-hero__ligne {
+  display: block;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.accueil-hero__ligne--1 {
+  font-size: clamp(26px, 3.4vw, 44px);
+  letter-spacing: 0.02em;
+  animation-delay: 200ms;
+}
+
+.accueil-hero__ligne--2 {
+  font-size: clamp(30px, 4.4vw, 58px);
+  letter-spacing: 0.01em;
+  animation-delay: 360ms;
+}
+
+/* Le trait bleu sous le titre, avec son soleil au bout. */
+.accueil-hero__trait {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  width: min(100%, 560px);
+  margin-top: 14px;
+}
+
+.accueil-hero__trait > span {
+  flex: 1;
+  height: 5px;
+  margin-bottom: 14px;
+  border-radius: 5px;
+  background: var(--hope-bleu);
+  transform-origin: right center;
+  animation: hero-trait 900ms cubic-bezier(0.22, 1, 0.36, 1) 600ms both;
+}
+
+.accueil-hero__soleil {
+  flex: none;
+  width: 46px;
+  height: 36px;
+  animation: hero-apparait 600ms ease-out 1100ms both;
+}
+
+.accueil-hero__rayons rect {
+  fill: var(--hope-orange);
+}
+
+.accueil-hero__rayons {
+  transform-origin: 24px 26px;
+  animation: soleil-rayonne 3.6s ease-in-out 1.7s infinite;
+}
+
+.accueil-hero__dome {
+  fill: var(--hope-jaune);
+}
+
+.accueil-hero__socle {
+  fill: var(--hope-orange);
+}
+
+.accueil-hero__texte {
+  max-width: 560px;
+  margin: 18px 0 0;
+  font-size: clamp(15.5px, 1.4vw, 18px);
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: justify;
+  text-align-last: right;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 700ms both;
+}
+
+.accueil-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 850ms both;
+}
+
+/* ============================ Les activites ============================ */
+
+.accueil-activites {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(64px, 8vw, 104px) 32px;
+}
+
+.accueil-activites__grille {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.v-activite {
+  --v-activite-fond: var(--hope-bleu);
+  --v-activite-titre: #2f2a5e;
+  --v-activite-texte: #2f2a5e;
+  --v-activite-horizon: var(--hope-bleu);
+  --v-activite-anneau: var(--hope-jaune);
+  --v-activite-icone: var(--hope-bleu-lisible);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 700ms ease,
+    transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 120ms);
+}
+
+.accueil-activites--vu .v-activite {
+  opacity: 1;
+  transform: none;
+}
+
+.v-activite--scolarite {
+  --v-activite-horizon: var(--hope-violet);
+}
+
+.v-activite--employabilite {
+  --v-activite-fond: var(--hope-violet);
+  --v-activite-titre: #ffffff;
+  --v-activite-texte: #ffffff;
+  --v-activite-icone: var(--hope-violet);
+}
+
+/* Le blanc sur l'orange de la charte ne se lit pas assez (WCAG AA) :
+   l'orange de la carte est pris un ton plus profond. */
+.v-activite--soins {
+  --v-activite-fond: #ad5f0c;
+  --v-activite-titre: #ffffff;
+  --v-activite-texte: #ffffff;
+  --v-activite-icone: var(--hope-orange-fonce);
+}
+
+.v-activite--alimentation {
+  --v-activite-fond: var(--hope-jaune);
+  --v-activite-titre: var(--hope-bleu-lisible);
+  --v-activite-texte: #4a4479;
+  --v-activite-anneau: var(--hope-violet);
+  --v-activite-icone: var(--hope-orange-fonce);
+}
+
+/* Le soleil qui coiffe la carte : il deborde sur elle. */
+.v-activite__medaillon {
+  position: relative;
+  z-index: 1;
+  width: 190px;
+  height: 104px;
+  margin-bottom: -46px;
+}
+
+.v-activite__soleil {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.v-activite__rayons rect {
+  fill: var(--hope-orange);
+}
+
+.v-activite__rayons {
+  transform-origin: 100px 78px;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.v-activite__horizon {
+  fill: var(--v-activite-horizon);
+  transition: transform 0.4s ease;
+}
+
+.v-activite__pastille {
+  position: absolute;
+  left: 50%;
+  top: 42px;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 8px solid var(--v-activite-anneau);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--v-activite-icone);
+  transform: translateX(-50%);
+  box-shadow: 0 8px 20px -8px rgba(53, 51, 67, 0.4);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.v-activite__pastille svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.v-activite__carte {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  padding: 66px 26px 34px;
+  border-radius: 24px;
+  background: var(--v-activite-fond);
+  box-shadow: 0 18px 40px -26px rgba(53, 51, 67, 0.55);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
+}
+
+.v-activite__titre {
+  margin: 0;
+  color: var(--v-activite-titre);
+  font-family: var(--vitrine-titre);
+  font-size: 21px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.v-activite__texte {
+  margin: 22px 0 0;
+  color: var(--v-activite-texte);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: justify;
+  hyphens: auto;
+}
+
+@media (hover: hover) {
+  .v-activite:hover .v-activite__carte {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 50px -28px rgba(53, 51, 67, 0.6);
+  }
+
+  .v-activite:hover .v-activite__pastille {
+    transform: translateX(-50%) translateY(-8px) scale(1.06);
+  }
+
+  .v-activite:hover .v-activite__rayons {
+    transform: translateY(-10px) scale(1.12);
+  }
+
+  .v-activite:hover .v-activite__horizon:first-of-type {
+    transform: translate(-6px, -8px);
+  }
+
+  .v-activite:hover .v-activite__horizon:last-of-type {
+    transform: translate(6px, -8px);
+  }
+}
+
+/* ============================ Les impacts ============================ */
+
+.accueil-impacts {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(56px, 7vw, 88px) 32px clamp(64px, 8vw, 100px);
+  background: var(--hope-violet);
+  color: #ffffff;
+  isolation: isolate;
+}
+
+/* Un halo de soleil qui derive lentement derriere les chiffres. */
+.accueil-impacts__halo {
+  position: absolute;
+  top: -30%;
+  right: -10%;
+  z-index: -1;
+  width: 60vw;
+  max-width: 760px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 227, 137, 0.14), rgba(245, 227, 137, 0) 65%);
+  animation: impacts-halo 16s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.accueil-impacts__grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 72px 48px;
+  max-width: 1040px;
+  margin: 56px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.impact {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 700ms ease,
+    transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 140ms);
+}
+
+.accueil-impacts--vu .impact {
+  opacity: 1;
+  transform: none;
+}
+
+/* L'icone en filigrane, derriere le chiffre. */
+.impact__filigrane {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  z-index: -1;
+  width: 150px;
+  height: 150px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.13);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: translateX(-50%) scale(0.8) rotate(-6deg);
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 140ms + 200ms);
+}
+
+.accueil-impacts--vu .impact__filigrane {
+  transform: translateX(-50%) scale(1) rotate(0deg);
+}
+
+.impact__chiffre {
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.impact__libelle {
+  margin: 4px 0 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Un trait jaune sous le libelle, qui se trace a l'apparition. */
+.impact__libelle::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin: 14px auto 0;
+  border-radius: 4px;
+  background: var(--hope-jaune);
+  transform: scaleX(0);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 140ms + 500ms);
+}
+
+.accueil-impacts--vu .impact__libelle::after {
+  transform: scaleX(1);
+}
+
+.impact__texte {
+  max-width: 380px;
+  margin: 18px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
+  opacity: 0.95;
+}
+
+/* ============================ Petits ecrans ============================ */
+
+@media (max-width: 1100px) {
+  .accueil-activites__grille {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 56px 28px;
+  }
+}
+
+@media (max-width: 760px) {
+  .accueil-hero {
+    min-height: 620px;
+  }
+
+  .accueil-hero__photo {
+    object-position: 20% 30%;
+  }
+
+  .accueil-hero__voile {
+    background: linear-gradient(180deg, rgba(24, 18, 44, 0.25) 0%, rgba(24, 18, 44, 0.7) 45%, rgba(24, 18, 44, 0.9) 100%);
+  }
+
+  .accueil-hero__contenu {
+    align-items: stretch;
+    justify-content: flex-end;
+    align-self: flex-end;
+    padding: 48px 20px 40px;
+  }
+
+  .accueil-hero__titre {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .accueil-hero__trait {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .accueil-hero__trait > span {
+    transform-origin: left center;
+  }
+
+  .accueil-hero__texte {
+    text-align: left;
+    text-align-last: auto;
+  }
+
+  .accueil-hero__actions {
+    justify-content: stretch;
+  }
+
+  .accueil-hero__actions .accueil-bouton {
+    flex: 1 1 200px;
+  }
+
+  .accueil-activites {
+    padding-inline: 20px;
+  }
+
+  .accueil-activites__grille {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
+  .accueil-impacts {
+    padding-inline: 20px;
+  }
+
+  .accueil-impacts__grille {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 56px;
+  }
+}
+
+/* ============================ Animations ============================ */
+
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-monte {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-trait {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes hero-apparait {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes soleil-rayonne {
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes impacts-halo {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-18%, 22%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accueil-hero__photo,
+  .accueil-hero__ligne,
+  .accueil-hero__trait > span,
+  .accueil-hero__soleil,
+  .accueil-hero__rayons,
+  .accueil-hero__texte,
+  .accueil-hero__actions,
+  .accueil-impacts__halo {
+    animation: none;
+  }
+
+  .v-activite,
+  .impact,
+  .impact__filigrane,
+  .impact__libelle::after {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .impact__filigrane {
+    transform: translateX(-50%);
+  }
+
+  .impact__libelle::after {
+    transform: scaleX(1);
+  }
+
+  .v-activite__carte,
+  .v-activite__pastille,
+  .v-activite__rayons,
+  .v-activite__horizon,
+  .accueil-bouton {
+    transition: none;
+  }
+}

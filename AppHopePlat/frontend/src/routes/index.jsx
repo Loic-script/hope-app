@@ -75,6 +75,7 @@ const StatisticsPage = lazy(() => import('../pages/admin/StatisticsPage.jsx'));
 const PublicationsPage = lazy(() => import('../pages/admin/PublicationsPage.jsx'));
 const VitrineLayout = lazy(() => import('../layouts/VitrineLayout.jsx'));
 const EnPreparation = lazy(() => import('../pages/vitrine/EnPreparation.jsx'));
+const AccueilVitrine = lazy(() => import('../pages/vitrine/Accueil.jsx'));
 const VerifierCourriel = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.VerifierCourriel })));
 const PolitiqueConfidentialite = lazy(() =>
   import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
@@ -172,7 +173,7 @@ export default function AppRoutes() {
     <Routes>
       {/* ----- Le site vitrine, public ----- */}
       <Route element={<VitrineLayout />}>
-        <Route path="/" element={<EnPreparation titre="Accueil" />} />
+        <Route path="/" element={<AccueilVitrine />} />
         <Route path="/nous-decouvrir" element={<EnPreparation titre="Nous découvrir" />} />
         <Route path="/nos-realisations" element={<EnPreparation titre="Nos réalisations" />} />
         <Route path="/actualites" element={<EnPreparation titre="Actualités" />} />

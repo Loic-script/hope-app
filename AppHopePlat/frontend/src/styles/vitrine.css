@@ -153,14 +153,16 @@
   right: 0;
 }
 
+/* La page courante : le bleu de la charte. Le bleu clair du logo ne se
+   lit pas assez sur le blanc (WCAG AA) : il reste pour le trait, le texte
+   prend le bleu profond. */
 .vitrine-nav__lien--actif,
 .vitrine-nav__lien--actif:hover {
-  color: var(--hope-bleu);
+  color: var(--hope-bleu-lisible);
 }
 
 .vitrine-nav__lien--actif::after {
   background: var(--hope-bleu);
-  opacity: 0.45;
 }
 
 /* "Faire un don" : la seule couleur pleine de la barre. */
