@@ -9,7 +9,7 @@
  * On ne depense donc jamais un argent qui n'est pas arrive. Le controle et
  * l'ecriture se font dans une meme transaction, le projet verrouille.
  */
-import { transaction } from '../config/database.js';
+import { query, transaction } from '../config/database.js';
 import * as expenseRepository from '../repositories/expense.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 
@@ -78,6 +78,7 @@ export async function lister(requete = {}) {
     statut: requete.status ? valeurParmi(requete.status, 'status', STATUTS) : null,
     recherche: texteFacultatif(requete.search, 'search', { max: 120 }),
     sansJustificatif: requete.withoutDocument === 'true' || requete.withoutDocument === true,
+    beneficiaryId: identifiantFacultatif(requete.beneficiaryId, 'beneficiaryId'),
     limite: taille,
     decalage,
   });
@@ -93,13 +94,26 @@ export async function recupererParId(id) {
 
 /** Enregistre une utilisation des fonds d'un projet. */
 export async function creer(corps = {}) {
+  return transaction((client) => enregistrer(client, corps));
+}
+
+/**
+ * La creation d'une depense, dans une transaction deja ouverte : la
+ * fiche d'un beneficiaire cree avec sa premiere depense passe par ici,
+ * et tout reussit ou rien ne s'enregistre.
+ *
+ * Une depense peut etre faite pour un beneficiaire (beneficiaryId,
+ * facultatif) : il doit alors etre rattache au projet qui paie.
+ */
+export async function enregistrer(client, corps = {}) {
   const projectId = identifiantRequis(corps.projectId, 'projectId');
   const montant = enCentimes(corps.amount, 'amount');
   const devise = normaliserDevise(corps.currency, 'currency');
   const description = texteRequis(corps.description, 'description', { max: 2000 });
   const dateDepense = dateRequise(corps.expenseDate, 'expenseDate', { defautAujourdhui: true });
+  const beneficiaryId = identifiantFacultatif(corps.beneficiaryId, 'beneficiaryId');
 
-  return transaction(async (client) => {
+  {
     const projet = await projectRepository.trouverPourMiseAJour(projectId, client);
     if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
 
@@ -108,6 +122,20 @@ export async function creer(corps = {}) {
         'Seul un projet en cours peut enregistrer une dépense.',
         'PROJET_FERME'
       );
+    }
+
+    if (beneficiaryId !== null) {
+      const { rows } = await query(
+        'SELECT 1 FROM project_beneficiaries WHERE project_id = $1 AND beneficiary_id = $2',
+        [projectId, beneficiaryId],
+        client
+      );
+      if (rows.length === 0) {
+        throw new ErreurRegleMetier(
+          'Ce bénéficiaire n’est pas rattaché à ce projet : rattachez-le d’abord, ou choisissez un de ses projets.',
+          'BENEFICIAIRE_NON_RATTACHE'
+        );
+      }
     }
 
     await verifierFondsDisponibles(client, projet, montant);
@@ -121,10 +149,11 @@ export async function creer(corps = {}) {
         category: texteFacultatif(corps.category, 'category', { max: 60 }),
         supplier: texteFacultatif(corps.supplier, 'supplier', { max: 200 }),
         expenseDate: dateDepense,
+        beneficiaryId,
       },
       client
     );
-  });
+  }
 }
 
 /** Modifie une depense ; tout changement de montant repasse le controle. */

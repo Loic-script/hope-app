@@ -329,3 +329,59 @@ describe('aucune lecture ne plante (fumee)', () => {
     }
   });
 });
+
+describe('beneficiaires : projet lie et argent depense', () => {
+  test('creation avec projet et depense, tout ou rien ; la fiche additionne ses depenses', async () => {
+    const projet = await creerProjet('Ecolage des orphelins', 300_000);
+    const donateur = await creerDonateur();
+    await appel('POST', '/admin/donations', {
+      jeton: jetonAdmin,
+      corps: { donorId: donateur, amount: '100000', allocation: 'PROJECT', projectId: projet, paymentMethod: 'Mvola' },
+    });
+
+    const sansProjet = await appel('POST', '/admin/beneficiaries', {
+      jeton: jetonAdmin,
+      corps: { firstName: 'Sans', lastName: 'Projet', beneficiaryType: 'ORPHAN', depense: { amount: '1000' } },
+    });
+    assert.equal(sansProjet.statut, 400);
+
+    const tropCher = await appel('POST', '/admin/beneficiaries', {
+      jeton: jetonAdmin,
+      corps: { firstName: 'Trop', lastName: 'Cher', beneficiaryType: 'ORPHAN', projectId: projet, depense: { amount: '100000.01' } },
+    });
+    assert.equal(tropCher.statut, 422);
+    const [reste] = await base.sql("SELECT count(*)::int AS n FROM beneficiaries WHERE first_name = 'Trop'");
+    assert.equal(reste.n, 0, 'la fiche n est pas creee si la depense echoue');
+
+    const cree = await appel('POST', '/admin/beneficiaries', {
+      jeton: jetonAdmin,
+      corps: { firstName: 'Mialy', lastName: 'Rabe', beneficiaryType: 'ORPHAN', projectId: projet, depense: { amount: '40000', category: 'Formation' } },
+    });
+    assert.equal(cree.statut, 201, JSON.stringify(cree.corps));
+    const id = cree.corps.id;
+
+    // Une depense pour une personne non rattachee au projet est refusee.
+    const autre = await appel('POST', '/admin/beneficiaries', {
+      jeton: jetonAdmin,
+      corps: { firstName: 'Hors', lastName: 'Projet', beneficiaryType: 'FAMILY' },
+    });
+    const refus = await appel('POST', '/admin/expenses', {
+      jeton: jetonAdmin,
+      corps: { projectId: projet, amount: '1000', description: 'Essai', beneficiaryId: autre.corps.id },
+    });
+    assert.equal(refus.statut, 422);
+    assert.equal(refus.corps.code, 'BENEFICIAIRE_NON_RATTACHE');
+
+    const deuxieme = await appel('POST', '/admin/expenses', {
+      jeton: jetonAdmin,
+      corps: { projectId: projet, amount: '10000', description: 'Soins', beneficiaryId: id },
+    });
+    assert.equal(deuxieme.statut, 201);
+
+    const fiche = await appel('GET', `/admin/beneficiaries/${id}`, { jeton: jetonAdmin });
+    assert.equal(fiche.corps.expenses.length, 2);
+    assert.equal(fiche.corps.expenses[0].beneficiaryName, 'Mialy Rabe');
+    assert.equal(fiche.corps.spentTotal, '50000.00');
+    assert.equal(fiche.corps.projects.length, 1);
+  });
+});

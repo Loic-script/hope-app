@@ -96,6 +96,7 @@ const COLONNES_ATTENDUES = [
   ['utilisateur', 'conditions_acceptees_le'],
   ['utilisateur', 'sessions_valides_depuis'],
   ['utilisateur', 'email_verifie_le'],
+  ['expenses', 'beneficiary_id'],
   ['admins', 'sessions_valides_depuis'],
   ['admins', 'photo_url'],
   ['beneficiaries', 'photo_fichier'],

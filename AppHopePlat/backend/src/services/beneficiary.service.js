@@ -7,6 +7,9 @@
  */
 import * as beneficiaryRepository from '../repositories/beneficiary.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
+import * as expenseRepository from '../repositories/expense.repository.js';
+import * as expenseService from './expense.service.js';
+import { transaction } from '../config/database.js';
 import * as photos from './photoBeneficiaire.service.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
@@ -102,37 +105,85 @@ export async function recupererParId(id, admin = null) {
   const beneficiaire = await beneficiaryRepository.trouverParId(beneficiaryId);
   if (!beneficiaire) throw new ErreurIntrouvable('Le beneficiaire', beneficiaryId);
 
+  const [projets, depenses] = await Promise.all([
+    beneficiaryRepository.listerProjetsDuBeneficiaire(beneficiaryId),
+    expenseRepository.lister({ beneficiaryId, limite: 200 }),
+  ]);
   return {
     ...enrichir(beneficiaire, admin),
-    projects: await beneficiaryRepository.listerProjetsDuBeneficiaire(beneficiaryId),
+    projects: projets,
+    // Les depenses faites pour cette personne, annulees comprises (la
+    // fiche les montre barrees) ; le total ne compte que les autres.
+    expenses: depenses,
   };
 }
 
+/**
+ * Cree la fiche. Deux complements facultatifs, dans la meme transaction
+ * (tout s'enregistre, ou rien) :
+ *
+ *   - projectId : le projet auquel la personne est rattachee ;
+ *   - depense : { amount, description?, category?, expenseDate? }, l'argent
+ *     depense pour elle sur ce projet -- il faut alors un projet, en
+ *     cours, qui a recu de quoi payer.
+ */
 export async function creer(corps = {}, admin = null) {
   const photoFichier =
     corps.photoFichier === undefined ? null : await photoValide(corps.photoFichier);
-
-  const beneficiaire = await beneficiaryRepository.creer({
-    firstName: texteRequis(corps.firstName, 'firstName', { max: 120 }),
-    lastName: texteRequis(corps.lastName, 'lastName', { max: 120 }),
-    beneficiaryType: valeurParmi(corps.beneficiaryType, 'beneficiaryType', TYPES),
-    gender: corps.gender ? valeurParmi(corps.gender, 'gender', GENRES) : null,
-    birthDate: dateFacultative(corps.birthDate, 'birthDate'),
-    country: texteFacultatif(corps.country, 'country', { max: 120 }) ?? 'Madagascar',
-    city: texteFacultatif(corps.city, 'city', { max: 120 }),
-    status: valeurParmi(corps.status, 'status', STATUTS, { defaut: 'ACTIVE' }),
-    notes: texteFacultatif(corps.notes, 'notes', { max: 5000 }),
-    photoFichier,
-  });
-
-  // Rattachement immediat si un projet est indique dans le formulaire.
   const projectId = identifiantFacultatif(corps.projectId, 'projectId');
-  if (projectId !== null) {
-    await rattacherAuProjet(projectId, { beneficiaryId: beneficiaire.id });
-    return recupererParId(beneficiaire.id, admin);
+  const depense = corps.depense && String(corps.depense.amount ?? '').trim() !== '' ? corps.depense : null;
+  if (depense && projectId === null) {
+    throw new ErreurValidation('Choisissez le projet sur lequel l’argent a été dépensé.', {
+      projectId: 'Projet requis pour une dépense',
+    });
   }
 
-  return enrichir(beneficiaire, admin);
+  const cree = await transaction(async (client) => {
+    const beneficiaire = await beneficiaryRepository.creer(
+      {
+        firstName: texteRequis(corps.firstName, 'firstName', { max: 120 }),
+        lastName: texteRequis(corps.lastName, 'lastName', { max: 120 }),
+        beneficiaryType: valeurParmi(corps.beneficiaryType, 'beneficiaryType', TYPES),
+        gender: corps.gender ? valeurParmi(corps.gender, 'gender', GENRES) : null,
+        birthDate: dateFacultative(corps.birthDate, 'birthDate'),
+        country: texteFacultatif(corps.country, 'country', { max: 120 }) ?? 'Madagascar',
+        city: texteFacultatif(corps.city, 'city', { max: 120 }),
+        status: valeurParmi(corps.status, 'status', STATUTS, { defaut: 'ACTIVE' }),
+        notes: texteFacultatif(corps.notes, 'notes', { max: 5000 }),
+        photoFichier,
+      },
+      client
+    );
+
+    if (projectId !== null) {
+      const projet = await projectRepository.trouverParId(projectId, client);
+      if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
+      if (projet.status === 'ARCHIVED') {
+        throw new ErreurRegleMetier('Ce projet est archivé : sa liste de bénéficiaires est figée.', 'PROJET_ARCHIVE');
+      }
+      await beneficiaryRepository.rattacher(
+        { projectId, beneficiaryId: beneficiaire.id, joinedAt: null, status: 'ACTIVE', notes: null },
+        client
+      );
+    }
+
+    if (depense) {
+      await expenseService.enregistrer(client, {
+        projectId,
+        beneficiaryId: beneficiaire.id,
+        amount: depense.amount,
+        currency: depense.currency,
+        description:
+          texteFacultatif(depense.description, 'description', { max: 2000 }) ??
+          `Dépense pour ${beneficiaire.firstName} ${beneficiaire.lastName}`.trim(),
+        category: depense.category,
+        expenseDate: depense.expenseDate,
+      });
+    }
+    return beneficiaire;
+  });
+
+  return projectId !== null ? recupererParId(cree.id, admin) : enrichir(cree, admin);
 }
 
 export async function mettreAJour(id, corps = {}, admin = null) {

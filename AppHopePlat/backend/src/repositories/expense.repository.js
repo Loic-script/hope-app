@@ -12,11 +12,14 @@ const COLONNES = `
   e.supplier, e.expense_date, e.status, e.created_at, e.updated_at,
   p.name      AS project_name,
   p.reference AS project_reference,
-  doc.nombre  AS documents_count
+  doc.nombre  AS documents_count,
+  e.beneficiary_id,
+  NULLIF(TRIM(CONCAT_WS(' ', bf.first_name, bf.last_name)), '') AS beneficiary_name
 `;
 
 const JOINTURES = `
   JOIN projects p ON p.id = e.project_id
+  LEFT JOIN beneficiaries bf ON bf.id = e.beneficiary_id
   LEFT JOIN LATERAL (
     SELECT COUNT(*)::int AS nombre FROM supporting_documents WHERE expense_id = e.id
   ) doc ON TRUE
@@ -46,6 +49,10 @@ export async function lister(filtres = {}, client = null) {
                       OR p.name ILIKE $${valeurs.length})`);
   }
   if (filtres.sansJustificatif) conditions.push('doc.nombre = 0');
+  if (filtres.beneficiaryId) {
+    valeurs.push(filtres.beneficiaryId);
+    conditions.push(`e.beneficiary_id = $${valeurs.length}`);
+  }
 
   const ou = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -80,8 +87,8 @@ export async function trouverPourMiseAJour(id, client) {
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO expenses (project_id, amount, currency, description, category,
-                           supplier, expense_date, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'RECORDED')
+                           supplier, expense_date, status, beneficiary_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'RECORDED', $8)
      RETURNING id`,
     [
       donnees.projectId,
@@ -91,6 +98,7 @@ export async function creer(donnees, client = null) {
       donnees.category,
       donnees.supplier,
       donnees.expenseDate,
+      donnees.beneficiaryId ?? null,
     ],
     client
   );

@@ -755,3 +755,277 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   Beneficiaires : le formulaire (projet et depense), la liste et
+   le profil.
+   ============================================================ */
+
+.formulaire-grille__intertitre {
+  grid-column: 1 / -1;
+  margin: 6px 0 -4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.formulaire-grille__fixe {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--admin-surface-douce);
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.actions-ligne {
+  display: inline-flex;
+  gap: 14px;
+}
+
+.ligne--annulee td {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.profil-benef {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.profil-benef__identite {
+  display: flex;
+  gap: 20px;
+  padding: 22px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 18px;
+  background: var(--admin-surface);
+  box-shadow: 0 10px 28px rgba(43, 50, 68, 0.06);
+  animation: carte-budget-entree 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.profil-benef__texte {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+
+.profil-benef__pastilles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profil-benef__faits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.profil-benef__faits dt {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.profil-benef__faits dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.profil-benef__notes {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid #86b9de;
+  border-radius: 0 10px 10px 0;
+  background: #f1f6fb;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  white-space: pre-line;
+}
+
+.profil-benef__chiffres {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profil-benef__chiffre {
+  --teinte: #5d5696;
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 16px 18px;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 16px;
+  background: var(--admin-surface);
+  box-shadow: 0 8px 22px rgba(43, 50, 68, 0.05);
+  animation: carte-budget-entree 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(80ms + var(--rang, 0) * 80ms);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease;
+}
+
+.profil-benef__chiffre::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--teinte);
+}
+
+.profil-benef__chiffre:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(43, 50, 68, 0.1);
+}
+
+.profil-benef__chiffre--violet { --teinte: #5d5696; }
+.profil-benef__chiffre--bleu { --teinte: #2b6484; }
+.profil-benef__chiffre--vert { --teinte: #2c8f63; }
+.profil-benef__chiffre--orange { --teinte: #c9822a; }
+
+.profil-benef__chiffre span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.profil-benef__chiffre strong {
+  font-family: var(--police-titre);
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+  overflow-wrap: anywhere;
+}
+
+.profil-benef__colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.profil-benef__repartition {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 20px 4px;
+  list-style: none;
+}
+
+.profil-benef__repartition li {
+  display: grid;
+  grid-template-columns: minmax(0, 180px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.profil-benef__repartition li > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profil-benef__barre {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf0f6;
+}
+
+.profil-benef__barre span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #a9a4d6, #5d5696);
+  animation: profil-benef-barre 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: left;
+}
+
+.profil-benef__projets {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 12px 12px;
+  list-style: none;
+}
+
+.profil-benef__projets li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  transition: background-color 0.18s ease;
+}
+
+.profil-benef__projets li:hover {
+  background: var(--admin-surface-douce);
+}
+
+.profil-benef__vide {
+  margin: 0;
+  padding: 18px 20px;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}
+
+@keyframes profil-benef-barre {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 1100px) {
+  .profil-benef,
+  .profil-benef__colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .profil-benef__identite {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 18px;
+  }
+
+  .profil-benef__pastilles {
+    justify-content: center;
+  }
+
+  .profil-benef__faits {
+    text-align: left;
+  }
+
+  .profil-benef__repartition li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .profil-benef__barre {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profil-benef__identite,
+  .profil-benef__chiffre,
+  .profil-benef__barre span {
+    animation: none;
+  }
+
+  .profil-benef__chiffre {
+    transition: none;
+  }
+}

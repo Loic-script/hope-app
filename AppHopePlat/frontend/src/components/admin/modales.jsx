@@ -690,6 +690,8 @@ export function DepenseModale({
   projets = [],
   depense = null,
   categories = [],
+  // La personne pour qui l'argent est depense, si l'on vient de sa fiche.
+  beneficiaire = null,
   onFermer,
   onEnregistre,
 }) {
@@ -735,7 +737,11 @@ export function DepenseModale({
       () =>
         edition
           ? expenseService.mettreAJour(depense.id, formulaire)
-          : expenseService.creer({ ...formulaire, projectId: Number(projectId) }),
+          : expenseService.creer({
+              ...formulaire,
+              projectId: Number(projectId),
+              ...(beneficiaire ? { beneficiaryId: beneficiaire.id } : {}),
+            }),
       { onSucces: onEnregistre }
     );
   }
@@ -743,7 +749,7 @@ export function DepenseModale({
   return (
     <ModaleFormulaire
       ouverte={ouverte}
-      titre={edition ? 'Modifier la dépense' : 'Enregistrer une dépense'}
+      titre={edition ? 'Modifier la dépense' : beneficiaire ? `Dépense pour ${beneficiaire.fullName}` : 'Enregistrer une dépense'}
       sousTitre={
         projetChoisi
           ? `Fonds disponibles sur « ${projetChoisi.name} » : ${fmt.montant(projetChoisi.availableFunds, projetChoisi.currency)}`
@@ -981,6 +987,12 @@ const BENEFICIAIRE_VIDE = {
   country: 'Madagascar',
   status: 'ACTIVE',
   notes: '',
+  // A la creation seulement : le projet lie, et l'argent depense pour la
+  // personne sur ce projet. Tous deux facultatifs.
+  projectId: '',
+  depenseMontant: '',
+  depenseObjet: '',
+  depenseCategorie: '',
 };
 
 export function BeneficiaireModale({
@@ -988,6 +1000,9 @@ export function BeneficiaireModale({
   projet = null,
   beneficiaire = null,
   libelles = {},
+  // Les projets proposes pour le rattachement (creation, hors fiche projet).
+  projets = [],
+  categories = [],
   onFermer,
   onEnregistre,
 }) {
@@ -1041,14 +1056,29 @@ export function BeneficiaireModale({
   }
 
   async function enregistrer() {
+    const { projectId: projetChoisi, depenseMontant, depenseObjet, depenseCategorie, ...champs } = formulaire;
+    const projetLie = projet?.id ?? (projetChoisi ? Number(projetChoisi) : null);
     const charge = {
-      ...formulaire,
+      ...champs,
       gender: formulaire.gender || null,
       birthDate: formulaire.birthDate || null,
       notes: formulaire.notes || null,
       ...(photo.modifiee ? { photoFichier: photo.fichier } : {}),
-      ...(edition || !projet ? {} : { projectId: projet.id }),
+      ...(edition || !projetLie ? {} : { projectId: projetLie }),
+      ...(!edition && depenseMontant.trim() !== ''
+        ? {
+            depense: {
+              amount: depenseMontant.trim(),
+              description: depenseObjet.trim() || null,
+              category: depenseCategorie || null,
+            },
+          }
+        : {}),
     };
+    if (!edition && depenseMontant.trim() !== '' && !projetLie) {
+      setErreur('Choisissez le projet sur lequel l’argent a été dépensé.');
+      return;
+    }
 
     await soumettre(
       () =>
@@ -1145,6 +1175,65 @@ export function BeneficiaireModale({
           placeholder="Situation, accompagnement en cours… (confidentiel)"
           disabled={envoi}
         />
+
+        {/*
+          Le projet lie et l'argent depense : a la creation seulement. Ensuite,
+          la fiche du beneficiaire rattache et enregistre les depenses.
+        */}
+        {!edition && (
+          <>
+            <p className="formulaire-grille__intertitre">Projet et dépense</p>
+            {projet ? (
+              <div className="champ-admin champ-admin--pleine-largeur">
+                <span className="champ-admin__label">Projet lié</span>
+                <p className="formulaire-grille__fixe">{projet.name}</p>
+              </div>
+            ) : (
+              <ChampSelection
+                label="Projet lié"
+                id="beneficiaire-projet"
+                value={formulaire.projectId}
+                onChange={(e) => modifier('projectId', e.target.value)}
+                options={projets
+                  .filter((p) => p.status !== 'ARCHIVED')
+                  .map((p) => ({ valeur: p.id, label: `${p.reference ? `${p.reference} · ` : ''}${p.name}` }))}
+                vide="Aucun pour l’instant"
+                disabled={envoi}
+                pleineLargeur
+              />
+            )}
+            <ChampMontant
+              label="Argent dépensé pour le bénéficiaire"
+              id="beneficiaire-depense"
+              value={formulaire.depenseMontant}
+              onChange={(e) => modifier('depenseMontant', e.target.value)}
+              disabled={envoi || (!projet && !formulaire.projectId)}
+              aide={
+                !projet && !formulaire.projectId
+                  ? 'Choisissez d’abord le projet qui paie.'
+                  : 'Enregistré comme une dépense du projet, au nom de ce bénéficiaire.'
+              }
+            />
+            <ChampSelection
+              label="Catégorie de la dépense"
+              id="beneficiaire-depense-categorie"
+              value={formulaire.depenseCategorie}
+              onChange={(e) => modifier('depenseCategorie', e.target.value)}
+              options={categories.map((c) => ({ valeur: c, label: c }))}
+              vide="Non classée"
+              disabled={envoi || formulaire.depenseMontant.trim() === ''}
+            />
+            <ChampTexte
+              label="Objet de la dépense"
+              id="beneficiaire-depense-objet"
+              value={formulaire.depenseObjet}
+              onChange={(e) => modifier('depenseObjet', e.target.value)}
+              placeholder="Ex. écolage du trimestre, kit scolaire…"
+              disabled={envoi || formulaire.depenseMontant.trim() === ''}
+              pleineLargeur
+            />
+          </>
+        )}
       </div>
     </ModaleFormulaire>
   );

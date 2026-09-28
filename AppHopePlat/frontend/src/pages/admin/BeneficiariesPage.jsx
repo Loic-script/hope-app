@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { BeneficiaireModale } from '../../components/admin/modales.jsx';
 import Visage from '../../components/admin/Visage.jsx';
@@ -17,6 +17,7 @@ import {
 import { useChargement } from '../../hooks/useChargement.js';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
 import * as catalogService from '../../services/catalog.service.js';
+import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
 /** Les trois vues de la liste. */
@@ -38,6 +39,7 @@ const FILTRES = [
  * administrateur : aucune route publique ne les sert.
  */
 export default function BeneficiariesPage() {
+  const navigate = useNavigate();
   const [parametres, setParametres] = useSearchParams();
   const [recherche, setRecherche] = useState('');
   const [filtre, setFiltre] = useState('tous');
@@ -58,6 +60,8 @@ export default function BeneficiariesPage() {
     []
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
+  // Les projets proposes pour rattacher une nouvelle fiche.
+  const { donnees: listeProjets } = useChargement(() => projectService.lister({ pageSize: 200 }), []);
 
   const libelles = catalogue?.labels ?? {};
   const tous = useMemo(() => donnees?.items ?? [], [donnees]);
@@ -145,6 +149,8 @@ export default function BeneficiariesPage() {
           chargement={chargement && !donnees}
           lignes={affiches}
           cleLigne={(personne) => personne.id}
+          // Une ligne ouvre le profil de la personne.
+          onLigne={(personne) => navigate(`/admin/beneficiaries/${personne.id}`)}
           colonnes={[
             {
               cle: 'fullName',
@@ -195,6 +201,20 @@ export default function BeneficiariesPage() {
                 ),
             },
             {
+              cle: 'spentTotal',
+              titre: 'Dépensé',
+              aligne: 'droite',
+              rendu: (personne) =>
+                Number(personne.spentTotal) > 0 ? (
+                  <CelluleDouble
+                    principal={fmt.montant(personne.spentTotal)}
+                    secondaire={`${personne.expensesCount} dépense(s)`}
+                  />
+                ) : (
+                  <span className="table__secondaire">—</span>
+                ),
+            },
+            {
               cle: 'status',
               titre: 'Statut',
               rendu: (personne) => (
@@ -206,13 +226,18 @@ export default function BeneficiariesPage() {
               titre: 'Actions',
               aligne: 'droite',
               rendu: (personne) => (
-                <button
-                  type="button"
-                  className="lien-action"
-                  onClick={() => setModale({ ouverte: true, cible: personne })}
-                >
-                  Modifier
-                </button>
+                <span className="actions-ligne">
+                  <Link className="lien-action" to={`/admin/beneficiaries/${personne.id}`}>
+                    Profil
+                  </Link>
+                  <button
+                    type="button"
+                    className="lien-action"
+                    onClick={() => setModale({ ouverte: true, cible: personne })}
+                  >
+                    Modifier
+                  </button>
+                </span>
               ),
             },
           ]}
@@ -253,6 +278,8 @@ export default function BeneficiariesPage() {
         ouverte={modale.ouverte}
         beneficiaire={modale.cible}
         libelles={libelles}
+        projets={listeProjets?.items ?? []}
+        categories={catalogue?.expenseCategories ?? []}
         onFermer={fermer}
         onEnregistre={() => {
           fermer();

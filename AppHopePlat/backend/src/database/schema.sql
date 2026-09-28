@@ -269,6 +269,7 @@ CREATE TABLE IF NOT EXISTS expenses (
 CREATE INDEX IF NOT EXISTS expenses_project_idx ON expenses (project_id);
 CREATE INDEX IF NOT EXISTS expenses_status_idx  ON expenses (status);
 
+
 -- ------------------------------------------------------------
 -- 8. Justificatifs
 --
@@ -357,6 +358,14 @@ ALTER TABLE beneficiaries ADD COLUMN IF NOT EXISTS photo_fichier VARCHAR(80);
 -- ------------------------------------------------------------
 -- 10. Rattachement beneficiaires <-> projets (N-N)
 -- ------------------------------------------------------------
+-- Une depense peut etre faite pour un beneficiaire precis (ecolage,
+-- soins, materiel remis a une famille...). Facultatif : la plupart
+-- servent le projet entier. La fiche du beneficiaire les additionne.
+-- (Declaree ici : la table beneficiaries doit exister avant.)
+ALTER TABLE expenses
+  ADD COLUMN IF NOT EXISTS beneficiary_id INTEGER REFERENCES beneficiaries(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS expenses_beneficiaire_idx ON expenses (beneficiary_id);
+
 CREATE TABLE IF NOT EXISTS project_beneficiaries (
   id             SERIAL      PRIMARY KEY,
   project_id     INTEGER     NOT NULL REFERENCES projects(id)      ON DELETE CASCADE,

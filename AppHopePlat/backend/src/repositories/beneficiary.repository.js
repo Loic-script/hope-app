@@ -13,7 +13,9 @@ const COLONNES = `
   b.photo_fichier,
   TRIM(CONCAT_WS(' ', b.first_name, b.last_name)) AS full_name,
   rattache.nombre  AS projects_count,
-  rattache.projets AS project_names
+  rattache.projets AS project_names,
+  depense.total    AS spent_total,
+  depense.nombre   AS expenses_count
 `;
 
 const AGREGATS = `
@@ -24,6 +26,11 @@ const AGREGATS = `
       JOIN projects p ON p.id = pb.project_id
      WHERE pb.beneficiary_id = b.id
   ) rattache ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT COALESCE(SUM(e.amount), 0) AS total, COUNT(*)::int AS nombre
+      FROM expenses e
+     WHERE e.beneficiary_id = b.id AND e.status <> 'CANCELLED'
+  ) depense ON TRUE
 `;
 
 /**

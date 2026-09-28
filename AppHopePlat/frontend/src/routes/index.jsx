@@ -31,6 +31,7 @@ const AdminLogin = lazy(() => import('../pages/AdminLogin.jsx'));
 const AdminLoginSuccess = lazy(() => import('../pages/AdminLoginSuccess.jsx'));
 const AdminHome = lazy(() => import('../pages/admin/AdminHome.jsx'));
 const BeneficiariesPage = lazy(() => import('../pages/admin/BeneficiariesPage.jsx'));
+const BeneficiairePage = lazy(() => import('../pages/admin/BeneficiairePage.jsx'));
 const BudgetPage = lazy(() => import('../pages/admin/BudgetPage.jsx'));
 const DonsPage = lazy(() => import('../pages/admin/DonsPage.jsx'));
 const ImpactPage = lazy(() => import('../pages/admin/ImpactPage.jsx'));
@@ -319,6 +320,7 @@ export default function AppRoutes() {
           <Route path="/admin/projects/:id" element={<ProjectDetailPage />} />
 
           <Route path="/admin/beneficiaries" element={<BeneficiariesPage />} />
+          <Route path="/admin/beneficiaries/:id" element={<BeneficiairePage />} />
 
           <Route path="/admin/proofs" element={<ProofsPage />} />
           <Route path="/admin/proofs/:id" element={<ProofDetailPage />} />

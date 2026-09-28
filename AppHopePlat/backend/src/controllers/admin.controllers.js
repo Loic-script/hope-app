@@ -175,7 +175,7 @@ export const documents = {
   }),
   supprimer: gerer((req) => documentService.supprimer(req.params.id)),
 
-  /** Sert le fichier lui-meme ; repond directement, sans passer par gerer(). */
+
   telecharger: gerer(async (req, res) => {
     const { document, cheminAbsolu } = await documentService.preparerTelechargement(req.params.id);
 
@@ -192,12 +192,6 @@ export const documents = {
   }),
 };
 
-/* ================================================================
-   Equipe HOPE et journal d'activite
-
-   req.admin est l'auteur de l'action : il est passe aux services pour
-   qu'ils sachent qui journaliser et qui refuser.
-   ================================================================ */
 
 export const team = {
   lister: gerer(() => teamService.lister()),
