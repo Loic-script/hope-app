@@ -1,0 +1,554 @@
+/* ==================================================================
+   Mes taches (pages/benevole/MesTaches.jsx)
+
+   Un tableau en trois colonnes, dans l'ordre ou une tache les
+   traverse : a prendre (bleu), en cours (violet), livree (vert). Une
+   carte ne dit que l'essentiel -- le nom, la priorite, les boutons --
+   et s'ouvre sur tout le reste. Une bande a gauche dit la priorite
+   avant qu'on lise le mot. Charge apres benevole-espace.css.
+   ================================================================== */
+
+.colonnes-taches {
+  --mt-anime: cubic-bezier(0.22, 1, 0.36, 1);
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+/* ---------- Les colonnes ---------- */
+.colonnes-taches .colonne-taches {
+  --col: #2b6484;
+  --col-pale: #e7f1fa;
+
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 16px;
+  background: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(53, 51, 67, 0.04);
+  animation: mt-colonne 0.5s var(--mt-anime) both;
+}
+
+.colonnes-taches .colonne-taches--cours {
+  --col: #5d5696;
+  --col-pale: #eeedf8;
+  animation-delay: 0.06s;
+}
+
+.colonnes-taches .colonne-taches--livree {
+  --col: #2f7d57;
+  --col-pale: #e6f4ec;
+  animation-delay: 0.12s;
+}
+
+@keyframes mt-colonne {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Un filet de couleur en tete : la colonne se reconnait de loin. */
+.colonnes-taches .colonne-taches::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: var(--col);
+}
+
+.colonne-taches__tete {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--admin-bordure);
+  background: linear-gradient(180deg, var(--col-pale), transparent);
+}
+
+.colonnes-taches .colonne-taches__titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--admin-texte, #2a2838);
+}
+
+.colonne-taches__point {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--col);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--col) 18%, transparent);
+}
+
+.colonnes-taches .colonne-taches__compteur {
+  margin-left: auto;
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--col);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  animation: mt-compte 0.4s var(--mt-anime);
+}
+
+@keyframes mt-compte {
+  from {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+}
+
+.colonnes-taches .colonne-taches__sous-titre {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.colonne-taches__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  list-style: none;
+}
+
+.colonne-taches__liste > li {
+  animation: mt-carte 0.45s var(--mt-anime) both;
+  animation-delay: calc(0.15s + var(--rang) * 0.05s);
+}
+
+@keyframes mt-carte {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+.colonnes-taches .colonne-taches__vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 32px 20px 36px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--admin-texte-faible);
+}
+
+.colonne-taches__icone-vide {
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border-radius: 12px;
+  background: var(--col-pale);
+  fill: none;
+  stroke: var(--col);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Le chargement : deux cartes grisees qui respirent. */
+.colonne-taches__squelettes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.colonne-taches__squelettes span {
+  height: 86px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f1f3f8 25%, #e7eaf2 50%, #f1f3f8 75%) 0 0 / 200% 100%;
+  animation: mt-reflet 1.3s linear infinite;
+}
+
+@keyframes mt-reflet {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Les cartes ---------- */
+.colonnes-taches .carte-tache {
+  --prio: #4a8bc2;
+
+  position: relative;
+  padding: 13px 14px 12px 17px;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(53, 51, 67, 0.05);
+  transition:
+    transform 0.2s var(--mt-anime),
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+/* La bande de priorite, a gauche. */
+.colonnes-taches .carte-tache::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--prio);
+}
+
+.colonnes-taches .carte-tache--urgente {
+  --prio: #d9483b;
+}
+
+.colonnes-taches .carte-tache--haute {
+  --prio: #e09735;
+}
+
+.colonnes-taches .carte-tache--simple {
+  --prio: #aab1c2;
+}
+
+.colonnes-taches .carte-tache--ouvrable:hover,
+.colonnes-taches .carte-tache--ouvrable:has(.carte-tache__ouvrir:focus-visible) {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--col) 45%, var(--admin-bordure));
+  box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--col) 35%, transparent);
+}
+
+/* La carte dont la fenetre est ouverte. */
+.colonnes-taches .carte-tache--choisie {
+  border-color: var(--col);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--col) 22%, transparent);
+}
+
+.colonnes-taches .carte-tache__haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.colonnes-taches .carte-tache__titre {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.colonnes-taches .carte-tache--ouvrable:hover .carte-tache__ouvrir {
+  color: var(--col);
+}
+
+.colonnes-taches .jeton-priorite {
+  margin-top: 1px;
+  padding: 3px 9px;
+  font-size: 10.5px;
+}
+
+.carte-tache__bas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.colonnes-taches .carte-tache__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.colonnes-taches .carte-tache__actions:empty {
+  display: none;
+}
+
+/* "Details" : ce qui signale que la carte s'ouvre. */
+.carte-tache__detail {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-texte-faible);
+  transition: color 0.2s;
+}
+
+.carte-tache__detail svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.25s var(--mt-anime);
+}
+
+.colonnes-taches .carte-tache--ouvrable:hover .carte-tache__detail {
+  color: var(--col);
+}
+
+.colonnes-taches .carte-tache--ouvrable:hover .carte-tache__detail svg {
+  transform: translateX(3px);
+}
+
+/* L'etat d'une demande, dans les boutons : discret, sur une ligne. */
+.colonnes-taches .etat-demande {
+  flex-basis: 100%;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ---------- Les onglets du telephone ---------- */
+.onglets-taches {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .colonnes-taches {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .onglets-taches {
+    position: sticky;
+    top: calc(var(--admin-entete-hauteur, 60px) + 6px);
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 4px;
+    border: 1px solid var(--admin-bordure);
+    border-radius: 14px;
+    background: var(--admin-surface);
+    box-shadow: 0 6px 16px -10px rgba(53, 51, 67, 0.3);
+  }
+
+  .onglets-taches__onglet {
+    --col: #2b6484;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--admin-texte-doux);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  .onglets-taches__onglet--cours {
+    --col: #5d5696;
+  }
+
+  .onglets-taches__onglet--livree {
+    --col: #2f7d57;
+  }
+
+  .onglets-taches__onglet--actif {
+    background: var(--col);
+    color: #fff;
+  }
+
+  .onglets-taches__compte {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--col) 14%, transparent);
+    font-size: 11px;
+  }
+
+  .onglets-taches__onglet--actif .onglets-taches__compte {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .colonnes-taches .colonne-taches[data-visible='false'] {
+    display: none;
+  }
+
+  /* Une seule colonne : son en-tete dit deja ce que dit l'onglet. */
+  .colonnes-taches .colonne-taches__titre {
+    display: none;
+  }
+
+  .colonne-taches__tete {
+    padding: 10px 14px;
+  }
+
+  .colonnes-taches .colonne-taches__sous-titre {
+    margin: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .onglets-taches__onglet {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colonnes-taches *,
+  .colonnes-taches,
+  .onglets-taches * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   La livraison, depliee en bas de la fenetre de la tache
+   ============================================================ */
+
+.detail-livraison {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-bordure, #e5eaf3);
+  scroll-margin-top: 12px;
+  animation: detail-livraison-entree 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.detail-livraison .livraison {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-livraison .livraison__consigne {
+  margin: 0;
+}
+
+.livraison__refus {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--hope-erreur-fond, #fdeceb);
+  font-size: 14px;
+  color: var(--hope-erreur, #c0392b);
+}
+
+.livraison__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@keyframes detail-livraison-entree {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .livraison__actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-livraison {
+    animation: none;
+  }
+}
+
+/* Le commentaire de livraison, au-dessus du depot des photos. */
+.livraison__commentaire {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  animation: livraison-commentaire-entree 260ms ease-out both;
+}
+
+.livraison__libelle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--hope-texte);
+}
+
+.livraison__facultatif {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--hope-bleu-clair);
+  color: var(--hope-bleu-lisible);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.livraison__commentaire textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 11px 13px 24px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--hope-texte);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.livraison__commentaire textarea:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+.livraison__compteur {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: var(--hope-texte-doux);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+@keyframes livraison-commentaire-entree {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .livraison__commentaire,
+  .livraison__commentaire textarea {
+    animation: none;
+    transition: none;
+  }
+}

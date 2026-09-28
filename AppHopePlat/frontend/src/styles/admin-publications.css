@@ -1,0 +1,1241 @@
+/* ============================================================
+   HOPE - Publications des projets en cours
+
+   Le visuel a gauche, ce qu'il faut savoir pour decider a droite.
+
+   L'element signature est la jauge horizon : le logo HOPE est un soleil
+   qui monte vers une ligne d'horizon, et un taux de financement est une
+   valeur qui monte vers sa cible. La ligne porte donc la part recue en
+   plein, la part manquante en hachures, et le soleil se tient a la
+   frontiere exacte entre les deux.
+   ============================================================ */
+
+.publications {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Le flux est long, la colonne de droite courte : sans cela elle file vers
+   le haut et laisse un grand vide. On la laisse accompagner la lecture. */
+@media (min-width: 1101px) {
+  .accueil__colonnes > .accueil__pile:last-child {
+    position: sticky;
+    top: calc(var(--admin-entete-hauteur) + 18px);
+    align-self: start;
+  }
+}
+
+/*
+ * Benevole, bailleur et donateur : la meme colonne qui suit l'ecran. Plus haute
+ * que l'ecran, elle recoit un "top" negatif (useColonneCollante) : elle
+ * defile d'abord, puis s'arrete quand son bas atteint celui de l'ecran.
+ *
+ * Sur une seule colonne, rien a suivre -- et chez le benevole, ses
+ * taches passent avant le fil.
+ */
+@media (max-width: 1240px) {
+  .accueil__colonnes--benevole > .accueil__pile:last-child,
+  .accueil__colonnes--bailleur > .accueil__pile:last-child,
+  .accueil__colonnes--donateur > .accueil__pile:last-child {
+    position: static;
+  }
+
+  .accueil__colonnes--benevole > .accueil__pile:last-child {
+    order: -1;
+  }
+}
+
+/* ============================================================
+   1. La publication
+   ============================================================ */
+
+.publication {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.publication:hover {
+  border-color: var(--hope-bleu);
+  box-shadow: 0 10px 30px rgba(36, 43, 62, 0.09);
+  transform: translateY(-1px);
+}
+
+/* --- Le visuel --- */
+
+.publication__media {
+  position: relative;
+  min-height: 186px;
+  background-color: #eef2f8;
+}
+
+.publication__photo,
+.publication__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sans visuel, on invite a en poser un plutot que de laisser un cadre mort. */
+.publication__sans-visuel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  padding: 18px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--hope-violet);
+  background-color: var(--hope-bleu-clair);
+  transition: background-color 0.18s ease;
+}
+
+.publication__sans-visuel:hover {
+  background-color: #cfe2f2;
+}
+
+.publication__sans-visuel .hope-logo {
+  height: 30px;
+  margin: 0;
+  opacity: 0.45;
+}
+
+/* La reference identifie le projet : elle appartient au visuel. */
+.publication__reference {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background-color: rgba(28, 32, 48, 0.72);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  backdrop-filter: blur(3px);
+}
+
+.publication__sans-visuel + .publication__reference {
+  background-color: rgba(93, 86, 150, 0.82);
+}
+
+/* Sur une video, le bas appartient aux commandes de lecture : la
+   reference monte en haut pour ne pas couvrir la barre de progression. */
+.publication__video + .publication__reference {
+  top: 12px;
+  bottom: auto;
+}
+
+/* --- Le corps --- */
+
+.publication__corps {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px 16px;
+  min-width: 0;
+}
+
+.publication__surtitre {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.publication__titre {
+  margin-top: 5px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.publication__titre a {
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.publication__titre a:hover {
+  color: var(--hope-violet);
+}
+
+.publication__texte {
+  margin-top: 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+  /* Deux lignes suffisent a situer le projet ; le detail a son ecran. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================
+   2. La jauge horizon
+   ============================================================ */
+
+.jauge {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+/* 18 px sous la legende : le soleil depasse de 17 px au-dessus de la
+   ligne, et recouvrait la derniere ligne de texte quand la legende passe
+   sur deux lignes (telephone). */
+.jauge__legende {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.jauge__recu strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.jauge__taux {
+  margin-left: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background-color: #ece9f8;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.jauge__manque {
+  flex: none;
+  font-weight: 600;
+  color: var(--hope-orange-fonce);
+}
+
+/* La ligne d'horizon. Le fond hachure est la part qui manque encore. */
+.jauge__ligne {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background-color: #fbf1e0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(224, 151, 53, 0.42) 0 3px,
+    transparent 3px 7px
+  );
+}
+
+.jauge__plein {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--position, 0%);
+  border-radius: 999px;
+  background-color: var(--hope-violet);
+  transition: width 0.9s cubic-bezier(0.22, 0.75, 0.3, 1);
+  transition-delay: calc(var(--rang, 0) * 90ms);
+}
+
+/*
+ * Le soleil se leve sur la ligne, a la frontiere du recu et du manquant.
+ *
+ * C'est le fichier de la charte, et non plus un demi-disque dessine en
+ * CSS : le meme soleil que celui des surtitres, avec ses rayons.
+ *
+ * Le fichier a ete remis a l'endroit une fois pour toutes -- coupole en
+ * bas, rayons au-dessus, comme le pictogramme officiel -- et n'a donc
+ * plus a etre retourne ici.
+ *
+ * Le clamp le maintient entier dans le rail : a 0 comme a 100 %, il ne
+ * sort ni a gauche ni a droite.
+ */
+.jauge__soleil {
+  position: absolute;
+  /*
+   * Mesure, et non estimee. Le fichier laisse du vide sous la coupole --
+   * la place des rayons, qui passent au-dessus une fois l'image
+   * retournee. A "bottom: 1px", la coupole traversait donc toute la
+   * barre et s'arretait a son bord inferieur. Ces 6 px la remontent
+   * jusqu'a son bord superieur, moins 1 px de chevauchement : sans ce
+   * pixel, un liseré du fond apparaissait entre les deux.
+   */
+  bottom: 6px;
+  left: clamp(0px, calc(var(--position, 0%) - 12px), calc(100% - 24px));
+  width: 24px;
+  height: 17px;
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+  transition: left 0.9s cubic-bezier(0.22, 0.75, 0.3, 1);
+  transition-delay: calc(var(--rang, 0) * 90ms);
+}
+
+/* Budget atteint : le soleil est haut, la ligne entiere est financee. */
+.jauge--atteint .jauge__ligne {
+  background-image: none;
+  background-color: #eceafa;
+}
+
+.jauge--atteint .jauge__manque {
+  color: var(--hope-violet-lisible);
+}
+
+/* ============================================================
+   3. Les mesures du pied
+   ============================================================ */
+
+.publication__mesures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.publication__mesure {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.publication__mesure svg {
+  width: 13px;
+  height: 13px;
+  align-self: center;
+  flex: none;
+  color: var(--hope-violet);
+  opacity: 0.75;
+}
+
+.publication__mesure-valeur {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--admin-texte);
+  white-space: nowrap;
+}
+
+.publication__mesure-libelle {
+  white-space: nowrap;
+}
+
+/* --- Le pied : les mesures, et les actions quand la carte en porte --- */
+
+.publication__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.publication__pied .publication__mesures {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Les actions se calent a droite ; faute de place, elles passent sous
+   les mesures, toujours a droite. */
+.publication__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Le surtitre a gauche, le statut en face. */
+.publication__haut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.publication__etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* La page Projets : les cartes suivent la barre de recherche. */
+.publications--page {
+  margin-top: 18px;
+}
+
+/* ============================================================
+   4. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .publication {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .publication__media {
+    min-height: 0;
+    height: 172px;
+  }
+}
+
+@media (max-width: 620px) {
+  .publication__corps {
+    padding: 16px;
+  }
+
+  /* Sur un telephone, les actions se rangent deux par deux, sur toute la
+     largeur : aucun bouton ne reste seul sur sa ligne. */
+  .publication__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .jauge__legende {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .publication__mesures {
+    gap: 8px 16px;
+  }
+}
+
+/* ============================================================
+   5. Le fil de l'accueil
+
+   Les projets en cours se lisent comme des publications : qui, quand,
+   ou ; ce qu'il fait ; sa photo en grand ; son financement ; une seule
+   action, voir le projet. Ni "J'aime", ni commentaire, ni partage.
+   ============================================================ */
+
+/* "fil-accueil" et non "fil" : l'espace bailleur a deja son ".fil",
+   une grille d'actualites. */
+.fil-accueil {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fil-accueil__entete {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 4px 0;
+}
+
+.fil-accueil__titre {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.fil-accueil__sous-titre {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.fil-post {
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow:
+    0 1px 2px rgba(36, 43, 62, 0.05),
+    0 10px 28px -18px rgba(36, 43, 62, 0.22);
+  animation: fil-apparition 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--rang, 0) * 70ms);
+}
+
+/* --- Qui, quand, ou --- */
+
+.fil-post__entete {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px 10px;
+}
+
+/* L'avatar de HOPE : le soleil de la charte, sur son violet. */
+.fil-post__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #7c75ba, var(--hope-violet) 72%);
+  color: var(--hope-jaune);
+  box-shadow:
+    0 0 0 2px var(--admin-surface),
+    0 0 0 3.5px var(--hope-bleu-clair);
+}
+
+.fil-post__avatar svg {
+  width: 25px;
+  height: 25px;
+}
+
+.fil-post__qui {
+  flex: 1;
+  min-width: 0;
+}
+
+.fil-post__titre {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.fil-post__titre a {
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.fil-post__titre a:hover {
+  text-decoration: underline;
+}
+
+.fil-post__point {
+  margin: 0 6px;
+  font-weight: 400;
+  color: var(--admin-texte-faible);
+}
+
+.fil-post__categorie {
+  font-weight: 600;
+  color: var(--hope-lien);
+}
+
+.fil-post__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* Un point entre deux informations, comme sous un nom de page. */
+.fil-post__meta > * + *::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--admin-texte-faible);
+}
+
+.fil-post__lieu {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fil-post__lieu svg {
+  width: 13px;
+  height: 13px;
+  margin-right: 3px;
+}
+
+.fil-post__reference {
+  flex: none;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: #f1f3f8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Ce qu'il fait --- */
+
+.fil-post__texte {
+  padding: 0 16px 12px;
+}
+
+.fil-post__accroche {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.fil-post__description {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  white-space: pre-line;
+}
+
+.fil-post__description--repliee {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fil-post__voir-plus {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+}
+
+.fil-post__voir-plus:hover {
+  color: var(--admin-texte);
+  text-decoration: underline;
+}
+
+/* --- Sa photo, en pleine largeur --- */
+
+/*
+ * La photo garde ses proportions. Les bords qu'elle laisse libres se
+ * remplissent de la meme photo, floutee : pas de bandes grises.
+ */
+.fil-post__media {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: 480px;
+  background-color: #1f1d2b;
+}
+
+.fil-post__media::before {
+  content: '';
+  position: absolute;
+  inset: -30px;
+  z-index: -1;
+  background: var(--fond) center / cover no-repeat;
+  filter: blur(24px) brightness(0.82) saturate(1.1);
+}
+
+.fil-post__media .photo-voir {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fil-post__media .photo-voir img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fil-post__media--video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Sans visuel : une invitation a en poser un, et non un cadre vide. */
+.fil-post__sans-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 16px;
+  padding: 28px 16px;
+  border: 1px dashed var(--admin-bordure-forte);
+  border-radius: 12px;
+  background-color: var(--hope-fond-panneau);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hope-violet);
+  text-decoration: none;
+}
+
+.fil-post__sans-media .hope-logo {
+  height: 28px;
+  opacity: 0.45;
+}
+
+/* --- Son financement --- */
+
+.fil-post__compteurs {
+  padding: 2px 16px 12px;
+}
+
+.fil-post__compteurs .jauge {
+  padding-top: 12px;
+}
+
+.fil-post__chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.fil-post__chiffres strong {
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+/* --- Une seule action --- */
+
+.fil-post__actions {
+  margin: 0 12px;
+  padding: 4px 0;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.fil-post__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  margin: 2px 0;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.fil-post__action svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Deux actions : "Voir le projet" et "Faire un don", a parts egales. */
+.fil-post__actions--double {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+/* "Faire un don" : le violet de la charte, le coeur en orange ; il bat au
+   survol. */
+.fil-post__action--don {
+  color: var(--hope-violet);
+}
+
+.fil-post__action--don svg {
+  color: var(--hope-orange);
+}
+
+@media (hover: hover) {
+  .fil-post__action--don:hover {
+    background-color: #f3f1fb;
+  }
+
+  .fil-post__action--don:hover svg {
+    animation: don-battement 900ms ease-in-out;
+  }
+}
+
+.fil-post__action:hover {
+  background-color: #f0f2f7;
+  color: var(--hope-violet);
+}
+
+.fil-post__action:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Le fil d'actualite des espaces benevole et bailleur
+
+   Projets et actualites dans un meme fil (FilActualite.jsx) : trois
+   filtres en tete, et l'actualite habillee comme un projet.
+   ============================================================ */
+
+/* Les filtres : Tout, Projets, Actualites -- chacun avec son compte. */
+.filtres-fil {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.filtres-fil .filtres__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+}
+
+.filtres-fil__compte {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: rgba(93, 86, 150, 0.1);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--hope-violet);
+}
+
+/* De quoi il s'agit : actualite, ou appel a financement. */
+.fil-post__type {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: #dbeaf5;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2b6484;
+}
+
+.fil-post__type--appel {
+  background-color: #fdf1de;
+  color: #8a5c12;
+}
+
+/* Un appel demande une decision : il se distingue, comme dans
+   l'administration. */
+.fil-post--appel {
+  border-left: 3px solid var(--hope-orange);
+}
+
+/* Le projet dont parle l'actualite, dans la ligne de date. */
+.fil-post__projet {
+  font-weight: 600;
+  color: var(--hope-violet);
+  text-decoration: none;
+}
+
+.fil-post__projet:hover {
+  text-decoration: underline;
+}
+
+/* La date et le projet, separes d'un point. */
+.fil-post--actualite .fil-post__meta {
+  gap: 0 8px;
+}
+
+.fil-post--actualite .fil-post__meta > * + *::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--admin-texte-faible);
+}
+
+/* Le bouton "Financer ce projet" et son formulaire. */
+.fil-post__interet {
+  margin: 0 16px;
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.fil-post__interet .actu__deja {
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  .fil-post__interet > .bouton-bailleur {
+    width: 100%;
+  }
+
+  /* Les trois filtres sur une ligne, a parts egales. */
+  .filtres-fil {
+    align-self: stretch;
+    flex-wrap: nowrap;
+  }
+
+  .filtres-fil .filtres__bouton {
+    flex: 1;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 4px;
+  }
+
+  /* Le projet de l'actualite passe sous la date, sans point en tete de
+     ligne. */
+  .fil-post--actualite .fil-post__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fil-post--actualite .fil-post__meta > * + *::before {
+    content: none;
+  }
+}
+
+@keyframes fil-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .fil-post__entete {
+    padding: 12px 12px 8px;
+  }
+
+  .fil-post__texte,
+  .fil-post__compteurs {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .fil-post__reference {
+    display: none;
+  }
+
+  .fil-post__media {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* --- Dans l'espace benevole --- */
+
+/* Un fil se lit sur une colonne mesuree, comme un reseau social : pleine
+   largeur, une photo de 1 100 px de large n'aurait plus rien d'un fil. */
+
+/* Le titre prend la place qu'il lui faut ; faute de place, le bouton
+   passe dessous au lieu de l'ecraser. */
+.fil-accueil__entete {
+  flex-wrap: wrap;
+}
+
+.fil-accueil__entete > div {
+  flex: 1 1 220px;
+}
+
+/* "Tous les projets" : un bouton discret, qui ne passe pas a la ligne. */
+.fil-accueil__tous {
+  flex: none;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.fil-accueil__tous svg {
+  width: 15px;
+  height: 15px;
+}
+
+.fil-post__taches {
+  margin-top: 2px;
+}
+
+.fil-post__taches span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fil-post__taches svg {
+  width: 15px;
+  height: 15px;
+  color: var(--admin-texte-faible);
+}
+
+/* Des taches attendent quelqu'un : la ligne le dit en couleur. */
+.fil-post__taches-libres,
+.fil-post__taches-libres strong,
+.fil-post__taches-libres svg {
+  color: var(--hope-violet);
+}
+
+/* ============================================================
+   6. Mouvement reduit
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fil-post {
+    animation: none;
+  }
+
+  .fil-post__action {
+    transition: none;
+  }
+
+  .publication,
+  .jauge__plein,
+  .jauge__soleil {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   J'aime et Commenter, au pied d'une actualite (ActionsActualite.jsx)
+
+   Le coeur se remplit d'orange et bat quand on aime ; la zone de
+   commentaire se deplie sous les boutons. Un commentaire ne va qu'a
+   l'equipe HOPE : la zone le rappelle.
+   ============================================================ */
+
+.actualite-action {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actualite-action svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    transform 0.2s ease;
+}
+
+.actualite-action--aime {
+  color: var(--hope-orange-lisible);
+}
+
+.actualite-action--aime svg {
+  fill: var(--hope-orange);
+  stroke: var(--hope-orange);
+}
+
+.actualite-action--bat svg {
+  animation: actualite-coeur 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.actualite-action--actif {
+  background-color: #f3f1fb;
+  color: var(--hope-violet);
+}
+
+.actualite-action__nombre {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fbefdc;
+  color: var(--hope-orange-lisible);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  animation: actualite-nombre 260ms ease-out;
+}
+
+@keyframes actualite-coeur {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes actualite-nombre {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.actualite-commentaire {
+  margin: 0 12px 12px;
+  padding: 12px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 12px;
+  background: #fafbfe;
+  animation: actualite-deplie 240ms ease-out;
+}
+
+.actualite-commentaire textarea {
+  display: block;
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--hope-texte);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.actualite-commentaire textarea:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+.actualite-commentaire__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.actualite-commentaire__aide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hope-texte-doux);
+  font-size: 13px;
+}
+
+.actualite-commentaire__aide::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hope-violet);
+  opacity: 0.55;
+}
+
+.actualite-commentaire__boutons {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.actualite-commentaire__annuler,
+.actualite-commentaire__envoyer {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.actualite-commentaire__annuler {
+  border: 1px solid var(--hope-bordure);
+  background: #fff;
+  color: var(--hope-texte);
+}
+
+.actualite-commentaire__envoyer {
+  border: 0;
+  background: var(--hope-violet);
+  color: #fff;
+}
+
+.actualite-commentaire__envoyer:hover:not(:disabled) {
+  background: var(--hope-violet-fonce);
+}
+
+.actualite-commentaire__envoyer:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.actualite-commentaire__envoyer:disabled,
+.actualite-commentaire__annuler:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.actualite-commentaire__annuler:focus-visible,
+.actualite-commentaire__envoyer:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.actualite-commentaire__refus {
+  margin: 8px 0 0;
+  color: var(--hope-erreur);
+  font-size: 13.5px;
+}
+
+.actualite-commentaire__merci {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf6ee;
+  color: #1f6b3a;
+  font-size: 14px;
+  font-weight: 600;
+  animation: actualite-deplie 240ms ease-out;
+}
+
+.actualite-commentaire__merci::before {
+  content: '\2713';
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2e8b57;
+  color: #fff;
+  font-size: 12px;
+}
+
+@keyframes actualite-deplie {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actualite-action svg,
+  .actualite-action--bat svg,
+  .actualite-action__nombre,
+  .actualite-commentaire,
+  .actualite-commentaire__merci,
+  .actualite-commentaire textarea,
+  .actualite-commentaire__envoyer {
+    animation: none;
+    transition: none;
+  }
+}

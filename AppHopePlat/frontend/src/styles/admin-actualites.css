@@ -1,0 +1,443 @@
+/* ============================================================
+   HOPE - Actualites de l'espace bailleur, cote administration
+
+   La page se lit comme celle des projets : la meme barre d'outils, puis
+   la meme carte -- le visuel a gauche, le contenu a droite, les mesures
+   et les actions au pied. Ce fichier n'en decrit que les differences,
+   la carte elle-meme vient de admin-publications.css.
+
+   Sous un appel a financement, les bailleurs interesses.
+   ============================================================ */
+
+/* L'appel a financement demande une suite : il se distingue, comme dans
+   l'espace bailleur. */
+.publication--appel {
+  border-left: 3px solid var(--hope-orange);
+}
+
+/* Le cadre sans photo n'est pas un lien ici : rien ne s'allume au survol. */
+.publication__sans-visuel--fige {
+  cursor: default;
+}
+
+.publication__sans-visuel--fige:hover {
+  background-color: var(--hope-bleu-clair);
+}
+
+/* Le surtitre porte le projet lie : le lien garde la couleur du surtitre. */
+.publication__surtitre a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.publication__surtitre a:hover {
+  text-decoration: underline;
+}
+
+.publication__surtitre--alerte {
+  color: var(--etat-ambre);
+}
+
+/* Le titre d'une actualite n'est pas un lien, et peut etre une longue
+   phrase : il se coupe plutot que de deborder de la carte. */
+.publication__titre--actualite {
+  overflow-wrap: anywhere;
+}
+
+/* Trois lignes du texte, ses retours a la ligne conserves : de quoi
+   reconnaitre la publication sans ouvrir le formulaire. */
+.publication__texte--actualite {
+  -webkit-line-clamp: 3;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* Le pied prend la place libre et se cale en bas de la carte. */
+.publication--actualite .publication__pied {
+  margin-top: auto;
+}
+
+/*
+ * Le financement d'un appel, en clair : ce qui est recu, le budget, la
+ * part faite, ce qui manque. Pas de jauge ici -- la barre du projet se
+ * lit sur sa propre carte, dans la page Projets.
+ */
+.publication__financement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.publication__financement strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.publication__part {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background-color: #ece9f8;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.publication__manque {
+  font-weight: 600;
+  color: var(--hope-orange-fonce);
+}
+
+.publication__note {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--etat-vert);
+}
+
+/* --- Les bailleurs interesses --- */
+
+.interets-admin {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.interets-admin__titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.interets-admin__compte {
+  min-width: 21px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--admin-surface-douce);
+  border: 1px solid var(--admin-bordure);
+  font-size: 11.5px;
+  text-align: center;
+  letter-spacing: 0;
+  color: var(--admin-texte-doux);
+}
+
+.interets-admin__titre .badge {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.interets-admin__vide {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.interets-admin__liste {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interet-admin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f4f9;
+}
+
+.interet-admin:last-child {
+  border-bottom: 0;
+}
+
+.interet-admin__qui {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.interet-admin__qui strong {
+  color: var(--admin-texte);
+}
+
+.interet-admin__qui a {
+  color: var(--hope-violet);
+  overflow-wrap: anywhere;
+}
+
+.interet-admin__date {
+  color: var(--admin-texte-faible);
+}
+
+.interet-admin__message {
+  grid-column: 1;
+  margin: 0;
+  padding: 7px 11px;
+  border-left: 3px solid var(--admin-bordure-forte);
+  border-radius: 0 8px 8px 0;
+  background-color: var(--admin-surface-douce);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.interet-admin__suivi {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.interet-admin__statut select {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--admin-texte);
+}
+
+/* --- Formulaire --- */
+
+.actualite-form__types {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.photo-actualite__legende {
+  flex-wrap: wrap;
+}
+
+.photo-actualite__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.photo-actualite__actions label.btn {
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .interet-admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .interet-admin__suivi {
+    grid-column: 1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
+}
+
+/* ------------------------------------------------------------
+   Les reactions des utilisateurs : J'aime, et les commentaires que
+   seule l'equipe lit. La liste se deplie sous la carte.
+   ------------------------------------------------------------ */
+
+.reactions-admin {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.reactions-admin__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+
+.reactions-admin__chiffre,
+.reactions-admin__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--admin-texte-doux);
+  font-size: 14px;
+}
+
+.reactions-admin__chiffre strong,
+.reactions-admin__bouton strong {
+  color: var(--hope-texte);
+  font-variant-numeric: tabular-nums;
+}
+
+.reactions-admin svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+}
+
+.reactions-admin__chiffre--jaime svg {
+  fill: var(--hope-orange);
+  stroke: var(--hope-orange);
+}
+
+.reactions-admin__bouton {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.reactions-admin__bouton:hover:not(:disabled) {
+  border-color: var(--admin-bordure);
+  background: #f3f1fb;
+  color: var(--hope-violet);
+}
+
+.reactions-admin__bouton:disabled {
+  cursor: default;
+}
+
+.reactions-admin__bouton:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.reactions-admin__nouveaux {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fbefdc;
+  color: var(--hope-orange-lisible);
+  font-size: 12px;
+  font-weight: 700;
+  animation: reactions-pulse 1.8s ease-in-out 2;
+}
+
+.reactions-admin__fleche {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.reactions-admin__bouton[aria-expanded='true'] .reactions-admin__fleche {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.reactions-admin__liste ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reactions-admin__commentaire {
+  padding: 10px 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+  background: #fafbfe;
+  animation: reactions-entree 260ms ease-out both;
+  animation-delay: calc(var(--rang, 0) * 40ms);
+}
+
+.reactions-admin__auteur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0 0 4px;
+  font-size: 13.5px;
+}
+
+.reactions-admin__auteur time {
+  margin-left: auto;
+  color: var(--admin-texte-doux);
+  font-size: 12.5px;
+}
+
+.reactions-admin__espace {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--hope-bleu-clair);
+  color: var(--hope-bleu-lisible);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.reactions-admin__point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hope-orange);
+}
+
+.reactions-admin__texte {
+  margin: 0;
+  color: var(--hope-texte);
+  font-size: 14.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.reactions-admin__vide {
+  margin: 10px 0 0;
+  color: var(--admin-texte-doux);
+  font-size: 13.5px;
+}
+
+@keyframes reactions-entree {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reactions-pulse {
+  50% {
+    box-shadow: 0 0 0 4px rgba(224, 151, 53, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reactions-admin__commentaire,
+  .reactions-admin__nouveaux {
+    animation: none;
+  }
+
+  .reactions-admin__fleche,
+  .reactions-admin__bouton {
+    transition: none;
+  }
+}

@@ -1,0 +1,2359 @@
+/* ============================================================
+   HOPE - Espace administrateur : modules specifiques
+
+   Complete admin.css avec les composants propres aux ecrans
+   Budget, Statistiques, Notifications et Messages.
+   ============================================================ */
+
+/* ============================================================
+   1. Flux des fonds
+
+   L'element signature de l'espace admin. Les largeurs des
+   segments sont proportionnelles aux montants reels : la barre
+   n'est pas une decoration, c'est la lecture du budget.
+
+       DONS RECUS
+       [ dons affectes .....| fonds HOPE ................. ]
+              |                        |
+        aux projets           [ investi ....| disponible ]
+   ============================================================ */
+
+.flux {
+  padding: 22px 24px 24px;
+}
+
+.flux__entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.flux__intitule {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.flux__total {
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Barre principale : dons affectes contre fonds HOPE --- */
+
+.flux__barre {
+  display: flex;
+  gap: 3px;
+  height: 66px;
+}
+
+.flux__segment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0 15px;
+  border-radius: 9px;
+  overflow: hidden;
+  transition: flex-grow 0.4s ease;
+}
+
+.flux__segment--affecte {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--hope-violet), var(--hope-violet-2));
+}
+
+.flux__segment--hope {
+  color: var(--admin-texte);
+  background-color: var(--hope-bleu-clair);
+  border: 1px solid #c4dced;
+}
+
+.flux__segment--vide {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-texte-faible);
+  background-color: #eef2f8;
+  border: 1px dashed var(--admin-bordure-forte);
+  font-size: 13.5px;
+}
+
+.flux__etiquette {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.88;
+}
+
+.flux__montant {
+  margin-top: 2px;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Descente vers la destination de chaque part --- */
+
+.flux__descente {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.flux__branche {
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0 15px;
+}
+
+.flux__fleche {
+  width: 2px;
+  height: 18px;
+  margin-left: 9px;
+  background-color: var(--admin-bordure-forte);
+}
+
+.flux__destination {
+  padding: 6px 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Sous-barre : usage du fonds HOPE --- */
+
+.flux__sous-barre {
+  display: flex;
+  gap: 3px;
+  height: 50px;
+  margin-top: 8px;
+}
+
+.flux__sous-segment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0 13px;
+  border-radius: 8px;
+  transition: flex-grow 0.4s ease;
+}
+
+.flux__sous-segment--investi {
+  color: #ffffff;
+  background-color: #4f8bd0;
+}
+
+.flux__sous-segment--disponible {
+  color: #7a5713;
+  background-color: var(--hope-jaune);
+}
+
+.flux__sous-etiquette {
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flux__sous-montant {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   2. Series de barres (ecran Statistiques)
+   ============================================================ */
+
+.serie {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.serie__ligne {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) minmax(0, 3fr) minmax(96px, auto);
+  align-items: center;
+  gap: 14px;
+}
+
+.serie__libelle {
+  font-size: 13.5px;
+  color: var(--admin-texte);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.serie__piste {
+  height: 10px;
+  border-radius: 5px;
+  background-color: #eef2f8;
+  overflow: hidden;
+}
+
+.serie__barre {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--hope-violet), var(--hope-bleu));
+  transition: width 0.4s ease;
+}
+
+.serie__barre--orange {
+  background: linear-gradient(90deg, var(--hope-orange), var(--hope-jaune));
+}
+
+.serie__valeur {
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* --- Histogramme mensuel : colonnes empilees affecte / HOPE --- */
+
+.histogramme {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding-top: 8px;
+}
+
+.histogramme__mois {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+}
+
+.histogramme__colonne {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 100%;
+  max-width: 44px;
+  height: 100%;
+}
+
+.histogramme__part {
+  border-radius: 3px;
+  transition: height 0.4s ease;
+}
+
+.histogramme__part--affecte {
+  background-color: var(--hope-violet);
+}
+
+.histogramme__part--hope {
+  background-color: var(--hope-bleu);
+}
+
+.histogramme__vide {
+  height: 3px;
+  border-radius: 3px;
+  background-color: #e4e9f2;
+}
+
+.histogramme__etiquette {
+  font-size: 11px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.legende__entree {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.legende__pastille {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 3px;
+}
+
+/* --- Grille des ecrans de statistiques --- */
+
+.stats-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+/* ============================================================
+   3. Notifications
+   ============================================================ */
+
+.notif {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0f3f9;
+}
+
+.notif:last-child {
+  border-bottom: 0;
+}
+
+.notif--non-lue {
+  background-color: #f7f9ff;
+}
+
+.notif__marque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 9px;
+}
+
+.notif__marque svg {
+  width: 17px;
+  height: 17px;
+}
+
+.notif__marque--don      { color: #2c8f63; background-color: #e2f4ea; }
+.notif__marque--message  { color: #2668b8; background-color: #e4eefc; }
+.notif__marque--projet   { color: #6a58b8; background-color: #ece7fb; }
+.notif__marque--investi  { color: #c58116; background-color: #fdf1de; }
+/* Un compte qui s'ouvre : la teinte de la marque, comme les utilisateurs. */
+.notif__marque--compte     { color: #8a5c12; background-color: #fbf0dc; }
+.notif__marque--demande    { color: #6a58b8; background-color: #ece7fb; }
+.notif__marque--livraison  { color: #2c8f63; background-color: #e2f4ea; }
+.notif__marque--partenaire { color: #2668b8; background-color: #e4eefc; }
+.notif__marque--preuve     { color: #8a5c12; background-color: #fbf0dc; }
+
+/*
+ * Une demande non traitee ne se fond pas dans le journal.
+ *
+ * Le journal raconte ce qui s'est passe ; une demande, elle, attend
+ * quelqu'un. Un liseré violet en tete de ligne et une etiquette
+ * suffisent a les distinguer -- sans crier, mais sans se cacher.
+ */
+.notif--demande {
+  border-left: 3px solid var(--hope-violet);
+}
+
+.notif__attente {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background-color: var(--hope-jaune);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hope-violet-lisible);
+}
+
+.notif__contenu {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif__texte {
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--admin-texte);
+}
+
+.notif--non-lue .notif__texte {
+  font-weight: 600;
+}
+
+.notif__meta {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.notif__actions {
+  flex: none;
+  padding-top: 3px;
+}
+
+/* ============================================================
+   4. Media d'un projet
+   ============================================================ */
+
+/* La photo du projet, en couverture en haut de sa fiche. */
+.couverture-projet {
+  overflow: hidden;
+  height: clamp(190px, 22vw, 290px);
+  margin-bottom: 20px;
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface-douce);
+  box-shadow: 0 10px 28px -18px rgba(42, 40, 57, 0.45);
+}
+
+.couverture-projet .photo-voir,
+.couverture-projet video {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Une video garde son image entiere, sur fond sombre : on la regarde,
+   on ne la recadre pas. */
+.couverture-projet--video {
+  background-color: #1f1d2b;
+}
+
+.couverture-projet video {
+  object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .couverture-projet {
+    height: 180px;
+    margin-bottom: 14px;
+  }
+}
+
+/* ============================================================
+   5. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 1240px) {
+  .stats-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .flux__barre,
+  .flux__descente,
+  .flux__sous-barre {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .flux__segment,
+  .flux__sous-segment {
+    padding: 12px 14px;
+  }
+
+  .flux__fleche {
+    display: none;
+  }
+
+  .flux__branche {
+    padding: 0;
+  }
+
+  .serie__ligne {
+    grid-template-columns: minmax(0, 1fr) minmax(80px, auto);
+  }
+
+  .serie__piste {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .histogramme {
+    height: 160px;
+    gap: 4px;
+  }
+
+  .histogramme__etiquette {
+    font-size: 9px;
+  }
+
+  .message__entete {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* ============================================================
+   Preuves terrain
+
+   Le formulaire reste visible en permanence a gauche : publier
+   une preuve doit prendre quelques secondes, pas trois clics.
+   La liste sert de controle immediat de ce qui vient d'etre
+   publie ; la publication elle-meme passe par la modale.
+   ============================================================ */
+
+.preuves {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preuve {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+}
+
+/* Format carre : les photos de terrain arrivent dans tous les
+   cadrages, un ratio impose evite une liste en escalier. */
+.preuve__vignette {
+  width: 74px;
+  height: 74px;
+  flex: none;
+  border-radius: 9px;
+  object-fit: cover;
+  background-color: var(--admin-surface-douce);
+}
+
+.preuve__vignette--vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--admin-texte-faible);
+}
+
+.preuve__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+/*
+ * Ligne cliquable : le lien de la description s'etire sur toute la
+ * surface par son ::after, si bien que la vignette ouvre la lecture
+ * sans qu'il faille imbriquer l'image et le bouton dans un meme lien --
+ * ce qui serait du HTML invalide et un piege au clavier.
+ */
+.preuve--cliquable {
+  position: relative;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.preuve--cliquable:hover {
+  border-color: var(--admin-bordure-forte);
+  box-shadow: 0 4px 14px rgba(36, 43, 62, 0.08);
+}
+
+.preuve__lien {
+  text-decoration: none;
+  color: inherit;
+}
+
+.preuve__lien::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.preuve--cliquable:hover .preuve__lien,
+.preuve--cliquable:focus-within .preuve__lien {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Au-dessus de la zone etiree, sinon le lien avalerait le clic. */
+.preuve__action {
+  position: relative;
+  z-index: 1;
+}
+
+.preuve__projet {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.preuve__description {
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+}
+
+.preuve__signature {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   Lecture d'une preuve
+
+   Une preuve est le plus souvent une photo ou une video : elle
+   merite d'etre vue en grand. La disposition est celle d'un
+   lecteur -- le media prend la place, ce qui le decrit vient
+   dessous, les autres preuves du projet attendent a droite.
+   ============================================================ */
+
+.lecture {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.lecture__principal {
+  min-width: 0;
+}
+
+/*
+ * Le cadre du media, sur fond sombre : une photo de terrain a des
+ * bords clairs aussi souvent que sombres, et un fond blanc la
+ * laisserait flotter sans limite visible.
+ *
+ * Hauteur bornee plutot que ratio impose : une photo verticale prise
+ * au telephone ne doit ni etre rognee ni pousser la fiche hors de
+ * l'ecran.
+ */
+.lecteur {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Toute la largeur de la colonne, quelle que soit celle du media : une
+     photo verticale se pose alors au centre du cadre et non a gauche. */
+  width: 100%;
+  min-height: 320px;
+  max-height: 70vh;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+/*
+ * Fond sombre pour une photo ou une video : une image de terrain a des
+ * bords clairs aussi souvent que sombres, et flotterait sans limite
+ * visible sur du blanc. Il remplit aussi les cotes laissees libres par
+ * un cadrage vertical.
+ */
+.lecteur--media {
+  background:
+    radial-gradient(120% 90% at 50% 0%, #232a3c, transparent 70%),
+    #171c28;
+}
+
+/* Le cadre unique est un bouton : il ouvre le carrousel. */
+.lecteur--ouvrable {
+  padding: 0;
+  border: 0;
+  cursor: zoom-in;
+}
+
+.lecteur__media {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+/* Les etats sans media -- temoignage, fichier absent, PDF -- reprennent
+   la surface claire des panneaux : il n'y a plus d'image a mettre en
+   valeur, seulement du texte a lire. */
+.lecteur--texte,
+.lecteur--attente {
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px 26px;
+  border: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface);
+  text-align: center;
+}
+
+.lecteur__citation {
+  max-width: 46ch;
+  font-size: 19px;
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--admin-texte);
+}
+
+.lecteur__mention {
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+.lecture__entete {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.lecture__description {
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--admin-texte);
+}
+
+/* La fiche technique : deux colonnes tant que la place le permet. */
+.lecture__fiche {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px 22px;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+}
+
+.lecture__fiche dt {
+  margin-bottom: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.lecture__fiche dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--admin-texte);
+  overflow-wrap: anywhere;
+}
+
+.lecture__discret {
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   Objectifs specifiques d'un projet
+   ============================================================ */
+
+/*
+ * Une liste numerotee : "le deuxieme objectif" doit pouvoir se
+ * designer en reunion. Le numero est pose a part plutot que laisse au
+ * marqueur du navigateur, qui se colle au texte sur une ligne longue.
+ */
+.objectifs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: objectif;
+}
+
+.objectifs__ligne {
+  display: flex;
+  gap: 12px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+  counter-increment: objectif;
+}
+
+.objectifs__ligne::before {
+  content: counter(objectif);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--hope-bleu-clair);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--hope-violet-fonce);
+}
+
+/* --- La mosaique --- */
+
+/*
+ * Six tuiles au plus, sur trois colonnes. La premiere prend deux
+ * colonnes sur deux rangs : elle porte l'image qui represente la preuve,
+ * et l'oeil a besoin d'un point d'entree plutot que de six carres
+ * identiques.
+ *
+ * Ratio impose sur les tuiles : les photos arrivent dans tous les
+ * cadrages, et une grille en escalier se lit mal.
+ */
+.galerie {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.galerie__tuile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #232a3c, transparent 70%),
+    #171c28;
+  cursor: zoom-in;
+}
+
+/* La premiere tuile occupe le carre de gauche, sauf s'il n'y en a que
+   deux : elles se partagent alors la largeur a egalite. */
+.galerie[data-nombre='2'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.galerie:not([data-nombre='2']) .galerie__tuile:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
+  border-radius: 12px;
+}
+
+.galerie__media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.galerie__tuile:hover .galerie__media {
+  opacity: 0.88;
+}
+
+/* Le triangle de lecture sur une tuile video. */
+.galerie__lecture {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: rgba(23, 28, 40, 0.72);
+  font-size: 16px;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+/*
+ * Le "+N" de la derniere tuile. Il couvre l'image plutot que de se poser
+ * dans un coin : c'est un bouton "voir la suite", pas une etiquette.
+ */
+.galerie__reste {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(23, 28, 40, 0.62);
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+/* --- Le carrousel plein ecran --- */
+
+.visionneuse {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 84px;
+  background-color: rgba(14, 17, 25, 0.94);
+  animation: visionneuse-apparition 0.18s ease-out;
+}
+
+@keyframes visionneuse-apparition {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.visionneuse__scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.visionneuse__media {
+  display: block;
+  max-width: 100%;
+  /* La hauteur disponible, moins les marges du cadre. */
+  max-height: calc(100vh - 128px);
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.visionneuse__fermer,
+.visionneuse__fleche {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transition: background-color 0.16s ease;
+}
+
+.visionneuse__fermer:hover,
+.visionneuse__fleche:hover {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+
+.visionneuse__fermer {
+  top: 18px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+}
+
+.visionneuse__fermer svg {
+  width: 20px;
+  height: 20px;
+}
+
+.visionneuse__fleche {
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+}
+
+.visionneuse__fleche--gauche {
+  left: 18px;
+}
+
+/* Une seule icone de chevron dans le jeu : la gauche est retournee. */
+.visionneuse__fleche--gauche svg {
+  transform: rotate(180deg);
+}
+
+.visionneuse__fleche--droite {
+  right: 18px;
+}
+
+.visionneuse__fleche svg {
+  width: 24px;
+  height: 24px;
+}
+
+.visionneuse__compteur {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Sur un petit ecran, les fleches mangeraient l'image : elles passent
+   en bas, au pouce, et le cadre reprend la largeur. */
+@media (max-width: 700px) {
+  .visionneuse {
+    padding: 60px 12px 92px;
+  }
+
+  .visionneuse__media {
+    max-height: calc(100vh - 152px);
+  }
+
+  .visionneuse__fleche {
+    top: auto;
+    bottom: 20px;
+    margin-top: 0;
+  }
+
+  .visionneuse__fleche--gauche {
+    left: calc(50% - 66px);
+  }
+
+  .visionneuse__fleche--droite {
+    right: calc(50% - 66px);
+  }
+}
+
+/* --- Le compte d'images sur une vignette de liste --- */
+
+.preuve__vignette-cadre {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+.preuve__compte {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background-color: rgba(23, 28, 40, 0.78);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* --- Les autres preuves du projet --- */
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestion {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px;
+  border-radius: 11px;
+  transition: background-color 0.16s ease;
+}
+
+.suggestion:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.suggestion .preuve__vignette {
+  width: 92px;
+  height: 62px;
+}
+
+.suggestion__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Le lien s'etire sur toute la ligne : la vignette devient cliquable
+   sans imbriquer une image dans un lien par ligne. */
+.suggestion__lien {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  color: var(--admin-texte);
+}
+
+.suggestion__lien::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.suggestion__lien:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.suggestion__signature {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+@media (max-width: 1024px) {
+  .lecture {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   Journal d'activite
+
+   Une ligne = une action signee. L'auteur est mis en avant :
+   c'est l'information que le fil de l'accueil ne donne pas.
+   ============================================================ */
+
+.journal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal__ligne {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--admin-bordure);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.journal__ligne:last-child {
+  border-bottom: 0;
+}
+
+.journal__auteur {
+  flex: none;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.journal__action {
+  flex: 1;
+  min-width: 0;
+  color: var(--admin-texte);
+}
+
+.journal__date {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Projets silencieux : l'alerte de l'ecran Preuves --- */
+
+.silence {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.silence__ligne {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.silence__ligne:last-child {
+  border-bottom: 0;
+}
+
+.silence__projet {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.silence__reference {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+/* L'orange de la charte, celui des barres de financement incomplet :
+   c'est un signal d'attention, pas une erreur. */
+.silence__duree {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hope-orange);
+}
+
+/* ============================================================
+   Chaine de resultats
+
+   Depenses -> Activite -> Resultat -> Impact : ce qu'on a
+   engage, ce qu'on a fait, ce qu'on a obtenu, ce que cela a
+   change. Une liste de definitions plutot qu'un tableau :
+   chaque valeur est un texte ou une liste, pas une cellule.
+   ============================================================ */
+
+.chaine {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 14px 18px;
+  margin: 0;
+}
+
+.chaine__terme {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+  /* Aligne l'intitule sur la premiere ligne de sa valeur, et non sur le
+     milieu du bloc quand celui-ci fait plusieurs lignes. */
+  padding-top: 2px;
+}
+
+.chaine__valeur {
+  margin: 0;
+  min-width: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+}
+
+.chaine__liste {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.chaine__liste li + li {
+  margin-top: 4px;
+}
+
+.chaine__date {
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte-faible);
+}
+
+.chaine__vide {
+  color: var(--admin-texte-faible);
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .chaine {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px 0;
+  }
+
+  .chaine__terme + .chaine__valeur {
+    margin-bottom: 10px;
+  }
+}
+
+/* --- Notification cliquable --- */
+
+/*
+ * Le lien du libelle s'etire sur toute la ligne grace a son ::after :
+ * la notification entiere devient cliquable sans qu'il faille imbriquer
+ * le bouton "marquer comme lu" a l'interieur du lien, ce qui serait du
+ * HTML invalide et un piege au clavier.
+ */
+.notif--cliquable {
+  position: relative;
+}
+
+.notif__lien {
+  color: inherit;
+  text-decoration: none;
+}
+
+.notif__lien::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.notif--cliquable:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.notif__lien:hover,
+.notif--cliquable:focus-within .notif__lien {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Au-dessus de la zone etiree, sinon le lien avalerait le clic. */
+.notif__actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   Visages : la photo d'une personne, ou ses initiales
+
+   Un disque de taille fixe, avec ou sans photo : une liste ne saute
+   pas quand les images arrivent. Un clic sur la photo l'agrandit.
+   ============================================================ */
+
+.visage {
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+}
+
+.visage--petit {
+  width: 38px;
+  height: 38px;
+}
+
+.visage--grand {
+  width: 76px;
+  height: 76px;
+  box-shadow: 0 0 0 3px var(--admin-surface), 0 0 0 4px var(--admin-bordure);
+}
+
+.visage .photo-voir {
+  border-radius: 50%;
+}
+
+.visage__initiales {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.visage--grand .visage__initiales {
+  font-size: 24px;
+}
+
+/* Dans une cellule de tableau : le visage, puis le nom. */
+.cellule-visage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.page-entete__visuel {
+  flex: none;
+}
+
+@media (max-width: 560px) {
+  .visage--grand {
+    width: 56px;
+    height: 56px;
+  }
+
+  .visage--grand .visage__initiales {
+    font-size: 18px;
+  }
+}
+
+/* ============================================================
+   Taches : la fenetre, l'equipe, les demandes
+
+   Une tache se confie a une equipe. La fenetre met d'abord ce qui
+   attend une decision -- les demandes --, puis l'equipe, puis la
+   preuve une fois livree.
+   ============================================================ */
+
+/* Une ligne qu'un clic ouvre. Le titre reste un vrai bouton, pour le
+   clavier ; la ligne entiere n'est qu'une facilite pour la souris. */
+.table tr.ligne--cliquable {
+  cursor: pointer;
+}
+
+.table tr.ligne--cliquable:hover td {
+  background-color: var(--admin-surface-douce);
+}
+
+.lien-tache {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  color: var(--admin-texte);
+  cursor: pointer;
+}
+
+.lien-tache:hover,
+.lien-tache:focus-visible {
+  color: var(--hope-violet);
+  text-decoration: underline;
+}
+
+/* Les visages de l'equipe, serres les uns sur les autres. */
+.equipe-bref {
+  display: inline-flex;
+  align-items: center;
+}
+
+.equipe-bref .visage {
+  width: 30px;
+  height: 30px;
+  box-shadow: 0 0 0 2px var(--admin-surface);
+}
+
+.equipe-bref .visage + .visage {
+  margin-left: -8px;
+}
+
+.equipe-bref .visage__initiales {
+  font-size: 11px;
+}
+
+.equipe-bref__plus {
+  margin-left: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.equipe-bref__nom {
+  margin-left: 8px;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.fenetre-tache {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fenetre-tache__attente {
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__faits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__retard {
+  font-weight: 600;
+  color: var(--etat-rouge);
+}
+
+.fenetre-tache__description {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--admin-texte);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.fenetre-tache__description--vide {
+  color: var(--admin-texte-faible);
+}
+
+.fenetre-tache__bloc {
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+/* Les demandes attendent une decision : elles se detachent. */
+.fenetre-tache__bloc--demandes {
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--etat-ambre) 35%, transparent);
+  border-radius: var(--admin-rayon);
+  background-color: var(--etat-ambre-fond);
+}
+
+.fenetre-tache__titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.fenetre-tache__compte {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-bordure);
+  font-size: 12px;
+  text-align: center;
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__aide {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.fenetre-tache__affecter {
+  margin-top: 12px;
+}
+
+.fenetre-tache__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.fenetre-tache__espace {
+  flex: 1;
+}
+
+.fenetre-tache__confirmer {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--etat-rouge);
+}
+
+.personnes-tache {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personne-tache {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--admin-bordure) 70%, transparent);
+}
+
+.personne-tache:last-child {
+  border-bottom: 0;
+}
+
+.personne-tache__qui {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.personne-tache__qui strong {
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.personne-tache__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* --- Choisir les benevoles a affecter --- */
+
+.choix-benevoles {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface-douce);
+}
+
+.choix-benevoles__recherche {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.choix-benevoles__liste {
+  max-height: 260px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.choix-benevoles__ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.choix-benevoles__ligne:hover {
+  background-color: var(--admin-surface);
+}
+
+.choix-benevoles__ligne input {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  accent-color: var(--hope-violet);
+}
+
+.choix-benevoles__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   L'experience requise d'une tache
+
+   Les memes intitules que la fiche du benevole : l'equipe coche ce que
+   la tache demande, le benevole coche ce qu'il sait faire, et les deux
+   se rapprochent.
+   ============================================================ */
+
+.competences-tache {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface-douce);
+}
+
+.competences-tache__titre {
+  margin-bottom: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.competences-tache__liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.puce-competence {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  font: inherit;
+  font-size: 13px;
+  color: var(--admin-texte);
+  cursor: pointer;
+  transition: border-color 0.16s ease-out, background-color 0.16s ease-out,
+    color 0.16s ease-out;
+}
+
+.puce-competence:hover:not(:disabled):not(.puce-competence--actif) {
+  border-color: var(--hope-violet);
+  color: var(--hope-violet-lisible);
+}
+
+.puce-competence--actif {
+  border-color: var(--hope-violet);
+  background-color: var(--hope-violet);
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* --- Ce qu'une tache demande, la ou on la lit --- */
+
+.tache-competences {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tache-competences__intitule {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.tache-competences__puce {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: #ece7fb;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4a4479;
+}
+
+/* Le benevole la possede : la puce se coche, il se sait attendu. */
+.tache-competences__puce--acquise {
+  background-color: #e2f4ea;
+  color: #216b4a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puce-competence {
+    transition: none;
+  }
+}
+
+/* --- Priorite, taille d'equipe, affectation : le formulaire de tache --- */
+
+.priorites-tache {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+/*
+ * Chaque degre porte sa teinte, meme non choisi : l'oeil apprend
+ * l'echelle avant de lire les mots. Choisi, le bouton prend la teinte
+ * pleine (filtres__bouton--actif s'en charge pour le fond).
+ */
+.priorites-tache__choix--rouge  { color: var(--etat-rouge); }
+.priorites-tache__choix--ambre  { color: var(--etat-ambre); }
+.priorites-tache__choix--bleu   { color: var(--hope-bleu-lisible); }
+.priorites-tache__choix--gris   { color: var(--admin-texte-doux); }
+
+.taille-equipe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.taille-equipe__champ {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.taille-equipe__champ input {
+  width: 84px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.affectation-tache {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface-douce);
+}
+
+/* Un delai qui presse ne se lit pas comme une date ordinaire. */
+.table__secondaire--alerte {
+  font-weight: 600;
+  color: var(--etat-rouge);
+}
+
+/* --- Ce qui a ete choisi dans une liste deroulante --- */
+
+/*
+ * Le choix se fait dans la liste, comme pour le projet ; ce qui est
+ * retenu s'affiche juste dessous, chacun avec sa croix. On voit alors
+ * d'un coup ce qu'on a demande, et on en retire un sans rouvrir la
+ * liste.
+ */
+.choix-retirables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.choix-retirable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 5px 5px 13px;
+  border-radius: 999px;
+  background-color: #ece7fb;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4a4479;
+  animation: choix-arrive 280ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* Une personne, ce n'est pas une competence : la teinte les distingue. */
+.choix-retirable--personne {
+  background-color: #e2f4ea;
+  color: #216b4a;
+}
+
+.choix-retirable__croix {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: background-color 0.16s ease-out, opacity 0.16s ease-out;
+}
+
+.choix-retirable__croix:hover:not(:disabled),
+.choix-retirable__croix:focus-visible {
+  background-color: rgba(255, 255, 255, 0.7);
+  opacity: 1;
+}
+
+.choix-retirable__croix svg {
+  width: 13px;
+  height: 13px;
+}
+
+@keyframes choix-arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choix-retirable {
+    animation: none;
+  }
+
+  .choix-retirable__croix {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Choisir des personnes
+
+   On ne choisit pas quelqu'un dans une liste de mots : le visage, le
+   nom, et ce que la personne sait faire. La recherche filtre sur les
+   trois, et ceux qui sont deja choisis remontent en tete.
+   ============================================================ */
+
+.choix-personnes {
+  margin-top: 4px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+  overflow: hidden;
+}
+
+.choix-personnes__recherche {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface-douce);
+}
+
+.choix-personnes__recherche svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--admin-texte-faible);
+}
+
+.choix-personnes__recherche input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.choix-personnes__recherche input:focus {
+  outline: none;
+}
+
+.choix-personnes__liste {
+  margin: 0;
+  padding: 6px;
+  max-height: 270px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.choix-personnes__vide {
+  padding: 18px 14px;
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Une personne --- */
+
+.personne-choix {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background-color: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.14s ease-out;
+}
+
+.personne-choix:hover:not(:disabled) {
+  background-color: var(--admin-surface-douce);
+}
+
+/* Choisie : la ligne se teinte et porte sa coche, comme cochee. */
+.personne-choix--choisie {
+  background-color: #ece7fb;
+}
+
+.personne-choix--choisie:hover:not(:disabled) {
+  background-color: #e3ddf8;
+}
+
+.personne-choix__visage {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-bleu-clair);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hope-violet-lisible);
+}
+
+.personne-choix__visage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.personne-choix__texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.personne-choix__nom {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  overflow-wrap: anywhere;
+}
+
+/* Ce qu'elle sait faire : la ligne du dessous, en petit. */
+.personne-choix__detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.personne-choix__competence:not(:last-child)::after {
+  content: ' ·';
+}
+
+/* Une competence que la tache demande : c'est elle qu'on cherchait. */
+.personne-choix__competence--demandee {
+  font-weight: 700;
+  color: #216b4a;
+}
+
+.personne-choix__marque {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--hope-violet);
+}
+
+.personne-choix__marque svg {
+  width: 17px;
+  height: 17px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personne-choix {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Le dernier avertissement avant une suppression definitive
+
+   La fenetre ne demande pas "etes-vous sur ?" -- personne ne lit cette
+   question. Elle dit ce qui disparait, ce qui survit, et demande
+   d'ecrire le nom : le temps de l'ecrire est le temps de se raviser.
+   ============================================================ */
+
+.suppression-forcee {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte);
+}
+
+.suppression-forcee__alerte {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: var(--etat-rouge-fond);
+  font-weight: 700;
+  color: var(--etat-rouge);
+}
+
+.suppression-forcee__alerte svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.suppression-forcee__intro {
+  font-weight: 600;
+}
+
+.suppression-forcee__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Ce qui survit, ce qui part : la couleur du liseré le dit avant le
+   texte, et le texte le confirme. */
+.suppression-forcee__liste li {
+  padding-left: 13px;
+  border-left: 3px solid var(--admin-bordure-forte);
+  color: var(--admin-texte-doux);
+}
+
+.suppression-forcee__garde {
+  border-left-color: var(--etat-vert) !important;
+}
+
+.suppression-forcee__efface {
+  border-left-color: var(--etat-rouge) !important;
+}
+
+.suppression-forcee__conseil {
+  padding: 11px 13px;
+  border-radius: 10px;
+  background-color: var(--admin-surface-douce);
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.suppression-forcee__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.suppression-forcee__champ input {
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--admin-texte);
+}
+
+.suppression-forcee__champ input:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 1px;
+}
+
+.suppression-forcee__aide {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ---------- Journal d'audit ---------- */
+.audit__qui {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.audit__cible {
+  color: var(--admin-texte-doux);
+}
+
+.audit__details {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.audit__ip {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.audit__pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}
+
+/* ---------- Back office (onglet des utilisateurs) ---------- */
+.backoffice__roles {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.backoffice__roles legend {
+  margin-bottom: 8px;
+}
+
+.backoffice__role {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--admin-bordure);
+  border-radius: 14px;
+  background: var(--admin-surface);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.backoffice__role:hover {
+  border-color: #a9a4d6;
+}
+
+.backoffice__role input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.backoffice__role--choisi {
+  border-color: #5d5696;
+  background: #f4f3fc;
+  box-shadow: 0 8px 20px -10px rgba(74, 68, 121, 0.45);
+}
+
+.backoffice__role:has(input:focus-visible) {
+  outline: 3px solid #86b9de;
+  outline-offset: 2px;
+}
+
+.backoffice__role-titre {
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.backoffice__role--choisi .backoffice__role-titre {
+  color: #4a4479;
+}
+
+.backoffice__role-texte {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--admin-texte-doux);
+}
+
+.backoffice__resultat {
+  position: relative;
+  margin: 14px 20px 0;
+  padding: 12px 44px 12px 14px;
+  border-radius: 12px;
+  background: #e6f5ed;
+  font-size: 14px;
+  color: #1d6b48;
+  animation: champ-combo-entree 0.2s ease both;
+}
+
+.backoffice__resultat p {
+  margin: 0;
+}
+
+.backoffice__resultat--alerte {
+  background: #fff4e0;
+  color: #7f5210;
+}
+
+.backoffice__secret {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px !important;
+}
+
+.backoffice__secret code {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--admin-texte);
+}
+
+.backoffice__fermer {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 20px;
+  color: inherit;
+  cursor: pointer;
+}
+
+.backoffice__choix-role {
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 8px;
+  background: var(--admin-surface);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+@media (max-width: 600px) {
+  .backoffice__roles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Le bandeau des accès envoyés, hors d'un panneau (page Utilisateurs). */
+.page-entete ~ .backoffice__resultat,
+.onglets ~ .backoffice__resultat {
+  margin: 0 0 14px;
+}
+
+/* Le commentaire laisse par le benevole a la livraison. */
+.fenetre-tache__commentaire {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--hope-violet);
+  border-radius: 0 10px 10px 0;
+  background: #f5f4fb;
+  color: var(--hope-texte);
+  font-size: 14.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fenetre-tache__commentaire cite {
+  display: block;
+  margin-top: 6px;
+  color: var(--admin-texte-doux);
+  font-size: 12.5px;
+  font-style: normal;
+  white-space: normal;
+}
+
+.fenetre-tache__commentaire cite::before {
+  content: '\2014\00a0';
+}

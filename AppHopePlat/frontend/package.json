@@ -1,0 +1,34 @@
+{
+  "name": "hope-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interface HOPE - espace administrateur",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:reseau": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^6.12.0",
+    "@stripe/stripe-js": "^9.17.0",
+    "axios": "^1.7.9",
+    "countries-and-timezones": "^3.10.0",
+    "libphonenumber-js": "^1.13.13",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "vite": "^6.0.7"
+  }
+}

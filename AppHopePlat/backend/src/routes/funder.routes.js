@@ -1,0 +1,101 @@
+/**
+ * Routes de l'espace bailleur, montees sous /api/bailleur.
+ *
+ * Trois routes publiques -- s'inscrire, se connecter, lire la liste des
+ * types d'organisation -- et tout le reste derriere le jeton.
+ *
+ * SECURITE : aucune route de ce fichier ne cree ni ne modifie un
+ * engagement, un versement ou une affectation. L'espace est en lecture
+ * seule sur les montants ; les seules ecritures sont la fiche de
+ * contact et la manifestation d'interet, qui ne debite rien.
+ */
+import { Router } from 'express';
+
+import * as funder from '../controllers/funder.controllers.js';
+import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
+import { identiteBailleur } from '../services/promesseDon.service.js';
+import {
+  authenticateFunder,
+  exigerConsultation,
+  exigerOrganisation,
+} from '../middleware/funderAuth.middleware.js';
+import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
+import { televerserMedia } from '../middleware/upload.middleware.js';
+
+const router = Router();
+
+// Le paiement par carte : un bailleur donne une fois, jamais par mois.
+const carte = controleursCarte((req) => identiteBailleur(req.bailleur), { mensuelPermis: false });
+
+/* ---------------------------- Public ---------------------------------- */
+
+router.get('/types-organisation', funder.typesOrganisation);
+
+router.post(
+  '/inscription',
+  limiterTentatives({ fenetreMs: 60_000, maximum: 5 }),
+  funder.inscription
+);
+
+router.post(
+  '/login',
+  limiterTentatives({ fenetreMs: 60_000, maximum: 10 }),
+  funder.login
+);
+
+/* ---------------------------- Protege --------------------------------- */
+
+router.get('/me', authenticateFunder, funder.me);
+router.post('/logout', authenticateFunder, funder.logout);
+
+// Le verrou vaut pour tout ce qui suit : jeton valide, puis droit de
+// consultation. Un contact desactive par HOPE ne passe pas.
+router.use(authenticateFunder, exigerConsultation);
+
+// Tout ce qui suit a besoin d'un bailleur_id sur quoi filtrer.
+// L'organisation nait avec le compte : ce verrou ne sert plus qu'a
+// refuser proprement un cas qui ne devrait plus se produire.
+router.use(exigerOrganisation);
+
+router.get('/tableau-de-bord', funder.espace.tableauDeBord);
+router.get('/partenariat', funder.espace.partenariat);
+router.get('/versements', funder.espace.versements);
+// Paiements effectues : ses dons faits ici et les versements de ses conventions.
+router.get('/paiements', funder.espace.paiements);
+
+// Les projets HOPE, la fiche de chacun -- ce qu'il est, son financement,
+// son impact -- et son rapport a jour : lu dans l'espace ou enregistre
+// en PDF.
+router.get('/projets', funder.espace.projets);
+router.get('/projets/:id', funder.espace.projet);
+// Faire un don a un projet : les modes de paiement, puis la promesse.
+router.get('/dons/options', funder.espace.optionsDon);
+router.post('/dons', funder.espace.faireUnDon);
+// Les pages de paiement : ou envoyer, puis "j'ai paye" apres coup.
+router.get('/paiement/coordonnees', funder.espace.coordonneesPaiement);
+// La carte, encaissee en ligne par Stripe -- un don ponctuel.
+router.get('/paiement/carte', carte.reglages);
+router.post('/paiement/carte/session', carte.ouvrir);
+router.get('/paiement/carte/session/:id', carte.etat);
+router.patch('/dons/:id/justificatif', funder.espace.declarerPaiement);
+router.get('/projets/:id/rapport', funder.espace.rapportProjet);
+router.get('/projets/:id/rapport/pdf', funder.espace.pdfRapportProjet);
+
+router.get('/documents', funder.espace.documents);
+// Lire le rapport dans l'espace : aucune trace, aucun fichier.
+router.get('/documents/:id/apercu', funder.espace.apercuDocument);
+router.post('/documents/:id/telechargement', funder.espace.telecharger);
+router.post('/certificat', funder.espace.certificat);
+
+router.get('/fil', funder.espace.fil);
+router.post('/interet', funder.espace.manifesterUnInteret);
+
+router.get('/profil', funder.espace.profil);
+// La fiche de l'organisation se precise dans les parametres du compte.
+router.patch('/organisation', funder.espace.mettreAJourOrganisation);
+router.patch('/profil/contact', funder.espace.mettreAJourContact);
+
+// La photo de contact : televersee ici, rattachee par le PATCH ci-dessus.
+router.post('/profil/photo', televerserMedia, funder.espace.televerserPhoto);
+
+export default router;

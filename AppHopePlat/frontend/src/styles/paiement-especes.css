@@ -1,0 +1,597 @@
+/* ==================================================================
+   Don en especes (pages/donateur/PaiementEspeces.jsx)
+
+   L'objet de reference : le carnet a souches du tresorier. Un fond de
+   nuit violette (celle de HOPE), un carnet blanc ou l'on dit combien,
+   ou et quand ; puis un bon jaune a souche perforee -- la souche se
+   detache en tournant, c'est la part que garde l'equipe. Orange HOPE
+   pour tout ce qui se choisit.
+   ================================================================== */
+
+.esp {
+  --es-nuit: #2b2748;
+  --es-nuit-2: #3a3560;
+  --es-orange: #e09735;
+  --es-orange-fonce: #b86f12;
+  --es-jaune: #f5e389;
+  --es-carnet: #ffffff;
+  --es-texte: #2a2433;
+  --es-doux: #6b6480;
+  --es-trait: #e4e0ee;
+  --es-rouge: #c0392b;
+  --es-anime: cubic-bezier(0.22, 1, 0.36, 1);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(600px 300px at 90% -10%, rgba(224, 151, 53, 0.22), transparent 70%),
+    var(--es-nuit);
+  color: var(--es-texte);
+  font-family: var(--police-titre);
+}
+
+.esp__tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  color: #fff;
+}
+
+.esp__retour {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.esp__retour svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.esp__retour:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.esp__retour:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.esp__tete-titre {
+  flex: 1;
+  font-weight: 600;
+}
+
+.esp__tete-hope {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.esp__tete-hope .hope-logo {
+  width: 56px;
+  height: auto;
+}
+
+.esp__page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+}
+
+/* ---------- Le carnet ---------- */
+.esp__temps {
+  padding: 18px 16px 12px;
+  border-radius: 20px;
+  background: var(--es-carnet);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  animation: esp-entre 0.5s var(--es-anime) both;
+}
+
+@keyframes esp-entre {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.esp__temps--bon {
+  padding-top: 14px;
+}
+
+.esp__titre {
+  margin: 0 0 14px;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.25;
+  outline: none;
+}
+
+.esp__titre--centre,
+.esp__texte {
+  text-align: center;
+}
+
+.esp__texte {
+  margin: 14px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--es-doux);
+}
+
+.esp__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.esp__champ:first-of-type {
+  margin-top: 0;
+}
+
+.esp__champ--apparait {
+  animation: esp-entre 0.35s var(--es-anime) both;
+}
+
+.esp__libelle {
+  padding: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.esp__montant {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--es-trait);
+  border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.esp__montant:focus-within,
+.esp__saisie:focus {
+  border-color: var(--es-orange);
+  box-shadow: 0 0 0 3px rgba(224, 151, 53, 0.2);
+}
+
+.esp__montant--erreur,
+.esp__saisie--erreur {
+  border-color: var(--es-rouge);
+}
+
+.esp__montant input {
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--es-texte);
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.esp__montant span {
+  padding: 0 14px;
+  color: var(--es-doux);
+  font-weight: 600;
+}
+
+.esp__rapides {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.esp__rapide {
+  min-height: 40px;
+  border: 1.5px solid var(--es-trait);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--es-texte);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.esp__rapide--choisi {
+  border-color: var(--es-orange);
+  background: var(--es-orange);
+  color: #fff;
+}
+
+.esp__groupe {
+  min-width: 0;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.esp__groupe legend {
+  margin-bottom: 6px;
+}
+
+.esp__lieux {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.esp__lieu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--es-trait);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.esp__lieu input,
+.esp__moment input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.esp__lieu--choisi {
+  border-color: var(--es-orange);
+  background: #fff8ee;
+}
+
+.esp__lieu:has(input:focus-visible),
+.esp__moment:has(input:focus-visible) {
+  outline: 2px solid var(--es-orange);
+  outline-offset: 2px;
+}
+
+.esp__lieu--ferme {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.esp__lieu-titre {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.esp__lieu-texte {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--es-doux);
+}
+
+.esp__saisie {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1.5px solid var(--es-trait);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--es-texte);
+  font: inherit;
+  outline: none;
+}
+
+.esp__quand {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.esp__groupe--moment {
+  margin-top: 12px;
+}
+
+.esp__moments {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  border: 1.5px solid var(--es-trait);
+  border-radius: 12px;
+}
+
+.esp__moment {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 43px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.esp__moment + .esp__moment {
+  border-left: 1.5px solid var(--es-trait);
+}
+
+.esp__moment--choisi {
+  background: var(--es-orange);
+  color: #fff;
+}
+
+.esp__erreur {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--es-rouge);
+}
+
+.esp__erreur:empty {
+  display: none;
+}
+
+.esp__erreur--centre {
+  text-align: center;
+}
+
+.esp__bouton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--es-nuit);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.esp__bouton:hover:not(:disabled) {
+  background: var(--es-nuit-2);
+  transform: translateY(-1px);
+}
+
+.esp__bouton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.esp__lien {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 2px;
+  border: 0;
+  background: none;
+  color: var(--es-doux);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.esp :focus-visible {
+  outline: 2px solid var(--es-orange);
+  outline-offset: 2px;
+}
+
+.esp__titre:focus-visible,
+.esp__montant input:focus-visible,
+.esp__saisie:focus-visible {
+  outline: none;
+}
+
+/* ---------- Le bon a souche : la signature ---------- */
+.bon {
+  display: grid;
+  grid-template-columns: 1fr 88px;
+  /* La place de la souche qui se detache et descend. */
+  margin-bottom: 22px;
+  filter: drop-shadow(0 12px 22px rgba(43, 39, 72, 0.22));
+  animation: esp-bon 0.6s var(--es-anime) both;
+}
+
+@keyframes esp-bon {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+}
+
+.bon__corps {
+  padding: 14px 16px;
+  border-radius: 14px 0 0 14px;
+  background: var(--es-jaune);
+}
+
+.bon__tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bon__hope {
+  width: 70px;
+  height: auto;
+}
+
+.bon__numero {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bon__montant {
+  margin: 8px 0 6px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.bon__lignes {
+  margin: 0;
+}
+
+.bon__lignes > div {
+  display: grid;
+  grid-template-columns: 5em 1fr;
+  gap: 8px;
+  padding: 4px 0;
+  border-top: 1px dashed rgba(42, 36, 51, 0.25);
+  font-size: 0.8rem;
+}
+
+.bon__lignes dt {
+  color: #5c5236;
+}
+
+.bon__lignes dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* La souche : perforee, elle se detache apres un temps. */
+.bon__souche {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-left: 2px dashed rgba(42, 36, 51, 0.4);
+  border-radius: 0 14px 14px 0;
+  background: #f0d86e;
+  font-size: 0.68rem;
+  text-align: center;
+  transform-origin: 0 0;
+  animation: esp-detache 0.9s 1.1s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+
+.bon__souche span:first-child {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bon__souche strong {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+@keyframes esp-detache {
+  to {
+    transform: translate(10px, 14px) rotate(7deg);
+    opacity: 0.8;
+  }
+}
+
+.esp__attente {
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+
+.esp__alerte {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fdeceb;
+  color: var(--es-rouge);
+}
+
+/* ---------- Ordinateur ---------- */
+@media (min-width: 900px) {
+  .esp__tete {
+    padding-top: 28px;
+  }
+
+  .esp__page {
+    padding-top: 8px;
+  }
+
+  .esp__temps {
+    padding: 28px 30px 20px;
+  }
+
+  .bon {
+    grid-template-columns: 1fr 104px;
+  }
+
+  .bon__corps {
+    padding: 20px 22px;
+  }
+
+  .bon__montant {
+    font-size: 2.2rem;
+  }
+}
+
+/* ---------- Telephone ---------- */
+@media (max-width: 600px) {
+  .esp__tete {
+    padding: 8px 12px;
+  }
+
+  .esp__page {
+    padding: 0 10px 12px;
+  }
+
+  .esp__temps {
+    padding: 14px 12px 8px;
+    border-radius: 18px;
+  }
+
+  .esp__titre {
+    margin-bottom: 10px;
+  }
+
+  .esp__groupe {
+    margin-top: 10px;
+  }
+
+  .esp__lieu {
+    padding: 8px 10px;
+  }
+
+  .esp__bouton {
+    margin-top: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esp *,
+  .esp *::before,
+  .esp *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}

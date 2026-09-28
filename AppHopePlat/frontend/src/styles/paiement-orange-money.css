@@ -1,0 +1,1017 @@
+/* ==================================================================
+   Paiement par Orange Money (pages/donateur/PaiementOrangeMoney.jsx)
+
+   La grammaire des pages Orange Money : bandeau noir, typographie
+   franche et sans fioriture, chevrons noir / orange / gris, champs aux
+   angles presque droits, orange reserve a l'action. Le recu reprend le
+   recu de transaction d'Orange Money : sections en gras, lignes
+   libelle / valeur, filets gris.
+   ================================================================== */
+
+.om {
+  --om-orange: #ff7900;
+  --om-orange-fonce: #e56b00;
+  --om-orange-pale: #fff1e5;
+  --om-noir: #000;
+  --om-gris: #595959;
+  --om-gris-clair: #ddd;
+  --om-fond: #f4f4f4;
+  --om-trait: #ccc;
+  --om-rouge: #cd3c14;
+  --om-vert: #32c832;
+  --om-doux: cubic-bezier(0.22, 1, 0.36, 1);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #fff;
+  color: var(--om-noir);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Le bandeau noir ---------- */
+.om__bandeau {
+  background: var(--om-noir);
+  color: #fff;
+}
+
+.om__bandeau-dedans {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 1100px;
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 10px 24px;
+}
+
+.om__retour {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.om__retour svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.om__retour:hover:not(:disabled) {
+  border-color: var(--om-orange);
+  background: rgba(255, 121, 0, 0.15);
+}
+
+.om__retour:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.om__marque {
+  display: grid;
+  place-items: center;
+  flex: none;
+  height: 44px;
+  padding: 0 8px;
+  background: #fff;
+}
+
+.om__marque img {
+  height: 34px;
+  width: auto;
+}
+
+.om__bandeau-titre {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.om__bandeau-hope {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.om__hope {
+  display: grid;
+  place-items: center;
+  flex: none;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 2px;
+  background: #fff;
+}
+
+.om__hope .hope-logo {
+  width: 64px;
+  height: auto;
+}
+
+/* ---------- La page ---------- */
+.om__page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 24px 24px;
+}
+
+.om__titre {
+  margin: 0 0 22px;
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+
+/* ---------- Les chevrons ---------- */
+.om__chevrons {
+  display: flex;
+  margin: 0 0 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.om__chevron {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-left: -10px;
+  padding: 0 22px;
+  background: var(--om-gris-clair);
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+  transition: background 0.45s var(--om-doux), color 0.45s;
+}
+
+.om__chevron:first-child {
+  margin-left: 0;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+}
+
+.om__chevron--fait {
+  background: var(--om-noir);
+  color: #fff;
+}
+
+.om__chevron--actif {
+  background: var(--om-orange);
+  color: #fff;
+}
+
+/* ---------- Chaque temps ---------- */
+.om__temps {
+  animation: om-entre 0.45s var(--om-doux) both;
+}
+
+@keyframes om-entre {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.om__formulaire,
+.om__envoi {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.om__texte {
+  max-width: 520px;
+  margin: 0 auto 18px;
+  line-height: 1.5;
+  color: var(--om-gris);
+}
+
+/* ---------- Champs ---------- */
+.om__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.om__libelle {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.om__saisie-groupe {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #999;
+  border-radius: 2px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.om__saisie-groupe:focus-within {
+  border-color: var(--om-noir);
+  box-shadow: 0 0 0 2px var(--om-noir);
+}
+
+.om__saisie-groupe--erreur {
+  border-color: var(--om-rouge);
+  box-shadow: 0 0 0 1px var(--om-rouge);
+}
+
+.om__saisie {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--om-noir);
+  font: inherit;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.om__saisie--montant {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.om__saisie--reference {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.om__prefixe,
+.om__suffixe {
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  background: var(--om-fond);
+  font-weight: 700;
+}
+
+.om__prefixe {
+  border-right: 1px solid var(--om-trait);
+}
+
+.om__suffixe {
+  border-left: 1px solid var(--om-trait);
+}
+
+.om__erreur {
+  min-height: 1.1em;
+  font-size: 0.8rem;
+  color: var(--om-rouge);
+}
+
+.om__erreur:empty {
+  min-height: 0;
+}
+
+.om__erreur--centre {
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+/* Les montants proposes : des cases, l'orange pour la case choisie. */
+.om__rapides {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: -4px 0 18px;
+}
+
+.om__rapide {
+  min-height: 40px;
+  border: 1px solid var(--om-trait);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--om-noir);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.om__rapide:hover {
+  border-color: var(--om-noir);
+}
+
+.om__rapide--choisi {
+  border-color: var(--om-orange);
+  background: var(--om-orange);
+  color: var(--om-noir);
+}
+
+/* Le rappel : pour quoi, vers qui. */
+.om__rappel {
+  margin: 4px 0 0;
+  padding: 10px 14px;
+  background: var(--om-fond);
+  font-size: 0.88rem;
+}
+
+.om__rappel > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 3px 0;
+}
+
+.om__rappel dt {
+  color: var(--om-gris);
+}
+
+.om__rappel dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ---------- Boutons ---------- */
+.om__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-top: 20px;
+}
+
+.om__bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 2px solid var(--om-orange);
+  border-radius: 2px;
+  background: var(--om-orange);
+  color: var(--om-noir);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.om__bouton:hover:not(:disabled) {
+  border-color: var(--om-noir);
+  background: var(--om-noir);
+  color: #fff;
+}
+
+.om__bouton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.om__bouton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.om__bouton--contour {
+  border-color: var(--om-noir);
+  background: #fff;
+}
+
+.om__lien {
+  min-height: 40px;
+  border: 0;
+  background: none;
+  color: var(--om-noir);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.om__lien:hover {
+  color: var(--om-orange-fonce);
+}
+
+.om :focus-visible {
+  outline: 2px solid var(--om-noir);
+  outline-offset: 2px;
+}
+
+.om__titre:focus-visible,
+.om__saisie:focus-visible {
+  outline: none;
+}
+
+/* ---------- L'envoi ---------- */
+.om__consignes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  counter-reset: consigne;
+}
+
+.om__consignes li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  animation: om-entre 0.4s var(--om-doux) both;
+  animation-delay: calc(0.08s + var(--rang) * 0.1s);
+}
+
+/* Le numero de la consigne : un carre orange, comme le logo. */
+.om__consignes li::before {
+  counter-increment: consigne;
+  content: counter(consigne);
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  background: var(--om-orange);
+  color: #fff;
+  font-weight: 700;
+}
+
+.om__consigne-detail {
+  color: var(--om-gris);
+}
+
+.om__section-nom {
+  display: none;
+  font-weight: 400;
+}
+
+.om__beneficiaire {
+  padding: 4px 0 2px;
+  border-top: 1px solid var(--om-trait);
+  border-bottom: 1px solid var(--om-trait);
+}
+
+.om__section-titre {
+  margin: 10px 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.om__ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  padding: 2px 0;
+}
+
+.om__ligne-libelle {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.om__ligne-valeur {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.om__copier {
+  flex: none;
+  min-width: 64px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--om-noir);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--om-noir);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.om__copier:hover {
+  background: var(--om-noir);
+  color: #fff;
+}
+
+.om__copier--fait {
+  border-color: var(--om-orange);
+  background: var(--om-orange);
+  color: var(--om-noir);
+}
+
+/* Le champ du numero de transaction respire sous le beneficiaire ; sur
+   telephone, le bouton #144# fait deja cet ecart. */
+.om__envoi .om__formulaire {
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .om__envoi .om__formulaire {
+    margin-top: 0;
+  }
+}
+
+/* Composer #144# : sur telephone seulement (voir plus bas). */
+.om__composer {
+  display: none;
+}
+
+/* ---------- Le recu ---------- */
+.om__temps--recu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.om__merci {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.om__merci-coche {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  background: var(--om-orange);
+  animation: om-coche 0.5s var(--om-doux) both;
+}
+
+.om__merci-coche svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  animation: om-trace 0.4s 0.35s var(--om-doux) forwards;
+}
+
+@keyframes om-coche {
+  from {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes om-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* La fente de l'imprimante, et le recu qui en sort. */
+.om__fente {
+  width: min(100%, 440px);
+  height: 8px;
+  border-radius: 4px;
+  background: var(--om-noir);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+}
+
+.om__sortie {
+  width: min(100%, 420px);
+  overflow: hidden;
+}
+
+.om__recu {
+  padding: 22px 22px 8px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  animation: om-imprime 1.3s 0.2s cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+
+@keyframes om-imprime {
+  from {
+    transform: translateY(-100%);
+  }
+}
+
+.om__recu-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.om__recu-entete img {
+  height: 34px;
+  width: auto;
+}
+
+.om__recu-hope {
+  flex: none;
+  width: 80px;
+}
+
+.om__recu-hope .hope-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.om__recu-titre {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.om__recu-date {
+  margin: 2px 0 6px;
+  font-size: 0.9rem;
+}
+
+.om__recu-section {
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--om-gris-clair);
+}
+
+.om__recu-date + .om__recu-section {
+  border-top: 0;
+}
+
+.om__recu-section h3 {
+  margin: 4px 0 4px;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.om__recu-section p {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+}
+
+.om__recu .om__ligne {
+  min-height: 26px;
+}
+
+.om__recu-numero {
+  font-variant-numeric: tabular-nums;
+}
+
+.om__statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--om-orange-fonce);
+  font-weight: 700;
+}
+
+.om__statut-point {
+  width: 8px;
+  height: 8px;
+  background: var(--om-orange);
+  animation: om-clignote 1.6s ease-in-out infinite;
+}
+
+@keyframes om-clignote {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.om__actions--recu {
+  width: min(100%, 420px);
+}
+
+/* ---------- Attente, alerte, pied ---------- */
+.om__attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 0;
+  color: var(--om-gris);
+}
+
+.om__rotation {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--om-gris-clair);
+  border-top-color: var(--om-orange);
+  border-radius: 50%;
+  animation: om-tourne 0.8s linear infinite;
+}
+
+.om__rotation--bouton {
+  border-color: rgba(0, 0, 0, 0.2);
+  border-top-color: var(--om-noir);
+}
+
+@keyframes om-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.om__alerte {
+  padding: 12px 14px;
+  border-left: 4px solid var(--om-rouge);
+  background: #fdecea;
+  color: var(--om-rouge);
+}
+
+.om__pied {
+  margin: auto 0 0;
+  padding-top: 24px;
+  font-size: 0.78rem;
+  color: var(--om-gris);
+  text-align: center;
+}
+
+/* ---------- Ordinateur : les boutons cote a cote ---------- */
+@media (min-width: 700px) {
+  .om__actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .om__actions .om__bouton {
+    min-width: 200px;
+  }
+
+  .om__actions--recu {
+    width: auto;
+  }
+}
+
+/* ==================================================================
+   Telephone : tout tient dans l'ecran. Bandeau plus bas, chevrons
+   numerotes, consignes et champs resserres, #144# a portee de pouce.
+   ================================================================== */
+@media (max-width: 600px) {
+  .om__bandeau-dedans {
+    gap: 10px;
+    min-height: 52px;
+    padding: 6px 12px;
+  }
+
+  .om__retour {
+    width: 40px;
+    height: 40px;
+  }
+
+  .om__marque {
+    height: 36px;
+    padding: 0 5px;
+  }
+
+  .om__marque img {
+    height: 26px;
+  }
+
+  .om__bandeau-titre {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .om__bandeau-hope,
+  .om__hope,
+  .om__consigne-detail,
+  .om__ligne--nom {
+    display: none;
+  }
+
+  .om__section-nom {
+    display: inline;
+  }
+
+  .om__page {
+    padding: 14px 14px 10px;
+  }
+
+  .om__titre {
+    margin-bottom: 12px;
+    font-size: 1.25rem;
+  }
+
+  .om__chevrons {
+    margin-bottom: 16px;
+  }
+
+  .om__chevron {
+    min-height: 34px;
+    padding: 0 16px;
+    font-size: 0.78rem;
+  }
+
+  .om__champ {
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .om__libelle {
+    font-size: 0.84rem;
+  }
+
+  .om__saisie {
+    min-height: 44px;
+  }
+
+  .om__saisie--montant {
+    font-size: 1.3rem;
+  }
+
+  .om__rapides {
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .om__rapide {
+    font-size: 0.74rem;
+  }
+
+  .om__rappel {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+
+  .om__actions {
+    gap: 0;
+    margin-top: 14px;
+  }
+
+  .om__consignes {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .om__consignes li {
+    font-size: 0.86rem;
+  }
+
+  .om__consignes li::before {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+  }
+
+  .om__section-titre {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+  }
+
+  .om__ligne {
+    min-height: 40px;
+  }
+
+  .om__ligne-libelle {
+    font-size: 0.84rem;
+  }
+
+  .om__copier {
+    min-height: 40px;
+  }
+
+  .om__composer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    margin: 10px 0 8px;
+    border: 1px dashed var(--om-noir);
+    color: var(--om-noir);
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .om__composer:active {
+    background: var(--om-orange-pale);
+  }
+
+  .om__merci {
+    margin-bottom: 10px;
+    font-size: 0.86rem;
+  }
+
+  .om__recu {
+    padding: 16px 16px 6px;
+  }
+
+  .om__recu-titre {
+    font-size: 1.3rem;
+  }
+
+  .om__pied {
+    padding-top: 10px;
+    font-size: 0.72rem;
+  }
+}
+
+/* Les ecrans bas (iPhone SE, 568px) : le titre et le bouton #144# disent
+   deja la marche a suivre ; les consignes, le rappel et le pied cedent
+   leur place. */
+@media (max-width: 600px) and (max-height: 620px) {
+  .om__consignes,
+  .om__rappel,
+  .om__pied {
+    display: none;
+  }
+
+  .om__titre {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+  }
+
+  .om__chevrons {
+    margin-bottom: 10px;
+  }
+
+  .om__page {
+    padding-top: 10px;
+  }
+
+  .om__composer {
+    margin-top: 6px;
+  }
+}
+
+/* Chevrons sur les plus petits ecrans : le numero seul. */
+@media (max-width: 360px) {
+  .om__chevron-nom {
+    display: none;
+  }
+
+  .om__chevron--actif .om__chevron-nom {
+    display: inline;
+  }
+}
+
+/* Moins de mouvement : les etats restent, les animations s'effacent. */
+@media (prefers-reduced-motion: reduce) {
+  .om *,
+  .om *::before,
+  .om *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .om__merci-coche svg {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Imprimer : le recu, et rien d'autre. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .om__recu,
+  .om__recu * {
+    visibility: visible;
+  }
+
+  .om__recu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-shadow: none;
+    animation: none;
+  }
+}

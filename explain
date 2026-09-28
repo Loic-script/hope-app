@@ -1,0 +1,52 @@
+Espace Admin : 
+
+Dashboard : 
+	1-Projets:
+	-Créer un projet : 
+		* Nom
+		* Description
+		* Catégorie
+		* Localisation (lieux)
+		* Responsable
+		* Début
+		* Budget necessaire
+		* Statu (en cours)
+		* photo/video
+
+	-Voir les projets : 
+		* Id_projet_forein_key
+		* Modifier
+		* Terminer
+		* Supprimer
+		* nom_Donateurs
+		* Somme investit dans ce projet
+	2-Impact:
+	-Voir le resultat
+		*Id_projet_forein_key
+		*Date de fin (projet terminé)
+		*Statut (terminé)
+		
+	3-Budget :
+	-Somme du budget 
+		*somme don affecté
+		*somme pour hope 
+		*somme totale
+	-Investir:
+		*Choisie le projet
+		*Justification
+		*Budget
+	4-Notif :
+		*donateur(id) a fait un don (mensuel ou *) de (somme) pour (hope ou projet)
+	5-Donateur:
+	-donateur sans compte: 
+		*id_donateur_foreign_key
+		*date 
+	-donateur avec compte: 
+		*id_donateur_foreign_key
+		*id_donateur_compte_foreign_key
+		*date
+	6-Message: 
+	-Donateur avec compte 	
+	7-Statistique du budget, projet, donateur	
+		
+	8-AI assisting (optionnel)

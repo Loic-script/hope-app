@@ -1,0 +1,390 @@
+/* ============================================================
+   HOPE - Authentification des utilisateurs, completion, espace
+   donateur
+
+   La page reprend la coquille de la connexion administrateur
+   (admin-login.css) : meme panneau d'illustration, meme carte, memes
+   champs. Seuls s'ajoutent ici la bascule connexion / inscription, la
+   liste du type d'utilisateur, et les deux formulaires de completion.
+
+   Chargee APRES admin-login.css, dont elle ajuste quelques regles.
+   ============================================================ */
+
+/* Le panneau d'illustration porte un titre plus court que celui de
+   l'administrateur : on garde la meme photo, la meme composition. */
+.connexion__illustration--utilisateur .illustration__titre {
+  font-size: clamp(34px, 4vw, 46px);
+}
+
+/*
+ * Le trait bleu sous le titre court jusqu'au "n" de "demain".
+ *
+ * Sa largeur totale -- celle de la plus longue ligne du titre -- est
+ * mesuree par la page (Authentification.jsx) ; le soleil garde la
+ * sienne, et la barre prend tout le reste.
+ */
+.connexion__illustration--utilisateur .illustration__barre {
+  display: flex;
+  max-width: 100%;
+}
+
+.connexion__illustration--utilisateur .illustration__barre::before {
+  flex: 1;
+  width: auto;
+}
+
+.carte-connexion--utilisateur {
+  /* Le formulaire d'inscription est plus long que celui de connexion :
+     la carte respire un peu plus. */
+  max-width: 470px;
+}
+
+/* ============================================================
+   1. Bascule connexion / inscription
+   ============================================================ */
+
+.bascule-acces {
+  display: flex;
+  gap: 4px;
+  margin-top: 24px;
+  padding: 4px;
+  border-radius: 999px;
+  background-color: #e7ecf5;
+}
+
+.bascule-acces__onglet {
+  flex: 1;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--hope-texte-doux);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.bascule-acces__onglet--actif {
+  background-color: var(--hope-blanc);
+  font-weight: 600;
+  color: var(--hope-violet);
+  box-shadow: 0 1px 3px rgba(53, 51, 67, 0.1);
+}
+
+/* La bascule porte deja la marge du haut du formulaire. */
+.carte-connexion--utilisateur .formulaire {
+  margin-top: 22px;
+}
+
+/* ============================================================
+   2. Champs propres a cette page
+   ============================================================ */
+
+/* Prenom et nom vont ensemble : ils tiennent sur une ligne. */
+.paire-acces {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+}
+
+/* admin-login.css espace les champs par ".champ + .champ". Dans la
+   grille, cette marge decalerait le second champ vers le bas et les
+   deux colonnes ne seraient plus alignees.
+
+   Le selecteur reprend ".paire-acces" : sans lui il aurait le meme
+   poids que la regle heritee, qui le suit dans la cascade. */
+.paire-acces .champ + .champ {
+  margin-top: 0;
+}
+
+/* La liste du type d'utilisateur reprend l'habillage des champs de
+   saisie : meme boite, meme hauteur, meme focus. */
+.champ__selection {
+  /* La fleche natine du select est masquee par la boite : on la rend. */
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%236b6880' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+.champ__erreur {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--hope-erreur);
+}
+
+/* Ce que le type choisi implique, dit avant l'envoi du formulaire. */
+.note-acces {
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-orange);
+  border-radius: 0 9px 9px 0;
+  background-color: #fdf4e3;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8a5c12;
+}
+
+.note-acces--ok {
+  border-left-color: #2c8f63;
+  background-color: #e6f4ec;
+  color: #1f6b48;
+}
+
+/* Compte en attente de validation : ni le rouge, ni le ton d'un refus. */
+.formulaire__attente {
+  margin-top: 16px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background-color: #fdf4e3;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #8a5c12;
+}
+
+.formulaire__succes {
+  margin-top: 16px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background-color: #e6f4ec;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #1f6b48;
+}
+
+/* ============================================================
+   3. La troisieme porte de la page d'entree
+   ============================================================ */
+
+/* Une seule porte pour les trois types : elle est plus large que celle
+   de l'admin, et le violet de la marque la porte. */
+.redirection__lien--utilisateur {
+  background-color: var(--hope-violet);
+}
+
+.redirection__lien--utilisateur:hover {
+  background-color: var(--hope-violet-fonce);
+}
+
+/* ============================================================
+   4. Formulaires de completion
+
+   Ils s'affichent avant d'entrer dans l'espace, hors de sa coquille :
+   il n'y a encore rien a y montrer.
+   ============================================================ */
+
+.completion {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 40px 20px 60px;
+  background-color: var(--hope-fond-panneau);
+}
+
+.completion__carte {
+  width: 100%;
+  max-width: 660px;
+  padding: 34px 32px 28px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 18px;
+  background-color: var(--hope-blanc);
+  box-shadow: 0 24px 60px rgba(53, 51, 67, 0.09);
+}
+
+.completion__entete {
+  text-align: center;
+}
+
+.completion__titre {
+  margin-top: 22px;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.completion__accroche {
+  margin-top: 9px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hope-texte-doux);
+}
+
+.completion__formulaire {
+  margin-top: 26px;
+}
+
+.completion__groupe {
+  margin: 0 0 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 14px;
+}
+
+.completion__groupe legend {
+  padding: 0 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.completion__paire {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+}
+
+.completion__champ {
+  margin-top: 14px;
+}
+
+.completion__champ label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.completion__champ input,
+.completion__champ select {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: var(--rayon-champ);
+  background-color: var(--hope-blanc);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--hope-texte);
+}
+
+.completion__champ input:focus,
+.completion__champ select:focus {
+  outline: none;
+  border-color: var(--hope-bordure-active);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+.completion__champ input[aria-invalid='true'],
+.completion__champ select[aria-invalid='true'] {
+  border-color: var(--hope-erreur);
+}
+
+.completion__aide {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--hope-texte-doux);
+}
+
+.completion__erreur-champ {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--hope-erreur);
+}
+
+.completion__case {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 13px;
+  font-size: 14px;
+}
+
+.completion__note {
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-bleu);
+  border-radius: 0 9px 9px 0;
+  background-color: var(--hope-bleu-clair);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--hope-texte);
+}
+
+.completion__erreur {
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-erreur);
+  border-radius: 0 9px 9px 0;
+  background-color: var(--hope-erreur-fond);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #8c2b20;
+}
+
+.completion__pied {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.completion__bouton {
+  padding: 12px 26px;
+  border: 0;
+  border-radius: var(--rayon-champ);
+  background-color: var(--hope-orange);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hope-blanc);
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.completion__bouton:hover:not(:disabled) {
+  background-color: var(--hope-orange-fonce);
+  transform: translateY(-1px);
+}
+
+.completion__bouton:disabled {
+  opacity: 0.6;
+}
+
+.completion__bouton:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   6. Petits ecrans
+   ============================================================ */
+
+@media (max-width: 620px) {
+  .paire-acces,
+  .completion__paire {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Repliees en colonne, les paires retrouvent l'espacement normal. */
+  .paire-acces .champ + .champ {
+    margin-top: 22px;
+  }
+
+  .completion__carte {
+    padding: 26px 20px 22px;
+  }
+
+  .completion__pied {
+    justify-content: stretch;
+  }
+
+  .completion__bouton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bascule-acces__onglet,
+  .completion__bouton {
+    transition: none;
+  }
+}

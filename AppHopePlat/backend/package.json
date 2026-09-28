@@ -1,0 +1,48 @@
+{
+  "name": "hope-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API HOPE - espace administrateur (projets, dons, budgets, depenses, justificatifs, beneficiaires, impacts)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node src/scripts/initDatabase.js",
+    "db:migrate": "node src/scripts/migrate.js",
+    "db:seed": "node src/scripts/seedAdmin.js",
+    "db:categories": "node src/scripts/seedCategories.js",
+    "db:seed-demo": "node src/scripts/seedDemoData.js",
+    "db:reset": "node src/scripts/resetData.js",
+    "db:setup": "npm run db:init && npm run db:migrate && npm run db:seed && npm run db:categories",
+    "test:api": "node src/scripts/testAuthFlow.js",
+    "test:admin": "node src/scripts/testAdminFlow.js",
+    "db:seed-volunteers": "node src/scripts/seedVolunteerData.js",
+    "db:seed-funders": "node src/scripts/seedFunderData.js",
+    "db:seed-espace": "node src/scripts/seedEspaceData.js",
+    "db:seed-rapports": "node src/scripts/seedRapportsBailleur.js",
+    "lint": "eslint .",
+    "test": "node --test",
+    "couverture": "node --test --experimental-test-coverage --test-coverage-exclude=tests/**"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.3.0",
+    "nodemailer": "^10.0.10",
+    "pg": "^8.16.3",
+    "sharp": "^0.35.4",
+    "stripe": "^22.6.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.12.0"
+  }
+}

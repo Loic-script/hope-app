@@ -1,0 +1,1738 @@
+/* ==================================================================
+   Paiement par MVola (pages/donateur/PaiementMvola.jsx)
+
+   La grammaire de l'application MVola, que le donateur a en poche :
+   un cadre jaune epais, une carte "solde" jaune au-dessus d'un bandeau
+   noir, des pastilles rondes cerclees, une pilule noire qui dit ou l'on
+   en est. Le logo HOPE reste dans l'en-tete : c'est HOPE qui recoit.
+   ================================================================== */
+
+.mvola {
+  --mv-jaune: #ffd400;
+  --mv-jaune-vif: #ffe03d;
+  --mv-jaune-pale: #fff7cc;
+  --mv-noir: #141414;
+  --mv-noir-2: #262626;
+  --mv-gris: #5f5f5f;
+  --mv-trait: #e7e2cc;
+  --mv-vert: #0a7a3b;
+  --mv-rouge: #b3261e;
+  --mv-ressort: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --mv-doux: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(16px, 5vh, 56px) 16px 40px;
+  background:
+    radial-gradient(1200px 520px at 50% -10%, var(--mv-jaune-pale), transparent 70%),
+    linear-gradient(180deg, #fffdf2, #ffffff 60%);
+  color: var(--mv-noir);
+  font-family: var(--police-titre);
+  overflow-x: hidden;
+}
+
+/* Un soleil jaune qui respire derriere le cadre. */
+.mvola__halo {
+  position: absolute;
+  top: -180px;
+  left: 50%;
+  width: 620px;
+  height: 620px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 212, 0, 0.35), transparent 65%);
+  animation: mvola-respire 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes mvola-respire {
+  50% {
+    transform: scale(1.08);
+    opacity: 0.8;
+  }
+}
+
+/* Le cadre : le telephone de la maquette, bord jaune epais. */
+.mvola__cadre {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  padding: 20px 20px 18px;
+  border: 10px solid var(--mv-jaune);
+  border-radius: 38px;
+  background: #fff;
+  box-shadow:
+    0 30px 80px rgba(120, 96, 0, 0.18),
+    0 6px 18px rgba(20, 20, 20, 0.06);
+  animation: mvola-arrive 0.6s var(--mv-doux) both;
+}
+
+@keyframes mvola-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+}
+
+/* ---------- En-tete ---------- */
+.mvola__entete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mvola__carre {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--mv-noir);
+  color: var(--mv-jaune);
+  cursor: pointer;
+  transition: transform 0.2s var(--mv-ressort), background 0.2s;
+}
+
+.mvola__carre svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mvola__carre:hover:not(:disabled) {
+  transform: translateX(-2px);
+  background: var(--mv-noir-2);
+}
+
+.mvola__carre:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.mvola__qui {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.mvola__bonjour {
+  font-size: 0.8rem;
+  color: var(--mv-gris);
+}
+
+.mvola__nom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.02rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mvola__hope {
+  width: 34px;
+  height: auto;
+  flex: none;
+}
+
+.mvola__logo {
+  flex: none;
+  width: 84px;
+  height: auto;
+  border-radius: 10px;
+}
+
+/* ---------- La pilule qui avance ---------- */
+.mvola__pas {
+  display: flex;
+  gap: 6px;
+  margin: 18px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.mvola__pas-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--mv-jaune);
+  transition: width 0.45s var(--mv-doux), background 0.3s;
+}
+
+.mvola__pas-point--actif {
+  width: 34px;
+  background: var(--mv-noir);
+}
+
+.mvola__pas-point--fait {
+  background: var(--mv-noir-2);
+  opacity: 0.35;
+}
+
+/* ---------- Chaque temps entre en glissant ---------- */
+.mvola__temps {
+  animation: mvola-temps 0.5s var(--mv-doux) both;
+}
+
+@keyframes mvola-temps {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.mvola__titre {
+  margin: 8px 0 14px;
+  font-size: clamp(1.3rem, 4.6vw, 1.55rem);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+
+.mvola__temps--merci .mvola__titre {
+  position: relative;
+  margin-top: 18px;
+}
+
+.mvola__titre--centre,
+.mvola__texte--centre {
+  text-align: center;
+}
+
+.mvola__texte {
+  margin: -4px 0 18px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--mv-gris);
+}
+
+.mvola__texte strong {
+  color: var(--mv-noir);
+}
+
+/* ---------- La carte "solde" : jaune dessus, noire dessous ---------- */
+.mvola__solde {
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgba(255, 196, 0, 0.35);
+  transition: transform 0.3s var(--mv-doux), box-shadow 0.3s;
+}
+
+.mvola__solde:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(255, 196, 0, 0.5), 0 0 0 3px var(--mv-noir);
+}
+
+.mvola__solde-haut {
+  display: block;
+  padding: 18px 18px 16px;
+  background:
+    radial-gradient(260px 120px at 100% 0%, var(--mv-jaune-vif), transparent 70%),
+    var(--mv-jaune);
+  cursor: text;
+}
+
+.mvola__solde-libelle {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.mvola__solde-valeur {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Le champ prend la largeur de ce qu'il contient : "Ar" suit le nombre. */
+.mvola__montant {
+  width: calc(var(--chiffres, 1) * 0.6em + 0.08em);
+  max-width: 100%;
+  min-width: 1.2ch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mv-noir);
+  font: inherit;
+  font-size: clamp(2.1rem, 9vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: width 0.18s var(--mv-doux);
+}
+
+.mvola__montant::placeholder {
+  color: rgba(20, 20, 20, 0.35);
+}
+
+.mvola__devise {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mvola__solde-bas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--mv-noir);
+  color: #fff;
+}
+
+.mvola__solde-bas > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px 18px;
+}
+
+.mvola__solde-bas > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.mvola__solde-petit {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+.mvola__solde-fort {
+  color: var(--mv-jaune);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  /* Deux lignes au plus : un nom de projet se lit en entier. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* ---------- Montants rapides : des pastilles rondes ---------- */
+.mvola__rubrique {
+  margin: 14px 0 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mvola__rapides {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.mvola__rapide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--mv-noir);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.mvola__rapide-rond {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 1.5px solid var(--mv-trait);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition:
+    transform 0.25s var(--mv-ressort),
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.mvola__rapide:hover .mvola__rapide-rond {
+  transform: translateY(-3px);
+  border-color: var(--mv-jaune);
+}
+
+.mvola__rapide--choisi .mvola__rapide-rond {
+  background: var(--mv-jaune);
+  border-color: var(--mv-noir);
+  transform: scale(1.06);
+}
+
+.mvola__rapide--choisi {
+  font-weight: 700;
+}
+
+/* ---------- Champs ---------- */
+.mvola__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.mvola__champ-libelle {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mvola__telephone {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1.5px solid var(--mv-trait);
+  border-radius: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mvola__telephone:focus-within,
+.mvola__saisie:focus {
+  border-color: var(--mv-noir);
+  box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.55);
+}
+
+.mvola__indicatif {
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  background: var(--mv-jaune);
+  font-weight: 700;
+}
+
+.mvola__telephone input,
+.mvola__saisie {
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 0;
+  background: #fff;
+  color: var(--mv-noir);
+  font: inherit;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.mvola__saisie {
+  border: 1.5px solid var(--mv-trait);
+  border-radius: 14px;
+  text-transform: uppercase;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mvola__telephone--erreur,
+.mvola__saisie--erreur {
+  border-color: var(--mv-rouge);
+  animation: mvola-non 0.35s;
+}
+
+@keyframes mvola-non {
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.mvola__aide {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--mv-gris);
+}
+
+.mvola__aide--erreur,
+.mvola__erreur {
+  color: var(--mv-rouge);
+}
+
+.mvola__erreur {
+  min-height: 1.2em;
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+}
+
+.mvola__erreur--centre {
+  text-align: center;
+}
+
+/* ---------- Les trois gestes : les tuiles de l'application ---------- */
+.mvola__gestes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  counter-reset: geste;
+}
+
+.mvola__geste {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  animation: mvola-geste 0.5s var(--mv-ressort) both;
+  animation-delay: calc(0.12s + var(--rang) * 0.12s);
+}
+
+@keyframes mvola-geste {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+}
+
+.mvola__geste-rond {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border: 1.5px solid var(--mv-trait);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(20, 20, 20, 0.06);
+  /* Un anneau jaune passe d'une tuile a l'autre : l'ordre des gestes. */
+  animation: mvola-tour 3.6s ease-in-out infinite;
+  animation-delay: calc(0.8s + var(--rang) * 1.2s);
+}
+
+@keyframes mvola-tour {
+  0%,
+  30%,
+  100% {
+    border-color: var(--mv-trait);
+    box-shadow: 0 6px 14px rgba(20, 20, 20, 0.06);
+  }
+  10%,
+  20% {
+    border-color: var(--mv-jaune);
+    box-shadow: 0 0 0 6px rgba(255, 212, 0, 0.35);
+  }
+}
+
+.mvola__geste-rond::after {
+  counter-increment: geste;
+  content: counter(geste);
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--mv-noir);
+  color: var(--mv-jaune);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mvola__geste-rond svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: var(--mv-noir);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mvola__geste-titre {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.mvola__geste-texte {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--mv-gris);
+}
+
+/* ---------- Le destinataire, a recopier ---------- */
+.mvola__destinataire {
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--mv-noir);
+  color: #fff;
+}
+
+.mvola__copiable {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 14px 16px;
+}
+
+.mvola__copiable + .mvola__copiable {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.mvola__copiable-libelle {
+  grid-column: 1;
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+.mvola__copiable-valeur {
+  grid-column: 1;
+  color: var(--mv-jaune);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+}
+
+.mvola__copier {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 76px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--mv-jaune);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--mv-jaune);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.25s var(--mv-ressort);
+}
+
+.mvola__copier:hover {
+  background: rgba(255, 212, 0, 0.12);
+}
+
+.mvola__copier--fait {
+  background: var(--mv-jaune);
+  color: var(--mv-noir);
+  transform: scale(1.06);
+}
+
+.mvola__destinataire-nom {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--mv-noir-2);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.mvola__destinataire-nom strong {
+  color: #fff;
+}
+
+/* Composer #111# : utile sur telephone, discret ailleurs. */
+.mvola__composer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  margin-top: 12px;
+  border: 1.5px dashed var(--mv-noir);
+  border-radius: 14px;
+  color: var(--mv-noir);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.mvola__composer:hover {
+  background: var(--mv-jaune-pale);
+}
+
+.mvola__composer-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mv-vert);
+  box-shadow: 0 0 0 0 rgba(10, 122, 59, 0.5);
+  animation: mvola-pulse 1.8s infinite;
+}
+
+@keyframes mvola-pulse {
+  to {
+    box-shadow: 0 0 0 12px rgba(10, 122, 59, 0);
+  }
+}
+
+/* ---------- Boutons ---------- */
+.mvola__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.mvola__bouton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 22px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: var(--mv-noir);
+  color: var(--mv-jaune);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.25s var(--mv-ressort), box-shadow 0.25s;
+}
+
+/* Un reflet jaune traverse le bouton au survol. */
+.mvola__bouton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 212, 0, 0.22), transparent 70%);
+  translate: -100% 0;
+  transition: translate 0.6s var(--mv-doux);
+}
+
+.mvola__bouton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(20, 20, 20, 0.25);
+}
+
+.mvola__bouton:hover:not(:disabled)::before {
+  translate: 100% 0;
+}
+
+.mvola__bouton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.mvola__bouton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.mvola__bouton svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.25s var(--mv-ressort);
+}
+
+.mvola__bouton:hover svg {
+  transform: translateX(4px);
+}
+
+.mvola__plus-tard {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--mv-gris);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.mvola__plus-tard:hover {
+  color: var(--mv-noir);
+}
+
+.mvola :focus-visible {
+  outline: 3px solid var(--mv-noir);
+  outline-offset: 3px;
+}
+
+.mvola__solde :focus-visible,
+.mvola__titre:focus-visible {
+  outline: none;
+}
+
+/* ---------- Attente ---------- */
+.mvola__attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 0;
+  color: var(--mv-gris);
+}
+
+.mvola__rotation {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--mv-jaune);
+  border-top-color: var(--mv-noir);
+  border-radius: 50%;
+  animation: mvola-tourne 0.8s linear infinite;
+}
+
+.mvola__rotation--clair {
+  border-color: rgba(255, 212, 0, 0.3);
+  border-top-color: var(--mv-jaune);
+}
+
+@keyframes mvola-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mvola__alerte {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fdeceb;
+  color: var(--mv-rouge);
+  font-size: 0.9rem;
+}
+
+/* ---------- Merci ---------- */
+.mvola__sceau {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  margin: 10px auto 8px;
+}
+
+.mvola__sceau svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  animation: mvola-sceau 0.6s var(--mv-ressort) both;
+}
+
+.mvola__sceau circle {
+  fill: var(--mv-jaune);
+  stroke: var(--mv-noir);
+  stroke-width: 2;
+}
+
+.mvola__sceau path {
+  fill: none;
+  stroke: var(--mv-noir);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: mvola-trace 0.5s 0.45s var(--mv-doux) forwards;
+}
+
+@keyframes mvola-sceau {
+  from {
+    transform: scale(0.3) rotate(-25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes mvola-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.mvola__onde {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--mv-jaune);
+  opacity: 0;
+  /* Trois ondes, puis le calme : le merci ne clignote pas sans fin. */
+  animation: mvola-onde 2.4s 0.5s var(--mv-doux) 3;
+}
+
+.mvola__onde--2 {
+  animation-delay: 1.3s;
+}
+
+@keyframes mvola-onde {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Huit etincelles jaillissent du sceau, une fois. */
+.mvola__etincelle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  border-radius: 2px;
+  background: var(--mv-jaune);
+  opacity: 0;
+  transform: rotate(var(--angle)) translateY(0);
+  animation: mvola-etincelle 0.9s 0.35s var(--mv-doux) both;
+}
+
+.mvola__etincelle:nth-child(odd) {
+  background: var(--mv-noir);
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+}
+
+@keyframes mvola-etincelle {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(-78px) scale(0.4);
+  }
+}
+
+/* Le recu : un ticket aux bords decoupes. */
+.mvola__recu {
+  position: relative;
+  margin: 18px 0 0;
+  padding: 6px 18px;
+  border-radius: 16px;
+  background: var(--mv-jaune-pale);
+  animation: mvola-temps 0.5s 0.3s var(--mv-doux) both;
+}
+
+.mvola__recu::before,
+.mvola__recu::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.mvola__recu::before {
+  left: -10px;
+}
+
+.mvola__recu::after {
+  right: -10px;
+}
+
+.mvola__recu > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+}
+
+.mvola__recu > div + div {
+  border-top: 1px dashed #e2d38a;
+}
+
+.mvola__recu dt {
+  font-size: 0.84rem;
+  color: var(--mv-gris);
+}
+
+.mvola__recu dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.mvola__statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #7a5b00;
+}
+
+.mvola__statut-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0a800;
+  animation: mvola-pulse-jaune 1.8s infinite;
+}
+
+@keyframes mvola-pulse-jaune {
+  0% {
+    box-shadow: 0 0 0 0 rgba(224, 168, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(224, 168, 0, 0);
+  }
+}
+
+/* ---------- Pied ---------- */
+.mvola__pied {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--mv-trait);
+  font-size: 0.76rem;
+  color: var(--mv-gris);
+  text-align: center;
+}
+
+.mvola__pied svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--mv-vert);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Ce qui n'existe qu'a une taille d'ecran ---------- */
+.mvola__cote,
+.mvola__etape-texte {
+  display: none;
+}
+
+/* ==================================================================
+   Ordinateur : pas un telephone pose au milieu de l'ecran, mais une
+   page de paiement large -- la colonne jaune raconte le don, la
+   colonne blanche le fait avancer.
+   ================================================================== */
+@media (min-width: 900px) {
+  .mvola {
+    align-items: center;
+    padding: 48px 32px;
+  }
+
+  .mvola__halo {
+    top: -320px;
+    width: 980px;
+    height: 980px;
+  }
+
+  .mvola__cadre {
+    display: grid;
+    grid-template-columns: minmax(360px, 420px) 1fr;
+    max-width: 1100px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 30px;
+    box-shadow:
+      0 40px 100px rgba(120, 96, 0, 0.2),
+      0 8px 24px rgba(20, 20, 20, 0.06);
+  }
+
+  /* --- La colonne jaune --- */
+  .mvola__cote {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 40px 36px 32px;
+    overflow: hidden;
+    background:
+      radial-gradient(420px 260px at 0% 0%, var(--mv-jaune-vif), transparent 70%),
+      var(--mv-jaune);
+  }
+
+  /* Un grand soleil pale, dans l'angle : le decor, rien de plus. */
+  .mvola__cote::after {
+    content: '';
+    position: absolute;
+    right: -140px;
+    bottom: -140px;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    border: 46px solid rgba(255, 255, 255, 0.22);
+    pointer-events: none;
+  }
+
+  .mvola__cote > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .mvola__marques {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mvola__marque-hope {
+    display: grid;
+    place-items: center;
+    height: 52px;
+    padding: 0 14px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(120, 96, 0, 0.18);
+  }
+
+  .mvola__marque-hope .hope-logo {
+    width: 92px;
+    height: auto;
+  }
+
+  .mvola__croix {
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .mvola__marque-mvola {
+    width: 104px;
+    height: 52px;
+    object-fit: cover;
+    border: 2px solid var(--mv-noir);
+    border-radius: 14px;
+  }
+
+  .mvola__cote-titre {
+    margin: 6px 0 0;
+    font-size: 1.65rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .mvola__cote-texte {
+    margin: -10px 0 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: #3d3300;
+  }
+
+  /* Les trois temps, relies par un fil. */
+  .mvola__etapes {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mvola__etape {
+    position: relative;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .mvola__etape:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 42px;
+    left: 19px;
+    width: 2px;
+    height: 14px;
+    background: rgba(20, 20, 20, 0.25);
+  }
+
+  .mvola__etape-rond {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--mv-noir);
+    border-radius: 50%;
+    font-weight: 700;
+    transition:
+      background 0.3s,
+      color 0.3s,
+      transform 0.4s var(--mv-ressort);
+  }
+
+  .mvola__etape-rond svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mvola__etape--active .mvola__etape-rond,
+  .mvola__etape--faite .mvola__etape-rond {
+    background: var(--mv-noir);
+    color: var(--mv-jaune);
+  }
+
+  .mvola__etape--active .mvola__etape-rond {
+    transform: scale(1.08);
+    animation: mvola-anneau 2.2s ease-out infinite;
+  }
+
+  @keyframes mvola-anneau {
+    0% {
+      box-shadow: 0 0 0 0 rgba(20, 20, 20, 0.35);
+    }
+    100% {
+      box-shadow: 0 0 0 12px rgba(20, 20, 20, 0);
+    }
+  }
+
+  .mvola__etape-corps strong {
+    display: block;
+    font-size: 0.98rem;
+  }
+
+  .mvola__etape-corps small {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: rgba(20, 20, 20, 0.66);
+  }
+
+  .mvola__etape:not(.mvola__etape--active):not(.mvola__etape--faite) {
+    opacity: 0.72;
+  }
+
+  /* Le don tel qu'il se precise. */
+  .mvola__resume {
+    margin: 4px 0 0;
+    padding: 6px 20px;
+    border-radius: 18px;
+    background: var(--mv-noir);
+    color: #fff;
+  }
+
+  .mvola__resume > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 0;
+  }
+
+  .mvola__resume > div + div {
+    border-top: 1px dashed rgba(255, 255, 255, 0.16);
+  }
+
+  .mvola__resume dt {
+    font-size: 0.8rem;
+    opacity: 0.75;
+  }
+
+  .mvola__resume dd {
+    margin: 0;
+    min-width: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .mvola__resume-montant dd {
+    color: var(--mv-jaune);
+    font-size: 1.45rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    animation: mvola-pop 0.35s var(--mv-ressort);
+  }
+
+  @keyframes mvola-pop {
+    from {
+      transform: scale(0.9);
+      opacity: 0.4;
+    }
+  }
+
+  .mvola__cote-pied {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: auto 0 0;
+    font-size: 0.8rem;
+    color: #3d3300;
+  }
+
+  .mvola__cote-pied svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--mv-noir);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* --- La colonne blanche --- */
+  .mvola__principal {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 660px;
+    padding: 36px 56px 40px;
+  }
+
+  .mvola__qui,
+  .mvola__entete .mvola__logo,
+  .mvola__pas,
+  .mvola__pied,
+  .mvola__composer {
+    display: none;
+  }
+
+  .mvola__etape-texte {
+    display: inline;
+    margin-left: auto;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mv-gris);
+  }
+
+  .mvola__carre {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mvola__titre {
+    margin: 26px 0 16px;
+    font-size: 1.95rem;
+  }
+
+  .mvola__texte {
+    font-size: 1rem;
+  }
+
+  .mvola__montant {
+    font-size: 3rem;
+  }
+
+  .mvola__solde-haut {
+    padding: 22px 24px 20px;
+  }
+
+  .mvola__solde-bas > div {
+    padding: 14px 24px;
+  }
+
+  .mvola__rapides {
+    gap: 12px;
+  }
+
+  .mvola__gestes {
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .mvola__geste-rond {
+    width: 68px;
+    height: 68px;
+  }
+
+  .mvola__actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    margin-top: 28px;
+  }
+
+  .mvola__bouton {
+    min-width: 280px;
+  }
+
+  .mvola__temps--merci {
+    margin: auto 0;
+  }
+
+  .mvola__temps--merci .mvola__actions {
+    justify-content: center;
+  }
+
+  .mvola__recu {
+    max-width: 520px;
+    margin-inline: auto;
+  }
+}
+
+/* ==================================================================
+   Telephone : la page tient dans l'ecran. Tout se resserre -- marges,
+   pastilles, textes d'aide --, et ce que le pied de page dit deja
+   n'est pas repete.
+   ================================================================== */
+@media (max-width: 480px) {
+  .mvola {
+    align-items: stretch;
+    padding: 0;
+    background: var(--mv-jaune);
+  }
+
+  .mvola__halo,
+  .mvola__hors-telephone,
+  .mvola__rubrique,
+  .mvola__geste-texte,
+  .mvola__aide:not(.mvola__aide--erreur) {
+    display: none;
+  }
+
+  .mvola__cadre {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: none;
+    padding: 12px 14px 10px;
+    border-width: 6px;
+    border-radius: 26px;
+  }
+
+  .mvola__principal {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .mvola__entete {
+    gap: 10px;
+  }
+
+  .mvola__carre {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+  }
+
+  .mvola__bonjour {
+    font-size: 0.72rem;
+  }
+
+  .mvola__nom {
+    font-size: 0.88rem;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .mvola__hope {
+    width: 28px;
+  }
+
+  .mvola__logo {
+    width: 62px;
+    border-radius: 8px;
+  }
+
+  .mvola__pas {
+    margin: 10px 0 0;
+  }
+
+  .mvola__titre {
+    margin: 8px 0 10px;
+    font-size: 1.18rem;
+  }
+
+  .mvola__texte {
+    margin: -4px 0 10px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  /* La carte "solde", plus basse. */
+  .mvola__solde-haut {
+    padding: 12px 14px 10px;
+  }
+
+  .mvola__solde-libelle {
+    font-size: 0.8rem;
+  }
+
+  .mvola__solde-valeur {
+    margin-top: 0;
+  }
+
+  .mvola__montant {
+    font-size: 2rem;
+  }
+
+  .mvola__devise {
+    font-size: 1.05rem;
+  }
+
+  .mvola__solde-bas > div {
+    padding: 8px 12px;
+  }
+
+  .mvola__solde-petit {
+    font-size: 0.7rem;
+  }
+
+  .mvola__solde-fort {
+    font-size: 0.84rem;
+  }
+
+  .mvola__erreur {
+    min-height: 0;
+    margin-top: 4px;
+  }
+
+  /* Les montants rapides : une rangee de pilules, plus de pastilles. */
+  .mvola__rapides {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .mvola__rapide {
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 2px;
+    border: 1.5px solid var(--mv-trait);
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+      background 0.2s,
+      border-color 0.2s,
+      transform 0.25s var(--mv-ressort);
+  }
+
+  .mvola__rapide-rond {
+    display: none;
+  }
+
+  .mvola__rapide--choisi {
+    border-color: var(--mv-noir);
+    background: var(--mv-jaune);
+    transform: scale(1.04);
+  }
+
+  .mvola__champ {
+    gap: 5px;
+    margin-top: 12px;
+  }
+
+  .mvola__champ-libelle {
+    font-size: 0.82rem;
+  }
+
+  .mvola__telephone input,
+  .mvola__saisie {
+    min-height: 46px;
+    font-size: 1rem;
+  }
+
+  .mvola__indicatif {
+    padding: 0 11px;
+  }
+
+  .mvola__actions {
+    gap: 0;
+    margin-top: 14px;
+  }
+
+  .mvola__bouton {
+    min-height: 50px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+  }
+
+  .mvola__plus-tard {
+    min-height: 40px;
+    font-size: 0.85rem;
+  }
+
+  /* L'envoi : les trois gestes en une rangee basse. */
+  .mvola__gestes {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .mvola__geste {
+    gap: 4px;
+  }
+
+  .mvola__geste-rond {
+    width: 44px;
+    height: 44px;
+  }
+
+  .mvola__geste-rond svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mvola__geste-rond::after {
+    top: -3px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.64rem;
+  }
+
+  .mvola__geste-titre {
+    font-size: 0.72rem;
+  }
+
+  .mvola__copiable {
+    padding: 8px 12px;
+  }
+
+  .mvola__copiable-libelle {
+    font-size: 0.7rem;
+  }
+
+  .mvola__copiable-valeur {
+    font-size: 1.1rem;
+  }
+
+  .mvola__copier {
+    min-width: 66px;
+    min-height: 40px;
+    font-size: 0.78rem;
+  }
+
+  /* Le titulaire est deja dans le libelle du numero. */
+  .mvola__destinataire-nom {
+    display: none;
+  }
+
+  .mvola__composer {
+    min-height: 42px;
+    margin-top: 8px;
+    font-size: 0.82rem;
+  }
+
+  /* Le merci. */
+  .mvola__temps--merci {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .mvola__sceau {
+    width: 78px;
+    height: 78px;
+    margin: 4px auto 0;
+  }
+
+  .mvola__temps--merci .mvola__titre {
+    margin-top: 12px;
+  }
+
+  .mvola__recu {
+    margin-top: 10px;
+    padding: 2px 14px;
+  }
+
+  .mvola__recu > div {
+    padding: 8px 0;
+  }
+
+  /* Le pied descend en bas de l'ecran, sans pousser le reste. */
+  .mvola__pied {
+    margin: auto 0 0;
+    padding-top: 8px;
+    font-size: 0.7rem;
+  }
+
+  .mvola__principal > .mvola__temps + .mvola__pied {
+    margin-top: auto;
+  }
+}
+
+/* Les petits ecrans (iPhone SE, 568px de haut) : on garde l'essentiel.
+   Les trois gestes se lisent deja dans le titre et le bouton #111#, et
+   le pied de page cede sa place. */
+@media (max-width: 480px) and (max-height: 620px) {
+  .mvola__gestes,
+  .mvola__pied {
+    display: none;
+  }
+
+  .mvola__pas {
+    margin-top: 6px;
+  }
+
+  .mvola__titre {
+    margin: 4px 0 8px;
+    font-size: 1.08rem;
+  }
+
+  .mvola__solde-haut {
+    padding: 10px 12px 8px;
+  }
+
+  .mvola__montant {
+    font-size: 1.75rem;
+  }
+
+  .mvola__composer {
+    min-height: 40px;
+  }
+
+  .mvola__champ {
+    margin-top: 10px;
+  }
+
+  .mvola__actions {
+    margin-top: 10px;
+  }
+}
+
+/* Moins de mouvement : les etats restent, les animations s'effacent. */
+@media (prefers-reduced-motion: reduce) {
+  .mvola *,
+  .mvola *::before,
+  .mvola *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .mvola__sceau path {
+    stroke-dashoffset: 0;
+  }
+}

@@ -1,0 +1,241 @@
+/* ============================================================
+   "Faire un don", bouton flottant de l'espace bailleur
+   (components/DonFlottant.jsx)
+
+   Une pilule orange posee en bas a droite : elle entre en rebondissant,
+   un reflet la traverse toutes les quelques secondes, le coeur bat dans
+   un halo. La poignee a gauche la deplace (useCarteDeplacable) ; tout le
+   reste mene au don.
+   ============================================================ */
+
+.don-flottant {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.don-flottant .carte-mobile {
+  pointer-events: auto;
+}
+
+.don-flottant__pilule {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--hope-orange) 0%, #f0b04f 55%, var(--hope-orange-fonce) 100%);
+  background-size: 180% 180%;
+  box-shadow:
+    0 14px 30px -8px rgba(201, 130, 42, 0.65),
+    0 4px 10px rgba(53, 51, 67, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation:
+    don-flottant-entree 620ms cubic-bezier(0.34, 1.56, 0.64, 1) 300ms backwards,
+    don-flottant-fond 6s ease-in-out infinite;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Saisi : il se souleve, son ombre s'allonge. */
+.carte-mobile--saisie .don-flottant__pilule {
+  box-shadow:
+    0 26px 48px -12px rgba(201, 130, 42, 0.7),
+    0 6px 14px rgba(53, 51, 67, 0.16);
+}
+
+.don-flottant__reflet {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.5) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: don-flottant-reflet 4.5s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+
+.don-flottant__poignee {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 56px;
+  margin-left: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: grab;
+  touch-action: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.don-flottant__poignee svg {
+  width: 18px;
+  height: 18px;
+}
+
+.don-flottant__poignee:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.carte-mobile--saisie .don-flottant__poignee {
+  cursor: grabbing;
+}
+
+.don-flottant__lien {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 22px 0 6px;
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  text-shadow: 0 1px 1px rgba(120, 70, 10, 0.25);
+}
+
+.don-flottant__coeur {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--hope-orange-fonce);
+  animation: don-flottant-halo 2.4s ease-out infinite;
+}
+
+.don-flottant__coeur svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  animation: don-flottant-coeur 2.4s ease-in-out infinite;
+}
+
+@media (hover: hover) {
+  .don-flottant__pilule:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 18px 36px -8px rgba(201, 130, 42, 0.75),
+      0 6px 14px rgba(53, 51, 67, 0.14);
+  }
+}
+
+.don-flottant__lien:active {
+  transform: scale(0.97);
+}
+
+.don-flottant__poignee:focus-visible,
+.don-flottant__lien:focus-visible {
+  outline: 3px solid var(--hope-jaune);
+  outline-offset: -3px;
+  border-radius: 999px;
+}
+
+@keyframes don-flottant-entree {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes don-flottant-fond {
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes don-flottant-reflet {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  85%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes don-flottant-coeur {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.22);
+  }
+  30% {
+    transform: scale(0.95);
+  }
+  45% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes don-flottant-halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+}
+
+/* Telephone : plus compact, au-dessus du bord et de la barre du systeme. */
+@media (max-width: 560px) {
+  .don-flottant {
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .don-flottant__poignee {
+    width: 30px;
+    height: 50px;
+  }
+
+  .don-flottant__lien {
+    min-height: 50px;
+    padding-right: 18px;
+    font-size: 14.5px;
+  }
+
+  .don-flottant__coeur {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media print {
+  .don-flottant {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .don-flottant__pilule,
+  .don-flottant__reflet,
+  .don-flottant__coeur,
+  .don-flottant__coeur svg {
+    animation: none;
+  }
+
+  .don-flottant__pilule,
+  .don-flottant__poignee {
+    transition: none;
+  }
+}

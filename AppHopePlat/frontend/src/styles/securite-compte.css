@@ -1,0 +1,467 @@
+/* ============================================================
+   La securite du compte, commune aux trois espaces : changer son
+   mot de passe, supprimer son compte.
+   ============================================================ */
+
+.securite {
+  margin-top: 28px;
+  padding: 22px 24px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(53, 51, 67, 0.05);
+  animation: securite-entree 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.securite__titre {
+  margin: 0 0 6px;
+  font-family: var(--police-titre);
+  font-size: 18px;
+  color: var(--hope-violet-fonce);
+}
+
+.securite__ligne {
+  padding: 16px 0;
+  border-top: 1px solid #eef0f7;
+}
+
+.securite__ligne:first-of-type {
+  border-top: 0;
+}
+
+.securite__entete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.securite__entete h3 {
+  margin: 0;
+  font-size: 15.5px;
+  color: var(--hope-texte);
+}
+
+.securite__entete p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--hope-texte-doux);
+}
+
+.securite__pictogramme {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #efeefa;
+  color: var(--hope-violet);
+}
+
+.securite__pictogramme--danger {
+  background: var(--hope-erreur-fond);
+  color: var(--hope-erreur);
+}
+
+.securite__pictogramme svg,
+.securite__voir svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.securite__bouton {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--hope-bordure);
+  border-radius: 11px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hope-texte);
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.securite__bouton:hover:not(:disabled) {
+  border-color: var(--hope-violet);
+  color: var(--hope-violet);
+}
+
+.securite__bouton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.securite__bouton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.securite__bouton--principal {
+  border-color: var(--hope-violet);
+  background: var(--hope-violet);
+  color: #ffffff;
+}
+
+.securite__bouton--principal:hover:not(:disabled) {
+  background: var(--hope-violet-fonce);
+  color: #ffffff;
+}
+
+.securite__bouton--discret {
+  border-color: transparent;
+  background: transparent;
+}
+
+.securite__bouton--danger {
+  border-color: #f2c9c4;
+  color: var(--hope-erreur);
+}
+
+.securite__bouton--danger:hover:not(:disabled) {
+  border-color: var(--hope-erreur);
+  background: var(--hope-erreur-fond);
+  color: var(--hope-erreur);
+}
+
+.securite__bouton--danger-plein {
+  border-color: var(--hope-erreur);
+  background: var(--hope-erreur);
+  color: #ffffff;
+}
+
+.securite__bouton--danger-plein:hover:not(:disabled) {
+  background: #a53125;
+  color: #ffffff;
+}
+
+.securite__bouton:focus-visible,
+.securite__voir:focus-visible,
+.securite__champ input:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.securite__formulaire {
+  display: grid;
+  gap: 14px;
+  max-width: 460px;
+  margin: 16px 0 0 56px;
+  animation: securite-entree 0.25s ease both;
+}
+
+.securite__champ {
+  display: grid;
+  gap: 6px;
+}
+
+.securite__champ label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hope-texte);
+}
+
+.securite__champ input {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid var(--hope-bordure);
+  border-radius: 11px;
+  background: #fafbfe;
+  font: inherit;
+  font-size: 16px;
+  color: var(--hope-texte);
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.securite__champ input:focus {
+  border-color: var(--hope-bleu);
+  background: #ffffff;
+}
+
+.securite__champ input[aria-invalid='true'] {
+  border-color: var(--hope-erreur);
+}
+
+.securite__aide {
+  font-size: 13px;
+  color: var(--hope-texte-doux);
+}
+
+.securite__erreur {
+  font-size: 13px;
+  color: var(--hope-erreur);
+}
+
+.securite__force {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hope-texte-doux);
+}
+
+.securite__jauge {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 34px);
+  gap: 4px;
+}
+
+.securite__jauge i {
+  height: 5px;
+  border-radius: 3px;
+  background: #e6e8f2;
+  transition: background-color 0.25s ease;
+}
+
+.securite__force--1 { color: #b0392c; }
+.securite__force--1 .securite__jauge i:nth-child(-n + 1) { background: #d9534f; }
+.securite__force--2 { color: #8a5c12; }
+.securite__force--2 .securite__jauge i:nth-child(-n + 2) { background: var(--hope-orange); }
+.securite__force--3 { color: #2c8f63; }
+.securite__force--3 .securite__jauge i { background: #2c8f63; }
+
+.securite__voir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--hope-lien);
+  cursor: pointer;
+}
+
+.securite__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.securite__succes {
+  margin: 12px 0 0 56px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #e6f5ed;
+  font-size: 14px;
+  color: #22704d;
+}
+
+.securite__refus {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--hope-erreur-fond);
+  font-size: 14px;
+  color: var(--hope-erreur);
+}
+
+/* ---------- La fenetre de suppression ---------- */
+.securite__voile {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(33, 30, 52, 0.55);
+  backdrop-filter: blur(3px);
+  animation: securite-voile 0.2s ease both;
+}
+
+.securite__fenetre {
+  display: grid;
+  gap: 14px;
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 30px 80px rgba(20, 18, 40, 0.3);
+  animation: securite-fenetre 0.26s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.securite__fenetre h3 {
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: 19px;
+  color: var(--hope-texte);
+}
+
+.securite__consequences {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--hope-texte-doux);
+}
+
+@keyframes securite-entree {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes securite-voile {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes securite-fenetre {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  .securite {
+    padding: 18px 16px;
+  }
+
+  .securite__entete {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .securite__entete .securite__bouton {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .securite__formulaire,
+  .securite__succes {
+    margin-left: 0;
+  }
+
+  .securite__actions .securite__bouton {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .securite,
+  .securite__formulaire,
+  .securite__voile,
+  .securite__fenetre {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Le rappel de confirmer son adresse, en tete des espaces.
+   ============================================================ */
+.bandeau-verif {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #f3dcb4;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #fff8ea, #fffdf6);
+  animation: securite-entree 0.35s ease both;
+}
+
+.bandeau-verif__icone {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #fdebc8;
+  color: var(--hope-orange-lisible);
+}
+
+.bandeau-verif__icone svg,
+.bandeau-verif__fermer svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bandeau-verif__texte {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--hope-texte);
+  overflow-wrap: anywhere;
+}
+
+.bandeau-verif__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bandeau-verif__bouton {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--hope-orange);
+  border-radius: 10px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hope-orange-lisible);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.18s ease;
+}
+
+.bandeau-verif__bouton:hover:not(:disabled) {
+  background: #fdebc8;
+}
+
+.bandeau-verif__fermer {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--hope-texte-doux);
+  cursor: pointer;
+}
+
+.bandeau-verif__fermer:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.bandeau-verif__bouton:focus-visible,
+.bandeau-verif__fermer:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .bandeau-verif {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'icone texte fermer' 'actions actions actions';
+  }
+
+  .bandeau-verif__icone { grid-area: icone; }
+  .bandeau-verif__texte { grid-area: texte; }
+  .bandeau-verif__actions { display: contents; }
+  .bandeau-verif__fermer { grid-area: fermer; }
+  .bandeau-verif__bouton { grid-area: actions; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandeau-verif { animation: none; }
+}

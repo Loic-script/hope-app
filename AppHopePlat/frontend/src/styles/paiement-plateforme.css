@@ -1,0 +1,684 @@
+/* ==================================================================
+   Plateformes de transfert (pages/donateur/PaiementPlateforme.jsx)
+
+   L'objet de reference : le guichet qui compare ses services. Les
+   couleurs de HOPE (violet, bleu ciel, jaune), des cartes de service
+   marquees par ce qui compte vraiment -- la facon dont l'argent arrive
+   (mobile, especes, banque) --, et un filtre qui rebat les cartes.
+   ================================================================== */
+
+.plt {
+  --pl-violet: #5d5696;
+  --pl-violet-fonce: #4a4479;
+  --pl-bleu: #86b9de;
+  --pl-bleu-pale: #e7f1fa;
+  --pl-jaune: #f5e389;
+  --pl-texte: #353343;
+  --pl-doux: #6b6880;
+  --pl-trait: #dfe4f1;
+  --pl-rouge: #c0392b;
+  --pl-anime: cubic-bezier(0.22, 1, 0.36, 1);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(180deg, var(--pl-bleu-pale), #fff 320px);
+  color: var(--pl-texte);
+  font-family: var(--police-titre);
+}
+
+.plt__tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 14px 16px 6px;
+}
+
+.plt__retour {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--pl-violet);
+  box-shadow: 0 2px 8px rgba(53, 51, 67, 0.08);
+  cursor: pointer;
+}
+
+.plt__retour svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plt__retour:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.plt__tete-titre {
+  flex: 1;
+  font-weight: 600;
+  color: var(--pl-violet);
+}
+
+.plt__tete-hope {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.plt__tete-hope .hope-logo {
+  width: 56px;
+  height: auto;
+}
+
+.plt__page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 6px 16px 24px;
+}
+
+.plt__temps {
+  animation: plt-entre 0.45s var(--pl-anime) both;
+}
+
+@keyframes plt-entre {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.plt__titre {
+  margin: 6px 0 12px;
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+  outline: none;
+}
+
+.plt__titre--centre,
+.plt__texte {
+  text-align: center;
+}
+
+.plt__sous-titre {
+  margin: -4px 0 12px;
+  font-size: 0.88rem;
+  color: var(--pl-doux);
+}
+
+.plt__texte {
+  margin: 0 0 8px;
+  line-height: 1.55;
+  color: var(--pl-doux);
+}
+
+/* ---------- Le filtre ---------- */
+.plt__filtres {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.plt__filtres::-webkit-scrollbar {
+  display: none;
+}
+
+.plt__filtre {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--pl-trait);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--pl-texte);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.plt__filtre--actif {
+  border-color: var(--pl-violet);
+  background: var(--pl-violet);
+  color: #fff;
+}
+
+.plt__icone {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Les cartes : elles se rebattent a chaque filtre ---------- */
+.plt__liste {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plt__liste li {
+  animation: plt-carte 0.4s var(--pl-anime) both;
+  animation-delay: calc(var(--rang) * 0.035s);
+}
+
+@keyframes plt-carte {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+.plt__carte {
+  --accent: var(--pl-violet);
+  --fond: #fff;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  min-height: 78px;
+  overflow: hidden;
+  padding: 0 12px 10px;
+  border: 1.5px solid var(--pl-trait);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--pl-texte);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.plt__carte:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 22%, transparent);
+  transform: translateY(-2px);
+}
+
+/* Le bandeau au logo : son fond est celui du logo, pour qu'il s'y fonde ;
+   un filet a la couleur de la marque le separe du corps de la carte. */
+.plt__logo {
+  display: block;
+  box-sizing: border-box;
+  align-self: stretch;
+  height: 64px;
+  margin: 0 -12px 4px;
+  padding: 6px 12px;
+  border-bottom: 3px solid var(--accent);
+  background: var(--fond);
+  transition: filter 0.2s;
+}
+
+/* Le cadre fixe la taille : l'image le remplit sans deborder. */
+.plt__logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  transition: transform 0.3s var(--pl-anime);
+}
+
+.plt__carte:hover:not(:disabled) .plt__logo img {
+  transform: scale(1.06);
+}
+
+.plt__carte:disabled .plt__logo {
+  filter: grayscale(1);
+}
+
+.plt__carte:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plt__nom {
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.plt__arrivees {
+  display: flex;
+  gap: 4px;
+}
+
+.plt__arrivee {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent, var(--pl-violet)) 12%, #fff);
+  color: var(--accent, var(--pl-violet));
+}
+
+.plt__arrivee .plt__icone {
+  width: 15px;
+  height: 15px;
+}
+
+.plt__note {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--pl-doux);
+}
+
+/* La remarque : ce qui ne marche pas, dit franchement. */
+.plt__remarque {
+  margin: 14px 0 4px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--pl-jaune);
+  border-radius: 0 12px 12px 0;
+  background: #fffbe6;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.plt__remarque strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.plt__remarque p {
+  margin: 0;
+  color: var(--pl-doux);
+}
+
+.plt__remarque em {
+  color: var(--pl-texte);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ---------- L'envoi, aux couleurs du service ---------- */
+.plt__banniere {
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 84px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-bottom: 4px solid var(--accent);
+  border-radius: 16px;
+  background: var(--fond);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 18%, transparent);
+  animation: plt-banniere 0.5s var(--pl-anime) both;
+}
+
+@keyframes plt-banniere {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.plt__banniere img {
+  display: block;
+  width: 70%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.plt__temps--marque .plt__destination-titre {
+  color: var(--accent);
+}
+
+.plt__temps--marque .plt__copier {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.plt__temps--marque .plt__copier:hover,
+.plt__temps--marque .plt__copier--fait {
+  background: var(--accent);
+  color: #fff;
+}
+
+.plt__temps--marque .plt__saisie:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.plt__temps--marque .plt__bouton {
+  background: var(--accent);
+}
+
+.plt__temps--marque .plt__bouton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 82%, #000);
+}
+
+/* ---------- Les destinations ---------- */
+.plt__destinations {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.plt__destination {
+  padding: 10px 12px;
+  border: 1.5px solid var(--pl-trait);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.plt__destination-titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--pl-violet);
+}
+
+.plt__destination-ligne {
+  display: grid;
+  grid-template-columns: 6.5em 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  border-top: 1px solid var(--pl-trait);
+}
+
+.plt__destination-libelle {
+  font-size: 0.76rem;
+  color: var(--pl-doux);
+}
+
+.plt__destination-valeur {
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.plt__copier {
+  min-width: 62px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1.5px solid var(--pl-violet);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--pl-violet);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plt__copier--fait,
+.plt__copier:hover {
+  background: var(--pl-violet);
+  color: #fff;
+}
+
+/* ---------- Champs ---------- */
+.plt__montant-rang {
+  display: grid;
+  grid-template-columns: 1fr 7em;
+  gap: 8px;
+}
+
+.plt__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.plt__montant-rang .plt__champ {
+  margin-top: 0;
+}
+
+.plt__libelle {
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.plt__libelle em {
+  margin-left: 4px;
+  color: var(--pl-doux);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.plt__saisie {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1.5px solid var(--pl-trait);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--pl-texte);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.plt__saisie:focus {
+  border-color: var(--pl-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+.plt__saisie--erreur {
+  border-color: var(--pl-rouge);
+}
+
+.plt__erreur {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--pl-rouge);
+}
+
+.plt__erreur:empty {
+  display: none;
+}
+
+.plt__erreur--centre {
+  text-align: center;
+}
+
+.plt__bouton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--pl-violet);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.plt__bouton:hover:not(:disabled) {
+  background: var(--pl-violet-fonce);
+  transform: translateY(-1px);
+}
+
+.plt__bouton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.plt__lien {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 4px;
+  border: 0;
+  background: none;
+  color: var(--pl-doux);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.plt :focus-visible {
+  outline: 2px solid var(--pl-violet);
+  outline-offset: 2px;
+}
+
+.plt__titre:focus-visible,
+.plt__saisie:focus-visible {
+  outline: none;
+}
+
+.plt__temps--fin {
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+}
+
+.plt__coche {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  background: var(--pl-violet);
+  animation: plt-coche 0.5s var(--pl-anime) both;
+}
+
+.plt__coche svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes plt-coche {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+.plt__attente {
+  padding: 40px 0;
+  color: var(--pl-doux);
+  text-align: center;
+}
+
+.plt__alerte {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fdeceb;
+  color: var(--pl-rouge);
+}
+
+/* ---------- Ordinateur ---------- */
+@media (min-width: 900px) {
+  .plt__tete {
+    padding-top: 30px;
+  }
+
+  .plt__liste {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .plt__carte {
+    min-height: 150px;
+    padding: 0 16px 14px;
+  }
+
+  .plt__logo {
+    height: 76px;
+    margin: 0 -16px 6px;
+  }
+
+  .plt__destinations {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .plt__temps:not(.plt__temps--fin) form {
+    max-width: 520px;
+  }
+}
+
+/* ---------- Telephone ---------- */
+@media (max-width: 600px) {
+  .plt__tete {
+    padding: 10px 12px 4px;
+  }
+
+  .plt__page {
+    padding: 4px 12px 14px;
+  }
+
+  .plt__carte {
+    min-height: 0;
+    padding: 0 10px 8px;
+  }
+
+  .plt__logo {
+    height: 50px;
+    margin: 0 -10px 2px;
+  }
+
+  .plt__banniere {
+    height: 64px;
+  }
+
+  .plt__note {
+    display: none;
+  }
+
+  .plt__remarque {
+    margin-top: 10px;
+    padding: 8px 10px;
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plt *,
+  .plt *::before,
+  .plt *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}

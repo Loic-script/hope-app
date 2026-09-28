@@ -1,0 +1,2642 @@
+/* ============================================================
+   HOPE - Espace donateur
+
+   L'espace le plus visible de la plateforme : il accueille, invite a
+   donner, et montre ce que chaque don rend possible. Les animations y
+   servent le sens -- ce qui arrive monte, ce qui se remplit se remplit,
+   ce qui se confirme se coche -- et toutes s'effacent quand l'appareil
+   demande moins de mouvement (fin de fichier).
+
+   Couleurs de la charte. Le texte blanc ne se pose que sur le violet :
+   sur l'orange, il ne se lirait pas assez (contraste 2,6:1). Le jaune
+   porte le bouton du bandeau violet, l'orange reste un accent.
+   ============================================================ */
+
+.espace-donateur {
+  --don-violet: var(--hope-violet);
+  --don-violet-fonce: var(--hope-violet-fonce);
+  --don-violet-clair: #f3f1fb;
+  --don-rayon: 18px;
+  --don-ombre: 0 1px 2px rgba(36, 43, 62, 0.05), 0 14px 32px -20px rgba(36, 43, 62, 0.28);
+  --don-ressort: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --don-pose: cubic-bezier(0.22, 0.8, 0.3, 1);
+
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ============================================================
+   1. Les boutons et les liens
+   ============================================================ */
+
+.don-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 24px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--hope-jaune);
+  box-shadow: 0 10px 24px -12px rgba(245, 227, 137, 0.9);
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--hope-violet-fonce);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 220ms var(--don-pose, ease-out),
+    box-shadow 220ms ease-out,
+    background-color 200ms ease-out;
+}
+
+.don-cta svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+
+/* Le reflet qui traverse le bouton au survol. */
+.don-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-140%) skewX(-20deg);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .don-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px -14px rgba(74, 68, 121, 0.55);
+  }
+
+  .don-cta:hover::after {
+    animation: don-brille 850ms ease-out;
+  }
+
+  /* Le coeur bat quand on s'approche du don. */
+  .don-cta:hover svg:first-child {
+    animation: don-battement 900ms ease-in-out;
+  }
+}
+
+.don-cta:active {
+  transform: scale(0.97);
+}
+
+.don-cta:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+/* Sur fond blanc : le violet, texte blanc. */
+.don-cta--plein {
+  background: linear-gradient(135deg, #6d67a0 0%, var(--hope-violet-fonce) 100%);
+  box-shadow: 0 12px 26px -14px rgba(74, 68, 121, 0.8);
+  color: #ffffff;
+}
+
+.don-cta--plein svg:first-child {
+  color: var(--hope-jaune);
+}
+
+/* Sur le bandeau violet : le bouton secondaire, en creux. */
+.don-cta--clair {
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.don-cta--petit {
+  min-height: 42px;
+  padding: 0 18px;
+  font-size: 14.5px;
+}
+
+.don-bouton-secondaire {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1.5px solid var(--admin-bordure);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  cursor: pointer;
+  transition: border-color 200ms ease-out, color 200ms ease-out, transform 200ms ease-out;
+}
+
+.don-bouton-secondaire svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (hover: hover) {
+  .don-bouton-secondaire:hover {
+    border-color: var(--hope-violet);
+    color: var(--hope-violet);
+  }
+}
+
+.don-lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hope-violet);
+  text-decoration: underline;
+  text-decoration-color: rgba(93, 86, 150, 0.35);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: text-decoration-color 200ms ease-out;
+}
+
+.don-lien:hover {
+  text-decoration-color: currentColor;
+}
+
+/* ============================================================
+   2. Le bandeau d'accueil
+   ============================================================ */
+
+.don-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  padding: 36px 38px;
+  overflow: hidden;
+  border-radius: 24px;
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(134, 185, 222, 0.28) 0%, transparent 55%),
+    linear-gradient(135deg, #6d67a0 0%, var(--hope-violet) 45%, var(--hope-violet-fonce) 100%);
+  box-shadow: 0 24px 48px -28px rgba(43, 36, 94, 0.75);
+  color: #ffffff;
+  animation: don-monte 650ms var(--don-pose) both;
+}
+
+/* Deux halos qui flottent lentement : le bandeau respire. */
+.don-hero__halo {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.don-hero__halo--un {
+  top: -120px;
+  right: 18%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(245, 227, 137, 0.35), transparent 65%);
+  animation: don-flotte 14s ease-in-out infinite;
+}
+
+.don-hero__halo--deux {
+  bottom: -140px;
+  left: 28%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(224, 151, 53, 0.28), transparent 65%);
+  animation: don-flotte 18s ease-in-out infinite reverse;
+}
+
+/* Le soleil de HOPE, en filigrane, qui tourne tres lentement. */
+.don-hero__soleil {
+  position: absolute;
+  z-index: -1;
+  top: -60px;
+  right: -60px;
+  width: 260px;
+  height: 260px;
+  color: var(--hope-jaune);
+  opacity: 0.13;
+  animation: don-tourne 90s linear infinite;
+}
+
+.don-hero__soleil svg {
+  width: 100%;
+  height: 100%;
+}
+
+.don-hero__titre {
+  margin: 6px 0 10px;
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.don-hero__accroche {
+  max-width: 46ch;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.don-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.don-hero__chiffres {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Trois chiffres de verre, qui arrivent l'un apres l'autre. */
+.don-hero__chiffre {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'icone valeur'
+    'icone libelle';
+  align-items: center;
+  column-gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: don-monte 600ms calc(220ms + var(--rang, 0) * 130ms) var(--don-pose) both;
+}
+
+.don-hero__icone {
+  grid-area: icone;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background-color: var(--hope-jaune);
+  color: var(--hope-violet-fonce);
+}
+
+.don-hero__icone svg {
+  width: 22px;
+  height: 22px;
+}
+
+.don-hero__chiffre strong {
+  grid-area: valeur;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.don-hero__chiffre > span:last-child {
+  grid-area: libelle;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.don-bienvenue {
+  padding: 13px 18px;
+  border-radius: 14px;
+  background-color: #e6f4ec;
+  font-weight: 600;
+  color: #1f6b48;
+  animation: don-monte 500ms var(--don-pose) both;
+}
+
+.espace-donateur :focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.don-hero :focus-visible,
+.don-identite :focus-visible {
+  outline-color: var(--hope-jaune);
+}
+
+/* ============================================================
+   3. Le fil et la colonne de droite
+   ============================================================ */
+
+.don-fil__chiffres {
+  align-items: center;
+}
+
+.don-fil__atteint {
+  margin-left: auto;
+  font-weight: 600;
+  color: #1f6b48;
+}
+
+.don-carte {
+  padding: 20px 22px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--don-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--don-ombre);
+  animation: don-monte 550ms calc(var(--rang, 0) * 110ms) var(--don-pose) both;
+}
+
+.don-carte__surtitre {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hope-orange-fonce);
+}
+
+.don-carte__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.don-carte__titre {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.don-carte__accroche {
+  margin-top: 3px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.don-carte__vide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}
+
+/* "Un projet a besoin de vous" */
+.don-besoin__image {
+  margin: 0 -22px 14px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: var(--admin-fond);
+}
+
+.don-besoin__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 700ms var(--don-pose);
+}
+
+@media (hover: hover) {
+  .don-besoin:hover .don-besoin__image img {
+    transform: scale(1.05);
+  }
+}
+
+.don-besoin__titre {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.don-besoin__titre a {
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.don-besoin__titre a:hover {
+  text-decoration: underline;
+}
+
+.don-besoin__lieu {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.don-besoin .don-cta {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* La colonne est etroite : la legende de la jauge s'y empile plutot que
+   de couper "18 %" en deux. */
+.don-besoin .jauge__legende {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+/* Les derniers dons */
+.don-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-mini__ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background-color: var(--admin-fond);
+  animation: don-monte 450ms calc(200ms + var(--rang, 0) * 90ms) var(--don-pose) both;
+}
+
+.don-mini__texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.don-mini__texte strong {
+  font-size: 15px;
+}
+
+.don-mini__texte span {
+  overflow: hidden;
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--admin-texte-doux);
+}
+
+/* Ce que HOPE fait de votre don */
+.don-transparence {
+  background: linear-gradient(160deg, #ffffff 0%, var(--don-violet-clair) 100%);
+}
+
+.don-transparence__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-transparence__liste li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.don-transparence__liste span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Les pastilles de statut d'un don */
+.don-statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.don-statut::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.don-statut--attente { background-color: #fdf1de; color: #8a5c12; }
+.don-statut--recu    { background-color: #e6f4ec; color: #1f6b48; }
+.don-statut--echec   { background-color: #fdeceb; color: #a8271a; }
+.don-statut--neutre  { background-color: #eef1f6; color: #5b6275; }
+.don-statut--violet  { background-color: #eceafa; color: var(--hope-violet-fonce); }
+
+/* Une promesse en attente respire doucement : elle attend un retour. */
+.don-statut--attente::before {
+  animation: don-respire 2.4s ease-in-out infinite;
+}
+
+.don-vide {
+  padding: 22px;
+  border-radius: var(--don-rayon);
+  background-color: var(--admin-surface);
+  text-align: center;
+  color: var(--admin-texte-doux);
+}
+
+.don-vide--grand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 36px 22px;
+}
+
+.don-vide__icone {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--don-violet-clair);
+  color: var(--hope-violet);
+  animation: don-pop 600ms var(--don-ressort) both;
+}
+
+.don-vide__icone svg {
+  width: 30px;
+  height: 30px;
+}
+
+.don-refus {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background-color: #fdeceb;
+  font-size: 14px;
+  font-weight: 600;
+  color: #a8271a;
+  animation: don-secousse 380ms ease-out;
+}
+
+/* ============================================================
+   4. Les en-tetes de page
+   ============================================================ */
+
+.don-entete {
+  animation: don-monte 500ms var(--don-pose) both;
+}
+
+.don-entete--action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.don-entete__titre {
+  font-size: clamp(24px, 2.6vw, 31px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.don-entete__accroche {
+  max-width: 62ch;
+  margin-top: 5px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+/* ============================================================
+   5. Faire un don
+   ============================================================ */
+
+/* La progression : quatre pas relies par une ligne qui se remplit. */
+.don-pas {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--pas, 4), minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* La ligne va du centre du premier rond a celui du dernier : une
+   demi-colonne de marge de chaque cote. --avance dit la part franchie. */
+.don-pas::before,
+.don-pas::after {
+  content: '';
+  position: absolute;
+  top: 19px;
+  left: calc(50% / var(--pas, 4));
+  height: 3px;
+  border-radius: 999px;
+}
+
+.don-pas::before {
+  right: calc(50% / var(--pas, 4));
+  background-color: var(--admin-bordure);
+}
+
+.don-pas::after {
+  width: calc(var(--avance, 0%) * (1 - 1 / var(--pas, 4)));
+  background: linear-gradient(90deg, var(--hope-bleu), var(--hope-violet));
+  transition: width 600ms var(--don-pose);
+}
+
+.don-pas__pas {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.don-pas__rond {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--admin-bordure);
+  border-radius: 50%;
+  background-color: var(--admin-surface);
+  font-weight: 800;
+  color: var(--admin-texte-faible);
+  transition:
+    border-color 300ms ease-out,
+    background-color 300ms ease-out,
+    color 300ms ease-out,
+    transform 300ms var(--don-ressort);
+}
+
+.don-pas__rond svg {
+  width: 18px;
+  height: 18px;
+}
+
+.don-pas__pas--actif .don-pas__rond {
+  border-color: var(--hope-violet);
+  color: var(--hope-violet);
+  transform: scale(1.12);
+  box-shadow: 0 0 0 6px rgba(93, 86, 150, 0.14);
+}
+
+.don-pas__pas--fait .don-pas__rond {
+  border-color: var(--hope-violet);
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.don-pas__libelle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.don-pas__pas--actif .don-pas__libelle {
+  color: var(--hope-violet);
+}
+
+/* Le projet que soutient le don, quand il vient d'une publication. */
+.don-projet-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--don-rayon);
+  background:
+    radial-gradient(80% 140% at 100% 0%, rgba(245, 227, 137, 0.25), transparent 60%),
+    var(--admin-surface);
+  box-shadow: var(--don-ombre);
+  animation: don-monte 500ms 80ms var(--don-pose) both;
+}
+
+.don-projet-tete__image {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 16px;
+  background-color: var(--don-violet-clair);
+  color: var(--hope-violet);
+}
+
+.don-projet-tete__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.don-projet-tete__image svg {
+  width: 30px;
+  height: 30px;
+}
+
+.don-projet-tete__texte {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.don-projet-tete__surtitre {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hope-orange-fonce);
+}
+
+.don-projet-tete__nom {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.don-projet-tete__lieu {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.don-projet-tete__reste {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background-color: #fdf1de;
+  font-size: 13.5px;
+  color: #8a5c12;
+}
+
+/* L'etape et le recapitulatif qui la suit. */
+.don-disposition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 24px;
+}
+
+.don-etape {
+  padding: 28px 30px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 22px;
+  background-color: var(--admin-surface);
+  box-shadow: var(--don-ombre);
+}
+
+.don-etape--avance {
+  animation: don-glisse-avance 450ms var(--don-pose) both;
+}
+
+.don-etape--recule {
+  animation: don-glisse-recule 450ms var(--don-pose) both;
+}
+
+.don-etape__titre {
+  margin-bottom: 18px;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.don-etape__sous-titre {
+  margin: 26px 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Deux grands choix. */
+.don-choix-duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.don-choix,
+.don-rythme {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 18px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  text-align: left;
+  color: var(--admin-texte);
+  cursor: pointer;
+  transition:
+    border-color 220ms ease-out,
+    background-color 220ms ease-out,
+    transform 260ms var(--don-ressort),
+    box-shadow 220ms ease-out;
+}
+
+.don-choix strong,
+.don-rythme strong {
+  font-size: 16px;
+}
+
+.don-choix span:last-child,
+.don-rythme span:last-child {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.don-choix__icone {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background-color: var(--don-violet-clair);
+  color: var(--hope-violet);
+  transition: transform 300ms var(--don-ressort), background-color 220ms ease-out, color 220ms ease-out;
+}
+
+.don-choix__icone svg,
+.don-rythme > svg {
+  width: 24px;
+  height: 24px;
+}
+
+.don-rythme > svg {
+  color: var(--hope-violet);
+}
+
+@media (hover: hover) {
+  .don-choix:hover,
+  .don-rythme:hover {
+    transform: translateY(-3px);
+    border-color: #c9c4e6;
+    box-shadow: var(--don-ombre);
+  }
+}
+
+.don-choix--actif,
+.don-rythme--actif {
+  border-color: var(--hope-violet);
+  background-color: var(--don-violet-clair);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.12);
+}
+
+.don-choix--actif .don-choix__icone {
+  background-color: var(--hope-violet);
+  color: var(--hope-jaune);
+  transform: scale(1.08) rotate(-6deg);
+}
+
+/* Les projets a choisir. */
+.don-projets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.don-projet {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 16px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  text-align: left;
+  color: var(--admin-texte);
+  cursor: pointer;
+  animation: don-monte 450ms calc(var(--rang, 0) * 60ms) var(--don-pose) both;
+  transition: border-color 220ms ease-out, transform 260ms var(--don-ressort), box-shadow 220ms ease-out;
+}
+
+@media (hover: hover) {
+  .don-projet:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: var(--don-ombre);
+  }
+}
+
+.don-projet--actif {
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.14);
+}
+
+.don-projet:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.don-projet__image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: var(--don-violet-clair);
+  color: var(--hope-violet);
+}
+
+.don-projet__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.don-projet__image > svg {
+  width: 40px;
+  height: 40px;
+}
+
+.don-projet__coche {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  animation: don-pop 450ms var(--don-ressort) both;
+}
+
+.don-projet__coche svg {
+  width: 17px;
+  height: 17px;
+}
+
+.don-projet__corps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+}
+
+.don-projet__categorie {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hope-lien);
+}
+
+.don-projet__nom {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.don-projet__lieu,
+.don-projet__reste {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.don-projet__rail,
+.don-carte-projet__rail {
+  display: block;
+  height: 7px;
+  margin: 6px 0 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: #fbf1e0;
+}
+
+.don-projet__rail span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--hope-bleu), var(--hope-violet));
+  animation: don-remplit 1s 200ms var(--don-pose) both;
+}
+
+/* Le montant. */
+.don-devises {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 14px;
+  background-color: #eef2f8;
+}
+
+.don-devise {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+  transition: background-color 200ms ease-out, color 200ms ease-out;
+}
+
+.don-devise span {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.don-devise--actif {
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+  color: var(--hope-violet);
+}
+
+.don-montants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.don-montant {
+  min-height: 58px;
+  padding: 0 10px;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 16px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+  cursor: pointer;
+  animation: don-monte 400ms calc(var(--rang, 0) * 55ms) var(--don-pose) both;
+  transition:
+    border-color 200ms ease-out,
+    background-color 200ms ease-out,
+    color 200ms ease-out,
+    transform 260ms var(--don-ressort);
+}
+
+@media (hover: hover) {
+  .don-montant:hover {
+    transform: translateY(-2px);
+    border-color: #c9c4e6;
+  }
+}
+
+.don-montant--actif {
+  border-color: transparent;
+  background: linear-gradient(135deg, #6d67a0, var(--hope-violet-fonce));
+  color: #ffffff;
+  transform: scale(1.04);
+  box-shadow: 0 12px 24px -14px rgba(74, 68, 121, 0.8);
+}
+
+.don-saisie {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.don-saisie__libelle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.don-saisie__boite {
+  display: flex;
+  align-items: center;
+  max-width: 340px;
+  overflow: hidden;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.don-saisie__boite:focus-within {
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.12);
+}
+
+.don-saisie__boite input {
+  flex: 1;
+  min-width: 0;
+  height: 54px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--admin-texte);
+  outline: none;
+}
+
+.don-saisie__devise {
+  padding: 0 16px;
+  font-weight: 800;
+  color: var(--admin-texte-doux);
+}
+
+.don-saisie--texte textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.don-saisie--texte textarea:focus {
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.12);
+  outline: none;
+}
+
+.don-aide {
+  margin-top: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.don-rythmes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Les modes de paiement. */
+.don-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 10px;
+}
+
+.don-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 16px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  color: var(--admin-texte);
+  cursor: pointer;
+  animation: don-monte 400ms calc(var(--rang, 0) * 45ms) var(--don-pose) both;
+  transition: border-color 200ms ease-out, transform 260ms var(--don-ressort), box-shadow 200ms ease-out;
+}
+
+@media (hover: hover) {
+  .don-mode:hover {
+    transform: translateY(-2px);
+    border-color: #c9c4e6;
+  }
+}
+
+.don-mode--actif {
+  border-color: var(--hope-violet);
+  background-color: var(--don-violet-clair);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.12);
+}
+
+.don-mode__visuel {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 52px;
+}
+
+/* Le cadre fixe la taille : l'illustration le remplit sans deborder
+   (un max-height en pourcentage ne tient pas dans une grille). */
+.don-mode__visuel img,
+.don-mode__visuel svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.don-mode__nom {
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.don-modes--compact {
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+}
+
+.don-modes--compact .don-mode__visuel {
+  height: 38px;
+}
+
+/* Le recapitulatif. */
+.don-recap__montant {
+  margin-bottom: 18px;
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--hope-violet), #9a6fb0 60%, var(--hope-orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: don-pop 600ms var(--don-ressort) both;
+}
+
+.don-recap__montant span {
+  font-size: 0.5em;
+  font-weight: 700;
+}
+
+.don-recap__lignes {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.don-recap__lignes > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.don-recap__lignes dt {
+  color: var(--admin-texte-doux);
+}
+
+.don-recap__lignes dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.don-recap__note {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background-color: var(--don-violet-clair);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hope-violet-fonce);
+}
+
+.don-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.don-refus + .don-navigation {
+  margin-top: 16px;
+}
+
+.don-etape > .don-refus {
+  margin-top: 18px;
+}
+
+/* Le resume qui suit la saisie, sur grand ecran. */
+.don-resume {
+  position: sticky;
+  top: calc(var(--admin-entete-hauteur) + 18px);
+  padding: 22px;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(245, 227, 137, 0.22), transparent 55%),
+    linear-gradient(160deg, #6d67a0, var(--hope-violet-fonce));
+  box-shadow: 0 20px 40px -26px rgba(43, 36, 94, 0.8);
+  color: #ffffff;
+  animation: don-monte 550ms 150ms var(--don-pose) both;
+}
+
+.don-resume__titre {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.don-resume__montant {
+  margin: 6px 0 14px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Avec des pages de paiement, le montant se dit a l'etape suivante. */
+.don-resume__montant--suite {
+  font-size: 17px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.don-resume__montant span {
+  font-size: 0.55em;
+}
+
+.don-resume__lignes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-resume__lignes li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.don-resume__lignes span {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.don-resume__lignes strong {
+  font-size: 14.5px;
+}
+
+.don-resume__note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--hope-jaune);
+}
+
+.don-resume__note svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Le merci. */
+.don-merci {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 660px;
+  margin: 10px auto 0;
+  padding: 40px 32px 34px;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 26px;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(245, 227, 137, 0.3), transparent 70%),
+    var(--admin-surface);
+  box-shadow: var(--don-ombre);
+  text-align: center;
+  animation: don-pop 600ms var(--don-ressort) both;
+}
+
+.don-merci__confettis {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.don-merci__confetti {
+  position: absolute;
+  top: -12px;
+  left: var(--x);
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: don-confetti 1800ms var(--d, 0ms) cubic-bezier(0.25, 0.6, 0.35, 1) forwards;
+}
+
+.don-merci__confetti--0 { background-color: var(--hope-jaune); }
+.don-merci__confetti--1 { background-color: var(--hope-orange); }
+.don-merci__confetti--2 { background-color: var(--hope-bleu); }
+.don-merci__confetti--3 { background-color: var(--hope-violet); border-radius: 50%; width: 10px; height: 10px; }
+
+.don-merci__coche {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 14px;
+}
+
+.don-merci__coche circle {
+  fill: var(--don-violet-clair);
+  stroke: var(--hope-violet);
+  stroke-width: 4;
+  stroke-dasharray: 227;
+  stroke-dashoffset: 227;
+  animation: don-trace 700ms 150ms ease-out forwards;
+}
+
+.don-merci__coche path {
+  fill: none;
+  stroke: var(--hope-orange-fonce);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: don-trace 450ms 750ms ease-out forwards;
+}
+
+.don-merci__titre {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  animation: don-monte 500ms 500ms var(--don-pose) both;
+}
+
+.don-merci__texte {
+  max-width: 48ch;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+  animation: don-monte 500ms 620ms var(--don-pose) both;
+}
+
+.don-merci__texte strong {
+  color: var(--hope-violet-fonce);
+}
+
+.don-merci__reference {
+  margin-top: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background-color: var(--admin-fond);
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+  animation: don-monte 500ms 720ms var(--don-pose) both;
+}
+
+.don-merci__etapes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 460px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.don-merci__etapes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  animation: don-monte 450ms var(--don-pose) both;
+}
+
+.don-merci__etapes li:nth-child(1) { animation-delay: 850ms; }
+.don-merci__etapes li:nth-child(2) { animation-delay: 950ms; }
+.don-merci__etapes li:nth-child(3) { animation-delay: 1050ms; }
+
+.don-merci__etapes span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.don-merci__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+  animation: don-monte 450ms 1150ms var(--don-pose) both;
+}
+
+/* ============================================================
+   6. Mes dons
+   ============================================================ */
+
+.don-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-stat {
+  --teinte: var(--hope-violet);
+  --fond: #eceafa;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 18px 20px;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--don-rayon);
+  background:
+    radial-gradient(90% 120% at 100% 0%, var(--fond) 0%, transparent 55%),
+    var(--admin-surface);
+  box-shadow: var(--don-ombre);
+  animation: don-monte 550ms calc(var(--rang, 0) * 100ms) var(--don-pose) both;
+  transition: transform 260ms var(--don-ressort);
+}
+
+.don-stat--violet { --teinte: var(--hope-violet); --fond: #eceafa; }
+.don-stat--orange { --teinte: var(--hope-orange-fonce); --fond: #fdf1de; }
+.don-stat--bleu   { --teinte: #3d7fab; --fond: #dbeaf5; }
+.don-stat--jaune  { --teinte: #96801f; --fond: #fbf6da; }
+
+@media (hover: hover) {
+  .don-stat:hover {
+    transform: translateY(-3px);
+  }
+}
+
+.don-stat__icone {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 8px;
+  border-radius: 13px;
+  background-color: var(--fond);
+  color: var(--teinte);
+}
+
+.don-stat__icone svg {
+  width: 22px;
+  height: 22px;
+}
+
+.don-stat__libelle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.don-stat__valeur {
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.don-stat__valeur--date {
+  font-size: 21px;
+}
+
+.don-stat__note {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* La frise des dons. */
+.don-frise {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 4px 0 0;
+  padding: 0 0 0 26px;
+  list-style: none;
+}
+
+.don-frise::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 8px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--hope-violet), rgba(134, 185, 222, 0.4));
+}
+
+.don-frise__don {
+  position: relative;
+  animation: don-monte 480ms calc(var(--rang, 0) * 70ms) var(--don-pose) both;
+}
+
+.don-frise__point {
+  position: absolute;
+  top: 26px;
+  left: -24px;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--admin-surface);
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  box-shadow: 0 0 0 2px var(--hope-violet);
+}
+
+.don-frise__don--pending .don-frise__point {
+  background-color: var(--hope-orange);
+  box-shadow: 0 0 0 2px var(--hope-orange);
+  animation: don-respire 2.4s ease-in-out infinite;
+}
+
+.don-frise__don--received .don-frise__point {
+  background-color: #2e8b57;
+  box-shadow: 0 0 0 2px #2e8b57;
+}
+
+.don-frise__carte {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 16px;
+  background-color: var(--admin-surface);
+  transition: transform 260ms var(--don-ressort), box-shadow 220ms ease-out;
+}
+
+@media (hover: hover) {
+  .don-frise__carte:hover {
+    transform: translateX(4px);
+    box-shadow: var(--don-ombre);
+  }
+}
+
+.don-frise__vignette {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 14px;
+  background-color: var(--don-violet-clair);
+  color: var(--hope-violet);
+}
+
+.don-frise__vignette img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.don-frise__vignette svg {
+  width: 28px;
+  height: 28px;
+}
+
+.don-frise__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.don-frise__pour {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.don-frise__pour a {
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.don-frise__pour a:hover {
+  text-decoration: underline;
+}
+
+.don-frise__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.don-frise__reference {
+  font-variant-numeric: tabular-nums;
+}
+
+.don-frise__mensuel {
+  padding: 0 8px;
+  border-radius: 999px;
+  background-color: #dbeaf5;
+  font-weight: 700;
+  color: #2b6484;
+}
+
+.don-frise__message {
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-style: italic;
+  color: var(--admin-texte-doux);
+}
+
+.don-frise__droite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: none;
+}
+
+.don-frise__montant {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   7. Projets
+   ============================================================ */
+
+.don-recherche {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 340px);
+  min-height: 48px;
+  padding: 0 16px;
+  border: 2px solid var(--admin-bordure);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  color: var(--admin-texte-faible);
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.don-recherche:focus-within {
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.12);
+}
+
+.don-recherche svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+
+.don-recherche input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--admin-texte);
+  outline: none;
+}
+
+.don-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-carte-projet {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 20px;
+  background-color: var(--admin-surface);
+  box-shadow: var(--don-ombre);
+  animation: don-monte 520ms calc(var(--rang, 0) * 80ms) var(--don-pose) both;
+  transition: transform 300ms var(--don-ressort), box-shadow 260ms ease-out;
+}
+
+@media (hover: hover) {
+  .don-carte-projet:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 26px 44px -26px rgba(36, 43, 62, 0.45);
+  }
+
+  .don-carte-projet:hover .don-carte-projet__image img {
+    transform: scale(1.06);
+  }
+}
+
+.don-carte-projet__image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background-color: var(--don-violet-clair);
+  color: var(--hope-violet);
+}
+
+.don-carte-projet__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 800ms var(--don-pose);
+}
+
+.don-carte-projet__image > svg {
+  width: 48px;
+  height: 48px;
+}
+
+.don-carte-projet__categorie {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hope-violet-fonce);
+}
+
+.don-carte-projet__corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px 18px 18px;
+}
+
+.don-carte-projet__nom {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.don-carte-projet__nom a {
+  color: var(--admin-texte);
+  text-decoration: none;
+}
+
+.don-carte-projet__nom a:hover {
+  text-decoration: underline;
+}
+
+.don-carte-projet__lieu {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.don-carte-projet__accroche {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.don-carte-projet__rail {
+  height: 8px;
+  margin-top: auto;
+  padding: 0;
+}
+
+.don-carte-projet__corps .don-carte-projet__rail {
+  margin-top: 16px;
+}
+
+.don-carte-projet__rail span {
+  display: block;
+  width: var(--taux);
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--hope-bleu), var(--hope-violet));
+  animation: don-remplit 1.2s 250ms var(--don-pose) both;
+}
+
+.don-carte-projet__chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.don-carte-projet__chiffres strong {
+  font-size: 15px;
+  color: var(--admin-texte);
+}
+
+.don-carte-projet__chiffres span {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.don-carte-projet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.don-carte-projet__atteint {
+  font-weight: 700;
+  color: #1f6b48;
+}
+
+/* ============================================================
+   8. Mon profil
+   ============================================================ */
+
+.don-identite {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 26px;
+  padding: 30px 32px;
+  overflow: hidden;
+  border-radius: 24px;
+  background:
+    radial-gradient(80% 120% at 100% 0%, rgba(245, 227, 137, 0.22), transparent 55%),
+    linear-gradient(135deg, #6d67a0 0%, var(--hope-violet) 50%, var(--hope-violet-fonce) 100%);
+  box-shadow: 0 24px 48px -28px rgba(43, 36, 94, 0.75);
+  color: #ffffff;
+  animation: don-monte 600ms var(--don-pose) both;
+}
+
+.don-identite__halo {
+  position: absolute;
+  z-index: -1;
+  bottom: -130px;
+  left: -60px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(134, 185, 222, 0.35), transparent 65%);
+  animation: don-flotte 16s ease-in-out infinite;
+}
+
+.don-identite__avatar-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* L'avatar : un clic pour changer la photo ; un anneau de couleur l'entoure. */
+.don-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 118px;
+  height: 118px;
+  padding: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--hope-jaune), var(--hope-orange), var(--hope-bleu), var(--hope-jaune));
+  cursor: pointer;
+  transition: transform 300ms var(--don-ressort);
+  animation: don-pop 650ms 150ms var(--don-ressort) both;
+}
+
+.don-avatar img,
+.don-avatar__initiales {
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--hope-violet);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.don-avatar__initiales {
+  display: grid;
+  place-items: center;
+  background-color: #ffffff;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--hope-violet);
+}
+
+.don-avatar__voile {
+  position: absolute;
+  inset: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background-color: rgba(43, 36, 94, 0.55);
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+
+@media (hover: hover) {
+  .don-avatar:hover {
+    transform: scale(1.04);
+  }
+
+  .don-avatar:hover .don-avatar__voile {
+    opacity: 1;
+  }
+}
+
+.don-avatar:focus-visible .don-avatar__voile,
+.don-avatar--envoi .don-avatar__voile {
+  opacity: 1;
+}
+
+/* Pendant l'envoi, l'anneau tourne. */
+.don-avatar--envoi {
+  animation: don-tourne 1.4s linear infinite;
+}
+
+.don-avatar--envoi img,
+.don-avatar--envoi .don-avatar__initiales,
+.don-avatar--envoi .don-avatar__voile {
+  animation: don-tourne 1.4s linear infinite reverse;
+}
+
+.don-identite__retirer {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+}
+
+.don-identite__nom {
+  margin: 4px 0 4px;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.don-identite__email,
+.don-identite__depuis {
+  font-size: 14.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.don-identite__refus {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: rgba(253, 236, 235, 0.95);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #a8271a;
+}
+
+.don-identite__chiffres {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-identite__chiffres li {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'icone valeur'
+    'icone libelle';
+  align-items: center;
+  column-gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.don-identite__chiffres svg {
+  grid-area: icone;
+  width: 24px;
+  height: 24px;
+  color: var(--hope-jaune);
+}
+
+.don-identite__chiffres strong {
+  grid-area: valeur;
+  font-size: 20px;
+}
+
+.don-identite__chiffres span {
+  grid-area: libelle;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.don-profil__blocs {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.don-profil__champs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 18px;
+}
+
+.don-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.don-champ--large {
+  grid-column: 1 / -1;
+}
+
+.don-champ__libelle {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.don-champ input,
+.don-champ select {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid var(--admin-bordure);
+  border-radius: 12px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--admin-texte);
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.don-champ input:focus,
+.don-champ select:focus {
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 4px rgba(93, 86, 150, 0.12);
+  outline: none;
+}
+
+.don-champ--erreur input,
+.don-champ--erreur select {
+  border-color: #c0392b;
+}
+
+.don-champ__erreur {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #a8271a;
+}
+
+.don-pastilles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.don-pastille {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1.5px solid var(--admin-bordure);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  cursor: pointer;
+  transition:
+    border-color 200ms ease-out,
+    background-color 200ms ease-out,
+    color 200ms ease-out,
+    transform 240ms var(--don-ressort);
+}
+
+@media (hover: hover) {
+  .don-pastille:hover {
+    border-color: #c9c4e6;
+  }
+}
+
+.don-pastille--actif {
+  border-color: var(--hope-violet);
+  background-color: var(--hope-violet);
+  color: #ffffff;
+  transform: scale(1.03);
+}
+
+.don-profil__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.don-profil__succes {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f6b48;
+  animation: don-pop 450ms var(--don-ressort) both;
+}
+
+.don-profil__succes svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================
+   9. Petits ecrans
+   ============================================================ */
+
+@media (max-width: 1100px) {
+  .don-disposition {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Le recapitulatif de la derniere etape suffit : le resume s'efface. */
+  .don-resume {
+    display: none;
+  }
+
+  .don-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .don-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 28px 24px;
+  }
+
+  .don-identite {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .don-identite__chiffres {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .don-hero {
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+
+  .don-hero__actions .don-cta {
+    flex: 1 1 100%;
+  }
+
+  .don-etape {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .don-choix-duo,
+  .don-rythmes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .don-pas__libelle {
+    font-size: 11.5px;
+  }
+
+  .don-montants {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .don-modes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .don-saisie__boite {
+    max-width: none;
+  }
+
+  .don-navigation > * {
+    flex: 1 1 auto;
+  }
+
+  .don-frise {
+    padding-left: 20px;
+  }
+
+  .don-frise__point {
+    left: -18px;
+  }
+
+  .don-frise__carte {
+    flex-wrap: wrap;
+  }
+
+  .don-frise__droite {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .don-profil__champs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .don-identite {
+    padding: 24px 18px;
+  }
+
+  .don-merci {
+    padding: 32px 18px 26px;
+  }
+
+  .don-merci__actions > * {
+    flex: 1 1 100%;
+  }
+
+  .don-recherche {
+    width: 100%;
+  }
+}
+
+/* Petit telephone : les quatre chiffres restent deux par deux, resserres,
+   pour que l'historique arrive vite. */
+@media (max-width: 480px) {
+  .don-stats {
+    gap: 10px;
+  }
+
+  .don-stat {
+    padding: 14px;
+  }
+
+  .don-stat__icone {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 6px;
+  }
+
+  .don-stat__valeur {
+    font-size: 20px;
+  }
+
+  .don-stat__valeur--date {
+    font-size: 16px;
+  }
+
+  .don-stat__libelle,
+  .don-stat__note {
+    font-size: 12px;
+  }
+}
+
+/* ============================================================
+   10. Les animations
+   ============================================================ */
+
+@keyframes don-monte {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes don-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes don-glisse-avance {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes don-glisse-recule {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes don-flotte {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(26px, -18px) scale(1.08);
+  }
+}
+
+@keyframes don-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes don-brille {
+  from {
+    transform: translateX(-140%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(260%) skewX(-20deg);
+  }
+}
+
+@keyframes don-battement {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.28);
+  }
+  45% {
+    transform: scale(0.94);
+  }
+  65% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes don-respire {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes don-remplit {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes don-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes don-confetti {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), 340px) rotate(calc(var(--r, 0deg) * 12));
+  }
+}
+
+@keyframes don-secousse {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+/* Quand l'appareil demande moins de mouvement : tout est la d'emblee,
+   rien ne bouge, rien ne boucle. */
+@media (prefers-reduced-motion: reduce) {
+  .espace-donateur *,
+  .espace-donateur *::before,
+  .espace-donateur *::after,
+  .espace-donateur {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .don-merci__coche circle,
+  .don-merci__coche path {
+    stroke-dashoffset: 0;
+  }
+
+  .don-merci__confettis {
+    display: none;
+  }
+}
+
+/* L'etiquette d'un choix de destination ("Don affecte", "Don non
+   affecte" chez le bailleur), en haut a droite de la carte. */
+.don-choix__etiquette {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: #fdf1de;
+  color: var(--hope-orange-lisible);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition:
+    background-color 220ms ease-out,
+    color 220ms ease-out;
+}
+
+.don-choix--actif .don-choix__etiquette {
+  background-color: var(--hope-violet);
+  color: var(--hope-jaune);
+}

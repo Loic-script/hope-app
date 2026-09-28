@@ -1,0 +1,765 @@
+/* ==================================================================
+   Virement bancaire local (pages/donateur/PaiementVirement.jsx)
+
+   L'objet de reference : le RIB qu'une banque remet a son client. Un
+   bleu d'encre bancaire, un papier legerement bleute, et le fond de
+   securite guilloche qui se dessine a l'ouverture -- la signature de
+   la page. Le reste est sobre, comme un guichet.
+   ================================================================== */
+
+.vir {
+  --vi-encre: #12355b;
+  --vi-encre-2: #1d4f82;
+  --vi-papier: #f3f6fa;
+  --vi-guilloche: #b6c8de;
+  --vi-or: #9a7a2a;
+  --vi-texte: #16202b;
+  --vi-doux: #5b6878;
+  --vi-trait: #d6dfea;
+  --vi-rouge: #b3261e;
+  --vi-anime: cubic-bezier(0.22, 1, 0.36, 1);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--vi-papier);
+  color: var(--vi-texte);
+  font-family: var(--police-titre);
+}
+
+/* ---------- Le bandeau ---------- */
+.vir__tete {
+  background: var(--vi-encre);
+  color: #fff;
+}
+
+.vir__tete-dedans {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+  min-height: 60px;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+.vir__retour {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.vir__retour svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vir__retour:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.vir__retour:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.vir__tete-titre {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.vir__tete-hope {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vir__tete-hope .hope-logo {
+  width: 56px;
+  height: auto;
+}
+
+/* ---------- La page ---------- */
+.vir__page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 18px 16px 24px;
+}
+
+/* Les trois temps : des onglets, souligne d'un trait qui avance. */
+.vir__etapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.vir__etape {
+  position: relative;
+  padding-bottom: 8px;
+  color: var(--vi-doux);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.vir__etape::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--vi-trait);
+  transition: background 0.4s var(--vi-anime);
+}
+
+.vir__etape--active,
+.vir__etape--faite {
+  color: var(--vi-encre);
+  font-weight: 700;
+}
+
+.vir__etape--active::after,
+.vir__etape--faite::after {
+  background: var(--vi-encre);
+}
+
+.vir__temps {
+  animation: vir-entre 0.45s var(--vi-anime) both;
+}
+
+@keyframes vir-entre {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.vir__titre {
+  margin: 0 0 16px;
+  font-size: clamp(1.2rem, 4vw, 1.55rem);
+  font-weight: 700;
+  line-height: 1.25;
+  outline: none;
+}
+
+.vir__titre--centre,
+.vir__texte {
+  text-align: center;
+}
+
+.vir__texte {
+  margin: 0 0 18px;
+  color: var(--vi-doux);
+  line-height: 1.55;
+}
+
+/* ---------- Champs ---------- */
+.vir__champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vir__libelle {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vir__libelle em {
+  margin-left: 6px;
+  color: var(--vi-doux);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.vir__montant {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--vi-trait);
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vir__montant:focus-within,
+.vir__saisie:focus {
+  border-color: var(--vi-encre-2);
+  box-shadow: 0 0 0 3px rgba(29, 79, 130, 0.18);
+}
+
+.vir__montant--erreur,
+.vir__saisie--erreur {
+  border-color: var(--vi-rouge);
+}
+
+.vir__montant input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--vi-texte);
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.vir__montant span {
+  padding: 0 14px;
+  color: var(--vi-doux);
+  font-weight: 600;
+}
+
+.vir__rapides {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.vir__rapide {
+  min-height: 40px;
+  border: 1px solid var(--vi-trait);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--vi-texte);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.vir__rapide:hover:not(:disabled) {
+  border-color: var(--vi-encre-2);
+}
+
+.vir__rapide--choisi {
+  border-color: var(--vi-encre);
+  background: var(--vi-encre);
+  color: #fff;
+}
+
+.vir__saisie {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--vi-trait);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--vi-texte);
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.vir__erreur {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--vi-rouge);
+}
+
+.vir__erreur:empty {
+  display: none;
+}
+
+.vir__erreur--centre {
+  text-align: center;
+}
+
+.vir__pour {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--vi-or);
+  background: #fff;
+  font-size: 0.88rem;
+  color: var(--vi-doux);
+}
+
+.vir__pour strong {
+  color: var(--vi-texte);
+}
+
+/* ---------- Boutons ---------- */
+.vir__bouton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--vi-encre);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.vir__bouton:hover:not(:disabled) {
+  background: var(--vi-encre-2);
+  transform: translateY(-1px);
+}
+
+.vir__bouton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.vir__lien {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 4px;
+  border: 0;
+  background: none;
+  color: var(--vi-doux);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.vir :focus-visible {
+  outline: 2px solid var(--vi-encre-2);
+  outline-offset: 2px;
+}
+
+.vir__titre:focus-visible,
+.vir__montant input:focus-visible,
+.vir__saisie:focus-visible {
+  outline: none;
+}
+
+/* ---------- Le RIB : la signature ---------- */
+.rib {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 18px 12px;
+  border: 1px solid var(--vi-trait);
+  border-radius: 14px;
+  background: linear-gradient(160deg, #ffffff, #f6f9fd);
+  box-shadow: 0 14px 34px rgba(18, 53, 91, 0.12);
+  animation: vir-rib 0.6s var(--vi-anime) both;
+}
+
+@keyframes vir-rib {
+  from {
+    opacity: 0;
+    transform: translateY(16px) rotate(-1deg);
+  }
+}
+
+/* Le fond guilloche se trace, ligne apres ligne. */
+.rib__guilloche {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rib__guilloche path {
+  fill: none;
+  stroke: var(--vi-guilloche);
+  stroke-width: 0.7;
+  opacity: 0.75;
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
+  animation: vir-trace 1.8s var(--vi-anime) forwards;
+  animation-delay: calc(0.15s + var(--i) * 0.05s);
+}
+
+@keyframes vir-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.rib > :not(.rib__guilloche) {
+  position: relative;
+}
+
+.rib__tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rib__banque {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  color: var(--vi-encre);
+}
+
+.rib__banque small {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--vi-doux);
+}
+
+.rib__sigle {
+  padding: 3px 8px;
+  border: 1.5px solid var(--vi-or);
+  border-radius: 4px;
+  color: var(--vi-or);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.rib__titulaire {
+  display: flex;
+  flex-direction: column;
+  margin: 12px 0 10px;
+}
+
+.rib__titulaire span {
+  font-size: 0.72rem;
+  color: var(--vi-doux);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rib__titulaire strong {
+  font-size: 1.05rem;
+}
+
+/* Les quatre cases du RIB, comme sur le document papier. */
+.rib__cases {
+  display: grid;
+  grid-template-columns: 5fr 5fr 11fr 2.6fr;
+  border: 1px solid var(--vi-encre);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.rib__case {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+}
+
+.rib__case + .rib__case {
+  border-left: 1px solid var(--vi-encre);
+}
+
+.rib__case small {
+  font-size: 0.64rem;
+  color: var(--vi-doux);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.rib__case span {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.rib__iban {
+  margin: 10px 0 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: var(--vi-encre);
+  overflow-wrap: anywhere;
+}
+
+.rib__pied {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.rib__copier,
+.vir__copier {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--vi-encre);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--vi-encre);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.rib__copier:hover,
+.vir__copier:hover,
+.rib__copier--fait,
+.vir__copier--fait {
+  background: var(--vi-encre);
+  color: #fff;
+}
+
+/* Le motif : a recopier tel quel, il merite sa propre case. */
+.vir__motif {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  margin: 14px 0 18px;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--vi-or);
+  border-radius: 12px;
+  background: #fffdf6;
+}
+
+.vir__motif-libelle {
+  grid-column: 1;
+  font-size: 0.76rem;
+  color: var(--vi-doux);
+}
+
+.vir__motif-valeur {
+  grid-column: 1;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--vi-encre);
+}
+
+.vir__motif .vir__copier {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.vir__motif-aide {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  font-size: 0.76rem;
+  color: var(--vi-doux);
+}
+
+/* ---------- Fin ---------- */
+.vir__temps--fin {
+  display: flex;
+  flex-direction: column;
+}
+
+.vir__sceau {
+  width: 72px;
+  height: 72px;
+  margin: 6px auto 12px;
+}
+
+.vir__sceau svg {
+  width: 100%;
+  height: 100%;
+  animation: vir-sceau 0.55s var(--vi-anime) both;
+}
+
+.vir__sceau circle {
+  fill: #e8eef6;
+  stroke: var(--vi-encre);
+  stroke-width: 2;
+}
+
+.vir__sceau path {
+  fill: none;
+  stroke: var(--vi-encre);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: vir-trace 0.5s 0.4s var(--vi-anime) forwards;
+}
+
+@keyframes vir-sceau {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+.vir__recap {
+  margin: 0;
+  padding: 4px 14px;
+  border: 1px solid var(--vi-trait);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.vir__recap > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 0.88rem;
+}
+
+.vir__recap > div + div {
+  border-top: 1px solid var(--vi-trait);
+}
+
+.vir__recap dt {
+  color: var(--vi-doux);
+}
+
+.vir__recap dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.vir__attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 0;
+  color: var(--vi-doux);
+}
+
+.vir__rotation {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--vi-trait);
+  border-top-color: var(--vi-encre);
+  border-radius: 50%;
+  animation: vir-tourne 0.8s linear infinite;
+}
+
+@keyframes vir-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vir__alerte {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fdeceb;
+  color: var(--vi-rouge);
+}
+
+/* ---------- Ordinateur ---------- */
+@media (min-width: 900px) {
+  .vir__page {
+    padding-top: 40px;
+  }
+
+  .vir__titre {
+    margin-bottom: 22px;
+  }
+
+  .rib {
+    padding: 24px 28px 18px;
+  }
+
+  .rib__case span {
+    font-size: 1.1rem;
+  }
+}
+
+/* ---------- Telephone ---------- */
+@media (max-width: 600px) {
+  .vir__tete-dedans {
+    min-height: 52px;
+    padding: 6px 12px;
+  }
+
+  .vir__page {
+    padding: 12px 14px 16px;
+  }
+
+  .vir__etapes {
+    margin-bottom: 14px;
+  }
+
+  .vir__titre {
+    margin-bottom: 12px;
+  }
+
+  .rib {
+    padding: 12px 12px 10px;
+  }
+
+  .rib__titulaire {
+    margin: 8px 0;
+  }
+
+  .rib__cases {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rib__case:nth-child(3) {
+    grid-column: 1;
+    border-left: 0;
+    border-top: 1px solid var(--vi-encre);
+  }
+
+  .rib__case:nth-child(4) {
+    border-top: 1px solid var(--vi-encre);
+  }
+
+  .rib__case span {
+    font-size: 0.88rem;
+  }
+
+  .vir__motif {
+    margin: 10px 0 12px;
+    padding: 10px 12px;
+  }
+
+  .vir__motif-aide {
+    display: none;
+  }
+
+  .vir__bouton {
+    margin-top: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vir *,
+  .vir *::before,
+  .vir *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .rib__guilloche path,
+  .vir__sceau path {
+    stroke-dashoffset: 0;
+  }
+}

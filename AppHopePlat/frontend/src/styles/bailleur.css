@@ -1,0 +1,1618 @@
+/* ============================================================
+   HOPE - Espace bailleur
+
+   Troisieme espace, troisieme forme de navigation, et ce n'est pas
+   gratuit : l'administrateur a un rail d'icones qu'il finit par
+   connaitre par coeur, le benevole des onglets qu'il traverse depuis
+   son telephone, le bailleur un rail permanent avec les libelles en
+   clair -- il vient quelques fois par an et n'a rien memorise.
+
+   Le registre est plus institutionnel que les deux autres : moins de
+   couleur, plus de blanc, des chiffres qui portent. Le violet de la
+   marque tient le role principal, l'orange reste reserve a l'action.
+   ============================================================ */
+
+/* ============================================================
+   1. La coque
+
+   Le rail de cet espace a disparu : l'ossature vient desormais de
+   CoqueEspace, la meme que l'administrateur, et ses regles vivent dans
+   admin-entete.css. Ne restent ici que les ecrans.
+
+   Ce qui disait le partenaire -- raison sociale, niveau, fonction, date
+   d'entree -- tenait dans le rail. Le bandeau en garde l'essentiel : la
+   raison sociale et le niveau. Le reste se lit sur Mon organisation.
+   ============================================================ */
+
+/* ============================================================
+   2. En-tete de page et panneaux
+   ============================================================ */
+
+.page-bailleur__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-bailleur__titre {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.page-bailleur__accroche {
+  margin-top: 5px;
+  max-width: 62ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+.panneau-bailleur {
+  margin-bottom: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(43, 50, 68, 0.04);
+}
+
+.panneau-bailleur__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.panneau-bailleur__titre {
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.panneau-bailleur__sous-titre {
+  margin-top: 3px;
+  max-width: 70ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--admin-texte-faible);
+}
+
+.deux-colonnes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.deux-colonnes > .panneau-bailleur {
+  margin-bottom: 0;
+}
+
+/* ============================================================
+   3. Chiffres cles
+   ============================================================ */
+
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.kpi__carte {
+  padding: 20px 22px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(43, 50, 68, 0.04);
+}
+
+.kpi__libelle {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.kpi__valeur {
+  margin-top: 9px;
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.kpi__note {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.kpi__carte--violet .kpi__valeur { color: var(--hope-violet); }
+.kpi__carte--orange .kpi__valeur { color: var(--hope-orange-fonce); }
+.kpi__carte--bleu   .kpi__valeur { color: #2d80e6; }
+.kpi__carte--vert   .kpi__valeur { color: #2c8f63; }
+
+/* ============================================================
+   4. La chaine promis / recu / affecte -- element signature
+
+   Trois notions se ressemblent et ne veulent pas dire la meme chose.
+   Les poser sur un seul axe rend l'ecart lisible : le rail est le
+   promis, le remplissage le recu, le repere l'affecte.
+   ============================================================ */
+
+.triade__legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-bottom: 14px;
+}
+
+.triade__mesure {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 11px;
+  border-left: 3px solid var(--admin-bordure-forte);
+}
+
+.triade__mesure--plein  { border-left-color: var(--hope-violet); }
+.triade__mesure--repere { border-left-color: var(--hope-orange); }
+
+.triade__libelle {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.triade__valeur {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.triade__rail {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  /* Le rail entier est le montant promis : un liseré, pas un plein. */
+  background-color: #eef1f7;
+  box-shadow: inset 0 0 0 1px var(--admin-bordure);
+}
+
+.triade__recu {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background-color: var(--hope-violet);
+  transition: width 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+/* Le repere de l'affecte : un trait vertical qui traverse le rail,
+   volontairement different du remplissage pour qu'on ne confonde pas
+   « recu » et « attribue ». */
+.triade__repere {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background-color: var(--hope-orange);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  transition: left 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+.triade__note,
+.triade__attendu {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.triade--compacte .triade__rail {
+  height: 8px;
+}
+
+/* ============================================================
+   5. Repartition
+   ============================================================ */
+
+.repartition__barre {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  margin-bottom: 16px;
+}
+
+.repartition__part {
+  flex-basis: 0;
+  border-radius: 3px;
+}
+
+.repartition__part--1, .repartition__puce--1 { background-color: var(--hope-violet); }
+.repartition__part--2, .repartition__puce--2 { background-color: var(--hope-bleu); }
+.repartition__part--3, .repartition__puce--3 { background-color: var(--hope-orange); }
+.repartition__part--4, .repartition__puce--4 { background-color: #2c8f63; }
+.repartition__part--5, .repartition__puce--5 { background-color: #9d8ec9; }
+
+.repartition__legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.repartition__legende li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f4f9;
+  font-size: 13.5px;
+}
+
+.repartition__legende li:last-child {
+  border-bottom: 0;
+}
+
+.repartition__puce {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 3px;
+}
+
+/* Un libelle long -- "Âge non renseigné", un nom de ville -- se coupe
+   plutot que de passer sous le chiffre, qui est cale a droite. */
+.repartition__nom {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.repartition__chiffre {
+  flex: none;
+  font-weight: 700;
+}
+
+.repartition__montant {
+  flex: none;
+  min-width: 120px;
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* Un nombre de personnes tient en deux caracteres : lui reserver la
+   largeur d'un montant ecraserait le libelle sur un telephone. */
+.repartition__montant--nombre {
+  min-width: 42px;
+}
+
+/* ============================================================
+   6. Tableaux et listes
+   ============================================================ */
+
+.table-bailleur {
+  overflow-x: auto;
+}
+
+.table-bailleur table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table-bailleur th {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--admin-bordure);
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+.table-bailleur td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f4f9;
+  vertical-align: top;
+}
+
+.table-bailleur tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-bailleur .nombre {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table-bailleur__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.table-bailleur__discret {
+  color: var(--admin-texte-faible);
+}
+
+.lignes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f1f4f9;
+  font-size: 13.5px;
+}
+
+.ligne:last-child {
+  border-bottom: 0;
+}
+
+.ligne__gauche {
+  min-width: 0;
+}
+
+.ligne__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.ligne__droite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ligne__date {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   7. Jetons, distinctions, boutons, messages
+   ============================================================ */
+
+.jeton {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.jeton--gris   { background-color: #eef1f6; color: #6b7285; }
+.jeton--bleu   { background-color: #e4eefc; color: #2d80e6; }
+.jeton--vert   { background-color: #e2f4ea; color: #2c8f63; }
+.jeton--ambre  { background-color: #fdf1de; color: #b5731a; }
+.jeton--violet { background-color: #ece9f8; color: var(--hope-violet); }
+
+.distinctions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.distinctions__titre {
+  flex-basis: 100%;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.distinction {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid rgba(224, 151, 53, 0.4);
+  border-radius: 999px;
+  background-color: #fdf6ea;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a5c12;
+}
+
+.distinction__date {
+  font-weight: 400;
+  font-size: 11.5px;
+  opacity: 0.75;
+}
+
+/* Aussi porte par un lien -- "Toutes les preuves" -- d'ou le
+   soulignement retire et l'alignement du texte. */
+.bouton-bailleur {
+  display: inline-block;
+  padding: 11px 20px;
+  text-decoration: none;
+  border: 0;
+  border-radius: 10px;
+  background-color: var(--hope-orange);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.bouton-bailleur:hover:not(:disabled) {
+  background-color: var(--hope-orange-fonce);
+  transform: translateY(-1px);
+}
+
+.bouton-bailleur:disabled {
+  opacity: 0.6;
+}
+
+.bouton-bailleur:focus-visible {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.bouton-bailleur--discret {
+  border: 1px solid var(--admin-bordure-forte);
+  background-color: var(--admin-surface);
+  color: var(--admin-texte);
+}
+
+.bouton-bailleur--discret:hover:not(:disabled) {
+  background-color: var(--admin-surface-douce);
+}
+
+.lien-bailleur {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--hope-lien);
+}
+
+.alerte-bailleur {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-erreur);
+  border-radius: 0 9px 9px 0;
+  background-color: var(--hope-erreur-fond);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #8c2b20;
+}
+
+.succes-bailleur {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background-color: #e6f4ec;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #1f6b48;
+}
+
+/* Compte en attente : ni le rouge, ni le ton d'une erreur. */
+.attente-bailleur {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background-color: #fdf4e3;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #8a5c12;
+}
+
+.note-bailleur {
+  padding: 12px 15px;
+  border-left: 3px solid var(--hope-bleu);
+  border-radius: 0 9px 9px 0;
+  background-color: var(--hope-bleu-clair);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--hope-texte);
+}
+
+.vide-bailleur {
+  padding: 20px 2px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+/* ============================================================
+   8. Partenariat
+   ============================================================ */
+
+.groupe {
+  margin-bottom: 28px;
+}
+
+.groupe__titre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.groupe__compte {
+  min-width: 21px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: #ece9f8;
+  font-size: 11.5px;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.engagement {
+  margin-bottom: 16px;
+  padding: 22px 24px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(43, 50, 68, 0.04);
+}
+
+.engagement__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.engagement__titre {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.engagement__meta {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.engagement__jetons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.engagement__reste {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--hope-orange-fonce);
+}
+
+.engagement__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.engagement__sous-titre {
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Soutien non financier : une quantite, pas un montant --- */
+
+.quantite__chiffres {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.quantite__chiffres strong {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.quantite__chiffres span {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.quantite__rail {
+  height: 10px;
+  border-radius: 999px;
+  background-color: #eef1f7;
+  box-shadow: inset 0 0 0 1px var(--admin-bordure);
+}
+
+.quantite__plein {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--hope-bleu);
+  transition: width 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+.quantite__valorisation {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   9. Onglets, documents, preuves
+   ============================================================ */
+
+.onglets-bailleur {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 999px;
+  background-color: #e7ecf5;
+}
+
+.onglets-bailleur__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 17px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--admin-texte-doux);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.onglets-bailleur__bouton--actif {
+  background-color: var(--admin-surface);
+  font-weight: 600;
+  color: var(--hope-violet);
+  box-shadow: 0 1px 2px rgba(43, 50, 68, 0.08);
+}
+
+.onglets-bailleur__compte {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: rgba(93, 86, 150, 0.12);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.documents,
+.liste-preuves {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.document {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f4f9;
+}
+
+.document:last-child {
+  border-bottom: 0;
+}
+
+.document__corps {
+  flex: 1;
+  min-width: 260px;
+}
+
+.document__haut {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.document__titre {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.document__meta {
+  margin-top: 5px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-faible);
+}
+
+/* Savoir si le rapport est lu compte autant que le publier. */
+.document__lecture {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.preuve-part {
+  padding: 14px 16px;
+  border-radius: 11px;
+  background-color: var(--admin-surface-douce);
+}
+
+.preuve-part + .preuve-part {
+  margin-top: 11px;
+}
+
+.preuve-part__haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.preuve-part__date {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.preuve-part__texte {
+  margin-top: 9px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.preuve-part__meta {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   10. Appels a financement
+
+   Le fil d'actualite vit desormais dans la page d'entree (Accueil.jsx,
+   classes fil-post). Restent ici le message d'un interet deja exprime,
+   la collecte -- aussi lue sur les cartes de la page Projets -- et le
+   formulaire d'interet.
+   ============================================================ */
+
+.actu__deja {
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background-color: #e6f4ec;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1f6b48;
+}
+
+.collecte {
+  margin-top: 16px;
+  padding-top: 14px
+}
+
+.collecte__chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 9px;
+}
+
+.collecte__chiffres strong {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.collecte__chiffres span {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.collecte__rail {
+  height: 10px;
+  border-radius: 999px;
+  background-color: #eef1f7;
+  box-shadow: inset 0 0 0 1px var(--admin-bordure);
+}
+
+.collecte__plein {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  transition: width 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+.collecte__reste {
+  margin-top: 9px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.interet {
+  margin-top: 16px;
+}
+
+.interet__label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.interet__saisie {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13.5px;
+  resize: vertical;
+}
+
+/* Le point qui doit etre lu avant de cliquer : rien n'est debite. */
+.interet__avertissement {
+  margin-top: 10px;
+  padding: 10px 13px;
+  border-left: 3px solid var(--hope-bleu);
+  border-radius: 0 8px 8px 0;
+  background-color: var(--hope-bleu-clair);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.interet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.interet__actions .bouton-bailleur {
+  margin-top: 0;
+}
+
+/* ============================================================
+   11. Fiches et formulaires
+   ============================================================ */
+
+.fiche-part {
+  margin: 0;
+}
+
+.fiche-part__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f4f9;
+}
+
+.fiche-part__ligne:last-child {
+  border-bottom: 0;
+}
+
+.fiche-part__ligne dt {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.fiche-part__ligne dd {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.fiche-part__vide {
+  font-weight: 400;
+  color: var(--admin-texte-faible);
+}
+
+.formulaire-bailleur {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.champ-bailleur {
+  margin-top: 15px;
+}
+
+.champ-bailleur label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.champ-bailleur input,
+.champ-bailleur select {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+  background-color: var(--admin-surface);
+}
+
+.champ-bailleur input:focus,
+.champ-bailleur select:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+.champ-bailleur input[aria-invalid='true'],
+.champ-bailleur select[aria-invalid='true'] {
+  border-color: var(--hope-erreur);
+}
+
+.champ-bailleur__aide {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.champ-bailleur__erreur {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--hope-erreur);
+}
+
+.formulaire-bailleur .bouton-bailleur {
+  margin-top: 20px;
+  align-self: flex-start;
+}
+
+/* ============================================================
+   12. Petits ecrans
+
+   L'espace est concu pour le bureau, mais il doit rester consultable
+   sur un ecran etroit. Le menu, lui, se debrouille seul : la coque le
+   range dans un tiroir sous 561 px.
+   ============================================================ */
+
+@media (max-width: 1080px) {
+  .deux-colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .page-bailleur__titre {
+    font-size: 23px;
+  }
+
+  .panneau-bailleur,
+  .engagement {
+    padding: 18px;
+  }
+
+  .paire-champs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .triade__legende {
+    gap: 16px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .triade__recu,
+  .triade__repere,
+  .quantite__plein,
+  .collecte__plein,
+  .bouton-bailleur,
+  .onglets-bailleur__bouton {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Apercu d'un document, et fiche de l'organisation
+   ============================================================ */
+
+/* Les deux actions d'une ligne de document restent ensemble. */
+.document__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* L'invitation a preciser une organisation encore provisoire. */
+.note-fiche {
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-orange);
+  border-radius: 9px;
+  background-color: #fdf6ec;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #8a5c12;
+}
+
+/* Le champ d'adresse est le seul sur plusieurs lignes. */
+.champ-bailleur textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+  background-color: var(--admin-surface);
+  resize: vertical;
+}
+
+.champ-bailleur textarea:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+/* ============================================================
+   Projets : une carte par projet HOPE
+
+   Meme gabarit que les cartes du fil -- bordure, rayon, visuel --
+   pour que le partenaire reconnaisse la famille. Un projet qu'il
+   finance porte un liseré violet, la couleur de "Vous financez".
+   ============================================================ */
+
+.projets-bailleur {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.projet-bailleur {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 22px 24px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background-color: var(--admin-surface);
+  box-shadow: 0 1px 2px rgba(43, 50, 68, 0.04);
+}
+
+.projet-bailleur--finance {
+  border-left: 3px solid var(--hope-violet);
+}
+
+/* Meme reserve de hauteur que le visuel du fil : la grille ne saute pas
+   quand l'image arrive. */
+.projet-bailleur__visuel {
+  margin-bottom: 14px;
+  overflow: hidden;
+  border-radius: 10px;
+  aspect-ratio: 16 / 7;
+  background-color: var(--admin-fond);
+}
+
+.projet-bailleur__visuel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.projet-bailleur__haut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 11px;
+}
+
+.projet-bailleur__jetons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.projet-bailleur__reference {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+.projet-bailleur__titre {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.projet-bailleur__lieu {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--hope-violet);
+}
+
+.projet-bailleur__description {
+  margin-top: 10px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+  overflow-wrap: anywhere;
+}
+
+.projet-bailleur__description strong {
+  display: block;
+  color: var(--admin-texte);
+}
+
+.projet-bailleur__description p {
+  margin-top: 2px;
+}
+
+.projet-bailleur__chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px 16px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #f1f4f9;
+}
+
+.projet-bailleur__chiffres dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.projet-bailleur__chiffres dd {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  color: var(--admin-texte);
+}
+
+/* Voir le projet, puis lire son rapport. */
+.projet-bailleur__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Le nom du projet mene a sa fiche. */
+.projet-bailleur__titre a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.projet-bailleur__titre a:hover {
+  text-decoration: underline;
+}
+
+/* Page Rapports : les documents recus viennent apres les rapports des
+   projets, sous leur propre intitule. */
+.rapports-bailleur__recus {
+  margin-top: 28px;
+}
+
+@media (max-width: 620px) {
+  .projets-bailleur {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .projet-bailleur {
+    padding: 18px;
+  }
+}
+
+/* ============================================================
+   Accueil : le fil des projets, et la colonne du partenaire
+   ============================================================ */
+
+/* Dans les piles, l'ecart vient de la pile : pas de marge en plus. */
+.accueil__colonnes--bailleur .panneau-bailleur {
+  margin-bottom: 0;
+}
+
+/* Ce que le partenaire a affecte au projet : sa part, mise en avant. */
+.fil-post__votre-part,
+.fil-post__votre-part strong {
+  font-weight: 600;
+  color: var(--hope-violet);
+}
+
+/* Telephone : les quatre chiffres deux par deux, pour que les projets
+   arrivent vite sous le pouce au lieu d'attendre quatre cartes. */
+@media (max-width: 620px) {
+  .kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .kpi__carte {
+    padding: 14px;
+  }
+
+  .kpi__libelle {
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Un montant comme "6 000 000 Ar" tient sur sa ligne jusqu'a 320 px. */
+  .kpi__valeur {
+    margin-top: 6px;
+    font-size: clamp(15px, 5vw, 19px);
+  }
+
+  .kpi__note {
+    font-size: 11.5px;
+  }
+
+  /* Trois chiffres : le dernier prend la rangee entiere plutot que de
+     rester seul sur une demi-largeur. */
+  .kpi__carte:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ============================================================
+   La fiche d'un projet, cote partenaire
+
+   Elle a la forme de celle de l'administration -- la photo en
+   couverture, le bandeau des quatre chiffres, les onglets -- sans
+   aucune prise sur le projet. Ces quelques regles ne posent que ce
+   qui lui est propre.
+   ============================================================ */
+
+.fiche-projet-bailleur .couverture-projet {
+  margin-bottom: 18px;
+}
+
+.fiche-projet-bailleur .page-bailleur__entete {
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+/* Le statut, "Vous financez", et le lieu du projet sur la meme ligne. */
+.fiche-projet-bailleur__jetons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.fiche-projet-bailleur__lieu {
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.fiche-projet-bailleur .resume-financier {
+  margin-bottom: 18px;
+}
+
+/* Ce que HOPE ne communique pas, et pourquoi : au pied de l'onglet, en
+   retrait, pour que la limite se lise sans couper la lecture. */
+.fiche-projet-bailleur__note {
+  margin-top: 14px;
+  padding-left: 12px;
+  border-left: 3px solid var(--admin-bordure-forte);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   Paiements effectues (pages/bailleur/Paiements.jsx)
+
+   Trois chiffres qui entrent l'un apres l'autre, trois filtres en
+   pastilles, puis la liste : chaque paiement glisse a son tour.
+   ============================================================ */
+
+.paiements__carte {
+  animation: paiements-entree 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 70ms);
+}
+
+.paiements__filtres {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #eef0f7;
+}
+
+.paiements__filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-texte-doux);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.paiements__filtre:hover {
+  color: var(--hope-violet);
+}
+
+.paiements__filtre--actif {
+  background: #fff;
+  color: var(--hope-violet);
+  box-shadow: 0 1px 4px rgba(43, 50, 68, 0.12);
+}
+
+.paiements__filtre:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.paiements__compte {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e4e6f0;
+  color: var(--hope-texte);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.paiements__filtre--actif .paiements__compte {
+  background: #ece9f8;
+  color: var(--hope-violet);
+}
+
+.paiements__liste {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paiement {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 14px;
+  background: var(--admin-surface);
+  animation: paiements-entree 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 40ms);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .paiement:hover {
+    transform: translateY(-2px);
+    border-color: #d4d1ea;
+    box-shadow: 0 8px 20px rgba(93, 86, 150, 0.1);
+  }
+}
+
+.paiement__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #e2f4ea;
+  color: #2c8f63;
+}
+
+.paiement--en_attente .paiement__icone {
+  background: #fdf1de;
+  color: #b5731a;
+}
+
+.paiement__icone svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.paiement__libelle {
+  margin: 0;
+  overflow: hidden;
+  color: var(--hope-texte);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paiement__libelle a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.paiement__libelle a:hover {
+  color: var(--hope-violet);
+}
+
+.paiement__meta {
+  margin: 3px 0 0;
+  color: var(--admin-texte-doux);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.paiement__droite {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.paiement__montant {
+  color: var(--hope-texte);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.paiement--recu .paiement__montant {
+  color: #2c8f63;
+}
+
+.paiement__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-texte-doux);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .paiement {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .paiement__droite {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px dashed var(--admin-bordure);
+  }
+
+  .paiement__date {
+    justify-self: end;
+  }
+
+  .paiement__libelle {
+    white-space: normal;
+  }
+}
+
+@keyframes paiements-entree {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paiements__carte,
+  .paiement {
+    animation: none;
+    transition: none;
+  }
+
+  .paiements__filtre {
+    transition: none;
+  }
+}
+
+/* Sur telephone, les trois filtres tiennent sur une ligne, a parts egales. */
+@media (max-width: 560px) {
+  .paiements__filtres {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .paiements__filtre {
+    justify-content: center;
+    gap: 5px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 560px) {
+  .paiements__filtre {
+    white-space: nowrap;
+  }
+
+  /* Le montant a gauche, la pastille et la date a droite, qui passent a
+     la ligne plutot que de toucher le bord. */
+  .paiement__date {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    white-space: normal;
+    text-align: right;
+  }
+}

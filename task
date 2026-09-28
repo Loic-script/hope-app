@@ -1,0 +1,28 @@
+Modules entiers absents
+#	Ce qui manque	En une phrase
+1	Preuves terrain	Publier une photo + deux lignes pour montrer qu'une action a eu lieu. À ne pas confondre avec vos justificatifs, qui prouvent une dépense ; ici on prouve une action. C'est ce qui alimentera le suivi du donateur.
+2	Vue consolidée des financements	Voir, projet par projet, qui l'a financé — particuliers et bailleurs mêlés — sans compter deux fois le même argent.
+3	Fil d'actualité	Écrire une publication (actualité, appel à financement, événement) et choisir qui la voit : donateurs, bénévoles, bailleurs.
+Le n°2 a un préalable : la table bailleurs / partenaires n'existe pas. Vos 14 tables ne connaissent que les donateurs.
+
+Comptes et traçabilité
+#	Ce qui manque	En une phrase
+4	Comptes nommés et rôles	Aujourd'hui, un seul compte AdminHope partagé par toute l'équipe. Les maquettes montrent Njara R., Solo T., Mialy F. avec des rôles.
+5	Journal d'activité	Savoir qui a créé un projet, saisi une dépense, clôturé quoi. J'ai vérifié : zéro colonne d'auteur dans tout le schéma. Rien n'est attribué.
+6	Changer son mot de passe	L'écran Paramètres explique que le mot de passe est haché, mais ne permet pas de le modifier. Il faut passer par la ligne de commande.
+Les 4 et 5 vont ensemble, et ils sont plus urgents qu'ils n'en ont l'air : les ajouter plus tard voudra dire migrer des données déjà en production, sans savoir qui a écrit quoi avant.
+
+Automatismes
+#	Ce qui manque	En une phrase
+7	Alerte « sans preuve depuis 15 j »	Repérer les projets dont on n'a plus de nouvelles, avant que le donateur ne le remarque.
+8	Reçus fiscaux automatiques	Les maquettes montrent « Système a envoyé 6 reçus fiscaux ». Rien de tel n'existe : le mot « reçu » dans votre code désigne un justificatif de dépense.
+9	Dons mensuels prélevés	MONTHLY n'est aujourd'hui qu'une étiquette d'affichage. Chaque mois, l'admin ressaisit le don à la main.
+Sécurité
+#	Ce qui manque	En une phrase
+10	Jeton en cookie httpOnly	Le JWT est dans localStorage, donc lisible par n'importe quel script de la page.
+11	Rafraîchissement, HTTPS, helmet	Session de 2 h sans renouvellement, pas de chiffrement en production, en-têtes de sécurité absents.
+En résumé : trois modules à construire, une dette de comptes à payer, trois automatismes, et la sécurité à durcir avant toute ouverture vers l'extérieur.
+
+Si je devais n'en garder que deux à faire tout de suite : les comptes nommés (4+5) parce qu'ils deviennent coûteux avec le temps, et les preuves terrain (1) parce que les trois autres espaces en dépendent.
+
+quand on crée un ptojet il faut ajouter un champ objectif spécifique et ajouter un option "+ ajouter" pour ajouter et ça deviens automatiquement une liste 

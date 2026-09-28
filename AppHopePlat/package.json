@@ -1,0 +1,18 @@
+{
+  "name": "hope-plateforme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HOPE : la plateforme de l'ONG (API Express et frontend React), deployee en un seul service.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm ci --prefix backend --omit=dev && npm ci --prefix frontend --include=dev && npm run build --prefix frontend",
+    "start": "npm start --prefix backend",
+    "db:preparer": "npm run db:init --prefix backend && npm run db:migrate --prefix backend",
+    "db:premier-deploiement": "npm run db:preparer && npm run db:seed --prefix backend && npm run db:categories --prefix backend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
+    "test:e2e": "npm run build --prefix frontend && npm test --prefix e2e"
+  }
+}

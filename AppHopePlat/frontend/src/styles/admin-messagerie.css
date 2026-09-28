@@ -1,0 +1,569 @@
+/* ============================================================
+   HOPE - Messagerie
+
+   Deux volets : la liste des conversations a gauche, l'echange
+   selectionne a droite avec sa zone de reponse en bas.
+   ============================================================ */
+
+.messagerie {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  /* Les deux volets occupent la hauteur restante sous le bandeau. */
+  height: calc(100vh - var(--admin-entete-hauteur) - 190px);
+  min-height: 460px;
+}
+
+.messagerie__volet {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+/* ============================================================
+   1. Volet gauche : les conversations
+   ============================================================ */
+
+.conversations__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.conversations__titre {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.conversations__compte {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.conversations__marque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 11px;
+  background-color: var(--hope-bleu-clair);
+  color: var(--hope-violet);
+}
+
+.conversations__marque svg {
+  width: 19px;
+  height: 19px;
+}
+
+/*
+ * La recherche, sous l'en-tete du volet.
+ *
+ * Elle existait deja sur l'ecran des donateurs, ecrite dans sa page ;
+ * la messagerie commune la reprend, et les deux la partagent desormais.
+ */
+.conversations__outils {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 20px 14px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.conversations__loupe {
+  position: absolute;
+  left: 32px;
+  display: flex;
+  color: var(--admin-texte-faible);
+  pointer-events: none;
+}
+
+.conversations__loupe svg {
+  width: 17px;
+  height: 17px;
+}
+
+.conversations__outils input {
+  width: 100%;
+  padding: 10px 13px 10px 38px;
+  border: 1.5px solid var(--admin-bordure);
+  border-radius: var(--rayon-champ);
+  background-color: var(--admin-surface);
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--admin-texte);
+}
+
+.conversations__outils input:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+/* La photo remplit la pastille ; sans elle, ce sont les initiales. */
+.conversation__avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.conversations__liste {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.conversation {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-bottom: 1px solid #f0f3f9;
+  border-left: 3px solid transparent;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.conversation:hover {
+  background-color: var(--admin-surface-douce);
+}
+
+.conversation--active,
+.conversation--active:hover {
+  background-color: #f3f1fb;
+  border-left-color: var(--hope-violet);
+}
+
+.conversation__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.conversation__avatar--international {
+  background-color: var(--hope-bleu);
+  color: var(--admin-texte);
+}
+
+.conversation__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversation__ligne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Sans min-width a 0, un enfant flex refuse de passer sous sa taille de
+   contenu : l'ellipse ne se declencherait jamais. */
+.conversation__ligne > .conversation__nom,
+.conversation__ligne > .conversation__courriel {
+  min-width: 0;
+}
+
+.conversation__nom {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation__temps {
+  flex: none;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+  white-space: nowrap;
+}
+
+.conversation__extrait {
+  display: block;
+  margin-top: 2px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation--nouvelle .conversation__nom,
+.conversation--nouvelle .conversation__extrait {
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+.conversation__courriel {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation__pastille {
+  min-width: 19px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: var(--hope-orange);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  color: #ffffff;
+}
+
+/* ============================================================
+   2. Volet droit : l'echange
+   ============================================================ */
+
+.echange__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.echange__identite {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.echange__nom {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--admin-texte);
+}
+
+.echange__courriel {
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.echange__fil {
+  flex: 1;
+  min-height: 0;
+  padding: 22px 24px;
+  overflow-y: auto;
+  background-color: #fafbfe;
+}
+
+.echange__vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-faible);
+}
+
+/*
+ * Le retour a la boite de messages.
+ *
+ * Invisible sur grand ecran : la liste y est deja a gauche, et un
+ * bouton de retour n'aurait nulle part ou mener. Il n'apparait qu'au
+ * moment ou le fil prend l'ecran a lui seul.
+ */
+.echange__retour {
+  display: none;
+}
+
+/* --- Bulles --- */
+
+/* La photo de l'auteur et sa bulle tiennent sur une meme ligne : c'est
+   le rang qui porte l'alignement, la bulle ne fait que se dimensionner.
+   Aligne en bas, comme dans une messagerie : la photo accompagne la fin
+   de la salve, pas son debut. */
+.bulle-rang {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.bulle-rang--recue {
+  margin-right: auto;
+  max-width: 88%;
+}
+
+/* La ligne est poussee a droite, mais elle mesure jusqu'a 76 % de la
+   largeur : sans justify-content, une bulle courte se posait a SON bord
+   gauche, donc au milieu de l'echange. C'est la bulle qu'on veut a
+   droite, pas seulement la ligne qui la porte. */
+.bulle-rang--envoyee {
+  margin-left: auto;
+  justify-content: flex-end;
+  max-width: 76%;
+}
+
+.bulle__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  /* La bulle porte 5px de meta sous elle : sans ce recul, la photo
+     flotterait sous le texte qu'elle accompagne. */
+  margin-bottom: 22px;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.bulle__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Le creux garde la place de la photo dans une salve, sans la repeter. */
+.bulle__avatar--creux {
+  background: none;
+}
+
+.bulle {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Hors d'un rang -- l'ancienne messagerie des fils HOPE -- la bulle
+   garde son propre alignement. */
+.echange__fil > .bulle {
+  max-width: 76%;
+  margin-bottom: 16px;
+}
+
+.echange__fil > .bulle--recue {
+  margin-right: auto;
+}
+
+.echange__fil > .bulle--envoyee {
+  margin-left: auto;
+}
+
+.bulle__sujet {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.bulle__contenu {
+  padding: 13px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bulle--recue .bulle__contenu {
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px 12px 12px 3px;
+  background-color: var(--admin-surface);
+  color: var(--admin-texte);
+}
+
+.bulle--envoyee .bulle__contenu {
+  border-radius: 12px 12px 3px 12px;
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.bulle__meta {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.bulle--envoyee .bulle__meta {
+  text-align: right;
+}
+
+/* --- Zone de reponse --- */
+
+.reponse {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--admin-bordure);
+  background-color: var(--admin-surface);
+}
+
+.reponse textarea {
+  flex: 1;
+  min-height: 46px;
+  max-height: 140px;
+  padding: 12px 14px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+  resize: vertical;
+}
+
+.reponse textarea:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+.reponse textarea:disabled {
+  background-color: #f4f6fa;
+  color: var(--admin-texte-doux);
+}
+
+.reponse .btn {
+  height: 46px;
+  padding: 0 20px;
+  flex: none;
+}
+
+.reponse__aide {
+  padding: 0 20px 14px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   3. Adaptation aux petits ecrans
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  /*
+   * Un volet a la fois.
+   *
+   * Les deux empiles, la boite et le fil se disputaient le meme ecran :
+   * il fallait defiler longuement pour atteindre le champ de saisie, et
+   * la liste restait au-dessus sans servir. La conversation ayant son
+   * adresse, elle peut prendre la page entiere -- et le retour se fait
+   * par le chevron de l'entete, ou par le bouton du navigateur.
+   */
+  .messagerie {
+    grid-template-columns: minmax(0, 1fr);
+    /* Toute la hauteur utile : le champ de saisie se pose en bas du
+       fil, la ou le pouce l'attend, et non apres un long defilement. */
+    height: calc(100vh - var(--admin-entete-hauteur) - 150px);
+    min-height: 420px;
+  }
+
+  .messagerie--fil-ouvert .messagerie__volet--liste,
+  .messagerie:not(.messagerie--fil-ouvert) .messagerie__volet--fil {
+    display: none;
+  }
+
+  .conversations__liste {
+    max-height: none;
+  }
+
+  .echange__retour {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    /* Un recul a gauche pour que la cible tienne les 44 px
+       recommandes sans decaler la pastille qui la suit. */
+    margin-left: -6px;
+    border-radius: 50%;
+    color: var(--admin-texte-doux);
+  }
+
+  .echange__retour:hover {
+    background-color: var(--admin-fond);
+    color: var(--admin-texte);
+  }
+
+  .echange__retour svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/*
+ * Sur telephone, la messagerie occupe toute la hauteur utile : celle de
+ * la fenetre, moins le bandeau, le retrait bas du contenu (40 px) et le
+ * titre de page avec ses marges (60 px). Le grand titre disparait quand
+ * un fil est ouvert (regle ci-dessous).
+ *
+ * dvh plutot que vh : sur un telephone, la barre d'adresse se replie
+ * en defilant, et 100vh vaut la hauteur barre depliee -- le bas de la
+ * conversation tombait alors hors de l'ecran.
+ */
+@media (max-width: 560px) {
+  .messagerie {
+    height: calc(100vh - var(--admin-entete-hauteur) - 40px - 60px);
+    height: calc(100dvh - var(--admin-entete-hauteur) - 40px - 60px);
+    /* Pas de plancher : sur un ecran court, mieux vaut un fil ramasse
+       qu'un bouton Envoyer hors de l'ecran. */
+    min-height: 0;
+  }
+
+  .page-benevole__entete--fil-ouvert {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .bulle {
+    max-width: 92%;
+  }
+
+  .reponse {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reponse .btn {
+    width: 100%;
+  }
+}

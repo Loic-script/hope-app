@@ -1,0 +1,3093 @@
+/* ============================================================
+   2. En-tete de page, blocs, etats
+   ============================================================ */
+
+.page-benevole__entete {
+  margin-bottom: 22px;
+}
+
+.page-benevole__titre {
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.page-benevole__accroche {
+  margin-top: 5px;
+  font-size: 14.5px;
+  color: var(--admin-texte-doux);
+}
+
+.bloc {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.bloc__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bloc__titre {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.bloc__lien {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--hope-lien);
+}
+
+.bloc__compte {
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.bloc__vide {
+  padding: 22px 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+.bloc__vide a {
+  font-weight: 600;
+  color: var(--hope-lien);
+}
+
+.alerte-benevole {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border-left: 3px solid var(--hope-erreur);
+  border-radius: 0 8px 8px 0;
+  background-color: var(--hope-erreur-fond);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #8c2b20;
+}
+
+.succes-benevole {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background-color: #eceafa;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #4a4479;
+}
+
+.fil-retour {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--hope-lien);
+}
+
+/* ============================================================
+   3. Chiffres cles
+   ============================================================ */
+
+.chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.chiffre {
+  padding: 18px 20px;
+  border: 1px solid var(--admin-bordure);
+  border-left-width: 3px;
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.chiffre--violet { border-left-color: var(--hope-violet); }
+.chiffre--orange { border-left-color: var(--hope-orange); }
+.chiffre--bleu   { border-left-color: var(--hope-bleu); }
+.chiffre--valide { border-left-color: #4a4479; }
+
+.chiffre__valeur {
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.chiffre__libelle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+/* ============================================================
+   4. Pastilles
+   ============================================================ */
+
+.pastille {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.pastille--gris  { background-color: #eef1f6; color: #6b7285; }
+.pastille--bleu  { background-color: #dbeaf5; color: #2b6484; }
+.pastille--valide { background-color: #eceafa; color: #4a4479; }
+.pastille--rouge { background-color: var(--hope-erreur-fond); color: #a8271a; }
+.pastille--orange { background-color: #fdf1de; color: #8a5c12; }
+
+/* ============================================================
+   7. Taches
+   ============================================================ */
+
+.colonnes-taches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.colonne-taches {
+  padding: 16px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.colonne-taches__titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.colonne-taches__sous-titre {
+  margin: 2px 0 13px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.colonne-taches__compteur {
+  min-width: 21px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: #eef1f6;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--admin-texte-doux);
+}
+
+.colonne-taches__vide {
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.colonne-taches .carte-tache {
+  box-shadow: none;
+}
+
+.colonne-taches .carte-tache + .carte-tache {
+  margin-top: 11px;
+}
+
+.carte-tache {
+  padding: 15px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 11px;
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.carte-tache__projet {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.carte-tache__titre {
+  margin-top: 5px;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.carte-tache__texte {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+.carte-tache__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.carte-tache__echeance--retard {
+  font-weight: 600;
+  color: var(--hope-erreur);
+}
+
+.carte-tache__statut {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: #eef1f6;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.carte-tache__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.carte-tache__fait {
+  font-size: 12.5px;
+  color: #4a4479;
+}
+
+.carte-tache__preuve {
+  font-size: 12.5px;
+}
+
+/* --- Carte ouvrable ---
+   Le titre est un bouton ; son ::after couvre la carte entiere, si bien
+   que tout clic sur la carte l'ouvre. Les actions passent au-dessus pour
+   garder leur propre clic. */
+
+.carte-tache--ouvrable {
+  position: relative;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.carte-tache--ouvrable:hover,
+.carte-tache--ouvrable:has(.carte-tache__ouvrir:focus-visible) {
+  border-color: color-mix(in srgb, var(--hope-violet) 45%, var(--admin-bordure));
+  box-shadow: 0 6px 18px rgba(92, 84, 150, 0.12);
+}
+
+.carte-tache__ouvrir {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.carte-tache__ouvrir::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.carte-tache__ouvrir:focus-visible {
+  outline: none;
+}
+
+.carte-tache--ouvrable:hover .carte-tache__ouvrir {
+  color: var(--hope-violet);
+}
+
+.carte-tache--ouvrable .carte-tache__actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   Fenetre : le detail d'une tache et de son projet
+   ============================================================ */
+
+.detail-tache__texte {
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.detail-tache__texte--vide {
+  color: var(--admin-texte-faible);
+}
+
+.detail-tache__echeance {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background-color: var(--admin-surface-douce);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.detail-tache__echeance svg {
+  width: 15px;
+  height: 15px;
+  color: var(--hope-violet);
+}
+
+.detail-tache__echeance--retard {
+  background-color: var(--hope-erreur-fond);
+  color: var(--hope-erreur);
+}
+
+.detail-tache__echeance--retard svg {
+  color: var(--hope-erreur);
+}
+
+.detail-projet {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-bordure);
+}
+
+.detail-projet__surtitre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.detail-projet__attente {
+  font-size: 13.5px;
+  color: var(--admin-texte-faible);
+}
+
+.detail-projet__grille {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Sans image, le texte prend toute la largeur. */
+.detail-projet__grille:not(:has(.detail-projet__image)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.detail-projet__image {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  border-radius: 11px;
+  background-color: var(--admin-surface-douce);
+}
+
+.detail-projet__categorie {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.detail-projet__nom {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.detail-projet__lieu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.detail-projet__lieu svg {
+  width: 15px;
+  height: 15px;
+  color: var(--hope-violet);
+}
+
+.detail-projet__annonce {
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hope-violet-lisible);
+}
+
+.detail-projet__description {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+  white-space: pre-wrap;
+}
+
+.detail-projet__intertitre {
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+.detail-projet__objectifs {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .detail-projet__grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   Fenetre : livrer une tache, preuve a l'appui
+   ============================================================ */
+
+.livraison__consigne {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+.livraison__depot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 28px 18px;
+  border: 2px dashed var(--admin-bordure-forte);
+  border-radius: 12px;
+  background-color: var(--admin-surface-douce);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.livraison__depot:hover,
+.livraison__depot--survol,
+.livraison__depot:has(input:focus-visible) {
+  border-color: var(--hope-violet);
+  background-color: color-mix(in srgb, var(--hope-violet) 6%, var(--admin-surface));
+}
+
+.livraison__depot--plein {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* Le champ reste dans le document -- le clavier et les lecteurs d'ecran
+   le trouvent -- mais la zone entiere en tient lieu a l'ecran. */
+.livraison__depot input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.livraison__depot-titre {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.livraison__depot-aide {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.livraison__fichiers {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.livraison__fichier {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+}
+
+.livraison__apercu {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 8px;
+  background-color: #1f1b33;
+}
+
+.livraison__apercu img,
+.livraison__apercu video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.livraison__lecture {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.livraison__infos {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.livraison__nom {
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.livraison__taille {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   9. Listes simples
+   ============================================================ */
+
+.liste-simple {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.liste-simple__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--admin-bordure);
+  font-size: 14px;
+}
+
+.liste-simple__ligne:last-child {
+  border-bottom: 0;
+}
+
+.liste-simple__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.liste-simple__date {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* ============================================================
+   11. Profil
+   ============================================================ */
+
+.validation {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 17px;
+  border-left: 3px solid var(--hope-orange);
+  border-radius: 0 10px 10px 0;
+  background-color: #fdf4e3;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #8a5c12;
+}
+
+.validation--ok {
+  border-left-color: #4a4479;
+  background-color: #eceafa;
+  color: #4a4479;
+}
+
+.profil-benevole {
+  margin-top: 20px;
+}
+
+.profil-benevole__groupe {
+  margin: 0 0 16px;
+  padding: 20px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.profil-benevole__groupe legend {
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hope-violet);
+}
+
+.profil-benevole__fixe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--admin-bordure);
+  font-size: 14px;
+}
+
+.profil-benevole__fixe span {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.profil-benevole__champ {
+  margin-top: 15px;
+}
+
+.profil-benevole__champ label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.profil-benevole__champ input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--admin-texte);
+}
+
+.profil-benevole__champ input:focus {
+  outline: none;
+  border-color: var(--hope-bleu);
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
+}
+
+.profil-benevole__aide {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+.profil-benevole__case {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 13px;
+  font-size: 14px;
+}
+
+.profil-benevole__pied {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* --- Disponibilites --- */
+
+.dispo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dispo__jour {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.dispo__nom {
+  width: 92px;
+  flex: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.dispo__moments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dispo__moment {
+  padding: 7px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.dispo__moment--actif {
+  border-color: var(--hope-violet);
+  background-color: #ece9f8;
+  font-weight: 600;
+  color: var(--hope-violet);
+}
+
+/* ============================================================
+   12. Petits ecrans
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+  
+
+  .colonnes-taches {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .page-benevole__titre{
+    font-size: 22px;
+  }
+
+  .dispo__nom {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dispo__moment{
+    transition: none;
+  }
+}
+
+/* ============================================================
+   9. Vue d'ensemble
+
+   La page d'accueil de l'espace ne liste pas, elle met en avant : la
+   tache a rendre, la tache a prendre. Ses couleurs sont les quatre de la charte --
+   violet, bleu, orange, jaune -- prelevees dans le logo lui-meme, et
+   rien d'autre.
+   ============================================================ */
+
+.accueil-benevole {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- L'en-tete : surtitre, titre, et l'action principale --- */
+
+.accueil-benevole__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/*
+ * Le surtitre, precede de son trait jaune.
+ *
+ * Le meme motif qu'a l'accueil de l'administrateur : un trait de couleur
+ * puis une ligne en petites capitales, qui situe la page avant que le
+ * titre ne s'adresse a la personne.
+ */
+.surtitre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--admin-texte-doux);
+}
+
+/* Le trait du surtitre est le motif commun -- barre et soleil -- en
+   jaune plutot qu'en orange. */
+.surtitre__trait {
+  --trait-couleur: var(--hope-jaune);
+}
+
+/* Sur fond violet, le surtitre s'eclaircit et son trait passe a l'orange,
+   qui tient mieux la lumiere que le jaune sur ce fond-la. */
+.surtitre--clair {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.surtitre--clair .surtitre__trait {
+  --trait-couleur: var(--hope-orange);
+}
+
+.accueil-benevole__titre {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.accueil-benevole__accroche {
+  margin-top: 4px;
+  font-size: 14.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Boutons et liens, aux couleurs de la charte --- */
+
+.bouton-hope {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 19px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background-color: var(--hope-violet);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(93, 86, 150, 0.28);
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.bouton-hope:hover,
+.bouton-hope:focus-visible {
+  background-color: var(--hope-violet-fonce);
+  box-shadow: 0 10px 24px rgba(74, 68, 121, 0.34);
+}
+
+.bouton-hope:active {
+  transform: translateY(1px);
+}
+
+.bouton-hope svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+/* La declinaison creuse : une action secondaire, qui ne doit pas
+   disputer l'attention a l'action principale de la page. */
+.bouton-hope--creux {
+  background-color: transparent;
+  border-color: var(--hope-violet);
+  color: var(--hope-violet);
+  box-shadow: none;
+}
+
+.bouton-hope--creux:hover,
+.bouton-hope--creux:focus-visible {
+  background-color: #efeefa;
+  box-shadow: none;
+}
+
+.lien-hope {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--hope-violet);
+}
+
+.lien-hope svg {
+  width: 15px;
+  height: 15px;
+}
+
+.lien-hope--fleche {
+  text-decoration: none;
+  color: var(--hope-jaune);
+}
+
+.lien-hope--fleche:hover {
+  text-decoration: underline;
+}
+
+/* --- Le carre d'icone, decline dans les quatre couleurs --- */
+
+.carre-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+
+.carre-icone svg {
+  width: 21px;
+  height: 21px;
+}
+
+.carre-icone--violet { background-color: #eceafa; color: var(--hope-violet); }
+.carre-icone--bleu   { background-color: var(--hope-bleu-clair); color: #3d7fab; }
+.carre-icone--orange { background-color: #fbeed8; color: #8a5c12; }
+.carre-icone--jaune  { background-color: #fbf6da; color: #96801f; }
+
+/* --- Les trois reperes --- */
+
+.reperes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.repere {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--admin-bordure);
+  border-left: 4px solid var(--hope-violet);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.repere--violet { border-left-color: var(--hope-violet); }
+.repere--bleu   { border-left-color: var(--hope-bleu); }
+.repere--orange { border-left-color: var(--hope-orange); }
+.repere--jaune  { border-left-color: var(--hope-jaune); }
+
+.repere__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+/*
+ * Le nombre et son libelle sur la meme ligne de base : lus ensemble,
+ * ils forment une phrase -- "2 taches en cours". Si la carte est trop
+ * etroite, le libelle passe sous le nombre, entier, plutot que de
+ * l'ecraser.
+ */
+.repere__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 9px;
+}
+
+/* Le nombre ne se coupe jamais : "1/5" restait sinon "1/" puis "5". */
+.repere__valeur {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* Le total d'une fraction, plus discret que ce qui est atteint. */
+.repere__sur {
+  margin-left: 1px;
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--admin-texte-doux);
+}
+
+.repere__libelle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* La precision se lit en entier, sur deux lignes au plus : coupee a
+   "Prochain : 5 taches livr...", elle ne disait plus rien. */
+.repere__detail {
+  display: -webkit-box;
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--admin-texte-doux);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* --- La paire du haut --- */
+
+/*
+ * Deux colonnes : les chiffres, empiles, a gauche ; la tache a prendre,
+ * qui porte le plus de texte, prend la plus large.
+ */
+.accueil-benevole__paire {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.tache-active__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  /* Colle les actions au bas du bloc : les deux colonnes de la paire
+     terminent alors sur la meme ligne. */
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.tache-active__vide {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--admin-texte-doux);
+}
+
+/* --- La tache en cours --- */
+
+.tache-active,
+.journal-apercu {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.tache-active__haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tache-active__intitule,
+.journal-apercu__titre {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.tache-active__compte {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: var(--hope-jaune);
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a681a;
+}
+
+.tache-active__ligne {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.tache-active__titre {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.tache-active__projet {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--hope-violet);
+}
+
+.tache-active__texte {
+  margin-top: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+.tache-active__echeance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--admin-bordure);
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.tache-active__echeance svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--admin-texte-faible);
+}
+
+/* --- L'invitation, et l'apercu du journal --- */
+
+/*
+ * Le seul bloc de la page a fond plein : un violet, et les trois
+ * chiffres du benevole. Rien d'autre -- ni photo, ni titre, ni bouton.
+ *
+ * La carte epouse ses trois tuiles : empilees a cote de "A prendre",
+ * elles en rejoignent la hauteur sans s'etirer ; en bandeau quand la
+ * carte est large.
+ *
+ * L'entree se joue une fois, a l'arrivee : la carte monte, puis les
+ * chiffres arrivent l'un apres l'autre en comptant. Rien ne boucle
+ * ensuite.
+ *
+ * La carte est un conteneur : ses chiffres passent en bandeau selon SA
+ * largeur, pas celle de l'ecran -- le menu lateral ouvert peut la
+ * reduire de moitie sur une tablette.
+ */
+.invitation {
+  container: invitation / inline-size;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(245, 227, 137, 0.16) 0%, transparent 46%),
+    linear-gradient(135deg, var(--hope-violet) 0%, var(--hope-violet-fonce) 100%);
+  box-shadow: 0 16px 36px -20px rgba(43, 36, 94, 0.6), var(--admin-ombre);
+  color: #ffffff;
+  animation: invitation-entree 560ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.invitation__corps {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 16px;
+}
+
+/* --- Les trois chiffres --- */
+
+/*
+ * Des lignes compactes, empilees : la carte epouse ses trois tuiles au
+ * lieu de les etirer. A cote de "A prendre", leur hauteur naturelle
+ * (3 x 78 px) rejoint celle de la voisine ; s'il reste quelques pixels,
+ * grid-auto-rows: 1fr les partage egalement, et le contenu reste centre.
+ *
+ * Carte large -- une tablette, ou la carte seule sur sa ligne -- : les
+ * trois se mettent cote a cote, en bandeau (voir @container plus bas).
+ */
+.invitation__chiffres {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --delai est pose par le composant : les chiffres entrent l'un apres
+   l'autre, au rythme ou leurs compteurs demarrent. */
+.invitation__chiffre {
+  display: flex;
+  animation: invitation-entree 520ms var(--delai, 0ms) cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+/*
+ * Une tuile : l'icone, le nombre et ce qu'il compte, la precision
+ * dessous, la fleche au bout. Plus sombre que la carte, le blanc s'y lit
+ * nettement. Toute la tuile est le lien -- une cible large, au doigt
+ * comme a la souris.
+ */
+.chiffre-invitation {
+  --teinte: var(--hope-jaune);
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  min-height: 72px;
+  padding: 14px 16px 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background-color: rgba(34, 28, 78, 0.42);
+  color: #ffffff;
+  text-decoration: none;
+  transition:
+    transform 220ms cubic-bezier(0.22, 0.8, 0.3, 1),
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 220ms ease-out;
+}
+
+/* Le fil de couleur sur le bord gauche : la teinte du chiffre. */
+.chiffre-invitation::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--teinte);
+}
+
+.chiffre-invitation--jaune  { --teinte: var(--hope-jaune); }
+.chiffre-invitation--bleu   { --teinte: var(--hope-bleu); }
+.chiffre-invitation--orange { --teinte: var(--hope-orange); }
+
+.chiffre-invitation__icone {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--teinte);
+  color: var(--hope-violet-fonce);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chiffre-invitation__icone svg {
+  width: 20px;
+  height: 20px;
+}
+
+.chiffre-invitation__texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Le nombre et son libelle sur la meme ligne de base : ils se lisent
+   comme une phrase -- "5 taches livrees". */
+.chiffre-invitation__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+}
+
+/* Chiffres a chasse fixe : le compteur ne fait pas danser le libelle. */
+.chiffre-invitation__valeur {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.chiffre-invitation__libelle {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.chiffre-invitation__detail {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.chiffre-invitation__fleche {
+  width: 18px;
+  height: 18px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 200ms ease-out, color 200ms ease-out;
+}
+
+@media (hover: hover) {
+  .chiffre-invitation:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.28);
+    background-color: rgba(34, 28, 78, 0.62);
+    box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  .chiffre-invitation:hover .chiffre-invitation__icone {
+    transform: scale(1.06) rotate(-4deg);
+  }
+
+  .chiffre-invitation:hover .chiffre-invitation__fleche {
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+}
+
+.chiffre-invitation:active {
+  transform: scale(0.98);
+}
+
+/*
+ * Carte large : les trois tuiles cote a cote, en bandeau. Chacune garde
+ * sa ligne -- icone, nombre, precision -- et le bandeau reste bas.
+ */
+@container invitation (min-width: 760px) {
+  .invitation__chiffres {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+/*
+ * Carte tres etroite (petit telephone) : marges et icone resserrees,
+ * pour que le nombre, son libelle et la precision tiennent chacun sur
+ * leur ligne au lieu de s'emietter.
+ */
+@container invitation (max-width: 360px) {
+  .invitation__corps {
+    padding: 12px;
+  }
+
+  .invitation__chiffres {
+    gap: 8px;
+  }
+
+  .chiffre-invitation {
+    column-gap: 10px;
+    min-height: 64px;
+    padding: 12px 12px 12px 14px;
+  }
+
+  .chiffre-invitation::before {
+    top: 12px;
+    bottom: 12px;
+  }
+
+  .chiffre-invitation__icone {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+  }
+
+  .chiffre-invitation__valeur {
+    font-size: 24px;
+  }
+
+  .chiffre-invitation__libelle {
+    font-size: 14px;
+  }
+
+  .chiffre-invitation__fleche {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Sur le violet, le contour de focus passe au jaune : le bleu clair
+   commun s'y perdrait. */
+.invitation :focus-visible {
+  outline-color: var(--hope-jaune);
+}
+
+@keyframes invitation-entree {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Quand l'appareil demande moins de mouvement : tout est la d'emblee. */
+@media (prefers-reduced-motion: reduce) {
+  .invitation,
+  .invitation__chiffre {
+    animation: none;
+  }
+
+  .chiffre-invitation,
+  .chiffre-invitation__icone,
+  .chiffre-invitation__fleche {
+    transition: none;
+  }
+
+  .chiffre-invitation:hover,
+  .chiffre-invitation:active,
+  .chiffre-invitation:hover .chiffre-invitation__icone,
+  .chiffre-invitation:hover .chiffre-invitation__fleche {
+    transform: none;
+  }
+}
+
+.journal-apercu__accroche {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+.journal-apercu__chiffres {
+  display: flex;
+  gap: 26px;
+  margin: 18px 0 auto;
+  padding: 14px 0;
+  border-top: 1px solid var(--admin-bordure);
+  border-bottom: 1px solid var(--admin-bordure);
+}
+
+.journal-apercu__chiffres p {
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.journal-apercu__chiffres strong {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--admin-texte);
+}
+
+.journal-apercu .bouton-hope {
+  align-self: flex-start;
+  margin-top: 18px;
+}
+
+/*
+ * Seul en bas de l'accueil, le journal prend toute la largeur : sur un
+ * grand ecran, il se lit en une ligne -- le titre, les deux chiffres, le
+ * bouton. Sur un telephone, il reste en colonne.
+ */
+@media (min-width: 781px) {
+  .journal-apercu--large {
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .journal-apercu--large .tache-active__ligne {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .journal-apercu--large .journal-apercu__chiffres {
+    gap: 36px;
+    margin: 0;
+    padding: 4px 32px;
+    border-top: none;
+    border-bottom: none;
+    border-left: 1px solid var(--admin-bordure);
+    border-right: 1px solid var(--admin-bordure);
+  }
+
+  .journal-apercu--large .bouton-hope {
+    align-self: center;
+    margin-top: 0;
+  }
+}
+
+/* --- Petits ecrans : tout se met en colonne --- */
+
+@media (max-width: 1180px) {
+  .accueil-benevole__paire {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 780px) {
+  .accueil-benevole__titre {
+    font-size: 24px;
+  }
+}
+
+/* ============================================================
+   10. Journal
+
+   Les paliers de reconnaissance, et le pied du tableau.
+   ============================================================ */
+
+.journal {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.journal .reperes {
+  margin-top: 2px;
+}
+
+/* Le compte a droite du titre de bloc : "3 sur 5 atteints". */
+.bloc__sous-titre {
+  font-size: 13px;
+  color: var(--admin-texte-doux);
+}
+
+/*
+ * Un palier par ligne, et non des pastilles alignees.
+ *
+ * Les pastilles ne disaient qu'une chose -- obtenu, ou pas -- la ou le
+ * benevole veut savoir ce qui lui manque. Chaque ligne porte donc son
+ * avancement et son reste a parcourir.
+ */
+.paliers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.palier {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+}
+
+/*
+ * La marque de gauche : une coche si le palier est atteint, son
+ * pourcentage sinon. Un pourcentage vaut mieux qu'un cadenas -- il dit
+ * ou l'on en est, pas seulement qu'on n'y est pas.
+ */
+.palier__marque {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #eef1f6;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-texte-doux);
+}
+
+.palier__marque svg {
+  width: 19px;
+  height: 19px;
+}
+
+.palier__corps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.palier__libelle {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.palier__etat {
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+/* La jauge du palier : fine, elle complete le pourcentage sans
+   reclamer l'attention que prendrait une barre pleine. */
+.palier__jauge {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background-color: #eef1f6;
+}
+
+.palier__plein {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--hope-bleu);
+  transition: width 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+/* Atteint : le violet de la marque, comme partout ailleurs ou quelque
+   chose est acquis. */
+.palier--obtenu {
+  border-color: #d9d4f2;
+  background-color: #f6f5fd;
+}
+
+.palier--obtenu .palier__marque {
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.palier--obtenu .palier__etat {
+  font-weight: 600;
+  color: var(--hope-violet-lisible);
+}
+
+/* Le pied du tableau : le total des heures. */
+.table tfoot td {
+  padding-top: 13px;
+  border-top: 2px solid var(--admin-bordure);
+  font-weight: 700;
+}
+
+/* ============================================================
+   11. Notifications et messages
+
+   Deux ecrans partages par l'espace benevole et l'espace bailleur : les
+   regles vivent donc ici, la feuille etant chargee pour les deux.
+   ============================================================ */
+
+/* --- Le fil de notifications --- */
+
+.fil-notifs {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notif + .notif {
+  border-top: 1px solid var(--admin-bordure);
+}
+
+/*
+ * La ligne contient son lien.
+ *
+ * Une regle de l'administration etire .notif__lien sur toute sa ligne par
+ * un ::after en position absolue. Ici la ligne n'etait pas positionnee :
+ * le calque montait jusqu'a la page entiere, et un clic n'importe ou --
+ * sur le titre, sur une carte voisine -- ouvrait la derniere notification.
+ */
+.fil-notifs .notif {
+  position: relative;
+  /* La regle de l'administration (.notif) donne a la ligne sa propre
+     marge et son filet du bas : ici, c'est le lien qui porte la marge,
+     et la ligne colle aux bords -- le filet de non-lu aussi. */
+  padding: 0;
+  border-bottom: 0;
+}
+
+/*
+ * Toute la ligne est cliquable, lien ou bouton selon qu'elle mene
+ * quelque part. Les deux partagent la meme regle : une notification qui
+ * ne mene nulle part doit se marquer lue du meme geste.
+ */
+.notif__lien {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 15px 14px 15px 16px;
+  border-radius: 10px;
+  border: 0;
+  background: none;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.16s ease;
+}
+
+.notif__lien:hover,
+.notif__lien:focus-visible {
+  background-color: var(--admin-surface-douce);
+}
+
+.notif__corps {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.notif__titre {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.notif__texte {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.notif__date {
+  font-size: 12px;
+  color: var(--admin-texte-faible);
+}
+
+/* La pastille de non-lu, a droite : un point, et son intitule pour les
+   lecteurs d'ecran -- la couleur seule ne dit rien a qui ne la voit pas. */
+.notif__point {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background-color: var(--hope-orange);
+}
+
+/* Non lue : le titre pese plus, et un filet violet borde la ligne. */
+.notif--neuve .notif__titre {
+  font-weight: 700;
+}
+
+/* Le filet colle au bord gauche de la ligne, sur toute sa hauteur. */
+.fil-notifs .notif--neuve::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--hope-violet);
+  pointer-events: none;
+}
+
+/* --- La composition d'un message --- */
+
+/*
+ * L'ecran reprend la messagerie de l'administration : les fils a gauche,
+ * l'echange a droite. Ses regles vivent dans admin-messerie.css, chargee
+ * pour tous les espaces. Ne restent ici que le volet de composition et
+ * ses champs, qui n'existent pas cote equipe -- c'est le benevole qui
+ * ouvre le fil, pas elle.
+ */
+
+.composition {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 20px 22px;
+}
+
+/* La zone de texte prend toute la hauteur restante du volet : le champ
+   de saisie doit ressembler a l'echange qu'il remplacera. */
+.champ-espace--extensible {
+  flex: 1;
+  min-height: 0;
+}
+
+.champ-espace--extensible textarea {
+  flex: 1;
+  min-height: 140px;
+  resize: none;
+}
+
+.composition__pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Le fil des bulles reste lisible quand la reponse n'est pas venue. */
+.echange__attente {
+  margin-top: 10px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--admin-texte-faible);
+}
+
+/* --- Le formulaire --- */
+
+.formulaire-espace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.champ-espace {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.champ-espace__label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.champ-espace input,
+.champ-espace textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--admin-bordure);
+  border-radius: var(--rayon-champ);
+  background-color: var(--admin-surface);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-texte);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.champ-espace textarea {
+  resize: vertical;
+}
+
+.champ-espace input:focus,
+.champ-espace textarea:focus {
+  outline: none;
+  border-color: var(--hope-violet);
+  box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
+}
+
+.champ-espace__erreur {
+  font-size: 12.5px;
+  color: var(--hope-erreur);
+}
+
+.formulaire-espace .bouton-hope {
+  align-self: flex-start;
+}
+
+.formulaire-espace .bouton-hope:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (max-width: 1180px) {
+  .accueil-benevole__paire--messages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Empile : le formulaire n'a plus de colonne ou tenir. */
+  .bloc--collant {
+    position: static;
+  }
+}
+
+/* ============================================================
+   12. Projets
+
+   L'entree de l'espace : ce que HOPE mene, et ce qu'il y a a y faire.
+   ============================================================ */
+
+.projets-benevole {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte-projet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.carte-projet:hover,
+/* Le lien etire porte le focus : c'est la carte entiere qui doit le
+   montrer, sinon rien ne bouge au clavier. */
+.carte-projet:has(:focus-visible) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(36, 43, 62, 0.14);
+}
+
+/* --- L'image de couverture --- */
+
+/* "flex: none" : sans lui, la colonne etire l'image pour remplir la
+   carte la plus haute de la rangee, et le rapport 16/9 saute d'une carte
+   a l'autre. */
+.carte-projet__image {
+  position: relative;
+  flex: none;
+  aspect-ratio: 16 / 9;
+  background-color: #eceafa;
+}
+
+.carte-projet__image img,
+.carte-projet__image video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sans image, le pictogramme du projet plutot qu'un rectangle vide. */
+.carte-projet__sans-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--hope-violet);
+  opacity: 0.35;
+}
+
+.carte-projet__sans-image svg {
+  width: 44px;
+  height: 44px;
+}
+
+.carte-projet__categorie {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.94);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hope-violet-lisible);
+}
+
+/* --- Le corps --- */
+
+.carte-projet__corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px 18px 18px;
+}
+
+.carte-projet__titre {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/*
+ * Le lien du titre couvre la carte entiere : tout le rectangle devient
+ * cliquable, sans qu'un <div onClick> vienne exclure le clavier.
+ */
+.carte-projet__titre a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.carte-projet__titre a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.carte-projet {
+  position: relative;
+}
+
+.carte-projet__lieu {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--admin-texte-faible);
+}
+
+.carte-projet__texte {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 9px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--admin-texte-doux);
+}
+
+/* Les deux comptes, colles au bas de la carte : les cartes d'une meme
+   rangee alignent alors leur pied, quelle que soit la longueur du
+   resume. */
+.carte-projet__compte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.carte-projet__compte span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carte-projet__compte svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Ce qui attend quelqu'un se distingue de ce qui est a zero. */
+.carte-projet__vif {
+  font-weight: 700;
+  color: var(--hope-violet-lisible);
+}
+
+/* ============================================================
+   13. Un projet en particulier
+   ============================================================ */
+
+.tete-projet {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--admin-bordure);
+  border-radius: var(--admin-rayon);
+  background-color: var(--admin-surface);
+  box-shadow: var(--admin-ombre);
+}
+
+.tete-projet__image {
+  position: relative;
+  min-height: 220px;
+}
+
+.tete-projet__image img,
+.tete-projet__image video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* La video garde son image entiere sur fond sombre : on la regarde. */
+.tete-projet__image video {
+  object-fit: contain;
+  background-color: #1f1d2b;
+}
+
+.tete-projet__corps {
+  padding: 22px 24px;
+}
+
+.tete-projet__lieu {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 6px 0 10px;
+  font-size: 13.5px;
+  color: var(--admin-texte-doux);
+}
+
+.tete-projet__lieu svg {
+  width: 16px;
+  height: 16px;
+  color: var(--hope-violet);
+}
+
+/* Le titre de la description : il annonce le paragraphe, sous le nom du
+   projet qui le domine. Plus petit que le titre, plus fort que le texte. */
+.tete-projet__annonce {
+  margin: 12px 0 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hope-violet-lisible);
+}
+
+/* Les objectifs specifiques : ce que le projet doit avoir change. */
+.tete-projet__objectifs {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--admin-texte-doux);
+}
+
+/* --- Les taches du projet --- */
+
+.taches-projet {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tache-projet {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 2px;
+}
+
+.tache-projet + .tache-projet {
+  border-top: 1px solid var(--admin-bordure);
+}
+
+/* Deja prise : la ligne s'efface un peu, elle n'attend plus personne. */
+.tache-projet--prise {
+  opacity: 0.66;
+}
+
+.tache-projet__corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.tache-projet__titre {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.tache-projet__texte {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--admin-texte-doux);
+}
+
+.tache-projet__faits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 8px;
+}
+
+.tache-projet__echeance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+.tache-projet__echeance svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tache-projet .bouton-hope {
+  flex: none;
+}
+
+@media (max-width: 860px) {
+  /* L'image passe au-dessus plutot que de comprimer le texte. */
+  .tete-projet {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tete-projet__image {
+    min-height: 170px;
+  }
+
+  .tache-projet {
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================================
+   14. La photo de profil
+   ============================================================ */
+
+.photo-profil {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  grid-column: 1 / -1;
+  padding-bottom: 6px;
+}
+
+/*
+ * L'apercu, ou les initiales a defaut. Le meme disque violet que
+ * l'avatar du bandeau : ce qu'on regle ici, c'est ce qu'on verra la.
+ */
+.photo-profil__apercu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background-color: var(--hope-violet);
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.photo-profil__apercu img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-profil__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  min-width: 0;
+}
+
+/*
+ * Le bouton est un <label> : cliquer dessus ouvre le selecteur de
+ * fichier sans qu'aucun script n'ait a le declencher, et le clavier y
+ * arrive par le champ qu'il porte.
+ */
+.photo-profil__choisir {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.photo-profil__choisir input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-profil__choisir:focus-within {
+  outline: 2px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.photo-profil__aide {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   Taches d'equipe et demandes
+
+   Prendre une tache, c'est la demander : l'equipe HOPE valide.
+   La carte dit ou en est la demande, et qui travaille deja dessus.
+   ============================================================ */
+
+.carte-tache__equipe,
+.detail-tache__equipe,
+.tache-projet__equipe {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--admin-texte-doux);
+}
+
+.detail-tache__equipe {
+  margin-top: 10px;
+  font-size: 13.5px;
+}
+
+/* L'etat de la demande : une ligne a part, au-dessus des boutons. */
+.etat-demande {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--etat-ambre);
+}
+
+.etat-demande--dedans {
+  color: var(--etat-vert);
+}
+
+.etat-demande--refus {
+  color: var(--admin-texte-doux);
+  font-weight: 500;
+}
+
+.tache-projet__action {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  max-width: 260px;
+  text-align: right;
+}
+
+.tache-projet__action .etat-demande {
+  text-align: right;
+}
+
+.modale__pied .etat-demande {
+  flex-basis: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 620px) {
+  .tache-projet {
+    flex-wrap: wrap;
+  }
+
+  .tache-projet__action {
+    justify-content: flex-start;
+    max-width: none;
+    text-align: left;
+  }
+
+  .tache-projet__action .etat-demande {
+    text-align: left;
+  }
+}
+
+/* ============================================================
+   La page d'un projet : trois onglets
+   ============================================================ */
+
+/* L'ecart entre les blocs vient de la colonne : pas de marge en plus. */
+.projet-benevole .bloc,
+.projet-benevole .onglets,
+.projet-benevole .cartes-chiffres {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.projet-benevole .bloc__titre {
+  margin: 0 0 14px;
+}
+
+.projet-benevole .bloc__entete .bloc__titre {
+  margin: 0;
+}
+
+.projet-benevole__texte {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--admin-texte);
+  white-space: pre-line;
+}
+
+/* ============================================================
+   Telephone : les taches d'un projet
+   ============================================================ */
+
+/*
+ * Sur un telephone, trois colonnes (icone, texte, bouton) ecrasaient le
+ * texte a un mot par ligne et faisaient chevaucher le bouton. L'icone et
+ * le texte restent cote a cote ; l'action passe dessous, sur toute la
+ * largeur, a portee de pouce.
+ */
+@media (max-width: 640px) {
+  .tache-projet {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 12px;
+  }
+
+  .tache-projet__action {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+    max-width: none;
+    text-align: left;
+  }
+
+  .tache-projet__action .bouton-hope {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .tache-projet__action .etat-demande {
+    text-align: left;
+  }
+
+  .projet-benevole .bloc {
+    padding: 16px;
+  }
+
+  /* Les onglets tiennent sur la largeur de l'ecran, sans defiler. */
+  .projet-benevole .onglets__bouton {
+    flex: 1;
+    padding: 11px 6px;
+    font-size: 14px;
+  }
+
+  .projet-benevole .onglets__compteur {
+    margin-left: 5px;
+  }
+}
+
+/* ============================================================
+   Telephone : un tableau se lit en fiches
+   ============================================================ */
+
+/*
+ * Un tableau de quatre ou cinq colonnes ne tient pas sur un telephone :
+ * il defilait de cote, et la derniere colonne restait cachee. Chaque
+ * ligne devient une fiche, chaque cellule une ligne "libelle : valeur" ;
+ * le libelle vient de l'attribut data-libelle de la cellule.
+ */
+@media (max-width: 640px) {
+  .table--empilable,
+  .table--empilable tbody,
+  .table--empilable tfoot,
+  .table--empilable tr,
+  .table--empilable td {
+    display: block;
+    width: 100%;
+  }
+
+  .table--empilable thead {
+    display: none;
+  }
+
+  .table--empilable tbody tr {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--admin-bordure);
+  }
+
+  .table--empilable tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table--empilable td,
+  .table--empilable td.table__centre {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    border: 0;
+    text-align: right;
+  }
+
+  .table--empilable td::before {
+    content: attr(data-libelle);
+    flex: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--admin-texte-faible);
+    text-align: left;
+  }
+
+  /* La premiere cellule est le titre de la fiche : pleine largeur, sans libelle. */
+  .table--empilable td:first-child {
+    display: block;
+    padding-bottom: 6px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .table--empilable td:first-child::before {
+    display: none;
+  }
+
+  .table--empilable tbody tr:hover td {
+    background: none;
+  }
+
+  .table--empilable tfoot td {
+    border-top: 2px solid var(--admin-bordure-forte);
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Le pied du journal : "Total" se lit dans le libelle de sa valeur. */
+  .table--empilable tfoot td:first-child {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  /* "En bref" sur deux colonnes : la fiche tient sans faire defiler. */
+  .projet-benevole__fiche {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+  }
+}
+
+/* ============================================================
+   Ajouter une preuve terrain (onglet Impact d'un projet)
+   ============================================================ */
+
+/* Le titre a gauche, le bouton en face ; sous le titre sur telephone. */
+.bloc__entete--action {
+  align-items: center;
+}
+
+.preuve__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.confirmation-benevole {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background-color: var(--etat-vert-fond);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--etat-vert);
+}
+
+.ajout-preuve {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ajout-preuve .livraison__consigne {
+  margin: 0;
+}
+
+.ajout-preuve__libelle {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+/* Les quatre natures, en pastilles a choisir. */
+.ajout-preuve__natures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ajout-preuve__natures legend {
+  width: 100%;
+  padding: 0;
+}
+
+.ajout-preuve__nature {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 999px;
+  background-color: var(--admin-surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ajout-preuve__nature input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ajout-preuve__nature:hover {
+  border-color: var(--hope-bleu);
+}
+
+.ajout-preuve__nature--choisie {
+  border-color: var(--hope-violet);
+  background-color: #ece9f8;
+  color: var(--hope-violet);
+}
+
+.ajout-preuve__nature:has(input:focus-visible) {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.ajout-preuve__champ textarea,
+.ajout-preuve__champ input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--admin-bordure-forte);
+  border-radius: 10px;
+  background-color: var(--admin-surface);
+  font: inherit;
+  font-size: 15px;
+  color: var(--admin-texte);
+}
+
+.ajout-preuve__champ textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.ajout-preuve__champ textarea:focus,
+.ajout-preuve__champ input:focus {
+  border-color: var(--hope-bleu-lisible);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.3);
+}
+
+.ajout-preuve__champ--date input {
+  max-width: 220px;
+}
+
+.ajout-preuve__pdf {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--etat-rouge);
+  background-color: var(--etat-rouge-fond);
+}
+
+@media (max-width: 640px) {
+  .bloc__entete--action .bouton-hope {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .preuve__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* 16 px : en dessous, iOS agrandit la page au focus. */
+  .ajout-preuve__champ textarea,
+  .ajout-preuve__champ input {
+    font-size: 16px;
+  }
+
+  .ajout-preuve__champ--date input {
+    max-width: none;
+  }
+}
+
+/*
+ * Telephone : la carte d'une preuve terrain. Trois colonnes (vignette,
+ * texte, boutons) ecrasaient le texte a un mot par ligne et posaient
+ * "Voir le fichier" sur la description. La vignette et le texte restent
+ * cote a cote ; les boutons passent dessous, sur toute la largeur.
+ */
+@media (max-width: 640px) {
+  .projet-benevole .preuve {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 12px;
+  }
+
+  .projet-benevole .preuve__actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: auto;
+  }
+
+  .projet-benevole .preuve__actions .bouton-hope {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   Une carte qu'on deplace et qu'on replie
+
+   La carte des trois reperes n'appartient pas a la page : elle
+   appartient au benevole. Il la prend par sa poignee et la pose ou il
+   veut, ou la replie quand il travaille dans le fil. L'enveloppe porte
+   le deplacement -- la carte, elle, garde son animation d'entree, et
+   une animation l'emporterait sur toute autre transformation.
+   ============================================================ */
+
+.carte-mobile {
+  position: relative;
+  z-index: 2;
+  transform: translate3d(var(--x, 0px), var(--y, 0px), 0);
+  /* A l'arrivee, on decelere : la carte se pose, elle ne freine pas net.
+     Le leger depassement ne sert qu'au retour a la place d'origine. */
+  transition: transform 420ms cubic-bezier(0.22, 0.9, 0.28, 1.06);
+}
+
+/*
+ * Pendant le glisser, aucune transition : la carte doit coller au doigt.
+ * Elle se souleve -- un peu plus grande, une ombre plus longue, portee
+ * au-dessus du reste -- et le curseur dit ce qui se passe.
+ */
+.carte-mobile--saisie {
+  z-index: 30;
+  transform: translate3d(var(--x, 0px), var(--y, 0px), 0) scale(1.015);
+  transition: none;
+  cursor: grabbing;
+}
+
+.carte-mobile--saisie .invitation {
+  box-shadow: 0 34px 64px -26px rgba(30, 24, 70, 0.78), var(--admin-ombre);
+}
+
+/* --- La barre de la carte : poignee, titre, actions --- */
+
+.invitation__barre {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 0 8px;
+}
+
+.invitation__titre {
+  margin-right: auto;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.invitation__poignee,
+.invitation__action {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.78);
+  transition: background-color 180ms ease-out, color 180ms ease-out, transform 180ms ease-out;
+}
+
+/* 34 px suffisent a l'oeil, pas au doigt : la zone sensible en fait 44. */
+.invitation__poignee::after,
+.invitation__action::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+}
+
+.invitation__poignee:hover,
+.invitation__action:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.invitation__poignee svg,
+.invitation__action svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* La poignee se prend : le curseur le dit avant le premier geste, et
+   touch-action empeche le doigt de faire defiler la page a la place. */
+.invitation__poignee {
+  cursor: grab;
+  touch-action: none;
+}
+
+.invitation__poignee:active,
+.carte-mobile--saisie .invitation__poignee {
+  cursor: grabbing;
+  background-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* Le chevron montre ou va le pliage : vers le bas, la carte se replie. */
+.invitation__action--pliage svg {
+  transition: transform 320ms cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.carte-mobile--reduite .invitation__action--pliage svg {
+  transform: rotate(-180deg);
+}
+
+/* --- Repliee, la carte garde ses trois nombres --- */
+
+.invitation__resume {
+  display: flex;
+  gap: 6px;
+  margin: 0 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.invitation__pastille {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 9px;
+  background-color: var(--teinte);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--hope-violet-fonce);
+  animation: pastille-entree 320ms cubic-bezier(0.22, 0.9, 0.28, 1.06) both;
+}
+
+.invitation__pastille--jaune  { --teinte: var(--hope-jaune); }
+.invitation__pastille--bleu   { --teinte: var(--hope-bleu); }
+.invitation__pastille--orange { --teinte: var(--hope-orange); }
+
+/* Elles arrivent l'une apres l'autre, dans l'ordre des tuiles. */
+.invitation__pastille:nth-child(2) { animation-delay: 60ms; }
+.invitation__pastille:nth-child(3) { animation-delay: 120ms; }
+
+@keyframes pastille-entree {
+  from {
+    opacity: 0;
+    transform: translateX(6px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Le pliage --- */
+
+/*
+ * De 1fr a 0fr : la seule facon d'animer une hauteur qu'on ne connait
+ * pas. L'enfant porte overflow et min-height, sans quoi il refuse de
+ * se laisser reduire.
+ *
+ * On deplie en 420 ms et on replie en 300 : une sortie plus vive qu'une
+ * entree, comme partout ailleurs. La visibilite tombe a la fin du repli,
+ * pour que les lecteurs d'ecran ne lisent plus ce qui est range.
+ */
+.invitation__pliage {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition: grid-template-rows 420ms cubic-bezier(0.22, 0.8, 0.3, 1),
+    opacity 260ms ease-out 80ms;
+}
+
+.invitation__pliage > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.carte-mobile--reduite .invitation__pliage {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 160ms ease-in, visibility 0s linear 300ms;
+}
+
+/* La barre rapproche le corps du haut : sans elle, 16 px suffisaient. */
+.invitation__barre + .invitation__pliage .invitation__corps {
+  padding-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte-mobile,
+  .invitation__pliage,
+  .invitation__action,
+  .invitation__action--pliage svg {
+    transition: none;
+  }
+
+  .invitation__pastille {
+    animation: none;
+  }
+
+  /* Le soulevement reste, sans agrandissement : rien ne bouge en trop. */
+  .carte-mobile--saisie {
+    transform: translate3d(var(--x, 0px), var(--y, 0px), 0);
+  }
+}
+
+/* ============================================================
+   La priorite d'une tache, cote benevole
+
+   Elle explique l'ordre : les plus pressantes en haut de colonne. Le
+   serveur calcule cette urgence -- la priorite choisie par l'equipe,
+   rehaussee par une date de fin proche -- et l'ecran la nomme.
+   ============================================================ */
+
+.carte-tache__haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jeton-priorite {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Quatre degres, quatre teintes : l'echelle se lit sans mot a mot. */
+.jeton-priorite--urgente { background-color: #fde8e6; color: #a23528; }
+.jeton-priorite--haute   { background-color: #fdf1de; color: #8a5c12; }
+.jeton-priorite--moyenne { background-color: #e4eefc; color: #2b6484; }
+.jeton-priorite--simple  { background-color: #eef1f6; color: #5c6275; }
+
+/* Le delai, a cote de la date : "12/10/2026 — à rendre dans 2 jours". */
+.carte-tache__delai {
+  font-weight: 600;
+}
+
+.carte-tache__equipe-voulue {
+  font-size: 12.5px;
+  color: var(--admin-texte-faible);
+}
+
+/* ============================================================
+   Les reperes d'une tache, dans sa fenetre
+
+   Une carte dit le titre ; la fenetre doit dire de quoi decider.
+   Quatre reperes en tete -- ce qui presse, pour quand, a combien, et
+   ce qu'il faut savoir faire -- puis la consigne.
+   ============================================================ */
+
+.reperes-tache {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 14px;
+  border-radius: 14px;
+  background-color: var(--admin-surface-douce);
+}
+
+.reperes-tache__ligne {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* L'experience requise prend la ligne entiere : elle porte des puces. */
+.reperes-tache__ligne--large {
+  grid-column: 1 / -1;
+}
+
+.reperes-tache dt {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+.reperes-tache dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-texte);
+}
+
+/* Le delai, la ou il complete la date : plus petit, en retrait. */
+.reperes-tache__delai {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+.reperes-tache__alerte {
+  color: var(--etat-rouge);
+}
+
+.reperes-tache__rien {
+  font-weight: 500;
+  color: var(--admin-texte-faible);
+}
+
+.reperes-tache__competences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-tache__intitule {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--admin-texte-faible);
+}
+
+/* Sur un telephone, les reperes s'empilent deux par deux. */
+@media (max-width: 620px) {
+  .reperes-tache {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

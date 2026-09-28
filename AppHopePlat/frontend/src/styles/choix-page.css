@@ -1,0 +1,479 @@
+/* ============================================================
+   Un choix sur une page a lui (components/ChoixSurPage.jsx)
+
+   Sur telephone, les longues listes du formulaire -- pays, indicatif,
+   langue, fuseau horaire -- s'ouvrent sur une page entiere, rangee comme
+   celles des applications de telephone :
+     - l'en-tete : le retour, le titre, la recherche ;
+     - la liste en sections (suggestions, puis A, B, C...), chaque
+       en-tete de section accroche en haut tant qu'on la parcourt ;
+     - l'index A-Z sur le bord droit ;
+     - des lignes egales : drapeau, nom et precision, detail, coche,
+       separees d'un trait fin.
+   Rattachee au document, la page porte ses propres couleurs.
+   ============================================================ */
+
+/* Le champ ferme : il se lit comme la liste native qu'il remplace. */
+.choix-page__declencheur {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choix-page__declencheur:disabled {
+  cursor: progress;
+}
+
+.choix-page__valeur {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- La page ---------------- */
+
+.choix-page {
+  --choix-encre: #2a2839;
+  --choix-doux: #6b6880;
+  --choix-trait: #e9edf4;
+  --choix-section: #f5f7fb;
+  --choix-marge: 20px;
+
+  position: fixed;
+  z-index: 1001;
+  top: var(--zone-haut, 0px);
+  left: 0;
+  right: 0;
+  height: var(--zone-hauteur, 100dvh);
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  font-family: var(--police-titre);
+  color: var(--choix-encre);
+  animation: choix-entree 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.choix-page:focus {
+  outline: none;
+}
+
+/* ---------------- En haut : retour, titre, recherche ---------------- */
+
+.choix-page__entete {
+  flex: none;
+  position: relative;
+  z-index: 3;
+  padding: max(4px, env(safe-area-inset-top, 0px)) 16px 12px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 0 var(--choix-trait);
+  transition: box-shadow 0.2s ease;
+}
+
+/* La liste passe dessous : une ombre detache l'en-tete. */
+.choix-page--defile .choix-page__entete {
+  box-shadow:
+    0 1px 0 var(--choix-trait),
+    0 10px 18px -14px rgba(42, 40, 57, 0.45);
+}
+
+.choix-page__tete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 54px;
+  margin-left: -8px;
+}
+
+.choix-page__retour {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--choix-encre);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.choix-page__retour:hover,
+.choix-page__retour:active,
+.choix-page__retour:focus-visible {
+  background-color: #f1f4f9;
+}
+
+.choix-page__retour:focus-visible,
+.choix-page__effacer:focus-visible,
+.choix-page__option:focus-visible,
+.choix-page__index button:focus-visible {
+  outline: 2px solid var(--hope-bleu-lisible);
+  outline-offset: -2px;
+}
+
+.choix-page__retour svg {
+  width: 22px;
+  height: 22px;
+}
+
+.choix-page__titre {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.choix-page__recherche {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  background-color: #f1f4f9;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.choix-page__recherche:focus-within {
+  border-color: var(--hope-bleu-lisible);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.3);
+}
+
+.choix-page__loupe {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-left: 14px;
+  color: var(--choix-doux);
+}
+
+.choix-page__recherche:focus-within .choix-page__loupe {
+  color: var(--hope-violet);
+}
+
+/* 16 px : en dessous, iOS agrandit la page au focus. */
+.choix-page__saisie {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  color: var(--choix-encre);
+  outline: none;
+}
+
+.choix-page__saisie::placeholder {
+  color: #7a778f;
+  opacity: 1;
+}
+
+.choix-page__effacer {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-right: 4px;
+  border: none;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--choix-doux);
+  cursor: pointer;
+}
+
+.choix-page__effacer svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------------- La liste ---------------- */
+
+.choix-page__corps {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* Positionnee : les sections y mesurent leur place (offsetTop). */
+.choix-page__liste {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* L'en-tete d'une section reste en haut tant qu'on parcourt ses lignes. */
+.choix-page__groupe {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 8px var(--choix-marge);
+  border-top: 1px solid var(--choix-trait);
+  border-bottom: 1px solid var(--choix-trait);
+  background-color: var(--choix-section);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--choix-doux);
+}
+
+.choix-page__section:first-child .choix-page__groupe {
+  border-top-color: transparent;
+}
+
+/* Une lettre : plus grande, a la couleur de HOPE. */
+.choix-page__groupe--lettre {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 15px;
+  letter-spacing: 0;
+  color: var(--hope-violet);
+}
+
+/* "3 resultats" : une simple mention au-dessus des lignes trouvees. */
+.choix-page__groupe--resultats {
+  position: static;
+  border: none;
+  background: none;
+  padding-top: 14px;
+  padding-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/*
+ * Une ligne : 60 px, a la mesure du doigt. Le trait qui la separe de la
+ * suivante commence sous le texte, comme sur un telephone.
+ */
+.choix-page__option {
+  --retrait: var(--choix-marge);
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 8px var(--choix-marge);
+  background-image: linear-gradient(var(--choix-trait), var(--choix-trait));
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: calc(100% - var(--retrait)) 1px;
+  font-size: 16px;
+  line-height: 1.3;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.choix-page__option--visuel {
+  --retrait: calc(var(--choix-marge) + 40px + 14px);
+}
+
+.choix-page__option:last-child {
+  background-image: none;
+}
+
+.choix-page__option:active {
+  background-color: #eef3fa;
+}
+
+.choix-page__option--choisie {
+  background-color: #f4f1fb;
+}
+
+.choix-page__option--choisie .choix-page__libelle {
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+/* Le drapeau du pays, dessine par le telephone. */
+.choix-page__drapeau {
+  flex: none;
+  width: 40px;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Sans drapeau dessine, ou pour une langue : une pastille ("MG", "ES"). */
+.choix-page__pastille {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 28px;
+  border-radius: 7px;
+  background-color: #eeecf8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--hope-violet);
+}
+
+.choix-page__option--choisie .choix-page__pastille {
+  background-color: var(--hope-violet);
+  color: #ffffff;
+}
+
+.choix-page__textes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choix-page__libelle {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.choix-page__sous-titre {
+  font-size: 13px;
+  color: var(--choix-doux);
+  overflow-wrap: anywhere;
+}
+
+.choix-page__libelle mark,
+.choix-page__sous-titre mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background-color: var(--hope-bleu-clair);
+  color: inherit;
+}
+
+.choix-page__detail {
+  flex: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--choix-doux);
+  font-variant-numeric: tabular-nums;
+}
+
+/* La place de la coche est gardee sur chaque ligne : les details restent alignes. */
+.choix-page__marque {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+}
+
+.choix-page__coche {
+  width: 20px;
+  height: 20px;
+  color: var(--hope-violet);
+}
+
+.choix-page__vide {
+  margin: 0;
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--choix-doux);
+}
+
+/* ---------------- L'index A-Z ---------------- */
+
+/* Les lignes laissent la place de l'index. */
+.choix-page--index .choix-page__option,
+.choix-page--index .choix-page__groupe {
+  padding-right: 36px;
+}
+
+.choix-page__index {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  bottom: 8px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 26px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.choix-page__index button {
+  flex: 0 1 17px;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  overflow: hidden;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--hope-violet);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* La lettre touchee, en grand au milieu : on sait ou l'on arrive. */
+.choix-page__bulle {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  margin: -38px 0 0 -38px;
+  border-radius: 20px;
+  background-color: rgba(71, 62, 138, 0.9);
+  box-shadow: 0 12px 30px rgba(42, 40, 57, 0.25);
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+@keyframes choix-entree {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choix-page {
+    animation: none;
+  }
+
+  .choix-page__recherche,
+  .choix-page__entete {
+    transition: none;
+  }
+}
