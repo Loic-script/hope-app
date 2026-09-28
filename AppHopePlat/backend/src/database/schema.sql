@@ -646,6 +646,15 @@ ALTER TABLE utilisateur
 ALTER TABLE utilisateur ADD COLUMN IF NOT EXISTS sessions_valides_depuis TIMESTAMPTZ;
 ALTER TABLE admins      ADD COLUMN IF NOT EXISTS sessions_valides_depuis TIMESTAMPTZ;
 
+-- Les comptes back office : une adresse (identifiant et destinataire des
+-- acces), et deux roles de plus -- GESTIONNAIRE (« Admin » : gere les
+-- comptes des utilisateurs) et MANAGER (cree et modifie les projets).
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS email VARCHAR(200);
+CREATE UNIQUE INDEX IF NOT EXISTS admins_email_unique ON admins (LOWER(email)) WHERE email IS NOT NULL;
+ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_role_valide;
+ALTER TABLE admins ADD CONSTRAINT admins_role_valide
+  CHECK (role IN ('ADMIN', 'COORDINATOR', 'VIEWER', 'GESTIONNAIRE', 'MANAGER'));
+
 -- La liste des comptes a activer est la requete la plus frequente.
 CREATE INDEX IF NOT EXISTS utilisateur_statut_idx ON utilisateur (statut);
 CREATE INDEX IF NOT EXISTS utilisateur_role_idx   ON utilisateur_role (role);

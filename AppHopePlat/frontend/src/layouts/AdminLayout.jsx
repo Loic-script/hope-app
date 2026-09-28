@@ -117,6 +117,27 @@ const ENTREES_PROFIL = [{ to: '/admin/settings', label: 'Paramètres', Icone: Ic
  * Monte a l'interieur de RequireAuth : le profil verifie par
  * GET /api/admin/me arrive par le contexte et redescend vers les pages.
  */
+/** Le libelle du role, sous le nom, dans l'en-tete. */
+const LIBELLES_ROLES = {
+  ADMIN: 'Administrateur',
+  COORDINATOR: 'Coordinateur',
+  VIEWER: 'Lecture seule',
+  GESTIONNAIRE: 'Admin back office',
+  MANAGER: 'Manager',
+};
+
+/**
+ * Le menu selon le role. Le Manager (compte back office) ne gere pas les
+ * utilisateurs : l'entree disparait (le serveur les lui ferme aussi).
+ */
+function groupesDuRole(role) {
+  if (role !== 'MANAGER') return GROUPES;
+  return GROUPES.map((groupe) => ({
+    ...groupe,
+    entrees: groupe.entrees.filter((entree) => entree.to !== '/admin/utilisateurs'),
+  })).filter((groupe) => groupe.entrees.length > 0);
+}
+
 export default function AdminLayout() {
   const { admin, rafraichir } = useOutletContext();
   const navigate = useNavigate();
@@ -174,13 +195,13 @@ export default function AdminLayout() {
 
   return (
     <CoqueEspace
-      groupes={GROUPES}
+      groupes={groupesDuRole(admin?.role)}
       espace="Espace administrateur"
       accueil="/admin"
       cleRail="hope.admin.rail-replie"
       identite={{
-        nom: admin?.adminLog ?? 'AdminHope',
-        role: 'Administrateur',
+        nom: admin?.fullName ?? admin?.adminLog ?? 'AdminHope',
+        role: LIBELLES_ROLES[admin?.role] ?? 'Administrateur',
         photoUrl: admin?.photoUrl,
       }}
       onDeconnexion={seDeconnecter}

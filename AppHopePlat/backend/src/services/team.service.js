@@ -32,6 +32,9 @@ export const LIBELLES_ROLES = {
   ADMIN: 'Administrateur',
   COORDINATOR: 'Coordinateur',
   VIEWER: 'Lecture seule',
+  // Les roles des comptes back office (onglet Back office des utilisateurs).
+  GESTIONNAIRE: 'Admin (back office)',
+  MANAGER: 'Manager',
 };
 
 /** Longueur minimale d'un mot de passe, alignee sur les comptes donateurs. */

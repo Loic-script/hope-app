@@ -43,6 +43,7 @@ import { envoyerFichierLivraison } from './fichierLivraison.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 import { gerer } from './handler.js';
 import * as auditService from '../services/audit.service.js';
+import * as backofficeService from '../services/backoffice.service.js';
 import { poserSession } from '../shared/session.js';
 import * as adminAuthService from '../services/adminAuth.service.js';
 
@@ -119,7 +120,7 @@ export const projectReports = {
     res.send(contenu);
   }),
 };
-
+// 
 /* ================================================================
    Budget : etat du fonds et investissements
    ================================================================ */
@@ -507,4 +508,14 @@ export const messages = {
   creer: gerer((req) => messageService.creer(req.body), { statut: 201 }),
   marquerLu: gerer((req) => messageService.marquerLu(req.params.id)),
   repondre: gerer((req) => messageService.repondre(req.params.id, req.body)),
+};
+
+/* ================================================================
+   Back office : comptes crees par l'administrateur principal
+   ================================================================ */
+export const backoffice = {
+  lister: gerer(() => backofficeService.lister()),
+  creer: gerer((req) => backofficeService.creer(req.body), { statut: 201 }),
+  modifier: gerer((req) => backofficeService.modifier(req.params.id, req.body)),
+  renouvelerAcces: gerer((req) => backofficeService.renouvelerAcces(req.params.id)),
 };

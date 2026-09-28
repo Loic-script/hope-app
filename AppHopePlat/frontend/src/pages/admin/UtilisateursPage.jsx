@@ -1,5 +1,6 @@
+import BackOffice from '../../components/admin/BackOffice.jsx';
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 
 import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import {
@@ -67,7 +68,12 @@ const TEXTES = {
  */
 export default function UtilisateursPage() {
   const [parametres, setParametres] = useSearchParams();
-  const onglet = ONGLETS.includes(parametres.get('onglet')) ? parametres.get('onglet') : 'donateurs';
+  // L'onglet Back office n'existe que pour l'administrateur principal.
+  const { admin } = useOutletContext();
+  const principal = admin?.role === 'ADMIN';
+  const demande = parametres.get('onglet');
+  const surBackOffice = principal && demande === 'backoffice';
+  const onglet = ONGLETS.includes(demande) ? demande : 'donateurs';
   const textes = TEXTES[onglet];
 
   const [recherche, setRecherche] = useState('');
@@ -269,10 +275,16 @@ export default function UtilisateursPage() {
             label: enAttente('bailleurs') ? `Bailleurs · ${enAttente('bailleurs')} en attente` : 'Bailleurs',
             compteur: listes.bailleurs.length,
           },
+          ...(principal ? [{ cle: 'backoffice', label: 'Back office' }] : []),
         ]}
-        actif={onglet}
+        actif={surBackOffice ? 'backoffice' : onglet}
         onChange={changerOnglet}
       />
+
+      {surBackOffice ? (
+        <BackOffice />
+      ) : (
+      <>
 
       <Panneau serre>
         <BarreOutils
@@ -300,6 +312,8 @@ export default function UtilisateursPage() {
           }
         />
       </Panneau>
+      </>
+      )}
 
       {gestion.fenetres}
 

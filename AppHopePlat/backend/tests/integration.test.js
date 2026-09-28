@@ -385,3 +385,53 @@ describe('beneficiaires : projet lie et argent depense', () => {
     assert.equal(fiche.corps.projects.length, 1);
   });
 });
+
+describe('back office : Admin et Manager', () => {
+  test('mot de passe genere, droits de chacun, renvoi et suspension', async () => {
+    const creer = (role, email) =>
+      appel('POST', '/admin/backoffice', { jeton: jetonAdmin, corps: { fullName: `Essai ${role}`, email, role } });
+
+    const manager = await creer('MANAGER', 'manager@hope.test');
+    assert.equal(manager.statut, 201, JSON.stringify(manager.corps));
+    // SMTP coupe dans les tests : le mot de passe revient pour etre transmis.
+    assert.equal(manager.corps.courrielEnvoye, false);
+    assert.match(manager.corps.motDePasseProvisoire, /^.{14}$/);
+    const gestion = await creer('ADMIN', 'gestion@hope.test');
+    assert.equal(gestion.corps.compte.role, 'GESTIONNAIRE');
+    assert.equal((await creer('MANAGER', 'MANAGER@hope.test')).statut, 422, 'adresse deja prise');
+
+    const connexion = async (email, motDePasse) =>
+      (await appel('POST', '/admin/login', { corps: { adminLog: email, password: motDePasse } })).corps.token;
+    const jm = await connexion('manager@hope.test', manager.corps.motDePasseProvisoire);
+    const jg = await connexion('gestion@hope.test', gestion.corps.motDePasseProvisoire);
+
+    // Manager : lit, cree et modifie un projet, rien d'autre.
+    assert.equal((await appel('GET', '/admin/projects', { jeton: jm })).statut, 200);
+    assert.equal((await appel('GET', '/admin/utilisateurs/donateurs', { jeton: jm })).statut, 403);
+    assert.equal((await appel('GET', '/admin/backoffice', { jeton: jm })).statut, 403);
+    const { corps: catalogue } = await appel('GET', '/admin/catalog', { jeton: jm });
+    const projet = await appel('POST', '/admin/projects', {
+      jeton: jm,
+      corps: { name: 'Projet du manager', categoryId: catalogue.categories[0].id, location: 'Essai', startDate: '2026-01-01', requiredBudget: '1000' },
+    });
+    assert.equal(projet.statut, 201, JSON.stringify(projet.corps));
+    assert.equal((await appel('PATCH', `/admin/projects/${projet.corps.id}`, { jeton: jm, corps: { location: 'Antsirabe' } })).statut, 200);
+    assert.equal((await appel('PATCH', `/admin/projects/${projet.corps.id}/archive`, { jeton: jm })).statut, 403);
+    assert.equal((await appel('POST', '/admin/categories', { jeton: jm, corps: { name: 'Interdite' } })).statut, 403);
+
+    // Admin back office : gere les utilisateurs, pas ses pairs.
+    assert.equal((await appel('GET', '/admin/utilisateurs/benevoles', { jeton: jg })).statut, 200);
+    assert.equal((await appel('GET', '/admin/backoffice', { jeton: jg })).statut, 403);
+    assert.equal((await appel('POST', '/admin/categories', { jeton: jg, corps: { name: `Permise ${Date.now()}` } })).statut, 201);
+
+    // Renvoi : l'ancien mot de passe et la session tombent.
+    const renvoi = await appel('POST', `/admin/backoffice/${gestion.corps.compte.id}/acces`, { jeton: jetonAdmin });
+    assert.equal(renvoi.statut, 200);
+    assert.equal((await appel('POST', '/admin/login', { corps: { adminLog: 'gestion@hope.test', password: gestion.corps.motDePasseProvisoire } })).statut, 401);
+    assert.equal((await appel('GET', '/admin/me', { jeton: jg })).statut, 401);
+
+    // Suspendu : plus de connexion.
+    await appel('PATCH', `/admin/backoffice/${manager.corps.compte.id}`, { jeton: jetonAdmin, corps: { status: 'SUSPENDED' } });
+    assert.notEqual((await appel('POST', '/admin/login', { corps: { adminLog: 'manager@hope.test', password: manager.corps.motDePasseProvisoire } })).statut, 200);
+  });
+});

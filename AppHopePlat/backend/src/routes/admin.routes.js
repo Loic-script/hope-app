@@ -14,6 +14,7 @@ import {
   authenticateAdmin,
   exigerEcriture,
   exigerRole,
+  verrouEcriture,
 } from '../middleware/auth.middleware.js';
 import {
   televerserJustificatif,
@@ -45,6 +46,7 @@ import {
   tasks,
   team,
   utilisateurs,
+  backoffice,
   volunteers,
   consultation,
 } from '../controllers/admin.controllers.js';
@@ -76,13 +78,7 @@ router.patch('/me/photo', team.changerSaPhoto);
  * ajoutee plus bas est protegee par defaut, sans qu'on ait a y penser.
  * Les lectures (GET, HEAD) passent : un compte VIEWER consulte tout.
  */
-router.use((req, res, suite) => {
-  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
-    suite();
-    return;
-  }
-  exigerEcriture(req, res, suite);
-});
+router.use(verrouEcriture);
 
 // --- Accueil et donnees de reference ---------------------------------
 router.get('/dashboard', dashboard.recuperer);
@@ -236,6 +232,13 @@ router.patch('/team/:id/password', exigerRole('ADMIN'), team.reinitialiserMotDeP
 router.get('/activity', team.journal);
 // Le journal d'audit complet, reserve au role ADMIN.
 router.get('/audit', exigerRole('ADMIN'), team.audit);
+
+// --- Back office : les comptes crees par l'administrateur principal ----
+// Reserve au role ADMIN : un « Admin » back office ne gere pas ses pairs.
+router.get('/backoffice', exigerRole('ADMIN'), backoffice.lister);
+router.post('/backoffice', exigerRole('ADMIN'), backoffice.creer);
+router.patch('/backoffice/:id', exigerRole('ADMIN'), backoffice.modifier);
+router.post('/backoffice/:id/acces', exigerRole('ADMIN'), backoffice.renouvelerAcces);
 
 // --- Utilisateurs : donateurs, benevoles, bailleurs --------------------
 // Un compte se designe par son UUID, une fiche donateur par son numero.

@@ -34,7 +34,7 @@ const SQL_TABLE_ADMINS = `
 
   ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_role_valide;
   ALTER TABLE admins ADD  CONSTRAINT admins_role_valide
-    CHECK (role IN ('ADMIN', 'COORDINATOR', 'VIEWER'));
+    CHECK (role IN ('ADMIN', 'COORDINATOR', 'VIEWER', 'GESTIONNAIRE', 'MANAGER'));
 
   ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_status_valide;
   ALTER TABLE admins ADD  CONSTRAINT admins_status_valide

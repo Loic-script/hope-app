@@ -24,7 +24,10 @@ const SITE_PUBLIC = import.meta.env.VITE_SITE_URL ?? '/';
 export default function AdminLogin() {
   const navigate = useNavigate();
 
-  const [adminLog, setAdminLog] = useState('');
+  // Le lien du courriel d'acces porte l'identifiant (?identifiant=...).
+  const [adminLog, setAdminLog] = useState(
+    () => new URLSearchParams(window.location.search).get('identifiant') ?? ''
+  );
   const [password, setPassword] = useState('');
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
   const [seSouvenir, setSeSouvenir] = useState(true);

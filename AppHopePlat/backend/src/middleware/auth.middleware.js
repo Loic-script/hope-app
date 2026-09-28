@@ -84,4 +84,39 @@ export function exigerRole(...roles) {
 }
 
 /** Tout le monde sauf la lecture seule. */
-export const exigerEcriture = exigerRole('ADMIN', 'COORDINATOR');
+export const exigerEcriture = exigerRole('ADMIN', 'COORDINATOR', 'GESTIONNAIRE');
+
+/*
+ * Le Manager (compte back office) consulte, et ne fait qu'une chose :
+ * creer ou modifier un projet (et televerser sa photo). Les utilisateurs,
+ * l'equipe et le journal d'audit lui sont fermes, meme en lecture.
+ */
+const ECRITURES_MANAGER = [
+  ['POST', /^\/projects$/],
+  ['POST', /^\/projects\/media$/],
+  ['PATCH', /^\/projects\/\d+$/],
+];
+const LECTURES_INTERDITES_MANAGER = [/^\/utilisateurs/, /^\/team/, /^\/backoffice/, /^\/audit/, /^\/consulter/];
+
+function refus(req) {
+  const erreur = new ErreurRegleMetier('Votre rôle ne permet pas cette action.', 'DROIT_INSUFFISANT', {
+    role: req.admin?.role,
+  });
+  erreur.statut = 403;
+  return erreur;
+}
+
+/** Le verrou d'ecriture de l'espace administrateur, Manager compris. */
+export function verrouEcriture(req, res, suite) {
+  const lecture = ['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+  if (req.admin?.role === 'MANAGER') {
+    if (lecture) {
+      return LECTURES_INTERDITES_MANAGER.some((motif) => motif.test(req.path)) ? suite(refus(req)) : suite();
+    }
+    return ECRITURES_MANAGER.some(([methode, motif]) => methode === req.method && motif.test(req.path))
+      ? suite()
+      : suite(refus(req));
+  }
+  if (lecture) return suite();
+  return exigerEcriture(req, res, suite);
+}
