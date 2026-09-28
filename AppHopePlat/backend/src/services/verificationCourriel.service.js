@@ -106,6 +106,14 @@ export async function renvoyer(utilisateurId) {
   const compte = rows[0];
   if (!compte) throw new ErreurValidation('Compte introuvable.');
   if (compte.email_verifie_le) return { message: 'Votre adresse est déjà confirmée.', emailVerifie: true };
-  await envoyerLien(compte);
-  return { message: `Un nouveau lien vient de partir à ${compte.email}.`, emailVerifie: false };
+  const parti = await envoyerLien(compte);
+  // Ne jamais annoncer un courriel qui n'est pas parti (SMTP absent ou en panne).
+  if (!parti) {
+    return {
+      message: 'Le lien n’a pas pu être envoyé : l’envoi des courriels n’est pas encore en service. Réessayez plus tard ou contactez l’équipe HOPE.',
+      emailVerifie: false,
+      envoye: false,
+    };
+  }
+  return { message: `Un nouveau lien vient de partir à ${compte.email}.`, emailVerifie: false, envoye: true };
 }
