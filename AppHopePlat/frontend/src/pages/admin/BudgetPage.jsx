@@ -5,6 +5,7 @@ import { IconePlus } from '../../components/admin/AdminIcons.jsx';
 import CartesBudget from '../../components/admin/CartesBudget.jsx';
 import DetailDepenses from '../../components/admin/DetailDepenses.jsx';
 import FluxDesFonds from '../../components/admin/FluxDesFonds.jsx';
+import FondsFlottant from '../../components/admin/FondsFlottant.jsx';
 import { DepenseModale, DonModale, InvestirModale } from '../../components/admin/modales.jsx';
 import {
   Alerte,
@@ -192,6 +193,13 @@ export default function BudgetPage() {
       />
 
       {erreur && <Alerte>{erreur}</Alerte>}
+
+      {/* Le budget de HOPE, toujours sous les yeux : une carte que l'on deplace. */}
+      <FondsFlottant
+        resume={resume}
+        onInvestir={() => setModaleOuverte(true)}
+        peutInvestir={Number(resume?.availableTotal ?? 0) > 0 && projets.length > 0}
+      />
 
       {/*
         ---------- Les quatre sommes du budget ----------

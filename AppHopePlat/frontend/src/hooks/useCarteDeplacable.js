@@ -24,14 +24,23 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * meme si le doigt sort de la poignee.
  *
  * @param {string} cle  ou retenir le choix (localStorage)
- * @param {{ pas?: number, grandPas?: number }} [options]
+ * @param {{ pas?: number, grandPas?: number, reduiteParDefaut?: boolean,
+ *           entiere?: boolean, margeHaut?: number }} [options]
+ *        reduiteParDefaut : l'etat de la carte tant que la personne n'a
+ *        rien choisi (par exemple repliee sur un petit ecran) ;
+ *        entiere : la carte reste tout entiere a l'ecran (une carte
+ *        flottante, dont les boutons doivent rester atteignables), et
+ *        pas plus haut que margeHaut (la barre du haut).
  */
-export function useCarteDeplacable(cle, { pas = 16, grandPas = 64 } = {}) {
+export function useCarteDeplacable(
+  cle,
+  { pas = 16, grandPas = 64, reduiteParDefaut = false, entiere = false, margeHaut = 8 } = {}
+) {
   const enveloppe = useRef(null);
   const glissement = useRef(null);
 
-  const [position, setPosition] = useState(() => lireChoix(cle).position);
-  const [reduite, setReduite] = useState(() => lireChoix(cle).reduite);
+  const [position, setPosition] = useState(() => lireChoix(cle, reduiteParDefaut).position);
+  const [reduite, setReduite] = useState(() => lireChoix(cle, reduiteParDefaut).reduite);
   const [enDeplacement, setEnDeplacement] = useState(false);
 
   // Le choix survit a la visite : on l'ecrit des qu'il change.
@@ -49,6 +58,15 @@ export function useCarteDeplacable(cle, { pas = 16, grandPas = 64 } = {}) {
     // deplacement deja applique.
     const gauche = cadre.left - position.x;
     const haut = cadre.top - position.y;
+
+    if (entiere) {
+      const marge = 8;
+      return {
+        x: Math.round(Math.min(Math.max(x, marge - gauche), window.innerWidth - gauche - cadre.width - marge)),
+        y: Math.round(Math.min(Math.max(y, margeHaut - haut), window.innerHeight - haut - cadre.height - marge)),
+      };
+    }
+
     const visible = 72; // ce qu'il faut voir pour pouvoir la reprendre
 
     return {
@@ -62,7 +80,7 @@ export function useCarteDeplacable(cle, { pas = 16, grandPas = 64 } = {}) {
         Math.min(Math.max(y, -haut + 8), window.innerHeight - haut - visible)
       ),
     };
-  }, [position.x, position.y]);
+  }, [position.x, position.y, entiere, margeHaut]);
 
   const deplacerDe = useCallback(
     (dx, dy) => setPosition((actuelle) => borner(actuelle.x + dx, actuelle.y + dy)),
@@ -140,6 +158,18 @@ export function useCarteDeplacable(cle, { pas = 16, grandPas = 64 } = {}) {
     return () => window.removeEventListener('resize', recadrer);
   }, [borner]);
 
+  // Une carte entiere depliee pres du bord pourrait en deborder : une
+  // fois le depliage fini, on la recadre.
+  useEffect(() => {
+    if (!entiere || reduite) return undefined;
+    const minuterie = setTimeout(() => {
+      setPosition((actuelle) =>
+        actuelle.x === 0 && actuelle.y === 0 ? actuelle : borner(actuelle.x, actuelle.y)
+      );
+    }, 420);
+    return () => clearTimeout(minuterie);
+  }, [entiere, reduite, borner]);
+
   const deplacee = position.x !== 0 || position.y !== 0;
 
   return {
@@ -180,10 +210,11 @@ const VIDE = { position: { x: 0, y: 0 }, reduite: false };
  * site sont bloquees, la lecture leve une exception. La carte doit
  * s'afficher quand meme, a sa place d'origine.
  */
-function lireChoix(cle) {
+function lireChoix(cle, reduiteParDefaut = false) {
+  const vide = { ...VIDE, reduite: reduiteParDefaut };
   try {
     const brut = window.localStorage.getItem(cle);
-    if (!brut) return VIDE;
+    if (!brut) return vide;
 
     const lu = JSON.parse(brut);
     return {
@@ -194,7 +225,7 @@ function lireChoix(cle) {
       reduite: Boolean(lu?.reduite),
     };
   } catch {
-    return VIDE;
+    return vide;
   }
 }
 

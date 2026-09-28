@@ -429,3 +429,329 @@
     transform: none;
   }
 }
+
+/* ============================================================
+   Le budget de HOPE, en carte flottante sur l'ecran Budget.
+
+   Posee en haut a droite, sous la barre ; deplacable par sa poignee
+   (useCarteDeplacable, comme la carte des taches du benevole) et
+   repliable en pastille. L'enveloppe .carte-mobile porte le
+   deplacement ; la carte garde son animation d'entree.
+   ============================================================ */
+
+.fonds-flottant {
+  position: fixed;
+  top: calc(var(--admin-entete-hauteur, 70px) + 14px);
+  right: 22px;
+  z-index: 35;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.fonds-flottant .carte-mobile {
+  pointer-events: auto;
+}
+
+.fonds-carte {
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  border: 1px solid rgba(93, 86, 150, 0.18);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  box-shadow: 0 22px 50px -18px rgba(38, 32, 84, 0.45), 0 2px 8px rgba(38, 32, 84, 0.08);
+  animation: fonds-carte-entree 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.05) both;
+  transition: box-shadow 0.25s ease;
+}
+
+.carte-mobile--saisie .fonds-carte {
+  box-shadow: 0 34px 64px -24px rgba(30, 24, 70, 0.7), 0 2px 8px rgba(38, 32, 84, 0.1);
+}
+
+.fonds-carte__barre {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 8px 0 6px;
+}
+
+.fonds-carte__poignee,
+.fonds-carte__action {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.fonds-carte__poignee {
+  cursor: grab;
+  touch-action: none;
+}
+
+.carte-mobile--saisie .fonds-carte__poignee {
+  cursor: grabbing;
+}
+
+.fonds-carte__poignee:hover,
+.fonds-carte__action:hover {
+  background: #efeefa;
+  color: #5d5696;
+}
+
+.fonds-carte__poignee:focus-visible,
+.fonds-carte__action:focus-visible,
+.fonds-carte__investir:focus-visible {
+  outline: 3px solid #86b9de;
+  outline-offset: 2px;
+}
+
+.fonds-carte__poignee svg,
+.fonds-carte__action svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fonds-carte__action--pliage svg {
+  transition: transform 0.3s ease;
+}
+
+.carte-mobile--reduite .fonds-carte__action--pliage svg {
+  transform: rotate(-90deg);
+}
+
+.fonds-carte__titre {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--admin-texte);
+  white-space: nowrap;
+}
+
+.fonds-carte__resume {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fdf3cf;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #6b560e;
+  white-space: nowrap;
+  animation: fonds-carte-apparition 0.3s ease both;
+}
+
+/* Le repli : la hauteur glisse de 1fr a 0fr, sans mesurer le contenu. */
+.fonds-carte__pliage {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.carte-mobile--reduite .fonds-carte__pliage {
+  grid-template-rows: 0fr;
+}
+
+.fonds-carte__corps {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+  padding: 10px 16px 16px;
+  overflow: hidden;
+  transition: opacity 0.25s ease, padding 0.38s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.carte-mobile--reduite .fonds-carte__corps {
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+
+/* Repliee, la carte n'est plus qu'une pastille : elle prend la largeur
+   de son contenu, toujours ancree a droite. */
+.carte-mobile--reduite .fonds-carte {
+  width: auto;
+}
+
+.carte-mobile--reduite .fonds-carte__barre {
+  padding-bottom: 8px;
+}
+
+.fonds-carte__tete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fonds-carte__anneau {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  transform: rotate(-90deg);
+}
+
+.fonds-carte__piste {
+  fill: none;
+  stroke: #edf0f6;
+  stroke-width: 8;
+}
+
+.fonds-carte__arc {
+  fill: none;
+  stroke: #4f86b8;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.fonds-carte__taux {
+  transform: rotate(90deg);
+  transform-origin: 38px 38px;
+  font-family: var(--police-titre);
+  font-size: 15px;
+  font-weight: 700;
+  fill: var(--admin-texte);
+}
+
+.fonds-carte__etiquette {
+  margin: 0 0 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.fonds-carte__disponible {
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+}
+
+.fonds-carte__lignes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px dashed #dfe3ee;
+}
+
+.fonds-carte__lignes div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.fonds-carte__lignes dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-texte-doux);
+}
+
+.fonds-carte__lignes dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-texte);
+}
+
+.fonds-carte__puce {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.fonds-carte__puce--recu { background: #86b9de; }
+.fonds-carte__puce--investi { background: #4f86b8; }
+.fonds-carte__puce--disponible { background: #e7c94a; }
+
+.fonds-carte__investir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #5d5696, #6d67a0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.fonds-carte__investir svg {
+  width: 17px;
+  height: 17px;
+}
+
+.fonds-carte__investir:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -8px rgba(74, 68, 121, 0.7);
+}
+
+.fonds-carte__investir:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes fonds-carte-entree {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fonds-carte-apparition {
+  from { opacity: 0; transform: translateX(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 700px) {
+  .fonds-flottant {
+    top: calc(var(--admin-entete-hauteur, 60px) + 10px);
+    right: 12px;
+  }
+}
+
+@media print {
+  .fonds-flottant {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fonds-carte,
+  .fonds-carte__resume {
+    animation: none;
+  }
+
+  .fonds-carte__pliage,
+  .fonds-carte__corps,
+  .fonds-carte__arc,
+  .fonds-carte__action--pliage svg,
+  .fonds-carte__investir {
+    transition: none;
+  }
+}
