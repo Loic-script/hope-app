@@ -110,7 +110,10 @@ export const projectReports = {
     statut: 201,
   }),
 
-
+  /**
+   * Le PDF du jour, en piece jointe : c'est un telechargement demande,
+   * pas un apercu -- la lecture se fait dans l'onglet.
+   */
   pdf: gerer(async (req, res) => {
     const { contenu, nomFichier } = await projectReportService.pdf(req.params.id);
     res.setHeader('Content-Type', 'application/pdf');
