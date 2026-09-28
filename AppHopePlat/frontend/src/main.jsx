@@ -30,6 +30,7 @@ import './styles/benevole-espace.css';
 import './styles/mes-taches.css';
 import './styles/annuaire-benevoles.css';
 import './styles/bailleur.css';
+import './styles/don-flottant.css';
 import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';
 import './styles/feuille.css';

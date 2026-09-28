@@ -4,7 +4,6 @@ import { Outlet, useLocation, useNavigate, useOutletContext } from 'react-router
 import {
   PleineAccueil,
   PleineBudget,
-  PleineDons,
   PleineGraphique,
   PleineMessages,
   PleineOrganisation,
@@ -16,6 +15,7 @@ import * as espaceService from '../services/espace.service.js';
 import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
 import BandeauVerification from '../components/compte/BandeauVerification.jsx';
+import DonFlottant from '../components/DonFlottant.jsx';
 
 /**
  * Les ecrans de l'espace, dans l'ordre de la lecture : les actualites --
@@ -36,12 +36,7 @@ const GROUPES = [
     // "Accueil" : une seule page, ou les projets et les publications
     // de l'equipe se suivent dans un meme fil. Meme entree chez le
     // benevole et chez le donateur.
-    entrees: [
-      { to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true },
-      // L'appel a donner, mis en avant : "vedette" lui donne son fond
-      // orange, son reflet et son coeur qui bat (admin-entete.css).
-      { to: '/bailleur/faire-un-don', label: 'Faire un don', Icone: PleineDons, vedette: true },
-    ],
+    entrees: [{ to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Notre partenariat',
@@ -114,6 +109,9 @@ export default function BailleurLayout() {
    */
   const nom = bailleur?.raisonSociale || `${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim();
 
+  // "Faire un don" flotte sur tout l'espace, sauf la ou l'on donne deja.
+  const surLeDon = /^\/bailleur\/(faire-un-don|payer)/.test(emplacement.pathname);
+
   return (
     <CoqueEspace
       groupes={GROUPES}
@@ -151,6 +149,7 @@ export default function BailleurLayout() {
           }}
         />
       </Suspense>
+      {!surLeDon && <DonFlottant to="/bailleur/faire-un-don" cle="hope.bailleur.don-flottant" />}
     </CoqueEspace>
   );
 }

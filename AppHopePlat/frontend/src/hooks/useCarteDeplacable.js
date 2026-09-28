@@ -55,9 +55,14 @@ export function useCarteDeplacable(
 
     const cadre = element.getBoundingClientRect();
     // La place naturelle de la carte : sa position a l'ecran, moins le
-    // deplacement deja applique.
-    const gauche = cadre.left - position.x;
-    const haut = cadre.top - position.y;
+    // deplacement reellement affiche. Pas celui de l'etat : pendant la
+    // transition (des fleches pressees vite), la carte est encore en
+    // chemin, et l'on bornerait depuis une place fausse.
+    const transformation = getComputedStyle(element).transform;
+    const affiche =
+      transformation && transformation !== 'none' ? new DOMMatrixReadOnly(transformation) : { m41: 0, m42: 0 };
+    const gauche = cadre.left - affiche.m41;
+    const haut = cadre.top - affiche.m42;
 
     if (entiere) {
       const marge = 8;
@@ -80,7 +85,7 @@ export function useCarteDeplacable(
         Math.min(Math.max(y, -haut + 8), window.innerHeight - haut - visible)
       ),
     };
-  }, [position.x, position.y, entiere, margeHaut]);
+  }, [entiere, margeHaut]);
 
   const deplacerDe = useCallback(
     (dx, dy) => setPosition((actuelle) => borner(actuelle.x + dx, actuelle.y + dy)),
@@ -95,7 +100,13 @@ export function useCarteDeplacable(
     // Seul le bouton principal fait glisser ; le clic droit ouvre le menu.
     if (evenement.button !== 0) return;
 
-    evenement.currentTarget.setPointerCapture?.(evenement.pointerId);
+    // La capture peut echouer (pointeur deja relache) : le glisser se
+    // fait alors sans elle, il ne doit pas casser.
+    try {
+      evenement.currentTarget.setPointerCapture?.(evenement.pointerId);
+    } catch {
+      // sans capture
+    }
     glissement.current = {
       pointeur: evenement.pointerId,
       departX: evenement.clientX,
@@ -119,7 +130,11 @@ export function useCarteDeplacable(
 
   function terminer(evenement) {
     if (!glissement.current) return;
-    evenement.currentTarget.releasePointerCapture?.(evenement.pointerId);
+    try {
+      evenement.currentTarget.releasePointerCapture?.(evenement.pointerId);
+    } catch {
+      // deja relachee
+    }
     glissement.current = null;
     setEnDeplacement(false);
   }
