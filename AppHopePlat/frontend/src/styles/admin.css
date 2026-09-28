@@ -1874,3 +1874,125 @@ tr[id^='compte-'] {
 .table__centre .table__principal {
   white-space: nowrap;
 }
+
+/* ------------------------------------------------------------------
+   Champ « liste ou saisie libre » (ChampCombo)
+   ------------------------------------------------------------------ */
+.champ-combo {
+  position: relative;
+}
+
+.champ-combo input {
+  width: 100%;
+  padding-right: 68px;
+}
+
+.champ-combo__bascule,
+.champ-combo__vider {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-texte-doux);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.champ-combo__bascule { right: 6px; }
+.champ-combo__vider { right: 36px; }
+
+.champ-combo__bascule:hover,
+.champ-combo__vider:hover {
+  background: var(--admin-surface-douce);
+  color: var(--admin-texte);
+}
+
+.champ-combo__bascule svg,
+.champ-combo__vider svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s ease;
+}
+
+.champ-combo--ouvert .champ-combo__bascule svg {
+  transform: rotate(180deg);
+}
+
+.champ-combo__liste {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 232px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: 0 18px 40px rgba(43, 50, 68, 0.16);
+  animation: champ-combo-entree 0.16s ease both;
+}
+
+.champ-combo__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--admin-texte);
+  cursor: pointer;
+}
+
+.champ-combo__option--active {
+  background: #efeefa;
+}
+
+.champ-combo__option--choisie {
+  font-weight: 700;
+  color: #4a4479;
+}
+
+.champ-combo__option--nouvelle {
+  margin-top: 4px;
+  border-top: 1px dashed var(--admin-bordure);
+  border-radius: 0 0 8px 8px;
+  color: #4a4479;
+  font-weight: 600;
+}
+
+.champ-combo__plus {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #5d5696;
+  font-size: 14px;
+  line-height: 1;
+  color: #ffffff;
+}
+
+@keyframes champ-combo-entree {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champ-combo__liste { animation: none; }
+  .champ-combo__bascule svg { transition: none; }
+}

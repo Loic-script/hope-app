@@ -153,7 +153,9 @@ export function Modale({ ouverte, titre, sousTitre, onFermer, pied, large, erreu
     if (!ouverte) return undefined;
 
     const surTouche = (evenement) => {
-      if (evenement.key === 'Escape') onFermer();
+      // Un champ qui a deja traite Echap (une liste deroulante qui se
+      // referme) le signale : la fenetre, elle, reste ouverte.
+      if (evenement.key === 'Escape' && !evenement.defaultPrevented) onFermer();
     };
     document.addEventListener('keydown', surTouche);
 

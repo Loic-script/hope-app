@@ -17,6 +17,7 @@ import {
 } from './forms.jsx';
 import { IconeCroix } from './AdminIcons.jsx';
 import ChoixBenevoles from './ChoixBenevoles.jsx';
+import ChampCombo from './ChampCombo.jsx';
 import { useSoumission } from '../../hooks/useChargement.js';
 import ChampPhotoProfil from '../ChampPhotoProfil.jsx';
 import * as beneficiaryService from '../../services/beneficiary.service.js';
@@ -802,13 +803,13 @@ export function DepenseModale({
           onChange={(e) => modifier('expenseDate', e.target.value)}
           disabled={envoi}
         />
-        <ChampSelection
+        <ChampCombo
           label="Catégorie"
           id="depense-categorie"
           value={formulaire.category}
-          onChange={(e) => modifier('category', e.target.value)}
-          options={categories.map((categorie) => ({ valeur: categorie, label: categorie }))}
-          vide="Non classée"
+          onChange={(valeur) => modifier('category', valeur)}
+          options={categories}
+          placeholder="Choisir ou taper une catégorie…"
           disabled={envoi}
         />
         <ChampTexte
@@ -1214,13 +1215,13 @@ export function BeneficiaireModale({
                   : 'Enregistré comme une dépense du projet, au nom de ce bénéficiaire.'
               }
             />
-            <ChampSelection
+            <ChampCombo
               label="Catégorie de la dépense"
               id="beneficiaire-depense-categorie"
               value={formulaire.depenseCategorie}
-              onChange={(e) => modifier('depenseCategorie', e.target.value)}
-              options={categories.map((c) => ({ valeur: c, label: c }))}
-              vide="Non classée"
+              onChange={(valeur) => modifier('depenseCategorie', valeur)}
+              options={categories}
+              placeholder="Choisir ou taper une catégorie…"
               disabled={envoi || formulaire.depenseMontant.trim() === ''}
             />
             <ChampTexte
