@@ -73,6 +73,8 @@ const ProfilUtilisateurPage = lazy(() => import('../pages/admin/ProfilUtilisateu
 const UtilisateursPage = lazy(() => import('../pages/admin/UtilisateursPage.jsx'));
 const StatisticsPage = lazy(() => import('../pages/admin/StatisticsPage.jsx'));
 const PublicationsPage = lazy(() => import('../pages/admin/PublicationsPage.jsx'));
+const VitrineLayout = lazy(() => import('../layouts/VitrineLayout.jsx'));
+const EnPreparation = lazy(() => import('../pages/vitrine/EnPreparation.jsx'));
 const VerifierCourriel = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.VerifierCourriel })));
 const PolitiqueConfidentialite = lazy(() =>
   import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
@@ -168,7 +170,17 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<ChargementPage />}>
     <Routes>
-      <Route path="/" element={<Redirection />} />
+      {/* ----- Le site vitrine, public ----- */}
+      <Route element={<VitrineLayout />}>
+        <Route path="/" element={<EnPreparation titre="Accueil" />} />
+        <Route path="/nous-decouvrir" element={<EnPreparation titre="Nous découvrir" />} />
+        <Route path="/nos-realisations" element={<EnPreparation titre="Nos réalisations" />} />
+        <Route path="/actualites" element={<EnPreparation titre="Actualités" />} />
+        <Route path="/contact" element={<EnPreparation titre="Contact" />} />
+        <Route path="/s-engager" element={<EnPreparation titre="S’engager" />} />
+      </Route>
+      {/* Le choix de l'espace (administration ou utilisateurs), qui etait a la racine. */}
+      <Route path="/espaces" element={<Redirection />} />
       <Route path="/admin/login" element={<AdminLogin />} />
 
       {/* ----- Porte unique des utilisateurs ----- */}

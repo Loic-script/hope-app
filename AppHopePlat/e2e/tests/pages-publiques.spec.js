@@ -6,8 +6,8 @@ import { expect, test } from '@playwright/test';
 
 import { sansDebordement } from './outils.js';
 
-test('la racine propose les espaces ; l authentification mene aux textes legaux', async ({ page }) => {
-  await page.goto('/');
+test('le choix des espaces ; l authentification mene aux textes legaux', async ({ page }) => {
+  await page.goto('/espaces');
   await expect(page.getByRole('link', { name: 'Donateur, bénévole ou bailleur' })).toBeVisible();
   await page.goto('/authentification');
   await expect(page.locator('.liens-legaux a')).toHaveCount(2);

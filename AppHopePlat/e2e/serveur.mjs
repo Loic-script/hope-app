@@ -51,6 +51,10 @@ const base = await preparerBaseDeTest({ prefixe: 'hope_e2e' });
 // le limiteur freinerait la suite. Il est teste a part (backend/tests),
 // et cette variable est ignoree en production.
 process.env.DESACTIVER_LIMITEUR = '1';
+// preparerBaseDeTest vide l'adresse de l'equipe (aucun courriel reel) :
+// on remet l'adresse d'essai, que les pages legales doivent afficher.
+// SMTP reste vide : rien ne part.
+process.env.EQUIPE_EMAIL = 'contact@hope.test';
 const { creerApplication } = await import('../backend/src/app.js');
 const { fermerPool } = await import('../backend/src/config/database.js');
 
