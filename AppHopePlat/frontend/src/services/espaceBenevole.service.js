@@ -185,9 +185,10 @@ export async function relacherTache(id) {
  *
  * @param {File[]} fichiers
  */
-export async function livrerTache(id, fichiers = []) {
+export async function livrerTache(id, fichiers = [], commentaire = '') {
   const formulaire = new FormData();
   for (const fichier of fichiers) formulaire.append('files', fichier);
+  if (commentaire.trim()) formulaire.append('commentaire', commentaire.trim());
 
   // Le client pose "application/json" par defaut : l'en-tete arriverait
   // sans la frontiere du multipart, et multer ne trouverait rien a lire.

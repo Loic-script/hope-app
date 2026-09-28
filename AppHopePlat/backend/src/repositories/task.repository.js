@@ -45,7 +45,7 @@ const COLONNES = `
   -- L'urgence, calculee ici pour que tous les ecrans s'accordent : la
   -- priorite choisie, rehaussee par une date de fin proche ou passee.
   (${URGENCE})::int AS urgence,
-  t.prise_le, t.livree_le, t.livree_par, t.validee_par, t.cree_le,
+  t.prise_le, t.livree_le, t.livree_par, t.validee_par, t.cree_le, t.commentaire_livraison,
   p.name      AS projet_nom,
   p.reference AS projet_reference,
   p.status    AS projet_statut,
@@ -376,12 +376,12 @@ export async function alignerStatut(tacheId, client = null) {
 }
 
 /** Un membre de l'equipe declare la tache livree. */
-export async function livrer(id, benevoleId, client = null) {
+export async function livrer(id, benevoleId, commentaire = null, client = null) {
   await query(
     `UPDATE tache
-        SET statut = 'livree', livree_le = NOW(), livree_par = $2
+        SET statut = 'livree', livree_le = NOW(), livree_par = $2, commentaire_livraison = $3
       WHERE id = $1`,
-    [id, benevoleId],
+    [id, benevoleId, commentaire],
     client
   );
 }
@@ -389,8 +389,8 @@ export async function livrer(id, benevoleId, client = null) {
 /**
  * Joint les fichiers de la livraison a la tache.
  *
- * Appelee dans la meme transaction que la livraison : une tache ne doit
- * pas passer "livree" sans sa preuve, ni une preuve rester sans tache.
+ * Appelee dans la meme transaction que la livraison : une preuve ne doit
+ * pas rester sans tache. Les fichiers sont facultatifs.
  */
 export async function ajouterFichiers(tacheId, fichiers, client = null) {
   for (const [rang, fichier] of fichiers.entries()) {

@@ -874,6 +874,10 @@ CREATE INDEX IF NOT EXISTS tache_benevole_demandes_idx
 -- Qui, dans l'equipe, a declare la tache livree.
 ALTER TABLE tache ADD COLUMN IF NOT EXISTS livree_par UUID REFERENCES benevole(id) ON DELETE SET NULL;
 
+-- Le mot du benevole a la livraison : ce qu'il a fait, ce qui reste. Les
+-- photos et videos sont facultatives, ce commentaire aussi.
+ALTER TABLE tache ADD COLUMN IF NOT EXISTS commentaire_livraison VARCHAR(2000);
+
 -- Une tache en cours n'a plus un benevole unique : la regle qui liait le
 -- statut a benevole_id tombe.
 ALTER TABLE tache DROP CONSTRAINT IF EXISTS tache_prise_coherente;

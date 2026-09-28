@@ -292,6 +292,7 @@ function refusDuFichier(fichier) {
  */
 export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () => {} }) {
   const [fichiers, setFichiers] = useState([]);
+  const [commentaire, setCommentaire] = useState('');
   const [refus, setRefus] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [survol, setSurvol] = useState(false);
@@ -342,16 +343,11 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
 
   async function livrer(evenement) {
     evenement.preventDefault();
-    if (fichiers.length === 0) {
-      setRefus('Joignez au moins une photo ou une vidéo de ce que vous avez fait.');
-      return;
-    }
-
     setEnvoi(true);
     onEnvoi(true);
     setRefus('');
     try {
-      await service.livrerTache(tache.id, fichiers);
+      await service.livrerTache(tache.id, fichiers, commentaire);
       onLivree();
     } catch (echec) {
       setRefus(messageErreur(echec, 'La livraison n’a pas pu être enregistrée.'));
@@ -366,9 +362,28 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
   return (
     <form className="livraison" id="formulaire-livraison" onSubmit={livrer}>
       <p className="livraison__consigne">
-        Montrez ce que vous avez fait : une photo du résultat, une courte vidéo. L’équipe HOPE
-        s’en sert pour valider la livraison.
+        Dites en quelques mots ce que vous avez fait. Une photo ou une courte vidéo aide l’équipe
+        HOPE à valider la livraison, mais n’est pas obligatoire.
       </p>
+
+      {/* Le commentaire, d'abord : c'est lui qui raconte la livraison. */}
+      <div className="livraison__commentaire">
+        <label className="livraison__libelle" htmlFor="livraison-commentaire">
+          Commentaire <span className="livraison__facultatif">facultatif</span>
+        </label>
+        <textarea
+          id="livraison-commentaire"
+          value={commentaire}
+          onChange={(e) => setCommentaire(e.target.value)}
+          maxLength={2000}
+          rows={3}
+          placeholder="Ex. Fiche traduite et relue avec l’enseignante ; il reste la version imprimée à valider."
+          disabled={envoi}
+        />
+        <span className="livraison__compteur" aria-hidden="true">
+          {commentaire.length} / 2000
+        </span>
+      </div>
 
       {/* La zone de depot est aussi un bouton : on clique, ou on glisse. */}
       <label
@@ -456,7 +471,7 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
         <button type="button" className="btn btn--neutre" onClick={onAnnuler} disabled={envoi}>
           Annuler
         </button>
-        <button type="submit" className="btn btn--principal" disabled={envoi || fichiers.length === 0}>
+        <button type="submit" className="btn btn--principal" disabled={envoi}>
           {envoi ? 'Envoi en cours…' : `Livrer la tâche${fichiers.length ? ` (${fichiers.length})` : ''}`}
         </button>
       </div>

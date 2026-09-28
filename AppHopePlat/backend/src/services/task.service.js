@@ -4,8 +4,8 @@
  * Une tache se confie a une equipe d'un ou plusieurs benevoles. L'equipe
  * HOPE peut y affecter qui elle veut ; un benevole, lui, demande a la
  * prendre ou a la rejoindre, et sa demande attend la decision de HOPE.
- * N'importe quel membre de l'equipe la declare livree, preuve a l'appui,
- * pour tous.
+ * N'importe quel membre de l'equipe la declare livree pour tous, avec s'il
+ * le veut des photos, des videos et un commentaire.
  *
  * Toute decision prend la tache sous verrou : deux gestes simultanes --
  * deux demandes acceptees, un retrait pendant une livraison -- ne doivent
@@ -18,6 +18,7 @@ import * as espaceRepository from '../repositories/espace.repository.js';
 import * as profileRepository from '../repositories/volunteerProfile.repository.js';
 import * as taskRepository from '../repositories/task.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
+import { texteFacultatif } from '../shared/validation.js';
 import { signalerDemandeDeTache, signalerTacheLivree } from './notification.service.js';
 
 const STATUTS = ['a_faire', 'en_cours', 'livree'];
@@ -628,11 +629,7 @@ const MAX_FICHIERS_LIVRAISON = 6;
  * plus haut des deux.
  */
 function verifierFichiersLivraison(fichiers) {
-  if (fichiers.length === 0) {
-    throw new ErreurValidation('Joignez au moins une photo ou une vidéo de ce que vous avez fait.', {
-      files: 'Preuve obligatoire',
-    });
-  }
+  // Photos et videos sont facultatives : une tache peut se livrer sans.
   if (fichiers.length > MAX_FICHIERS_LIVRAISON) {
     throw new ErreurValidation(`Une livraison porte au plus ${MAX_FICHIERS_LIVRAISON} fichiers.`, {
       files: 'Trop de fichiers',
@@ -669,8 +666,9 @@ function verifierFichiersLivraison(fichiers) {
  * @param {Array<object>} fichiers ceux que multer a deja ecrits sur le
  *        disque. En cas de refus, c'est le controleur qui les efface.
  */
-export async function livrer(id, utilisateurId, fichiers = []) {
+export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
   verifierFichiersLivraison(fichiers);
+  const commentaire = texteFacultatif(corps?.commentaire, 'commentaire', { max: 2000 });
 
   return transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
@@ -694,7 +692,7 @@ export async function livrer(id, utilisateurId, fichiers = []) {
       })),
       client
     );
-    await taskRepository.livrer(tache.id, fiche.id, client);
+    await taskRepository.livrer(tache.id, fiche.id, commentaire, client);
     const vue = await taskRepository.trouverPourBenevole(tache.id, fiche.id, client);
 
     await signalerTacheLivree(

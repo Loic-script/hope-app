@@ -102,6 +102,7 @@ const COLONNES_ATTENDUES = [
   ['admins', 'photo_url'],
   ['beneficiaries', 'photo_fichier'],
   ['tache', 'livree_par'],
+  ['tache', 'commentaire_livraison'],
   ['field_proofs', 'benevole_id'],
   ['projects', 'description_titre'],
   ['projects', 'project_type'],

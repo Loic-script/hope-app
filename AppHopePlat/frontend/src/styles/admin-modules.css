@@ -2330,3 +2330,30 @@
 .onglets ~ .backoffice__resultat {
   margin: 0 0 14px;
 }
+
+/* Le commentaire laisse par le benevole a la livraison. */
+.fenetre-tache__commentaire {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--hope-violet);
+  border-radius: 0 10px 10px 0;
+  background: #f5f4fb;
+  color: var(--hope-texte);
+  font-size: 14.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fenetre-tache__commentaire cite {
+  display: block;
+  margin-top: 6px;
+  color: var(--admin-texte-doux);
+  font-size: 12.5px;
+  font-style: normal;
+  white-space: normal;
+}
+
+.fenetre-tache__commentaire cite::before {
+  content: '\2014\00a0';
+}

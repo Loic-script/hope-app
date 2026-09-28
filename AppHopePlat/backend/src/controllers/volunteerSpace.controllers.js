@@ -105,12 +105,12 @@ export const taches = {
   relacher: gerer((req) => taskService.relacher(req.params.id, req.benevole.id)),
   /*
    * multer a deja ecrit les fichiers quand le service se prononce : un
-   * refus -- aucune preuve, un PDF, une tache deja livree -- les
+   * refus -- un PDF, un commentaire trop long, une tache deja livree -- les
    * laisserait sur le disque sans rien pour les referencer.
    */
   livrer: gerer(async (req) => {
     try {
-      return await taskService.livrer(req.params.id, req.benevole.id, req.files ?? []);
+      return await taskService.livrer(req.params.id, req.benevole.id, req.files ?? [], req.body);
     } catch (erreur) {
       for (const fichier of req.files ?? []) {
         await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(fichier.filename)));

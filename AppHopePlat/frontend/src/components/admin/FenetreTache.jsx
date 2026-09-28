@@ -314,6 +314,17 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
                 ))}
             </section>
 
+            {/* ---------- Le mot du benevole a la livraison ---------- */}
+            {livree && tache.commentaireLivraison && (
+              <section className="fenetre-tache__bloc">
+                <h3 className="fenetre-tache__titre">Commentaire de livraison</h3>
+                <blockquote className="fenetre-tache__commentaire">
+                  {tache.commentaireLivraison}
+                  {tache.livreeParNom && <cite>{tache.livreeParNom}</cite>}
+                </blockquote>
+              </section>
+            )}
+
             {/* ---------- La preuve ---------- */}
             {tache.files.length > 0 && (
               <section className="fenetre-tache__bloc">
