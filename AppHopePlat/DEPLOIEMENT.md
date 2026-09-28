@@ -8,7 +8,7 @@ Tout est déjà prêt dans le dépôt :
 | Fichier | Rôle |
 |---|---|
 | `package.json` (racine de `AppHopePlat`) | `build`, `start`, `db:preparer`, `db:premier-deploiement` |
-| `railway.json` | commande de construction, de démarrage, migration avant chaque mise en ligne, sonde de santé `/api/sante` |
+| `railway.json` | les mêmes réglages que ceux de la section 1, pour mémoire : Railway abandonne ce fichier (*Config as Code*, voir ci-dessous) |
 | `backend/.env.example` | la liste commentée de toutes les variables |
 
 Durée : une trentaine de minutes la première fois.
@@ -22,10 +22,20 @@ Durée : une trentaine de minutes la première fois.
 2. Dans le service créé, **Settings** :
    - **Root Directory** : `AppHopePlat` (le dépôt contient d'autres dossiers ; sans ce réglage,
      Railway construit la racine du dépôt, n'y trouve rien et échoue — voir « Dépannage ») ;
-   - **Railway Config File** (rubrique *Config-as-code*) : `/AppHopePlat/railway.json`. Ce
-     chemin part de la racine du dépôt : il ne suit pas le *Root Directory*. Sans lui, la
-     migration avant mise en ligne et la sonde de santé `/api/sante` ne s'appliquent pas ;
-   - **Branch** : `main` pour la production (ou `dev` pour une préproduction).
+   - **Branch** : `main` pour la production (ou `dev` pour une préproduction) ;
+   - rubrique **Build** → *Custom Build Command* : `npm run build` ;
+   - rubrique **Deploy** :
+     - *Custom Start Command* : `npm start` ;
+     - *Pre-deploy Command* : `npm run db:preparer` — **indispensable** : c'est elle qui crée
+       les tables et applique chaque évolution du schéma avant la mise en ligne ;
+     - *Healthcheck Path* : `/api/sante` (délai : 120 s) — Railway garde l'ancienne version
+       tant que la nouvelle ne répond pas ;
+     - *Restart Policy* : *On Failure*, 5 tentatives.
+
+   Ces réglages se saisissent dans l'interface. Le fichier `railway.json` du dépôt porte les
+   mêmes, mais Railway abandonne ce mécanisme (*Config as Code*) : il cesse de fonctionner le
+   1er décembre 2026, et un service qui ne l'a jamais utilisé ne peut plus l'activer depuis le
+   28 août 2026.
 3. **+ New → Database → PostgreSQL** dans le même projet.
 
 ## 2. Les variables du service
@@ -195,7 +205,8 @@ production.
 | Message dans Railway | Cause et remède |
 |---|---|
 | `Script start.sh not found` / `Railpack could not determine how to build the app` | Le service construit la racine du dépôt. **Settings → Root Directory** : `AppHopePlat`, puis redéployer. |
-| La construction passe, mais pas de migration ni de sonde de santé | `railway.json` n'est pas lu : **Settings → Railway Config File** : `/AppHopePlat/railway.json`. |
+| Le site répond, mais la base reste vide (« You have no tables ») | La *Pre-deploy Command* manque : **Settings → Deploy → Pre-deploy Command** : `npm run db:preparer`, puis redéployer. Ou, une fois : `npm run db:premier-deploiement` dans l'onglet **Console** du service. |
+| Railway affiche « successful » puis « Crashed » | Sans *Healthcheck Path*, Railway valide dès le démarrage du conteneur : lire les dernières lignes `[HOPE]` du journal (**Deploy Logs**). |
 | Le service redémarre en boucle au démarrage | Une variable obligatoire manque (section 2) : les journaux du déploiement la nomment. |
 
 ## 6. Ensuite
