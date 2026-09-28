@@ -424,7 +424,10 @@ describe('back office : Admin et Manager', () => {
     assert.equal((await appel('GET', '/admin/backoffice', { jeton: jg })).statut, 403);
     assert.equal((await appel('POST', '/admin/categories', { jeton: jg, corps: { name: `Permise ${Date.now()}` } })).statut, 201);
 
-    // Renvoi : l'ancien mot de passe et la session tombent.
+    // Renvoi : l'ancien mot de passe et la session tombent. Un jeton emis
+    // dans la meme seconde que la fermeture reste valide (session.service.js) :
+    // on laisse passer la seconde, sinon l'essai echoue quand il va vite.
+    await new Promise((fin) => setTimeout(fin, 1100));
     const renvoi = await appel('POST', `/admin/backoffice/${gestion.corps.compte.id}/acces`, { jeton: jetonAdmin });
     assert.equal(renvoi.statut, 200);
     assert.equal((await appel('POST', '/admin/login', { corps: { adminLog: 'gestion@hope.test', password: gestion.corps.motDePasseProvisoire } })).statut, 401);
