@@ -4,6 +4,13 @@ import { Link } from 'react-router-dom';
 import akanySoavina from '../../assets/vitrine/akany-soavina.jpg';
 import initiationFormations from '../../assets/vitrine/initiation-formations.jpg';
 import mereEtEnfant from '../../assets/vitrine/mere-et-enfant.jpg';
+import logoAqoci from '../../assets/vitrine/partenaires/aqoci.png';
+import logoCoeurEtConscience from '../../assets/vitrine/partenaires/coeur-et-conscience.png';
+import logoDesjardins from '../../assets/vitrine/partenaires/desjardins.png';
+import logoDeveloppementEtPaix from '../../assets/vitrine/partenaires/developpement-et-paix.png';
+import logoHumaniteInclusion from '../../assets/vitrine/partenaires/humanite-inclusion.png';
+import logoSaveTheChildren from '../../assets/vitrine/partenaires/save-the-children.png';
+import logoUnicef from '../../assets/vitrine/partenaires/unicef.png';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
@@ -206,18 +213,19 @@ export function Actualites() {
 /* ============================ Nos partenaires ============================ */
 
 /*
- * Les logos des partenaires sont a fournir (fichiers de chaque
- * organisation) : en attendant, chaque partenaire est nomme dans une
- * tuile sobre. Pour un logo : `logo: import de l'image`.
+ * Les logos des partenaires, fournis par HOPE et recadres sur leur contenu.
+ * `hauteur` egalise leur surface a l'ecran : un logo presque carre (HI)
+ * est affiche plus haut qu'un logo tres large (UNICEF), et tous paraissent
+ * de meme importance. L'ordre est celui de la maquette : quatre, puis trois.
  */
 const PARTENAIRES = [
-  { nom: 'UNICEF', logo: null },
-  { nom: 'Humanité & Inclusion', logo: null },
-  { nom: 'AQOCI', logo: null },
-  { nom: 'Save the Children', logo: null },
-  { nom: 'Desjardins', logo: null },
-  { nom: 'Développement et Paix — Caritas Canada', logo: null },
-  { nom: 'Cœur et Conscience', logo: null },
+  { nom: 'UNICEF', logo: logoUnicef, hauteur: 43 },
+  { nom: 'Humanité & Inclusion', logo: logoHumaniteInclusion, hauteur: 74 },
+  { nom: 'AQOCI', logo: logoAqoci, hauteur: 47 },
+  { nom: 'Save the Children', logo: logoSaveTheChildren, hauteur: 43 },
+  { nom: 'Desjardins', logo: logoDesjardins, hauteur: 44 },
+  { nom: 'Développement et Paix — Caritas Canada', logo: logoDeveloppementEtPaix, hauteur: 50 },
+  { nom: 'Cœur et Conscience', logo: logoCoeurEtConscience, hauteur: 63 },
 ];
 
 export function Partenaires() {
@@ -230,7 +238,7 @@ export function Partenaires() {
       <ul className="v-partenaires__liste">
         {PARTENAIRES.map((p, rang) => (
           <li key={p.nom} className="v-partenaire v-entree" style={{ '--rang': rang }}>
-            {p.logo ? <img src={p.logo} alt={p.nom} loading="lazy" /> : <span className="v-partenaire__nom">{p.nom}</span>}
+            <img src={p.logo} alt={p.nom} loading="lazy" style={{ '--hauteur': `${p.hauteur}px` }} />
           </li>
         ))}
       </ul>

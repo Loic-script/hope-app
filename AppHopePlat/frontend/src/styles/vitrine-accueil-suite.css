@@ -367,13 +367,14 @@
   font-size: clamp(24px, 3vw, 32px);
 }
 
+/* Quatre logos, puis trois, centres : chaque case a la meme largeur. */
 .v-partenaires__liste {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 18px 22px;
-  max-width: 1100px;
-  margin: 40px auto 0;
+  gap: 44px 56px;
+  max-width: 980px;
+  margin: 48px auto 0;
   padding: 0;
   list-style: none;
 }
@@ -381,38 +382,23 @@
 .v-partenaire {
   display: grid;
   place-items: center;
-  min-width: 190px;
-  min-height: 76px;
-  padding: 12px 22px;
-  border: 1px solid #e6e8f1;
-  border-radius: 14px;
-  background: #fff;
+  width: 200px;
+  height: 84px;
 }
 
+/* La hauteur de chaque logo egalise leur surface (voir PARTENAIRES). */
 .v-partenaire img {
-  max-width: 170px;
-  max-height: 56px;
+  display: block;
+  width: auto;
+  height: var(--hauteur, 44px);
+  max-width: 100%;
   object-fit: contain;
-  filter: grayscale(0.2);
-  transition: filter 0.25s ease;
-}
-
-.v-partenaire__nom {
-  color: var(--hope-texte-doux);
-  font-size: 15px;
-  font-weight: 700;
-  text-align: center;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @media (hover: hover) {
-  .v-apparu .v-partenaire:hover {
-    transform: translateY(-4px);
-    border-color: #d4d1ea;
-    box-shadow: 0 14px 28px -18px rgba(53, 51, 67, 0.45);
-  }
-
   .v-partenaire:hover img {
-    filter: none;
+    transform: scale(1.08);
   }
 }
 
@@ -579,9 +565,17 @@
     right: -6px;
   }
 
+  .v-partenaires__liste {
+    gap: 28px 24px;
+  }
+
   .v-partenaire {
-    flex: 1 1 140px;
-    min-width: 0;
+    width: calc(50% - 12px);
+    height: 70px;
+  }
+
+  .v-partenaire img {
+    height: calc(var(--hauteur, 44px) * 0.85);
   }
 
   .v-contribuer {
