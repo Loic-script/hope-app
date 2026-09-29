@@ -16,20 +16,29 @@ import { useApparition } from '../../hooks/useApparition.js';
  */
 
 /**
- * Le medaillon des sections : les rayons du soleil, un anneau, et
- * l'icone au centre. Le meme dessin que sur l'accueil, sans l'encoche --
- * ici il est pose sur le fond, pas sur une carte.
+ * Le medaillon des sections : la couronne de traits, un anneau, et
+ * l'icone au centre. Il est pose sur le fond, sans l'encoche des cartes
+ * d'activite de l'accueil.
  */
 function Medaillon({ children, className = '' }) {
   return (
     <span className={`v-medaillon ${className}`.trim()} aria-hidden="true">
       <svg className="v-medaillon__soleil" viewBox="-50 -50 100 100">
+        {/* La couronne des fichiers de HOPE : douze traits tout autour,
+            un tous les 30 degres, poses juste au-dela de l'anneau. */}
         <g className="v-medaillon__rayons">
-          <rect x="-4.3" y="-46" width="8.6" height="20" rx="4.3" />
-          <rect x="-4.3" y="-46" width="8.6" height="20" rx="4.3" transform="rotate(-37)" />
-          <rect x="-4.3" y="-46" width="8.6" height="20" rx="4.3" transform="rotate(37)" />
-          <rect x="-4.3" y="-46" width="8.6" height="20" rx="4.3" transform="rotate(-72)" />
-          <rect x="-4.3" y="-46" width="8.6" height="20" rx="4.3" transform="rotate(72)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(30)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(60)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(90)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(120)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(150)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(180)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(210)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(240)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(270)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(300)" />
+          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(330)" />
         </g>
         <circle className="v-medaillon__anneau" r="25.4" />
         <g className="v-medaillon__icone">{children}</g>
