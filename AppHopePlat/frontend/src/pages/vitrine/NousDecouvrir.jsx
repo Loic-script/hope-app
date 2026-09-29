@@ -18,50 +18,56 @@ import { useApparition } from '../../hooks/useApparition.js';
  */
 
 /**
- * Le medaillon des sections : un anneau jaune, l'icone au centre, et le
- * soleil autour. Deux soleils, releves sur les maquettes :
- *   - `couronne` : huit traits repartis tous les 30 degres, le quart
- *     bas-droit reste vide -- c'est le cote de la carte (raison d'etre,
- *     vision) ;
- *   - `rayons` : trois rayons en haut, comme sur l'accueil (mission).
+ * Le medaillon des sections : un anneau jaune sur un disque blanc,
+ * l'icone au centre, et le soleil autour. Deux variantes, relevees sur
+ * les maquettes, l'anneau exterieur (R = 28,5) pris pour unite :
+ *   - `couronne` (raison d'etre, vision) : anneau de 0,155 R, huit traits
+ *     tous les 30 degres de 1,26 a 1,67 R, le quart bas-droit libre du
+ *     cote de la carte ;
+ *   - `rayons` (mission) : anneau de 0,126 R, trois rayons de 1,2 a 2 R
+ *     larges de 0,3 R, le boitier grandi vers le haut pour les contenir.
  *
- * L'icone est soit un dessin (children), soit un fichier fourni par HOPE
- * (`image` : { src, largeur, hauteur } en unites du medaillon, l'anneau
- * exterieur valant 28,5).
+ * Le disque blanc va jusqu'au depart des traits (1,26 R) : pose sur une
+ * carte, il en creuse le coin ; pose sur la ligne de la mission, il
+ * l'interrompt.
+ *
+ * L'icone est soit un dessin (children, reduit par `echelle`), soit un
+ * fichier fourni par HOPE (`image` : { src, largeur, hauteur }).
  */
-function Medaillon({ children, image = null, variante = 'couronne', className = '' }) {
+function Medaillon({ children, image = null, variante = 'couronne', echelle = 1, className = '' }) {
+  const rayons = variante === 'rayons';
   return (
-    <span className={`v-medaillon ${className}`.trim()} aria-hidden="true">
-      <svg className="v-medaillon__soleil" viewBox="-50 -50 100 100">
+    <span className={`v-medaillon v-medaillon--${variante} ${className}`.trim()} aria-hidden="true">
+      <svg className="v-medaillon__soleil" viewBox={rayons ? '-50 -60 100 110' : '-50 -50 100 100'}>
         <g className="v-medaillon__rayons">
-          {variante === 'couronne' ? (
-            <>
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(30)" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(60)" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(210)" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(240)" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(270)" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(300)" />
-              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(330)" />
-            </>
-          ) : (
-            <>
-              <rect x="-2.9" y="-48.3" width="5.8" height="12.4" rx="2.9" />
-              <rect x="-2.9" y="-48.3" width="5.8" height="12.4" rx="2.9" transform="rotate(-37)" />
-              <rect x="-2.9" y="-48.3" width="5.8" height="12.4" rx="2.9" transform="rotate(37)" />
-            </>
-          )}
+          <g className="v-medaillon__rayons-vif">
+            {rayons ? (
+              <>
+                <rect x="-4.15" y="-57" width="8.3" height="22.8" rx="4.15" />
+                <rect x="-4.3" y="-58.1" width="8.6" height="21.6" rx="4.3" transform="rotate(-48.7)" />
+                <rect x="-4.3" y="-58.1" width="8.6" height="21.6" rx="4.3" transform="rotate(48.7)" />
+              </>
+            ) : (
+              <>
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(30)" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(60)" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(210)" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(240)" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(270)" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(300)" />
+                <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(330)" />
+              </>
+            )}
+          </g>
         </g>
-        {/* Le disque blanc, jusqu'au depart des traits : pose sur une carte,
-            il en creuse le coin (l'encoche des maquettes). */}
-        <circle className="v-medaillon__halo" r="35.9" />
-        <circle className="v-medaillon__anneau" r="26.3" />
+        <circle className="v-medaillon__halo" r="36.5" />
+        <circle className="v-medaillon__anneau" r={rayons ? 26.7 : 26.3} strokeWidth={rayons ? 3.6 : 4.4} />
         <g className="v-medaillon__icone">
           {image ? (
             <image href={image.src} x={-image.largeur / 2} y={-image.hauteur / 2} width={image.largeur} height={image.hauteur} />
           ) : (
-            children
+            <g transform={echelle === 1 ? undefined : `scale(${echelle})`}>{children}</g>
           )}
         </g>
       </svg>
@@ -146,18 +152,21 @@ const MISSION = [
   {
     cle: 'education',
     icone: <IconeDiplome />,
+    echelle: 0.67,
     titre: 'L’éducation de qualité pour les enfants,',
     texte: 'pour les enfants, afin de poser les bases d’un développement solide.',
   },
   {
     cle: 'formation',
     icone: <IconeFormation />,
+    echelle: 0.55,
     titre: 'La formation professionnelle et l’acquisition de compétences',
     texte: 'pour les mères, adaptées aux réalités du marché du travail local.',
   },
   {
     cle: 'insertion',
     icone: <IconeMallette creux="v-medaillon__creux" />,
+    echelle: 0.9,
     titre: 'L’insertion professionnelle et l’emploi',
     texte: 'assorties d’un suivi rapproché pour mesurer et garantir les progrès de chacun.',
   },
@@ -175,12 +184,12 @@ function NotreMission() {
           Éclairer, former et accompagner les orphelins et mères célibataires de Madagascar vers une autonomie
           durable. Nous concrétisons cet engagement en garantissant un accès direct à :
         </p>
+        {/* La ligne violette court d'un bord a l'autre derriere les trois
+            medaillons, qui l'interrompent de leur disque blanc. */}
         <ul className="decouvrir-mission__liste">
           {MISSION.map((etape, rang) => (
             <li key={etape.cle} className={`decouvrir-etape decouvrir-etape--${etape.cle}`} style={{ '--rang': rang }}>
-              <span className="decouvrir-etape__barre decouvrir-etape__barre--gauche" aria-hidden="true" />
-              <span className="decouvrir-etape__barre decouvrir-etape__barre--droite" aria-hidden="true" />
-              <Medaillon className="decouvrir-etape__medaillon" variante="rayons">
+              <Medaillon className="decouvrir-etape__medaillon" variante="rayons" echelle={etape.echelle}>
                 {etape.icone}
               </Medaillon>
               <h3 className="decouvrir-etape__titre">{etape.titre}</h3>

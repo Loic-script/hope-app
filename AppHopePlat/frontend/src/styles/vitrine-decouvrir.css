@@ -32,10 +32,14 @@
   fill: #ffffff;
 }
 
+/* La variante aux trois rayons est plus haute : son boitier les contient. */
+.v-medaillon--rayons {
+  height: calc(var(--medaillon, 100px) * 1.1);
+}
+
 .v-medaillon__anneau {
   fill: #ffffff;
   stroke: var(--hope-jaune);
-  stroke-width: 4.4;
 }
 
 .v-medaillon__icone {
@@ -54,6 +58,12 @@
 .v-medaillon__rayons,
 .v-medaillon__icone {
   opacity: 0;
+}
+
+/* Le survol joue sur un groupe interieur : l'animation d'entree garde le
+   groupe exterieur, les deux ne se disputent pas la meme propriete. */
+.v-medaillon__rayons-vif {
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .v-apparu .v-medaillon__rayons {
@@ -302,61 +312,41 @@
   text-align: center;
 }
 
+/* Trois etapes reliees par une ligne violette continue, tracee derriere
+   la rangee : chaque medaillon l'interrompt de son disque blanc. Releve
+   sur la maquette (R l'anneau exterieur = 0,285 du medaillon) : la ligne
+   fait 0,33 R d'epaisseur et passe 0,27 R au-dessus du centre de
+   l'anneau, lui-meme a 0,6 du haut du boitier. */
 .decouvrir-mission__liste {
+  --medaillon: clamp(120px, 14vw, 190px);
+
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: 0;
   margin: clamp(40px, 5vw, 64px) 0 0;
   padding: 0;
   list-style: none;
 }
 
-/* Les trois etapes sont reliees par une ligne violette, interrompue par
-   les medaillons : chaque etape porte sa moitie de barre, a gauche et a
-   droite. */
-.decouvrir-etape {
-  --medaillon: clamp(86px, 8.5vw, 104px);
-  --medaillon-icone: var(--hope-violet);
-
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 8px;
-  text-align: center;
-}
-
-.decouvrir-etape--education {
-  --medaillon-icone: var(--hope-bleu);
-}
-
-.decouvrir-etape__barre {
+.decouvrir-mission__liste::before {
+  content: '';
   position: absolute;
-  top: calc(8px + var(--medaillon) / 2 - 5px);
-  width: calc(50% - var(--medaillon) / 2 - 2px);
-  height: 10px;
+  top: calc(var(--medaillon) * 0.476);
+  right: 0;
+  left: 0;
+  height: calc(var(--medaillon) * 0.094);
   border-radius: 999px;
   background: var(--hope-violet);
   transform: scaleX(0);
+  transform-origin: center;
 }
 
-.decouvrir-etape__barre--gauche {
-  left: 0;
-  transform-origin: right center;
+.v-apparu.decouvrir-mission .decouvrir-mission__liste::before {
+  animation: decouvrir-ligne 900ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
 }
 
-.decouvrir-etape__barre--droite {
-  right: 0;
-  transform-origin: left center;
-}
-
-/* Les barres se deploient depuis le medaillon vers les cotes. */
-.v-apparu .decouvrir-etape__barre {
-  animation: decouvrir-barre 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--rang, 0) * 140ms + 420ms);
-}
-
-@keyframes decouvrir-barre {
+@keyframes decouvrir-ligne {
   from {
     transform: scaleX(0);
   }
@@ -365,8 +355,35 @@
   }
 }
 
+.decouvrir-etape {
+  --medaillon-icone: var(--hope-violet);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+  text-align: center;
+}
+
+.decouvrir-etape--education {
+  --medaillon-icone: var(--hope-bleu);
+}
+
+.decouvrir-etape--formation {
+  --medaillon-icone: var(--hope-orange);
+}
+
+/* Au survol, les rayons s'ecartent un peu ; le medaillon, lui, ne bouge
+   pas : il masque la ligne, il doit rester en place. */
+@media (hover: hover) {
+  .decouvrir-etape:hover .v-medaillon__rayons-vif {
+    transform: scale(1.1);
+  }
+}
+
 .decouvrir-etape__titre {
-  margin: 18px 0 0;
+  margin: 12px 0 0;
   color: var(--hope-violet);
   font-family: var(--vitrine-titre);
   font-size: clamp(15px, 1.4vw, 17px);
@@ -381,17 +398,6 @@
   font-size: clamp(13px, 1.1vw, 14px);
   font-weight: 600;
   line-height: 1.5;
-}
-
-/* La carte entiere se souleve au survol. */
-@media (hover: hover) {
-  .decouvrir-etape {
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .decouvrir-etape:hover {
-    transform: translateY(-6px);
-  }
 }
 
 /* ---------------------------- Notre approche ---------------------------- */
@@ -489,18 +495,25 @@
 .decouvrir-tableau__cadre {
   max-width: 900px;
   margin: clamp(32px, 4vw, 48px) auto 0;
-  overflow: hidden;
-  border-radius: 6px;
 }
 
+/* Les cellules sont separees (6 px, comme la maquette) ; l'espacement
+   deborde aussi du tableau, on le reprend par une marge negative. */
 .decouvrir-tableau {
-  width: 100%;
+  width: calc(100% + 12px);
+  margin: -6px;
   border-collapse: separate;
-  border-spacing: 0 8px;
+  border-spacing: 6px;
+  table-layout: fixed;
+}
+
+.decouvrir-tableau th,
+.decouvrir-tableau td {
+  border-radius: 3px;
 }
 
 .decouvrir-tableau thead th {
-  padding: 16px 20px;
+  padding: 13px 20px;
   background: var(--hope-violet);
   color: #ffffff;
   font-family: var(--vitrine-titre);
@@ -510,7 +523,7 @@
 }
 
 .decouvrir-tableau thead th:first-child {
-  width: 38%;
+  width: 50%;
 }
 
 /* Chaque ligne entre a son tour. */
@@ -530,20 +543,21 @@
 
 .decouvrir-tableau tbody th,
 .decouvrir-tableau tbody td {
-  padding: 16px 20px;
+  padding: 12px 20px;
   background: #ffffff;
   color: var(--hope-violet);
-  font-size: clamp(13px, 1.15vw, 14.5px);
   vertical-align: middle;
 }
 
 .decouvrir-tableau tbody th {
   font-family: var(--vitrine-titre);
+  font-size: clamp(14px, 1.25vw, 15.5px);
   font-weight: 700;
   text-align: center;
 }
 
 .decouvrir-tableau tbody td {
+  font-size: clamp(12.5px, 1.05vw, 13.5px);
   font-weight: 600;
   line-height: 1.5;
   text-align: justify;
@@ -568,7 +582,7 @@
   }
 
   /* En colonne, la ligne qui relie les etapes n'a plus de sens. */
-  .decouvrir-etape__barre {
+  .decouvrir-mission__liste::before {
     display: none;
   }
 
@@ -633,6 +647,11 @@
     width: 100%;
   }
 
+  .decouvrir-tableau {
+    margin: 0;
+    border-spacing: 0;
+  }
+
   .decouvrir-tableau thead {
     position: absolute;
     width: 1px;
@@ -668,7 +687,7 @@
   .v-medaillon__icone,
   .v-apparu .v-medaillon__rayons,
   .v-apparu .v-medaillon__icone,
-  .v-apparu .decouvrir-etape__barre {
+  .v-apparu.decouvrir-mission .decouvrir-mission__liste::before {
     animation: none;
     opacity: 1;
   }
@@ -677,7 +696,7 @@
     transform: scaleY(-1);
   }
 
-  .decouvrir-etape__barre {
+  .decouvrir-mission__liste::before {
     transform: none;
   }
 
@@ -690,7 +709,7 @@
   }
 
   .decouvrir-approche__photo,
-  .decouvrir-etape {
+  .v-medaillon__rayons-vif {
     transform: none;
     transition: none;
   }
