@@ -153,12 +153,10 @@
   right: 0;
 }
 
-/* La page courante : le bleu de la charte. Le bleu clair du logo ne se
-   lit pas assez sur le blanc (WCAG AA) : il reste pour le trait, le texte
-   prend le bleu profond. */
+/* La page courante : le bleu de la charte, comme sur la maquette. */
 .vitrine-nav__lien--actif,
 .vitrine-nav__lien--actif:hover {
-  color: var(--hope-bleu-lisible);
+  color: var(--hope-bleu);
 }
 
 .vitrine-nav__lien--actif::after {
@@ -229,7 +227,7 @@
   padding: 0 11px;
   border: 0;
   border-radius: 10px;
-  background: #f1effa;
+  background: var(--hope-bleu-clair);
   cursor: pointer;
 }
 
@@ -315,12 +313,12 @@
   }
 
   .vitrine-mobile__lien:hover {
-    background: #f5f4fb;
+    background: var(--hope-fond-panneau);
   }
 
   .vitrine-mobile__lien--actif {
-    background: #eef5fb;
-    color: #2b6484;
+    background: var(--hope-bleu-clair);
+    color: var(--hope-violet);
   }
 }
 

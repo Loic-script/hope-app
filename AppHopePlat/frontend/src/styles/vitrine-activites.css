@@ -33,9 +33,8 @@
 .v-activite--scolarite {
   --v-fond: var(--hope-bleu);
   --v-titre: var(--hope-violet);
-  /* Le violet de la maquette, un ton plus profond pour le texte courant :
-     meme teinte a l'oeil, lisible sur le bleu (WCAG AA). */
-  --v-texte: #3f3a6e;
+  /* Le violet fonce de la charte pour le texte courant. */
+  --v-texte: var(--hope-violet-fonce);
   --v-horizon: var(--hope-violet);
   --v-anneau: var(--hope-jaune);
   --v-icone: var(--hope-bleu);

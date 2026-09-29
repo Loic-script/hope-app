@@ -13,14 +13,27 @@ test.use({ contextOptions: { reducedMotion: 'reduce' } });
 const REGLES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 /*
- * Des elements dont le contraste est connu et accepte : les couleurs de
- * la maquette du site vitrine, retenues a la demande de HOPE (28/09/2026)
- * -- blanc sur l'orange de la carte Soins (2,4:1), bleu clair sur le
- * jaune du titre Alimentation (1,6:1). Seule la regle de contraste leur
- * est epargnee : toutes les autres s'y appliquent.
+ * Des elements dont le contraste est connu et accepte : les couleurs pures
+ * de la palette HOPE sur le site vitrine, retenues a la demande de HOPE
+ * (28 et 29/09/2026) -- texte blanc sur les boutons orange et bleus, bleu
+ * clair des titres d'actualite et du lien actif, orange du bouton
+ * "Toutes nos...", carte Soins (blanc sur orange), titre Alimentation (bleu
+ * sur jaune), texte violet fonce de la carte Scolarite. Seule la regle de
+ * contraste leur est epargnee : toutes les autres s'y appliquent.
  */
 const CONTRASTE_ACCEPTE = {
-  '/': ['.v-activite--soins .v-activite__carte', '.v-activite--alimentation .v-activite__titre'],
+  '/': [
+    '.vitrine-nav__lien--actif',
+    '.vitrine-don',
+    '.accueil-bouton--orange',
+    '.accueil-bouton--bleu',
+    '.v-activite--scolarite .v-activite__texte',
+    '.v-activite--soins .v-activite__carte',
+    '.v-activite--alimentation .v-activite__titre',
+    '.v-bouton-contour',
+    '.v-actualite__titre',
+    '.v-actualite__lien',
+  ],
 };
 
 async function auditer(page, nom) {

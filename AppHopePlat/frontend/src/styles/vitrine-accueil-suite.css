@@ -40,7 +40,7 @@
   text-align: left;
 }
 
-/* "Toutes nos ..." : contour orange ; le texte prend l'orange lisible. */
+/* "Toutes nos ..." : contour et texte orange ; plein au survol, texte blanc. */
 .v-bouton-contour {
   display: inline-flex;
   align-items: center;
@@ -48,7 +48,7 @@
   padding: 0 18px;
   border: 2px solid var(--hope-orange);
   border-radius: 10px;
-  color: var(--hope-orange-lisible);
+  color: var(--hope-orange);
   font-size: 14.5px;
   font-weight: 700;
   text-decoration: none;
@@ -60,7 +60,7 @@
 
 .v-bouton-contour:hover {
   background: var(--hope-orange);
-  color: #1f1a33;
+  color: #ffffff;
   transform: translateY(-2px);
 }
 
@@ -77,7 +77,7 @@
   place-items: center;
   width: 100%;
   height: 100%;
-  background: #d3def0;
+  background: var(--hope-bleu-clair);
   color: var(--hope-violet);
 }
 
@@ -190,7 +190,7 @@
 
 .v-actualites {
   padding: clamp(56px, 7vw, 88px) 0;
-  background: #f0eff5;
+  background: var(--hope-fond-panneau);
 }
 
 .v-actualites__attente {
@@ -259,7 +259,7 @@
 
 .v-actualite__titre {
   margin: 0;
-  color: var(--hope-bleu-lisible);
+  color: var(--hope-bleu);
   font-family: var(--vitrine-titre);
   font-size: 18px;
   font-weight: 700;
@@ -293,7 +293,7 @@
   padding: 0 16px;
   border-radius: 9px;
   background: var(--hope-bleu);
-  color: #1f1a33;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
@@ -303,7 +303,7 @@
 }
 
 .v-actualite__lien:hover {
-  background: #9cc7e6;
+  background: var(--hope-violet);
   transform: translateY(-2px);
 }
 
@@ -318,7 +318,7 @@
   height: 36px;
   border: 0;
   border-radius: 9px;
-  background: var(--hope-bleu-lisible);
+  background: var(--hope-bleu);
   color: #fff;
   cursor: pointer;
   box-shadow: 0 8px 20px -10px rgba(53, 51, 67, 0.5);
@@ -410,7 +410,7 @@
   align-items: center;
   min-height: 560px;
   overflow: hidden;
-  background: #2a2240;
+  background: var(--hope-violet-fonce);
   isolation: isolate;
 }
 
@@ -434,7 +434,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(90deg, rgba(24, 18, 44, 0.88) 0%, rgba(24, 18, 44, 0.7) 45%, rgba(24, 18, 44, 0.15) 80%, rgba(24, 18, 44, 0) 100%);
+  background: linear-gradient(90deg, rgba(74, 68, 121, 0.88) 0%, rgba(74, 68, 121, 0.7) 45%, rgba(74, 68, 121, 0.15) 80%, rgba(74, 68, 121, 0) 100%);
 }
 
 .v-contribuer__contenu {
@@ -455,7 +455,7 @@
   font-weight: 700;
   line-height: 1.2;
   text-transform: uppercase;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 4px 24px rgba(53, 51, 67, 0.35);
 }
 
 .v-contribuer__titre strong {
@@ -510,7 +510,7 @@
   font-size: clamp(15.5px, 1.4vw, 17.5px);
   font-weight: 600;
   line-height: 1.6;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 12px rgba(53, 51, 67, 0.4);
 }
 
 .v-contribuer__texte em {
@@ -601,7 +601,7 @@
   }
 
   .v-contribuer__voile {
-    background: linear-gradient(180deg, rgba(24, 18, 44, 0.1) 0%, rgba(24, 18, 44, 0.75) 45%, rgba(24, 18, 44, 0.92) 100%);
+    background: linear-gradient(180deg, rgba(74, 68, 121, 0.1) 0%, rgba(74, 68, 121, 0.75) 45%, rgba(74, 68, 121, 0.92) 100%);
   }
 
   .v-contribuer__contenu {
