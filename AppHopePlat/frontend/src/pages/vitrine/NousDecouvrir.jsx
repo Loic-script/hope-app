@@ -7,6 +7,7 @@ import iconeCible from '../../assets/vitrine/icones/cible.png';
 import { IconeDiplome, IconeFormation, IconeMallette } from '../../components/vitrine/icones.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
+import EquipeHope from './EquipeHope.jsx';
 
 /**
  * "Nous decouvrir" : qui est HOPE, sa raison d'etre, sa vision, sa
@@ -289,6 +290,7 @@ export default function NousDecouvrir() {
       <NotreMission />
       <NotreApproche />
       <NotreDifference />
+      <EquipeHope />
     </>
   );
 }
