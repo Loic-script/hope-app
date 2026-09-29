@@ -28,10 +28,14 @@
   fill: var(--hope-orange);
 }
 
+.v-medaillon__halo {
+  fill: #ffffff;
+}
+
 .v-medaillon__anneau {
   fill: #ffffff;
   stroke: var(--hope-jaune);
-  stroke-width: 6.2;
+  stroke-width: 4.4;
 }
 
 .v-medaillon__icone {
@@ -192,19 +196,21 @@
 /* ---------------------- Raison d'etre et vision ---------------------- */
 
 .decouvrir-cartes {
+  --medaillon: clamp(84px, 9vw, 108px);
+
   display: grid;
   gap: clamp(56px, 7vw, 84px);
   max-width: 1000px;
   margin: 0 auto;
-  padding: clamp(72px, 9vw, 116px) 32px clamp(56px, 7vw, 88px);
+  /* A gauche, la place du medaillon qui depasse de la carte. */
+  padding: clamp(72px, 9vw, 116px) 32px clamp(56px, 7vw, 88px) calc(24px + var(--medaillon) * 0.62);
 }
 
-/* Le medaillon deborde en haut a gauche de la carte. */
+/* Le medaillon est centre sur le coin haut-gauche de la carte : sa moitie
+   haute depasse au-dessus, sa moitie gauche a cote. */
 .decouvrir-carte {
-  --medaillon: clamp(84px, 9vw, 108px);
-
   position: relative;
-  padding-top: calc(var(--medaillon) * 0.42);
+  padding-top: calc(var(--medaillon) / 2);
   opacity: 0;
   transform: translateY(36px);
   transition:
@@ -221,7 +227,8 @@
 .decouvrir-carte__medaillon {
   position: absolute;
   top: 0;
-  left: clamp(12px, 3vw, 44px);
+  /* Le centre 11 % du medaillon a gauche du coin, comme sur la maquette. */
+  left: calc(var(--medaillon) * -0.61);
   z-index: 1;
 }
 
@@ -597,6 +604,14 @@
   .decouvrir-hero__contenu,
   .decouvrir-cartes {
     padding-inline: 20px;
+  }
+
+  .decouvrir-cartes {
+    --medaillon: 84px;
+  }
+
+  .decouvrir-carte__medaillon {
+    left: -8px;
   }
 
   .decouvrir-hero__texte {

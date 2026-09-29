@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom';
 
 import enfantTentes from '../../assets/vitrine/enfant-tentes.jpg';
 import quiSommesNous from '../../assets/vitrine/qui-sommes-nous.jpg';
-import { IconeAmpoule, IconeCible, IconeDiplome, IconeFormation, IconeMallette } from '../../components/vitrine/icones.jsx';
+import iconeAmpoule from '../../assets/vitrine/icones/ampoule.png';
+import iconeCible from '../../assets/vitrine/icones/cible.png';
+import { IconeDiplome, IconeFormation, IconeMallette } from '../../components/vitrine/icones.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 
@@ -16,32 +18,52 @@ import { useApparition } from '../../hooks/useApparition.js';
  */
 
 /**
- * Le medaillon des sections : la couronne de traits, un anneau, et
- * l'icone au centre. Il est pose sur le fond, sans l'encoche des cartes
- * d'activite de l'accueil.
+ * Le medaillon des sections : un anneau jaune, l'icone au centre, et le
+ * soleil autour. Deux soleils, releves sur les maquettes :
+ *   - `couronne` : huit traits repartis tous les 30 degres, le quart
+ *     bas-droit reste vide -- c'est le cote de la carte (raison d'etre,
+ *     vision) ;
+ *   - `rayons` : trois rayons en haut, comme sur l'accueil (mission).
+ *
+ * L'icone est soit un dessin (children), soit un fichier fourni par HOPE
+ * (`image` : { src, largeur, hauteur } en unites du medaillon, l'anneau
+ * exterieur valant 28,5).
  */
-function Medaillon({ children, className = '' }) {
+function Medaillon({ children, image = null, variante = 'couronne', className = '' }) {
   return (
     <span className={`v-medaillon ${className}`.trim()} aria-hidden="true">
       <svg className="v-medaillon__soleil" viewBox="-50 -50 100 100">
-        {/* La couronne des fichiers de HOPE : douze traits tout autour,
-            un tous les 30 degres, poses juste au-dela de l'anneau. */}
         <g className="v-medaillon__rayons">
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(30)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(60)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(90)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(120)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(150)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(180)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(210)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(240)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(270)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(300)" />
-          <rect x="-2.0" y="-43.2" width="4.0" height="10.2" rx="2.0" transform="rotate(330)" />
+          {variante === 'couronne' ? (
+            <>
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(30)" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(60)" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(210)" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(240)" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(270)" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(300)" />
+              <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" transform="rotate(330)" />
+            </>
+          ) : (
+            <>
+              <rect x="-2.9" y="-48.3" width="5.8" height="12.4" rx="2.9" />
+              <rect x="-2.9" y="-48.3" width="5.8" height="12.4" rx="2.9" transform="rotate(-37)" />
+              <rect x="-2.9" y="-48.3" width="5.8" height="12.4" rx="2.9" transform="rotate(37)" />
+            </>
+          )}
         </g>
-        <circle className="v-medaillon__anneau" r="25.4" />
-        <g className="v-medaillon__icone">{children}</g>
+        {/* Le disque blanc, jusqu'au depart des traits : pose sur une carte,
+            il en creuse le coin (l'encoche des maquettes). */}
+        <circle className="v-medaillon__halo" r="35.9" />
+        <circle className="v-medaillon__anneau" r="26.3" />
+        <g className="v-medaillon__icone">
+          {image ? (
+            <image href={image.src} x={-image.largeur / 2} y={-image.hauteur / 2} width={image.largeur} height={image.hauteur} />
+          ) : (
+            children
+          )}
+        </g>
       </svg>
     </span>
   );
@@ -79,7 +101,7 @@ const CARTES = [
   {
     cle: 'raison',
     titre: 'Notre Raison d’Être',
-    icone: <IconeAmpoule />,
+    image: { src: iconeAmpoule, largeur: 21.7, hauteur: 31 },
     paragraphes: [
       'Parce que chaque histoire mérite une deuxième chance.',
       'Derrière chaque regard d’enfant et chaque combat de mère célibataire, il y a une force incroyable qui ne demande qu’à éclore. À Madagascar, la précarité isole, mais l’amour et l’accompagnement créent des miracles.',
@@ -90,7 +112,7 @@ const CARTES = [
   {
     cle: 'vision',
     titre: 'Notre Vision',
-    icone: <IconeCible />,
+    image: { src: iconeCible, largeur: 31, hauteur: 31 },
     paragraphes: [
       'Un monde où l’origine sociale ne détermine plus le destin d’un enfant ou d’une mère. Nous aspirons à une société où chaque personne accompagnée réécrit son histoire et accède à un avenir radieux, libre et autonome.',
     ],
@@ -103,7 +125,7 @@ function RaisonEtVision() {
     <section ref={ref} className={`decouvrir-cartes${vu ? ' v-apparu' : ''}`} aria-label="Notre raison d’être et notre vision">
       {CARTES.map((carte, rang) => (
         <article key={carte.cle} className={`decouvrir-carte decouvrir-carte--${carte.cle}`} style={{ '--rang': rang }}>
-          <Medaillon className="decouvrir-carte__medaillon">{carte.icone}</Medaillon>
+          <Medaillon className="decouvrir-carte__medaillon" image={carte.image} />
           <div className="decouvrir-carte__corps">
             <h2 className="decouvrir-carte__titre">{carte.titre}</h2>
             {carte.paragraphes.map((texte) => (
@@ -158,7 +180,9 @@ function NotreMission() {
             <li key={etape.cle} className={`decouvrir-etape decouvrir-etape--${etape.cle}`} style={{ '--rang': rang }}>
               <span className="decouvrir-etape__barre decouvrir-etape__barre--gauche" aria-hidden="true" />
               <span className="decouvrir-etape__barre decouvrir-etape__barre--droite" aria-hidden="true" />
-              <Medaillon className="decouvrir-etape__medaillon">{etape.icone}</Medaillon>
+              <Medaillon className="decouvrir-etape__medaillon" variante="rayons">
+                {etape.icone}
+              </Medaillon>
               <h3 className="decouvrir-etape__titre">{etape.titre}</h3>
               <p className="decouvrir-etape__texte">{etape.texte}</p>
             </li>

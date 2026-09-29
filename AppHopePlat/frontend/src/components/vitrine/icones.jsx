@@ -65,45 +65,6 @@ export function IconeCouvert({ creux = 'v-activite__creux' }) {
   );
 }
 
-/** L'ampoule allumee : l'idee qui fonde l'association. */
-export function IconeAmpoule({ creux = 'v-medaillon__creux' }) {
-  return (
-    <>
-      <path d="M0 -13.2C-5.6 -13.2-10.1 -8.9-10.1 -3.4-10.1 0.3-8.2 2.9-6.1 5.1-4.8 6.5-4.1 7.6-3.9 8.9H3.9C4.1 7.6 4.8 6.5 6.1 5.1 8.2 2.9 10.1 0.3 10.1 -3.4 10.1 -8.9 5.6 -13.2 0 -13.2Z" />
-      <rect x="-4.2" y="10.4" width="8.4" height="2.1" rx="1.05" />
-      <rect x="-3" y="13.6" width="6" height="2" rx="1" />
-      <path className={creux} d="M-0.9 6.6V-1.6L-4.4 -5.4 -3.1 -6.6 0 -3.2 3.1 -6.6 4.4 -5.4 0.9 -1.6V6.6Z" />
-    </>
-  );
-}
-
-/**
- * La cible et sa fleche : le cap que l'association se donne.
- *
- * Deux anneaux et un point au centre ; la fleche arrive du haut a droite
- * et se creuse un passage a travers eux -- son contour blanc, pose avant
- * elle, ouvre les anneaux la ou elle entre.
- */
-export function IconeCible() {
-  return (
-    <>
-      {/* Les anneaux : un disque perce, d'ou la regle evenodd. */}
-      <path
-        fillRule="evenodd"
-        d="M0 -12.4A12.4 12.4 0 1 1-0.01 -12.4ZM0 -9.2A9.2 9.2 0 1 0 0.01 -9.2Z"
-      />
-      <path
-        fillRule="evenodd"
-        d="M0 -7.4A7.4 7.4 0 1 1-0.01 -7.4ZM0 -4.4A4.4 4.4 0 1 0 0.01 -4.4Z"
-      />
-      <circle r="2" />
-      {/* Le passage de la fleche, puis la fleche. */}
-      <path className="v-medaillon__creux" strokeWidth="5.4" d="M10.32 -10.32 9.9 -2.55 8.34 -5.52 2.4 0.42 -0.42 -2.4 5.52 -8.34 2.55 -9.9Z" />
-      <path d="M10.32 -10.32 9.9 -2.55 8.34 -5.52 2.4 0.42 -0.42 -2.4 5.52 -8.34 2.55 -9.9Z" />
-    </>
-  );
-}
-
 /** La loupe sur une silhouette : reperer et former les personnes. */
 export function IconeFormation() {
   return (
