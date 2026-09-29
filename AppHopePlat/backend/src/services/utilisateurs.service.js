@@ -348,9 +348,15 @@ export async function supprimerCompte(id, admin = null) {
  * donateur qui supprime son propre compte (compte.service.js) : les dons
  * restent dans la comptabilite de l'association, la loi l'impose.
  *
+ * Avec `avecDons`, la fiche part pour de bon, ses dons compris : les
+ * sommes recues par les projets qu'elle a soutenus diminuent d'autant.
+ * C'est fait pour le menage (une fiche d'essai), jamais pour un vrai
+ * donateur -- l'ecran le dit avant.
+ *
  * @param {number|string} id
- * @param {{ forcer?: boolean }} [options] forcer : effacer l'identite
- *   plutot que refuser, quand des dons sont rattaches.
+ * @param {{ forcer?: boolean, avecDons?: boolean }} [options]
+ *   forcer : effacer l'identite plutot que refuser, quand des dons sont
+ *   rattaches ; avecDons : tout supprimer, dons compris.
  */
 export async function supprimerFiche(id, options = {}) {
   const ficheId = identifiantRequis(id, 'id');
@@ -364,6 +370,20 @@ export async function supprimerFiche(id, options = {}) {
   }
 
   const dons = `${nombre} don${nombre > 1 ? 's' : ''} enregistré${nombre > 1 ? 's' : ''}`;
+
+  // Tout supprimer : les dons d'abord, la fiche ensuite, d'un seul tenant.
+  if (options.avecDons) {
+    await transaction(async (client) => {
+      await depot.supprimerDonsDeFiche(ficheId, client);
+      await depot.supprimerFiche(ficheId, client);
+    });
+    return {
+      supprime: true,
+      dons: nombre,
+      message: `Fiche supprimée avec ses ${dons}. Les sommes reçues par les projets concernés ont diminué d’autant.`,
+    };
+  }
+
   if (!options.forcer) {
     throw new ErreurRegleMetier(
       `Ce donateur a ${dons} : il ne peut pas être supprimé sans effacer l’historique des ` +

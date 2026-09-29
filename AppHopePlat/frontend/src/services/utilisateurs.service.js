@@ -44,12 +44,16 @@ export async function supprimerCompte(id) {
  * DELETE /api/admin/utilisateurs/fiches/:id
  *
  * Refuse tant que des dons s'y rattachent : les supprimer retirerait des
- * sommes recues par les projets. Avec `forcer`, l'identite du donateur est
- * effacee et ses dons restent, sans son nom.
+ * sommes recues par les projets. Deux issues alors :
+ *   - `forcer`   : l'identite est effacee, les dons restent sans son nom ;
+ *   - `avecDons` : tout part, dons compris (les totaux des projets baissent).
  */
-export async function supprimerFiche(id, { forcer = false } = {}) {
+export async function supprimerFiche(id, { forcer = false, avecDons = false } = {}) {
+  const params = {};
+  if (forcer) params.forcer = 1;
+  if (avecDons) params.avecDons = 1;
   const { data } = await api.delete(`/admin/utilisateurs/fiches/${id}`, {
-    params: forcer ? { forcer: 1 } : undefined,
+    params: Object.keys(params).length > 0 ? params : undefined,
   });
   return data;
 }

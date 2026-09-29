@@ -229,8 +229,9 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
   }
 
   /**
-   * @param {{ forcer?: boolean }} [options] forcer : effacer l'identite
-   *   d'une fiche donateur qui porte des dons, au lieu de la supprimer.
+   * @param {{ forcer?: boolean, avecDons?: boolean }} [options] pour une
+   *   fiche donateur qui porte des dons : `forcer` efface son identite et
+   *   garde les dons, `avecDons` supprime tout.
    */
   async function confirmer(options = {}) {
     const { action, cible } = demande;
@@ -239,7 +240,10 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
     try {
       if (action === 'supprimer') {
         const reponse = await (cible.genre === 'fiche'
-          ? utilisateursService.supprimerFiche(cible.id, { forcer: Boolean(options.forcer) })
+          ? utilisateursService.supprimerFiche(cible.id, {
+              forcer: Boolean(options.forcer),
+              avecDons: Boolean(options.avecDons),
+            })
           : utilisateursService.supprimerCompte(cible.id));
         fermer();
         onSupprime?.(reponse?.message ?? null);
@@ -293,7 +297,7 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
           cible?.genre !== 'fiche'
             ? 'Le compte ne pourra plus se connecter et quittera la liste. Ce qu’il a fait — dons, tâches, engagements — reste dans l’historique des projets.'
             : donsRattaches
-              ? 'Ses dons ne peuvent pas être effacés : ils font partie des sommes reçues par les projets. Vous pouvez effacer son identité — nom, adresse, téléphone, ville — et garder ses dons, qui resteront sans son nom.'
+              ? 'Ses dons font partie des sommes reçues par les projets. Effacer son identité retire son nom, son adresse, son téléphone et sa ville, et garde ses dons. Tout supprimer efface aussi ses dons : les sommes reçues par les projets qu’il a soutenus diminueront d’autant, et c’est irréversible.'
               : 'La fiche de ce donateur sera effacée. C’est impossible s’il a des dons enregistrés : ils font partie de l’historique des projets.'
         }
         onFermer={fermer}
@@ -301,7 +305,12 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
         envoi={enCours}
         erreur={donsRattaches ? '' : erreurFenetre}
         libelleConfirmer={donsRattaches ? 'Effacer son identité' : 'Supprimer'}
-        danger
+        danger={!donsRattaches}
+        actionSecondaire={
+          donsRattaches
+            ? { libelle: 'Tout supprimer, dons compris', onAction: () => confirmer({ avecDons: true }) }
+            : null
+        }
       />
 
       <ModaleConfirmation

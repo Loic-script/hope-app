@@ -391,6 +391,19 @@ export async function anonymiserFiche(id, client = null) {
   return resultat.rowCount > 0;
 }
 
+/**
+ * Efface les dons d'une fiche : la seule facon de la supprimer ensuite,
+ * la cle etant en ON DELETE RESTRICT. Les notifications qui citent ces
+ * dons partent avec eux (ON DELETE CASCADE).
+ *
+ * Les sommes recues par les projets diminuent d'autant : a n'appeler que
+ * sur demande explicite (voir utilisateurs.service).
+ */
+export async function supprimerDonsDeFiche(id, client = null) {
+  const resultat = await query('DELETE FROM donations WHERE donor_id = $1', [id], client);
+  return resultat.rowCount;
+}
+
 export async function compterDonsDeFiche(id, client = null) {
   const resultat = await query('SELECT COUNT(*)::int AS n FROM donations WHERE donor_id = $1', [
     id,

@@ -300,9 +300,16 @@ export const utilisateurs = {
   profilFiche: gerer((req) => utilisateursService.profilFiche(req.params.id)),
   modifierCompte: gerer((req) => utilisateursService.modifierCompte(req.params.id, req.body)),
   supprimerCompte: gerer((req) => utilisateursService.supprimerCompte(req.params.id, req.admin)),
-  // ?forcer=1 : la fiche a des dons, on efface son identite au lieu de refuser.
+  /*
+   * La fiche a des dons :
+   *   ?forcer=1     efface son identite, garde les dons ;
+   *   ?avecDons=1   supprime tout, dons compris (les totaux des projets baissent).
+   */
   supprimerFiche: gerer((req) =>
-    utilisateursService.supprimerFiche(req.params.id, { forcer: req.query.forcer === '1' })
+    utilisateursService.supprimerFiche(req.params.id, {
+      forcer: req.query.forcer === '1',
+      avecDons: req.query.avecDons === '1',
+    })
   ),
 };
 

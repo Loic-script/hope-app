@@ -274,6 +274,9 @@ export function ModaleConfirmation({
   erreur,
   libelleConfirmer = 'Confirmer',
   danger = false,
+  // Une seconde issue, posee avant l'action principale : la plus lourde
+  // des deux (tout supprimer) n'est jamais celle qu'on touche d'abord.
+  actionSecondaire = null,
 }) {
   return (
     <Modale
@@ -286,6 +289,16 @@ export function ModaleConfirmation({
           <button type="button" className="btn btn--neutre" onClick={onFermer} disabled={envoi}>
             Annuler
           </button>
+          {actionSecondaire && (
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={actionSecondaire.onAction}
+              disabled={envoi}
+            >
+              {actionSecondaire.libelle}
+            </button>
+          )}
           <button
             type="button"
             className={`btn ${danger ? 'btn--danger' : 'btn--principal'}`}
