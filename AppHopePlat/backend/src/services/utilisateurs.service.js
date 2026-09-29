@@ -338,21 +338,45 @@ export async function supprimerCompte(id, admin = null) {
   return { supprime: true };
 }
 
-/** Supprime une fiche donateur, si aucun don ne s'y rattache. */
-export async function supprimerFiche(id) {
+/**
+ * Supprime une fiche donateur.
+ *
+ * Sans don rattache, la fiche part entierement. Avec des dons, la
+ * supprimer effacerait des sommes recues par les projets : la base le
+ * refuse d'ailleurs (donations.donor_id en ON DELETE RESTRICT). On efface
+ * alors l'identite de la personne et on garde la ligne, comme le fait le
+ * donateur qui supprime son propre compte (compte.service.js) : les dons
+ * restent dans la comptabilite de l'association, la loi l'impose.
+ *
+ * @param {number|string} id
+ * @param {{ forcer?: boolean }} [options] forcer : effacer l'identite
+ *   plutot que refuser, quand des dons sont rattaches.
+ */
+export async function supprimerFiche(id, options = {}) {
   const ficheId = identifiantRequis(id, 'id');
   const fiche = await depot.trouverFiche(ficheId);
   if (!fiche) throw new ErreurIntrouvable('Le donateur', ficheId);
 
   const nombre = await depot.compterDonsDeFiche(ficheId);
-  if (nombre > 0) {
+  if (nombre === 0) {
+    await depot.supprimerFiche(ficheId);
+    return { supprime: true, dons: 0 };
+  }
+
+  const dons = `${nombre} don${nombre > 1 ? 's' : ''} enregistré${nombre > 1 ? 's' : ''}`;
+  if (!options.forcer) {
     throw new ErreurRegleMetier(
-      `Ce donateur a ${nombre} don${nombre > 1 ? 's' : ''} enregistré${nombre > 1 ? 's' : ''} : ` +
-        'il ne peut pas être supprimé sans effacer l’historique des projets qu’il a soutenus.',
+      `Ce donateur a ${dons} : il ne peut pas être supprimé sans effacer l’historique des ` +
+        'projets qu’il a soutenus. Vous pouvez effacer son identité : ses dons resteront, sans son nom.',
       'DONATEUR_AVEC_DONS'
     );
   }
 
-  await depot.supprimerFiche(ficheId);
-  return { supprime: true };
+  await depot.anonymiserFiche(ficheId);
+  return {
+    supprime: true,
+    anonymise: true,
+    dons: nombre,
+    message: `L’identité de ce donateur est effacée. Ses ${dons} restent au compte des projets, sans son nom.`,
+  };
 }

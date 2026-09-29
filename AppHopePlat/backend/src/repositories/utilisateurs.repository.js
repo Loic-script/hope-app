@@ -367,6 +367,30 @@ export async function supprimerFiche(id, client = null) {
   return resultat.rowCount > 0;
 }
 
+/**
+ * Efface l'identite d'une fiche donateur sans la supprimer.
+ *
+ * La ligne reste : ses dons y sont rattaches (donations.donor_id, en
+ * ON DELETE RESTRICT) et comptent dans les totaux des projets. Le pays et
+ * l'origine restent aussi, car les statistiques les additionnent ; tout
+ * ce qui designe la personne part.
+ *
+ * La base exige un nom ou une raison sociale (donors_identite_presente) :
+ * la fiche prend celui que les ecrans affichent deja pour un don sans
+ * donateur nomme.
+ */
+export async function anonymiserFiche(id, client = null) {
+  const resultat = await query(
+    `UPDATE donors
+        SET first_name = 'Donateur', last_name = 'supprimé', organization_name = NULL,
+            email = NULL, phone = NULL, city = NULL, updated_at = NOW()
+      WHERE id = $1`,
+    [id],
+    client
+  );
+  return resultat.rowCount > 0;
+}
+
 export async function compterDonsDeFiche(id, client = null) {
   const resultat = await query('SELECT COUNT(*)::int AS n FROM donations WHERE donor_id = $1', [
     id,

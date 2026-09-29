@@ -189,10 +189,13 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
   const [erreurFenetre, setErreurFenetre] = useState('');
   const [enCours, setEnCours] = useState(false);
+  // Vrai quand le serveur a refuse : la fiche porte des dons.
+  const [donsRattaches, setDonsRattaches] = useState(false);
 
   const fermer = () => {
     setDemande({ action: null, cible: null, profil: null });
     setErreurFenetre('');
+    setDonsRattaches(false);
   };
 
   /**
@@ -225,17 +228,21 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
     setDemande({ action, cible, profil: cible.profil ?? null });
   }
 
-  async function confirmer() {
+  /**
+   * @param {{ forcer?: boolean }} [options] forcer : effacer l'identite
+   *   d'une fiche donateur qui porte des dons, au lieu de la supprimer.
+   */
+  async function confirmer(options = {}) {
     const { action, cible } = demande;
     setErreurFenetre('');
     setEnCours(true);
     try {
       if (action === 'supprimer') {
-        await (cible.genre === 'fiche'
-          ? utilisateursService.supprimerFiche(cible.id)
+        const reponse = await (cible.genre === 'fiche'
+          ? utilisateursService.supprimerFiche(cible.id, { forcer: Boolean(options.forcer) })
           : utilisateursService.supprimerCompte(cible.id));
         fermer();
-        onSupprime?.();
+        onSupprime?.(reponse?.message ?? null);
       } else if (action === 'desactiver') {
         const service = cible.onglet === 'bailleurs' ? funderService : volunteerService;
         await service.changerStatut(cible.id, 'suspendu');
@@ -243,6 +250,9 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
         onStatut?.();
       }
     } catch (echec) {
+      // Des dons rattaches : on propose d'effacer l'identite plutot que
+      // de renvoyer l'administrateur sans solution.
+      if (echec?.response?.data?.code === 'DONATEUR_AVEC_DONS') setDonsRattaches(true);
       setErreurFenetre(messageErreur(echec, 'L’action n’a pas abouti.'));
     } finally {
       setEnCours(false);
@@ -280,15 +290,17 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
         ouverte={action === 'supprimer'}
         titre={`Supprimer ${nom} ?`}
         message={
-          cible?.genre === 'fiche'
-            ? 'La fiche de ce donateur sera effacée. C’est impossible s’il a des dons enregistrés : ils font partie de l’historique des projets.'
-            : 'Le compte ne pourra plus se connecter et quittera la liste. Ce qu’il a fait — dons, tâches, engagements — reste dans l’historique des projets.'
+          cible?.genre !== 'fiche'
+            ? 'Le compte ne pourra plus se connecter et quittera la liste. Ce qu’il a fait — dons, tâches, engagements — reste dans l’historique des projets.'
+            : donsRattaches
+              ? 'Ses dons ne peuvent pas être effacés : ils font partie des sommes reçues par les projets. Vous pouvez effacer son identité — nom, adresse, téléphone, ville — et garder ses dons, qui resteront sans son nom.'
+              : 'La fiche de ce donateur sera effacée. C’est impossible s’il a des dons enregistrés : ils font partie de l’historique des projets.'
         }
         onFermer={fermer}
-        onConfirmer={confirmer}
+        onConfirmer={() => confirmer({ forcer: donsRattaches })}
         envoi={enCours}
-        erreur={erreurFenetre}
-        libelleConfirmer="Supprimer"
+        erreur={donsRattaches ? '' : erreurFenetre}
+        libelleConfirmer={donsRattaches ? 'Effacer son identité' : 'Supprimer'}
         danger
       />
 

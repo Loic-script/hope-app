@@ -114,9 +114,15 @@ export default function UtilisateursPage() {
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
   const libelles = catalogue?.labels ?? {};
 
+  // Effacer l'identite d'un donateur laisse sa fiche dans la liste : sans
+  // un mot, on croirait que rien ne s'est passe.
+  const [succes, setSucces] = useState('');
   const gestion = useGestionUtilisateur({
     onModifie: recharger,
-    onSupprime: recharger,
+    onSupprime: (message) => {
+      setSucces(message ?? '');
+      recharger();
+    },
     onStatut: recharger,
     libelles,
   });
@@ -273,6 +279,7 @@ export default function UtilisateursPage() {
 
       {erreur && <Alerte>{erreur}</Alerte>}
       {gestion.erreur && <Alerte>{gestion.erreur}</Alerte>}
+      {succes && <Alerte type="succes">{succes}</Alerte>}
       {!surBackOffice && <MotDePasseATransmettre resultat={cree} onFermer={() => setCree(null)} />}
 
       <Onglets

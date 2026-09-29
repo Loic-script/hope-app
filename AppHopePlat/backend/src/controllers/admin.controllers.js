@@ -300,7 +300,10 @@ export const utilisateurs = {
   profilFiche: gerer((req) => utilisateursService.profilFiche(req.params.id)),
   modifierCompte: gerer((req) => utilisateursService.modifierCompte(req.params.id, req.body)),
   supprimerCompte: gerer((req) => utilisateursService.supprimerCompte(req.params.id, req.admin)),
-  supprimerFiche: gerer((req) => utilisateursService.supprimerFiche(req.params.id)),
+  // ?forcer=1 : la fiche a des dons, on efface son identite au lieu de refuser.
+  supprimerFiche: gerer((req) =>
+    utilisateursService.supprimerFiche(req.params.id, { forcer: req.query.forcer === '1' })
+  ),
 };
 
 export const volunteers = {
