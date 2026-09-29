@@ -121,3 +121,17 @@ test('actualites : celles publiees par l administration, a la une, la recherche,
   await page.goto('/actualites/0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11');
   await expect(page.locator('.realisation__message')).toContainText('introuvable');
 });
+
+test('s engager : les trois voies, puis l appel au don et au partenariat', async ({ page }) => {
+  await page.goto('/s-engager');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('écrivons une plus belle histoire');
+  await expect(page.locator('.engager-carte')).toHaveCount(3);
+  await expect(page.locator('.engager-carte .v-medaillon')).toHaveCount(3);
+  await sansDebordement(page);
+
+  const appel = page.locator('.engager-appel');
+  await expect(appel.getByRole('link', { name: 'Faire un don' })).toHaveAttribute('href', '/authentification?type=donateur');
+  await appel.getByRole('link', { name: 'Devenir partenaire' }).click();
+  await expect(page).toHaveURL(/\/authentification\?type=bailleur$/);
+  await expect(page.locator('#typeConnexion')).toHaveValue('bailleur');
+});

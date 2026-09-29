@@ -87,3 +87,55 @@ export function IconeFormation({ creux = 'v-activite__creux' }) {
     </g>
   );
 }
+
+/*
+ * Les icones de la page "S'engager", relevees sur les fichiers fournis
+ * par HOPE et redessinees a leur taille en pixels, l'origine au centre
+ * de l'icone ; le medaillon les reduit par `echelle`.
+ */
+
+/** Trois personnes, celle de devant detachee des deux autres par un trait blanc. */
+export function IconeGroupe({ creux = 'v-activite__creux' }) {
+  return (
+    <g transform="translate(-18 -15)">
+      <circle cx="7" cy="8" r="6" />
+      <circle cx="29" cy="8" r="6" />
+      <path d="M0 26V22.5C0 18.9 3.1 16 7 16S14 18.9 14 22.5V26Z" />
+      <path d="M22 26V22.5C22 18.9 25.1 16 29 16S36 18.9 36 22.5V26Z" />
+      <circle cx="18" cy="8" r="8" />
+      <path className={creux} strokeWidth="2.4" d="M8 30V28A10 10 0 0 1 28 28V30Z" />
+      <path d="M8 30V28A10 10 0 0 1 28 28V30Z" />
+    </g>
+  );
+}
+
+/** Une tour et ses fenetres, un batiment bas a ses cotes. */
+export function IconeBatiment({ creux = 'v-activite__creux' }) {
+  return (
+    <g transform="translate(-17.5 -16)">
+      <path d="M14 7H31C33.2 7 35 8.8 35 11V27C35 29.2 33.2 31 31 31H14Z" />
+      <rect className={creux} x="17" y="10.5" width="14" height="17" rx="0.8" />
+      <rect x="17" y="14" width="4" height="3" />
+      <rect x="24" y="14" width="4" height="3" />
+      <rect x="17" y="21" width="4" height="3" />
+      <rect x="24" y="21" width="4" height="3" />
+      <path d="M0 3C0 1.3 1.3 0 3 0H14C15.7 0 17 1.3 17 3V31H2C0.9 31 0 30.1 0 29Z" />
+      {[3.5, 10.5, 17.5, 24.5].map((y) =>
+        [3.5, 10.5].map((x) => <rect key={`${x}-${y}`} className={creux} x={x} y={y} width="3" height="3" rx="0.8" />)
+      )}
+    </g>
+  );
+}
+
+/** Un reseau : un noeud relie a deux autres. */
+export function IconeReseau() {
+  return (
+    <g transform="translate(-18 -21)">
+      <circle cx="18" cy="7.5" r="7.5" />
+      <rect x="16" y="13" width="4" height="7" />
+      <path d="M9 18H27C28.7 18 30 19.3 30 21V28H27V21H9V28H6V21C6 19.3 7.3 18 9 18Z" />
+      <circle cx="7.5" cy="34.5" r="7.5" />
+      <circle cx="28.5" cy="34.5" r="7.5" />
+    </g>
+  );
+}

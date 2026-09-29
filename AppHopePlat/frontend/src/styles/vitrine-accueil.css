@@ -53,6 +53,16 @@
   background: var(--hope-violet);
 }
 
+.accueil-bouton--violet {
+  background: var(--hope-violet);
+  color: #ffffff;
+  box-shadow: 0 10px 24px -10px rgba(93, 86, 150, 0.9);
+}
+
+.accueil-bouton--violet:hover {
+  background: var(--hope-violet-fonce);
+}
+
 .accueil-bouton:hover {
   transform: translateY(-3px);
 }

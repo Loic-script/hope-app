@@ -45,6 +45,13 @@ const CONTRASTE_ACCEPTE = {
   '/nos-realisations/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
   '/actualites': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange', '.v-actualite__titre', '.v-actualite__lien'],
   '/actualites/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
+  '/s-engager': [
+    '.vitrine-nav__lien--actif',
+    '.vitrine-don',
+    '.accueil-bouton--orange',
+    '.engager-carte--entreprises',
+    '.engager-carte--donateurs',
+  ],
 };
 
 async function auditer(page, nom) {
@@ -63,7 +70,7 @@ async function auditer(page, nom) {
 }
 
 test('pages publiques', async ({ page }) => {
-  for (const chemin of ['/', '/nous-decouvrir', '/nos-realisations', '/actualites', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
+  for (const chemin of ['/', '/nous-decouvrir', '/nos-realisations', '/actualites', '/s-engager', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');
     await auditer(page, chemin);
