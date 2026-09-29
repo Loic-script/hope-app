@@ -77,6 +77,8 @@ const VitrineLayout = lazy(() => import('../layouts/VitrineLayout.jsx'));
 const EnPreparation = lazy(() => import('../pages/vitrine/EnPreparation.jsx'));
 const AccueilVitrine = lazy(() => import('../pages/vitrine/Accueil.jsx'));
 const NousDecouvrir = lazy(() => import('../pages/vitrine/NousDecouvrir.jsx'));
+const NosRealisations = lazy(() => import('../pages/vitrine/NosRealisations.jsx'));
+const Realisation = lazy(() => import('../pages/vitrine/Realisation.jsx'));
 const VerifierCourriel = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.VerifierCourriel })));
 const PolitiqueConfidentialite = lazy(() =>
   import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
@@ -176,7 +178,8 @@ export default function AppRoutes() {
       <Route element={<VitrineLayout />}>
         <Route path="/" element={<AccueilVitrine />} />
         <Route path="/nous-decouvrir" element={<NousDecouvrir />} />
-        <Route path="/nos-realisations" element={<EnPreparation titre="Nos réalisations" />} />
+        <Route path="/nos-realisations" element={<NosRealisations />} />
+        <Route path="/nos-realisations/:id" element={<Realisation />} />
         <Route path="/actualites" element={<EnPreparation titre="Actualités" />} />
         <Route path="/contact" element={<EnPreparation titre="Contact" />} />
         <Route path="/s-engager" element={<EnPreparation titre="S’engager" />} />

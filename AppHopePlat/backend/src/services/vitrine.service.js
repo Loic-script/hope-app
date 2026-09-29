@@ -1,18 +1,34 @@
 /**
  * Ce que le site vitrine public lit de la plateforme, sans compte.
  *
- * Seulement des actualites de HOPE : leur titre, un extrait, leur date et
- * leur photo. Jamais les appels a financement (montants, budgets), ni les
- * interets des bailleurs, ni l'auteur de la publication.
+ * Les actualites de HOPE (titre, extrait, date, photo) et ses projets
+ * (nom, extrait, lieu, categorie, etat, photo). Jamais les appels a
+ * financement, les budgets, les responsables, les donateurs ni les
+ * beneficiaires : ce qui touche a l'argent ou aux personnes reste dans
+ * les espaces.
  */
 import { query } from '../config/database.js';
-import { versListe } from '../shared/mapping.js';
+import { ErreurIntrouvable } from '../shared/errors.js';
+import { versListe, versObjet } from '../shared/mapping.js';
 
 const EXTRAIT = 220;
 
+/** Un extrait coupe a un mot entier, avec des points de suspension. */
+function extrait(texte) {
+  if (!texte || texte.length <= EXTRAIT) return texte;
+  return `${texte.slice(0, EXTRAIT).replace(/\s+\S*$/, '')}…`;
+}
+
+/** Une limite demandee par le site, bornee. */
+function borner(valeur, defaut, maximum) {
+  return Math.min(Math.max(Number.parseInt(valeur, 10) || defaut, 1), maximum);
+}
+
+/* -------------------------------- Actualites -------------------------------- */
+
 /** Les dernieres actualites, les plus recentes d'abord. */
 export async function actualites(requete = {}) {
-  const limite = Math.min(Math.max(Number.parseInt(requete.limite, 10) || 9, 1), 24);
+  const limite = borner(requete.limite, 9, 24);
   const { rows } = await query(
     `SELECT pu.id, pu.titre, LEFT(pu.corps, ${EXTRAIT + 1}) AS corps, pu.publie_le,
             COALESCE(pu.media_url, CASE WHEN p.media_type = 'PHOTO' THEN p.media_url END) AS photo_url,
@@ -24,12 +40,61 @@ export async function actualites(requete = {}) {
       LIMIT $1`,
     [limite]
   );
-  return {
-    items: versListe(rows).map((a) => ({
-      ...a,
-      // Un extrait coupe a un mot entier, avec des points de suspension.
-      corps:
-        a.corps && a.corps.length > EXTRAIT ? `${a.corps.slice(0, EXTRAIT).replace(/\s+\S*$/, '')}…` : a.corps,
-    })),
-  };
+  return { items: versListe(rows).map((a) => ({ ...a, corps: extrait(a.corps) })) };
+}
+
+/* ---------------------------------- Projets ---------------------------------- */
+
+/** Les projets que le site montre : ceux de la mission, non archives. */
+const PROJETS_VISIBLES = `p.project_type = 'HOPE' AND p.status <> 'ARCHIVED'`;
+
+/** Ce que le site en recoit -- et rien d'autre. */
+const COLONNES_PROJET = `
+  p.id, p.name, p.description_titre, p.location, p.status,
+  p.start_date, p.completed_at, p.updated_at,
+  CASE WHEN p.media_type = 'PHOTO' THEN p.media_url END AS photo_url,
+  c.name AS categorie`;
+
+const DE_PROJETS = `FROM projects p LEFT JOIN project_categories c ON c.id = p.category_id`;
+
+/**
+ * Les projets, les plus recents d'abord, avec un extrait de leur
+ * description. `recherche` filtre sur le nom, le lieu et la categorie.
+ */
+export async function projets(requete = {}) {
+  const valeurs = [borner(requete.limite, 24, 60)];
+  let filtre = '';
+  const recherche = String(requete.recherche ?? '').trim().slice(0, 80);
+  if (recherche) {
+    valeurs.push(`%${recherche}%`);
+    filtre = ` AND (p.name ILIKE $2 OR p.location ILIKE $2 OR c.name ILIKE $2)`;
+  }
+  const { rows } = await query(
+    `SELECT ${COLONNES_PROJET}, LEFT(p.description, ${EXTRAIT + 1}) AS description
+       ${DE_PROJETS}
+      WHERE ${PROJETS_VISIBLES}${filtre}
+      ORDER BY p.created_at DESC, p.id DESC
+      LIMIT $1`,
+    valeurs
+  );
+  return { items: versListe(rows).map((p) => ({ ...p, description: extrait(p.description) })) };
+}
+
+/** Un projet en entier : sa description et, s'il est termine, son resultat. */
+export async function projet(id) {
+  if (!/^\d{1,9}$/.test(String(id).trim())) throw new ErreurIntrouvable('Le projet', id);
+  const { rows } = await query(
+    `SELECT ${COLONNES_PROJET}, p.description, p.outcome
+       ${DE_PROJETS}
+      WHERE p.id = $1 AND ${PROJETS_VISIBLES}`,
+    [Number.parseInt(id, 10)]
+  );
+  if (!rows[0]) throw new ErreurIntrouvable('Le projet', id);
+  return versObjet(rows[0]);
+}
+
+/** Pour le plan du site : chaque projet visible et sa derniere mise a jour. */
+export async function projetsPourPlan() {
+  const { rows } = await query(`SELECT p.id, p.updated_at FROM projects p WHERE ${PROJETS_VISIBLES} ORDER BY p.id`);
+  return versListe(rows);
 }

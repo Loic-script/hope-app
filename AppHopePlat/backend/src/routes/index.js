@@ -57,6 +57,23 @@ router.get('/public/actualites', async (req, res, next) => {
   }
 });
 
+// Les projets de HOPE pour le site vitrine : nom, extrait, lieu,
+// categorie, etat, photo ; puis la fiche d'un projet (vitrine.service).
+router.get('/public/projets', async (req, res, next) => {
+  try {
+    res.json(await vitrineService.projets(req.query));
+  } catch (erreur) {
+    next(erreur);
+  }
+});
+router.get('/public/projets/:id', async (req, res, next) => {
+  try {
+    res.json(await vitrineService.projet(req.params.id));
+  } catch (erreur) {
+    next(erreur);
+  }
+});
+
 // Authentification des utilisateurs : un seul formulaire pour les trois
 // types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.
 router.use('/', authRoutes);

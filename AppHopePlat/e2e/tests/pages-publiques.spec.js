@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { sansDebordement } from './outils.js';
+import { projetPublicPret, sansDebordement } from './outils.js';
 
 test('le choix des espaces ; l authentification mene aux textes legaux', async ({ page }) => {
   await page.goto('/espaces');
@@ -52,4 +52,40 @@ test('l API refuse proprement : route inconnue, session absente, origine etrange
   const sante = await request.get('/api/sante');
   expect(await sante.json()).toEqual({ statut: 'ok' });
   expect(sante.headers()['x-frame-options']).toBe('DENY');
+});
+
+test('nos realisations : les projets de la plateforme, la recherche, la fiche', async ({ page, request }, testInfo) => {
+  // Un projet seme par l'administration : le site le montre aussitot.
+  const projet = await projetPublicPret(request, testInfo);
+  const { items } = await (await request.get('/api/public/projets?limite=60')).json();
+  expect(items.some((p) => p.id === projet.id)).toBe(true);
+
+  await page.goto('/nos-realisations');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('nos projets réalisés');
+  await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
+  await sansDebordement(page);
+
+  // La recherche ne garde que lui, sans accents ni majuscules ; rien ne
+  // correspond a du bruit, et tout revient d'un clic.
+  const champ = page.getByRole('searchbox', { name: 'Rechercher un projet' });
+  await champ.fill(projet.name.toUpperCase());
+  await expect(page.locator('.realisations-carte')).toHaveCount(1);
+  await expect(page.locator('.realisations-carte')).toContainText(projet.name);
+  await champ.fill('zzzz-introuvable');
+  await expect(page.locator('.realisations__message')).toContainText('Aucun projet ne correspond');
+  await page.getByRole('button', { name: 'Voir tous les projets' }).click();
+  await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
+
+  // Sa fiche : le nom, le sous-titre, les deux paragraphes, le lieu.
+  await champ.fill(projet.name);
+  await page.locator('.realisations-carte__lien').first().click();
+  await expect(page).toHaveURL(new RegExp(`/nos-realisations/${projet.id}$`));
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(projet.name);
+  await expect(page.locator('.realisation__sous-titre')).toHaveText('Des livres pour toute une commune');
+  await expect(page.locator('.realisation__texte p')).toHaveCount(2);
+  await expect(page.locator('.realisation__fiche')).toContainText('Moramanga');
+  await sansDebordement(page);
+
+  await page.goto('/nos-realisations/999999');
+  await expect(page.locator('.realisation__message')).toContainText('introuvable');
 });

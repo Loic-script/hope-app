@@ -224,7 +224,7 @@
 .jauge__manque {
   flex: none;
   font-weight: 600;
-  color: var(--hope-orange-fonce);
+  color: var(--hope-orange-lisible);
 }
 
 /* La ligne d'horizon. Le fond hachure est la part qui manque encore. */

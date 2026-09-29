@@ -471,3 +471,48 @@ describe('comptes crees par l equipe', () => {
     assert.equal(org.type_organisation, 'ong');
   });
 });
+
+describe('le site vitrine public', () => {
+  test('les projets : ce que le site montre, et rien de l argent ni des personnes', async () => {
+    const projet = await creerProjet('Bibliotheque de Moramanga', 500_000);
+    const { corps: catalogue } = await appel('GET', '/admin/catalog', { jeton: jetonAdmin });
+    const interne = await appel('POST', '/admin/projects', {
+      jeton: jetonAdmin,
+      corps: {
+        name: 'Outil interne de suivi',
+        categoryId: catalogue.categories[0].id,
+        location: 'Antananarivo',
+        startDate: '2026-01-01',
+        requiredBudget: '100000',
+        projectType: 'INTERNAL',
+      },
+    });
+    assert.equal(interne.statut, 201, JSON.stringify(interne.corps));
+
+    const liste = await appel('GET', '/public/projets');
+    assert.equal(liste.statut, 200);
+    const trouve = liste.corps.items.find((p) => p.id === projet);
+    assert.ok(trouve, 'le projet de la mission apparait');
+    assert.equal(trouve.name, 'Bibliotheque de Moramanga');
+    assert.equal(trouve.description, 'Projet cree par les tests d integration.');
+    assert.equal(trouve.location, 'Antsirabe');
+    for (const champ of ['requiredBudget', 'managerName', 'donorNames', 'fundedTotal', 'beneficiaryProfile', 'reference']) {
+      assert.equal(champ in trouve, false, `${champ} ne sort pas sur le site`);
+    }
+    assert.ok(!liste.corps.items.some((p) => p.id === idDe(interne.corps)), 'un projet interne ne sort pas');
+
+    const recherche = await appel('GET', '/public/projets?recherche=moramanga');
+    assert.ok(recherche.corps.items.some((p) => p.id === projet));
+    const ailleurs = await appel('GET', '/public/projets?recherche=nulle-part-zzz');
+    assert.equal(ailleurs.corps.items.length, 0);
+
+    const fiche = await appel('GET', `/public/projets/${projet}`);
+    assert.equal(fiche.statut, 200);
+    assert.equal(fiche.corps.name, 'Bibliotheque de Moramanga');
+    assert.equal('requiredBudget' in fiche.corps, false);
+
+    assert.equal((await appel('GET', '/public/projets/999999')).statut, 404);
+    assert.equal((await appel('GET', '/public/projets/abc')).statut, 404);
+    assert.equal((await appel('GET', `/public/projets/${idDe(interne.corps)}`)).statut, 404, 'la fiche d un projet interne non plus');
+  });
+});

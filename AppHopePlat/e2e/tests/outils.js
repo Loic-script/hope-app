@@ -95,3 +95,30 @@ export async function donateurPret(request, email, motDePasse, { complet = false
   }
   return token;
 }
+
+/**
+ * Un projet de la mission cree par l'API d'administration, tel que le
+ * site vitrine le montre (GET /api/public/projets). Rend { id, name }.
+ */
+export async function projetPublicPret(request, testInfo, { nom = 'Bibliothèque' } = {}) {
+  const connexion = await request.post('/api/admin/login', { data: ADMIN });
+  expect(connexion.status(), 'connexion administrateur').toBe(200);
+  const entetes = { Authorization: `Bearer ${(await connexion.json()).token}` };
+  const catalogue = await (await request.get('/api/admin/catalog', { headers: entetes })).json();
+  const name = `${nom} ${testInfo.project.name} ${Date.now().toString(36)}`;
+  const creation = await request.post('/api/admin/projects', {
+    headers: entetes,
+    data: {
+      name,
+      categoryId: catalogue.categories[0].id,
+      location: 'Moramanga',
+      startDate: '2026-02-01',
+      requiredBudget: '750000',
+      descriptionTitre: 'Des livres pour toute une commune',
+      description: 'Une bibliothèque ouverte aux enfants de Moramanga.\n\nDes lectures à voix haute chaque samedi, avec les mères du quartier.',
+    },
+  });
+  expect(creation.status(), `creation du projet : ${await creation.text()}`).toBe(201);
+  const corps = await creation.json();
+  return { id: corps.id ?? corps.project?.id, name };
+}

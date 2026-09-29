@@ -16,7 +16,8 @@ import apiRoutes from './routes/index.js';
 import { gestionnaireErreurs, routeIntrouvable } from './middleware/error.middleware.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from './middleware/upload.middleware.js';
 import { verifierOrigine } from './shared/session.js';
-import { robotsTxt, sitemapXml } from './shared/referencement.js';
+import { pagesDesProjets, robotsTxt, sitemapXml } from './shared/referencement.js';
+import { projetsPourPlan } from './services/vitrine.service.js';
 import { journalDesRequetes } from './services/surveillance.service.js';
 
 /** frontend/dist : le frontend construit par "npm run build". */
@@ -152,8 +153,11 @@ export function creerApplication() {
   app.get('/robots.txt', (_req, res) => {
     res.type('text/plain').send(robotsTxt(config.siteUrl));
   });
-  app.get('/sitemap.xml', (_req, res) => {
-    res.type('application/xml').send(sitemapXml(config.siteUrl));
+  // La fiche de chaque projet s'ajoute aux pages fixes ; si la base ne
+  // repond pas, le plan reste celui des pages fixes.
+  app.get('/sitemap.xml', async (_req, res) => {
+    const projets = await projetsPourPlan().catch(() => []);
+    res.type('application/xml').send(sitemapXml(config.siteUrl, pagesDesProjets(projets)));
   });
 
   const index = path.join(DOSSIER_FRONTEND, 'index.html');

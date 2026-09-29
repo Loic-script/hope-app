@@ -22,7 +22,7 @@ import { urlMedia } from '../../services/api.js';
  */
 
 /** Une image absente : le cadre reste habite par une icone. */
-function SansImage() {
+export function SansImage() {
   return (
     <span className="v-sans-image" aria-hidden="true">
       <svg viewBox="0 0 24 24">

@@ -5,7 +5,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-import { ADMIN, adresseUnique, connecter, donateurPret } from './outils.js';
+import { ADMIN, adresseUnique, connecter, donateurPret, projetPublicPret } from './outils.js';
 
 // Sans animation : axe mesure les couleurs au repos, pas pendant un fondu.
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
@@ -41,6 +41,8 @@ const CONTRASTE_ACCEPTE = {
     '.accueil-bouton--bleu',
     '.decouvrir-carte--vision .decouvrir-carte__texte',
   ],
+  '/nos-realisations': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
+  '/nos-realisations/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
 };
 
 async function auditer(page, nom) {
@@ -59,11 +61,19 @@ async function auditer(page, nom) {
 }
 
 test('pages publiques', async ({ page }) => {
-  for (const chemin of ['/', '/nous-decouvrir', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
+  for (const chemin of ['/', '/nous-decouvrir', '/nos-realisations', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');
     await auditer(page, chemin);
   }
+});
+
+test('la fiche d un projet', async ({ page, request }, testInfo) => {
+  const projet = await projetPublicPret(request, testInfo, { nom: 'Accessible' });
+  await page.goto(`/nos-realisations/${projet.id}`);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(projet.name);
+  await page.waitForLoadState('networkidle');
+  await auditer(page, '/nos-realisations/:id');
 });
 
 test('espace donateur', async ({ page, request }, testInfo) => {

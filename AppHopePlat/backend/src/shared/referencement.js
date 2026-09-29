@@ -41,12 +41,23 @@ export function robotsTxt(siteUrl) {
   ].join('\n');
 }
 
-/** sitemap.xml : les pages publiques, en adresses absolues. */
-export function sitemapXml(siteUrl) {
+/** La page de chaque projet du site, datee de sa derniere mise a jour. */
+export function pagesDesProjets(projets = []) {
+  return projets.map((projet) => ({
+    chemin: `/nos-realisations/${projet.id}`,
+    priorite: '0.6',
+    frequence: 'monthly',
+    modifie: projet.updatedAt ? String(projet.updatedAt).slice(0, 10) : undefined,
+  }));
+}
+
+/** sitemap.xml : les pages publiques, puis celles fournies (les projets), en adresses absolues. */
+export function sitemapXml(siteUrl, pagesEnPlus = []) {
   const racine = base(siteUrl);
-  const entrees = PAGES_PUBLIQUES.map(
+  const entrees = [...PAGES_PUBLIQUES, ...pagesEnPlus].map(
     (page) =>
       `  <url>\n    <loc>${racine}${page.chemin}</loc>\n` +
+      (page.modifie ? `    <lastmod>${page.modifie}</lastmod>\n` : '') +
       `    <changefreq>${page.frequence}</changefreq>\n    <priority>${page.priorite}</priority>\n  </url>`
   );
   return (

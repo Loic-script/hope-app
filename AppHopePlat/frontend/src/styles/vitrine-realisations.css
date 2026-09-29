@@ -1,0 +1,559 @@
+/* ============================================================
+   Site vitrine : "Nos realisations" et la fiche d'un projet
+   (pages/vitrine/NosRealisations.jsx, pages/vitrine/Realisation.jsx)
+   Le bandeau reprend celui de "Nous decouvrir" ; les cartes et le fond
+   de soleils sont ceux de l'accueil (.v-realisation, .v-realisations,
+   vitrine-accueil-suite.css). Les mouvements d'entree (hero-zoom,
+   hero-monte) viennent de vitrine-accueil.css.
+   ============================================================ */
+
+/* ------------------------------- Le bandeau ------------------------------- */
+
+.realisations-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(600px, calc(100vh - 72px));
+  overflow: hidden;
+  background: var(--hope-violet-fonce);
+  isolation: isolate;
+}
+
+.realisations-hero__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+  animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+/* Le voile violet, leger au centre pour laisser vivre la photo. */
+.realisations-hero__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--hope-violet-fonce) 30%, transparent) 0%,
+      color-mix(in srgb, var(--hope-violet-fonce) 58%, transparent) 75%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--hope-violet-fonce) 16%, transparent) 0%,
+      color-mix(in srgb, var(--hope-violet-fonce) 30%, transparent) 100%
+    );
+}
+
+.realisations-hero__contenu {
+  position: relative;
+  padding: 72px 32px 84px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.realisations-hero__titre {
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(26px, 4.4vw, 50px);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
+}
+
+.realisations-hero__ligne {
+  display: block;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.realisations-hero__ligne:nth-child(1) {
+  animation-delay: 200ms;
+}
+
+.realisations-hero__ligne:nth-child(2) {
+  animation-delay: 380ms;
+}
+
+/* Le soleil de la charte, cale a gauche sous le titre ; il se leve puis
+   flotte doucement. */
+.realisations-hero__soleil {
+  position: absolute;
+  top: calc(100% - 84px + 10px);
+  left: 32px;
+  width: clamp(40px, 4.4vw, 60px);
+  aspect-ratio: 34.85 / 23.81;
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+  animation:
+    realisations-soleil 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 900ms both,
+    realisations-flotte 5s ease-in-out 1.6s infinite;
+}
+
+@keyframes realisations-soleil {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes realisations-flotte {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -4px;
+  }
+}
+
+/* --------------------------- La liste des projets --------------------------- */
+
+.realisations {
+  padding-top: clamp(28px, 3.5vw, 44px);
+}
+
+.realisations__entete {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Le champ et son bouton orange, d'un seul tenant. */
+.realisations-recherche {
+  display: flex;
+  width: min(100%, 340px);
+  border-radius: 10px;
+  box-shadow: 0 10px 26px -18px color-mix(in srgb, var(--hope-violet-fonce) 60%, transparent);
+}
+
+.realisations-recherche__champ {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1.5px solid color-mix(in srgb, var(--hope-bleu) 45%, #ffffff);
+  border-right: 0;
+  border-radius: 10px 0 0 10px;
+  background: #ffffff;
+  color: var(--hope-violet-fonce);
+  font: inherit;
+  font-size: 15px;
+  transition: border-color 0.2s ease;
+}
+
+.realisations-recherche__champ::placeholder {
+  color: var(--hope-texte-doux);
+}
+
+.realisations-recherche__champ:focus {
+  border-color: var(--hope-bleu);
+}
+
+.realisations-recherche__bouton {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  border: 0;
+  border-radius: 0 10px 10px 0;
+  background: var(--hope-orange);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.realisations-recherche__bouton svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  transition: transform 0.25s ease;
+}
+
+.realisations-recherche__bouton:hover {
+  background: color-mix(in srgb, var(--hope-orange) 85%, var(--hope-violet-fonce));
+}
+
+.realisations-recherche__bouton:hover svg {
+  transform: scale(1.12) rotate(-8deg);
+}
+
+.realisations-recherche__champ:focus-visible,
+.realisations-recherche__bouton:focus-visible {
+  outline: 3px solid var(--hope-violet);
+  outline-offset: 2px;
+}
+
+.realisations__grille {
+  margin-top: clamp(32px, 4vw, 48px);
+}
+
+/* La carte : celle de l'accueil, le lien "Lire la suite" range a droite. */
+.realisations-carte__image {
+  position: relative;
+  display: block;
+}
+
+.realisations-carte .v-realisation__lien {
+  align-self: flex-end;
+}
+
+/* L'etat du projet, en pastille sur la photo. */
+.realisations-carte__etat {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  color: var(--hope-violet-fonce);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--hope-violet-fonce) 70%, transparent);
+}
+
+.realisations-carte__etat--realise {
+  background: var(--hope-jaune);
+}
+
+.realisations-carte__etat--en-cours {
+  background: var(--hope-bleu-clair);
+}
+
+/* En attendant la plateforme : des cartes vides qui respirent. */
+.realisations-squelette {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 0 24px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--hope-violet) 14%, #ffffff);
+  animation: realisations-pulse 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--rang, 0) * 120ms);
+}
+
+.realisations-squelette__image {
+  aspect-ratio: 16 / 11;
+  background: color-mix(in srgb, var(--hope-violet) 22%, #ffffff);
+}
+
+.realisations-squelette__ligne {
+  height: 14px;
+  margin: 0 24px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hope-violet) 22%, #ffffff);
+}
+
+.realisations-squelette__ligne--titre {
+  width: 70%;
+  height: 20px;
+  margin-top: 8px;
+}
+
+.realisations-squelette__ligne--courte {
+  width: 45%;
+}
+
+@keyframes realisations-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Rien a montrer, ou la plateforme ne repond pas. */
+.realisations__message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: clamp(32px, 4vw, 48px);
+  padding: 40px 24px;
+  border-radius: 18px;
+  background: color-mix(in srgb, #ffffff 80%, transparent);
+  color: var(--hope-violet-fonce);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.realisations__message p {
+  margin: 0;
+}
+
+.realisations__message .v-bouton-contour {
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.realisations__message .v-bouton-contour:hover {
+  background: var(--hope-orange);
+}
+
+/* ---------------------------- La fiche d'un projet ---------------------------- */
+
+.realisation-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: min(520px, 70vh);
+  overflow: hidden;
+  background: var(--hope-violet-fonce);
+  color: #ffffff;
+  isolation: isolate;
+}
+
+.realisation-hero--sans-photo {
+  min-height: 360px;
+  background: linear-gradient(135deg, var(--hope-violet-fonce), var(--hope-violet));
+}
+
+.realisation-hero__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+/* Le voile monte du bas : le texte s'y pose, la photo respire en haut. */
+.realisation-hero__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--hope-violet-fonce) 20%, transparent) 0%,
+    color-mix(in srgb, var(--hope-violet-fonce) 84%, transparent) 100%
+  );
+}
+
+.realisation-hero__contenu {
+  width: 100%;
+  padding-top: 48px;
+  padding-bottom: 44px;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+
+.realisation__retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.realisation__retour:hover {
+  text-decoration: underline;
+}
+
+.realisation-hero__sur-titre {
+  margin: 26px 0 0;
+  color: var(--hope-jaune);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.realisation-hero__titre {
+  max-width: 22ch;
+  margin: 10px 0 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(26px, 3.6vw, 44px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
+}
+
+.realisation-hero__etat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.realisation-hero__etat .realisations-carte__etat {
+  position: static;
+}
+
+.realisation__fond {
+  padding-top: clamp(40px, 5vw, 64px);
+}
+
+.realisation__corps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: clamp(32px, 5vw, 72px);
+}
+
+.realisation__texte {
+  color: var(--hope-violet-fonce);
+  font-size: clamp(15.5px, 1.35vw, 17.5px);
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.realisation__texte p {
+  margin: 0 0 1.1em;
+}
+
+.realisation__sous-titre {
+  margin: 0 0 14px;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-titre);
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 700;
+}
+
+.realisation__texte p + .realisation__sous-titre {
+  margin-top: 30px;
+}
+
+/* L'aparte : le projet en bref, et l'appel au don ; il suit la lecture. */
+.realisation__aparte {
+  position: sticky;
+  top: 92px;
+  align-self: start;
+  padding: 26px 26px 28px;
+  border: 1.5px solid color-mix(in srgb, var(--hope-bleu) 35%, #ffffff);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px -24px color-mix(in srgb, var(--hope-violet-fonce) 60%, transparent);
+}
+
+.realisation__fiche {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 16px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.realisation__fiche dt {
+  color: var(--hope-texte-doux);
+  font-weight: 600;
+}
+
+.realisation__fiche dd {
+  margin: 0;
+  color: var(--hope-violet-fonce);
+  font-weight: 700;
+}
+
+.realisation__appel {
+  margin: 22px 0 14px;
+  color: var(--hope-violet-fonce);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.realisation__don {
+  width: 100%;
+}
+
+.realisation__attente {
+  margin: 0;
+  padding: 120px 24px;
+  color: var(--hope-violet-fonce);
+  font-weight: 600;
+  text-align: center;
+}
+
+.realisation__message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(72px, 12vw, 140px) 24px;
+  color: var(--hope-violet-fonce);
+  text-align: center;
+}
+
+.realisation__message h1 {
+  margin: 0;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-titre);
+  font-size: clamp(26px, 3.5vw, 40px);
+}
+
+.realisation__message p {
+  max-width: 48ch;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* ------------------------------ Petits ecrans ------------------------------ */
+
+@media (max-width: 900px) {
+  .realisation__corps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .realisation__aparte {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .realisations-hero__contenu {
+    padding: 56px 20px 72px;
+  }
+
+  .realisations-hero__soleil {
+    top: calc(100% - 72px + 8px);
+    left: 20px;
+  }
+
+  .realisations-recherche {
+    width: 100%;
+  }
+
+  .realisation-hero__contenu {
+    padding-top: 32px;
+  }
+
+  .realisation__aparte {
+    padding: 22px 20px 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .realisations-hero__photo,
+  .realisations-hero__ligne,
+  .realisations-hero__soleil,
+  .realisation-hero__photo,
+  .realisation-hero__contenu,
+  .realisations-squelette {
+    animation: none;
+  }
+
+  .realisations-recherche__bouton,
+  .realisations-recherche__bouton svg {
+    transition: none;
+  }
+}
