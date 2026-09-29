@@ -64,14 +64,6 @@ export default function PiedVitrine() {
         </p>
 
         <p className="vitrine-pied__copyright">Copyright © Hope for better life, 2024.</p>
-
-        {/* L'auteur du site, en clair : les moteurs de recherche le lisent. */}
-        <p className="vitrine-pied__credit">
-          Site conçu et développé par{' '}
-          <a href="https://github.com/Loic-script" target="_blank" rel="author noopener noreferrer">
-            RAZAFIMAMONJY Faneva Loïc
-          </a>
-        </p>
       </div>
     </footer>
   );
