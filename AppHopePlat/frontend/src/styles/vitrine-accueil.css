@@ -157,48 +157,35 @@
   animation-delay: 360ms;
 }
 
-/* Le trait bleu sous le titre, avec son soleil au bout. */
+/*
+ * Le trait sous le titre : le motif de la charte (.trait-hope, theme.css),
+ * aux proportions de la page d'authentification -- barre bleue de 6 px,
+ * soleil officiel retourne (coupole en haut, rayons vers le bas), 20 px
+ * d'ecart. Ici la barre s'etire jusqu'au soleil, pose au bout a droite.
+ */
 .accueil-hero__trait {
+  --trait-couleur: var(--hope-bleu);
+  --trait-epaisseur: 6px;
+  --trait-soleil: clamp(42px, 4vw, 54px);
+  --trait-ecart: 20px;
+
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 10px;
   width: min(100%, 560px);
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
-.accueil-hero__trait > span {
+.accueil-hero__trait::before {
   flex: 1;
-  height: 5px;
-  margin-bottom: 14px;
-  border-radius: 5px;
-  background: var(--hope-bleu);
+  width: auto;
+  /* Calee sur la coupole, qui occupe le haut du soleil retourne. */
+  margin-top: calc(var(--trait-soleil) * 0.157 - var(--trait-epaisseur) / 2);
   transform-origin: right center;
   animation: hero-trait 900ms cubic-bezier(0.22, 1, 0.36, 1) 600ms both;
 }
 
-.accueil-hero__soleil {
-  flex: none;
-  width: 46px;
-  height: 36px;
-  animation: hero-apparait 600ms ease-out 1100ms both;
-}
-
-.accueil-hero__rayons rect {
-  fill: var(--hope-orange);
-}
-
-.accueil-hero__rayons {
-  transform-origin: 24px 26px;
-  animation: soleil-rayonne 3.6s ease-in-out 1.7s infinite;
-}
-
-.accueil-hero__dome {
-  fill: var(--hope-jaune);
-}
-
-.accueil-hero__socle {
-  fill: var(--hope-orange);
+.accueil-hero__trait::after {
+  transform: scaleY(-1);
+  animation: hero-soleil 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 1100ms both;
 }
 
 .accueil-hero__texte {
@@ -360,13 +347,13 @@
     text-align: left;
   }
 
+  /* A gauche sur telephone : le soleil ouvre, la barre suit. */
   .accueil-hero__trait {
     flex-direction: row-reverse;
-    justify-content: flex-start;
     width: 100%;
   }
 
-  .accueil-hero__trait > span {
+  .accueil-hero__trait::before {
     transform-origin: left center;
   }
 
@@ -424,20 +411,16 @@
   }
 }
 
-@keyframes hero-apparait {
+/* Le soleil se leve : il grandit en tournant un peu, sans perdre son
+   retournement. */
+@keyframes hero-soleil {
   from {
     opacity: 0;
-    transform: scale(0.5) rotate(-20deg);
+    transform: scaleY(-1) scale(0.5) rotate(20deg);
   }
   to {
     opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes soleil-rayonne {
-  50% {
-    transform: scale(1.14);
+    transform: scaleY(-1);
   }
 }
 
@@ -453,9 +436,8 @@
 @media (prefers-reduced-motion: reduce) {
   .accueil-hero__photo,
   .accueil-hero__ligne,
-  .accueil-hero__trait > span,
-  .accueil-hero__soleil,
-  .accueil-hero__rayons,
+  .accueil-hero__trait::before,
+  .accueil-hero__trait::after,
   .accueil-hero__texte,
   .accueil-hero__actions,
   .accueil-impacts__halo {

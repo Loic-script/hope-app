@@ -462,38 +462,51 @@
   font-weight: 800;
 }
 
+/* Le motif de la charte, comme sur la page d'authentification : le soleil
+   ouvre (coupole en haut), la barre bleue s'etire jusqu'au bout. */
+.v-contribuer__contenu {
+  --soleil-contribuer: clamp(42px, 4vw, 54px);
+}
+
 .v-contribuer__trait {
+  --trait-couleur: var(--hope-bleu);
+  --trait-epaisseur: 6px;
+  --trait-soleil: var(--soleil-contribuer);
+  --trait-ecart: 20px;
+
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
   width: min(100%, 640px);
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
-.v-contribuer__soleil {
-  flex: none;
-  width: 44px;
-  height: 34px;
-}
-
-.v-contribuer__trait > span {
+.v-contribuer .v-contribuer__trait::before {
   flex: 1;
-  height: 5px;
-  margin-bottom: 12px;
-  border-radius: 5px;
-  background: var(--hope-bleu);
+  width: auto;
   transform: scaleX(0);
   transform-origin: left center;
-  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1) 300ms;
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1) 350ms;
 }
 
-.v-apparu .v-contribuer__trait > span {
+.v-contribuer .v-contribuer__trait::after {
+  opacity: 0;
+  transform: scaleY(-1) scale(0.5) rotate(-20deg);
+  transition:
+    opacity 500ms ease,
+    transform 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.v-apparu .v-contribuer__trait::before {
   transform: scaleX(1);
+}
+
+.v-apparu .v-contribuer__trait::after {
+  opacity: 1;
+  transform: scaleY(-1);
 }
 
 .v-contribuer__texte {
   max-width: 600px;
-  margin: 18px 0 0 54px;
+  margin: 18px 0 0 calc(var(--soleil-contribuer) + 20px);
   font-size: clamp(15.5px, 1.4vw, 17.5px);
   font-weight: 600;
   line-height: 1.6;
@@ -510,7 +523,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin: 30px 0 0 54px;
+  margin: 30px 0 0 calc(var(--soleil-contribuer) + 20px);
 }
 
 .accueil-bouton--violet {
@@ -620,8 +633,14 @@
     transition: none;
   }
 
-  .v-contribuer__trait > span {
+  .v-contribuer .v-contribuer__trait::before {
     transform: scaleX(1);
+    transition: none;
+  }
+
+  .v-contribuer .v-contribuer__trait::after {
+    opacity: 1;
+    transform: scaleY(-1);
     transition: none;
   }
 

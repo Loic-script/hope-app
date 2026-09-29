@@ -261,19 +261,8 @@ export function Contribuer() {
             <strong>Aider une vie</strong> dès aujourd’hui ?
           </span>
         </h2>
-        <div className="v-contribuer__trait" aria-hidden="true">
-          <svg className="v-contribuer__soleil" viewBox="0 0 48 36">
-            <g className="accueil-hero__rayons">
-              <rect x="22" y="0" width="4" height="10" rx="2" />
-              <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(-40 24 26)" />
-              <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(40 24 26)" />
-              <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(-78 24 26)" />
-              <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(78 24 26)" />
-            </g>
-            <path className="accueil-hero__dome" d="M13 30a11 11 0 0 1 22 0z" />
-          </svg>
-          <span />
-        </div>
+        {/* Le soleil ouvre, la barre suit : le motif de la page d'authentification. */}
+        <div className="trait-hope trait-hope--renverse v-contribuer__trait" aria-hidden="true" />
         <p className="v-contribuer__texte v-entree" style={{ '--rang': 2 }}>
           L’espoir commence par une intention, mais il se réalise par l’action. Rejoignez{' '}
           <em>Hope for a Better Life</em> et devenez l’acteur d’un changement durable.

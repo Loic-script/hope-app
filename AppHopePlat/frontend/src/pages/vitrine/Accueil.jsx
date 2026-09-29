@@ -20,23 +20,6 @@ import { Actualites as ActualitesAccueil, Contribuer, Partenaires, Realisations 
 
 /* ============================ Le bandeau ============================ */
 
-/** Le petit soleil au bout du trait du titre : rayons et demi-disque. */
-function PetitSoleil() {
-  return (
-    <svg className="accueil-hero__soleil" viewBox="0 0 48 36" aria-hidden="true">
-      <g className="accueil-hero__rayons">
-        <rect x="22" y="0" width="4" height="10" rx="2" />
-        <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(-40 24 26)" />
-        <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(40 24 26)" />
-        <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(-78 24 26)" />
-        <rect x="22" y="0" width="4" height="10" rx="2" transform="rotate(78 24 26)" />
-      </g>
-      <path className="accueil-hero__dome" d="M13 30a11 11 0 0 1 22 0z" />
-      <rect className="accueil-hero__socle" x="17" y="32" width="14" height="3" rx="1.5" />
-    </svg>
-  );
-}
-
 function Hero() {
   return (
     <section className="accueil-hero" aria-labelledby="accueil-hero-titre">
@@ -47,10 +30,9 @@ function Hero() {
           <span className="accueil-hero__ligne accueil-hero__ligne--1">Unissons-nous</span>
           <span className="accueil-hero__ligne accueil-hero__ligne--2">pour un avenir meilleur</span>
         </h1>
-        <div className="accueil-hero__trait" aria-hidden="true">
-          <span />
-          <PetitSoleil />
-        </div>
+        {/* Le trait de la charte, comme sur la page d'authentification :
+            la barre bleue et le soleil officiel, coupole en haut. */}
+        <div className="trait-hope accueil-hero__trait" aria-hidden="true" />
         <p className="accueil-hero__texte">
           Nous ne faisons pas que faire naître l’espoir. Nous éclairons le chemin des orphelins et des mères
           célibataires à Madagascar jusqu’à leur pleine indépendance.
