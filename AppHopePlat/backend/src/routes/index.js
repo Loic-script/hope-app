@@ -56,6 +56,13 @@ router.get('/public/actualites', async (req, res, next) => {
     next(erreur);
   }
 });
+router.get('/public/actualites/:id', async (req, res, next) => {
+  try {
+    res.json(await vitrineService.actualite(req.params.id));
+  } catch (erreur) {
+    next(erreur);
+  }
+});
 
 // Les projets de HOPE pour le site vitrine : nom, extrait, lieu,
 // categorie, etat, photo ; puis la fiche d'un projet (vitrine.service).

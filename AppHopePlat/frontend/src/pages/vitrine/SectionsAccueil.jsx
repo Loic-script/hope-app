@@ -187,7 +187,7 @@ export function Actualites() {
                     <p className="v-actualite__date">
                       le <time dateTime={a.publieLe}>{FORMAT_DATE.format(new Date(a.publieLe))}</time>
                     </p>
-                    <Link to="/actualites" className="v-actualite__lien">
+                    <Link to={`/actualites/${a.id}`} className="v-actualite__lien">
                       Lire maintenant<span className="sr-only"> : {a.titre}</span>
                     </Link>
                   </div>

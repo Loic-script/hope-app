@@ -51,7 +51,17 @@ export function pagesDesProjets(projets = []) {
   }));
 }
 
-/** sitemap.xml : les pages publiques, puis celles fournies (les projets), en adresses absolues. */
+/** La page de chaque actualite du site, datee de sa publication. */
+export function pagesDesActualites(actualites = []) {
+  return actualites.map((actualite) => ({
+    chemin: `/actualites/${actualite.id}`,
+    priorite: '0.6',
+    frequence: 'monthly',
+    modifie: actualite.publieLe ? String(actualite.publieLe).slice(0, 10) : undefined,
+  }));
+}
+
+/** sitemap.xml : les pages publiques, puis celles fournies (projets, actualites), en adresses absolues. */
 export function sitemapXml(siteUrl, pagesEnPlus = []) {
   const racine = base(siteUrl);
   const entrees = [...PAGES_PUBLIQUES, ...pagesEnPlus].map(

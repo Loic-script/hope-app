@@ -1,0 +1,203 @@
+/* ============================================================
+   Site vitrine : "Actualites" et l'article
+   (pages/vitrine/Actualites.jsx, pages/vitrine/Actualite.jsx)
+   Le bandeau met la derniere actualite a la une sur la photo fournie ;
+   les cartes sont celles de l'accueil (.v-actualite,
+   vitrine-accueil-suite.css) ; la recherche, les fantomes, les messages
+   et la fiche partagent les styles de vitrine-realisations.css.
+   ============================================================ */
+
+/* ------------------------------- Le bandeau ------------------------------- */
+
+.actualites-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(640px, calc(100vh - 72px));
+  overflow: hidden;
+  background: var(--hope-violet-fonce);
+  color: #ffffff;
+  isolation: isolate;
+}
+
+.actualites-hero__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% 40%;
+  animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+/* Le voile violet, un peu plus present a gauche, sous le texte. */
+.actualites-hero__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--hope-violet-fonce) 58%, transparent) 0%,
+      color-mix(in srgb, var(--hope-violet-fonce) 34%, transparent) 60%,
+      color-mix(in srgb, var(--hope-violet-fonce) 22%, transparent) 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--hope-violet-fonce) 10%, transparent) 0%,
+      color-mix(in srgb, var(--hope-violet-fonce) 30%, transparent) 100%
+    );
+}
+
+.actualites-hero__contenu {
+  width: 100%;
+  padding-top: 64px;
+  padding-bottom: 72px;
+}
+
+.actualites-hero__sur-titre {
+  margin: 0 0 12px;
+  color: var(--hope-jaune);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+
+.actualites-hero__titre {
+  max-width: 24ch;
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(24px, 3.6vw, 44px);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 250ms both;
+}
+
+/* Le soleil de la charte, en tete de l'extrait. */
+.actualites-hero__ligne {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  max-width: 640px;
+  margin-top: 18px;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 450ms both;
+}
+
+.actualites-hero__soleil {
+  flex: none;
+  width: 38px;
+  margin-top: 4px;
+  aspect-ratio: 34.85 / 23.81;
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+  animation: realisations-soleil 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 900ms both;
+}
+
+.actualites-hero__texte {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: clamp(15px, 1.35vw, 17.5px);
+  font-weight: 600;
+  line-height: 1.6;
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-violet-fonce) 80%, transparent);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.actualites-hero__bouton {
+  margin: 28px 0 0 54px;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 650ms both;
+}
+
+/* En attendant la plateforme : trois lignes qui respirent. */
+.actualites-hero__attente {
+  display: grid;
+  gap: 14px;
+  max-width: 560px;
+}
+
+.actualites-hero__attente span {
+  height: 22px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #ffffff 30%, transparent);
+  animation: v-squelette-pulse 1.4s ease-in-out infinite;
+}
+
+.actualites-hero__attente span:nth-child(1) {
+  width: 70%;
+  height: 34px;
+}
+
+.actualites-hero__attente span:nth-child(2) {
+  width: 90%;
+}
+
+.actualites-hero__attente span:nth-child(3) {
+  width: 50%;
+}
+
+/* ------------------------------- Les cartes ------------------------------- */
+
+.actualites__grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin: clamp(32px, 4vw, 48px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.actualites-carte__image {
+  display: block;
+}
+
+.actualites-carte .v-actualite__titre {
+  font-size: 20px;
+}
+
+@media (hover: hover) {
+  .v-apparu .actualites-carte:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 26px 44px -26px color-mix(in srgb, var(--hope-violet-fonce) 65%, transparent);
+  }
+}
+
+/* ------------------------------ Petits ecrans ------------------------------ */
+
+@media (max-width: 700px) {
+  .actualites__grille {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 480px;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .actualites-hero__contenu {
+    padding-top: 48px;
+    padding-bottom: 56px;
+  }
+
+  .actualites-hero__bouton {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actualites-hero__photo,
+  .actualites-hero__sur-titre,
+  .actualites-hero__titre,
+  .actualites-hero__ligne,
+  .actualites-hero__soleil,
+  .actualites-hero__bouton,
+  .actualites-hero__attente span {
+    animation: none;
+  }
+}

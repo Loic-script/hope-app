@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { projetPublicPret, sansDebordement } from './outils.js';
+import { actualitePubliquePrete, projetPublicPret, sansDebordement } from './outils.js';
 
 test('le choix des espaces ; l authentification mene aux textes legaux', async ({ page }) => {
   await page.goto('/espaces');
@@ -72,7 +72,7 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   await expect(page.locator('.realisations-carte')).toHaveCount(1);
   await expect(page.locator('.realisations-carte')).toContainText(projet.name);
   await champ.fill('zzzz-introuvable');
-  await expect(page.locator('.realisations__message')).toContainText('Aucun projet ne correspond');
+  await expect(page.locator('.v-liste__message')).toContainText('Aucun projet ne correspond');
   await page.getByRole('button', { name: 'Voir tous les projets' }).click();
   await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
 
@@ -87,5 +87,37 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   await sansDebordement(page);
 
   await page.goto('/nos-realisations/999999');
+  await expect(page.locator('.realisation__message')).toContainText('introuvable');
+});
+
+test('actualites : celles publiees par l administration, a la une, la recherche, l article', async ({ page, request }, testInfo) => {
+  const actualite = await actualitePubliquePrete(request, testInfo);
+  const { items } = await (await request.get('/api/public/actualites?limite=60')).json();
+  expect(items.some((a) => a.id === actualite.id)).toBe(true);
+
+  // Le bandeau met la plus recente a la une ; toutes sont en cartes.
+  await page.goto('/actualites');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(items[0].titre);
+  await expect(page.locator('.actualites-carte')).toHaveCount(items.length);
+  await sansDebordement(page);
+
+  const champ = page.getByRole('searchbox', { name: 'Rechercher une actualité' });
+  await champ.fill(actualite.titre.toUpperCase());
+  await expect(page.locator('.actualites-carte')).toHaveCount(1);
+  await champ.fill('zzzz-introuvable');
+  await expect(page.locator('.v-liste__message')).toContainText('Aucune actualité ne correspond');
+  await page.getByRole('button', { name: 'Voir toutes les actualités' }).click();
+  await expect(page.locator('.actualites-carte')).toHaveCount(items.length);
+
+  // L'article : le titre, les deux paragraphes, la date.
+  await champ.fill(actualite.titre);
+  await page.locator('.actualites-carte .v-actualite__lien').first().click();
+  await expect(page).toHaveURL(new RegExp(`/actualites/${actualite.id}$`));
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(actualite.titre);
+  await expect(page.locator('.realisation__texte p')).toHaveCount(2);
+  await expect(page.locator('.realisation__fiche')).toContainText('Publié');
+  await sansDebordement(page);
+
+  await page.goto('/actualites/0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11');
   await expect(page.locator('.realisation__message')).toContainText('introuvable');
 });

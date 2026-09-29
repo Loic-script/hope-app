@@ -122,3 +122,25 @@ export async function projetPublicPret(request, testInfo, { nom = 'Bibliothèque
   const corps = await creation.json();
   return { id: corps.id ?? corps.project?.id, name };
 }
+
+/**
+ * Une actualite publiee par l'API d'administration, telle que le site
+ * vitrine la montre (GET /api/public/actualites). Rend { id, titre }.
+ */
+export async function actualitePubliquePrete(request, testInfo, { titre = 'Rentrée des classes' } = {}) {
+  const connexion = await request.post('/api/admin/login', { data: ADMIN });
+  expect(connexion.status(), 'connexion administrateur').toBe(200);
+  const entetes = { Authorization: `Bearer ${(await connexion.json()).token}` };
+  const titreUnique = `${titre} ${testInfo.project.name} ${Date.now().toString(36)}`;
+  const creation = await request.post('/api/admin/publications', {
+    headers: entetes,
+    data: {
+      type: 'actualite',
+      titre: titreUnique,
+      corps: 'Cette année encore, HOPE accompagne la rentrée des enfants.\n\nFournitures, uniformes et frais de scolarité sont pris en charge.',
+    },
+  });
+  expect(creation.status(), `publication : ${await creation.text()}`).toBe(201);
+  const corps = await creation.json();
+  return { id: corps.id ?? corps.item?.id, titre: titreUnique };
+}

@@ -1,8 +1,11 @@
-import { useCallback, useDeferredValue, useEffect, useId, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import couverture from '../../assets/vitrine/realisations-couverture.jpg';
+import Recherche from '../../components/vitrine/Recherche.jsx';
+import { filtrerParMots } from '../../components/vitrine/recherche.js';
 import { useApparition } from '../../hooks/useApparition.js';
+import { urlMedia } from '../../services/api.js';
 import { SansImage } from './SectionsAccueil.jsx';
 
 /**
@@ -18,24 +21,6 @@ const ETATS = {
   COMPLETED: { classe: 'realise', libelle: 'Réalisé' },
   IN_PROGRESS: { classe: 'en-cours', libelle: 'En cours' },
 };
-
-/** Sans accents ni majuscules, pour que "ecole" trouve "École". */
-function simplifier(texte) {
-  return String(texte ?? '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
-}
-
-/** Les projets dont le nom, le texte, le lieu ou la categorie contient la recherche. */
-function filtrer(projets, recherche) {
-  const mots = simplifier(recherche).split(/\s+/).filter(Boolean);
-  if (mots.length === 0) return projets;
-  return projets.filter((p) => {
-    const corps = simplifier([p.name, p.descriptionTitre, p.description, p.location, p.categorie].join(' '));
-    return mots.every((mot) => corps.includes(mot));
-  });
-}
 
 /* ------------------------------- Le bandeau ------------------------------- */
 
@@ -56,34 +41,6 @@ function Couverture() {
   );
 }
 
-/* ------------------------------ La recherche ------------------------------ */
-
-function Recherche({ valeur, onChange }) {
-  const id = useId();
-  return (
-    <form className="realisations-recherche" role="search" onSubmit={(e) => e.preventDefault()}>
-      <label htmlFor={id} className="sr-only">
-        Rechercher un projet
-      </label>
-      <input
-        id={id}
-        className="realisations-recherche__champ"
-        type="search"
-        placeholder="Rechercher..."
-        autoComplete="off"
-        value={valeur}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <button type="submit" className="realisations-recherche__bouton" aria-label="Rechercher">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="10.5" cy="10.5" r="6.5" />
-          <path d="m15.5 15.5 5 5" />
-        </svg>
-      </button>
-    </form>
-  );
-}
-
 /* -------------------------------- Les cartes -------------------------------- */
 
 function Carte({ projet, rang }) {
@@ -95,7 +52,7 @@ function Carte({ projet, rang }) {
     <li className="v-realisation realisations-carte v-entree" style={{ '--rang': Math.min(rang, 5) }}>
       {/* La photo mene aussi a la fiche, sans doubler le lien pour le clavier. */}
       <Link to={lien} className="v-realisation__image realisations-carte__image" tabIndex={-1} aria-hidden="true">
-        {projet.photoUrl ? <img src={projet.photoUrl} alt="" loading="lazy" /> : <SansImage />}
+        {projet.photoUrl ? <img src={urlMedia(projet.photoUrl)} alt="" loading="lazy" /> : <SansImage />}
         {etat && <span className={`realisations-carte__etat realisations-carte__etat--${etat.classe}`}>{etat.libelle}</span>}
       </Link>
       <div className="v-realisation__corps">
@@ -114,11 +71,11 @@ function Squelettes() {
   return (
     <ul className="v-realisations__grille realisations__grille" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
-        <li key={i} className="realisations-squelette" style={{ '--rang': i }}>
-          <span className="realisations-squelette__image" />
-          <span className="realisations-squelette__ligne realisations-squelette__ligne--titre" />
-          <span className="realisations-squelette__ligne" />
-          <span className="realisations-squelette__ligne realisations-squelette__ligne--courte" />
+        <li key={i} className="v-squelette" style={{ '--rang': i }}>
+          <span className="v-squelette__image" />
+          <span className="v-squelette__ligne v-squelette__ligne--titre" />
+          <span className="v-squelette__ligne" />
+          <span className="v-squelette__ligne v-squelette__ligne--courte" />
         </li>
       ))}
     </ul>
@@ -153,7 +110,9 @@ export default function NosRealisations() {
 
   useEffect(charger, [charger]);
 
-  const visibles = projets ? filtrer(projets, rechercheDifferee) : [];
+  const visibles = projets
+    ? filtrerParMots(projets, rechercheDifferee, ['name', 'descriptionTitre', 'description', 'location', 'categorie'])
+    : [];
   const enRecherche = rechercheDifferee.trim() !== '';
 
   return (
@@ -165,11 +124,11 @@ export default function NosRealisations() {
         aria-labelledby="realisations-titre"
       >
         <div className="v-conteneur">
-          <div className="realisations__entete">
+          <div className="v-liste__entete">
             <h2 className="sr-only" id="realisations-titre">
               Nos projets
             </h2>
-            <Recherche valeur={recherche} onChange={setRecherche} />
+            <Recherche valeur={recherche} onChange={setRecherche} libelle="Rechercher un projet" />
           </div>
 
           {/* Le nombre de resultats, dit aux lecteurs d'ecran a chaque recherche. */}
@@ -182,7 +141,7 @@ export default function NosRealisations() {
           </p>
 
           {erreur ? (
-            <div className="realisations__message" role="alert">
+            <div className="v-liste__message" role="alert">
               <p>Les projets ne se chargent pas pour le moment.</p>
               <button type="button" className="v-bouton-contour" onClick={charger}>
                 Réessayer
@@ -191,7 +150,7 @@ export default function NosRealisations() {
           ) : projets === null ? (
             <Squelettes />
           ) : visibles.length === 0 ? (
-            <div className="realisations__message">
+            <div className="v-liste__message">
               <p>
                 {enRecherche ? (
                   <>

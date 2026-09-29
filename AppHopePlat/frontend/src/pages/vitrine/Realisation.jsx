@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { MessageFiche, Paragraphes } from '../../components/vitrine/fiche.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
+import { urlMedia } from '../../services/api.js';
 
 /**
  * La fiche publique d'un projet de HOPE (GET /api/public/projets/:id) :
@@ -22,27 +24,6 @@ function moisLisible(valeur) {
   const texte = String(valeur);
   const date = /^\d{4}-\d{2}-\d{2}$/.test(texte) ? new Date(`${texte}T12:00:00`) : new Date(texte);
   return Number.isNaN(date.getTime()) ? null : MOIS.format(date);
-}
-
-/** Un texte libre, un paragraphe par ligne vide (ou par retour a la ligne). */
-function Paragraphes({ texte }) {
-  return texte
-    .split(/\r?\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p, i) => <p key={i}>{p}</p>);
-}
-
-function Message({ titre, texte }) {
-  return (
-    <section className="realisation__message" aria-labelledby="realisation-message-titre">
-      <h1 id="realisation-message-titre">{titre}</h1>
-      <p>{texte}</p>
-      <Link to="/nos-realisations" className="v-bouton-contour">
-        Toutes nos réalisations
-      </Link>
-    </section>
-  );
 }
 
 export default function Realisation() {
@@ -68,13 +49,28 @@ export default function Realisation() {
     return <p className="realisation__attente">Chargement du projet…</p>;
   }
   if (etat.statut === 'introuvable') {
-    return <Message titre="Projet introuvable" texte="Ce projet n’existe pas ou n’est plus présenté sur le site." />;
+    return (
+      <MessageFiche
+        titre="Projet introuvable"
+        texte="Ce projet n’existe pas ou n’est plus présenté sur le site."
+        retour="/nos-realisations"
+        libelleRetour="Toutes nos réalisations"
+      />
+    );
   }
   if (etat.statut === 'erreur') {
-    return <Message titre="Un instant…" texte="Le projet ne se charge pas pour le moment. Réessayez dans quelques instants." />;
+    return (
+      <MessageFiche
+        titre="Un instant…"
+        texte="Le projet ne se charge pas pour le moment. Réessayez dans quelques instants."
+        retour="/nos-realisations"
+        libelleRetour="Toutes nos réalisations"
+      />
+    );
   }
 
   const { projet } = etat;
+  const photo = urlMedia(projet.photoUrl);
   const marque = ETATS[projet.status];
   const debut = moisLisible(projet.startDate);
   const fin = moisLisible(projet.completedAt);
@@ -83,8 +79,8 @@ export default function Realisation() {
 
   return (
     <article className="realisation">
-      <header className={`realisation-hero${projet.photoUrl ? '' : ' realisation-hero--sans-photo'}`}>
-        {projet.photoUrl && <img className="realisation-hero__photo" src={projet.photoUrl} alt="" fetchPriority="high" />}
+      <header className={`realisation-hero${photo ? '' : ' realisation-hero--sans-photo'}`}>
+        {photo && <img className="realisation-hero__photo" src={photo} alt="" fetchPriority="high" />}
         <div className="realisation-hero__voile" aria-hidden="true" />
         <div className="v-conteneur realisation-hero__contenu">
           <Link to="/nos-realisations" className="realisation__retour">

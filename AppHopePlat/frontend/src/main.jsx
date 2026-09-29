@@ -38,6 +38,7 @@ import './styles/vitrine-accueil-suite.css';
 import './styles/vitrine-decouvrir.css';
 import './styles/vitrine-equipe.css';
 import './styles/vitrine-realisations.css';
+import './styles/vitrine-actualites.css';
 import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';
 import './styles/feuille.css';

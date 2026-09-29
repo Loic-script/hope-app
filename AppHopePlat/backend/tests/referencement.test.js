@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { PAGES_PUBLIQUES, pagesDesProjets, robotsTxt, sitemapXml } from '../src/shared/referencement.js';
+import { PAGES_PUBLIQUES, pagesDesActualites, pagesDesProjets, robotsTxt, sitemapXml } from '../src/shared/referencement.js';
 
 test('robots.txt ferme les espaces et l API, et donne le plan du site', () => {
   const texte = robotsTxt('https://hope.example/');
@@ -34,4 +34,12 @@ test('le plan du site ajoute la fiche de chaque projet, datee de sa mise a jour'
   assert.match(xml, /<loc>https:\/\/hope\.example\/nos-realisations\/7<\/loc>\s*<lastmod>2026-09-01<\/lastmod>/);
   assert.match(xml, /<loc>https:\/\/hope\.example\/nos-realisations\/9<\/loc>\s*<changefreq>monthly/);
   assert.equal([...xml.matchAll(/<loc>/g)].length, PAGES_PUBLIQUES.length + 2);
+});
+
+test('le plan du site ajoute chaque actualite, datee de sa publication', () => {
+  const xml = sitemapXml(
+    'https://hope.example',
+    pagesDesActualites([{ id: '0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11', publieLe: '2026-09-20T08:00:00.000Z' }])
+  );
+  assert.match(xml, /<loc>https:\/\/hope\.example\/actualites\/0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11<\/loc>\s*<lastmod>2026-09-20<\/lastmod>/);
 });

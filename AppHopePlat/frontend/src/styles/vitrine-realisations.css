@@ -5,6 +5,9 @@
    de soleils sont ceux de l'accueil (.v-realisation, .v-realisations,
    vitrine-accueil-suite.css). Les mouvements d'entree (hero-zoom,
    hero-monte) viennent de vitrine-accueil.css.
+   La recherche (.v-recherche), les fantomes (.v-squelette), les
+   messages (.v-liste__message) et la fiche (.realisation-hero,
+   .realisation__corps...) servent aussi a la page Actualites.
    ============================================================ */
 
 /* ------------------------------- Le bandeau ------------------------------- */
@@ -121,20 +124,20 @@
   padding-top: clamp(28px, 3.5vw, 44px);
 }
 
-.realisations__entete {
+.v-liste__entete {
   display: flex;
   justify-content: flex-end;
 }
 
 /* Le champ et son bouton orange, d'un seul tenant. */
-.realisations-recherche {
+.v-recherche {
   display: flex;
   width: min(100%, 340px);
   border-radius: 10px;
   box-shadow: 0 10px 26px -18px color-mix(in srgb, var(--hope-violet-fonce) 60%, transparent);
 }
 
-.realisations-recherche__champ {
+.v-recherche__champ {
   flex: 1;
   min-width: 0;
   padding: 12px 16px;
@@ -148,15 +151,15 @@
   transition: border-color 0.2s ease;
 }
 
-.realisations-recherche__champ::placeholder {
+.v-recherche__champ::placeholder {
   color: var(--hope-texte-doux);
 }
 
-.realisations-recherche__champ:focus {
+.v-recherche__champ:focus {
   border-color: var(--hope-bleu);
 }
 
-.realisations-recherche__bouton {
+.v-recherche__bouton {
   display: grid;
   place-items: center;
   width: 56px;
@@ -170,7 +173,7 @@
     transform 0.2s ease;
 }
 
-.realisations-recherche__bouton svg {
+.v-recherche__bouton svg {
   width: 22px;
   height: 22px;
   fill: none;
@@ -180,16 +183,16 @@
   transition: transform 0.25s ease;
 }
 
-.realisations-recherche__bouton:hover {
+.v-recherche__bouton:hover {
   background: color-mix(in srgb, var(--hope-orange) 85%, var(--hope-violet-fonce));
 }
 
-.realisations-recherche__bouton:hover svg {
+.v-recherche__bouton:hover svg {
   transform: scale(1.12) rotate(-8deg);
 }
 
-.realisations-recherche__champ:focus-visible,
-.realisations-recherche__bouton:focus-visible {
+.v-recherche__champ:focus-visible,
+.v-recherche__bouton:focus-visible {
   outline: 3px solid var(--hope-violet);
   outline-offset: 2px;
 }
@@ -231,7 +234,7 @@
 }
 
 /* En attendant la plateforme : des cartes vides qui respirent. */
-.realisations-squelette {
+.v-squelette {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -239,33 +242,33 @@
   overflow: hidden;
   border-radius: 18px;
   background: color-mix(in srgb, var(--hope-violet) 14%, #ffffff);
-  animation: realisations-pulse 1.4s ease-in-out infinite;
+  animation: v-squelette-pulse 1.4s ease-in-out infinite;
   animation-delay: calc(var(--rang, 0) * 120ms);
 }
 
-.realisations-squelette__image {
+.v-squelette__image {
   aspect-ratio: 16 / 11;
   background: color-mix(in srgb, var(--hope-violet) 22%, #ffffff);
 }
 
-.realisations-squelette__ligne {
+.v-squelette__ligne {
   height: 14px;
   margin: 0 24px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--hope-violet) 22%, #ffffff);
 }
 
-.realisations-squelette__ligne--titre {
+.v-squelette__ligne--titre {
   width: 70%;
   height: 20px;
   margin-top: 8px;
 }
 
-.realisations-squelette__ligne--courte {
+.v-squelette__ligne--courte {
   width: 45%;
 }
 
-@keyframes realisations-pulse {
+@keyframes v-squelette-pulse {
   0%,
   100% {
     opacity: 1;
@@ -276,7 +279,7 @@
 }
 
 /* Rien a montrer, ou la plateforme ne repond pas. */
-.realisations__message {
+.v-liste__message {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -291,17 +294,17 @@
   text-align: center;
 }
 
-.realisations__message p {
+.v-liste__message p {
   margin: 0;
 }
 
-.realisations__message .v-bouton-contour {
+.v-liste__message .v-bouton-contour {
   background: transparent;
   font-family: inherit;
   cursor: pointer;
 }
 
-.realisations__message .v-bouton-contour:hover {
+.v-liste__message .v-bouton-contour:hover {
   background: var(--hope-orange);
 }
 
@@ -432,6 +435,12 @@
   margin-top: 30px;
 }
 
+.realisation__fiche a {
+  color: var(--hope-bleu-lisible);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* L'aparte : le projet en bref, et l'appel au don ; il suit la lecture. */
 .realisation__aparte {
   position: sticky;
@@ -529,7 +538,7 @@
     left: 20px;
   }
 
-  .realisations-recherche {
+  .v-recherche {
     width: 100%;
   }
 
@@ -548,12 +557,12 @@
   .realisations-hero__soleil,
   .realisation-hero__photo,
   .realisation-hero__contenu,
-  .realisations-squelette {
+  .v-squelette {
     animation: none;
   }
 
-  .realisations-recherche__bouton,
-  .realisations-recherche__bouton svg {
+  .v-recherche__bouton,
+  .v-recherche__bouton svg {
     transition: none;
   }
 }

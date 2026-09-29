@@ -516,3 +516,40 @@ describe('le site vitrine public', () => {
     assert.equal((await appel('GET', `/public/projets/${idDe(interne.corps)}`)).statut, 404, 'la fiche d un projet interne non plus');
   });
 });
+
+describe('les actualites du site vitrine', () => {
+  test('ce que l administration publie sort, sans l auteur ni les cibles ; jamais un appel a financement', async () => {
+    const publiee = await appel('POST', '/admin/publications', {
+      jeton: jetonAdmin,
+      corps: { type: 'actualite', titre: 'Rentree des classes a Moramanga', corps: 'Premier paragraphe.\n\nSecond paragraphe.' },
+    });
+    assert.equal(publiee.statut, 201, JSON.stringify(publiee.corps));
+    const id = idDe(publiee.corps);
+
+    const projet = await creerProjet('Puits de Sakaraha', 300_000);
+    const appelFonds = await appel('POST', '/admin/publications', {
+      jeton: jetonAdmin,
+      corps: { type: 'appel_financement', titre: 'Aidez le puits de Sakaraha', corps: 'Il manque du ciment.', projetId: projet },
+    });
+    assert.equal(appelFonds.statut, 201, JSON.stringify(appelFonds.corps));
+
+    const liste = await appel('GET', '/public/actualites?limite=60');
+    assert.equal(liste.statut, 200);
+    const trouvee = liste.corps.items.find((a) => a.id === id);
+    assert.ok(trouvee, 'l actualite publiee apparait');
+    assert.equal(trouvee.titre, 'Rentree des classes a Moramanga');
+    for (const champ of ['publiePar', 'publieParNom', 'cibles', 'montantCible', 'type']) {
+      assert.equal(champ in trouvee, false, `${champ} ne sort pas sur le site`);
+    }
+    assert.ok(!liste.corps.items.some((a) => a.id === idDe(appelFonds.corps)), 'un appel a financement ne sort pas');
+
+    const article = await appel('GET', `/public/actualites/${id}`);
+    assert.equal(article.statut, 200);
+    assert.equal(article.corps.corps, 'Premier paragraphe.\n\nSecond paragraphe.');
+    assert.equal('publiePar' in article.corps, false);
+
+    assert.equal((await appel('GET', `/public/actualites/${idDe(appelFonds.corps)}`)).statut, 404);
+    assert.equal((await appel('GET', '/public/actualites/0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11')).statut, 404);
+    assert.equal((await appel('GET', '/public/actualites/abc')).statut, 404);
+  });
+});

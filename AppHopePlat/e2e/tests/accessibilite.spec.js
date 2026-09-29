@@ -5,7 +5,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-import { ADMIN, adresseUnique, connecter, donateurPret, projetPublicPret } from './outils.js';
+import { ADMIN, actualitePubliquePrete, adresseUnique, connecter, donateurPret, projetPublicPret } from './outils.js';
 
 // Sans animation : axe mesure les couleurs au repos, pas pendant un fondu.
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
@@ -43,6 +43,8 @@ const CONTRASTE_ACCEPTE = {
   ],
   '/nos-realisations': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
   '/nos-realisations/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
+  '/actualites': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange', '.v-actualite__titre', '.v-actualite__lien'],
+  '/actualites/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
 };
 
 async function auditer(page, nom) {
@@ -61,7 +63,7 @@ async function auditer(page, nom) {
 }
 
 test('pages publiques', async ({ page }) => {
-  for (const chemin of ['/', '/nous-decouvrir', '/nos-realisations', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
+  for (const chemin of ['/', '/nous-decouvrir', '/nos-realisations', '/actualites', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');
     await auditer(page, chemin);
@@ -74,6 +76,14 @@ test('la fiche d un projet', async ({ page, request }, testInfo) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(projet.name);
   await page.waitForLoadState('networkidle');
   await auditer(page, '/nos-realisations/:id');
+});
+
+test('l article d une actualite', async ({ page, request }, testInfo) => {
+  const actualite = await actualitePubliquePrete(request, testInfo, { titre: 'Accessible' });
+  await page.goto(`/actualites/${actualite.id}`);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(actualite.titre);
+  await page.waitForLoadState('networkidle');
+  await auditer(page, '/actualites/:id');
 });
 
 test('espace donateur', async ({ page, request }, testInfo) => {
