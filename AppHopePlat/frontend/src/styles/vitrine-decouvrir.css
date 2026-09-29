@@ -1,0 +1,678 @@
+/* ============================================================
+   Site vitrine : la page "Nous decouvrir"
+   (pages/vitrine/NousDecouvrir.jsx)
+
+   Cinq temps : le bandeau "Qui sommes-nous ?", la raison d'etre et la
+   vision en cartes, la mission en trois etapes reliees, l'approche sur
+   une photo, et la difference en tableau.
+   ============================================================ */
+
+/* ------------------------- Le medaillon commun ------------------------- */
+
+/* Les rayons du soleil, un anneau jaune, et l'icone au centre. Sa taille
+   se regle par --medaillon (le diametre du cercle des rayons). */
+.v-medaillon {
+  display: block;
+  flex: none;
+  width: var(--medaillon, 100px);
+  height: var(--medaillon, 100px);
+}
+
+.v-medaillon__soleil {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.v-medaillon__rayons rect {
+  fill: var(--hope-orange);
+}
+
+.v-medaillon__anneau {
+  fill: #ffffff;
+  stroke: var(--hope-jaune);
+  stroke-width: 6.2;
+}
+
+.v-medaillon__icone {
+  fill: var(--medaillon-icone, var(--hope-violet));
+}
+
+.v-medaillon__creux {
+  fill: #ffffff;
+}
+
+/* A l'apparition : le medaillon se pose, ses rayons se deploient. */
+.v-medaillon__rayons,
+.v-medaillon__icone {
+  opacity: 0;
+}
+
+.v-apparu .v-medaillon__rayons {
+  animation: medaillon-rayons 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 140ms + 320ms);
+}
+
+.v-apparu .v-medaillon__icone {
+  animation: medaillon-icone 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 140ms + 220ms);
+}
+
+@keyframes medaillon-rayons {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes medaillon-icone {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------- Qui sommes-nous --------------------------- */
+
+.decouvrir-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(660px, calc(100vh - 72px));
+  overflow: hidden;
+  background: var(--hope-violet-fonce);
+  isolation: isolate;
+}
+
+.decouvrir-hero__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 32%;
+  animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+.decouvrir-hero__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at center, rgba(74, 68, 121, 0.55) 0%, rgba(74, 68, 121, 0.82) 70%),
+    linear-gradient(180deg, rgba(74, 68, 121, 0.35) 0%, rgba(74, 68, 121, 0.6) 100%);
+}
+
+.decouvrir-hero__contenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 860px;
+  padding: 72px 32px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.decouvrir-hero__titre {
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(28px, 4.4vw, 46px);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 4px 24px rgba(53, 51, 67, 0.4);
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+
+/* Le trait de la charte, centre sous le titre. */
+.decouvrir-hero__trait {
+  --trait-couleur: var(--hope-bleu);
+  --trait-epaisseur: 6px;
+  --trait-soleil: clamp(38px, 3.6vw, 48px);
+  --trait-ecart: 18px;
+
+  display: flex;
+  width: min(100%, 460px);
+  margin-top: 14px;
+}
+
+.decouvrir-hero__trait::before {
+  flex: 1;
+  width: auto;
+  transform-origin: left center;
+  animation: hero-trait 900ms cubic-bezier(0.22, 1, 0.36, 1) 560ms both;
+}
+
+.decouvrir-hero__trait::after {
+  transform: scaleY(-1);
+  animation: decouvrir-soleil 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 1000ms both;
+}
+
+.decouvrir-hero__texte {
+  margin: 22px 0 0;
+  font-size: clamp(15px, 1.4vw, 17.5px);
+  font-weight: 600;
+  line-height: 1.65;
+  text-align: justify;
+  text-align-last: center;
+  text-shadow: 0 2px 12px rgba(53, 51, 67, 0.45);
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 700ms both;
+}
+
+.decouvrir-hero__don {
+  margin-top: 30px;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 850ms both;
+}
+
+@keyframes decouvrir-soleil {
+  from {
+    opacity: 0;
+    transform: scaleY(-1) scale(0.5) rotate(20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(-1);
+  }
+}
+
+/* ---------------------- Raison d'etre et vision ---------------------- */
+
+.decouvrir-cartes {
+  display: grid;
+  gap: clamp(56px, 7vw, 84px);
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: clamp(72px, 9vw, 116px) 32px clamp(56px, 7vw, 88px);
+}
+
+/* Le medaillon deborde en haut a gauche de la carte. */
+.decouvrir-carte {
+  --medaillon: clamp(84px, 9vw, 108px);
+
+  position: relative;
+  padding-top: calc(var(--medaillon) * 0.42);
+  opacity: 0;
+  transform: translateY(36px);
+  transition:
+    opacity 700ms ease,
+    transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 140ms);
+}
+
+.v-apparu .decouvrir-carte {
+  opacity: 1;
+  transform: none;
+}
+
+.decouvrir-carte__medaillon {
+  position: absolute;
+  top: 0;
+  left: clamp(12px, 3vw, 44px);
+  z-index: 1;
+}
+
+.decouvrir-carte__corps {
+  padding: clamp(30px, 4vw, 44px) clamp(24px, 4vw, 44px) clamp(28px, 4vw, 40px);
+  border-radius: 20px;
+  box-shadow: 0 20px 44px -30px rgba(53, 51, 67, 0.6);
+}
+
+.decouvrir-carte--raison .decouvrir-carte__corps {
+  background: var(--hope-violet);
+  color: #ffffff;
+}
+
+.decouvrir-carte--raison {
+  --medaillon-icone: var(--hope-violet);
+}
+
+.decouvrir-carte--vision .decouvrir-carte__corps {
+  background: var(--hope-bleu);
+  color: var(--hope-violet-fonce);
+}
+
+.decouvrir-carte--vision {
+  --medaillon-icone: var(--hope-bleu);
+}
+
+.decouvrir-carte__titre {
+  margin: 0 0 14px;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(19px, 2.2vw, 24px);
+  font-weight: 700;
+}
+
+.decouvrir-carte--vision .decouvrir-carte__titre {
+  color: var(--hope-violet);
+}
+
+.decouvrir-carte__texte {
+  margin: 0 0 12px;
+  font-size: clamp(14px, 1.2vw, 15.5px);
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.decouvrir-carte__texte:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------------------------- Notre mission ---------------------------- */
+
+.decouvrir-mission {
+  padding: clamp(56px, 7vw, 88px) 0 clamp(64px, 8vw, 96px);
+  background: #ffffff;
+}
+
+.decouvrir-mission .accueil-section__titre,
+.decouvrir-difference .accueil-section__titre {
+  font-size: clamp(22px, 2.3vw, 30px);
+}
+
+.decouvrir-mission__accroche {
+  max-width: 720px;
+  margin: 20px auto 0;
+  color: var(--hope-violet);
+  font-size: clamp(15px, 1.3vw, 17px);
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.decouvrir-mission__liste {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: clamp(40px, 5vw, 64px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Les trois etapes sont reliees par une ligne violette, interrompue par
+   les medaillons : chaque etape porte sa moitie de barre, a gauche et a
+   droite. */
+.decouvrir-etape {
+  --medaillon: clamp(86px, 8.5vw, 104px);
+  --medaillon-icone: var(--hope-violet);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  text-align: center;
+}
+
+.decouvrir-etape--education {
+  --medaillon-icone: var(--hope-bleu);
+}
+
+.decouvrir-etape__barre {
+  position: absolute;
+  top: calc(8px + var(--medaillon) / 2 - 5px);
+  width: calc(50% - var(--medaillon) / 2 - 2px);
+  height: 10px;
+  border-radius: 999px;
+  background: var(--hope-violet);
+  transform: scaleX(0);
+}
+
+.decouvrir-etape__barre--gauche {
+  left: 0;
+  transform-origin: right center;
+}
+
+.decouvrir-etape__barre--droite {
+  right: 0;
+  transform-origin: left center;
+}
+
+/* Les barres se deploient depuis le medaillon vers les cotes. */
+.v-apparu .decouvrir-etape__barre {
+  animation: decouvrir-barre 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 140ms + 420ms);
+}
+
+@keyframes decouvrir-barre {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.decouvrir-etape__titre {
+  margin: 18px 0 0;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-titre);
+  font-size: clamp(15px, 1.4vw, 17px);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.decouvrir-etape__texte {
+  max-width: 280px;
+  margin: 14px 0 0;
+  color: var(--hope-violet);
+  font-size: clamp(13px, 1.1vw, 14px);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* La carte entiere se souleve au survol. */
+@media (hover: hover) {
+  .decouvrir-etape {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .decouvrir-etape:hover {
+    transform: translateY(-6px);
+  }
+}
+
+/* ---------------------------- Notre approche ---------------------------- */
+
+.decouvrir-approche {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 520px;
+  overflow: hidden;
+  background: var(--hope-violet-fonce);
+  isolation: isolate;
+}
+
+.decouvrir-approche__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 28% 40%;
+  transform: scale(1.1);
+  transition: transform 2.4s cubic-bezier(0.2, 0.6, 0.3, 1);
+}
+
+.v-apparu.decouvrir-approche .decouvrir-approche__photo {
+  transform: scale(1);
+}
+
+.decouvrir-approche__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    rgba(74, 68, 121, 0) 0%,
+    rgba(74, 68, 121, 0.2) 38%,
+    rgba(74, 68, 121, 0.78) 62%,
+    rgba(74, 68, 121, 0.9) 100%
+  );
+}
+
+.decouvrir-approche__contenu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 64px 48px;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateX(32px);
+  transition:
+    opacity 700ms ease 200ms,
+    transform 800ms cubic-bezier(0.22, 1, 0.36, 1) 200ms;
+}
+
+.v-apparu .decouvrir-approche__contenu {
+  opacity: 1;
+  transform: none;
+}
+
+.decouvrir-approche__texte {
+  max-width: 520px;
+  margin: 0;
+  font-size: clamp(15px, 1.35vw, 17px);
+  font-weight: 600;
+  line-height: 1.7;
+  text-align: justify;
+  text-shadow: 0 2px 12px rgba(53, 51, 67, 0.45);
+}
+
+.decouvrir-approche .accueil-bouton {
+  margin-top: 30px;
+}
+
+/* --------------------------- Notre difference --------------------------- */
+
+.decouvrir-difference {
+  padding: clamp(56px, 7vw, 88px) 0 clamp(64px, 8vw, 96px);
+  background: var(--hope-bleu-clair);
+}
+
+.decouvrir-difference__accroche {
+  margin: 22px 0 0;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-titre);
+  font-size: clamp(15px, 1.4vw, 17px);
+  font-weight: 700;
+  text-align: center;
+}
+
+.decouvrir-tableau__cadre {
+  max-width: 900px;
+  margin: clamp(32px, 4vw, 48px) auto 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.decouvrir-tableau {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.decouvrir-tableau thead th {
+  padding: 16px 20px;
+  background: var(--hope-violet);
+  color: #ffffff;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(14px, 1.3vw, 16px);
+  font-weight: 700;
+  text-align: center;
+}
+
+.decouvrir-tableau thead th:first-child {
+  width: 38%;
+}
+
+/* Chaque ligne entre a son tour. */
+.decouvrir-tableau tbody tr {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 600ms ease,
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--rang, 0) * 110ms + 150ms);
+}
+
+.v-apparu .decouvrir-tableau tbody tr {
+  opacity: 1;
+  transform: none;
+}
+
+.decouvrir-tableau tbody th,
+.decouvrir-tableau tbody td {
+  padding: 16px 20px;
+  background: #ffffff;
+  color: var(--hope-violet);
+  font-size: clamp(13px, 1.15vw, 14.5px);
+  vertical-align: middle;
+}
+
+.decouvrir-tableau tbody th {
+  font-family: var(--vitrine-titre);
+  font-weight: 700;
+  text-align: center;
+}
+
+.decouvrir-tableau tbody td {
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: justify;
+  hyphens: auto;
+}
+
+@media (hover: hover) {
+  .decouvrir-tableau tbody tr:hover th,
+  .decouvrir-tableau tbody tr:hover td {
+    background: #f7fbff;
+  }
+}
+
+/* ------------------------------ Petits ecrans ------------------------------ */
+
+@media (max-width: 860px) {
+  .decouvrir-mission__liste {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 44px;
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
+  /* En colonne, la ligne qui relie les etapes n'a plus de sens. */
+  .decouvrir-etape__barre {
+    display: none;
+  }
+
+  .decouvrir-approche {
+    align-items: flex-end;
+    min-height: 560px;
+  }
+
+  .decouvrir-approche__photo {
+    object-position: 40% 30%;
+  }
+
+  .decouvrir-approche__voile {
+    background: linear-gradient(
+      180deg,
+      rgba(74, 68, 121, 0.1) 0%,
+      rgba(74, 68, 121, 0.72) 45%,
+      rgba(74, 68, 121, 0.92) 100%
+    );
+  }
+
+  .decouvrir-approche__contenu {
+    align-items: stretch;
+    padding: 48px 20px 40px;
+  }
+
+  .decouvrir-approche .accueil-bouton {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .decouvrir-hero__contenu,
+  .decouvrir-cartes {
+    padding-inline: 20px;
+  }
+
+  .decouvrir-hero__texte {
+    text-align: left;
+    text-align-last: auto;
+  }
+
+  .decouvrir-hero__don {
+    width: 100%;
+  }
+
+  /* Le tableau se lit en deux lignes : le pilier, puis l'engagement. */
+  .decouvrir-tableau,
+  .decouvrir-tableau tbody,
+  .decouvrir-tableau tbody tr,
+  .decouvrir-tableau tbody th,
+  .decouvrir-tableau tbody td {
+    display: block;
+    width: 100%;
+  }
+
+  .decouvrir-tableau thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .decouvrir-tableau tbody tr {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  .decouvrir-tableau tbody th {
+    background: var(--hope-violet);
+    color: #ffffff;
+  }
+
+  .decouvrir-tableau tbody td {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decouvrir-hero__photo,
+  .decouvrir-hero__titre,
+  .decouvrir-hero__trait::before,
+  .decouvrir-hero__trait::after,
+  .decouvrir-hero__texte,
+  .decouvrir-hero__don,
+  .v-medaillon__rayons,
+  .v-medaillon__icone,
+  .v-apparu .v-medaillon__rayons,
+  .v-apparu .v-medaillon__icone,
+  .v-apparu .decouvrir-etape__barre {
+    animation: none;
+    opacity: 1;
+  }
+
+  .decouvrir-hero__trait::after {
+    transform: scaleY(-1);
+  }
+
+  .decouvrir-etape__barre {
+    transform: none;
+  }
+
+  .decouvrir-carte,
+  .decouvrir-approche__contenu,
+  .decouvrir-tableau tbody tr {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .decouvrir-approche__photo,
+  .decouvrir-etape {
+    transform: none;
+    transition: none;
+  }
+}

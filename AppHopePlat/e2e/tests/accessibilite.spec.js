@@ -34,6 +34,13 @@ const CONTRASTE_ACCEPTE = {
     '.v-actualite__titre',
     '.v-actualite__lien',
   ],
+  '/nous-decouvrir': [
+    '.vitrine-nav__lien--actif',
+    '.vitrine-don',
+    '.accueil-bouton--orange',
+    '.accueil-bouton--bleu',
+    '.decouvrir-carte--vision .decouvrir-carte__texte',
+  ],
 };
 
 async function auditer(page, nom) {
@@ -52,7 +59,7 @@ async function auditer(page, nom) {
 }
 
 test('pages publiques', async ({ page }) => {
-  for (const chemin of ['/', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
+  for (const chemin of ['/', '/nous-decouvrir', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');
     await auditer(page, chemin);
