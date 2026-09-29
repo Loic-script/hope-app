@@ -16,6 +16,7 @@ import apiRoutes from './routes/index.js';
 import { gestionnaireErreurs, routeIntrouvable } from './middleware/error.middleware.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from './middleware/upload.middleware.js';
 import { verifierOrigine } from './shared/session.js';
+import { robotsTxt, sitemapXml } from './shared/referencement.js';
 import { journalDesRequetes } from './services/surveillance.service.js';
 
 /** frontend/dist : le frontend construit par "npm run build". */
@@ -147,6 +148,14 @@ export function creerApplication() {
    * Toute autre adresse (hors /api et /media) renvoie index.html : c'est
    * le routeur de React qui la lit (/donateur/mes-dons, /admin/...).
    */
+  // Le referencement : ce que les moteurs peuvent lire, et le plan du site.
+  app.get('/robots.txt', (_req, res) => {
+    res.type('text/plain').send(robotsTxt(config.siteUrl));
+  });
+  app.get('/sitemap.xml', (_req, res) => {
+    res.type('application/xml').send(sitemapXml(config.siteUrl));
+  });
+
   const index = path.join(DOSSIER_FRONTEND, 'index.html');
   if (config.servirFrontend && fs.existsSync(index)) {
     app.use(

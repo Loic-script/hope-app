@@ -10,6 +10,9 @@ autonomie durable.
 > politique de confidentialité et les conditions d'utilisation.
 >
 > **Mise en ligne** : voir [DEPLOIEMENT.md](DEPLOIEMENT.md) (Railway, un seul service).
+>
+> **Conception et développement** : [RAZAFIMAMONJY Faneva Loïc](https://github.com/Loic-script)
+> (Loïc RAZAFIMAMONJY), développeur web full stack.
 
 ---
 
@@ -462,3 +465,11 @@ horizontal en 430 px, la déconnexion.
 - prélèvement automatique des dons mensuels chez un prestataire (les échéances sont
   aujourd'hui générées puis suivies à la main) ;
 - relecture juridique des textes légaux par le bureau de l'association.
+
+---
+
+## Auteur
+
+Site vitrine et plateforme HOPE conçus et développés par **RAZAFIMAMONJY Faneva Loïc**
+(aussi écrit Faneva Loïc RAZAFIMAMONJY, Loïc RAZAFIMAMONJY, Loic Razafimamonjy), développeur
+web full stack à Madagascar — [github.com/Loic-script](https://github.com/Loic-script).

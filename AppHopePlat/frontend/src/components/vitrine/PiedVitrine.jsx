@@ -2,7 +2,8 @@ import SoleilHope from './SoleilHope.jsx';
 
 /**
  * Le pied de page du site vitrine : le soleil de HOPE, ses reseaux, le
- * numero a appeler et le copyright, centres sur le violet de la charte.
+ * numero a appeler, le copyright et l'auteur du site, centres sur le
+ * violet de la charte.
  *
  * Les adresses des pages de HOPE sur les reseaux sont a renseigner ici ;
  * en attendant, chaque icone mene a la page d'accueil du reseau.
@@ -63,6 +64,14 @@ export default function PiedVitrine() {
         </p>
 
         <p className="vitrine-pied__copyright">Copyright © Hope for better life, 2024.</p>
+
+        {/* L'auteur du site, en clair : les moteurs de recherche le lisent. */}
+        <p className="vitrine-pied__credit">
+          Site conçu et développé par{' '}
+          <a href="https://github.com/Loic-script" target="_blank" rel="author noopener noreferrer">
+            RAZAFIMAMONJY Faneva Loïc
+          </a>
+        </p>
       </div>
     </footer>
   );
