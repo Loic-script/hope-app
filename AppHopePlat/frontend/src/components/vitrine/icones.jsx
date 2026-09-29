@@ -65,14 +65,25 @@ export function IconeCouvert({ creux = 'v-activite__creux' }) {
   );
 }
 
-/** La loupe sur une silhouette : reperer et former les personnes. */
-export function IconeFormation() {
+/**
+ * La personne dans la loupe, posee sur son socle : reperer et former.
+ * Relevee sur l'icone fournie par HOPE (33 x 36 px), redessinee a la
+ * meme taille, l'origine au centre de la loupe ; le groupe recentre
+ * l'ensemble (manche et socle compris) sur le medaillon.
+ */
+export function IconeFormation({ creux = 'v-activite__creux' }) {
   return (
-    <>
-      <path d="M-1.4 -13C5.2 -13 10.6 -7.7 10.6 -1.1 10.6 5.5 5.2 10.8-1.4 10.8-8 10.8-13.4 5.5-13.4 -1.1-13.4 -7.7-8 -13-1.4 -13ZM-1.4 -9.2C-5.9 -9.2-9.6 -5.6-9.6 -1.1-9.6 3.4-5.9 7-1.4 7 3.1 7 6.8 3.4 6.8 -1.1 6.8 -5.6 3.1 -9.2-1.4 -9.2Z" />
-      <circle cx="-1.4" cy="-4.2" r="2.7" />
-      <path d="M-1.4 -0.6C1.6 -0.6 4 1.3 4 3.7V4.6H-6.8V3.7C-6.8 1.3-4.4 -0.6-1.4 -0.6Z" />
-      <rect x="6.4" y="5.8" width="10.4" height="3.6" rx="1.8" transform="rotate(43 11.6 7.6)" />
-    </>
+    <g transform="translate(-1.9 -4.8)">
+      {/* La loupe : l'anneau (le disque interieur tourne a l'envers, d'ou le vide), puis le manche. */}
+      <path d="M0 -13.2A13.2 13.2 0 1 1 0 13.2A13.2 13.2 0 1 1 0 -13.2ZM0 -9.6A9.6 9.6 0 1 0 0 9.6A9.6 9.6 0 1 0 0 -9.6Z" />
+      <rect x="-2.9" y="-24.5" width="5.8" height="14.5" rx="2.9" transform="rotate(135)" />
+      {/* La personne : la tete et son reflet, les epaules qui rejoignent l'anneau. */}
+      <circle cx="0.6" cy="-0.7" r="6.4" />
+      <ellipse className={creux} cx="0.3" cy="0" rx="2.9" ry="1.3" transform="rotate(12 0.3 0)" />
+      <path d="M-6.87 9.34A9 9 0 0 1 7.87 9.34L6.5 10.2H-5.5Z" />
+      {/* Le socle : la tablette, creusee sous la loupe, et son pied. */}
+      <path d="M-6.2 15.6Q0.5 17.8 7.2 15.6Q8 15.5 8 16.3V18.9Q8 19.7 7.2 19.7H-6.2Q-7 19.7 -7 18.9V16.3Q-7 15.5 -6.2 15.6Z" />
+      <rect x="-4.5" y="19.3" width="10" height="3.5" rx="0.8" />
+    </g>
   );
 }

@@ -159,7 +159,7 @@ const MISSION = [
   },
   {
     cle: 'formation',
-    icone: <IconeFormation />,
+    icone: <IconeFormation creux="v-medaillon__creux" />,
     echelle: 0.55,
     titre: 'La formation professionnelle et l’acquisition de compétences',
     texte: 'pour les mères, adaptées aux réalités du marché du travail local.',
