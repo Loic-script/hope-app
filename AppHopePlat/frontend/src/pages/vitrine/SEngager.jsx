@@ -131,14 +131,14 @@ export default function SEngager() {
               <strong>aider une vie</strong> dès aujourd’hui{' '}?
             </span>
           </h2>
-          <div className="engager-appel__ligne v-entree" style={{ '--rang': 1 }}>
-            <span className="engager-hero__soleil engager-appel__soleil" aria-hidden="true" />
-            <p className="engager-appel__texte">
-              L’espoir commence par une intention, mais il se réalise par l’action. Rejoignez Hope for a Better Life et
-              devenez l’acteur d’un changement durable.
-            </p>
-          </div>
-          <div className="engager-appel__actions v-entree" style={{ '--rang': 2 }}>
+          {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
+          <div className="engager-appel__trait v-entree" aria-hidden="true" style={{ '--rang': 1 }} />
+          <p className="engager-appel__texte v-entree" style={{ '--rang': 2 }}>
+            L’espoir commence par une intention, mais il se réalise par l’action. Rejoignez{' '}
+            <span className="engager-appel__marque">Hope for a Better Life</span> et devenez l’acteur d’un changement
+            durable.
+          </p>
+          <div className="engager-appel__actions v-entree" style={{ '--rang': 3 }}>
             <Link to={LIEN_DON} className="accueil-bouton accueil-bouton--orange">
               Faire un don
             </Link>

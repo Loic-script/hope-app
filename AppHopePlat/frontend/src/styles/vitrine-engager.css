@@ -366,14 +366,22 @@ rect.engager-soleil__creux {
 
 /* --------------------------- L'appel a contribuer --------------------------- */
 
+/*
+ * Releve sur la maquette, a 1366 px de large : --u vaut 10 px, et toutes
+ * les mesures du bloc s'y rapportent (titre de 45 px, soleil de 63 px,
+ * filet de 68 a 762 px du bord du titre...). En dessous, tout retrecit
+ * ensemble, jusqu'a 6 px l'unite.
+ */
 .engager-appel {
+  --u: clamp(6px, 0.732vw, 10px);
+
   position: relative;
   display: flex;
-  align-items: center;
-  min-height: min(560px, 80vh);
+  align-items: flex-end;
+  min-height: min(690px, 92vh);
   overflow: hidden;
   border-top: 4px solid var(--hope-bleu);
-  background: var(--hope-violet-fonce);
+  background: var(--hope-texte);
   color: #ffffff;
   isolation: isolate;
 }
@@ -385,38 +393,40 @@ rect.engager-soleil__creux {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 72% 30%;
+  object-position: 100% 22%;
 }
 
-/* Le voile, plus present a gauche, sous le texte. */
+/* La photo garde ses couleurs : un voile sombre et neutre, a gauche
+   seulement, sous le texte. */
 .engager-appel__voile {
   position: absolute;
   inset: 0;
   z-index: -1;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--hope-violet-fonce) 62%, transparent) 0%,
-    color-mix(in srgb, var(--hope-violet-fonce) 32%, transparent) 60%,
-    color-mix(in srgb, var(--hope-violet-fonce) 18%, transparent) 100%
+    color-mix(in srgb, var(--hope-texte) 42%, transparent) 0%,
+    color-mix(in srgb, var(--hope-texte) 18%, transparent) 50%,
+    transparent 78%
   );
 }
 
 .engager-appel__contenu {
   width: 100%;
-  padding-top: 56px;
-  padding-bottom: 64px;
+  padding-top: calc(var(--u) * 9);
+  padding-bottom: clamp(56px, 8vw, 110px);
+  padding-left: calc(32px + var(--u) * 3);
 }
 
+/* Le titre : demi-gras, "aider une vie" en extra-gras. */
 .engager-appel__titre {
-  max-width: 34ch;
   margin: 0;
   font-family: var(--vitrine-titre);
-  font-size: clamp(22px, 3.2vw, 38px);
-  font-weight: 700;
-  line-height: 1.28;
-  letter-spacing: 0.01em;
+  font-size: calc(var(--u) * 4.5);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-texte) 70%, transparent);
 }
 
 .engager-appel__titre span {
@@ -427,31 +437,94 @@ rect.engager-soleil__creux {
   font-weight: 800;
 }
 
-.engager-appel__ligne {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  max-width: 640px;
-  margin-top: 16px;
+/* Le soleil renverse, un peu a gauche du titre, puis le filet bleu qui
+   part a sa droite ; le soleil deborde sous le filet, a cote du texte. */
+.engager-appel__trait {
+  position: relative;
+  height: calc(var(--u) * 0.85);
+  margin-top: calc(var(--u) * 0.1);
 }
 
-.engager-appel__soleil {
-  animation: none;
+.engager-appel__trait::before,
+.engager-appel__trait::after {
+  position: absolute;
+  top: 0;
+  content: '';
 }
 
+.engager-appel__trait::before {
+  top: calc(var(--u) * 0.28);
+  left: calc(var(--u) * 6.8);
+  width: min(calc(100% - var(--u) * 6.8), calc(var(--u) * 69.4));
+  height: calc(var(--u) * 0.57);
+  border-radius: 999px;
+  background: var(--hope-bleu);
+  transform-origin: left center;
+}
+
+.engager-appel__trait::after {
+  left: calc(var(--u) * -1.1);
+  width: calc(var(--u) * 6.3);
+  height: calc(var(--u) * 4.3);
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+  transform: scaleY(-1);
+}
+
+.v-apparu .engager-appel__trait::before {
+  animation: engager-filet 900ms cubic-bezier(0.22, 1, 0.36, 1) 380ms both;
+}
+
+.v-apparu .engager-appel__trait::after {
+  animation: engager-soleil-renverse 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 520ms both;
+}
+
+@keyframes engager-filet {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes engager-soleil-renverse {
+  from {
+    opacity: 0;
+    transform: scaleY(-1) scale(0.4) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(-1);
+  }
+}
+
+/* Le texte, en retrait du soleil, justifie. */
 .engager-appel__texte {
-  margin: 0;
-  font-size: clamp(15px, 1.3vw, 17px);
+  max-width: calc(var(--u) * 63.8);
+  margin: calc(var(--u) * 1.8) 0 0 calc(var(--u) * 7.4);
+  font-size: max(15px, calc(var(--u) * 2.05));
   font-weight: 600;
-  line-height: 1.6;
-  text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-violet-fonce) 80%, transparent);
+  line-height: 1.45;
+  text-align: justify;
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-texte) 75%, transparent);
+}
+
+/* Le nom de l'association, plus petit, comme sur la maquette. */
+.engager-appel__marque {
+  font-size: 0.8em;
+  font-weight: 700;
 }
 
 .engager-appel__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin: 28px 0 0 48px;
+  gap: calc(var(--u) * 4.4);
+  margin: calc(var(--u) * 3.8) 0 0 calc(var(--u) * 21.9);
+}
+
+.engager-appel__actions .accueil-bouton {
+  min-height: max(48px, calc(var(--u) * 5.4));
+  padding: 0 28px;
 }
 
 /* ------------------------------ Petits ecrans ------------------------------ */
@@ -490,6 +563,30 @@ rect.engager-soleil__creux {
     text-align: left;
   }
 
+  /* Etroit : la photo en haut, les visages degages, et le texte dessous,
+     sur le fondu sombre ; texte et boutons reprennent toute la largeur. */
+  .engager-appel {
+    min-height: 0;
+  }
+
+  .engager-appel__photo {
+    height: 440px;
+    object-position: 78% 18%;
+  }
+
+  .engager-appel__voile {
+    background: linear-gradient(180deg, transparent 0, transparent 190px, var(--hope-texte) 440px);
+  }
+
+  .engager-appel__contenu {
+    padding-top: 320px;
+    padding-left: 20px;
+  }
+
+  .engager-appel__texte {
+    text-align: left;
+  }
+
   .engager-appel__actions {
     margin-left: 0;
   }
@@ -515,7 +612,9 @@ rect.engager-soleil__creux {
   .engager-hero__photo,
   .engager-hero__ligne,
   .engager-hero__ligne-texte,
-  .engager-hero__soleil {
+  .engager-hero__soleil,
+  .v-apparu .engager-appel__trait::before,
+  .v-apparu .engager-appel__trait::after {
     animation: none;
   }
 }
