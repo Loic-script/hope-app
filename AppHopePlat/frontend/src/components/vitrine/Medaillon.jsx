@@ -1,19 +1,17 @@
 /**
  * Le medaillon des sections du site : un anneau jaune sur un disque
- * blanc, l'icone au centre, et le soleil autour. Trois variantes,
+ * blanc, l'icone au centre, et le soleil autour. Deux variantes,
  * relevees sur les maquettes, l'anneau exterieur (R = 28,5) pris pour
  * unite :
  *   - `couronne` (raison d'etre, vision) : anneau de 0,155 R, huit traits
  *     tous les 30 degres de 1,26 a 1,67 R, le quart bas-droit libre du
  *     cote de la carte ;
  *   - `rayons` (mission) : anneau de 0,126 R, trois rayons de 1,2 a 2 R
- *     larges de 0,3 R, le boitier grandi vers le haut pour les contenir ;
- *   - `eventail` (s'engager) : anneau de 0,155 R, cinq rayons de 1,3 a
- *     1,7 R tous les 30 degres, sur le haut seulement.
+ *     larges de 0,3 R, le boitier grandi vers le haut pour les contenir.
  *
  * Le disque blanc va jusqu'au depart des traits (1,26 R) : pose sur une
- * carte, il en creuse le coin ou le bord ; pose sur la ligne de la
- * mission, il l'interrompt.
+ * carte, il en creuse le coin ; pose sur la ligne de la mission, il
+ * l'interrompt.
  *
  * L'icone est soit un dessin (children, reduit par `echelle`), soit un
  * fichier fourni par HOPE (`image` : { src, largeur, hauteur }).
@@ -33,18 +31,6 @@ export default function Medaillon({ children, image = null, variante = 'couronne
                 <rect x="-4.3" y="-58.1" width="8.6" height="21.6" rx="4.3" transform="rotate(-48.7)" />
                 <rect x="-4.3" y="-58.1" width="8.6" height="21.6" rx="4.3" transform="rotate(48.7)" />
               </>
-            ) : variante === 'eventail' ? (
-              [0, -30, 30, -60, 60].map((angle) => (
-                <rect
-                  key={angle}
-                  x="-2.3"
-                  y="-48.5"
-                  width="4.6"
-                  height="11.5"
-                  rx="2.3"
-                  transform={angle === 0 ? undefined : `rotate(${angle})`}
-                />
-              ))
             ) : (
               <>
                 <rect x="-2.3" y="-47.6" width="4.6" height="11.7" rx="2.3" />

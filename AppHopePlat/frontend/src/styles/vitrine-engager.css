@@ -1,16 +1,20 @@
 /* ============================================================
    Site vitrine : la page "S'engager" (pages/vitrine/SEngager.jsx)
-   Le bandeau des mains reunies, les trois voies en cartes a medaillon
-   qui chevauchent le bas du bandeau, puis l'appel a contribuer sur la
-   photo. Les medaillons (.v-medaillon) viennent de vitrine-decouvrir.css,
-   les mouvements d'entree (hero-zoom, hero-monte, realisations-soleil)
-   de vitrine-accueil.css et vitrine-realisations.css.
+   Le bandeau des mains reunies, les trois voies en cartes a encoche,
+   coiffees de leur soleil, qui chevauchent le bas du bandeau, puis
+   l'appel a contribuer sur la photo. Les mouvements d'entree
+   (hero-zoom, hero-monte, realisations-soleil) viennent de
+   vitrine-accueil.css et vitrine-realisations.css.
    ============================================================ */
 
-/* Ce que les cartes mangent du bas du bandeau. */
+/*
+ * Ce que les cartes mangent du bas du bandeau : le quart de leur largeur,
+ * comme sur la maquette. Leur soleil deborde encore de 0,365 largeur
+ * au-dessus : le bandeau garde la place de l'un et de l'autre.
+ */
 .engager-hero,
 .engager-cartes {
-  --chevauchement: clamp(64px, 9vw, 120px);
+  --chevauchement: clamp(56px, 4.6vw, 64px);
 }
 
 /* ------------------------------- Le bandeau ------------------------------- */
@@ -21,7 +25,7 @@
   align-items: center;
   justify-content: center;
   min-height: min(640px, calc(100vh - 72px));
-  padding-bottom: var(--chevauchement);
+  padding-bottom: calc(var(--chevauchement) + 164px);
   overflow: hidden;
   background: var(--hope-violet-fonce);
   color: #ffffff;
@@ -120,88 +124,243 @@
 
 /* ------------------------------ Les trois voies ------------------------------ */
 
+/* flow-root : la marge negative des cartes ne remonte pas la section
+   (et son fond blanc) sur le bandeau ; seules les cartes le chevauchent. */
 .engager-voies {
   position: relative;
   z-index: 1;
+  display: flow-root;
   padding: 0 0 clamp(56px, 7vw, 88px);
   background: #ffffff;
 }
 
 .engager-cartes {
-  --medaillon: clamp(84px, 9vw, 104px);
-
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(24px, 4vw, 44px);
+  gap: clamp(28px, 6.8vw, 96px);
   max-width: 1000px;
   margin: calc(-1 * var(--chevauchement)) auto 0;
   padding: 0 32px;
   list-style: none;
 }
 
+/*
+ * La carte est son propre conteneur : son soleil, son encoche, ses coins
+ * et ses marges se mesurent en largeur de carte (cqi), dans les
+ * proportions de la maquette (une carte de 244 unites de large).
+ */
 .engager-carte {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(var(--medaillon) * 0.55 + 18px) 22px 28px;
-  border-radius: 18px;
-  color: #ffffff;
+  color: var(--texte);
   text-align: center;
-  box-shadow: 0 22px 44px -26px color-mix(in srgb, var(--hope-violet-fonce) 70%, transparent);
+  isolation: isolate;
+  container-type: inline-size;
 }
 
-/* Chaque voie a sa couleur, et son medaillon la reprend dans l'icone. */
+/* Chaque voie a sa couleur ; ses barres prennent celle d'a cote, son
+   icone la sienne, son texte le blanc ou le violet de la maquette. */
 .engager-carte--organismes {
-  --medaillon-icone: var(--hope-violet);
-
-  background: var(--hope-violet);
+  --fond: var(--hope-violet);
+  --barres: var(--hope-bleu);
+  --icone: var(--hope-violet);
+  --texte: #ffffff;
 }
 
 .engager-carte--entreprises {
-  --medaillon-icone: var(--hope-bleu);
-
-  background: var(--hope-bleu);
+  --fond: var(--hope-bleu);
+  --barres: var(--hope-violet);
+  --icone: var(--hope-bleu);
+  --texte: var(--hope-violet);
 }
 
 .engager-carte--donateurs {
-  --medaillon-icone: var(--hope-orange);
-
-  background: var(--hope-orange);
+  --fond: var(--hope-orange);
+  --barres: var(--hope-bleu);
+  --icone: var(--hope-orange);
+  --texte: #ffffff;
 }
 
-.engager-carte__medaillon {
+/*
+ * Le fond : la couleur de la voie, les coins arrondis (20 unites sur
+ * 244), et l'encoche, un demi-disque de 48,3 unites centre sur le bord
+ * haut, sous l'anneau, qui laisse voir ce qui est derriere. L'ombre est
+ * portee par le parent : elle suit l'encoche.
+ */
+.engager-carte__fond {
   position: absolute;
-  top: calc(var(--medaillon) * -0.5);
-  left: 50%;
-  transform: translateX(-50%);
+  inset: 0;
+  z-index: -1;
+  filter: drop-shadow(0 18px 20px color-mix(in srgb, var(--hope-violet-fonce) 22%, transparent));
+  transition: filter 0.3s ease;
 }
 
+.engager-carte__fond::before {
+  position: absolute;
+  inset: 0;
+  border-radius: 8.2cqi;
+  background: var(--fond);
+  content: '';
+  -webkit-mask: radial-gradient(circle at 50% 0, transparent 19.8cqi, #000 calc(19.8cqi + 0.75px));
+  mask: radial-gradient(circle at 50% 0, transparent 19.8cqi, #000 calc(19.8cqi + 0.75px));
+}
+
+/* Le soleil, de toute la largeur de la carte : le bord haut de la carte
+   passe a 89 unites sur 124, il deborde d'autant au-dessus. */
+.engager-soleil {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+  transform: translateY(-71.77%);
+}
+
+.engager-soleil__rayon-vif {
+  fill: var(--hope-orange);
+}
+
+.engager-soleil__barre {
+  fill: var(--barres);
+}
+
+.engager-soleil__anneau {
+  fill: #ffffff;
+  stroke: var(--hope-jaune);
+  stroke-width: 7.8;
+}
+
+.engager-soleil__icone {
+  fill: var(--icone);
+}
+
+/* Les vides de l'icone ; le trait qui detache la personne de devant
+   (IconeGroupe) garde son epaisseur, les fenetres n'en ont pas. */
+.engager-soleil__creux {
+  fill: #ffffff;
+  stroke: #ffffff;
+  stroke-linejoin: round;
+}
+
+rect.engager-soleil__creux {
+  stroke: none;
+}
+
+/* A l'apparition : l'anneau se pose, les rayons poussent depuis lui, un
+   par un, et les barres s'allongent vers l'exterieur. */
+.engager-soleil__coeur,
+.engager-soleil__rayon,
+.engager-soleil__barre {
+  opacity: 0;
+  transform-box: fill-box;
+}
+
+.engager-soleil__coeur {
+  transform-origin: 50% 50%;
+}
+
+.engager-soleil__rayon,
+.engager-soleil__rayon-vif {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.engager-soleil__barre--gauche {
+  transform-origin: 100% 50%;
+}
+
+.engager-soleil__barre--droite {
+  transform-origin: 0 50%;
+}
+
+.v-apparu .engager-soleil__coeur {
+  animation: engager-coeur 650ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 140ms + 200ms);
+}
+
+.v-apparu .engager-soleil__rayon {
+  animation: engager-rayon 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 140ms + 420ms + var(--i, 0) * 90ms);
+}
+
+.v-apparu .engager-soleil__barre {
+  animation: engager-barre 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 140ms + 560ms);
+}
+
+@keyframes engager-coeur {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes engager-rayon {
+  from {
+    opacity: 0;
+    transform: scaleY(0.1);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes engager-barre {
+  from {
+    opacity: 0;
+    transform: scaleX(0.1);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Le titre sous l'encoche, en deux lignes comme sur la maquette. */
 .engager-carte__titre {
-  max-width: 14ch;
-  margin: 0;
+  margin: 27cqi 6cqi 0;
   font-family: var(--vitrine-titre);
-  font-size: clamp(18px, 1.7vw, 21px);
+  font-size: clamp(17px, 9.8cqi, 27px);
   font-weight: 700;
   line-height: 1.25;
 }
 
+.engager-carte__titre span {
+  display: block;
+}
+
 .engager-carte__texte {
-  margin: 16px 0 0;
-  font-size: 14px;
+  margin: 10cqi 11cqi 16cqi;
+  font-size: clamp(13px, 6cqi, 16px);
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.35;
   text-align: justify;
 }
 
 @media (hover: hover) {
-  .v-apparu .engager-carte:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 32px 52px -28px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
+  .engager-soleil__rayon-vif {
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .engager-carte:hover .v-medaillon__rayons-vif {
-    transform: scale(1.1);
+  .v-apparu .engager-carte:hover {
+    transform: translateY(-8px);
+  }
+
+  .engager-carte:hover .engager-carte__fond {
+    filter: drop-shadow(0 26px 26px color-mix(in srgb, var(--hope-violet-fonce) 32%, transparent));
+  }
+
+  .engager-carte:hover .engager-soleil__rayon-vif {
+    transform: scaleY(1.18);
   }
 }
 
@@ -298,11 +457,24 @@
 /* ------------------------------ Petits ecrans ------------------------------ */
 
 @media (max-width: 900px) {
+  /* La largeur d'une carte ; le chevauchement et le soleil en decoulent. */
+  .engager-hero,
+  .engager-cartes {
+    --carte: calc(min(480px, 100vw) - 40px);
+    --chevauchement: calc(var(--carte) * 0.245);
+  }
+
+  .engager-hero {
+    padding-bottom: calc(var(--chevauchement) + var(--carte) * 0.365 + 40px);
+  }
+
   .engager-cartes {
     grid-template-columns: minmax(0, 1fr);
-    gap: calc(var(--medaillon) * 0.6 + 24px);
+    gap: calc(var(--carte) * 0.365 + 28px);
     max-width: 480px;
+    padding: 0 20px;
   }
+
   /* Etroit, le texte justifie se troue : on le cale a gauche. */
   .engager-carte__texte {
     text-align: left;
@@ -318,10 +490,6 @@
     text-align: left;
   }
 
-  .engager-cartes {
-    padding: 0 20px;
-  }
-
   .engager-appel__actions {
     margin-left: 0;
   }
@@ -332,6 +500,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .engager-soleil__coeur,
+  .engager-soleil__rayon,
+  .engager-soleil__barre {
+    opacity: 1;
+  }
+
+  .v-apparu .engager-soleil__coeur,
+  .v-apparu .engager-soleil__rayon,
+  .v-apparu .engager-soleil__barre {
+    animation: none;
+  }
+
   .engager-hero__photo,
   .engager-hero__ligne,
   .engager-hero__ligne-texte,

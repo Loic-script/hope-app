@@ -126,7 +126,7 @@ test('s engager : les trois voies, puis l appel au don et au partenariat', async
   await page.goto('/s-engager');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('écrivons une plus belle histoire');
   await expect(page.locator('.engager-carte')).toHaveCount(3);
-  await expect(page.locator('.engager-carte .v-medaillon')).toHaveCount(3);
+  await expect(page.locator('.engager-carte .engager-soleil')).toHaveCount(3);
   await sansDebordement(page);
 
   const appel = page.locator('.engager-appel');
