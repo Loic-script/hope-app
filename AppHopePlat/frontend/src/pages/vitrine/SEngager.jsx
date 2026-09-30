@@ -88,16 +88,18 @@ export default function SEngager() {
         <img className="engager-hero__photo" src={couverture} alt="" fetchPriority="high" />
         <div className="engager-hero__voile" aria-hidden="true" />
         <div className="v-conteneur engager-hero__contenu">
-          <h1 className="engager-hero__titre" id="engager-hero-titre">
-            <span className="engager-hero__ligne">Ensemble,</span>
-            <span className="engager-hero__ligne">écrivons une plus belle histoire.</span>
-          </h1>
-          <div className="engager-hero__ligne-texte">
-            {/* Le soleil de la charte (assets/soleil.svg), en tete du texte comme sur la maquette. */}
-            <span className="engager-hero__soleil" aria-hidden="true" />
+          {/* Le bloc prend la largeur du titre : le filet et le texte s'y alignent. */}
+          <div className="engager-hero__bloc">
+            <h1 className="engager-hero__titre" id="engager-hero-titre">
+              <span className="engager-hero__ligne">Ensemble,</span>
+              <span className="engager-hero__ligne">écrivons une plus belle histoire.</span>
+            </h1>
+            {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
+            <div className="engager-hero__trait" aria-hidden="true" />
             <p className="engager-hero__texte">
-              Que vous soyez une institution, une entreprise engagée ou un particulier au cœur généreux, votre présence
-              à nos côtés change tout. C’est grâce à cette union que l’espoir prend vie.
+              Que vous soyez <strong>une institution</strong>, <strong>une entreprise</strong> engagée ou{' '}
+              <strong>un particulier</strong> au cœur généreux, votre présence à nos côtés change tout. C’est grâce à
+              cette union que l’espoir prend vie.
             </p>
           </div>
         </div>
