@@ -225,7 +225,7 @@ export function Actualites() {
  */
 const PARTENAIRES = [
   { nom: 'HN', logo: logoHn, hauteur: 74 },
-  { nom: 'CanCham — Chambre de Commerce et de Coopération Canada-Madagascar', logo: logoCanCham, hauteur: 46 },
+  { nom: 'CanCham — Chambre de Commerce et de Coopération Canada-Madagascar', logo: logoCanCham, hauteur: 52 },
   { nom: 'L’Alliée Virtuelle', logo: logoAllieeVirtuelle, hauteur: 80 },
   { nom: 'GAD — Groupement des Acteurs du Digital de Madagascar', logo: logoGad, hauteur: 66 },
 ];
