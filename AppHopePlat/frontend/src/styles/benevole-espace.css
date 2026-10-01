@@ -683,7 +683,14 @@
   color: var(--hope-violet);
 }
 
-/* L'accord pour paraitre sur le site : une case et sa phrase. */
+/* Le site public : ce qu'il montre, et la case pour s'en retirer. */
+.profil-benevole__note {
+  margin: 0 0 10px;
+  color: var(--hope-texte-doux);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
 .profil-benevole__accord {
   display: flex;
   gap: 12px;

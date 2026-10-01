@@ -555,7 +555,7 @@ describe('les actualites du site vitrine', () => {
 });
 
 describe('les benevoles du site vitrine', () => {
-  test('seul un benevole qui l a accepte parait, par son prenom et sa photo', async () => {
+  test('un benevole actif parait par son prenom et sa photo, sauf s il demande a rester hors du site', async () => {
     async function benevole(email, prenom) {
       const compte = await appel('POST', '/admin/utilisateurs/comptes', {
         jeton: jetonAdmin,
@@ -573,21 +573,22 @@ describe('les benevoles du site vitrine', () => {
 
     const avant = await appel('GET', '/public/benevoles');
     assert.equal(avant.statut, 200);
-    assert.ok(!avant.corps.items.some((b) => ['Fy', 'Noro'].includes(b.prenom)), 'rien ne parait sans accord');
+    const noro = avant.corps.items.find((b) => b.prenom === 'Noro');
+    assert.ok(noro, 'un benevole actif parait d emblee');
+    assert.deepEqual(Object.keys(noro).sort(), ['id', 'photoUrl', 'prenom'], 'prenom et photo, rien d autre');
+    assert.ok(avant.corps.items.some((b) => b.prenom === 'Fy'));
 
-    const accord = await appel('PATCH', '/benevole/profil', { jeton: visible, corps: { visibleSite: true } });
-    assert.equal(accord.statut, 200, JSON.stringify(accord.corps));
-    assert.equal(accord.corps.visibleSite, true);
-    await appel('PATCH', '/benevole/profil', { jeton: discret, corps: { profession: 'Enseignant' } });
+    const retrait = await appel('PATCH', '/benevole/profil', { jeton: discret, corps: { masqueSite: true } });
+    assert.equal(retrait.statut, 200, JSON.stringify(retrait.corps));
+    assert.equal(retrait.corps.masqueSite, true);
+    await appel('PATCH', '/benevole/profil', { jeton: visible, corps: { profession: 'Enseignante' } });
 
     const apres = await appel('GET', '/public/benevoles');
-    const noro = apres.corps.items.find((b) => b.prenom === 'Noro');
-    assert.ok(noro, 'le benevole qui a accepte parait');
-    assert.deepEqual(Object.keys(noro).sort(), ['id', 'photoUrl', 'prenom'], 'prenom et photo, rien d autre');
-    assert.ok(!apres.corps.items.some((b) => b.prenom === 'Fy'), 'l autre reste hors du site');
+    assert.ok(!apres.corps.items.some((b) => b.prenom === 'Fy'), 'celui qui s est retire disparait du site');
+    assert.ok(apres.corps.items.some((b) => b.prenom === 'Noro'), 'l autre y reste');
 
-    const retrait = await appel('PATCH', '/benevole/profil', { jeton: visible, corps: { visibleSite: false } });
-    assert.equal(retrait.corps.visibleSite, false);
-    assert.ok(!(await appel('GET', '/public/benevoles')).corps.items.some((b) => b.prenom === 'Noro'), 'l accord se retire');
+    const retour = await appel('PATCH', '/benevole/profil', { jeton: discret, corps: { masqueSite: false } });
+    assert.equal(retour.corps.masqueSite, false);
+    assert.ok((await appel('GET', '/public/benevoles')).corps.items.some((b) => b.prenom === 'Fy'), 'il revient quand il le decide');
   });
 });

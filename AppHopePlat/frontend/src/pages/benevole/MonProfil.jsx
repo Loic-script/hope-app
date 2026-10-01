@@ -53,7 +53,7 @@ export default function MonProfil() {
       telephone: donnees.telephone ?? '',
       dateDeNaissance: donnees.dateDeNaissance ?? '',
       photoUrl: donnees.photoUrl ?? '',
-      visibleSite: Boolean(donnees.visibleSite),
+      masqueSite: Boolean(donnees.masqueSite),
     });
   }, [donnees]);
 
@@ -97,7 +97,7 @@ export default function MonProfil() {
         dateDeNaissance: champs.dateDeNaissance || null,
         // Vide vaut effacement : le service le traduit en NULL.
         photoUrl: champs.photoUrl,
-        visibleSite: champs.visibleSite,
+        masqueSite: champs.masqueSite,
       });
       setSucces('Votre profil est à jour.');
       recharger();
@@ -159,7 +159,7 @@ export default function MonProfil() {
             televerser={service.televerserPhoto}
             onChange={(url) => modifier('photoUrl', url)}
             disabled={envoi}
-            aide="Une image — JPEG, PNG ou WebP. Visible par l’équipe HOPE et les autres bénévoles ; sur le site public seulement si vous l’acceptez ci-dessous."
+            aide="Une image — JPEG, PNG ou WebP. Visible par l’équipe HOPE, les autres bénévoles et, sauf refus ci-dessous, sur le site public."
           />
 
           {/* Le nom se renseigne ici : l'inscription ne le demande plus. */}
@@ -265,21 +265,24 @@ export default function MonProfil() {
           <legend>Sur le site de HOPE</legend>
 
           {/*
-            Rien ne parait sur le site public sans ce oui : la rubrique
-            "Les benevoles" ne montre que le prenom et la photo de ceux
-            qui l'ont coche, et chacun peut le decocher quand il veut.
+            La rubrique "Les benevoles" du site public presente les
+            benevoles actifs par leur prenom et leur photo ; cette case
+            permet a chacun de s'en retirer, et d'y revenir, quand il veut.
           */}
+          <p className="profil-benevole__note">
+            Le site public de HOPE présente ses bénévoles dans la rubrique « Les bénévoles » : votre prénom et votre
+            photo, rien d’autre — ni votre nom, ni vos coordonnées.
+          </p>
           <label className="profil-benevole__accord">
             <input
               type="checkbox"
-              checked={champs.visibleSite}
-              onChange={(e) => modifier('visibleSite', e.target.checked)}
+              checked={champs.masqueSite}
+              onChange={(e) => modifier('masqueSite', e.target.checked)}
               disabled={envoi}
             />
             <span>
-              <strong>J’accepte d’apparaître sur le site public de HOPE</strong>, avec mon prénom et ma photo, dans la
-              rubrique « Les bénévoles ». Ni mon nom, ni mes coordonnées n’y figurent. Je peux retirer cet accord à
-              tout moment.
+              <strong>Je ne souhaite pas apparaître sur le site public.</strong> Vous pouvez changer d’avis à tout
+              moment.
             </span>
           </label>
         </fieldset>

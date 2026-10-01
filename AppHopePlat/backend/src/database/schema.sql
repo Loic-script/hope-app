@@ -2092,8 +2092,10 @@ CREATE INDEX IF NOT EXISTS publication_commentaire_pub_idx ON publication_commen
  * Le benevole sur le site vitrine.
  *
  * La rubrique "Les benevoles" du site public montre le prenom et la
- * photo des benevoles de la plateforme -- seulement ceux qui l'ont
- * accepte depuis leur profil. Rien n'y parait par defaut : une personne
- * qui aide ne s'est pas pour autant engagee a se montrer.
+ * photo des benevoles actifs de la plateforme. HOPE a choisi de les y
+ * presenter d'emblee ; chacun peut s'en retirer depuis son profil
+ * (masque_site). La premiere version demandait un accord prealable
+ * (visible_site) : cette colonne, jamais utilisee, disparait.
  */
-ALTER TABLE benevole ADD COLUMN IF NOT EXISTS visible_site BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE benevole DROP COLUMN IF EXISTS visible_site;
+ALTER TABLE benevole ADD COLUMN IF NOT EXISTS masque_site BOOLEAN NOT NULL DEFAULT FALSE;

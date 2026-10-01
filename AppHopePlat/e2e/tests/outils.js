@@ -146,9 +146,8 @@ export async function actualitePubliquePrete(request, testInfo, { titre = 'Rentr
 }
 
 /**
- * Un benevole de la plateforme qui a accepte de paraitre sur le site :
- * cree par l'administration, connecte, puis son accord donne depuis son
- * profil. Rend { prenom }.
+ * Un benevole actif de la plateforme, cree par l'administration : le
+ * site le presente d'emblee par son prenom. Rend { prenom }.
  */
 export async function benevoleVisiblePret(request, testInfo, { prenom = 'Noro' } = {}) {
   const connexionAdmin = await request.post('/api/admin/login', { data: ADMIN });
@@ -160,14 +159,5 @@ export async function benevoleVisiblePret(request, testInfo, { prenom = 'Noro' }
     data: { type: 'BENEVOLE', prenom: prenomUnique, nom: 'Rakoto', email },
   });
   expect(compte.status(), `compte benevole : ${await compte.text()}`).toBe(201);
-  const connexion = await request.post('/api/auth/login', {
-    data: { email, motDePasse: (await compte.json()).motDePasseProvisoire, typeUtilisateur: 'benevole' },
-  });
-  expect(connexion.status(), 'connexion benevole').toBe(200);
-  const accord = await request.patch('/api/benevole/profil', {
-    headers: { Authorization: `Bearer ${(await connexion.json()).token}` },
-    data: { visibleSite: true },
-  });
-  expect(accord.status(), `accord : ${await accord.text()}`).toBe(200);
   return { prenom: prenomUnique };
 }

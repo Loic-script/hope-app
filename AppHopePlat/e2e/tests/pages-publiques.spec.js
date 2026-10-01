@@ -148,7 +148,7 @@ test('l accueil : les realisations et les actualites sont celles de la plateform
   await expect(page.locator('.v-actualite__lien').first()).toHaveAttribute('href', `/actualites/${actualite.id}`);
 });
 
-test('nous decouvrir : les benevoles qui ont accepte de paraitre, par leur prenom', async ({ page, request }, testInfo) => {
+test('nous decouvrir : les benevoles de la plateforme, par leur prenom', async ({ page, request }, testInfo) => {
   const benevole = await benevoleVisiblePret(request, testInfo);
   await page.goto('/nous-decouvrir');
   await page.locator('.v-benevoles').scrollIntoViewIfNeeded();

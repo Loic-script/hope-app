@@ -258,7 +258,7 @@
   font-weight: 700;
 }
 
-/* Personne n'a encore accepte de paraitre, ou la liste se charge. */
+/* Pas encore de benevole a montrer, ou la liste se charge. */
 .v-benevoles__message {
   display: flex;
   flex-direction: column;

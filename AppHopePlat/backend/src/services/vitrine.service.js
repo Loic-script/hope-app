@@ -3,7 +3,8 @@
  *
  * Les actualites de HOPE (titre, extrait, date, photo), ses projets
  * (nom, extrait, lieu, categorie, etat, photo) et, de ses benevoles,
- * le prenom et la photo de ceux qui ont accepte de paraitre. Jamais les
+ * le prenom et la photo de ceux qui n'ont pas demande a rester hors du
+ * site. Jamais les
  * appels a financement, les budgets, les responsables, les donateurs ni
  * les beneficiaires : ce qui touche a l'argent ou aux personnes reste
  * dans les espaces.
@@ -131,17 +132,17 @@ export async function projetsPourPlan() {
 /* --------------------------------- Benevoles --------------------------------- */
 
 /**
- * Les benevoles qui ont accepte de paraitre sur le site (visible_site,
- * depuis leur profil), au compte actif et au prenom renseigne : leur
- * prenom et leur photo, rien d'autre -- ni nom, ni contact, ni metier.
- * Les plus anciens d'abord.
+ * Les benevoles de la plateforme, au compte actif et au prenom
+ * renseigne, sauf ceux qui ont demande a ne pas paraitre (masque_site,
+ * depuis leur profil) : leur prenom et leur photo, rien d'autre -- ni
+ * nom, ni contact, ni metier. Les plus anciens d'abord.
  */
 export async function benevoles() {
   const { rows } = await query(
     `SELECT b.id, u.prenom, u.photo_url
        FROM benevole b
        JOIN utilisateur u ON u.id = b.utilisateur_id
-      WHERE b.visible_site AND u.statut = 'actif' AND TRIM(u.prenom) <> ''
+      WHERE NOT b.masque_site AND u.statut = 'actif' AND TRIM(u.prenom) <> ''
       ORDER BY b.benevole_depuis, u.prenom
       LIMIT 24`
   );

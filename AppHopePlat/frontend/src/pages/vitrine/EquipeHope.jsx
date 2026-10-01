@@ -15,8 +15,8 @@ import { urlMedia } from '../../services/api.js';
  * HOPE, decoupes au disque interieur de leur anneau
  * (assets/vitrine/equipe) ; les personnes y figurent avec leur accord.
  * Les benevoles, eux, viennent de la plateforme (GET
- * /api/public/benevoles) : seuls ceux qui ont accepte de paraitre, depuis
- * leur profil, y sont, avec leur prenom et leur photo.
+ * /api/public/benevoles) : les benevoles actifs, avec leur prenom et leur
+ * photo, sauf ceux qui ont demande depuis leur profil a ne pas y paraitre.
  */
 
 /* ----------------------------- Le portrait ----------------------------- */
@@ -193,8 +193,8 @@ function IconeChevron({ sens }) {
 /**
  * Le carrousel des benevoles de la plateforme : trois portraits a
  * l'ecran, un sur telephone ; les fleches font glisser d'un portrait,
- * les points disent ou l'on est et y menent. Tant que personne n'a
- * accepte de paraitre, la rubrique invite a rejoindre l'equipe.
+ * les points disent ou l'on est et y menent. Sans benevole a montrer, la
+ * rubrique invite a rejoindre l'equipe.
  */
 function LesBenevoles() {
   const [ref, vu] = useApparition({ seuil: 0.2 });
