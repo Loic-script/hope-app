@@ -308,10 +308,10 @@
   transform: translateY(-2px);
 }
 
-/* Les fleches, posees a cheval sur le bord des cartes. */
+/* Les fleches, posees a cheval sur le bord des cartes, a mi-hauteur. */
 .v-carrousel__fleche {
   position: absolute;
-  top: 30%;
+  top: 50%;
   z-index: 2;
   display: grid;
   place-items: center;
@@ -323,6 +323,7 @@
   color: #fff;
   cursor: pointer;
   box-shadow: 0 8px 20px -10px rgba(53, 51, 67, 0.5);
+  transform: translateY(-50%);
   transition:
     opacity 0.2s ease,
     transform 0.2s ease,
@@ -349,7 +350,7 @@
 
 .v-carrousel__fleche:hover:not(:disabled) {
   background: var(--hope-violet);
-  transform: scale(1.06);
+  transform: translateY(-50%) scale(1.06);
 }
 
 .v-carrousel__fleche:disabled {
