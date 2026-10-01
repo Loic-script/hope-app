@@ -4,10 +4,16 @@
    Trois temps : le bandeau d'appel sur la photo, les quatre activites
    en cartes coiffees d'un soleil, les impacts sur le violet de la
    charte. Titres en Montserrat, texte en Quicksand.
+
+   Sur ordinateur (plus de 1100 px de large), chaque section de l'accueil
+   occupe un ecran : la hauteur de la fenetre moins l'en-tete resserre
+   (72 px), --vitrine-ecran. Son contenu est centre et ses tailles se
+   resserrent en vh sur les ecrans peu hauts, pour que rien ne soit coupe.
    ============================================================ */
 
 .vitrine {
   --vitrine-titre: 'Montserrat', 'Poppins', system-ui, sans-serif;
+  --vitrine-ecran: calc(100vh - 72px);
 }
 
 /* Les boutons d'appel de la page. */
@@ -331,6 +337,46 @@
   font-weight: 600;
   line-height: 1.55;
   opacity: 0.95;
+}
+
+/* ========================= Un ecran par section ========================= */
+
+/* Les activites ont leurs regles dans vitrine-activites.css, chargee
+   apres cette feuille. */
+@media (min-width: 1101px) {
+  .accueil-impacts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: var(--vitrine-ecran);
+    padding-block: clamp(32px, 5vh, 88px) clamp(32px, 6vh, 100px);
+  }
+
+  /* En colonne flex, les marges automatiques de la grille ne l'etirent
+     plus : on lui rend sa pleine largeur. */
+  .accueil-impacts__grille {
+    width: 100%;
+    gap: clamp(32px, 7vh, 160px) 72px;
+    margin-top: clamp(24px, 5vh, 124px);
+  }
+
+  .impact__filigrane {
+    width: clamp(calc(var(--largeur) * 0.58px), calc(var(--largeur) * min(0.073vw, 0.11vh)), calc(var(--largeur) * 1px));
+  }
+
+  .impact__chiffre {
+    font-size: clamp(34px, min(3.75vw, 6.5vh), 51px);
+  }
+
+  .impact__libelle {
+    font-size: clamp(22px, min(3.1vw, 5.2vh), 42px);
+  }
+
+  .impact__texte {
+    margin-top: clamp(12px, 3vh, 58px);
+    font-size: clamp(15px, min(1.4vw, 2.4vh), 19px);
+  }
 }
 
 /* ============================ Petits ecrans ============================ */

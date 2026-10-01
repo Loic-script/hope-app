@@ -68,7 +68,7 @@ export function Realisations() {
   return (
     <section
       ref={ref}
-      className={`v-realisations${vu ? ' v-apparu' : ''}`}
+      className={`v-realisations v-realisations--accueil${vu ? ' v-apparu' : ''}`}
       aria-labelledby="v-realisations-titre"
     >
       <div className="v-conteneur">

@@ -357,6 +357,73 @@
   pointer-events: none;
 }
 
+/* -------------------------- Un ecran par section -------------------------- */
+
+/* Sur ordinateur, "Nos projets" et "Actualites" occupent chacune un
+   ecran (voir vitrine-accueil.css) : les marges se resserrent en vh et
+   la photo des cartes se limite en hauteur, pour que les trois cartes
+   restent entieres. Les pages de liste, qui reprennent .v-realisations,
+   ne sont pas concernees (.v-realisations--accueil). */
+@media (min-width: 1101px) {
+  .v-realisations--accueil,
+  .v-actualites {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: var(--vitrine-ecran);
+    padding-block: clamp(32px, 5vh, 88px);
+  }
+
+  /* En colonne flex, le conteneur centre par ses marges automatiques
+     garde sa pleine largeur. */
+  .v-realisations--accueil > .v-conteneur,
+  .v-actualites > .v-conteneur {
+    width: 100%;
+  }
+
+  .v-realisations--accueil .v-realisations__grille {
+    margin-top: clamp(24px, 4vh, 48px);
+  }
+
+  .v-realisations--accueil .v-realisation__image {
+    max-height: clamp(150px, 30vh, 266px);
+  }
+
+  .v-actualites .v-carrousel {
+    margin-top: clamp(20px, 3.5vh, 40px);
+  }
+
+  .v-actualites .v-actualite__image {
+    max-height: clamp(110px, 21vh, 243px);
+  }
+
+  /* Le corps des cartes respire un peu moins sur les ecrans bas. */
+  .v-actualites .v-carrousel__piste {
+    padding-bottom: clamp(10px, 2.7vh, 18px);
+  }
+
+  .v-actualites .v-actualite__corps {
+    padding: clamp(14px, 3vh, 20px) 24px clamp(16px, 3.6vh, 24px);
+  }
+
+  .v-actualites .v-actualite__date {
+    margin: clamp(8px, 1.8vh, 12px) 0 clamp(10px, 2.7vh, 18px);
+  }
+}
+
+/* Fenetre vraiment basse (moins de 640 px) : l'extrait des actualites
+   tient en deux lignes et le bouton se tasse un peu. */
+@media (min-width: 1101px) and (max-height: 640px) {
+  .v-actualites .v-actualite__texte {
+    -webkit-line-clamp: 2;
+  }
+
+  .v-actualites .v-actualite__lien {
+    min-height: 36px;
+  }
+}
+
 /* ----------------------------- Nos partenaires ----------------------------- */
 
 .v-partenaires {
