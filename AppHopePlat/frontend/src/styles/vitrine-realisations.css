@@ -12,14 +12,21 @@
 
 /* ------------------------------- Le bandeau ------------------------------- */
 
+/*
+ * Releve sur la maquette, a la meme echelle que les bandeaux de
+ * "S'engager" : a 1366 px de large, --u vaut 10 px ; en dessous, tout
+ * retrecit ensemble, jusqu'a 6 px l'unite.
+ */
 .realisations-hero {
+  --u: clamp(6px, 0.732vw, 10px);
+
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: min(600px, calc(100vh - 72px));
   overflow: hidden;
-  background: var(--hope-violet-fonce);
+  background: var(--hope-texte);
   isolation: isolate;
 }
 
@@ -42,32 +49,40 @@
   background:
     radial-gradient(
       ellipse at center,
-      color-mix(in srgb, var(--hope-violet-fonce) 30%, transparent) 0%,
-      color-mix(in srgb, var(--hope-violet-fonce) 58%, transparent) 75%
+      color-mix(in srgb, var(--hope-texte) 30%, transparent) 0%,
+      color-mix(in srgb, var(--hope-texte) 50%, transparent) 75%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--hope-violet-fonce) 16%, transparent) 0%,
-      color-mix(in srgb, var(--hope-violet-fonce) 30%, transparent) 100%
+      color-mix(in srgb, var(--hope-texte) 10%, transparent) 0%,
+      color-mix(in srgb, var(--hope-texte) 24%, transparent) 100%
     );
 }
 
 .realisations-hero__contenu {
-  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
   padding: 72px 32px 84px;
   color: #ffffff;
-  text-align: center;
 }
 
+.realisations-hero__bloc {
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Deux lignes en extra-gras, centrees l'une sur l'autre. */
 .realisations-hero__titre {
   margin: 0;
   font-family: var(--vitrine-titre);
-  font-size: clamp(26px, 4.4vw, 50px);
+  font-size: calc(var(--u) * 4.62);
   font-weight: 800;
-  line-height: 1.22;
-  letter-spacing: 0.01em;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-align: center;
   text-transform: uppercase;
-  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-texte) 70%, transparent);
 }
 
 .realisations-hero__ligne {
@@ -83,18 +98,39 @@
   animation-delay: 380ms;
 }
 
-/* Le soleil de la charte, cale a gauche sous le titre ; il se leve puis
-   flotte doucement. */
-.realisations-hero__soleil {
+/* Le soleil renverse, au bord gauche du titre ; le filet part a sa droite
+   et depasse un peu le bout du titre, comme sur la maquette. */
+.realisations-hero__trait {
+  position: relative;
+  height: calc(var(--u) * 0.84);
+  margin-top: calc(var(--u) * 0.6);
+}
+
+.realisations-hero__trait::before,
+.realisations-hero__trait::after {
   position: absolute;
-  top: calc(100% - 84px + 10px);
-  left: 32px;
-  width: clamp(40px, 4.4vw, 60px);
-  aspect-ratio: 34.85 / 23.81;
+  top: 0;
+  content: '';
+}
+
+.realisations-hero__trait::before {
+  top: calc(var(--u) * 0.14);
+  right: calc(var(--u) * -4.5);
+  left: calc(var(--u) * 8.7);
+  height: calc(var(--u) * 0.5);
+  border-radius: 999px;
+  background: var(--hope-bleu);
+  transform-origin: left center;
+  animation: engager-filet 900ms cubic-bezier(0.22, 1, 0.36, 1) 560ms both;
+}
+
+.realisations-hero__trait::after {
+  left: calc(var(--u) * -0.3);
+  width: calc(var(--u) * 6.6);
+  height: calc(var(--u) * 4.5);
   background: url('../assets/soleil.svg') center / contain no-repeat;
-  animation:
-    realisations-soleil 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 900ms both,
-    realisations-flotte 5s ease-in-out 1.6s infinite;
+  transform: scaleY(-1);
+  animation: engager-soleil-renverse 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 700ms both;
 }
 
 @keyframes realisations-soleil {
@@ -533,11 +569,6 @@
     padding: 56px 20px 72px;
   }
 
-  .realisations-hero__soleil {
-    top: calc(100% - 72px + 8px);
-    left: 20px;
-  }
-
   .v-recherche {
     width: 100%;
   }
@@ -554,7 +585,8 @@
 @media (prefers-reduced-motion: reduce) {
   .realisations-hero__photo,
   .realisations-hero__ligne,
-  .realisations-hero__soleil,
+  .realisations-hero__trait::before,
+  .realisations-hero__trait::after,
   .realisation-hero__photo,
   .realisation-hero__contenu,
   .v-squelette {

@@ -30,12 +30,15 @@ function Couverture() {
       <img className="realisations-hero__photo" src={couverture} alt="" fetchPriority="high" />
       <div className="realisations-hero__voile" aria-hidden="true" />
       <div className="realisations-hero__contenu">
-        <h1 className="realisations-hero__titre" id="realisations-hero-titre">
-          <span className="realisations-hero__ligne">Découvrez tous</span>
-          <span className="realisations-hero__ligne">nos projets réalisés.</span>
-        </h1>
-        {/* Le soleil de la charte (assets/soleil.svg), pose au pied du titre comme sur la maquette. */}
-        <span className="realisations-hero__soleil" aria-hidden="true" />
+        {/* Le bloc prend la largeur du titre : le filet s'y aligne. */}
+        <div className="realisations-hero__bloc">
+          <h1 className="realisations-hero__titre" id="realisations-hero-titre">
+            <span className="realisations-hero__ligne">Découvrez tous</span>
+            <span className="realisations-hero__ligne">nos projets</span>
+          </h1>
+          {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
+          <div className="realisations-hero__trait" aria-hidden="true" />
+        </div>
       </div>
     </section>
   );

@@ -61,7 +61,7 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   expect(items.some((p) => p.id === projet.id)).toBe(true);
 
   await page.goto('/nos-realisations');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('nos projets réalisés');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Découvrez tous\s*nos projets/);
   await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
   await sansDebordement(page);
 
