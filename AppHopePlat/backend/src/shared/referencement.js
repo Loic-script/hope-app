@@ -13,7 +13,7 @@
 export const PAGES_PUBLIQUES = [
   { chemin: '/', priorite: '1.0', frequence: 'weekly' },
   { chemin: '/nous-decouvrir', priorite: '0.8', frequence: 'monthly' },
-  { chemin: '/nos-realisations', priorite: '0.8', frequence: 'weekly' },
+  { chemin: '/nos-projets', priorite: '0.8', frequence: 'weekly' },
   { chemin: '/actualites', priorite: '0.8', frequence: 'weekly' },
   { chemin: '/s-engager', priorite: '0.7', frequence: 'monthly' },
   { chemin: '/contact', priorite: '0.6', frequence: 'yearly' },
@@ -44,7 +44,7 @@ export function robotsTxt(siteUrl) {
 /** La page de chaque projet du site, datee de sa derniere mise a jour. */
 export function pagesDesProjets(projets = []) {
   return projets.map((projet) => ({
-    chemin: `/nos-realisations/${projet.id}`,
+    chemin: `/nos-projets/${projet.id}`,
     priorite: '0.6',
     frequence: 'monthly',
     modifie: projet.updatedAt ? String(projet.updatedAt).slice(0, 10) : undefined,

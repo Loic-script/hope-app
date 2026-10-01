@@ -95,7 +95,7 @@ export default function Actualite() {
                   <dt>Projet</dt>
                   <dd>
                     {actualite.projetId ? (
-                      <Link to={`/nos-realisations/${actualite.projetId}`} className="realisation__lien">
+                      <Link to={`/nos-projets/${actualite.projetId}`} className="realisation__lien">
                         {actualite.projetNom}
                       </Link>
                     ) : (

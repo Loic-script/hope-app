@@ -7,10 +7,8 @@ export const LIENS_GAUCHE = [
   { to: '/s-engager', libelle: 'S’engager' },
 ];
 
-// "Nos projets" : la page des realisations (/nos-realisations), que le
-// menu nomme ainsi.
 export const LIENS_DROITE = [
-  { to: '/nos-realisations', libelle: 'Nos projets' },
+  { to: '/nos-projets', libelle: 'Nos projets' },
   { to: '/actualites', libelle: 'Actualités' },
   { to: '/contact', libelle: 'Contact' },
 ];

@@ -31,8 +31,8 @@ test('le plan du site ajoute la fiche de chaque projet, datee de sa mise a jour'
     'https://hope.example',
     pagesDesProjets([{ id: 7, updatedAt: '2026-09-01T10:00:00.000Z' }, { id: 9 }])
   );
-  assert.match(xml, /<loc>https:\/\/hope\.example\/nos-realisations\/7<\/loc>\s*<lastmod>2026-09-01<\/lastmod>/);
-  assert.match(xml, /<loc>https:\/\/hope\.example\/nos-realisations\/9<\/loc>\s*<changefreq>monthly/);
+  assert.match(xml, /<loc>https:\/\/hope\.example\/nos-projets\/7<\/loc>\s*<lastmod>2026-09-01<\/lastmod>/);
+  assert.match(xml, /<loc>https:\/\/hope\.example\/nos-projets\/9<\/loc>\s*<changefreq>monthly/);
   assert.equal([...xml.matchAll(/<loc>/g)].length, PAGES_PUBLIQUES.length + 2);
 });
 

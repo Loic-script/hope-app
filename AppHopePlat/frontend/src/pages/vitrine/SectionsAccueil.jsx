@@ -14,7 +14,7 @@ import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
 
 /**
- * La suite de l'accueil du site vitrine : nos realisations et les
+ * La suite de l'accueil du site vitrine : nos projets et les
  * actualites (les trois dernieres de chaque, lues dans la plateforme),
  * nos partenaires, et l'appel a contribuer.
  */
@@ -46,7 +46,7 @@ function EnteteSection({ id, titre, lien, libelleLien }) {
   );
 }
 
-/* ============================ Nos realisations ============================ */
+/* ============================== Nos projets ============================== */
 
 /**
  * Les trois derniers projets de HOPE, tels que la plateforme les montre
@@ -77,18 +77,18 @@ export function Realisations() {
       <div className="v-conteneur">
         <EnteteSection
           id="v-realisations-titre"
-          titre="Nos réalisations"
-          lien="/nos-realisations"
-          libelleLien="Toutes nos réalisations"
+          titre="Nos projets"
+          lien="/nos-projets"
+          libelleLien="Tous nos projets"
         />
         {projets === null ? (
-          <p className="v-realisations__attente">Chargement des réalisations…</p>
+          <p className="v-realisations__attente">Chargement des projets…</p>
         ) : projets.length === 0 ? (
           <p className="v-realisations__attente">Nos premiers projets arrivent bientôt.</p>
         ) : (
           <ul className="v-realisations__grille">
             {projets.map((p, rang) => {
-              const lien = `/nos-realisations/${p.id}`;
+              const lien = `/nos-projets/${p.id}`;
               const texte = p.description || p.descriptionTitre || `Un projet de HOPE${p.location ? ` à ${p.location}` : ''}.`;
               return (
                 <li key={p.id} className="v-realisation v-entree" style={{ '--rang': rang }}>

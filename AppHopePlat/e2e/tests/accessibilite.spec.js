@@ -41,8 +41,8 @@ const CONTRASTE_ACCEPTE = {
     '.accueil-bouton--bleu',
     '.decouvrir-carte--vision .decouvrir-carte__texte',
   ],
-  '/nos-realisations': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
-  '/nos-realisations/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
+  '/nos-projets': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
+  '/nos-projets/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
   '/actualites': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange', '.v-actualite__titre', '.v-actualite__lien'],
   '/actualites/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
   '/s-engager': [
@@ -70,7 +70,7 @@ async function auditer(page, nom) {
 }
 
 test('pages publiques', async ({ page }) => {
-  for (const chemin of ['/', '/nous-decouvrir', '/nos-realisations', '/actualites', '/s-engager', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
+  for (const chemin of ['/', '/nous-decouvrir', '/nos-projets', '/actualites', '/s-engager', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');
     await auditer(page, chemin);
@@ -79,10 +79,10 @@ test('pages publiques', async ({ page }) => {
 
 test('la fiche d un projet', async ({ page, request }, testInfo) => {
   const projet = await projetPublicPret(request, testInfo, { nom: 'Accessible' });
-  await page.goto(`/nos-realisations/${projet.id}`);
+  await page.goto(`/nos-projets/${projet.id}`);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(projet.name);
   await page.waitForLoadState('networkidle');
-  await auditer(page, '/nos-realisations/:id');
+  await auditer(page, '/nos-projets/:id');
 });
 
 test('l article d une actualite', async ({ page, request }, testInfo) => {

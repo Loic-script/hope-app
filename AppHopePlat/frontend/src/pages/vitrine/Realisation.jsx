@@ -53,8 +53,8 @@ export default function Realisation() {
       <MessageFiche
         titre="Projet introuvable"
         texte="Ce projet n’existe pas ou n’est plus présenté sur le site."
-        retour="/nos-realisations"
-        libelleRetour="Toutes nos réalisations"
+        retour="/nos-projets"
+        libelleRetour="Tous nos projets"
       />
     );
   }
@@ -63,8 +63,8 @@ export default function Realisation() {
       <MessageFiche
         titre="Un instant…"
         texte="Le projet ne se charge pas pour le moment. Réessayez dans quelques instants."
-        retour="/nos-realisations"
-        libelleRetour="Toutes nos réalisations"
+        retour="/nos-projets"
+        libelleRetour="Tous nos projets"
       />
     );
   }
@@ -83,8 +83,8 @@ export default function Realisation() {
         {photo && <img className="realisation-hero__photo" src={photo} alt="" fetchPriority="high" />}
         <div className="realisation-hero__voile" aria-hidden="true" />
         <div className="v-conteneur realisation-hero__contenu">
-          <Link to="/nos-realisations" className="realisation__retour">
-            <span aria-hidden="true">←</span> Toutes nos réalisations
+          <Link to="/nos-projets" className="realisation__retour">
+            <span aria-hidden="true">←</span> Tous nos projets
           </Link>
           {surTitre && <p className="realisation-hero__sur-titre">{surTitre}</p>}
           <h1 className="realisation-hero__titre">{projet.name}</h1>

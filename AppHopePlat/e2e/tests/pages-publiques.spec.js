@@ -60,7 +60,7 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   const { items } = await (await request.get('/api/public/projets?limite=60')).json();
   expect(items.some((p) => p.id === projet.id)).toBe(true);
 
-  await page.goto('/nos-realisations');
+  await page.goto('/nos-projets');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Découvrez tous\s*nos projets/);
   await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
   await sansDebordement(page);
@@ -79,14 +79,14 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   // Sa fiche : le nom, le sous-titre, les deux paragraphes, le lieu.
   await champ.fill(projet.name);
   await page.locator('.realisations-carte__lien').first().click();
-  await expect(page).toHaveURL(new RegExp(`/nos-realisations/${projet.id}$`));
+  await expect(page).toHaveURL(new RegExp(`/nos-projets/${projet.id}$`));
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(projet.name);
   await expect(page.locator('.realisation__sous-titre')).toHaveText('Des livres pour toute une commune');
   await expect(page.locator('.realisation__texte p')).toHaveCount(2);
   await expect(page.locator('.realisation__fiche')).toContainText('Moramanga');
   await sansDebordement(page);
 
-  await page.goto('/nos-realisations/999999');
+  await page.goto('/nos-projets/999999');
   await expect(page.locator('.realisation__message')).toContainText('introuvable');
 });
 
@@ -145,7 +145,7 @@ test('l accueil : les realisations et les actualites sont celles de la plateform
   await expect(page.locator('.v-realisation')).toHaveCount(items.length);
   // Le projet seme est le plus recent : il ouvre la liste.
   await expect(page.locator('.v-realisation__titre').first()).toHaveText(projet.name);
-  await expect(page.locator('.v-realisation__lien').first()).toHaveAttribute('href', `/nos-realisations/${projet.id}`);
+  await expect(page.locator('.v-realisation__lien').first()).toHaveAttribute('href', `/nos-projets/${projet.id}`);
   await expect(page.locator('.v-actualite__titre').first()).toHaveText(actualite.titre);
   await expect(page.locator('.v-actualite__lien').first()).toHaveAttribute('href', `/actualites/${actualite.id}`);
 });

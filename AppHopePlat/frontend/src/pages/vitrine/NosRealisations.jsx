@@ -9,7 +9,7 @@ import { urlMedia } from '../../services/api.js';
 import { SansImage } from './SectionsAccueil.jsx';
 
 /**
- * "Nos realisations" : les projets de HOPE, lus dans la plateforme
+ * "Nos projets" : les projets de HOPE, lus dans la plateforme
  * (GET /api/public/projets), en cartes sur le fond de soleils.
  *
  * Le site ne recoit que ce que la plateforme veut bien montrer : le nom,
@@ -47,7 +47,7 @@ function Couverture() {
 /* -------------------------------- Les cartes -------------------------------- */
 
 function Carte({ projet, rang }) {
-  const lien = `/nos-realisations/${projet.id}`;
+  const lien = `/nos-projets/${projet.id}`;
   const etat = ETATS[projet.status];
   const texte =
     projet.description || projet.descriptionTitre || `Un projet de HOPE${projet.location ? ` à ${projet.location}` : ''}.`;

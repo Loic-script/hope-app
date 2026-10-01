@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import Redirection from '../pages/Redirection.jsx';
@@ -173,6 +173,12 @@ function VersUtilisateurs({ onglet }) {
   return <Navigate to={`/admin/utilisateurs?onglet=${onglet}${hash}`} replace />;
 }
 
+/** L'ancienne adresse d'une fiche de projet renvoie a la nouvelle. */
+function VersNosProjets() {
+  const { id } = useParams();
+  return <Navigate to={`/nos-projets/${id}`} replace />;
+}
+
 export default function AppRoutes() {
   return (
     <Suspense fallback={<ChargementPage />}>
@@ -181,8 +187,11 @@ export default function AppRoutes() {
       <Route element={<VitrineLayout />}>
         <Route path="/" element={<AccueilVitrine />} />
         <Route path="/nous-decouvrir" element={<NousDecouvrir />} />
-        <Route path="/nos-realisations" element={<NosRealisations />} />
-        <Route path="/nos-realisations/:id" element={<Realisation />} />
+        <Route path="/nos-projets" element={<NosRealisations />} />
+        <Route path="/nos-projets/:id" element={<Realisation />} />
+        {/* L'ancienne adresse de la page des projets, encore dans des liens partages. */}
+        <Route path="/nos-realisations" element={<Navigate to="/nos-projets" replace />} />
+        <Route path="/nos-realisations/:id" element={<VersNosProjets />} />
         <Route path="/actualites" element={<Actualites />} />
         <Route path="/actualites/:id" element={<Actualite />} />
         <Route path="/contact" element={<EnPreparation titre="Contact" />} />
