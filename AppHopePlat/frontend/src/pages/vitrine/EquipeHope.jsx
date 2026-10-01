@@ -78,11 +78,11 @@ function Portrait({ src, initiale = '', barres = 'violet' }) {
 }
 
 /**
- * Le portrait de la presidente, en calques empiles (boitier de 140
- * unites, centre au milieu) :
+ * Le portrait de la presidente, en calques empiles (boitier de 128
+ * unites, centre au milieu : la photo en occupe 63 %) :
  *   - derriere la carte : un halo jaune, la couronne de douze rayons
- *     (de 53,5 a 68) qui tourne lentement, et une orbite en pointilles
- *     (R = 49,6) avec son satellite, qui tourne a contresens ;
+ *     (de 51,5 a 63) qui tourne lentement, et une orbite en pointilles
+ *     (R = 48,4) avec son satellite, qui tourne a contresens ;
  *   - devant la carte : la photo (R = 40,2) dans son anneau jaune de 5,2
  *     d'epaisseur (R = 42,6), qui se trace a l'apparition.
  * La carte passe entre les deux : les rayons se couchent derriere elle.
@@ -95,28 +95,28 @@ function MedaillonDirection({ src }) {
   return (
     <div className="v-direction__portrait" aria-hidden="true">
       <span className="v-direction__halo" />
-      <svg className="v-direction__couronne" viewBox="-70 -70 140 140">
+      <svg className="v-direction__couronne" viewBox="-64 -64 128 128">
         <g className="v-portrait__rayons">
           <g className="v-portrait__rayons-vif">
             {Array.from({ length: 12 }, (_, i) => i * 30).map((angle) => (
               <rect
                 key={angle}
-                x="-3"
-                y="-68"
-                width="6"
-                height="14.5"
-                rx="3"
+                x="-2.7"
+                y="-63"
+                width="5.4"
+                height="11.5"
+                rx="2.7"
                 transform={angle === 0 ? undefined : `rotate(${angle})`}
               />
             ))}
           </g>
         </g>
       </svg>
-      <svg className="v-direction__orbite" viewBox="-70 -70 140 140">
-        <circle className="v-direction__orbite-trait" r="49.6" />
-        <circle className="v-direction__satellite" cy="-49.6" r="2.3" />
+      <svg className="v-direction__orbite" viewBox="-64 -64 128 128">
+        <circle className="v-direction__orbite-trait" r="48.4" />
+        <circle className="v-direction__satellite" cy="-48.4" r="2" />
       </svg>
-      <svg className="v-direction__medaillon" viewBox="-70 -70 140 140">
+      <svg className="v-direction__medaillon" viewBox="-64 -64 128 128">
         <defs>
           <clipPath id={id}>
             <circle r="40.2" />
