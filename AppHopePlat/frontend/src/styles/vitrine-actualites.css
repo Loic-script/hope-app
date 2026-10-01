@@ -9,13 +9,20 @@
 
 /* ------------------------------- Le bandeau ------------------------------- */
 
+/*
+ * Releve sur la maquette, a la meme echelle que les autres bandeaux : a
+ * 1366 px de large, --u vaut 10 px ; en dessous, tout retrecit ensemble,
+ * jusqu'a 6 px l'unite.
+ */
 .actualites-hero {
+  --u: clamp(6px, 0.732vw, 10px);
+
   position: relative;
   display: flex;
   align-items: center;
   min-height: min(640px, calc(100vh - 72px));
   overflow: hidden;
-  background: var(--hope-violet-fonce);
+  background: var(--hope-texte);
   color: #ffffff;
   isolation: isolate;
 }
@@ -32,86 +39,107 @@
 }
 
 /* Le voile violet, un peu plus present a gauche, sous le texte. */
+/* La photo garde ses couleurs : un voile sombre et neutre, un peu plus
+   present a gauche, sous le texte. */
 .actualites-hero__voile {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--hope-violet-fonce) 58%, transparent) 0%,
-      color-mix(in srgb, var(--hope-violet-fonce) 34%, transparent) 60%,
-      color-mix(in srgb, var(--hope-violet-fonce) 22%, transparent) 100%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--hope-violet-fonce) 10%, transparent) 0%,
-      color-mix(in srgb, var(--hope-violet-fonce) 30%, transparent) 100%
-    );
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--hope-texte) 55%, transparent) 0%,
+    color-mix(in srgb, var(--hope-texte) 32%, transparent) 55%,
+    color-mix(in srgb, var(--hope-texte) 20%, transparent) 100%
+  );
 }
 
 .actualites-hero__contenu {
   width: 100%;
   padding-top: 64px;
   padding-bottom: 72px;
+  padding-left: calc(32px + var(--u) * 3.6);
 }
 
-.actualites-hero__sur-titre {
-  margin: 0 0 12px;
-  color: var(--hope-jaune);
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+.actualites-hero__bloc {
+  width: fit-content;
+  max-width: 100%;
 }
 
+/* Le titre de l'actualite, en capitales extra-grasses, sur deux lignes
+   environ. */
 .actualites-hero__titre {
   max-width: 24ch;
   margin: 0;
   font-family: var(--vitrine-titre);
-  font-size: clamp(24px, 3.6vw, 44px);
+  font-size: calc(var(--u) * 4.62);
   font-weight: 800;
-  line-height: 1.22;
-  letter-spacing: 0.01em;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-violet-fonce) 75%, transparent);
-  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 250ms both;
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-texte) 70%, transparent);
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
 }
 
-/* Le soleil de la charte, en tete de l'extrait. */
-.actualites-hero__ligne {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  max-width: 640px;
-  margin-top: 18px;
+/* Le soleil renverse, au bord gauche du titre ; le filet part a sa droite
+   jusqu'au bout du titre. */
+.actualites-hero__trait {
+  position: relative;
+  height: calc(var(--u) * 0.84);
+  margin-top: calc(var(--u) * 0.4);
+}
+
+.actualites-hero__trait::before,
+.actualites-hero__trait::after {
+  position: absolute;
+  top: 0;
+  content: '';
+}
+
+.actualites-hero__trait::before {
+  top: calc(var(--u) * 0.14);
+  right: calc(var(--u) * 2.6);
+  left: calc(var(--u) * 6.2);
+  height: calc(var(--u) * 0.6);
+  border-radius: 999px;
+  background: var(--hope-bleu);
+  transform-origin: left center;
+  animation: engager-filet 900ms cubic-bezier(0.22, 1, 0.36, 1) 500ms both;
+}
+
+.actualites-hero__trait::after {
+  left: calc(var(--u) * -0.4);
+  width: calc(var(--u) * 6.6);
+  height: calc(var(--u) * 4.5);
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+  transform: scaleY(-1);
+  animation: engager-soleil-renverse 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 650ms both;
+}
+
+/* L'extrait, centre sous le titre, en retrait du soleil ; trois lignes
+   au plus. Il ne compte pas dans la largeur du bloc : c'est le titre qui
+   la donne. */
+.actualites-hero__texte {
+  display: -webkit-box;
+  contain: inline-size;
+  margin: calc(var(--u) * 2.2) calc(var(--u) * 2.6) 0 calc(var(--u) * 8.6);
+  overflow: hidden;
+  font-size: max(15px, calc(var(--u) * 2.05));
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-texte) 80%, transparent);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 450ms both;
 }
 
-.actualites-hero__soleil {
-  flex: none;
-  width: 38px;
-  margin-top: 4px;
-  aspect-ratio: 34.85 / 23.81;
-  background: url('../assets/soleil.svg') center / contain no-repeat;
-  animation: realisations-soleil 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 900ms both;
-}
-
-.actualites-hero__texte {
-  display: -webkit-box;
-  margin: 0;
-  overflow: hidden;
-  font-size: clamp(15px, 1.35vw, 17.5px);
-  font-weight: 600;
-  line-height: 1.6;
-  text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-violet-fonce) 80%, transparent);
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
+/* Le bouton, centre sous le bloc. */
 .actualites-hero__bouton {
-  margin: 28px 0 0 54px;
+  display: flex;
+  width: fit-content;
+  min-height: max(48px, calc(var(--u) * 5.4));
+  margin: calc(var(--u) * 3.4) auto 0;
+  padding: 0 28px;
   animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 650ms both;
 }
 
@@ -180,22 +208,31 @@
 
 @media (max-width: 640px) {
   .actualites-hero__contenu {
-    padding-top: 48px;
-    padding-bottom: 56px;
+    padding: 48px 20px 56px;
+  }
+
+  /* Un titre d'actualite peut etre long : plus serre sur telephone. */
+  .actualites-hero__titre {
+    font-size: 24px;
+    line-height: 1.3;
+  }
+
+  .actualites-hero__texte {
+    margin-right: 0;
+    text-align: left;
   }
 
   .actualites-hero__bouton {
     width: 100%;
-    margin-left: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .actualites-hero__photo,
-  .actualites-hero__sur-titre,
   .actualites-hero__titre,
-  .actualites-hero__ligne,
-  .actualites-hero__soleil,
+  .actualites-hero__trait::before,
+  .actualites-hero__trait::after,
+  .actualites-hero__texte,
   .actualites-hero__bouton,
   .actualites-hero__attente span {
     animation: none;

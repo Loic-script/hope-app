@@ -41,32 +41,26 @@ function Couverture({ actualites }) {
             </div>
           </>
         ) : derniere ? (
-          <>
-            <p className="actualites-hero__sur-titre">À la une</p>
+          /* Le bloc prend la largeur du titre : le filet, l'extrait et le bouton s'y alignent. */
+          <div className="actualites-hero__bloc">
             <h1 className="actualites-hero__titre" id="actualites-hero-titre">
               {derniere.titre}
             </h1>
-            {derniere.corps && (
-              <div className="actualites-hero__ligne">
-                {/* Le soleil de la charte (assets/soleil.svg), en tete du texte comme sur la maquette. */}
-                <span className="actualites-hero__soleil" aria-hidden="true" />
-                <p className="actualites-hero__texte">{derniere.corps}</p>
-              </div>
-            )}
+            {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
+            <div className="actualites-hero__trait" aria-hidden="true" />
+            {derniere.corps && <p className="actualites-hero__texte">{derniere.corps}</p>}
             <Link to={`/actualites/${derniere.id}`} className="accueil-bouton accueil-bouton--orange actualites-hero__bouton">
               Découvrir l’actualité →
             </Link>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="actualites-hero__bloc">
             <h1 className="actualites-hero__titre" id="actualites-hero-titre">
               Les actualités de HOPE
             </h1>
-            <div className="actualites-hero__ligne">
-              <span className="actualites-hero__soleil" aria-hidden="true" />
-              <p className="actualites-hero__texte">Les premières actualités arrivent bientôt.</p>
-            </div>
-          </>
+            <div className="actualites-hero__trait" aria-hidden="true" />
+            <p className="actualites-hero__texte">Les premières actualités arrivent bientôt.</p>
+          </div>
         )}
       </div>
     </section>
