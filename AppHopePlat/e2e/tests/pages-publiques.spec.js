@@ -135,3 +135,15 @@ test('s engager : les trois voies, puis l appel au don et au partenariat', async
   await expect(page).toHaveURL(/\/authentification\?type=bailleur$/);
   await expect(page.locator('#typeConnexion')).toHaveValue('bailleur');
 });
+
+test('l accueil : les realisations et les actualites sont celles de la plateforme', async ({ page, request }, testInfo) => {
+  const projet = await projetPublicPret(request, testInfo, { nom: 'Accueil' });
+  const actualite = await actualitePubliquePrete(request, testInfo, { titre: 'Accueil' });
+  await page.goto('/');
+  await expect(page.locator('.v-realisation')).toHaveCount(3);
+  // Le projet seme est le plus recent : il ouvre la liste.
+  await expect(page.locator('.v-realisation__titre').first()).toHaveText(projet.name);
+  await expect(page.locator('.v-realisation__lien').first()).toHaveAttribute('href', `/nos-realisations/${projet.id}`);
+  await expect(page.locator('.v-actualite__titre').first()).toHaveText(actualite.titre);
+  await expect(page.locator('.v-actualite__lien').first()).toHaveAttribute('href', `/actualites/${actualite.id}`);
+});

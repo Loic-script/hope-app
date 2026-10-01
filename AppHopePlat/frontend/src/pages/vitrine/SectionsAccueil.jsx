@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import akanySoavina from '../../assets/vitrine/akany-soavina.jpg';
-import initiationFormations from '../../assets/vitrine/initiation-formations.jpg';
 import mereEtEnfant from '../../assets/vitrine/mere-et-enfant.jpg';
 import logoAqoci from '../../assets/vitrine/partenaires/aqoci.png';
 import logoCoeurEtConscience from '../../assets/vitrine/partenaires/coeur-et-conscience.png';
@@ -16,9 +14,9 @@ import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
 
 /**
- * La suite de l'accueil du site vitrine : nos realisations, les
- * actualites (lues dans la plateforme), nos partenaires, et l'appel a
- * contribuer.
+ * La suite de l'accueil du site vitrine : nos realisations et les
+ * actualites (les trois dernieres de chaque, lues dans la plateforme),
+ * nos partenaires, et l'appel a contribuer.
  */
 
 /** Une image absente : le cadre reste habite par une icone. */
@@ -50,27 +48,26 @@ function EnteteSection({ id, titre, lien, libelleLien }) {
 
 /* ============================ Nos realisations ============================ */
 
-const REALISATIONS = [
-  {
-    titre: 'Soutien à la Formation Professionnelle d’Olivier',
-    texte: 'Olivier, 24 ans, rêvait de devenir mécanicien automobile…',
-    // La photo d'Olivier est a fournir : en attendant, le cadre l'annonce.
-    image: null,
-  },
-  {
-    titre: 'Initiation aux Formations Professionnelles',
-    texte: 'Afin de promouvoir l’autonomisation des mères célibataires…',
-    image: initiationFormations,
-  },
-  {
-    titre: 'Soutien Scolaire pour l’Akany Soavina',
-    texte: 'À l’occasion de la rentrée scolaire, nous avons soutenu les enfants de l’Akany Soavina…',
-    image: akanySoavina,
-  },
-];
-
+/**
+ * Les trois derniers projets de HOPE, tels que la plateforme les montre
+ * au site (GET /api/public/projets) : nom, extrait, photo. Chaque carte
+ * mene a la fiche du projet.
+ */
 export function Realisations() {
   const [ref, vu] = useApparition({ seuil: 0.15 });
+  const [projets, setProjets] = useState(null);
+
+  useEffect(() => {
+    let actif = true;
+    fetch('/api/public/projets?limite=3')
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d) => actif && setProjets(d.items ?? []))
+      .catch(() => actif && setProjets([]));
+    return () => {
+      actif = false;
+    };
+  }, []);
+
   return (
     <section
       ref={ref}
@@ -84,22 +81,32 @@ export function Realisations() {
           lien="/nos-realisations"
           libelleLien="Toutes nos réalisations"
         />
-        <ul className="v-realisations__grille">
-          {REALISATIONS.map((r, rang) => (
-            <li key={r.titre} className="v-realisation v-entree" style={{ '--rang': rang }}>
-              <div className="v-realisation__image">
-                {r.image ? <img src={r.image} alt="" loading="lazy" /> : <SansImage />}
-              </div>
-              <div className="v-realisation__corps">
-                <h3 className="v-realisation__titre">{r.titre}</h3>
-                <p className="v-realisation__texte">{r.texte}</p>
-                <Link to="/nos-realisations" className="v-realisation__lien">
-                  Lire la suite<span className="sr-only"> : {r.titre}</span>
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {projets === null ? (
+          <p className="v-realisations__attente">Chargement des réalisations…</p>
+        ) : projets.length === 0 ? (
+          <p className="v-realisations__attente">Nos premiers projets arrivent bientôt.</p>
+        ) : (
+          <ul className="v-realisations__grille">
+            {projets.map((p, rang) => {
+              const lien = `/nos-realisations/${p.id}`;
+              const texte = p.description || p.descriptionTitre || `Un projet de HOPE${p.location ? ` à ${p.location}` : ''}.`;
+              return (
+                <li key={p.id} className="v-realisation v-entree" style={{ '--rang': rang }}>
+                  <div className="v-realisation__image">
+                    {p.photoUrl ? <img src={urlMedia(p.photoUrl)} alt="" loading="lazy" /> : <SansImage />}
+                  </div>
+                  <div className="v-realisation__corps">
+                    <h3 className="v-realisation__titre">{p.name}</h3>
+                    <p className="v-realisation__texte">{texte}</p>
+                    <Link to={lien} className="v-realisation__lien">
+                      Lire la suite<span className="sr-only"> : {p.name}</span>
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </section>
   );

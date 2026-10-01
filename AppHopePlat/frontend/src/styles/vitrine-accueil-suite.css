@@ -193,6 +193,7 @@
   background: var(--hope-fond-panneau);
 }
 
+.v-realisations__attente,
 .v-actualites__attente {
   margin: 40px 0 0;
   color: var(--hope-texte-doux);
