@@ -22,6 +22,7 @@ import { DOSSIER_MEDIAS } from '../middleware/upload.middleware.js';
 import * as funderAuthService from '../services/funderAuth.service.js';
 import { installerDocumentsDemo } from './documentsBailleurDemo.js';
 import { poserMedia } from './mediasDemo.js';
+import { ACTUALITES_DEMO } from './actualitesDemo.js';
 
 const FORCER = process.argv.includes('--force');
 
@@ -346,18 +347,18 @@ async function installer() {
 
   // --- Fil d'actualite -------------------------------------------------
   const PUBLICATIONS = [
-    {
+    // Les actualites de demonstration (actualitesDemo.js). La rentree a
+    // une photo propre a l'annonce, et non celle du projet : une salle de
+    // classe malgache le jour de la rentree dit la nouvelle mieux que le
+    // visuel generique du programme.
+    ...ACTUALITES_DEMO.map((a) => ({
       type: 'actualite',
-      titre: 'Rentrée scolaire : 100 enfants accompagnés à Antananarivo',
-      corps:
-        'Les écolages du premier trimestre sont réglés et les kits distribués. Les 100 enfants du programme ont fait leur rentrée.',
-      projet: 'Soutien scolaire Antananarivo',
-      // Une photo propre a l'annonce, et non celle du projet : une salle
-      // de classe malgache le jour de la rentree dit la nouvelle mieux
-      // que le visuel generique du programme.
-      media: 'rentree.jpg',
-      publieLe: jour(-12),
-    },
+      titre: a.titre,
+      corps: a.corps,
+      projet: a.projet,
+      media: a.media,
+      publieLe: jour(-a.joursAvant),
+    })),
     {
       type: 'appel_financement',
       titre: 'Appel à financement : cantines de Fianarantsoa',
