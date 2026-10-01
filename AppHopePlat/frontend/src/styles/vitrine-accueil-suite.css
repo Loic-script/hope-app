@@ -368,7 +368,7 @@
   font-size: clamp(24px, 3vw, 32px);
 }
 
-/* Quatre logos, puis trois, centres : chaque case a la meme largeur. */
+/* Quatre logos centres sur une ligne : chaque case a la meme largeur. */
 .v-partenaires__liste {
   display: flex;
   flex-wrap: wrap;

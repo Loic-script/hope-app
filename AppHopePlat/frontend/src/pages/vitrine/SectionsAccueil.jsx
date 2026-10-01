@@ -2,13 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import mereEtEnfant from '../../assets/vitrine/mere-et-enfant.jpg';
-import logoAqoci from '../../assets/vitrine/partenaires/aqoci.png';
-import logoCoeurEtConscience from '../../assets/vitrine/partenaires/coeur-et-conscience.png';
-import logoDesjardins from '../../assets/vitrine/partenaires/desjardins.png';
-import logoDeveloppementEtPaix from '../../assets/vitrine/partenaires/developpement-et-paix.png';
-import logoHumaniteInclusion from '../../assets/vitrine/partenaires/humanite-inclusion.png';
-import logoSaveTheChildren from '../../assets/vitrine/partenaires/save-the-children.png';
-import logoUnicef from '../../assets/vitrine/partenaires/unicef.png';
+import logoAllieeVirtuelle from '../../assets/vitrine/partenaires/alliee-virtuelle.png';
+import logoCanCham from '../../assets/vitrine/partenaires/cancham.png';
+import logoGad from '../../assets/vitrine/partenaires/gad.png';
+import logoHn from '../../assets/vitrine/partenaires/hn.png';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
@@ -220,19 +217,17 @@ export function Actualites() {
 /* ============================ Nos partenaires ============================ */
 
 /*
- * Les logos des partenaires, fournis par HOPE et recadres sur leur contenu.
- * `hauteur` egalise leur surface a l'ecran : un logo presque carre (HI)
- * est affiche plus haut qu'un logo tres large (UNICEF), et tous paraissent
- * de meme importance. L'ordre est celui de la maquette : quatre, puis trois.
+ * Les logos des partenaires, fournis par HOPE, recadres sur leur contenu et
+ * enregistres a deux fois leur taille d'affichage. `hauteur` egalise leur
+ * surface a l'ecran : un logo presque carre (HN, L'Alliee Virtuelle) est
+ * affiche plus haut qu'un logo tres large (CanCham), et tous paraissent de
+ * meme importance. Les quatre tiennent sur une ligne.
  */
 const PARTENAIRES = [
-  { nom: 'UNICEF', logo: logoUnicef, hauteur: 43 },
-  { nom: 'Humanité & Inclusion', logo: logoHumaniteInclusion, hauteur: 74 },
-  { nom: 'AQOCI', logo: logoAqoci, hauteur: 47 },
-  { nom: 'Save the Children', logo: logoSaveTheChildren, hauteur: 43 },
-  { nom: 'Desjardins', logo: logoDesjardins, hauteur: 44 },
-  { nom: 'Développement et Paix — Caritas Canada', logo: logoDeveloppementEtPaix, hauteur: 50 },
-  { nom: 'Cœur et Conscience', logo: logoCoeurEtConscience, hauteur: 63 },
+  { nom: 'HN', logo: logoHn, hauteur: 74 },
+  { nom: 'CanCham — Chambre de Commerce et de Coopération Canada-Madagascar', logo: logoCanCham, hauteur: 46 },
+  { nom: 'L’Alliée Virtuelle', logo: logoAllieeVirtuelle, hauteur: 80 },
+  { nom: 'GAD — Groupement des Acteurs du Digital de Madagascar', logo: logoGad, hauteur: 66 },
 ];
 
 export function Partenaires() {
