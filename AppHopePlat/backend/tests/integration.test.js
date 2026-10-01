@@ -553,3 +553,41 @@ describe('les actualites du site vitrine', () => {
     assert.equal((await appel('GET', '/public/actualites/abc')).statut, 404);
   });
 });
+
+describe('les benevoles du site vitrine', () => {
+  test('seul un benevole qui l a accepte parait, par son prenom et sa photo', async () => {
+    async function benevole(email, prenom) {
+      const compte = await appel('POST', '/admin/utilisateurs/comptes', {
+        jeton: jetonAdmin,
+        corps: { type: 'BENEVOLE', prenom, nom: 'Rakoto', email },
+      });
+      assert.equal(compte.statut, 201, JSON.stringify(compte.corps));
+      const connexion = await appel('POST', '/auth/login', {
+        corps: { email, motDePasse: compte.corps.motDePasseProvisoire, typeUtilisateur: 'benevole' },
+      });
+      assert.equal(connexion.statut, 200, JSON.stringify(connexion.corps));
+      return connexion.corps.token;
+    }
+    const discret = await benevole('fy.site@hope.test', 'Fy');
+    const visible = await benevole('noro.site@hope.test', 'Noro');
+
+    const avant = await appel('GET', '/public/benevoles');
+    assert.equal(avant.statut, 200);
+    assert.ok(!avant.corps.items.some((b) => ['Fy', 'Noro'].includes(b.prenom)), 'rien ne parait sans accord');
+
+    const accord = await appel('PATCH', '/benevole/profil', { jeton: visible, corps: { visibleSite: true } });
+    assert.equal(accord.statut, 200, JSON.stringify(accord.corps));
+    assert.equal(accord.corps.visibleSite, true);
+    await appel('PATCH', '/benevole/profil', { jeton: discret, corps: { profession: 'Enseignant' } });
+
+    const apres = await appel('GET', '/public/benevoles');
+    const noro = apres.corps.items.find((b) => b.prenom === 'Noro');
+    assert.ok(noro, 'le benevole qui a accepte parait');
+    assert.deepEqual(Object.keys(noro).sort(), ['id', 'photoUrl', 'prenom'], 'prenom et photo, rien d autre');
+    assert.ok(!apres.corps.items.some((b) => b.prenom === 'Fy'), 'l autre reste hors du site');
+
+    const retrait = await appel('PATCH', '/benevole/profil', { jeton: visible, corps: { visibleSite: false } });
+    assert.equal(retrait.corps.visibleSite, false);
+    assert.ok(!(await appel('GET', '/public/benevoles')).corps.items.some((b) => b.prenom === 'Noro'), 'l accord se retire');
+  });
+});

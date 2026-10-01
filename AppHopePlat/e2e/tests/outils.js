@@ -144,3 +144,30 @@ export async function actualitePubliquePrete(request, testInfo, { titre = 'Rentr
   const corps = await creation.json();
   return { id: corps.id ?? corps.item?.id, titre: titreUnique };
 }
+
+/**
+ * Un benevole de la plateforme qui a accepte de paraitre sur le site :
+ * cree par l'administration, connecte, puis son accord donne depuis son
+ * profil. Rend { prenom }.
+ */
+export async function benevoleVisiblePret(request, testInfo, { prenom = 'Noro' } = {}) {
+  const connexionAdmin = await request.post('/api/admin/login', { data: ADMIN });
+  expect(connexionAdmin.status(), 'connexion administrateur').toBe(200);
+  const prenomUnique = `${prenom}${Date.now().toString(36).slice(-4)}`;
+  const email = adresseUnique(testInfo, 'benevole-site');
+  const compte = await request.post('/api/admin/utilisateurs/comptes', {
+    headers: { Authorization: `Bearer ${(await connexionAdmin.json()).token}` },
+    data: { type: 'BENEVOLE', prenom: prenomUnique, nom: 'Rakoto', email },
+  });
+  expect(compte.status(), `compte benevole : ${await compte.text()}`).toBe(201);
+  const connexion = await request.post('/api/auth/login', {
+    data: { email, motDePasse: (await compte.json()).motDePasseProvisoire, typeUtilisateur: 'benevole' },
+  });
+  expect(connexion.status(), 'connexion benevole').toBe(200);
+  const accord = await request.patch('/api/benevole/profil', {
+    headers: { Authorization: `Bearer ${(await connexion.json()).token}` },
+    data: { visibleSite: true },
+  });
+  expect(accord.status(), `accord : ${await accord.text()}`).toBe(200);
+  return { prenom: prenomUnique };
+}

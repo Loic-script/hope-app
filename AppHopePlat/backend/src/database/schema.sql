@@ -2087,3 +2087,13 @@ CREATE TABLE IF NOT EXISTS publication_commentaire (
 );
 
 CREATE INDEX IF NOT EXISTS publication_commentaire_pub_idx ON publication_commentaire (publication_id, cree_le DESC);
+
+/*
+ * Le benevole sur le site vitrine.
+ *
+ * La rubrique "Les benevoles" du site public montre le prenom et la
+ * photo des benevoles de la plateforme -- seulement ceux qui l'ont
+ * accepte depuis leur profil. Rien n'y parait par defaut : une personne
+ * qui aide ne s'est pas pour autant engagee a se montrer.
+ */
+ALTER TABLE benevole ADD COLUMN IF NOT EXISTS visible_site BOOLEAN NOT NULL DEFAULT FALSE;

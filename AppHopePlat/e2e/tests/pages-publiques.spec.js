@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { actualitePubliquePrete, projetPublicPret, sansDebordement } from './outils.js';
+import { actualitePubliquePrete, benevoleVisiblePret, projetPublicPret, sansDebordement } from './outils.js';
 
 test('le choix des espaces ; l authentification mene aux textes legaux', async ({ page }) => {
   await page.goto('/espaces');
@@ -146,4 +146,14 @@ test('l accueil : les realisations et les actualites sont celles de la plateform
   await expect(page.locator('.v-realisation__lien').first()).toHaveAttribute('href', `/nos-realisations/${projet.id}`);
   await expect(page.locator('.v-actualite__titre').first()).toHaveText(actualite.titre);
   await expect(page.locator('.v-actualite__lien').first()).toHaveAttribute('href', `/actualites/${actualite.id}`);
+});
+
+test('nous decouvrir : les benevoles qui ont accepte de paraitre, par leur prenom', async ({ page, request }, testInfo) => {
+  const benevole = await benevoleVisiblePret(request, testInfo);
+  await page.goto('/nous-decouvrir');
+  await page.locator('.v-benevoles').scrollIntoViewIfNeeded();
+  await expect(page.locator('.v-benevole__nom', { hasText: benevole.prenom })).toHaveCount(1);
+  // Ni nom de famille, ni adresse : seulement le prenom.
+  await expect(page.locator('.v-benevoles')).not.toContainText('Rakoto');
+  await sansDebordement(page);
 });

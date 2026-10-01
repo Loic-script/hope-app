@@ -64,6 +64,16 @@ router.get('/public/actualites/:id', async (req, res, next) => {
   }
 });
 
+// Les benevoles qui ont accepte de paraitre sur le site : prenom et
+// photo (vitrine.service).
+router.get('/public/benevoles', async (_req, res, next) => {
+  try {
+    res.json(await vitrineService.benevoles());
+  } catch (erreur) {
+    next(erreur);
+  }
+});
+
 // Les projets de HOPE pour le site vitrine : nom, extrait, lieu,
 // categorie, etat, photo ; puis la fiche d'un projet (vitrine.service).
 router.get('/public/projets', async (req, res, next) => {

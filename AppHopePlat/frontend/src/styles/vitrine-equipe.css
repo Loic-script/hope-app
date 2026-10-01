@@ -246,6 +246,35 @@
   color: var(--hope-bleu);
 }
 
+/* Sans photo : le disque bleu pale et l'initiale. */
+.v-portrait__fond {
+  fill: var(--hope-bleu-clair);
+}
+
+.v-portrait__initiale {
+  fill: var(--hope-violet);
+  font-family: var(--vitrine-titre);
+  font-size: 34px;
+  font-weight: 700;
+}
+
+/* Personne n'a encore accepte de paraitre, ou la liste se charge. */
+.v-benevoles__message {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  margin: clamp(24px, 3vw, 36px) auto 0;
+  color: var(--hope-violet);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.v-benevoles__message p {
+  margin: 0;
+}
+
 /* Les fleches : un carre bleu translucide pose sur le bord du portrait,
    a la hauteur des barres, comme sur la maquette. */
 .v-benevoles__fleche {
@@ -340,6 +369,9 @@
 /* --------------------------- Le mot de la direction --------------------------- */
 
 .v-direction {
+  /* La carte entre par la droite (translateX) : avant son entree, elle
+     ne doit pas elargir la page sur telephone. */
+  overflow-x: clip;
   padding: clamp(56px, 7vw, 88px) 0 clamp(64px, 8vw, 100px);
   background: #ffffff;
 }

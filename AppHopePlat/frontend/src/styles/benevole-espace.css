@@ -683,6 +683,27 @@
   color: var(--hope-violet);
 }
 
+/* L'accord pour paraitre sur le site : une case et sa phrase. */
+.profil-benevole__accord {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--admin-bordure);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.profil-benevole__accord input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--hope-violet);
+}
+
 .profil-benevole__fixe {
   display: flex;
   flex-wrap: wrap;

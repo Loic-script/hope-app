@@ -53,6 +53,7 @@ export default function MonProfil() {
       telephone: donnees.telephone ?? '',
       dateDeNaissance: donnees.dateDeNaissance ?? '',
       photoUrl: donnees.photoUrl ?? '',
+      visibleSite: Boolean(donnees.visibleSite),
     });
   }, [donnees]);
 
@@ -96,6 +97,7 @@ export default function MonProfil() {
         dateDeNaissance: champs.dateDeNaissance || null,
         // Vide vaut effacement : le service le traduit en NULL.
         photoUrl: champs.photoUrl,
+        visibleSite: champs.visibleSite,
       });
       setSucces('Votre profil est à jour.');
       recharger();
@@ -157,7 +159,7 @@ export default function MonProfil() {
             televerser={service.televerserPhoto}
             onChange={(url) => modifier('photoUrl', url)}
             disabled={envoi}
-            aide="Une image — JPEG, PNG ou WebP. Elle n’est visible que par l’équipe HOPE."
+            aide="Une image — JPEG, PNG ou WebP. Visible par l’équipe HOPE et les autres bénévoles ; sur le site public seulement si vous l’acceptez ci-dessous."
           />
 
           {/* Le nom se renseigne ici : l'inscription ne le demande plus. */}
@@ -257,6 +259,29 @@ export default function MonProfil() {
               </div>
             ))}
           </div>
+        </fieldset>
+
+        <fieldset className="profil-benevole__groupe">
+          <legend>Sur le site de HOPE</legend>
+
+          {/*
+            Rien ne parait sur le site public sans ce oui : la rubrique
+            "Les benevoles" ne montre que le prenom et la photo de ceux
+            qui l'ont coche, et chacun peut le decocher quand il veut.
+          */}
+          <label className="profil-benevole__accord">
+            <input
+              type="checkbox"
+              checked={champs.visibleSite}
+              onChange={(e) => modifier('visibleSite', e.target.checked)}
+              disabled={envoi}
+            />
+            <span>
+              <strong>J’accepte d’apparaître sur le site public de HOPE</strong>, avec mon prénom et ma photo, dans la
+              rubrique « Les bénévoles ». Ni mon nom, ni mes coordonnées n’y figurent. Je peux retirer cet accord à
+              tout moment.
+            </span>
+          </label>
         </fieldset>
 
         <fieldset className="profil-benevole__groupe">

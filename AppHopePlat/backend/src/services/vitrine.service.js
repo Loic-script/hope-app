@@ -1,11 +1,12 @@
 /**
  * Ce que le site vitrine public lit de la plateforme, sans compte.
  *
- * Les actualites de HOPE (titre, extrait, date, photo) et ses projets
- * (nom, extrait, lieu, categorie, etat, photo). Jamais les appels a
- * financement, les budgets, les responsables, les donateurs ni les
- * beneficiaires : ce qui touche a l'argent ou aux personnes reste dans
- * les espaces.
+ * Les actualites de HOPE (titre, extrait, date, photo), ses projets
+ * (nom, extrait, lieu, categorie, etat, photo) et, de ses benevoles,
+ * le prenom et la photo de ceux qui ont accepte de paraitre. Jamais les
+ * appels a financement, les budgets, les responsables, les donateurs ni
+ * les beneficiaires : ce qui touche a l'argent ou aux personnes reste
+ * dans les espaces.
  */
 import { query } from '../config/database.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
@@ -125,4 +126,24 @@ export async function projet(id) {
 export async function projetsPourPlan() {
   const { rows } = await query(`SELECT p.id, p.updated_at FROM projects p WHERE ${PROJETS_VISIBLES} ORDER BY p.id`);
   return versListe(rows);
+}
+
+/* --------------------------------- Benevoles --------------------------------- */
+
+/**
+ * Les benevoles qui ont accepte de paraitre sur le site (visible_site,
+ * depuis leur profil), au compte actif et au prenom renseigne : leur
+ * prenom et leur photo, rien d'autre -- ni nom, ni contact, ni metier.
+ * Les plus anciens d'abord.
+ */
+export async function benevoles() {
+  const { rows } = await query(
+    `SELECT b.id, u.prenom, u.photo_url
+       FROM benevole b
+       JOIN utilisateur u ON u.id = b.utilisateur_id
+      WHERE b.visible_site AND u.statut = 'actif' AND TRIM(u.prenom) <> ''
+      ORDER BY b.benevole_depuis, u.prenom
+      LIMIT 24`
+  );
+  return { items: versListe(rows) };
 }

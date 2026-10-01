@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import ando from '../../assets/vitrine/equipe/ando.jpg';
 import elisee from '../../assets/vitrine/equipe/elisee.jpg';
 import herilanja from '../../assets/vitrine/equipe/herilanja.jpg';
-import lalaina from '../../assets/vitrine/equipe/lalaina.jpg';
-import rado from '../../assets/vitrine/equipe/rado.jpg';
-import vero from '../../assets/vitrine/equipe/vero.jpg';
 import { useApparition } from '../../hooks/useApparition.js';
+import { urlMedia } from '../../services/api.js';
 
 /**
  * L'equipe de HOPE, sur la page "Nous decouvrir" : qui elle est, les
  * membres du bureau, les benevoles, et le mot de la presidente.
  *
- * Les portraits sont ceux fournis par HOPE, decoupes au disque interieur
- * de leur anneau (assets/vitrine/equipe). Les personnes y figurent avec
- * leur accord : ne pas y ajouter quelqu'un sans le sien.
+ * Les portraits du bureau et de la presidente sont ceux fournis par
+ * HOPE, decoupes au disque interieur de leur anneau
+ * (assets/vitrine/equipe) ; les personnes y figurent avec leur accord.
+ * Les benevoles, eux, viennent de la plateforme (GET
+ * /api/public/benevoles) : seuls ceux qui ont accepte de paraitre, depuis
+ * leur profil, y sont, avec leur prenom et leur photo.
  */
 
 /* ----------------------------- Le portrait ----------------------------- */
@@ -26,9 +28,10 @@ import { useApparition } from '../../hooks/useApparition.js';
  * longueur, a la couleur de la section (violet au bureau, bleu chez les
  * benevoles). La photo est rognee au disque interieur de l'anneau.
  *
- * Decoratif : le nom est ecrit sous le portrait.
+ * Sans photo (un benevole qui n'en a pas mise), le disque porte son
+ * initiale. Decoratif : le nom est ecrit sous le portrait.
  */
-function Portrait({ src, barres = 'violet' }) {
+function Portrait({ src, initiale = '', barres = 'violet' }) {
   const id = useId();
   return (
     // Le boitier s'arrete juste sous l'anneau (y = 44) : le nom vient tout pres.
@@ -51,15 +54,24 @@ function Portrait({ src, barres = 'violet' }) {
         <rect className="v-portrait__barre v-portrait__barre--gauche" x="-56.8" y="-2.8" width="12.8" height="5.6" rx="2.8" />
         <rect className="v-portrait__barre v-portrait__barre--droite" x="44" y="-2.8" width="12.8" height="5.6" rx="2.8" />
       </g>
-      <image
-        href={src}
-        x="-36.9"
-        y="-36.9"
-        width="73.8"
-        height="73.8"
-        preserveAspectRatio="xMidYMid slice"
-        clipPath={`url(#${id})`}
-      />
+      {src ? (
+        <image
+          href={src}
+          x="-36.9"
+          y="-36.9"
+          width="73.8"
+          height="73.8"
+          preserveAspectRatio="xMidYMid slice"
+          clipPath={`url(#${id})`}
+        />
+      ) : (
+        <>
+          <circle className="v-portrait__fond" r="36.9" />
+          <text className="v-portrait__initiale" y="1" textAnchor="middle" dominantBaseline="central">
+            {initiale}
+          </text>
+        </>
+      )}
       <circle className="v-portrait__anneau" r="38.45" />
     </svg>
   );
@@ -167,11 +179,8 @@ function MembresDuBureau() {
 
 /* ------------------------------ Les benevoles ------------------------------ */
 
-const BENEVOLES = [
-  { cle: 'vero', nom: 'Vero', photo: vero },
-  { cle: 'lalaina', nom: 'Lalaina', photo: lalaina },
-  { cle: 'rado', nom: 'Rado', photo: rado },
-];
+/** Devenir benevole : l'inscription a l'espace benevole. */
+const LIEN_BENEVOLE = '/authentification?type=benevole';
 
 function IconeChevron({ sens }) {
   return (
@@ -182,15 +191,28 @@ function IconeChevron({ sens }) {
 }
 
 /**
- * Le carrousel des benevoles : trois portraits a l'ecran, un sur
- * telephone ; les fleches font glisser d'un portrait, les points disent
- * ou l'on est et y menent.
+ * Le carrousel des benevoles de la plateforme : trois portraits a
+ * l'ecran, un sur telephone ; les fleches font glisser d'un portrait,
+ * les points disent ou l'on est et y menent. Tant que personne n'a
+ * accepte de paraitre, la rubrique invite a rejoindre l'equipe.
  */
 function LesBenevoles() {
   const [ref, vu] = useApparition({ seuil: 0.2 });
   const piste = useRef(null);
+  const [benevoles, setBenevoles] = useState(null);
   const [courant, setCourant] = useState(0);
   const [bords, setBords] = useState({ debut: true, fin: true });
+
+  useEffect(() => {
+    let actif = true;
+    fetch('/api/public/benevoles')
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d) => actif && setBenevoles(d.items ?? []))
+      .catch(() => actif && setBenevoles([]));
+    return () => {
+      actif = false;
+    };
+  }, []);
 
   const largeurItem = () => piste.current?.querySelector('.v-benevole')?.getBoundingClientRect().width ?? 0;
 
@@ -206,7 +228,7 @@ function LesBenevoles() {
     mesurer();
     window.addEventListener('resize', mesurer);
     return () => window.removeEventListener('resize', mesurer);
-  }, [mesurer]);
+  }, [mesurer, benevoles]);
 
   function aller(indice) {
     piste.current?.scrollTo({ left: indice * largeurItem(), behavior: 'smooth' });
@@ -218,54 +240,71 @@ function LesBenevoles() {
         <h2 className="accueil-section__titre" id="v-benevoles-titre">
           Les Bénévoles
         </h2>
-        <div className="v-benevoles__carrousel">
-          <button
-            type="button"
-            className="v-benevoles__fleche v-benevoles__fleche--gauche"
-            onClick={() => aller(courant - 1)}
-            disabled={bords.debut}
-            aria-label="Bénévoles précédents"
-          >
-            <IconeChevron sens="gauche" />
-          </button>
-          {/* La piste defile : on la rend atteignable au clavier (fleches du clavier). */}
-          <ul
-            className="v-benevoles__piste"
-            ref={piste}
-            onScroll={mesurer}
-            tabIndex={0}
-            aria-label="Portraits des bénévoles"
-          >
-            {BENEVOLES.map((benevole, rang) => (
-              <li key={benevole.cle} className="v-benevole" style={{ '--rang': rang }}>
-                <Portrait src={benevole.photo} barres="bleu" />
-                <h3 className="v-benevole__nom">{benevole.nom}</h3>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            className="v-benevoles__fleche v-benevoles__fleche--droite"
-            onClick={() => aller(courant + 1)}
-            disabled={bords.fin}
-            aria-label="Bénévoles suivants"
-          >
-            <IconeChevron sens="droite" />
-          </button>
-        </div>
-        <div className="v-benevoles__points" role="tablist" aria-label="Position dans la liste des bénévoles">
-          {BENEVOLES.map((benevole, rang) => (
-            <button
-              key={benevole.cle}
-              type="button"
-              role="tab"
-              className={`v-benevoles__point${rang === courant ? ' v-benevoles__point--actif' : ''}`}
-              aria-selected={rang === courant}
-              aria-label={`Aller à ${benevole.nom}`}
-              onClick={() => aller(rang)}
-            />
-          ))}
-        </div>
+        {benevoles === null ? (
+          <p className="v-benevoles__message">Chargement des bénévoles…</p>
+        ) : benevoles.length === 0 ? (
+          <div className="v-benevoles__message">
+            <p>Nos bénévoles se présenteront ici bientôt. Et pourquoi pas vous ?</p>
+            <Link to={LIEN_BENEVOLE} className="v-bouton-contour">
+              Devenir bénévole
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="v-benevoles__carrousel">
+              <button
+                type="button"
+                className="v-benevoles__fleche v-benevoles__fleche--gauche"
+                onClick={() => aller(courant - 1)}
+                disabled={bords.debut}
+                aria-label="Bénévoles précédents"
+              >
+                <IconeChevron sens="gauche" />
+              </button>
+              {/* La piste defile : on la rend atteignable au clavier (fleches du clavier). */}
+              <ul
+                className="v-benevoles__piste"
+                ref={piste}
+                onScroll={mesurer}
+                tabIndex={0}
+                aria-label="Portraits des bénévoles"
+              >
+                {benevoles.map((benevole, rang) => (
+                  <li key={benevole.id} className="v-benevole" style={{ '--rang': Math.min(rang, 5) }}>
+                    <Portrait
+                      src={urlMedia(benevole.photoUrl)}
+                      initiale={benevole.prenom.trim().charAt(0).toUpperCase()}
+                      barres="bleu"
+                    />
+                    <h3 className="v-benevole__nom">{benevole.prenom}</h3>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                className="v-benevoles__fleche v-benevoles__fleche--droite"
+                onClick={() => aller(courant + 1)}
+                disabled={bords.fin}
+                aria-label="Bénévoles suivants"
+              >
+                <IconeChevron sens="droite" />
+              </button>
+            </div>
+            <div className="v-benevoles__points" role="tablist" aria-label="Position dans la liste des bénévoles">
+              {benevoles.map((benevole, rang) => (
+                <button
+                  key={benevole.id}
+                  type="button"
+                  role="tab"
+                  className={`v-benevoles__point${rang === courant ? ' v-benevoles__point--actif' : ''}`}
+                  aria-selected={rang === courant}
+                  aria-label={`Aller à ${benevole.prenom}`}
+                  onClick={() => aller(rang)}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

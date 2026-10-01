@@ -58,6 +58,8 @@ function versProfilPublic(fiche) {
     disponibilites: fiche.disponibilites ?? {},
     accepteTerrain: fiche.accepteTerrain,
     accepteDistance: fiche.accepteDistance,
+    // Son accord pour paraitre, prenom et photo, sur le site public.
+    visibleSite: fiche.visibleSite,
     contactUrgenceNom: fiche.contactUrgenceNom,
     contactUrgenceTel: fiche.contactUrgenceTel,
     valideParHope: fiche.valideParHope,
@@ -244,6 +246,7 @@ export async function mettreAJour(utilisateurId, corps = {}) {
     // colonne rayon_km reste en base, mais n'est plus ni lue ni ecrite.
     accepte_terrain: booleen(corps.accepteTerrain),
     accepte_distance: booleen(corps.accepteDistance),
+    visible_site: booleen(corps.visibleSite),
     contact_urgence_nom: texte(corps.contactUrgenceNom, 'contactUrgenceNom', 120),
     contact_urgence_tel: texte(corps.contactUrgenceTel, 'contactUrgenceTel', 20),
   };
