@@ -3,8 +3,8 @@
    (pages/vitrine/NousDecouvrir.jsx)
 
    Cinq temps : le bandeau "Qui sommes-nous ?", la raison d'etre et la
-   vision en cartes, la mission en trois etapes reliees, l'approche sur
-   une photo, et la difference en tableau.
+   vision dans une carte, la mission en trois etapes reliees, l'approche
+   sur une photo, et la difference en tableau.
    ============================================================ */
 
 /* ------------------------- Le medaillon commun ------------------------- */
@@ -205,11 +205,12 @@
 
 /* ---------------------- Raison d'etre et vision ---------------------- */
 
+/* Une seule carte violette, coiffee de l'ampoule, ou la raison d'etre
+   est suivie de la vision. */
 .decouvrir-cartes {
   --medaillon: clamp(84px, 9vw, 108px);
 
   display: grid;
-  gap: clamp(56px, 7vw, 84px);
   max-width: 1000px;
   margin: 0 auto;
   /* A gauche, la place du medaillon qui depasse de la carte. */
@@ -242,28 +243,21 @@
   z-index: 1;
 }
 
-.decouvrir-carte__corps {
-  padding: clamp(30px, 4vw, 44px) clamp(24px, 4vw, 44px) clamp(28px, 4vw, 40px);
-  border-radius: 20px;
-  box-shadow: 0 20px 44px -30px rgba(53, 51, 67, 0.6);
-}
-
-.decouvrir-carte--raison .decouvrir-carte__corps {
-  background: var(--hope-violet);
-  color: #ffffff;
-}
-
-.decouvrir-carte--raison {
+.decouvrir-carte {
   --medaillon-icone: var(--hope-violet);
 }
 
-.decouvrir-carte--vision .decouvrir-carte__corps {
-  background: var(--hope-bleu);
-  color: var(--hope-violet-fonce);
+.decouvrir-carte__corps {
+  padding: clamp(30px, 4vw, 44px) clamp(24px, 4vw, 44px) clamp(28px, 4vw, 40px);
+  border-radius: 20px;
+  background: var(--hope-violet);
+  color: #ffffff;
+  box-shadow: 0 20px 44px -30px rgba(53, 51, 67, 0.6);
 }
 
-.decouvrir-carte--vision {
-  --medaillon-icone: var(--hope-bleu);
+/* La vision suit la raison d'etre, separee d'un blanc plus large. */
+.decouvrir-carte__bloc + .decouvrir-carte__bloc {
+  margin-top: clamp(22px, 3vw, 32px);
 }
 
 .decouvrir-carte__titre {
@@ -271,10 +265,6 @@
   font-family: var(--vitrine-titre);
   font-size: clamp(19px, 2.2vw, 24px);
   font-weight: 700;
-}
-
-.decouvrir-carte--vision .decouvrir-carte__titre {
-  color: var(--hope-violet);
 }
 
 .decouvrir-carte__texte {
@@ -288,6 +278,44 @@
 
 .decouvrir-carte__texte:last-child {
   margin-bottom: 0;
+}
+
+/* Un ecran par section, comme sur l'accueil (vitrine-accueil.css) : sur
+   ordinateur, la section occupe la hauteur de la fenetre moins l'en-tete,
+   la carte centree ; sur les ecrans peu hauts, les marges et les tailles
+   se resserrent en vh pour que la carte tienne entiere. */
+@media (min-width: 1101px) {
+  .decouvrir-cartes {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: var(--vitrine-ecran);
+    padding-block: clamp(40px, 9vh, 116px) clamp(24px, 6vh, 88px);
+  }
+
+  .decouvrir-carte {
+    width: 100%;
+  }
+
+  .decouvrir-carte__corps {
+    padding: clamp(22px, 4.6vh, 44px) clamp(24px, 4vw, 44px) clamp(20px, 4.2vh, 40px);
+  }
+
+  .decouvrir-carte__bloc + .decouvrir-carte__bloc {
+    margin-top: clamp(16px, 3.4vh, 32px);
+  }
+
+  .decouvrir-carte__titre {
+    margin-bottom: clamp(8px, 1.6vh, 14px);
+    font-size: clamp(19px, min(2.2vw, 3.4vh), 24px);
+  }
+
+  .decouvrir-carte__texte {
+    margin-bottom: clamp(6px, 1.4vh, 12px);
+    font-size: clamp(13.5px, min(1.2vw, 2.25vh), 15.5px);
+    line-height: min(1.6em, calc(1.3em + 0.45vh));
+  }
 }
 
 /* ---------------------------- Notre mission ---------------------------- */

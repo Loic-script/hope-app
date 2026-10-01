@@ -39,7 +39,6 @@ const CONTRASTE_ACCEPTE = {
     '.vitrine-don',
     '.accueil-bouton--orange',
     '.accueil-bouton--bleu',
-    '.decouvrir-carte--vision .decouvrir-carte__texte',
   ],
   '/nos-projets': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
   '/nos-projets/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],

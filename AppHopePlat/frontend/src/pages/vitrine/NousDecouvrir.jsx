@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import enfantTentes from '../../assets/vitrine/enfant-tentes.jpg';
 import quiSommesNous from '../../assets/vitrine/qui-sommes-nous.jpg';
 import iconeAmpoule from '../../assets/vitrine/icones/ampoule.png';
-import iconeCible from '../../assets/vitrine/icones/cible.png';
 import { IconeDiplome, IconeFormation, IconeMallette } from '../../components/vitrine/icones.jsx';
 import Medaillon from '../../components/vitrine/Medaillon.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
@@ -47,11 +46,12 @@ function QuiSommesNous() {
 
 /* ======================= Raison d'etre et vision ======================= */
 
-const CARTES = [
+/* Les deux textes se suivent dans une seule carte violette, coiffee de
+   l'ampoule ; la section tient sur un ecran (vitrine-decouvrir.css). */
+const BLOCS = [
   {
     cle: 'raison',
     titre: 'Notre Raison d’Être',
-    image: { src: iconeAmpoule, largeur: 21.7, hauteur: 31 },
     paragraphes: [
       'Parce que chaque histoire mérite une deuxième chance.',
       'Derrière chaque regard d’enfant et chaque combat de mère célibataire, il y a une force incroyable qui ne demande qu’à éclore. À Madagascar, la précarité isole, mais l’amour et l’accompagnement créent des miracles.',
@@ -62,7 +62,6 @@ const CARTES = [
   {
     cle: 'vision',
     titre: 'Notre Vision',
-    image: { src: iconeCible, largeur: 31, hauteur: 31 },
     paragraphes: [
       'Un monde où l’origine sociale ne détermine plus le destin d’un enfant ou d’une mère. Nous aspirons à une société où chaque personne accompagnée réécrit son histoire et accède à un avenir radieux, libre et autonome.',
     ],
@@ -73,19 +72,21 @@ function RaisonEtVision() {
   const [ref, vu] = useApparition({ seuil: 0.1 });
   return (
     <section ref={ref} className={`decouvrir-cartes${vu ? ' v-apparu' : ''}`} aria-label="Notre raison d’être et notre vision">
-      {CARTES.map((carte, rang) => (
-        <article key={carte.cle} className={`decouvrir-carte decouvrir-carte--${carte.cle}`} style={{ '--rang': rang }}>
-          <Medaillon className="decouvrir-carte__medaillon" image={carte.image} />
-          <div className="decouvrir-carte__corps">
-            <h2 className="decouvrir-carte__titre">{carte.titre}</h2>
-            {carte.paragraphes.map((texte) => (
-              <p key={texte.slice(0, 32)} className="decouvrir-carte__texte">
-                {texte}
-              </p>
-            ))}
-          </div>
-        </article>
-      ))}
+      <article className="decouvrir-carte" style={{ '--rang': 0 }}>
+        <Medaillon className="decouvrir-carte__medaillon" image={{ src: iconeAmpoule, largeur: 21.7, hauteur: 31 }} />
+        <div className="decouvrir-carte__corps">
+          {BLOCS.map((bloc) => (
+            <div key={bloc.cle} className="decouvrir-carte__bloc">
+              <h2 className="decouvrir-carte__titre">{bloc.titre}</h2>
+              {bloc.paragraphes.map((texte) => (
+                <p key={texte.slice(0, 32)} className="decouvrir-carte__texte">
+                  {texte}
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      </article>
     </section>
   );
 }
