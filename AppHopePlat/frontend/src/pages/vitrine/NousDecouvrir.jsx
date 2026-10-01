@@ -75,9 +75,15 @@ function RaisonEtVision() {
       <article className="decouvrir-carte" style={{ '--rang': 0 }}>
         <Medaillon className="decouvrir-carte__medaillon" image={{ src: iconeAmpoule, largeur: 21.7, hauteur: 31 }} />
         <div className="decouvrir-carte__corps">
-          {BLOCS.map((bloc) => (
+          {BLOCS.map((bloc, rang) => (
             <div key={bloc.cle} className="decouvrir-carte__bloc">
-              <h2 className="decouvrir-carte__titre">{bloc.titre}</h2>
+              {/* Seul le premier titre est le grand titre de la carte ; le
+                  suivant est un intertitre, a la taille du texte. */}
+              {rang === 0 ? (
+                <h2 className="decouvrir-carte__titre">{bloc.titre}</h2>
+              ) : (
+                <h3 className="decouvrir-carte__titre decouvrir-carte__titre--intertitre">{bloc.titre}</h3>
+              )}
               {bloc.paragraphes.map((texte) => (
                 <p key={texte.slice(0, 32)} className="decouvrir-carte__texte">
                   {texte}
