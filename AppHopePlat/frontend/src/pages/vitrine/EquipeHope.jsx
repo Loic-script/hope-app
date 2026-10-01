@@ -78,45 +78,66 @@ function Portrait({ src, initiale = '', barres = 'violet' }) {
 }
 
 /**
- * Le medaillon de la presidente : la couronne des cartes (huit traits, le
- * quart bas-droit libre, la ou passe la carte), sur un anneau de 0,096 R
- * (R = 40). Pas de disque blanc ici : la carte passe derriere.
+ * Le portrait de la presidente, en calques empiles (boitier de 140
+ * unites, centre au milieu) :
+ *   - derriere la carte : un halo jaune, la couronne de douze rayons
+ *     (de 53,5 a 68) qui tourne lentement, et une orbite en pointilles
+ *     (R = 49,6) avec son satellite, qui tourne a contresens ;
+ *   - devant la carte : la photo (R = 40,2) dans son anneau jaune de 5,2
+ *     d'epaisseur (R = 42,6), qui se trace a l'apparition.
+ * La carte passe entre les deux : les rayons se couchent derriere elle.
+ *
+ * Les rotations portent sur les calques entiers (transform seul) et ne
+ * tournent que lorsque la section est a l'ecran (.v-direction--en-vue).
  */
 function MedaillonDirection({ src }) {
   const id = useId();
   return (
-    <svg className="v-portrait v-direction__medaillon" viewBox="-70 -70 140 140" aria-hidden="true">
-      <defs>
-        <clipPath id={id}>
-          <circle r="36.2" />
-        </clipPath>
-      </defs>
-      <g className="v-portrait__rayons">
-        <g className="v-portrait__rayons-vif">
-          {[0, 30, 60, 210, 240, 270, 300, 330].map((angle) => (
-            <rect
-              key={angle}
-              x="-3.2"
-              y="-66.8"
-              width="6.4"
-              height="16"
-              rx="3.2"
-              transform={angle === 0 ? undefined : `rotate(${angle})`}
-            />
-          ))}
+    <div className="v-direction__portrait" aria-hidden="true">
+      <span className="v-direction__halo" />
+      <svg className="v-direction__couronne" viewBox="-70 -70 140 140">
+        <g className="v-portrait__rayons">
+          <g className="v-portrait__rayons-vif">
+            {Array.from({ length: 12 }, (_, i) => i * 30).map((angle) => (
+              <rect
+                key={angle}
+                x="-3"
+                y="-68"
+                width="6"
+                height="14.5"
+                rx="3"
+                transform={angle === 0 ? undefined : `rotate(${angle})`}
+              />
+            ))}
+          </g>
         </g>
-      </g>
-      <image
-        href={src}
-        x="-36.2"
-        y="-36.2"
-        width="72.4"
-        height="72.4"
-        preserveAspectRatio="xMidYMid slice"
-        clipPath={`url(#${id})`}
-      />
-      <circle className="v-portrait__anneau v-direction__anneau" r="38.1" />
-    </svg>
+      </svg>
+      <svg className="v-direction__orbite" viewBox="-70 -70 140 140">
+        <circle className="v-direction__orbite-trait" r="49.6" />
+        <circle className="v-direction__satellite" cy="-49.6" r="2.3" />
+      </svg>
+      <svg className="v-direction__medaillon" viewBox="-70 -70 140 140">
+        <defs>
+          <clipPath id={id}>
+            <circle r="40.2" />
+          </clipPath>
+        </defs>
+        {/* Le rognage reste fixe ; la photo, elle, se pose en reculant. */}
+        <g clipPath={`url(#${id})`}>
+          <image
+            className="v-direction__photo"
+            href={src}
+            x="-40.2"
+            y="-40.2"
+            width="80.4"
+            height="80.4"
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </g>
+        {/* Tourne d'un quart : le trace de l'anneau part du sommet. */}
+        <circle className="v-portrait__anneau v-direction__anneau" r="42.6" pathLength="100" transform="rotate(-90)" />
+      </svg>
+    </div>
   );
 }
 
@@ -314,8 +335,23 @@ function LesBenevoles() {
 
 function MotDeLaDirection() {
   const [ref, vu] = useApparition({ seuil: 0.25 });
+  // Le soleil ne tourne que lorsque la section est a l'ecran.
+  const [enVue, setEnVue] = useState(() => typeof IntersectionObserver === 'undefined');
+
+  useEffect(() => {
+    const section = ref.current;
+    if (!section || typeof IntersectionObserver === 'undefined') return undefined;
+    const observateur = new IntersectionObserver((entrees) => setEnVue(entrees.some((e) => e.isIntersecting)));
+    observateur.observe(section);
+    return () => observateur.disconnect();
+  }, [ref]);
+
   return (
-    <section ref={ref} className={`v-direction${vu ? ' v-apparu' : ''}`} aria-labelledby="v-direction-titre">
+    <section
+      ref={ref}
+      className={`v-direction${vu ? ' v-apparu' : ''}${enVue ? ' v-direction--en-vue' : ''}`}
+      aria-labelledby="v-direction-titre"
+    >
       <div className="v-conteneur">
         <h2 className="accueil-section__titre" id="v-direction-titre">
           Le mot de la direction
