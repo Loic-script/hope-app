@@ -10,9 +10,9 @@ export const LIENS_GAUCHE = [
 // "Nos projets" : la page des realisations (/nos-realisations), que le
 // menu nomme ainsi.
 export const LIENS_DROITE = [
+  { to: '/nos-realisations', libelle: 'Nos projets' },
   { to: '/actualites', libelle: 'Actualités' },
   { to: '/contact', libelle: 'Contact' },
-  { to: '/nos-realisations', libelle: 'Nos projets' },
 ];
 
 /** Faire un don : l'inscription ou la connexion d'un donateur. */
