@@ -100,19 +100,20 @@
 }
 
 /* Les deux colonnes se partagent la largeur a egalite pour que le logo
-   reste au centre : a droite, trois liens, "Connexion" et le bouton de
-   don doivent tenir dans une moitie, d'ou des ecarts mesures. */
+   reste au centre : a droite, trois liens, la pastille "Connexion" et le
+   bouton de don doivent tenir dans une moitie (523 px quand la barre est
+   a sa largeur maximale), d'ou des liens de 14 px et des ecarts mesures. */
 .vitrine-entete__droite {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 20px;
+  gap: 14px;
 }
 
 .vitrine-nav {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 18px;
 }
 
 .vitrine-nav--gauche {
@@ -123,7 +124,7 @@
   position: relative;
   padding: 8px 0;
   color: var(--hope-violet);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -166,22 +167,53 @@
   background: var(--hope-bleu);
 }
 
-/* "Connexion" : un lien sobre, a cote du bouton de don, pour qui a deja
-   un compte. Sans icone : la moitie droite de la barre n'a pas la place. */
+/* "Connexion" : une pastille cerclee de violet, a cote du bouton de don,
+   pour qui a deja un compte. Secondaire par rapport au don : un contour,
+   pas une couleur pleine ; au survol elle se remplit d'un violet pale et
+   se souleve, et son icone s'avance. */
 .vitrine-connexion {
   display: inline-flex;
   align-items: center;
-  padding: 8px 2px;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 13px 0 11px;
+  border: 1.5px solid color-mix(in srgb, var(--hope-violet) 45%, transparent);
+  border-radius: 999px;
+  background: transparent;
   color: var(--hope-violet);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
-  transition: color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.vitrine-connexion__icone {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .vitrine-connexion:hover {
-  color: var(--hope-bleu);
+  border-color: var(--hope-violet);
+  background: color-mix(in srgb, var(--hope-violet) 10%, #ffffff);
+  color: var(--hope-violet-fonce);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -12px rgba(93, 86, 150, 0.7);
+}
+
+.vitrine-connexion:hover .vitrine-connexion__icone {
+  transform: translateX(2px) scale(1.08);
+}
+
+.vitrine-connexion:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* "Faire un don" : la seule couleur pleine de la barre. */
@@ -191,13 +223,13 @@
   align-items: center;
   justify-content: center;
   min-height: 46px;
-  padding: 0 22px;
+  padding: 0 18px;
   overflow: hidden;
   border-radius: 10px;
   background: var(--hope-orange);
   color: #fff;
   font-family: var(--vitrine-police);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -279,25 +311,14 @@
   display: none;
 }
 
-/* Entre 1100 et 1300 px, chaque moitie est juste : les liens se
-   resserrent un peu pour que le logo reste au centre. */
-@media (max-width: 1300px) {
-  .vitrine-nav {
-    gap: 18px;
+/* Sous 1200 px, la pastille garde son mot et perd son icone. */
+@media (max-width: 1200px) {
+  .vitrine-connexion__icone {
+    display: none;
   }
 
-  .vitrine-entete__droite {
-    gap: 16px;
-  }
-
-  .vitrine-nav__lien,
   .vitrine-connexion {
-    font-size: 14px;
-  }
-
-  .vitrine-don {
-    padding: 0 18px;
-    font-size: 14px;
+    padding: 0 13px;
   }
 }
 
@@ -613,6 +634,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .vitrine-connexion,
+  .vitrine-connexion__icone {
+    transition: none;
+  }
+
   .vitrine-entete,
   .vitrine-don::before,
   .vitrine-mobile__lien,

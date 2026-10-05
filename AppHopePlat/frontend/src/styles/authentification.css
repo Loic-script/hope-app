@@ -43,13 +43,35 @@
    1. Bascule connexion / inscription
    ============================================================ */
 
+/* Deux onglets sur un rail ; la pastille blanche glisse de l'un a
+   l'autre (data-section, pose par la page) au lieu de sauter. */
 .bascule-acces {
+  position: relative;
   display: flex;
   gap: 4px;
   margin-top: 24px;
   padding: 4px;
   border-radius: 999px;
   background-color: #e7ecf5;
+  isolation: isolate;
+}
+
+.bascule-acces::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  z-index: -1;
+  width: calc(50% - 6px);
+  border-radius: 999px;
+  background-color: var(--hope-blanc);
+  box-shadow: 0 2px 6px rgba(53, 51, 67, 0.12);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bascule-acces[data-section='inscription']::before {
+  transform: translateX(calc(100% + 4px));
 }
 
 .bascule-acces__onglet {
@@ -62,14 +84,28 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--hope-texte-doux);
-  transition: background-color 0.18s ease, color 0.18s ease;
+  cursor: pointer;
+  transition:
+    color 0.25s ease,
+    transform 0.15s ease;
+}
+
+.bascule-acces__onglet:hover:not(.bascule-acces__onglet--actif) {
+  color: var(--hope-violet);
+}
+
+.bascule-acces__onglet:active {
+  transform: scale(0.97);
+}
+
+.bascule-acces__onglet:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
 }
 
 .bascule-acces__onglet--actif {
-  background-color: var(--hope-blanc);
   font-weight: 600;
   color: var(--hope-violet);
-  box-shadow: 0 1px 3px rgba(53, 51, 67, 0.1);
 }
 
 /* La bascule porte deja la marge du haut du formulaire. */
@@ -355,6 +391,213 @@
 }
 
 /* ============================================================
+   5. Mouvements : ce que la page fait quand on agit dessus
+   ============================================================ */
+
+/* A l'ouverture : la carte se pose, les textes de l'illustration
+   arrivent l'un apres l'autre. */
+.carte-connexion--utilisateur {
+  animation: acces-carte 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.connexion__illustration--utilisateur .illustration__principal > * {
+  animation: acces-monte 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.connexion__illustration--utilisateur .illustration__surtitre {
+  animation-delay: 150ms;
+}
+
+.connexion__illustration--utilisateur .illustration__titre {
+  animation-delay: 250ms;
+}
+
+.connexion__illustration--utilisateur .illustration__barre {
+  animation-delay: 400ms;
+}
+
+.connexion__illustration--utilisateur .illustration__sous-titre {
+  animation-delay: 500ms;
+}
+
+/* A chaque bascule : le titre, l'accroche et le formulaire entrent par
+   le bas, en fondu. */
+.carte-connexion__titre--anime,
+.carte-connexion__accroche--anime {
+  animation: acces-monte 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.carte-connexion__accroche--anime {
+  animation-delay: 60ms;
+}
+
+.carte-connexion__section {
+  animation: acces-section 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Un champ qui prend le focus : son etiquette passe au violet, son icone
+   se redresse, sa boite se souleve d'un cheveu. */
+.champ:focus-within .champ__label {
+  color: var(--hope-violet);
+}
+
+.champ__label {
+  transition: color 0.2s ease;
+}
+
+.carte-connexion--utilisateur .champ__boite {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.carte-connexion--utilisateur .champ__boite:focus-within {
+  transform: translateY(-1px);
+}
+
+.carte-connexion--utilisateur .champ__icone {
+  transition:
+    color 0.2s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.carte-connexion--utilisateur .champ__boite:focus-within .champ__icone {
+  transform: scale(1.12);
+}
+
+/* Un champ refuse tremble une fois. */
+.carte-connexion--utilisateur .champ__boite--erreur {
+  animation: acces-secousse 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* L'oeil du mot de passe : l'icone change d'un petit bond. */
+.carte-connexion--utilisateur .champ__bascule svg {
+  animation: acces-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.carte-connexion--utilisateur .champ__bascule:active {
+  transform: scale(0.9);
+}
+
+/* Le bouton principal : il se souleve au survol, sa fleche s'avance, un
+   reflet le traverse ; refuse, il secoue la tete. */
+.carte-connexion--utilisateur .bouton--principal {
+  position: relative;
+  overflow: hidden;
+}
+
+.carte-connexion--utilisateur .bouton--principal svg {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.carte-connexion--utilisateur .bouton--principal:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.carte-connexion--utilisateur .bouton--principal:hover:not(:disabled) svg {
+  transform: translateX(4px);
+}
+
+.carte-connexion--utilisateur .bouton--principal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.35) 48%, transparent 66%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.carte-connexion--utilisateur .bouton--principal:hover:not(:disabled)::after {
+  animation: acces-reflet 0.9s ease-in-out both;
+}
+
+.formulaire--refus .bouton--principal {
+  animation: acces-secousse 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Le texte de chargement : les points respirent. */
+.carte-connexion--utilisateur .bouton__chargement {
+  border-color: rgba(43, 33, 18, 0.25);
+  border-top-color: #2b2112;
+}
+
+.carte-connexion--utilisateur .bouton--secondaire:hover {
+  transform: translateY(-1px);
+}
+
+@keyframes acces-carte {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes acces-monte {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes acces-section {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes acces-secousse {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes acces-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes acces-reflet {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* ============================================================
    6. Petits ecrans
    ============================================================ */
 
@@ -383,8 +626,24 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bascule-acces::before,
   .bascule-acces__onglet,
-  .completion__bouton {
+  .completion__bouton,
+  .carte-connexion--utilisateur .champ__boite,
+  .carte-connexion--utilisateur .champ__icone,
+  .carte-connexion--utilisateur .bouton--principal svg {
     transition: none;
+  }
+
+  .carte-connexion--utilisateur,
+  .connexion__illustration--utilisateur .illustration__principal > *,
+  .carte-connexion__titre--anime,
+  .carte-connexion__accroche--anime,
+  .carte-connexion__section,
+  .carte-connexion--utilisateur .champ__boite--erreur,
+  .carte-connexion--utilisateur .champ__bascule svg,
+  .carte-connexion--utilisateur .bouton--principal::after,
+  .formulaire--refus .bouton--principal {
+    animation: none;
   }
 }

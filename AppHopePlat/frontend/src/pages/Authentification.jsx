@@ -143,10 +143,11 @@ export default function Authentification() {
         <div className="carte-connexion carte-connexion--utilisateur">
           <header className="carte-connexion__entete">
             <HopeLogo />
-            <h2 className="carte-connexion__titre">
+            {/* La cle relance l'entree en scene a chaque bascule. */}
+            <h2 className="carte-connexion__titre carte-connexion__titre--anime" key={`titre-${section}`}>
               {section === 'connexion' ? 'Se connecter' : 'Créer un compte'}
             </h2>
-            <p className="carte-connexion__accroche">
+            <p className="carte-connexion__accroche carte-connexion__accroche--anime" key={`accroche-${section}`}>
               {section === 'connexion'
                 ? 'Accédez à votre espace : donateur, bénévole ou bailleur.'
                 : 'Choisissez ce que vous venez faire chez HOPE : la suite s’adapte.'}
@@ -161,7 +162,7 @@ export default function Authentification() {
 
           {/* Deux sections, un seul jeu d'onglets : on voit d'un coup
               d'oeil qu'il y a les deux, et laquelle est ouverte. */}
-          <div className="bascule-acces" role="tablist">
+          <div className="bascule-acces" role="tablist" data-section={section}>
             <button
               type="button"
               role="tab"
@@ -186,15 +187,17 @@ export default function Authentification() {
             </button>
           </div>
 
-          {section === 'connexion' ? (
-            <Connexion navigate={navigate} types={types} />
-          ) : (
-            <Inscription
-              types={types}
-              navigate={navigate}
-              onInscrit={() => setSection('connexion')}
-            />
-          )}
+          <div className="carte-connexion__section" key={section}>
+            {section === 'connexion' ? (
+              <Connexion navigate={navigate} types={types} />
+            ) : (
+              <Inscription
+                types={types}
+                navigate={navigate}
+                onInscrit={() => setSection('connexion')}
+              />
+            )}
+          </div>
 
           <footer className="carte-connexion__pied">
             <span className="carte-connexion__trait" />
@@ -290,7 +293,7 @@ function Connexion({ navigate, types }) {
   const champEnErreur = erreur === MESSAGE_ERREUR;
 
   return (
-    <form className="formulaire" onSubmit={soumettre} noValidate>
+    <form className={`formulaire${erreur && !enAttente ? ' formulaire--refus' : ''}`} onSubmit={soumettre} noValidate>
       <div className="champ">
         <label className="champ__label" htmlFor="email">
           Adresse électronique
@@ -381,7 +384,10 @@ function Connexion({ navigate, types }) {
 
       <button type="submit" className="bouton bouton--principal" disabled={chargement}>
         {chargement ? (
-          'Connexion…'
+          <>
+            <span className="bouton__chargement" aria-hidden="true" />
+            Connexion…
+          </>
         ) : (
           <>
             Se connecter
@@ -645,7 +651,10 @@ function Inscription({ types, navigate, onInscrit }) {
 
       <button type="submit" className="bouton bouton--principal" disabled={envoi}>
         {envoi ? (
-          'Création…'
+          <>
+            <span className="bouton__chargement" aria-hidden="true" />
+            Création…
+          </>
         ) : (
           <>
             Créer mon compte

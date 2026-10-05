@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import HopeLogo from '../HopeLogo.jsx';
+import { IconeUtilisateur } from '../HopeIcons.jsx';
 import { LIEN_CONNEXION, LIEN_DON, LIENS_DROITE, LIENS_GAUCHE } from './liens.js';
 
 /**
@@ -84,6 +85,7 @@ export default function EnteteVitrine() {
             ))}
           </nav>
           <Link to={LIEN_CONNEXION} className="vitrine-connexion">
+            <IconeUtilisateur className="vitrine-connexion__icone" />
             Connexion
           </Link>
           <Link to={LIEN_DON} className="vitrine-don">
