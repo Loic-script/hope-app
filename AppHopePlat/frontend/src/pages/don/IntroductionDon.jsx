@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
-import { IconeFleche, IconeMainsCoeur } from '../../components/HopeIcons.jsx';
+import mainCoeur from '../../assets/vitrine/icones/main-coeur.png';
+import { IconeFleche } from '../../components/HopeIcons.jsx';
 import { useCompteur } from '../../hooks/useApparition.js';
 
 /**
@@ -8,8 +9,9 @@ import { useCompteur } from '../../hooks/useApparition.js';
  * de demander quoi que ce soit, dire en un ecran a quoi sert le geste,
  * comment il se passe en trois etapes, et ce qui le rend sur.
  *
- * Tout entre en scene l'un apres l'autre ; le soleil autour du coeur
- * tourne lentement, les deux chiffres se comptent sous les yeux. Le
+ * Tout entre en scene l'un apres l'autre ; les rayons du soleil tournent
+ * lentement autour de la main qui tend un coeur (visuel fourni par
+ * HOPE), les deux chiffres se comptent sous les yeux. Le
  * visiteur qui a demande moins de mouvement voit tout en place, d'un coup
  * (don-invite.css, prefers-reduced-motion).
  *
@@ -41,7 +43,7 @@ function Chiffre({ valeur, libelle, rang }) {
 export default function IntroductionDon({ onCommencer }) {
   return (
     <section className="don-intro" aria-labelledby="don-intro-titre">
-      {/* Le soleil : la couronne tourne, l'orbite a contresens, le coeur au centre. */}
+      {/* Le soleil : la couronne de rayons tourne autour du disque. */}
       <div className="don-intro__soleil" style={{ '--rang': 0 }} aria-hidden="true">
         <span className="don-intro__halo" />
         <svg className="don-intro__couronne" viewBox="-64 -64 128 128">
@@ -57,12 +59,8 @@ export default function IntroductionDon({ onCommencer }) {
             />
           ))}
         </svg>
-        <svg className="don-intro__orbite" viewBox="-64 -64 128 128">
-          <circle className="don-intro__orbite-trait" r="46" />
-          <circle className="don-intro__satellite" cy="-46" r="2.4" />
-        </svg>
         <span className="don-intro__coeur">
-          <IconeMainsCoeur />
+          <img src={mainCoeur} alt="" />
         </span>
       </div>
 
