@@ -44,6 +44,7 @@ import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';
 import './styles/feuille.css';
 import './styles/parcours-donateur.css';
+import './styles/don-invite.css';
 import './styles/paiement-mvola.css';
 import './styles/paiement-orange-money.css';
 import './styles/paiement-carte.css';

@@ -1,0 +1,419 @@
+/* ============================================================
+   Le don sans compte : l'introduction (pages/don/IntroductionDon.jsx)
+
+   Dans l'habit du parcours (parcours-donateur.css) : la colonne de
+   700 px, le bouton orange, la police des titres. Tout entre en scene
+   l'un apres l'autre (--rang), le soleil tourne lentement, les chiffres
+   se comptent (useCompteur). Moins de mouvement demande : tout est en
+   place d'un coup.
+   ============================================================ */
+
+.don-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 18px;
+  text-align: center;
+}
+
+/* Chaque bloc arrive a son tour, de bas en haut. */
+.don-intro > * {
+  animation: don-intro-entree 0.65s var(--parcours-rythme) both;
+  animation-delay: calc(var(--rang, 0) * 95ms + 80ms);
+}
+
+/* ------------------------------ Le soleil ------------------------------ */
+
+.don-intro__soleil {
+  --soleil: clamp(132px, 22vw, 168px);
+
+  position: relative;
+  width: var(--soleil);
+  height: var(--soleil);
+  margin-bottom: 6px;
+}
+
+.don-intro__soleil > * {
+  position: absolute;
+  inset: 0;
+}
+
+.don-intro__halo {
+  inset: 10%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--hope-jaune) 70%, transparent) 0%,
+    color-mix(in srgb, var(--hope-jaune) 30%, transparent) 55%,
+    transparent 72%
+  );
+}
+
+/* La couronne tourne en une minute, l'orbite a contresens : assez lent
+   pour vivre sans distraire. */
+.don-intro__couronne,
+.don-intro__orbite {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: don-intro-tourne 60s linear infinite;
+}
+
+.don-intro__couronne rect {
+  fill: var(--hope-orange);
+}
+
+.don-intro__orbite {
+  animation-duration: 36s;
+  animation-direction: reverse;
+}
+
+.don-intro__orbite-trait {
+  fill: none;
+  stroke: var(--hope-orange);
+  stroke-width: 0.8;
+  stroke-dasharray: 0.1 3.8;
+  stroke-linecap: round;
+}
+
+.don-intro__satellite {
+  fill: var(--hope-violet);
+}
+
+/* Le coeur dans son anneau jaune ; il bat deux fois a l'arrivee, puis
+   se tient tranquille. */
+.don-intro__coeur {
+  inset: 21%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--hope-violet);
+  box-shadow:
+    0 0 0 5px var(--hope-jaune),
+    0 14px 30px -14px rgba(53, 51, 67, 0.45);
+  animation:
+    don-intro-entree 0.65s var(--parcours-rythme) both,
+    don-intro-bat 1.1s ease-in-out 1.1s 2;
+}
+
+.don-intro__coeur svg {
+  width: 52%;
+  height: 52%;
+}
+
+/* ------------------------------ Les textes ------------------------------ */
+
+.don-intro__sur-titre {
+  margin: 0;
+  color: var(--hope-orange-fonce);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.don-intro__titre {
+  margin: 10px 0 0;
+  font-size: clamp(30px, 5.4vw, 46px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--hope-violet);
+}
+
+.don-intro__texte {
+  max-width: 560px;
+  margin: 16px 0 0;
+  font-size: clamp(15.5px, 1.3vw, 17.5px);
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--hope-texte-doux);
+}
+
+/* ------------------------------ Les etapes ------------------------------ */
+
+/* Trois jalons relies par un filet qui se trace de gauche a droite ;
+   chaque numero se pose avec un leger rebond. */
+.don-intro__etapes {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  width: 100%;
+  margin: 34px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-intro__etapes::before {
+  content: '';
+  position: absolute;
+  top: 21px;
+  right: 16.66%;
+  left: 16.66%;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--hope-bleu), var(--hope-violet));
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: don-intro-filet 1.1s var(--parcours-rythme) 0.9s both;
+}
+
+.don-intro__etape {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.don-intro__numero {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--hope-violet);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow:
+    0 0 0 6px #f3f6fc,
+    0 10px 22px -12px rgba(93, 86, 150, 0.8);
+  animation: don-intro-pose 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--rang, 0) * 160ms + 1s);
+}
+
+.don-intro__etape-titre {
+  margin-top: 6px;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--parcours-encre);
+}
+
+.don-intro__etape-texte {
+  max-width: 190px;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--hope-texte-doux);
+}
+
+/* ----------------------------- Les chiffres ----------------------------- */
+
+.don-intro__chiffres {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 560px;
+  margin: 30px 0 0;
+}
+
+.don-intro__chiffre {
+  padding: 18px 16px 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 16px 34px -26px rgba(53, 51, 67, 0.5);
+}
+
+.don-intro__nombre {
+  margin: 0;
+  font-size: clamp(32px, 4.4vw, 40px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--hope-orange);
+  font-variant-numeric: tabular-nums;
+}
+
+.don-intro__libelle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--hope-violet);
+}
+
+/* ------------------------------- Les gages ------------------------------- */
+
+.don-intro__gages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.don-intro__gage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--hope-bleu-clair);
+  color: var(--hope-violet-fonce);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.don-intro__gage::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hope-orange);
+}
+
+/* ------------------------------- Le bouton ------------------------------- */
+
+.don-intro__bouton {
+  position: relative;
+  max-width: 420px;
+  margin-top: 30px;
+  overflow: hidden;
+}
+
+/* Un reflet le traverse une fois, quand tout est en place. */
+.don-intro__bouton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.4) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: don-intro-reflet 1.1s ease-in-out 2.2s both;
+  pointer-events: none;
+}
+
+.don-intro__compte {
+  margin: 16px 0 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--hope-texte-doux);
+}
+
+.don-intro__compte a {
+  color: var(--hope-violet);
+  font-weight: 700;
+}
+
+/* ------------------------------ Mouvements ------------------------------ */
+
+@keyframes don-intro-entree {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes don-intro-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes don-intro-bat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.07);
+  }
+  60% {
+    transform: scale(0.98);
+  }
+}
+
+@keyframes don-intro-filet {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes don-intro-pose {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes don-intro-reflet {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* ------------------------------ Petits ecrans ------------------------------ */
+
+@media (max-width: 640px) {
+  /* Les jalons en liste, le numero a gauche ; plus de filet. */
+  .don-intro__etapes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    text-align: left;
+  }
+
+  .don-intro__etapes::before {
+    display: none;
+  }
+
+  .don-intro__etape {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #ffffff;
+  }
+
+  .don-intro__numero {
+    grid-row: 1 / 3;
+    width: 40px;
+    height: 40px;
+    box-shadow: none;
+  }
+
+  .don-intro__etape-titre {
+    margin-top: 0;
+  }
+
+  .don-intro__etape-texte {
+    max-width: none;
+  }
+
+  .don-intro__chiffres {
+    gap: 10px;
+  }
+
+  .don-intro__bouton {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .don-intro > *,
+  .don-intro__coeur,
+  .don-intro__numero,
+  .don-intro__couronne,
+  .don-intro__orbite,
+  .don-intro__bouton::after {
+    animation: none;
+  }
+
+  .don-intro__etapes::before {
+    animation: none;
+    transform: none;
+  }
+}

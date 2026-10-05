@@ -9,14 +9,17 @@ import { PAGES_DE_PAIEMENT, pageDePaiement } from '../../utils/pagesPaiement.js'
 import { devisePourPays } from '../../utils/fuseaux.js';
 import { PAYS_PAR_DEFAUT } from '../../utils/pays.js';
 import { EtapeAffectation, EtapeInformations, EtapePaiement } from '../donateur/Parcours.jsx';
+import IntroductionDon from './IntroductionDon.jsx';
 
 /**
  * Faire un don sans compte, depuis le site vitrine.
  *
- * Le meme habit que le parcours d'accueil du donateur, en trois etapes :
- * qui vous etes (avec votre courriel, pour le recu), a quoi va votre
- * don, comment vous payez. Puis la page du moyen choisi -- MVola, carte,
- * virement... -- demande le montant, enregistre le don et fait payer.
+ * Le meme habit que le parcours d'accueil du donateur. D'abord une
+ * introduction (IntroductionDon) : a quoi sert le geste, comment il se
+ * passe, ce qui le rend sur. Puis trois etapes : qui vous etes (avec
+ * votre courriel, pour le recu), a quoi va votre don, comment vous payez.
+ * Enfin la page du moyen choisi -- MVola, carte, virement... -- demande
+ * le montant, enregistre le don et fait payer.
  *
  * Rien n'est enregistre avant la page de paiement : les etapes se
  * gardent ici, et une page de paiement quittee par "Retour" ramene a la
@@ -40,7 +43,8 @@ export default function DonSansCompte() {
 
   const { donnees: options, chargement, erreur } = useChargement(() => donInviteService.options(), []);
 
-  const [etape, setEtape] = useState(reprise ? NOMBRE_ETAPES : 1);
+  // 0 : l'introduction ; au retour d'une page de paiement, la troisieme etape.
+  const [etape, setEtape] = useState(reprise ? NOMBRE_ETAPES : 0);
   const [valeurs, setValeurs] = useState(() => reprise ?? VIDE);
 
   // La page s'ouvre en haut, meme quand on arrive du bas du site.
@@ -109,7 +113,9 @@ export default function DonSansCompte() {
         </Link>
         <HopeLogo className="parcours__logo" />
 
-        {chargement && !options && (
+        {etape === 0 && <IntroductionDon onCommencer={() => allerA(1)} />}
+
+        {etape > 0 && chargement && !options && (
           <p className="parcours__attente" role="status">
             Préparation de votre don…
           </p>
@@ -173,7 +179,7 @@ export default function DonSansCompte() {
           />
         )}
 
-        {options && (
+        {options && etape > 0 && (
           <p className="parcours__note parcours__note--invite">
             Vous donnez régulièrement ? <Link to="/authentification">Créez un compte</Link> pour suivre vos dons et
             donner chaque mois.

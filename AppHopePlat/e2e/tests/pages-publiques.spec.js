@@ -156,9 +156,16 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
     await page.locator('.vitrine-entete__menu').click();
   }
 
-  // Etape 1 : qui donne, avec son courriel ; sans adresse postale.
+  // L'introduction : a quoi sert le geste, les trois etapes, les chiffres.
   await droite.getByRole('link', { name: 'Faire un don' }).click();
   await expect(page).toHaveURL(/\/faire-un-don$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Votre geste change une vie');
+  await expect(page.locator('.don-intro__etape')).toHaveCount(3);
+  await expect(page.locator('.don-intro__nombre').first()).toContainText('300');
+  await sansDebordement(page);
+  await page.getByRole('button', { name: 'Commencer mon don' }).click();
+
+  // Etape 1 : qui donne, avec son courriel ; sans adresse postale.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Faisons connaissance');
   await expect(page.locator('.parcours__pas')).toHaveCount(3);
   await expect(page.locator('#donateur-adresse')).toHaveCount(0);
