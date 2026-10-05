@@ -2,19 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import HopeLogo from '../HopeLogo.jsx';
-import { LIEN_DON, LIENS_DROITE, LIENS_GAUCHE } from './liens.js';
+import { LIEN_CONNEXION, LIEN_DON, LIENS_DROITE, LIENS_GAUCHE } from './liens.js';
 
 /**
  * L'en-tete du site vitrine de HOPE.
  *
- * Sur grand ecran, le logotype au centre, trois liens de chaque cote, et
- * le bouton "Faire un don" au bout : c'est l'action que le site cherche a
- * provoquer, elle a la seule couleur pleine de la barre. La page courante
- * passe au bleu de la charte.
+ * Sur grand ecran, le logotype au centre, trois liens de chaque cote,
+ * puis "Connexion" -- la porte des donateurs, benevoles et bailleurs qui
+ * ont un compte -- et le bouton "Faire un don" au bout : c'est l'action
+ * que le site cherche a provoquer, elle a la seule couleur pleine de la
+ * barre. La page courante passe au bleu de la charte.
  *
  * Sur telephone et tablette, le logotype a gauche, "Faire un don" et un
- * bouton de menu a droite ; le menu se deplie sous la barre. Il se ferme
- * au changement de page, a la touche Echap, ou d'un clic hors de lui.
+ * bouton de menu a droite ; le menu se deplie sous la barre, "Connexion"
+ * en dernier. Il se ferme au changement de page, a la touche Echap, ou
+ * d'un clic hors de lui.
  *
  * La barre reste en haut de l'ecran ; des qu'on descend, elle se resserre
  * et prend une ombre, pour se detacher du contenu qui passe dessous.
@@ -81,6 +83,9 @@ export default function EnteteVitrine() {
               <Lien key={lien.to} {...lien} />
             ))}
           </nav>
+          <Link to={LIEN_CONNEXION} className="vitrine-connexion">
+            Connexion
+          </Link>
           <Link to={LIEN_DON} className="vitrine-don">
             Faire un don
           </Link>
@@ -99,9 +104,9 @@ export default function EnteteVitrine() {
         </div>
       </div>
 
-      {/* Le menu des petits ecrans : les six liens, dans l'ordre. */}
+      {/* Le menu des petits ecrans : les six liens, dans l'ordre, puis la connexion. */}
       <nav id="vitrine-menu-mobile" className="vitrine-mobile" aria-label="Menu principal" hidden={!ouvert}>
-        {[...LIENS_GAUCHE, ...LIENS_DROITE].map((lien, rang) => (
+        {[...LIENS_GAUCHE, ...LIENS_DROITE, { to: LIEN_CONNEXION, libelle: 'Connexion' }].map((lien, rang) => (
           <NavLink
             key={lien.to}
             to={lien.to}

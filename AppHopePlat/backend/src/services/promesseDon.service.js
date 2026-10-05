@@ -25,6 +25,27 @@ import { identifiantRequis, texteFacultatif, valeurParmi } from '../shared/valid
 import { DEVISES, FREQUENCES, MODES_PAIEMENT, projetsProposes } from './donorProfile.service.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
+/**
+ * La fiche "donors" de qui donne : celle de son compte, creee au premier
+ * don ; ou celle que l'identite fournit elle-meme (don sans compte).
+ */
+async function ficheDuDonateur(identite, client) {
+  if (identite.ficheId) return identite.ficheId(client);
+  const existante = await donorSpaceRepository.ficheDuCompte(identite.utilisateurId, client);
+  if (existante) return existante.id;
+  const creee = await donorSpaceRepository.creerFicheDuCompte(
+    { utilisateurId: identite.utilisateurId, ...(await identite.nouvelleFiche(client)) },
+    client
+  );
+  return creee.id;
+}
+
+/** Le don relu comme son auteur le lira : par son compte, ou par sa fiche. */
+function relireLeDon(identite, donId) {
+  if (identite.relire) return identite.relire(donId);
+  return donorSpaceRepository.unDeMesDons(identite.utilisateurId ?? identite.id, donId);
+}
+
 /** Les statuts d'un don, tels que les espaces les lisent. */
 export const STATUTS_DON = {
   PENDING: 'En attente',
@@ -70,10 +91,14 @@ export function options() {
  * Affecte a un projet que l'on peut encore soutenir -- en cours, et dont
  * l'objectif n'est pas atteint --, ou laisse a HOPE.
  *
- * @param {{ utilisateurId: string, qui: string, origine: string,
- *           nouvelleFiche: (client) => Promise<object> }} identite
+ * @param {{ utilisateurId: string|null, qui: string, origine: string,
+ *           nouvelleFiche?: (client) => Promise<object>,
+ *           ficheId?: (client) => Promise<number>,
+ *           relire?: (donId) => Promise<object> }} identite
  *   qui donne : son compte, son nom tel que l'equipe le lira, l'espace
- *   d'ou il donne ("bailleur Telma"), et de quoi creer sa fiche de don
+ *   d'ou il donne ("bailleur Telma"), et de quoi creer sa fiche de don.
+ *   Sans compte (le don depuis le site, donInvite.service), l'identite
+ *   fournit elle-meme sa fiche (ficheId) et la relecture du don (relire).
  * @param {{ affectation, projetId?, montant, devise?, mode, frequence?, message? }} corps
  * @param {{ mensuelPermis?: boolean, enLigne?: boolean }} [reglages]
  *   enLigne : le don part se payer tout de suite par carte, chez Stripe.
@@ -118,15 +143,7 @@ export async function promettreUnDon(
   const precision = precisionDuMoyen(corps, mode);
 
   const don = await transaction(async (client) => {
-    const existante = await donorSpaceRepository.ficheDuCompte(identite.utilisateurId, client);
-    const donorId =
-      existante?.id ??
-      (
-        await donorSpaceRepository.creerFicheDuCompte(
-          { utilisateurId: identite.utilisateurId, ...(await identite.nouvelleFiche(client)) },
-          client
-        )
-      ).id;
+    const donorId = await ficheDuDonateur(identite, client);
 
     // Une reference de transaction ne justifie qu'un seul don.
     if (paiement.reference && (await donationRepository.referencePaiementPrise(paiement.reference, client))) {
@@ -192,7 +209,7 @@ export async function promettreUnDon(
     void courrielsAuto.promesseAConfirmer(don.id);
   }
 
-  const lu = await donorSpaceRepository.unDeMesDons(identite.utilisateurId, don.id);
+  const lu = await relireLeDon(identite, don.id);
   return {
     don: presenter(lu),
     message: enLigne
@@ -335,7 +352,7 @@ export async function declarerJustificatif(compte, don, corps = {}) {
     );
   });
 
-  const lu = await donorSpaceRepository.unDeMesDons(compte.id, don.id);
+  const lu = await relireLeDon(compte, don.id);
   return { don: presenter(lu), message: 'Merci ! L’équipe HOPE rapproche votre paiement de son relevé.' };
 }
 

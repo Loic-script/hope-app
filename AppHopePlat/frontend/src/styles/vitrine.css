@@ -99,17 +99,20 @@
   transform: scale(1.04);
 }
 
+/* Les deux colonnes se partagent la largeur a egalite pour que le logo
+   reste au centre : a droite, trois liens, "Connexion" et le bouton de
+   don doivent tenir dans une moitie, d'ou des ecarts mesures. */
 .vitrine-entete__droite {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 28px;
+  gap: 20px;
 }
 
 .vitrine-nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 24px;
 }
 
 .vitrine-nav--gauche {
@@ -163,6 +166,24 @@
   background: var(--hope-bleu);
 }
 
+/* "Connexion" : un lien sobre, a cote du bouton de don, pour qui a deja
+   un compte. Sans icone : la moitie droite de la barre n'a pas la place. */
+.vitrine-connexion {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 2px;
+  color: var(--hope-violet);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.vitrine-connexion:hover {
+  color: var(--hope-bleu);
+}
+
 /* "Faire un don" : la seule couleur pleine de la barre. */
 .vitrine-don {
   position: relative;
@@ -209,6 +230,7 @@
 
 .vitrine-nav__lien:focus-visible,
 .vitrine-entete__logo:focus-visible,
+.vitrine-connexion:focus-visible,
 .vitrine-don:focus-visible,
 .vitrine-entete__menu:focus-visible,
 .vitrine-mobile__lien:focus-visible {
@@ -257,6 +279,28 @@
   display: none;
 }
 
+/* Entre 1100 et 1300 px, chaque moitie est juste : les liens se
+   resserrent un peu pour que le logo reste au centre. */
+@media (max-width: 1300px) {
+  .vitrine-nav {
+    gap: 18px;
+  }
+
+  .vitrine-entete__droite {
+    gap: 16px;
+  }
+
+  .vitrine-nav__lien,
+  .vitrine-connexion {
+    font-size: 14px;
+  }
+
+  .vitrine-don {
+    padding: 0 18px;
+    font-size: 14px;
+  }
+}
+
 /* ------------------------ Tablette et telephone ------------------------ */
 
 @media (max-width: 1100px) {
@@ -271,7 +315,8 @@
     height: 64px;
   }
 
-  .vitrine-nav {
+  .vitrine-nav,
+  .vitrine-connexion {
     display: none;
   }
 

@@ -9,6 +9,17 @@
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
+/** Un don tel que les espaces et le site le lisent (mesDons, donsDeLaFiche). */
+const COLONNES_DON = `
+  d.id, d.reference, d.amount AS montant, d.currency AS devise,
+  d.allocation AS affectation, d.project_id AS projet_id,
+  p.name AS projet_nom,
+  CASE WHEN p.media_type = 'PHOTO' THEN p.media_url END AS projet_image,
+  d.frequency AS frequence, d.payment_method AS mode_paiement,
+  d.status AS statut, d.received_at AS recu_le, d.created_at AS cree_le,
+  d.message
+`;
+
 /** La fiche de don rattachee a ce compte, ou undefined. */
 export async function ficheDuCompte(utilisateurId, client = null) {
   const resultat = await query('SELECT id FROM donors WHERE utilisateur_id = $1', [utilisateurId], client);
@@ -46,13 +57,7 @@ export async function creerFicheDuCompte(donnees, client = null) {
  */
 export async function mesDons(utilisateurId, client = null) {
   const resultat = await query(
-    `SELECT d.id, d.reference, d.amount AS montant, d.currency AS devise,
-            d.allocation AS affectation, d.project_id AS projet_id,
-            p.name AS projet_nom,
-            CASE WHEN p.media_type = 'PHOTO' THEN p.media_url END AS projet_image,
-            d.frequency AS frequence, d.payment_method AS mode_paiement,
-            d.status AS statut, d.received_at AS recu_le, d.created_at AS cree_le,
-            d.message
+    `SELECT ${COLONNES_DON}
        FROM donations d
        JOIN donors f ON f.id = d.donor_id
        LEFT JOIN projects p ON p.id = d.project_id
@@ -62,6 +67,52 @@ export async function mesDons(utilisateurId, client = null) {
     client
   );
   return versListe(resultat.rows);
+}
+
+/* ------------------------------------------------------------------
+   Le donateur sans compte (don depuis le site vitrine)
+   ------------------------------------------------------------------ */
+
+/**
+ * La fiche sans compte qui porte cette adresse, ou undefined : le
+ * donateur sans compte qui revient donner retrouve sa fiche. Une fiche
+ * rattachee a un compte, elle, n'est jamais reprise par le courriel.
+ */
+export async function ficheSansCompte(email, client = null) {
+  const resultat = await query(
+    `SELECT f.id
+       FROM donors f
+      WHERE lower(f.email) = lower($1)
+        AND f.utilisateur_id IS NULL
+        AND NOT EXISTS (SELECT 1 FROM donor_accounts a WHERE a.donor_id = f.id)
+      ORDER BY f.created_at DESC, f.id DESC
+      LIMIT 1`,
+    [email],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
+/** Les dons d'une fiche, par son identifiant, dans la forme de mesDons. */
+export async function donsDeLaFiche(donorId, client = null) {
+  const resultat = await query(
+    `SELECT ${COLONNES_DON}
+       FROM donations d
+       JOIN donors f ON f.id = d.donor_id
+       LEFT JOIN projects p ON p.id = d.project_id
+      WHERE f.id = $1
+      ORDER BY d.created_at DESC, d.id DESC`,
+    [donorId],
+    client
+  );
+  return versListe(resultat.rows);
+}
+
+/** Un don de la fiche, par son identifiant : undefined s'il n'est pas a elle. */
+export async function unDonDeLaFiche(donorId, donId, client = null) {
+  if (!donorId) return undefined;
+  const liste = await donsDeLaFiche(donorId, client);
+  return liste.find((don) => Number(don.id) === Number(donId));
 }
 
 /** Un don du compte, par son identifiant : undefined s'il n'est pas a lui. */

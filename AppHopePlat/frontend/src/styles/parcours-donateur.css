@@ -468,6 +468,52 @@ select.parcours__saisie option {
   animation: parcours-rotation 0.8s linear infinite;
 }
 
+/* Le don sans compte (pages/don/DonSansCompte.jsx) : la croix qui
+   ramene au site, en haut a droite de la colonne, et la note qui invite
+   a creer un compte sous le formulaire. */
+.parcours__quitter {
+  position: absolute;
+  top: 18px;
+  right: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(93, 86, 150, 0.1);
+  color: var(--hope-violet);
+  font-size: 26px;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.parcours__quitter:hover {
+  background: rgba(93, 86, 150, 0.18);
+  transform: rotate(90deg);
+}
+
+.parcours__quitter:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 3px;
+}
+
+.parcours__note--invite {
+  margin: 28px 0 0;
+  color: var(--hope-texte-doux, #6b6786);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.parcours__note--invite a {
+  color: var(--hope-violet);
+  font-weight: 700;
+}
+
 .parcours__attente,
 .parcours__alerte {
   margin: 48px 0 0;

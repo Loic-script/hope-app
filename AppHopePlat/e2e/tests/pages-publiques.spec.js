@@ -130,10 +130,81 @@ test('s engager : les trois voies, puis l appel au don et au partenariat', async
   await sansDebordement(page);
 
   const appel = page.locator('.engager-appel');
-  await expect(appel.getByRole('link', { name: 'Faire un don' })).toHaveAttribute('href', '/authentification?type=donateur');
+  await expect(appel.getByRole('link', { name: 'Faire un don' })).toHaveAttribute('href', '/faire-un-don');
   await appel.getByRole('link', { name: 'Devenir partenaire' }).click();
   await expect(page).toHaveURL(/\/authentification\?type=bailleur$/);
   await expect(page.locator('#typeConnexion')).toHaveValue('bailleur');
+});
+
+/** Coche un bouton radio dont la carte entre encore en scene : on insiste jusqu'a ce qu'il le soit. */
+async function cocher(radio) {
+  await expect(async () => {
+    await radio.check({ force: true });
+    await expect(radio).toBeChecked({ timeout: 500 });
+  }).toPass();
+}
+
+test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, puis MVola', async ({ page }) => {
+  await page.goto('/');
+  const droite = page.locator('.vitrine-entete__droite');
+  await expect(droite.getByRole('link', { name: 'Faire un don' })).toHaveAttribute('href', '/faire-un-don');
+  if (page.viewportSize().width > 1100) {
+    await expect(droite.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/authentification');
+  } else {
+    await page.locator('.vitrine-entete__menu').click();
+    await expect(page.locator('.vitrine-mobile').getByRole('link', { name: 'Connexion' })).toBeVisible();
+    await page.locator('.vitrine-entete__menu').click();
+  }
+
+  // Etape 1 : qui donne, avec son courriel ; sans adresse postale.
+  await droite.getByRole('link', { name: 'Faire un don' }).click();
+  await expect(page).toHaveURL(/\/faire-un-don$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Faisons connaissance');
+  await expect(page.locator('.parcours__pas')).toHaveCount(3);
+  await expect(page.locator('#donateur-adresse')).toHaveCount(0);
+  await page.locator('.parcours__continuer').click();
+  await expect(page.locator('.parcours__recap')).toContainText('5 champs demandent votre attention');
+  await sansDebordement(page);
+
+  const courriel = `invite-${Date.now()}@hope.test`;
+  await page.fill('#donateur-nom', 'Rakoto');
+  await page.fill('#donateur-prenom', 'Essai');
+  await page.fill('#donateur-courriel', courriel);
+  if (page.viewportSize().width < 900) {
+    // Sur telephone, le pays se choisit sur une page a part.
+    await page.locator('#donateur-pays').click();
+    await page.locator('.choix-page__saisie').fill('Madagascar');
+    await page.locator('.choix-page__option', { hasText: 'Madagascar' }).first().click();
+  } else {
+    await page.selectOption('#donateur-pays', 'MG');
+  }
+  await page.fill('#donateur-telephone', '0341234567');
+  await page.locator('.parcours__continuer').click();
+
+  // Etape 2 : le fonds HOPE ; etape 3 : MVola.
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Affectation de votre don');
+  await cocher(page.locator('input[name="affectation"][value="HOPE"]'));
+  await page.locator('.parcours__continuer').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mode de paiement');
+  await cocher(page.locator('input[name="paiement"][value="mvola"]'));
+  await page.locator('.parcours__continuer').click();
+
+  // La page MVola : le numero saisi a l'etape 1 est deja la ; le montant,
+  // la reference, et le don part en attente de confirmation.
+  await expect(page).toHaveURL(/\/faire-un-don\/mvola$/);
+  await expect(page.locator('#mvola-numero')).toHaveValue('341234567');
+  await page.fill('#mvola-montant', '10000');
+  await page.locator('form[aria-label="Montant du don"] button[type="submit"]').click();
+  const reference = page.locator('form[aria-label="Référence de la transaction"]');
+  await reference.locator('input').fill(`MP${Date.now() % 100000}.E2E`);
+  await reference.locator('button[type="submit"]').click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Misaotra');
+  await expect(page.locator('body')).toContainText('En attente de confirmation');
+  await sansDebordement(page);
+
+  // La sortie ramene au site.
+  await page.getByRole('button', { name: 'Revenir au site HOPE' }).click();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test('l accueil : les realisations et les actualites sont celles de la plateforme', async ({ page, request }, testInfo) => {

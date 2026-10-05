@@ -3,17 +3,45 @@ import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import * as bailleurService from '../../services/bailleur.service.js';
 import * as donateurService from '../../services/donateur.service.js';
+import * as donInviteService from '../../services/donInvite.service.js';
 import * as benevoleService from '../../services/espaceBenevole.service.js';
 
 /** Le parcours d'accueil du donateur. */
 const PARCOURS = '/donateur/completer-profil';
+
+/** Le don sans compte, depuis le site vitrine (pages/don/DonSansCompte.jsx). */
+const DON_INVITE = '/faire-un-don';
+
+/*
+ * Le jeton du don sans compte, remis par le serveur avec le don : il
+ * survit au detour par la banque (le retour de Stripe recharge la page)
+ * dans le stockage de session de l'onglet, et nulle part ailleurs.
+ */
+const CLE_JETON_INVITE = 'hope.don-invite.jeton';
+
+function lireJetonInvite() {
+  try {
+    return sessionStorage.getItem(CLE_JETON_INVITE) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function retenirJetonInvite(jeton) {
+  try {
+    if (jeton) sessionStorage.setItem(CLE_JETON_INVITE, jeton);
+  } catch {
+    // Stockage indisponible (navigation privee stricte) : le jeton ne
+    // vivra que le temps de la page.
+  }
+}
 
 const Contexte = createContext(null);
 
 /**
  * D'ou l'on paie : le contexte que lisent les pages de paiement.
  *
- * Une meme page -- MVola, carte, virement... -- sert quatre chemins :
+ * Une meme page -- MVola, carte, virement... -- sert cinq chemins :
  *
  *   * parcours : le donateur vient de s'inscrire ; le moyen et
  *     l'affectation sont ceux de son profil, et la page rend la main a
@@ -21,7 +49,10 @@ const Contexte = createContext(null);
  *   * donateur, bailleur, benevole : "Faire un don" dans un espace. Le
  *     don se prepare dans ParcoursDon (destination, montant, moyen),
  *     qui l'apporte ici en brouillon ; la page le fait payer, puis
- *     revient a l'espace.
+ *     revient a l'espace ;
+ *   * invite : "Faire un don" du site vitrine, sans compte. Le brouillon
+ *     porte aussi qui donne (personne) ; le serveur remet un jeton avec
+ *     le don, qui sert ensuite a signaler le paiement.
  *
  * Ce contexte cache la difference : qui paie, quel don, quels services
  * appeler, ou aller en quittant.
@@ -132,6 +163,65 @@ export default function ContextePaiement({ espace, children }) {
         sessionPayee,
         quitter(etape) {
           navigate(PARCOURS, { replace: true, state: etape ? { etape } : undefined });
+        },
+      };
+    }
+
+    // ----- Le don sans compte, depuis le site vitrine -----
+    if (espace === 'invite') {
+      const prepare = brouillon ?? {};
+      const donateur = prepare.personne ?? null;
+      return {
+        espace,
+        libelleSuite: 'Revenir au site HOPE',
+        libellePlusTard: 'Revenir au site',
+        rafraichir: undefined,
+        async charger(mode) {
+          // Sans brouillon -- une adresse tapee, une page rechargee --, ou
+          // pour un autre moyen : le don se prepare d'abord. Sauf au
+          // retour d'un paiement par carte : le don est fait, on montre
+          // son recu.
+          if ((!brouillon || brouillon.mode !== mode) && !sessionPayee) {
+            navigate(DON_INVITE, { replace: true });
+            return null;
+          }
+          return {
+            personne: personneDe(donateur ?? {}),
+            affectation: prepare.affectation || 'HOPE',
+            projetId: prepare.affectation === 'PROJECT' ? prepare.projetId : undefined,
+            beneficiaire:
+              prepare.projetNom || (prepare.affectation === 'PROJECT' ? 'Le projet choisi' : 'Les projets de HOPE'),
+            // Un don sans compte est ponctuel : le mensuel suppose un espace.
+            frequence: 'ONE_TIME',
+            message: prepare.message,
+            montant: prepare.montant ?? null,
+            devise: prepare.devise ?? null,
+          };
+        },
+        coordonnees: () => donInviteService.coordonneesDePaiement(),
+        async promettre(corps) {
+          const reponse = await donInviteService.faireUnDon({ ...corps, donateur });
+          retenirJetonInvite(reponse.jeton);
+          return reponse;
+        },
+        declarer: (id, reference) => donInviteService.declarerPaiement(id, reference, lireJetonInvite()),
+        carte: {
+          reglages: () => donInviteService.reglagesCarte(),
+          async ouvrir(corps) {
+            const reponse = await donInviteService.ouvrirPaiementCarte({ ...corps, donateur });
+            retenirJetonInvite(reponse.jeton);
+            return reponse;
+          },
+          etat: (session) => donInviteService.etatPaiementCarte(session, lireJetonInvite()),
+        },
+        sessionPayee,
+        quitter(etape) {
+          if (etape) {
+            // Revenir au choix du moyen : le formulaire reprend la ou il etait.
+            navigate(DON_INVITE, { replace: true, state: prepare.reprise ? { reprise: prepare.reprise } : undefined });
+            return;
+          }
+          navigate('/', { replace: true });
         },
       };
     }

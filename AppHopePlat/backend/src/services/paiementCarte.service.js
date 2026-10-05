@@ -246,8 +246,11 @@ export async function etatSession(identite, sessionId) {
     });
   }
 
+  // Le compte qui a ouvert la session ; ou, sans compte, le jeton du don
+  // (donInvite.service) qui dit lequel on peut lire.
   const don = await donationRepository.parSessionFournisseur(id);
-  if (!don || don.utilisateurId !== identite.utilisateurId) {
+  const autorise = identite.peutLire ? identite.peutLire(don) : don.utilisateurId === identite.utilisateurId;
+  if (!don || !autorise) {
     throw new ErreurIntrouvable('Le paiement', id);
   }
 
@@ -263,7 +266,9 @@ export async function etatSession(identite, sessionId) {
   await synchroniser(don, session);
   // Relu comme partout ailleurs : "Mes dons" et la page de retour
   // parlent du meme don, dans les memes mots.
-  const aJour = await donorSpaceRepository.unDeMesDons(identite.utilisateurId, don.id);
+  const aJour = identite.relire
+    ? await identite.relire(don.id)
+    : await donorSpaceRepository.unDeMesDons(identite.utilisateurId, don.id);
   return {
     statut: session.status,
     paiement: session.payment_status,

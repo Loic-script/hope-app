@@ -17,6 +17,7 @@ import HopeLogo from '../../components/HopeLogo.jsx';
 import {
   IconeCoche,
   IconeCoeur,
+  IconeEnveloppe,
   IconeFleche,
   IconeFlecheGauche,
   IconeGlobe,
@@ -258,18 +259,30 @@ export default function Parcours() {
 /** Ordre des champs obligatoires : c'est aussi l'ordre du focus en erreur. */
 const OBLIGATOIRES = ['nom', 'prenom', 'adresse', 'ville', 'pays', 'telephone'];
 
+/* Le don sans compte (pages/don/DonSansCompte.jsx) remplit la meme etape,
+   avec son courriel -- pour le recu -- et sans adresse postale, que la
+   fiche d'un donateur sans compte ne garde pas. */
+const ORDRE_INVITE = ['nom', 'prenom', 'courriel', 'ville', 'pays', 'telephone'];
+const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 /**
  * Le numero tel qu'on l'affiche : national s'il est de l'indicatif
  * choisi, international sinon. Le serveur, lui, le garde au format
  * +261...
  */
 /** Les erreurs du formulaire, champ par champ. */
-function verifier(champs) {
+function verifier(champs, invite = false) {
   const erreurs = {};
   if (champs.nom.trim() === '') erreurs.nom = 'Indiquez votre nom.';
   if (champs.prenom.trim() === '') erreurs.prenom = 'Indiquez votre prénom.';
-  if (champs.adresse.trim() === '') erreurs.adresse = 'Indiquez votre adresse.';
-  if (champs.ville.trim() === '') erreurs.ville = 'Indiquez votre ville.';
+  if (invite) {
+    const courriel = champs.courriel.trim();
+    if (courriel === '') erreurs.courriel = 'Indiquez votre adresse de courriel.';
+    else if (!COURRIEL.test(courriel)) erreurs.courriel = 'Cette adresse de courriel n’est pas valide.';
+  } else {
+    if (champs.adresse.trim() === '') erreurs.adresse = 'Indiquez votre adresse.';
+    if (champs.ville.trim() === '') erreurs.ville = 'Indiquez votre ville.';
+  }
   if (champs.pays === '') erreurs.pays = 'Choisissez votre pays.';
   if (champs.telephone.trim() === '') {
     erreurs.telephone = 'Indiquez votre numéro de téléphone.';
@@ -282,7 +295,25 @@ function verifier(champs) {
   return erreurs;
 }
 
-function EtapeInformations({ initiales, sources, onSuivante }) {
+/**
+ * @param {object} props
+ * @param {(valeurs: object) => Promise<object>} [props.enregistrer]  ou
+ *   vont les valeurs : le serveur (etape 1 du parcours), ou le parent
+ *   (don sans compte, qui les garde jusqu'au paiement)
+ * @param {'compte'|'invite'} [props.variante]  "invite" : avec le
+ *   courriel, sans adresse, ville facultative, ni profession ni source
+ * @param {number} [props.total]  le nombre de points de la progression
+ */
+export function EtapeInformations({
+  initiales,
+  sources,
+  onSuivante,
+  enregistrer = donateurService.enregistrerEtape1,
+  variante = 'compte',
+  total = NOMBRE_ETAPES,
+}) {
+  const invite = variante === 'invite';
+  const ordre = invite ? ORDRE_INVITE : [...OBLIGATOIRES, 'profession', 'source'];
   /*
    * L'indicatif est distinct du pays de residence : on peut vivre en
    * France et garder un numero malgache. Il part du numero deja
@@ -293,6 +324,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
     return {
       nom: initiales.nom ?? '',
       prenom: initiales.prenom ?? '',
+      courriel: initiales.courriel ?? '',
       adresse: initiales.adresse ?? '',
       ville: initiales.ville ?? '',
       pays: initiales.pays ?? '',
@@ -316,7 +348,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
   const [refus, setRefus] = useState('');
   const formulaire = useRef(null);
 
-  const erreursLocales = verifier(champs);
+  const erreursLocales = verifier(champs, invite);
   const erreurDe = (champ) =>
     erreursServeur[champ] ?? ((touches[champ] || soumis) ? erreursLocales[champ] : undefined);
   const telephone = useEcranTelephone();
@@ -382,7 +414,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
 
   /** Porte le focus sur le premier champ en erreur, dans l'ordre du formulaire. */
   function focaliserPremiereErreur(erreurs) {
-    const premier = [...OBLIGATOIRES, 'profession', 'source'].find((champ) => erreurs[champ]);
+    const premier = ordre.find((champ) => erreurs[champ]);
     if (premier) formulaire.current?.querySelector(`#donateur-${premier}`)?.focus();
   }
 
@@ -391,7 +423,7 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
     setSoumis(true);
     setRefus('');
 
-    const erreurs = verifier(champs);
+    const erreurs = verifier(champs, invite);
     if (Object.keys(erreurs).length > 0) {
       focaliserPremiereErreur(erreurs);
       return;
@@ -399,16 +431,23 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
 
     setEnvoi(true);
     try {
-      const reponse = await donateurService.enregistrerEtape1({
+      const communs = {
         nom: champs.nom.trim(),
         prenom: champs.prenom.trim(),
-        adresse: champs.adresse.trim(),
         ville: champs.ville.trim(),
         pays: champs.pays,
         telephone: numeroInternational(champs.telephone, champs.indicatif),
-        profession: champs.profession.trim(),
-        source: champs.source,
-      });
+      };
+      const reponse = await enregistrer(
+        invite
+          ? { ...communs, courriel: champs.courriel.trim().toLowerCase() }
+          : {
+              ...communs,
+              adresse: champs.adresse.trim(),
+              profession: champs.profession.trim(),
+              source: champs.source,
+            }
+      );
       await onSuivante(reponse);
     } catch (echec) {
       const details = echec?.response?.data?.details ?? {};
@@ -420,14 +459,13 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
     }
   }
 
-  const nbErreurs = soumis
-    ? [...OBLIGATOIRES, 'profession', 'source'].filter((champ) => erreurDe(champ)).length
-    : 0;
+  const nbErreurs = soumis ? ordre.filter((champ) => erreurDe(champ)).length : 0;
 
   return (
     <>
       <EntetePas
         etape={1}
+        total={total}
         titre="Faisons connaissance"
         accroche="Complétez vos informations personnelles pour commencer."
       />
@@ -471,21 +509,37 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
           </Champ>
         </div>
 
-        <Champ id="adresse" libelle="Adresse" erreur={erreurDe('adresse')} Icone={IconeRepere}>
-          <input
-            type="text"
-            value={champs.adresse}
-            onChange={modifier('adresse')}
-            onBlur={quitter('adresse')}
-            placeholder="Votre adresse"
-            autoComplete="street-address"
-            maxLength={255}
-            disabled={envoi}
-          />
-        </Champ>
+        {invite ? (
+          <Champ id="courriel" libelle="Courriel" erreur={erreurDe('courriel')} Icone={IconeEnveloppe}>
+            <input
+              type="email"
+              inputMode="email"
+              value={champs.courriel}
+              onChange={modifier('courriel')}
+              onBlur={quitter('courriel')}
+              placeholder="Votre adresse de courriel"
+              autoComplete="email"
+              maxLength={255}
+              disabled={envoi}
+            />
+          </Champ>
+        ) : (
+          <Champ id="adresse" libelle="Adresse" erreur={erreurDe('adresse')} Icone={IconeRepere}>
+            <input
+              type="text"
+              value={champs.adresse}
+              onChange={modifier('adresse')}
+              onBlur={quitter('adresse')}
+              placeholder="Votre adresse"
+              autoComplete="street-address"
+              maxLength={255}
+              disabled={envoi}
+            />
+          </Champ>
+        )}
 
         <div className="parcours__paire">
-          <Champ id="ville" libelle="Ville" erreur={erreurDe('ville')} Icone={IconeImmeuble}>
+          <Champ id="ville" libelle="Ville" facultatif={invite} erreur={erreurDe('ville')} Icone={IconeImmeuble}>
             <input
               type="text"
               value={champs.ville}
@@ -556,47 +610,51 @@ function EtapeInformations({ initiales, sources, onSuivante }) {
           />
         </Champ>
 
-        <Champ
-          id="profession"
-          libelle="Profession"
-          facultatif
-          erreur={erreurDe('profession')}
-          Icone={IconeMallette}
-        >
-          <input
-            type="text"
-            value={champs.profession}
-            onChange={modifier('profession')}
-            onBlur={quitter('profession')}
-            placeholder="Votre profession"
-            autoComplete="organization-title"
-            maxLength={120}
-            disabled={envoi}
-          />
-        </Champ>
+        {!invite && (
+          <>
+            <Champ
+              id="profession"
+              libelle="Profession"
+              facultatif
+              erreur={erreurDe('profession')}
+              Icone={IconeMallette}
+            >
+              <input
+                type="text"
+                value={champs.profession}
+                onChange={modifier('profession')}
+                onBlur={quitter('profession')}
+                placeholder="Votre profession"
+                autoComplete="organization-title"
+                maxLength={120}
+                disabled={envoi}
+              />
+            </Champ>
 
-        <Champ
-          id="source"
-          libelle="Comment avez-vous connu Hope ?"
-          facultatif
-          erreur={erreurDe('source')}
-          Icone={IconeMegaphone}
-          liste
-        >
-          <select
-            value={champs.source}
-            onChange={modifier('source')}
-            disabled={envoi}
-            data-vide={champs.source === ''}
-          >
-            <option value="">Sélectionnez une réponse</option>
-            {sources.map((source) => (
-              <option key={source.cle} value={source.cle}>
-                {source.libelle}
-              </option>
-            ))}
-          </select>
-        </Champ>
+            <Champ
+              id="source"
+              libelle="Comment avez-vous connu Hope ?"
+              facultatif
+              erreur={erreurDe('source')}
+              Icone={IconeMegaphone}
+              liste
+            >
+              <select
+                value={champs.source}
+                onChange={modifier('source')}
+                disabled={envoi}
+                data-vide={champs.source === ''}
+              >
+                <option value="">Sélectionnez une réponse</option>
+                {sources.map((source) => (
+                  <option key={source.cle} value={source.cle}>
+                    {source.libelle}
+                  </option>
+                ))}
+              </select>
+            </Champ>
+          </>
+        )}
 
         <button type="submit" className="parcours__continuer" disabled={envoi} aria-busy={envoi}>
           {envoi ? (
@@ -1146,11 +1204,23 @@ function normaliser(texte) {
  * besoin de soutien viennent d'abord ; un projet deja finance reste
  * visible -- il dit ce que les dons ont permis -- mais ne se choisit plus.
  */
-function EtapeAffectation({ initiales, onRetour, onSuivante }) {
-  const { donnees: liste, chargement, erreur: erreurListe } = useChargement(
-    () => donateurService.listerProjets(),
-    []
-  );
+/**
+ * @param {object} props
+ * @param {() => Promise<{ items: object[] }>} [props.chargerProjets]  les
+ *   projets a proposer ; le don sans compte les apporte deja charges
+ * @param {(choix: object) => Promise<object>} [props.enregistrer]
+ * @param {number} [props.etape]  le numero affiche ; [props.total] les points
+ */
+export function EtapeAffectation({
+  initiales,
+  onRetour,
+  onSuivante,
+  chargerProjets = donateurService.listerProjets,
+  enregistrer = donateurService.enregistrerEtape3,
+  etape = 3,
+  total = NOMBRE_ETAPES,
+}) {
+  const { donnees: liste, chargement, erreur: erreurListe } = useChargement(() => chargerProjets(), []);
   const projets = liste?.items ?? [];
 
   const [choix, setChoix] = useState(() => ({
@@ -1211,7 +1281,7 @@ function EtapeAffectation({ initiales, onRetour, onSuivante }) {
 
     setEnvoi(true);
     try {
-      const reponse = await donateurService.enregistrerEtape3({
+      const reponse = await enregistrer({
         affectation: choix.affectation,
         projetId: affecte ? choix.projetId : null,
       });
@@ -1228,7 +1298,8 @@ function EtapeAffectation({ initiales, onRetour, onSuivante }) {
   return (
     <>
       <EntetePas
-        etape={3}
+        etape={etape}
+        total={total}
         titre="Affectation de votre don"
         accroche="Choisissez comment votre don sera utilisé."
       />
@@ -1491,7 +1562,21 @@ function CarteProjet({ projet, choisi, onChange, disabled }) {
  * Rien n'est coche d'avance : un moyen de paiement se choisit, il ne se
  * subit pas. Le choix fait, une phrase dit ce qu'il suppose.
  */
-function EtapePaiement({ initiales, pays, modes, onRetour, onSuivante }) {
+/**
+ * @param {object} props
+ * @param {(choix: { mode: string }) => Promise<object>} [props.enregistrer]
+ * @param {number} [props.etape]  le numero affiche ; [props.total] les points
+ */
+export function EtapePaiement({
+  initiales,
+  pays,
+  modes,
+  onRetour,
+  onSuivante,
+  enregistrer = donateurService.enregistrerEtape4,
+  etape = 4,
+  total = NOMBRE_ETAPES,
+}) {
   const depuisEtranger = Boolean(pays) && pays !== 'MG';
   const ordonnes = depuisEtranger
     ? [...modes.filter((m) => m.zone === 'international'), ...modes.filter((m) => m.zone !== 'international')]
@@ -1518,7 +1603,7 @@ function EtapePaiement({ initiales, pays, modes, onRetour, onSuivante }) {
 
     setEnvoi(true);
     try {
-      const reponse = await donateurService.enregistrerEtape4({ mode });
+      const reponse = await enregistrer({ mode });
       await onSuivante(reponse);
     } catch (echec) {
       setRefus(messageErreur(echec, 'Votre choix n’a pas pu être enregistré.'));
@@ -1530,7 +1615,8 @@ function EtapePaiement({ initiales, pays, modes, onRetour, onSuivante }) {
   return (
     <>
       <EntetePas
-        etape={4}
+        etape={etape}
+        total={total}
         titre="Mode de paiement"
         accroche="Choisissez votre moyen de paiement pour poursuivre votre don."
       />
@@ -1779,15 +1865,15 @@ function EtapeFrequence({ initiales, frequences, modePaiement, onRetour, onTermi
  * La barre sous "Etape 1" compte les cinq etapes : on sait ou l'on est,
  * et combien il en reste, sans avoir a le lire.
  */
-function EntetePas({ etape, titre, accroche }) {
+export function EntetePas({ etape, titre, accroche, total = NOMBRE_ETAPES }) {
   return (
     <header className="parcours__entete">
       <p className="parcours__etape">
         Étape {etape}
-        <span className="sr-only"> sur {NOMBRE_ETAPES}</span>
+        <span className="sr-only"> sur {total}</span>
       </p>
       <ol className="parcours__progression" aria-hidden="true">
-        {Array.from({ length: NOMBRE_ETAPES }, (_, index) => (
+        {Array.from({ length: total }, (_, index) => (
           <li
             key={index}
             className={

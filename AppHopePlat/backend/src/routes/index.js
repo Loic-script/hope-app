@@ -14,6 +14,8 @@ import funderRoutes from './funder.routes.js';
 import espaceRoutes from './espace.routes.js';
 import donorSpaceRoutes from './donorSpace.routes.js';
 import { webhookStripe } from '../controllers/paiementCarte.controllers.js';
+import * as donInvite from '../controllers/donInvite.controllers.js';
+import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
 import { photosBeneficiaires } from '../controllers/admin.controllers.js';
 import * as vitrineService from '../services/vitrine.service.js';
@@ -90,6 +92,29 @@ router.get('/public/projets/:id', async (req, res, next) => {
     next(erreur);
   }
 });
+
+/*
+ * Le don sans compte, depuis "Faire un don" du site vitrine
+ * (donInvite.service) : ce que le formulaire propose, ou payer, la
+ * promesse, puis -- avec le jeton remis au donateur -- le paiement
+ * signale ou l'etat du paiement par carte. Les ecritures sont limitees
+ * en debit : chaque promesse previent l'equipe et envoie un courriel.
+ */
+router.get('/public/dons/options', donInvite.options);
+router.get('/public/dons/coordonnees', donInvite.coordonnees);
+router.post('/public/dons', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }), donInvite.promettre);
+router.patch(
+  '/public/dons/:id/justificatif',
+  limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }),
+  donInvite.declarer
+);
+router.get('/public/dons/paiement/carte', donInvite.carte.reglages);
+router.post(
+  '/public/dons/paiement/carte/session',
+  limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }),
+  donInvite.carte.ouvrir
+);
+router.get('/public/dons/paiement/carte/session/:id', donInvite.carte.etat);
 
 // Authentification des utilisateurs : un seul formulaire pour les trois
 // types (donateur, benevole, bailleur), plus l'amorce de l'espace donateur.

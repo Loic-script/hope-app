@@ -12,6 +12,7 @@ import DonateurLayout from '../layouts/DonateurLayout.jsx';
  * ecran n'a besoin. Les autres espaces ne les telechargent pas.
  */
 const ParcoursDonateur = lazy(() => import('../pages/donateur/Parcours.jsx'));
+const DonSansCompte = lazy(() => import('../pages/don/DonSansCompte.jsx'));
 // Le paiement MVola, ouvert depuis l'etape 4 du parcours.
 import RequireDonateur from './RequireDonateur.jsx';
 import BenevoleLayout from '../layouts/BenevoleLayout.jsx';
@@ -144,6 +145,7 @@ function routesPaiement(base, espace) {
  * Table de routage de l'application HOPE.
  *
  *   /                page d'entree : l'admin, ou les utilisateurs
+ *   /faire-un-don    le don sans compte, depuis le site vitrine
  *   /authentification connexion et inscription des utilisateurs
  *   /donateur/...    espace donateur : actualites, dons, projets, profil
  *   /admin/login     connexion administrateur
@@ -200,6 +202,25 @@ export default function AppRoutes() {
       {/* Le choix de l'espace (administration ou utilisateurs), qui etait a la racine. */}
       <Route path="/espaces" element={<Redirection />} />
       <Route path="/admin/login" element={<AdminLogin />} />
+
+      {/* ----- Faire un don sans compte, depuis le site vitrine ----- */}
+      <Route
+        path="/faire-un-don"
+        element={
+          <Suspense
+            fallback={
+              <div className="verification" role="status" aria-live="polite">
+                <span className="verification__rotation" aria-hidden="true" />
+                <p>Préparation de votre don…</p>
+              </div>
+            }
+          >
+            <DonSansCompte />
+          </Suspense>
+        }
+      />
+      {/* Le moyen de paiement choisi, dans son contexte "invite". */}
+      {routesPaiement('/faire-un-don', 'invite')}
 
       {/* ----- Porte unique des utilisateurs ----- */}
       <Route path="/authentification" element={<Authentification />} />

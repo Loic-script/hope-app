@@ -13,5 +13,8 @@ export const LIENS_DROITE = [
   { to: '/contact', libelle: 'Contact' },
 ];
 
-/** Faire un don : l'inscription ou la connexion d'un donateur. */
-export const LIEN_DON = '/authentification?type=donateur';
+/** Faire un don : le don sans compte, en trois etapes puis le paiement. */
+export const LIEN_DON = '/faire-un-don';
+
+/** Connexion : la porte unique des donateurs, benevoles et bailleurs. */
+export const LIEN_CONNEXION = '/authentification';
