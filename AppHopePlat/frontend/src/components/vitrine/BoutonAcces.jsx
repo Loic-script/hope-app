@@ -9,7 +9,7 @@ import { LIEN_CONNEXION, LIEN_DON } from './liens.js';
  * deux portes.
  *
  *   - la partie principale est un lien dont le mot change toutes les
- *     cinq secondes : "Faire un don", puis "Connexion", puis de nouveau
+ *     trois secondes : "Faire un don", puis "Connexion", puis de nouveau
  *     le don, sans fin. Le passage se fait en briques : chaque lettre du
  *     mot qui arrive tombe de haut comme un Lego, s'ecrase un peu a
  *     l'atterrissage, rebondit et se pose ; a chaque impact, les lettres
@@ -34,7 +34,7 @@ const OPTIONS = [
 ];
 
 /** Le temps qu'un mot reste affiche avant de laisser la place a l'autre. */
-const CADENCE = 5000;
+const CADENCE = 3000;
 /** Le temps que les lettres du mot sortant aient fini de tomber (vitrine.css). */
 const GLISSEMENT = 800;
 
