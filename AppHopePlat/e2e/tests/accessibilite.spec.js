@@ -21,10 +21,12 @@ const REGLES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
  * sur jaune), texte violet fonce de la carte Scolarite. Seule la regle de
  * contraste leur est epargnee : toutes les autres s'y appliquent.
  */
+// Le bouton d'acces de la barre (.vitrine-acces) : texte blanc sur l'orange
+// de la charte, retenu tel quel a la demande de HOPE, comme l'ancien bouton.
 const CONTRASTE_ACCEPTE = {
   '/': [
     '.vitrine-nav__lien--actif',
-    '.vitrine-don',
+    '.vitrine-acces',
     '.accueil-bouton--orange',
     '.accueil-bouton--bleu',
     '.v-activite--scolarite .v-activite__texte',
@@ -36,17 +38,17 @@ const CONTRASTE_ACCEPTE = {
   ],
   '/nous-decouvrir': [
     '.vitrine-nav__lien--actif',
-    '.vitrine-don',
+    '.vitrine-acces',
     '.accueil-bouton--orange',
     '.accueil-bouton--bleu',
   ],
-  '/nos-projets': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
-  '/nos-projets/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
-  '/actualites': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange', '.v-actualite__titre', '.v-actualite__lien'],
-  '/actualites/:id': ['.vitrine-nav__lien--actif', '.vitrine-don', '.accueil-bouton--orange'],
+  '/nos-projets': ['.vitrine-nav__lien--actif', '.vitrine-acces', '.accueil-bouton--orange'],
+  '/nos-projets/:id': ['.vitrine-nav__lien--actif', '.vitrine-acces', '.accueil-bouton--orange'],
+  '/actualites': ['.vitrine-nav__lien--actif', '.vitrine-acces', '.accueil-bouton--orange', '.v-actualite__titre', '.v-actualite__lien'],
+  '/actualites/:id': ['.vitrine-nav__lien--actif', '.vitrine-acces', '.accueil-bouton--orange'],
   '/s-engager': [
     '.vitrine-nav__lien--actif',
-    '.vitrine-don',
+    '.vitrine-acces',
     '.accueil-bouton--orange',
     '.engager-carte--entreprises',
     '.engager-carte--donateurs',

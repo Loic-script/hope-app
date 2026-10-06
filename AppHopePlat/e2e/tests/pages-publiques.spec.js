@@ -147,17 +147,23 @@ async function cocher(radio) {
 test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, puis MVola', async ({ page }) => {
   await page.goto('/');
   const droite = page.locator('.vitrine-entete__droite');
-  await expect(droite.getByRole('link', { name: 'Faire un don' })).toHaveAttribute('href', '/faire-un-don');
-  if (page.viewportSize().width > 1100) {
-    await expect(droite.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/authentification');
-  } else {
+  // Le bouton d'acces : son mot alterne, sa fleche ouvre les deux portes en clair.
+  await expect(droite.locator('.vitrine-acces__principal')).toContainText('Faire un don');
+  await droite.getByRole('button', { name: /faire un don ou se connecter/i }).click();
+  const menu = droite.getByRole('menu');
+  await expect(menu.getByRole('menuitem', { name: 'Faire un don' })).toHaveAttribute('href', '/faire-un-don');
+  await expect(menu.getByRole('menuitem', { name: 'Connexion' })).toHaveAttribute('href', '/authentification');
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+  if (page.viewportSize().width <= 1100) {
     await page.locator('.vitrine-entete__menu').click();
     await expect(page.locator('.vitrine-mobile').getByRole('link', { name: 'Connexion' })).toBeVisible();
     await page.locator('.vitrine-entete__menu').click();
   }
 
   // L'introduction : a quoi sert le geste, les trois etapes, les chiffres.
-  await droite.getByRole('link', { name: 'Faire un don' }).click();
+  await droite.getByRole('button', { name: /faire un don ou se connecter/i }).click();
+  await droite.getByRole('menuitem', { name: 'Faire un don' }).click();
   await expect(page).toHaveURL(/\/faire-un-don$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Votre geste change une vie');
   await expect(page.locator('.don-intro__etape')).toHaveCount(3);

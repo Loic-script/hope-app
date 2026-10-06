@@ -2,22 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import HopeLogo from '../HopeLogo.jsx';
-import { IconeUtilisateur } from '../HopeIcons.jsx';
-import { LIEN_CONNEXION, LIEN_DON, LIENS_DROITE, LIENS_GAUCHE } from './liens.js';
+import BoutonAcces from './BoutonAcces.jsx';
+import { LIEN_CONNEXION, LIENS_DROITE, LIENS_GAUCHE } from './liens.js';
 
 /**
  * L'en-tete du site vitrine de HOPE.
  *
- * Sur grand ecran, le logotype au centre, trois liens de chaque cote,
- * puis "Connexion" -- la porte des donateurs, benevoles et bailleurs qui
- * ont un compte -- et le bouton "Faire un don" au bout : c'est l'action
- * que le site cherche a provoquer, elle a la seule couleur pleine de la
- * barre. La page courante passe au bleu de la charte.
+ * Sur grand ecran, le logotype au centre, trois liens de chaque cote, et
+ * au bout le bouton d'acces (BoutonAcces) : la seule couleur pleine de
+ * la barre, qui dit "Faire un don" puis "Connexion" en alternance, et
+ * dont la fleche ouvre le choix des deux. La page courante passe au bleu
+ * de la charte.
  *
- * Sur telephone et tablette, le logotype a gauche, "Faire un don" et un
- * bouton de menu a droite ; le menu se deplie sous la barre, "Connexion"
- * en dernier. Il se ferme au changement de page, a la touche Echap, ou
- * d'un clic hors de lui.
+ * Sur telephone et tablette, le logotype a gauche, le bouton d'acces et
+ * un bouton de menu a droite ; le menu se deplie sous la barre,
+ * "Connexion" en dernier, en toutes lettres. Il se ferme au changement
+ * de page, a la touche Echap, ou d'un clic hors de lui.
  *
  * La barre reste en haut de l'ecran ; des qu'on descend, elle se resserre
  * et prend une ombre, pour se detacher du contenu qui passe dessous.
@@ -84,13 +84,7 @@ export default function EnteteVitrine() {
               <Lien key={lien.to} {...lien} />
             ))}
           </nav>
-          <Link to={LIEN_CONNEXION} className="vitrine-connexion">
-            <IconeUtilisateur className="vitrine-connexion__icone" />
-            Connexion
-          </Link>
-          <Link to={LIEN_DON} className="vitrine-don">
-            Faire un don
-          </Link>
+          <BoutonAcces />
           <button
             type="button"
             className="vitrine-entete__menu"

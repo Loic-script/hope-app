@@ -167,56 +167,191 @@
   background: var(--hope-bleu);
 }
 
-/* "Connexion" : une pastille cerclee de violet, a cote du bouton de don,
-   pour qui a deja un compte. Secondaire par rapport au don : un contour,
-   pas une couleur pleine ; au survol elle se remplit d'un violet pale et
-   se souleve, et son icone s'avance. */
-.vitrine-connexion {
+/* Le bouton d'acces (BoutonAcces.jsx) : la seule couleur pleine de la
+   barre. A gauche le lien dont le mot glisse -- "Faire un don", puis
+   "Connexion" -- ; a droite la fleche qui ouvre le menu des deux portes. */
+.vitrine-acces {
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 42px;
-  padding: 0 13px 0 11px;
-  border: 1.5px solid color-mix(in srgb, var(--hope-violet) 45%, transparent);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--hope-violet);
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
+  align-items: stretch;
+  min-height: 46px;
+  overflow: visible;
+  border-radius: 10px;
+  background: var(--hope-orange);
+  color: #fff;
+  box-shadow: 0 8px 18px -8px rgba(201, 130, 42, 0.8);
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.vitrine-connexion__icone {
-  width: 18px;
-  height: 18px;
-  flex: none;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.vitrine-connexion:hover {
-  border-color: var(--hope-violet);
-  background: color-mix(in srgb, var(--hope-violet) 10%, #ffffff);
-  color: var(--hope-violet-fonce);
+.vitrine-acces:hover,
+.vitrine-acces--ouvert {
+  background: var(--hope-orange-fonce);
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px -12px rgba(93, 86, 150, 0.7);
+  box-shadow: 0 12px 24px -8px rgba(201, 130, 42, 0.85);
 }
 
-.vitrine-connexion:hover .vitrine-connexion__icone {
-  transform: translateX(2px) scale(1.08);
+.vitrine-acces__principal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px 0 18px;
+  overflow: hidden;
+  border-radius: 10px 0 0 10px;
+  color: inherit;
+  font-family: var(--vitrine-police);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  text-shadow: 0 1px 2px rgba(53, 51, 67, 0.2);
+  white-space: nowrap;
 }
 
-.vitrine-connexion:active {
-  transform: translateY(0) scale(0.97);
+/* Le gabarit tient la largeur du mot le plus long ; les mots, eux,
+   glissent dans la meme case. */
+.vitrine-acces__gabarit {
+  visibility: hidden;
 }
 
-/* "Faire un don" : la seule couleur pleine de la barre. */
+.vitrine-acces__mots {
+  position: absolute;
+  inset: 0 14px 0 18px;
+  display: grid;
+  place-items: center;
+}
+
+.vitrine-acces__mot {
+  grid-area: 1 / 1;
+  animation: acces-entre 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vitrine-acces__mot--sortant {
+  animation-name: acces-sort;
+}
+
+/* La fleche : une case a part, separee d'un filet clair ; elle se
+   retourne quand le menu est ouvert. */
+.vitrine-acces__fleche {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0 10px 10px 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.vitrine-acces__fleche:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.vitrine-acces__fleche svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.vitrine-acces--ouvert .vitrine-acces__fleche svg {
+  transform: rotate(180deg);
+}
+
+/* Le menu des deux portes, sous la fleche. */
+.vitrine-acces__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 212px;
+  margin: 0;
+  padding: 6px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--hope-violet);
+  box-shadow:
+    0 20px 44px -18px rgba(53, 51, 67, 0.45),
+    0 0 0 1px rgba(93, 86, 150, 0.08);
+  list-style: none;
+  transform-origin: top right;
+  animation: acces-menu 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vitrine-acces__choix {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 0 14px 0 12px;
+  border-radius: 9px;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-police);
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  animation: acces-entre 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 50ms + 40ms);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.vitrine-acces__choix:hover {
+  background: var(--hope-fond-panneau);
+  color: var(--hope-violet-fonce);
+}
+
+.vitrine-acces__choix-icone {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--hope-orange);
+}
+
+.vitrine-acces__choix:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: -3px;
+}
+
+@keyframes acces-entre {
+  from {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes acces-sort {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-110%);
+  }
+}
+
+@keyframes acces-menu {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* "Faire un don" seul, en bouton plein : les pages en preparation. */
 .vitrine-don {
   position: relative;
   display: inline-flex;
@@ -262,7 +397,8 @@
 
 .vitrine-nav__lien:focus-visible,
 .vitrine-entete__logo:focus-visible,
-.vitrine-connexion:focus-visible,
+.vitrine-acces__principal:focus-visible,
+.vitrine-acces__fleche:focus-visible,
 .vitrine-don:focus-visible,
 .vitrine-entete__menu:focus-visible,
 .vitrine-mobile__lien:focus-visible {
@@ -311,17 +447,6 @@
   display: none;
 }
 
-/* Sous 1200 px, la pastille garde son mot et perd son icone. */
-@media (max-width: 1200px) {
-  .vitrine-connexion__icone {
-    display: none;
-  }
-
-  .vitrine-connexion {
-    padding: 0 13px;
-  }
-}
-
 /* ------------------------ Tablette et telephone ------------------------ */
 
 @media (max-width: 1100px) {
@@ -336,8 +461,7 @@
     height: 64px;
   }
 
-  .vitrine-nav,
-  .vitrine-connexion {
+  .vitrine-nav {
     display: none;
   }
 
@@ -398,10 +522,21 @@
     height: 38px;
   }
 
-  .vitrine-entete .vitrine-don {
+  .vitrine-acces {
     min-height: 42px;
-    padding: 0 14px;
-    font-size: 14px;
+  }
+
+  .vitrine-acces__principal {
+    padding: 0 12px 0 14px;
+    font-size: 13.5px;
+  }
+
+  .vitrine-acces__mots {
+    inset: 0 12px 0 14px;
+  }
+
+  .vitrine-acces__fleche {
+    width: 36px;
   }
 }
 
@@ -634,9 +769,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vitrine-connexion,
-  .vitrine-connexion__icone {
+  .vitrine-acces,
+  .vitrine-acces__fleche,
+  .vitrine-acces__fleche svg,
+  .vitrine-acces__choix {
     transition: none;
+  }
+
+  .vitrine-acces__mot,
+  .vitrine-acces__menu,
+  .vitrine-acces__choix {
+    animation: none;
   }
 
   .vitrine-entete,
