@@ -7,10 +7,14 @@ import MadagascarSilhouette from '../components/MadagascarSilhouette.jsx';
 import photoHope from '../assets/hope-couverture.jpg';
 import {
   IconeCadenas,
+  IconeChevronBas,
+  IconeCoeur,
   IconeFleche,
   IconeGroupe,
+  IconeImmeuble,
   IconeOeil,
   IconeOeilBarre,
+  IconePoigneeMain,
   IconeUtilisateur,
 } from '../components/HopeIcons.jsx';
 import { useChargement } from '../hooks/useChargement.js';
@@ -667,17 +671,22 @@ function Inscription({ types, navigate, onInscrit }) {
   );
 }
 
-/** Ce que chaque espace dit de lui, en trois mots, a cote de son nom. */
-const PHRASES_TYPES = {
-  donateur: 'Je donne',
-  benevole: 'Je m’engage',
-  bailleur: 'Je finance',
+/** L'icone de chaque type, dans la liste et dans le champ une fois choisi. */
+const ICONES_TYPES = {
+  donateur: IconeCoeur,
+  benevole: IconePoigneeMain,
+  bailleur: IconeImmeuble,
 };
 
 /**
- * Le type d'utilisateur : une liste deroulante, dans la meme boite que
- * les autres champs, avec son icone. Chaque choix dit son nom et, en
- * trois mots, ce que l'on vient faire.
+ * Le type d'utilisateur : une liste sur mesure, dans la meme boite que
+ * les autres champs. Le bouton montre l'icone et le nom du type choisi ;
+ * le panneau, sous le champ, aligne les trois types avec leur pastille,
+ * et coche celui qui est pris. Au clavier : fleches, Entree, Echap,
+ * Debut et Fin.
+ *
+ * Le <select> d'origine reste dans la page, cache et synchronise : le
+ * formulaire et les outils qui le pilotent ne voient pas la difference.
  *
  * Le meme champ sert aux deux sections. A l'inscription, il dit ce que
  * l'on vient faire ; a la connexion, dans quel espace on entre.
@@ -686,38 +695,156 @@ const PHRASES_TYPES = {
  *        champ sans texte (le message est alors dit sous le formulaire).
  */
 function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
+  const [ouvert, setOuvert] = useState(false);
+  // L'option sous le curseur du clavier, le temps que le panneau est ouvert.
+  const [actif, setActif] = useState(-1);
+  const boite = useRef(null);
+  const bouton = useRef(null);
+
+  const choisi = types.find((type) => type.cle === valeur) ?? null;
+  const IconeChoisie = choisi ? (ICONES_TYPES[choisi.cle] ?? IconeGroupe) : IconeGroupe;
+  const idListe = `${id}-liste`;
+
+  // Un changement, d'ou qu'il vienne, passe par la meme porte que le select.
+  const choisir = (cle) => {
+    onChange({ target: { value: cle } });
+    setOuvert(false);
+    bouton.current?.focus();
+  };
+
+  const ouvrir = () => {
+    if (disabled) return;
+    setActif(Math.max(0, types.findIndex((type) => type.cle === valeur)));
+    setOuvert(true);
+  };
+
+  // Panneau ouvert : un clic dehors le ferme.
+  useEffect(() => {
+    if (!ouvert) return undefined;
+    const auClic = (e) => boite.current && !boite.current.contains(e.target) && setOuvert(false);
+    document.addEventListener('pointerdown', auClic);
+    return () => document.removeEventListener('pointerdown', auClic);
+  }, [ouvert]);
+
+  function auClavier(evenement) {
+    const { key } = evenement;
+    if (!ouvert) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(key)) {
+        evenement.preventDefault();
+        ouvrir();
+      }
+      return;
+    }
+    if (key === 'Escape' || key === 'Tab') {
+      if (key === 'Escape') evenement.preventDefault();
+      setOuvert(false);
+    } else if (key === 'ArrowDown') {
+      evenement.preventDefault();
+      setActif((i) => Math.min(types.length - 1, i + 1));
+    } else if (key === 'ArrowUp') {
+      evenement.preventDefault();
+      setActif((i) => Math.max(0, i - 1));
+    } else if (key === 'Home') {
+      evenement.preventDefault();
+      setActif(0);
+    } else if (key === 'End') {
+      evenement.preventDefault();
+      setActif(types.length - 1);
+    } else if (key === 'Enter' || key === ' ') {
+      evenement.preventDefault();
+      if (types[actif]) choisir(types[actif].cle);
+    }
+  }
+
   return (
     <div className="champ">
-      <label className="champ__label" htmlFor={id}>
+      <span className="champ__label" id={`${id}-etiquette`}>
         Type d’utilisateur
-      </label>
-      <div className={`champ__boite${erreur ? ' champ__boite--erreur' : ''}`}>
-        <IconeGroupe className="champ__icone" />
-        <select
-          id={id}
-          name="typeUtilisateur"
-          className="champ__saisie champ__selection"
-          value={valeur}
-          onChange={onChange}
-          disabled={disabled}
+      </span>
+      <div
+        ref={boite}
+        className={`champ__boite liste-type${ouvert ? ' liste-type--ouverte' : ''}${erreur ? ' champ__boite--erreur' : ''}`}
+      >
+        <IconeChoisie className={`champ__icone liste-type__icone${choisi ? ` liste-type__icone--${choisi.cle}` : ''}`} />
+        <button
+          ref={bouton}
+          type="button"
+          id={`${id}-bouton`}
+          className={`champ__saisie liste-type__bouton${choisi ? '' : ' liste-type__bouton--vide'}`}
+          role="combobox"
+          aria-haspopup="listbox"
+          aria-expanded={ouvert}
+          aria-controls={ouvert ? idListe : undefined}
+          aria-labelledby={`${id}-etiquette ${id}-bouton`}
           aria-describedby={`${id}-aide`}
           aria-invalid={erreur ? true : undefined}
-          data-vide={valeur === ''}
+          aria-activedescendant={ouvert && types[actif] ? `${idListe}-${types[actif].cle}` : undefined}
+          disabled={disabled}
+          onClick={() => (ouvert ? setOuvert(false) : ouvrir())}
+          onKeyDown={auClavier}
         >
-          <option value="">{invite}</option>
-          {types.map((type) => {
-            const phrase = PHRASES_TYPES[type.cle];
-            return (
-              <option key={type.cle} value={type.cle}>
-                {phrase ? `${type.libelle} — ${phrase}` : type.libelle}
-              </option>
-            );
-          })}
-        </select>
+          <span className="liste-type__valeur">{choisi ? choisi.libelle : invite}</span>
+          <IconeChevronBas className="liste-type__chevron" />
+        </button>
+
+        {ouvert && (
+          <ul id={idListe} className="liste-type__panneau" role="listbox" aria-labelledby={`${id}-etiquette`}>
+            {types.map((type, i) => {
+              const Icone = ICONES_TYPES[type.cle] ?? IconeGroupe;
+              const pris = type.cle === valeur;
+              return (
+                <li
+                  key={type.cle}
+                  id={`${idListe}-${type.cle}`}
+                  role="option"
+                  aria-selected={pris}
+                  className={`liste-type__option liste-type__option--${type.cle}${pris ? ' liste-type__option--prise' : ''}${
+                    i === actif ? ' liste-type__option--active' : ''
+                  }`}
+                  style={{ '--rang': i }}
+                  onPointerEnter={() => setActif(i)}
+                  // Le clic ne doit pas voler le focus au bouton : la souris choisit, le clavier garde la main.
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => choisir(type.cle)}
+                >
+                  <span className="liste-type__pastille" aria-hidden="true">
+                    <Icone />
+                  </span>
+                  <span className="liste-type__nom">{type.libelle}</span>
+                  {pris && (
+                    <svg className="liste-type__coche" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 12.5l4.5 4.5L19 7.5" />
+                    </svg>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
       <p className="sr-only" id={`${id}-aide`}>
         {invite}
       </p>
+
+      {/* Le select d'origine, cache et synchronise. */}
+      <select
+        id={id}
+        name="typeUtilisateur"
+        className="sr-only"
+        value={valeur}
+        onChange={onChange}
+        disabled={disabled}
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        <option value="">{invite}</option>
+        {types.map((type) => (
+          <option key={type.cle} value={type.cle}>
+            {type.libelle}
+          </option>
+        ))}
+      </select>
+
       {typeof erreur === 'string' && erreur && <p className="champ__erreur">{erreur}</p>}
     </div>
   );

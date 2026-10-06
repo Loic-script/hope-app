@@ -148,13 +148,205 @@
   cursor: pointer;
 }
 
-/* Tant que rien n'est choisi, la liste a la couleur d'un texte indicatif. */
-.champ__selection[data-vide='true'] {
+/* ------------------------------------------------------------
+   La liste du type d'utilisateur, sur mesure (ChampType)
+   ------------------------------------------------------------ */
+
+/* Ouverte, la boite passe au-dessus des champs suivants : son leger
+   soulevement au focus en fait un contexte d'empilement a part, le
+   panneau ne peut pas en sortir. */
+.liste-type--ouverte {
+  z-index: 30;
+}
+
+/* Le bouton tient toute la boite ; le chevron se retourne a l'ouverture. */
+.liste-type__bouton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-right: 14px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.liste-type__bouton:disabled {
+  cursor: default;
+}
+
+.liste-type__bouton--vide .liste-type__valeur {
   color: #a7abbd;
 }
 
-.champ__selection option {
+.liste-type__valeur {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--hope-texte);
+  font-weight: 500;
+}
+
+.liste-type__chevron {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: #6b6880;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.liste-type--ouverte .liste-type__chevron {
+  transform: rotate(180deg);
+}
+
+/* L'icone du champ prend la couleur du type choisi. */
+.liste-type__icone {
+  transition: color 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.liste-type__icone--donateur {
+  color: var(--hope-orange);
+}
+
+.liste-type__icone--benevole {
+  color: var(--hope-violet);
+}
+
+.liste-type__icone--bailleur {
+  color: var(--hope-lien);
+}
+
+.liste-type--ouverte .liste-type__icone {
+  transform: scale(1.1);
+}
+
+/* Le panneau, sous le champ : il se deplie en douceur, ses lignes
+   arrivent l'une apres l'autre. */
+.liste-type__panneau {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgba(93, 86, 150, 0.1);
+  border-radius: 14px;
+  background-color: var(--hope-blanc);
+  box-shadow: 0 22px 48px -20px rgba(53, 51, 67, 0.4);
+  list-style: none;
+  transform-origin: top center;
+  animation: liste-type-ouvre 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.liste-type__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 12px 0 8px;
+  border-radius: 10px;
+  color: var(--hope-texte);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  animation: liste-type-ligne 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--rang, 0) * 45ms + 30ms);
+  transition: background-color 0.15s ease;
+}
+
+.liste-type__option--active {
+  background-color: #eef2fa;
+}
+
+.liste-type__option--prise {
+  color: var(--hope-violet);
+}
+
+/* La pastille : le fond pale du type, son icone en couleur pleine. */
+.liste-type__pastille {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 9px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.liste-type__pastille svg {
+  width: 18px;
+  height: 18px;
+}
+
+.liste-type__option--active .liste-type__pastille {
+  transform: scale(1.08);
+}
+
+.liste-type__option--donateur .liste-type__pastille {
+  background-color: rgba(224, 151, 53, 0.16);
+  color: var(--hope-orange);
+}
+
+.liste-type__option--benevole .liste-type__pastille {
+  background-color: rgba(93, 86, 150, 0.14);
+  color: var(--hope-violet);
+}
+
+.liste-type__option--bailleur .liste-type__pastille {
+  background-color: rgba(134, 185, 222, 0.24);
+  color: var(--hope-lien);
+}
+
+.liste-type__nom {
+  flex: 1;
+}
+
+.liste-type__coche {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: var(--hope-violet);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: liste-type-coche 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes liste-type-ouvre {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes liste-type-ligne {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes liste-type-coche {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .champ__erreur {
@@ -640,8 +832,17 @@
   .completion__bouton,
   .carte-connexion--utilisateur .champ__boite,
   .carte-connexion--utilisateur .champ__icone,
-  .carte-connexion--utilisateur .bouton--principal svg {
+  .carte-connexion--utilisateur .bouton--principal svg,
+  .liste-type__chevron,
+  .liste-type__icone,
+  .liste-type__pastille {
     transition: none;
+  }
+
+  .liste-type__panneau,
+  .liste-type__option,
+  .liste-type__coche {
+    animation: none;
   }
 
   .carte-connexion--utilisateur,
