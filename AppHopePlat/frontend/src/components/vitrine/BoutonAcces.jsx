@@ -10,11 +10,12 @@ import { LIEN_CONNEXION, LIEN_DON } from './liens.js';
  *
  *   - la partie principale est un lien dont le mot change toutes les
  *     cinq secondes : "Faire un don", puis "Connexion", puis de nouveau
- *     le don, sans fin. Le passage se fait en "gribouillage doux" : les
- *     lettres du mot qui arrive se posent une a une en tremblotant,
- *     comme tracees a la main, floues puis nettes, pendant qu'un trait
- *     ondule se dessine sous le mot ; celles du mot qui part fretillent
- *     et s'estompent. Le lien mene la ou son mot le dit ;
+ *     le don, sans fin. Le passage se fait en briques : chaque lettre du
+ *     mot qui arrive tombe de haut comme un Lego, s'ecrase un peu a
+ *     l'atterrissage, rebondit et se pose ; a chaque impact, les lettres
+ *     deja posees encaissent une secousse, qui se propage ainsi le long
+ *     du mot. Celles du mot qui part sont renversees et tombent par le
+ *     bas. Le lien mene la ou son mot le dit ;
  *   - la fleche ouvre un petit menu qui nomme les deux portes en clair,
  *     pour qui ne veut pas attendre le bon mot.
  *
@@ -34,8 +35,11 @@ const OPTIONS = [
 
 /** Le temps qu'un mot reste affiche avant de laisser la place a l'autre. */
 const CADENCE = 5000;
-/** Le temps que le mot sortant finisse de s'estomper et que le trait s'efface (vitrine.css). */
-const GLISSEMENT = 1300;
+/** Le temps que les lettres du mot sortant aient fini de tomber (vitrine.css). */
+const GLISSEMENT = 800;
+
+/** L'espace insecable : un espace ordinaire s'effacerait entre deux briques. */
+const ESPACE = String.fromCharCode(160);
 
 function mouvementReduit() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -47,34 +51,28 @@ function hasard(amplitude) {
 }
 
 /**
- * Un mot lettre par lettre : chacune a son rang (--i) pour la cascade,
- * et sa propre inclinaison et son propre ecart (--rx, --dx), tires au
- * sort une fois pour toutes : c'est ce qui fait la main qui tremble.
+ * Un mot lettre par lettre, chaque lettre en deux couches :
+ *   - la brique (.vitrine-acces__lettre) tombe et rebondit, a son rang
+ *     (--i) et avec sa propre inclinaison (--rx), tiree au sort ;
+ *   - le corps (.vitrine-acces__lettre-corps) encaisse une secousse a
+ *     chaque brique qui atterrit apres elle : --reste en compte le nombre.
  */
 function Lettres({ mot, graine }) {
   const lettres = useMemo(
-    () => [...mot].map((car) => ({ car, rx: hasard(9).toFixed(1), dx: hasard(2.2).toFixed(1) })),
+    () => [...mot].map((car) => ({ car, rx: hasard(14).toFixed(1) })),
     // Un nouveau tirage a chaque entree en scene.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mot, graine]
   );
+  const total = lettres.length;
   return (
     <span className="vitrine-acces__lettres" aria-hidden="true">
-      {lettres.map(({ car, rx, dx }, i) => (
-        <span key={i} className="vitrine-acces__lettre" style={{ '--i': i, '--rx': `${rx}deg`, '--dx': `${dx}px` }}>
-          {car === ' ' ? ' ' : car}
+      {lettres.map(({ car, rx }, i) => (
+        <span key={i} className="vitrine-acces__lettre" style={{ '--i': i, '--rx': `${rx}deg`, '--reste': total - 1 - i }}>
+          <span className="vitrine-acces__lettre-corps">{car === ' ' ? ESPACE : car}</span>
         </span>
       ))}
     </span>
-  );
-}
-
-/** Le trait ondule, trace a la main sous le mot qui vient d'arriver. */
-function Trait() {
-  return (
-    <svg className="vitrine-acces__trait" viewBox="0 0 120 10" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M2 6.5c14-4 22 4 38 1.5s26-5 40-1.5 24 3 38-.5" pathLength="100" />
-    </svg>
   );
 }
 
@@ -106,7 +104,7 @@ export default function BoutonAcces() {
     return () => clearInterval(minuterie);
   }, [fige]);
 
-  // Le mot sorti et le trait disparaissent une fois leur mouvement fini.
+  // Le mot sorti disparait une fois tombe.
   useEffect(() => {
     if (sortant === null) return undefined;
     const minuterie = setTimeout(() => setSortant(null), GLISSEMENT);
@@ -150,7 +148,7 @@ export default function BoutonAcces() {
         <span className="vitrine-acces__gabarit" aria-hidden="true">
           Faire un don
         </span>
-        {/* Le mot entier pour les lecteurs d'ecran ; les lettres, elles, gribouillent. */}
+        {/* Le mot entier pour les lecteurs d'ecran ; les lettres, elles, tombent en briques. */}
         <span className="sr-only">{courant.libelle}</span>
         <span className="vitrine-acces__mots" aria-hidden="true">
           {sortant !== null && (
@@ -161,7 +159,6 @@ export default function BoutonAcces() {
           <span key={`courant-${bascule}`} className="vitrine-acces__mot vitrine-acces__mot--courant" data-mot={courant.libelle}>
             <Lettres mot={courant.libelle} graine={`c${bascule}`} />
           </span>
-          {sortant !== null && <Trait key={`trait-${bascule}`} />}
         </span>
       </Link>
 

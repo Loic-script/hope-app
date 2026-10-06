@@ -214,11 +214,14 @@
   visibility: hidden;
 }
 
-/* Les mots se superposent dans la meme case (BoutonAcces.jsx). Le
-   "gribouillage doux" : chaque lettre a sa propre inclinaison (--rx) et
-   son propre ecart (--dx), tires au sort ; elle arrive floue, de biais et
-   un peu basse, oscille deux fois en s'attenuant, puis se pose nette. Le
-   mot qui part fretille de la meme main, puis s'estompe vers le haut. */
+/* Les mots se superposent dans la meme case (BoutonAcces.jsx). Les
+   briques : chaque lettre du mot qui arrive tombe de haut, l'une apres
+   l'autre (--i, toutes les 75 ms), avec sa propre inclinaison (--rx) ;
+   elle touche le sol a 55 % de sa chute, s'ecrase, rebondit et se pose.
+   A chaque brique qui atterrit ensuite, le corps des lettres deja posees
+   encaisse une secousse (--reste fois, au rythme des atterrissages) :
+   c'est l'onde qui se propage le long du mot. Le mot qui part est
+   renverse et tombe par le bas. */
 .vitrine-acces__mots {
   position: absolute;
   inset: 0 14px 0 18px;
@@ -237,39 +240,28 @@
 
 .vitrine-acces__lettre {
   display: inline-block;
-  transform-origin: 50% 70%;
-  animation: acces-gribouille-entre 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(240ms + var(--i, 0) * 38ms);
+  transform-origin: 50% 100%;
+  animation: acces-brique-tombe 0.7s linear both;
+  animation-delay: calc(250ms + var(--i, 0) * 75ms);
+}
+
+.vitrine-acces__lettre-corps {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  /* La secousse : 75 ms par brique suivante, a partir de l'impact de la
+     brique d'apres (250 + (i + 1) * 75 + 385 ms). */
+  animation: acces-brique-secousse 75ms ease-in-out both;
+  animation-delay: calc(250ms + (var(--i, 0) + 1) * 75ms + 385ms);
+  animation-iteration-count: var(--reste, 0);
 }
 
 .vitrine-acces__mot--sortant .vitrine-acces__lettre {
-  animation: acces-gribouille-sort 0.5s ease-in both;
-  animation-delay: calc(var(--i, 0) * 24ms);
+  animation: acces-brique-chute 0.42s cubic-bezier(0.55, 0, 1, 0.45) both;
+  animation-delay: calc(var(--i, 0) * 26ms);
 }
 
-/* Le trait ondule sous le mot : il se trace comme au crayon, puis
-   s'efface. */
-.vitrine-acces__trait {
-  position: absolute;
-  right: 0;
-  bottom: 5px;
-  left: 0;
-  width: 100%;
-  height: 7px;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.vitrine-acces__trait path {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.85);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  animation:
-    acces-trait-trace 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both,
-    acces-trait-efface 0.35s ease 1.05s both;
+.vitrine-acces__mot--sortant .vitrine-acces__lettre-corps {
+  animation: none;
 }
 
 /* La fleche : une case a part, separee d'un filet clair ; elle se
@@ -371,59 +363,66 @@
 }
 
 
-@keyframes acces-gribouille-entre {
+/* La chute d'une brique : la gravite jusqu'a l'impact (55 %), l'ecrasement,
+   un rebond, un petit second rebond, puis le repos. */
+@keyframes acces-brique-tombe {
   0% {
     opacity: 0;
-    filter: blur(2px);
-    transform: translate(var(--dx, 0), 0.35em) rotate(var(--rx, 0)) scale(0.82);
+    transform: translateY(-1.7em) rotate(var(--rx, 0deg));
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
   }
-  35% {
+  12% {
     opacity: 1;
-    filter: blur(0.6px);
-    transform: translate(calc(var(--dx, 0) * -0.7), -0.1em) rotate(calc(var(--rx, 0) * -0.6)) scale(1.04);
   }
-  65% {
-    filter: blur(0);
-    transform: translate(calc(var(--dx, 0) * 0.35), 0.04em) rotate(calc(var(--rx, 0) * 0.3));
+  55% {
+    transform: translateY(0) rotate(0deg) scale(1, 1);
+    animation-timing-function: ease-out;
   }
-  85% {
-    transform: translate(calc(var(--dx, 0) * -0.15), -0.01em) rotate(calc(var(--rx, 0) * -0.12));
+  62% {
+    transform: translateY(0.02em) scale(1.14, 0.8);
+    animation-timing-function: ease-out;
+  }
+  74% {
+    transform: translateY(-0.24em) scale(0.98, 1.04);
+    animation-timing-function: ease-in;
+  }
+  84% {
+    transform: translateY(0) scale(1.05, 0.95);
+    animation-timing-function: ease-out;
+  }
+  92% {
+    transform: translateY(-0.06em) scale(1, 1);
+    animation-timing-function: ease-in;
   }
   100% {
     opacity: 1;
-    filter: blur(0);
     transform: none;
   }
 }
 
-@keyframes acces-gribouille-sort {
+/* La secousse d'une lettre posee quand une autre atterrit a cote. */
+@keyframes acces-brique-secousse {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-0.09em) scale(1.02, 0.96);
+  }
+}
+
+/* Une brique renversee : elle bascule et tombe par le bas. */
+@keyframes acces-brique-chute {
   0% {
     opacity: 1;
     transform: none;
   }
-  30% {
-    transform: translate(var(--dx, 0), 0.03em) rotate(var(--rx, 0));
-  }
-  60% {
-    opacity: 0.8;
-    transform: translate(calc(var(--dx, 0) * -0.8), -0.08em) rotate(calc(var(--rx, 0) * -0.8));
+  25% {
+    transform: translateY(-0.08em) rotate(calc(var(--rx, 0deg) * 0.6));
   }
   100% {
     opacity: 0;
-    filter: blur(2px);
-    transform: translate(calc(var(--dx, 0) * 0.5), -0.45em) rotate(calc(var(--rx, 0) * 1.3)) scale(0.9);
-  }
-}
-
-@keyframes acces-trait-trace {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes acces-trait-efface {
-  to {
-    opacity: 0;
+    transform: translateY(1.6em) rotate(calc(var(--rx, 0deg) * 2));
   }
 }
 
@@ -864,14 +863,10 @@
   }
 
   .vitrine-acces__lettre,
-  .vitrine-acces__trait path,
+  .vitrine-acces__lettre-corps,
   .vitrine-acces__menu,
   .vitrine-acces__choix {
     animation: none;
-  }
-
-  .vitrine-acces__trait {
-    display: none;
   }
 
   .vitrine-entete,
