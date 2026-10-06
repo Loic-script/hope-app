@@ -40,6 +40,7 @@ import './styles/vitrine-equipe.css';
 import './styles/vitrine-realisations.css';
 import './styles/vitrine-actualites.css';
 import './styles/vitrine-engager.css';
+import './styles/vitrine-contact.css';
 import './styles/fiche-projet.css';
 import './styles/donateur-espace.css';
 import './styles/feuille.css';

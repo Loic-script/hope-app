@@ -37,10 +37,11 @@ const FILTRES = [
   { valeur: 'TASK_DELIVERED', label: 'Tâches livrées' },
   { valeur: 'FUNDER_INTEREST', label: 'Partenaires intéressés' },
   { valeur: 'FIELD_PROOF', label: 'Preuves terrain' },
+  { valeur: 'CONTACT', label: 'Messages du site' },
 ];
 
 /** Les types qui appellent une reponse de l'equipe. */
-const DEMANDES = ['ACCOUNT_CREATED', 'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF'];
+const DEMANDES = ['ACCOUNT_CREATED', 'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF', 'CONTACT'];
 
 /** Icone et teinte de la pastille selon la nature de l'evenement. */
 const APPARENCE = {
@@ -53,6 +54,9 @@ const APPARENCE = {
   TASK_DELIVERED: { Icone: IconeValide, classe: 'livraison' },
   FUNDER_INTEREST: { Icone: IconeOrganisation, classe: 'partenaire' },
   FIELD_PROOF: { Icone: IconePreuves, classe: 'preuve' },
+  // Un message du formulaire de contact du site : la phrase dit tout,
+  // l'equipe repond par courriel.
+  CONTACT: { Icone: IconeMessages, classe: 'message' },
 };
 
 /**

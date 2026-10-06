@@ -175,8 +175,9 @@
   cursor: default;
 }
 
+/* Un gris lisible (4,6:1 sur blanc) : c'est un vrai texte, pas un placeholder. */
 .liste-type__bouton--vide .liste-type__valeur {
-  color: #a7abbd;
+  color: #75728a;
 }
 
 .liste-type__valeur {

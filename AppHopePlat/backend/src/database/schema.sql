@@ -2099,3 +2099,31 @@ CREATE INDEX IF NOT EXISTS publication_commentaire_pub_idx ON publication_commen
  */
 ALTER TABLE benevole DROP COLUMN IF EXISTS visible_site;
 ALTER TABLE benevole ADD COLUMN IF NOT EXISTS masque_site BOOLEAN NOT NULL DEFAULT FALSE;
+
+/*
+ * Le formulaire de contact du site vitrine.
+ *
+ * Un visiteur ecrit a HOPE sans compte : le message est garde ici, et
+ * l'equipe le voit dans sa cloche (notification CONTACT) et par
+ * courriel. traite_le dit quand l'equipe y a repondu.
+ */
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id         SERIAL       PRIMARY KEY,
+  nom        VARCHAR(120) NOT NULL,
+  email      VARCHAR(255) NOT NULL,
+  telephone  VARCHAR(30),
+  sujet      VARCHAR(40)  NOT NULL,
+  message    TEXT         NOT NULL,
+  traite_le  TIMESTAMPTZ,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  CONSTRAINT contact_messages_sujet_valide
+    CHECK (sujet IN ('don', 'benevolat', 'partenariat', 'presse', 'autre')),
+  CONSTRAINT contact_messages_message_non_vide CHECK (BTRIM(message) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS contact_messages_recents_idx ON contact_messages (created_at DESC);
+
+ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_valide;
+ALTER TABLE notifications ADD CONSTRAINT notifications_type_valide CHECK (
+  type IN ('DONATION', 'MESSAGE', 'PROJECT_COMPLETED', 'INVESTMENT', 'ACCOUNT_CREATED',
+           'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF', 'CONTACT'));

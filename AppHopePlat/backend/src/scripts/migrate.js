@@ -78,6 +78,7 @@ const TABLES_ATTENDUES = {
     'notification_utilisateur',
     'message_utilisateur',
     'message_entree',
+    'contact_messages',
   ],
   'Conversations': ['conversation', 'conversation_participant', 'conversation_message', 'conversation_piece'],
 };

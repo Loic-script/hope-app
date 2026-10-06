@@ -28,6 +28,8 @@ export const TYPES = [
   'TASK_DELIVERED',
   'FUNDER_INTEREST',
   'FIELD_PROOF',
+  // Un message du formulaire de contact du site (contact.service).
+  'CONTACT',
 ];
 
 /**

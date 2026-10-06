@@ -75,7 +75,6 @@ const UtilisateursPage = lazy(() => import('../pages/admin/UtilisateursPage.jsx'
 const StatisticsPage = lazy(() => import('../pages/admin/StatisticsPage.jsx'));
 const PublicationsPage = lazy(() => import('../pages/admin/PublicationsPage.jsx'));
 const VitrineLayout = lazy(() => import('../layouts/VitrineLayout.jsx'));
-const EnPreparation = lazy(() => import('../pages/vitrine/EnPreparation.jsx'));
 const AccueilVitrine = lazy(() => import('../pages/vitrine/Accueil.jsx'));
 const NousDecouvrir = lazy(() => import('../pages/vitrine/NousDecouvrir.jsx'));
 const NosRealisations = lazy(() => import('../pages/vitrine/NosRealisations.jsx'));
@@ -83,6 +82,7 @@ const Realisation = lazy(() => import('../pages/vitrine/Realisation.jsx'));
 const Actualites = lazy(() => import('../pages/vitrine/Actualites.jsx'));
 const Actualite = lazy(() => import('../pages/vitrine/Actualite.jsx'));
 const SEngager = lazy(() => import('../pages/vitrine/SEngager.jsx'));
+const Contact = lazy(() => import('../pages/vitrine/Contact.jsx'));
 const VerifierCourriel = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.VerifierCourriel })));
 const PolitiqueConfidentialite = lazy(() =>
   import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
@@ -196,7 +196,7 @@ export default function AppRoutes() {
         <Route path="/nos-realisations/:id" element={<VersNosProjets />} />
         <Route path="/actualites" element={<Actualites />} />
         <Route path="/actualites/:id" element={<Actualite />} />
-        <Route path="/contact" element={<EnPreparation titre="Contact" />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/s-engager" element={<SEngager />} />
       </Route>
       {/* Le choix de l'espace (administration ou utilisateurs), qui etait a la racine. */}

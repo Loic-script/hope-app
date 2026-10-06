@@ -187,3 +187,37 @@ export function promesseAConfirmer(donationId) {
     );
   });
 }
+
+/* ------------------------------------------------------------------
+   Le formulaire de contact du site vitrine (contact.service)
+   ------------------------------------------------------------------ */
+
+/** L'equipe recoit le message entier, avec de quoi repondre. */
+export function messageDeContact(message) {
+  return alerterEquipe(
+    `un message du site — ${message.sujetLibelle}`,
+    [
+      `De ${message.nom} (${message.email}${message.telephone ? `, ${message.telephone}` : ''}) :`,
+      message.message,
+      'Répondez-lui directement par courriel.',
+    ],
+    '/admin/notifications'
+  );
+}
+
+/** L'accuse de reception, a qui vient de nous ecrire. */
+export function contactRecu(message) {
+  return sansEchec('contact recu', async () => {
+    const prenom = String(message.nom ?? '').trim().split(/\s+/)[0] ?? '';
+    await courriel.envoyer({
+      a: message.email,
+      sujet: 'HOPE — nous avons bien reçu votre message',
+      titre: `Merci${prenom ? ` ${prenom}` : ''}, votre message est bien arrivé.`,
+      paragraphes: [
+        `Vous nous écrivez au sujet de : ${message.sujetLibelle}. Une personne de l’équipe HOPE vous répond à cette adresse sous 48 h ouvrées.`,
+        `Votre message : « ${message.message} »`,
+      ],
+      note: 'Vous n’êtes pas à l’origine de ce message ? Ignorez simplement ce courriel.',
+    });
+  });
+}

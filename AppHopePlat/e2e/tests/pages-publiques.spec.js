@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { actualitePubliquePrete, benevoleVisiblePret, projetPublicPret, sansDebordement } from './outils.js';
+import { ADMIN, actualitePubliquePrete, benevoleVisiblePret, projetPublicPret, sansDebordement } from './outils.js';
 
 test('le choix des espaces ; l authentification mene aux textes legaux', async ({ page }) => {
   await page.goto('/espaces');
@@ -218,6 +218,40 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   // La sortie ramene au site.
   await page.getByRole('button', { name: 'Revenir au site HOPE' }).click();
   await expect(page).toHaveURL(/\/$/);
+});
+
+test('contact : le formulaire ecrit a l equipe, qui le voit dans sa cloche', async ({ page, request }, testInfo) => {
+  await page.goto('/contact');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Parlons');
+  await expect(page.locator('.contact-sujet')).toHaveCount(5);
+  await sansDebordement(page);
+
+  // Vide : les champs se plaignent, rien ne part.
+  await page.getByRole('button', { name: 'Envoyer mon message' }).click();
+  await expect(page.locator('.parcours__recap')).toContainText('demandent votre attention');
+
+  const nom = `Essai Contact ${testInfo.project.name} ${Date.now().toString(36)}`;
+  await page.fill('#contact-nom', nom);
+  await page.fill('#contact-courriel', `contact-${Date.now()}@hope.test`);
+  await page.locator('.contact-sujet', { hasText: 'Devenir bénévole' }).click();
+  await page.fill('#contact-message', 'Bonjour, je voudrais donner un peu de mon temps le samedi.');
+  await page.getByRole('button', { name: 'Envoyer mon message' }).click();
+  await expect(page.locator('.contact-merci__titre')).toContainText('Merci Essai');
+  await sansDebordement(page);
+
+  // Cote equipe : la cloche porte le message.
+  const connexion = await request.post('/api/admin/login', { data: ADMIN });
+  expect(connexion.status(), 'connexion administrateur').toBe(200);
+  const entetes = { Authorization: `Bearer ${(await connexion.json()).token}` };
+  const reponse = await request.get('/api/admin/notifications', { headers: entetes, params: { type: 'CONTACT' } });
+  expect(reponse.status()).toBe(200);
+  const corps = await reponse.json();
+  const liste = Array.isArray(corps) ? corps : (corps.items ?? corps.notifications ?? []);
+  expect(liste.some((n) => n.type === 'CONTACT' && String(n.label).includes(nom)), 'la notification du message').toBe(true);
+
+  // Un autre message : le formulaire revient vide.
+  await page.getByRole('button', { name: 'Envoyer un autre message' }).click();
+  await expect(page.locator('#contact-nom')).toHaveValue('');
 });
 
 test('l accueil : les realisations et les actualites sont celles de la plateforme', async ({ page, request }, testInfo) => {

@@ -15,6 +15,7 @@ import espaceRoutes from './espace.routes.js';
 import donorSpaceRoutes from './donorSpace.routes.js';
 import { webhookStripe } from '../controllers/paiementCarte.controllers.js';
 import * as donInvite from '../controllers/donInvite.controllers.js';
+import * as contact from '../controllers/contact.controllers.js';
 import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
 import { photosBeneficiaires } from '../controllers/admin.controllers.js';
@@ -45,9 +46,16 @@ router.post('/paiements/stripe/webhook', webhookStripe);
 
 // L'adresse de contact de l'association, publique : les pages legales
 // l'affichent (EQUIPE_EMAIL). Vide, elles renvoient vers la messagerie.
+// Rien d'autre que l'adresse : un test y veille.
 router.get('/public/contact', (_req, res) => {
   res.json({ email: config.equipe.email || null });
 });
+
+// Le formulaire de contact du site (contact.service) : ses sujets, puis
+// l'envoi -- le message est garde, l'equipe prevenue. Limite en debit :
+// chaque envoi ecrit en base et part en courriel.
+router.get('/public/contact/sujets', contact.options);
+router.post('/public/contact', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 6 }), contact.envoyer);
 
 // Les actualites de HOPE pour le site vitrine public : titre, extrait,
 // date, photo -- rien d'autre (vitrine.service).

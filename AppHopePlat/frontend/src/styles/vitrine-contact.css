@@ -1,0 +1,612 @@
+/* ============================================================
+   Site vitrine : "Contact" (pages/vitrine/Contact.jsx)
+
+   Le bandeau sur la photo, a la meme echelle que les autres bandeaux
+   (--u : 10 px a 1366 px de large) ; puis deux colonnes sur le fond de
+   soleils : les cartes pour nous joindre, et le formulaire dans l'habit
+   des champs du parcours (parcours-donateur.css). Les mouvements
+   d'entree (hero-zoom, hero-monte, engager-filet...) viennent de
+   vitrine-accueil.css et vitrine-engager.css.
+   ============================================================ */
+
+/* ------------------------------- Le bandeau ------------------------------- */
+
+.contact-hero {
+  --u: clamp(6px, 0.732vw, 10px);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(520px, calc(100vh - 72px));
+  overflow: hidden;
+  background: var(--hope-texte);
+  color: #ffffff;
+  isolation: isolate;
+}
+
+.contact-hero__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 35%;
+  animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+.contact-hero__voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--hope-texte) 62%, transparent) 0%,
+    color-mix(in srgb, var(--hope-texte) 38%, transparent) 60%,
+    color-mix(in srgb, var(--hope-texte) 24%, transparent) 100%
+  );
+}
+
+.contact-hero__contenu {
+  width: 100%;
+  padding-top: 64px;
+  padding-bottom: 72px;
+}
+
+.contact-hero__sur-titre {
+  margin: 0;
+  color: var(--hope-jaune);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+
+.contact-hero__titre {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0 0;
+  font-family: var(--vitrine-titre);
+  font-size: calc(var(--u) * 4.62);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--hope-texte) 70%, transparent);
+}
+
+.contact-hero__ligne {
+  display: block;
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.contact-hero__ligne:nth-child(1) {
+  animation-delay: 250ms;
+}
+
+.contact-hero__ligne:nth-child(2) {
+  font-weight: 600;
+  animation-delay: 400ms;
+}
+
+/* Le filet bleu et le soleil renverse, comme sur les autres bandeaux. */
+.contact-hero__trait {
+  position: relative;
+  width: min(100%, calc(var(--u) * 46));
+  height: calc(var(--u) * 0.84);
+  margin-top: calc(var(--u) * 1.2);
+}
+
+.contact-hero__trait::before,
+.contact-hero__trait::after {
+  position: absolute;
+  top: 0;
+  content: '';
+}
+
+.contact-hero__trait::before {
+  top: calc(var(--u) * 0.14);
+  right: calc(var(--u) * 7);
+  left: 0;
+  height: calc(var(--u) * 0.6);
+  border-radius: 999px;
+  background: var(--hope-bleu);
+  transform-origin: left center;
+  animation: engager-filet 900ms cubic-bezier(0.22, 1, 0.36, 1) 600ms both;
+}
+
+.contact-hero__trait::after {
+  right: 0;
+  top: calc(var(--u) * -1.9);
+  width: calc(var(--u) * 6.2);
+  height: calc(var(--u) * 4.2);
+  background: url('../assets/soleil.svg') center / contain no-repeat;
+  transform: scaleY(-1);
+  animation: engager-soleil-renverse 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 1000ms both;
+}
+
+.contact-hero__texte {
+  max-width: 560px;
+  margin: calc(var(--u) * 2.2) 0 0;
+  font-size: max(15.5px, calc(var(--u) * 1.75));
+  font-weight: 600;
+  line-height: 1.6;
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-texte) 80%, transparent);
+  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 550ms both;
+}
+
+/* ------------------------------ Les colonnes ------------------------------ */
+
+/* Le fond de soleils de la page d'authentification, comme "Nos projets". */
+.contact {
+  padding: clamp(48px, 6vw, 80px) 0 clamp(64px, 8vw, 96px);
+  background-color: var(--hope-fond-panneau);
+  background-image:
+    linear-gradient(var(--voile-bleu), var(--voile-bleu)),
+    linear-gradient(var(--voile-blanc), var(--voile-blanc)),
+    var(--motif-soleils);
+  background-size: auto, auto, var(--motif-soleils-taille) auto;
+}
+
+.contact__grille {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.25fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.contact__cote {
+  display: grid;
+  gap: 18px;
+}
+
+/* ------------------------------- Les cartes ------------------------------- */
+
+.contact-carte {
+  padding: 24px 24px 22px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px -26px rgba(53, 51, 67, 0.5);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+  .v-apparu .contact-carte:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 26px 44px -26px rgba(93, 86, 150, 0.5);
+  }
+}
+
+.contact-carte__icone {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 13px;
+  background: var(--hope-bleu-clair);
+  color: var(--hope-violet);
+}
+
+.contact-carte__icone svg {
+  width: 22px;
+  height: 22px;
+}
+
+.contact-carte__icone--carte {
+  background: color-mix(in srgb, var(--hope-jaune) 55%, #ffffff);
+  color: var(--hope-orange-fonce);
+}
+
+.contact-carte__icone--carte svg {
+  width: 26px;
+  height: 26px;
+}
+
+.contact-carte__titre {
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--hope-violet);
+}
+
+.contact-carte__texte {
+  margin: 8px 0 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--hope-texte-doux);
+}
+
+.contact-carte__lien {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--hope-violet);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--hope-violet) 35%, transparent);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.contact-carte__lien:hover {
+  text-decoration-color: var(--hope-orange);
+}
+
+.contact-carte--agir {
+  background: var(--hope-violet);
+  color: #ffffff;
+}
+
+.contact-carte--agir .contact-carte__titre {
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.contact-carte__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.contact-carte--agir .v-bouton-contour {
+  border-color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+
+.contact-carte--agir .v-bouton-contour:hover {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: var(--hope-violet);
+}
+
+/* ----------------------------- Le formulaire ----------------------------- */
+
+.contact__carte {
+  padding: clamp(24px, 3vw, 40px);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 24px 56px -30px rgba(53, 51, 67, 0.55);
+}
+
+/* Les champs du parcours lisent leurs couleurs sur .parcours : on les
+   leur donne ici, hors du parcours. */
+.contact-formulaire {
+  --parcours-encre: #2a2839;
+  --parcours-bordure: #dde3ee;
+  --parcours-icone: #8e8ba3;
+  --parcours-fond-champ: #ffffff;
+  --parcours-placeholder: #75728a;
+  --parcours-anneau: rgba(134, 185, 222, 0.35);
+  --parcours-rythme: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  position: relative;
+  font-family: var(--police-titre);
+  color: var(--parcours-encre);
+}
+
+.contact-formulaire__titre {
+  margin: 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 800;
+  color: var(--hope-violet);
+}
+
+.contact-formulaire__accroche {
+  margin: 6px 0 22px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hope-texte-doux);
+}
+
+/* Les champs du parcours se suivent de 18 px ; dans la paire, la grille
+   les range deja cote a cote, sans marge. */
+.contact-formulaire > .parcours__champ + .parcours__champ,
+.contact-formulaire > .parcours__paire + .parcours__champ,
+.contact-formulaire .contact-sujets,
+.contact-formulaire__message {
+  margin-top: 18px;
+}
+
+.contact-formulaire .parcours__paire .parcours__champ {
+  margin-top: 0;
+}
+
+/* Le message : la boite s'ouvre en hauteur, l'icone reste en haut. */
+.contact-formulaire__message .parcours__boite {
+  align-items: flex-start;
+}
+
+.contact-formulaire__message .parcours__icone {
+  margin-top: 16px;
+}
+
+.contact-formulaire textarea.parcours__saisie {
+  height: auto;
+  min-height: 160px;
+  padding: 15px 16px 14px 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* Les sujets en pastilles : la choisie se remplit de violet, les autres
+   s'eclairent au survol ; elles entrent l'une apres l'autre. */
+.contact-sujets {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.contact-sujets > legend {
+  padding: 0;
+}
+
+.contact-sujets__liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contact-sujet {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 15px 0 12px;
+  border: 1.5px solid var(--parcours-bordure, #dde3ee);
+  border-radius: 999px;
+  background: #fcfdff;
+  color: var(--parcours-encre, #2a2839);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  animation: parcours-entree 0.45s var(--parcours-rythme, ease) both;
+  animation-delay: calc(var(--rang, 0) * 50ms);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+}
+
+.contact-sujet:hover {
+  border-color: var(--hope-bleu);
+  background: #f3f8fd;
+  transform: translateY(-1px);
+}
+
+.contact-sujet__radio {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.contact-sujet__icone {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--hope-orange);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.contact-sujet--actif {
+  border-color: var(--hope-violet);
+  background: var(--hope-violet);
+  color: #ffffff;
+  box-shadow: 0 10px 22px -12px rgba(93, 86, 150, 0.8);
+}
+
+.contact-sujet--actif .contact-sujet__icone {
+  color: var(--hope-jaune);
+  transform: scale(1.12) rotate(-6deg);
+}
+
+/* Choisie et survolee : elle fonce au lieu de s'eclaircir sous le texte blanc. */
+.contact-sujet--actif:hover {
+  border-color: var(--hope-violet-fonce);
+  background: var(--hope-violet-fonce);
+  color: #ffffff;
+}
+
+.contact-sujet:has(.contact-sujet__radio:focus-visible) {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.contact-sujets--erreur .contact-sujet:not(.contact-sujet--actif) {
+  border-color: #e3a6a0;
+}
+
+.contact-sujets .parcours__erreur {
+  margin-top: 8px;
+}
+
+/* Le piege a robots : hors de l'ecran. */
+.contact-formulaire__piege {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-formulaire__envoyer {
+  margin-top: 24px;
+}
+
+.contact-formulaire__note {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--hope-texte-doux);
+}
+
+.contact-formulaire__note a {
+  color: var(--hope-violet);
+}
+
+/* -------------------------------- Le merci -------------------------------- */
+
+/* La coche se trace : le cercle d'abord, le trait ensuite ; le reste
+   arrive en dessous, l'un apres l'autre. */
+.contact-merci {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 8px 12px;
+  text-align: center;
+  animation: parcours-entree 0.5s var(--parcours-rythme, ease) both;
+}
+
+.contact-merci__coche {
+  width: 96px;
+  height: 96px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.contact-merci__cercle {
+  stroke: var(--hope-orange);
+  stroke-width: 3.5;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  animation: contact-trace 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+.contact-merci__trait {
+  stroke: var(--hope-violet);
+  stroke-width: 4.5;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: contact-trace 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+}
+
+.contact-merci__titre {
+  margin: 18px 0 0;
+  font-family: var(--vitrine-titre);
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 800;
+  color: var(--hope-violet);
+  animation: hero-monte 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both;
+}
+
+.contact-merci__texte {
+  max-width: 440px;
+  margin: 10px 0 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--hope-texte-doux);
+  animation: hero-monte 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both;
+}
+
+.contact-merci__texte strong {
+  color: var(--hope-violet);
+}
+
+.contact-merci__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 26px;
+  animation: hero-monte 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.2s both;
+}
+
+@keyframes contact-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ------------------------------ Petits ecrans ------------------------------ */
+
+@media (max-width: 900px) {
+  .contact__grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Le formulaire d'abord : c'est pour lui qu'on vient. */
+  .contact__carte {
+    order: -1;
+  }
+
+  .contact__cote {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-hero__contenu {
+    padding: 48px 20px 56px;
+  }
+
+  .contact-hero__titre {
+    font-size: 28px;
+  }
+
+  .contact__carte {
+    border-radius: 18px;
+  }
+
+  .contact-sujet {
+    min-height: 40px;
+    padding: 0 13px 0 11px;
+    font-size: 14px;
+  }
+
+  .contact-merci__actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .contact-merci__actions > * {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-hero__photo,
+  .contact-hero__sur-titre,
+  .contact-hero__ligne,
+  .contact-hero__trait::before,
+  .contact-hero__trait::after,
+  .contact-hero__texte,
+  .contact-sujet,
+  .contact-merci,
+  .contact-merci__cercle,
+  .contact-merci__trait,
+  .contact-merci__titre,
+  .contact-merci__texte,
+  .contact-merci__actions {
+    animation: none;
+  }
+
+  .contact-merci__cercle,
+  .contact-merci__trait {
+    stroke-dashoffset: 0;
+  }
+
+  .contact-carte,
+  .contact-sujet,
+  .contact-sujet__icone {
+    transition: none;
+  }
+}
