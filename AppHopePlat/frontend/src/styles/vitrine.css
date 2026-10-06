@@ -198,7 +198,6 @@
   display: inline-flex;
   align-items: center;
   padding: 0 14px 0 18px;
-  overflow: hidden;
   border-radius: 10px 0 0 10px;
   color: inherit;
   font-family: var(--vitrine-police);
@@ -215,49 +214,33 @@
   visibility: hidden;
 }
 
-/* Les mots se superposent dans la meme case ; la perspective donne du
-   relief aux lettres qui basculent. */
+/* Le mot occupe la case du gabarit, lettre par lettre. Pendant le
+   dechiffrement (BoutonAcces.jsx), les lettres brouillees prennent le
+   jaune de la charte et une lueur, comme un code qui se resout. */
 .vitrine-acces__mots {
   position: absolute;
   inset: 0 14px 0 18px;
   display: grid;
   place-items: center;
-  perspective: 240px;
 }
 
 .vitrine-acces__mot {
-  grid-area: 1 / 1;
+  display: inline-flex;
   white-space: pre;
 }
 
-.vitrine-acces__lettres {
-  display: inline-flex;
-}
-
-/* Chaque lettre arrive de dessous en se redressant, avec un leger
-   rebond, l'une apres l'autre ; celles du mot qui part basculent vers
-   l'arriere et s'envolent, dans le meme ordre. */
 .vitrine-acces__lettre {
   display: inline-block;
-  transform-origin: 50% 100%;
-  backface-visibility: hidden;
-  animation: acces-lettre-entre 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: calc(260ms + var(--i, 0) * 24ms);
+  min-width: 0.2em;
+  text-align: center;
+  transition:
+    color 0.12s ease,
+    text-shadow 0.12s ease;
 }
 
-.vitrine-acces__mot--sortant .vitrine-acces__lettre {
-  animation: acces-lettre-sort 0.28s cubic-bezier(0.55, 0, 1, 0.45) both;
-  animation-delay: calc(var(--i, 0) * 18ms);
-}
-
-/* L'eclat : une lumiere traverse la partie principale au changement. */
-.vitrine-acces__eclat {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 32%, rgba(255, 255, 255, 0.5) 50%, transparent 68%);
-  transform: translateX(-130%);
-  animation: acces-eclat 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
-  pointer-events: none;
+.vitrine-acces__lettre--brouillee {
+  color: var(--hope-jaune);
+  text-shadow: 0 0 8px rgba(245, 227, 137, 0.85);
 }
 
 /* La fleche : une case a part, separee d'un filet clair ; elle se
@@ -358,36 +341,6 @@
   }
 }
 
-@keyframes acces-lettre-entre {
-  from {
-    opacity: 0;
-    transform: translateY(0.9em) rotateX(-85deg);
-  }
-  55% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes acces-lettre-sort {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-0.9em) rotateX(75deg);
-  }
-}
-
-@keyframes acces-eclat {
-  to {
-    transform: translateX(130%);
-  }
-}
 
 @keyframes acces-menu {
   from {
@@ -825,11 +778,13 @@
     transition: none;
   }
 
-  .vitrine-acces__lettre,
-  .vitrine-acces__eclat,
   .vitrine-acces__menu,
   .vitrine-acces__choix {
     animation: none;
+  }
+
+  .vitrine-acces__lettre {
+    transition: none;
   }
 
   .vitrine-entete,

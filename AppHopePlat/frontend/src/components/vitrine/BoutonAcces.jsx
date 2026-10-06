@@ -10,10 +10,10 @@ import { LIEN_CONNEXION, LIEN_DON } from './liens.js';
  *
  *   - la partie principale est un lien dont le mot change toutes les
  *     cinq secondes : "Faire un don", puis "Connexion", puis de nouveau
- *     le don, sans fin. Les lettres du mot qui part basculent et
- *     s'envolent une a une, celles du mot qui arrive se redressent en
- *     cascade, et un eclat traverse le bouton. Il mene la ou son mot le
- *     dit ;
+ *     le don, sans fin. Le passage de l'un a l'autre se fait comme un
+ *     dechiffrement : chaque lettre se brouille en caracteres qui
+ *     defilent, puis se fixe sur la bonne, de gauche a droite. Le lien
+ *     mene la ou son mot le dit ;
  *   - la fleche ouvre un petit menu qui nomme les deux portes en clair,
  *     pour qui ne veut pas attendre le bon mot.
  *
@@ -33,38 +33,39 @@ const OPTIONS = [
 
 /** Le temps qu'un mot reste affiche avant de laisser la place a l'autre. */
 const CADENCE = 5000;
-/** Le temps que le mot sortant finisse de s'envoler, lettre apres lettre (vitrine.css). */
-const GLISSEMENT = 700;
 
-/**
- * Un mot lettre par lettre, chacune avec son rang (--i) pour la cascade.
- * Les lettres sont cachees aux lecteurs d'ecran : le mot entier leur est
- * donne a part.
- */
-function Lettres({ mot }) {
-  return (
-    <span className="vitrine-acces__lettres" aria-hidden="true">
-      {[...mot].map((lettre, i) => (
-        <span key={`${i}-${lettre}`} className="vitrine-acces__lettre" style={{ '--i': i }}>
-          {lettre === ' ' ? ' ' : lettre}
-        </span>
-      ))}
-    </span>
-  );
-}
+/* Le dechiffrement : chaque lettre commence a se brouiller un peu apres
+   la precedente (ESPACEMENT, plus un hasard), reste brouillee un moment
+   (BROUILLAGE, plus un hasard), puis se fixe. Les caracteres qui defilent
+   changent toutes les PERIODE millisecondes ; ils sont choisis etroits,
+   pour que le mot brouille ne deborde pas de sa case. */
+const ESPACEMENT = 45;
+const BROUILLAGE = 280;
+const PERIODE = 60;
+const GLYPHES = 'abcdefghijklnoprstuvxyz0123456789#%*+<>=?!/;:';
 
 function mouvementReduit() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** Un mot, lettre par lettre, tel que le bouton le rend. */
+function enClair(mot) {
+  return [...mot].map((car) => ({ car, brouille: false }));
+}
+
+/** Le caractere brouille d'une lettre a un instant : il change par periode, sans hasard a chaque image. */
+function glyphe(indice, t) {
+  return GLYPHES[(indice * 7 + Math.floor(t / PERIODE) * 13) % GLYPHES.length];
 }
 
 export default function BoutonAcces() {
   const emplacement = useLocation();
   const boite = useRef(null);
   const premierChoix = useRef(null);
+  const motAffiche = useRef(OPTIONS[0].libelle);
 
   const [indice, setIndice] = useState(0);
-  // Le mot qui s'en va, le temps de son glissement.
-  const [sortant, setSortant] = useState(null);
+  const [lettres, setLettres] = useState(() => enClair(OPTIONS[0].libelle));
   const [pause, setPause] = useState(false);
   const [ouvert, setOuvert] = useState(false);
 
@@ -73,21 +74,50 @@ export default function BoutonAcces() {
   // Le mot suivant, a la cadence, sauf quand on vise le bouton.
   useEffect(() => {
     if (fige) return undefined;
-    const minuterie = setInterval(() => {
-      setIndice((courant) => {
-        setSortant(courant);
-        return (courant + 1) % OPTIONS.length;
-      });
-    }, CADENCE);
+    const minuterie = setInterval(() => setIndice((courant) => (courant + 1) % OPTIONS.length), CADENCE);
     return () => clearInterval(minuterie);
   }, [fige]);
 
-  // Le mot sorti disparait une fois son glissement fini.
+  // Le dechiffrement, de l'ancien mot vers le nouveau.
   useEffect(() => {
-    if (sortant === null) return undefined;
-    const minuterie = setTimeout(() => setSortant(null), GLISSEMENT);
-    return () => clearTimeout(minuterie);
-  }, [sortant]);
+    const nouveau = OPTIONS[indice].libelle;
+    const ancien = motAffiche.current;
+    motAffiche.current = nouveau;
+    if (ancien === nouveau) return undefined;
+    if (mouvementReduit()) {
+      setLettres(enClair(nouveau));
+      return undefined;
+    }
+
+    const longueur = Math.max(ancien.length, nouveau.length);
+    const plan = Array.from({ length: longueur }, (_, i) => {
+      const debut = i * ESPACEMENT + Math.random() * 90;
+      return { debut, fin: debut + BROUILLAGE + Math.random() * 260 };
+    });
+    const depart = performance.now();
+    let image = 0;
+
+    const pas = (maintenant) => {
+      const t = maintenant - depart;
+      let fini = true;
+      setLettres(
+        plan.map((etape, i) => {
+          if (t < etape.debut) {
+            fini = false;
+            return { car: ancien[i] ?? '', brouille: false };
+          }
+          if (t < etape.fin) {
+            fini = false;
+            return { car: glyphe(i, t), brouille: true };
+          }
+          return { car: nouveau[i] ?? '', brouille: false };
+        })
+      );
+      if (!fini) image = requestAnimationFrame(pas);
+    };
+    image = requestAnimationFrame(pas);
+    return () => cancelAnimationFrame(image);
+  }, [indice]);
 
   // Le menu se referme quand on change de page.
   useEffect(() => {
@@ -126,19 +156,17 @@ export default function BoutonAcces() {
         <span className="vitrine-acces__gabarit" aria-hidden="true">
           Faire un don
         </span>
+        {/* Le mot entier pour les lecteurs d'ecran ; les lettres, elles, se brouillent. */}
         <span className="sr-only">{courant.libelle}</span>
-        <span className="vitrine-acces__mots">
-          {sortant !== null && (
-            <span key={`sortant-${sortant}`} className="vitrine-acces__mot vitrine-acces__mot--sortant">
-              <Lettres mot={OPTIONS[sortant].libelle} />
-            </span>
-          )}
-          <span key={`courant-${courant.cle}`} className="vitrine-acces__mot vitrine-acces__mot--courant" data-mot={courant.libelle}>
-            <Lettres mot={courant.libelle} />
+        <span className="vitrine-acces__mots" aria-hidden="true">
+          <span className="vitrine-acces__mot" data-mot={courant.libelle}>
+            {lettres.map(({ car, brouille }, i) => (
+              <span key={i} className={`vitrine-acces__lettre${brouille ? ' vitrine-acces__lettre--brouillee' : ''}`}>
+                {car === ' ' ? ' ' : car}
+              </span>
+            ))}
           </span>
         </span>
-        {/* L'eclat qui traverse le bouton a chaque changement de mot. */}
-        {sortant !== null && <span key={`eclat-${sortant}`} className="vitrine-acces__eclat" aria-hidden="true" />}
       </Link>
 
       <button
