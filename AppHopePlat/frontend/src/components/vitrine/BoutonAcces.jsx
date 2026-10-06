@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { IconeChevronBas, IconeCoeur, IconeUtilisateur } from '../HopeIcons.jsx';
@@ -10,10 +10,11 @@ import { LIEN_CONNEXION, LIEN_DON } from './liens.js';
  *
  *   - la partie principale est un lien dont le mot change toutes les
  *     cinq secondes : "Faire un don", puis "Connexion", puis de nouveau
- *     le don, sans fin. Le passage de l'un a l'autre se fait comme un
- *     dechiffrement : chaque lettre se brouille en caracteres qui
- *     defilent, puis se fixe sur la bonne, de gauche a droite. Le lien
- *     mene la ou son mot le dit ;
+ *     le don, sans fin. Le passage se fait en "gribouillage doux" : les
+ *     lettres du mot qui arrive se posent une a une en tremblotant,
+ *     comme tracees a la main, floues puis nettes, pendant qu'un trait
+ *     ondule se dessine sous le mot ; celles du mot qui part fretillent
+ *     et s'estompent. Le lien mene la ou son mot le dit ;
  *   - la fleche ouvre un petit menu qui nomme les deux portes en clair,
  *     pour qui ne veut pas attendre le bon mot.
  *
@@ -33,39 +34,60 @@ const OPTIONS = [
 
 /** Le temps qu'un mot reste affiche avant de laisser la place a l'autre. */
 const CADENCE = 5000;
-
-/* Le dechiffrement : chaque lettre commence a se brouiller un peu apres
-   la precedente (ESPACEMENT, plus un hasard), reste brouillee un moment
-   (BROUILLAGE, plus un hasard), puis se fixe. Les caracteres qui defilent
-   changent toutes les PERIODE millisecondes ; ils sont choisis etroits,
-   pour que le mot brouille ne deborde pas de sa case. */
-const ESPACEMENT = 45;
-const BROUILLAGE = 280;
-const PERIODE = 60;
-const GLYPHES = 'abcdefghijklnoprstuvxyz0123456789#%*+<>=?!/;:';
+/** Le temps que le mot sortant finisse de s'estomper et que le trait s'efface (vitrine.css). */
+const GLISSEMENT = 1300;
 
 function mouvementReduit() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Un mot, lettre par lettre, tel que le bouton le rend. */
-function enClair(mot) {
-  return [...mot].map((car) => ({ car, brouille: false }));
+/** Un nombre au hasard entre -amplitude et +amplitude. */
+function hasard(amplitude) {
+  return (Math.random() * 2 - 1) * amplitude;
 }
 
-/** Le caractere brouille d'une lettre a un instant : il change par periode, sans hasard a chaque image. */
-function glyphe(indice, t) {
-  return GLYPHES[(indice * 7 + Math.floor(t / PERIODE) * 13) % GLYPHES.length];
+/**
+ * Un mot lettre par lettre : chacune a son rang (--i) pour la cascade,
+ * et sa propre inclinaison et son propre ecart (--rx, --dx), tires au
+ * sort une fois pour toutes : c'est ce qui fait la main qui tremble.
+ */
+function Lettres({ mot, graine }) {
+  const lettres = useMemo(
+    () => [...mot].map((car) => ({ car, rx: hasard(9).toFixed(1), dx: hasard(2.2).toFixed(1) })),
+    // Un nouveau tirage a chaque entree en scene.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mot, graine]
+  );
+  return (
+    <span className="vitrine-acces__lettres" aria-hidden="true">
+      {lettres.map(({ car, rx, dx }, i) => (
+        <span key={i} className="vitrine-acces__lettre" style={{ '--i': i, '--rx': `${rx}deg`, '--dx': `${dx}px` }}>
+          {car === ' ' ? ' ' : car}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Le trait ondule, trace a la main sous le mot qui vient d'arriver. */
+function Trait() {
+  return (
+    <svg className="vitrine-acces__trait" viewBox="0 0 120 10" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M2 6.5c14-4 22 4 38 1.5s26-5 40-1.5 24 3 38-.5" pathLength="100" />
+    </svg>
+  );
 }
 
 export default function BoutonAcces() {
   const emplacement = useLocation();
   const boite = useRef(null);
   const premierChoix = useRef(null);
-  const motAffiche = useRef(OPTIONS[0].libelle);
 
   const [indice, setIndice] = useState(0);
-  const [lettres, setLettres] = useState(() => enClair(OPTIONS[0].libelle));
+  // Le mot qui s'en va, le temps de s'estomper ; et un compteur de
+  // bascules, pour que chaque entree tire ses propres tremblements.
+  const [sortant, setSortant] = useState(null);
+  const [bascule, setBascule] = useState(0);
   const [pause, setPause] = useState(false);
   const [ouvert, setOuvert] = useState(false);
 
@@ -74,50 +96,22 @@ export default function BoutonAcces() {
   // Le mot suivant, a la cadence, sauf quand on vise le bouton.
   useEffect(() => {
     if (fige) return undefined;
-    const minuterie = setInterval(() => setIndice((courant) => (courant + 1) % OPTIONS.length), CADENCE);
+    const minuterie = setInterval(() => {
+      setIndice((courant) => {
+        setSortant(courant);
+        setBascule((n) => n + 1);
+        return (courant + 1) % OPTIONS.length;
+      });
+    }, CADENCE);
     return () => clearInterval(minuterie);
   }, [fige]);
 
-  // Le dechiffrement, de l'ancien mot vers le nouveau.
+  // Le mot sorti et le trait disparaissent une fois leur mouvement fini.
   useEffect(() => {
-    const nouveau = OPTIONS[indice].libelle;
-    const ancien = motAffiche.current;
-    motAffiche.current = nouveau;
-    if (ancien === nouveau) return undefined;
-    if (mouvementReduit()) {
-      setLettres(enClair(nouveau));
-      return undefined;
-    }
-
-    const longueur = Math.max(ancien.length, nouveau.length);
-    const plan = Array.from({ length: longueur }, (_, i) => {
-      const debut = i * ESPACEMENT + Math.random() * 90;
-      return { debut, fin: debut + BROUILLAGE + Math.random() * 260 };
-    });
-    const depart = performance.now();
-    let image = 0;
-
-    const pas = (maintenant) => {
-      const t = maintenant - depart;
-      let fini = true;
-      setLettres(
-        plan.map((etape, i) => {
-          if (t < etape.debut) {
-            fini = false;
-            return { car: ancien[i] ?? '', brouille: false };
-          }
-          if (t < etape.fin) {
-            fini = false;
-            return { car: glyphe(i, t), brouille: true };
-          }
-          return { car: nouveau[i] ?? '', brouille: false };
-        })
-      );
-      if (!fini) image = requestAnimationFrame(pas);
-    };
-    image = requestAnimationFrame(pas);
-    return () => cancelAnimationFrame(image);
-  }, [indice]);
+    if (sortant === null) return undefined;
+    const minuterie = setTimeout(() => setSortant(null), GLISSEMENT);
+    return () => clearTimeout(minuterie);
+  }, [sortant]);
 
   // Le menu se referme quand on change de page.
   useEffect(() => {
@@ -156,16 +150,18 @@ export default function BoutonAcces() {
         <span className="vitrine-acces__gabarit" aria-hidden="true">
           Faire un don
         </span>
-        {/* Le mot entier pour les lecteurs d'ecran ; les lettres, elles, se brouillent. */}
+        {/* Le mot entier pour les lecteurs d'ecran ; les lettres, elles, gribouillent. */}
         <span className="sr-only">{courant.libelle}</span>
         <span className="vitrine-acces__mots" aria-hidden="true">
-          <span className="vitrine-acces__mot" data-mot={courant.libelle}>
-            {lettres.map(({ car, brouille }, i) => (
-              <span key={i} className={`vitrine-acces__lettre${brouille ? ' vitrine-acces__lettre--brouillee' : ''}`}>
-                {car === ' ' ? ' ' : car}
-              </span>
-            ))}
+          {sortant !== null && (
+            <span key={`sortant-${bascule}`} className="vitrine-acces__mot vitrine-acces__mot--sortant">
+              <Lettres mot={OPTIONS[sortant].libelle} graine={`s${bascule}`} />
+            </span>
+          )}
+          <span key={`courant-${bascule}`} className="vitrine-acces__mot vitrine-acces__mot--courant" data-mot={courant.libelle}>
+            <Lettres mot={courant.libelle} graine={`c${bascule}`} />
           </span>
+          {sortant !== null && <Trait key={`trait-${bascule}`} />}
         </span>
       </Link>
 
