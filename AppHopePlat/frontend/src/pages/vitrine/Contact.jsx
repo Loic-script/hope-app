@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import couverture from '../../assets/vitrine/akany-soavina.jpg';
-import { IconeEnveloppe, IconeFleche, IconeRepere, IconeTelephone, IconeUtilisateur } from '../../components/HopeIcons.jsx';
+import { IconeEnveloppe, IconeFleche, IconeTelephone, IconeUtilisateur } from '../../components/HopeIcons.jsx';
 import { Champ } from '../../components/parcours/champs.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
@@ -335,6 +335,44 @@ function Formulaire({ sujets }) {
   );
 }
 
+/* ------------------------------- Le courriel ------------------------------- */
+
+/** L'adresse de l'equipe, et de quoi la copier d'un geste. */
+function Courriel({ adresse }) {
+  const [copie, setCopie] = useState(false);
+
+  // "Copie !" s'efface de lui-meme.
+  useEffect(() => {
+    if (!copie) return undefined;
+    const minuterie = setTimeout(() => setCopie(false), 1800);
+    return () => clearTimeout(minuterie);
+  }, [copie]);
+
+  async function copier() {
+    try {
+      await navigator.clipboard.writeText(adresse);
+      setCopie(true);
+    } catch {
+      // Sans presse-papiers : le lien reste la, a copier a la main.
+    }
+  }
+
+  return (
+    <div className="contact-carte__courriel">
+      <a className="contact-carte__lien" href={`mailto:${adresse}`}>
+        {adresse}
+      </a>
+      <button
+        type="button"
+        className={`contact-carte__copier${copie ? ' contact-carte__copier--fait' : ''}`}
+        onClick={copier}
+      >
+        {copie ? 'Copié !' : 'Copier'}
+      </button>
+    </div>
+  );
+}
+
 /* --------------------------------- La page --------------------------------- */
 
 export default function Contact() {
@@ -365,27 +403,25 @@ export default function Contact() {
         <div className="v-conteneur contact__grille">
           <aside className="contact__cote">
             <div className="contact-carte v-entree" style={{ '--rang': 0 }}>
-              <span className="contact-carte__icone">
-                <IconeEnveloppe />
-              </span>
-              <h2 className="contact-carte__titre">Par courriel</h2>
+              <p className="contact-carte__surtitre">Courriel</p>
+              <h2 className="contact-carte__titre">Écrivez-nous directement</h2>
               {courrielEquipe ? (
-                <a className="contact-carte__lien" href={`mailto:${courrielEquipe}`}>
-                  {courrielEquipe}
-                </a>
+                <Courriel adresse={courrielEquipe} />
               ) : (
                 <p className="contact-carte__texte">Le formulaire ci-contre nous parvient directement.</p>
               )}
-              <p className="contact-carte__texte">Réponse sous 48 h ouvrées.</p>
+              <p className="contact-carte__badge">
+                <span className="contact-carte__pouls" aria-hidden="true" />
+                Réponse sous 48 h ouvrées
+              </p>
             </div>
 
             <div className="contact-carte v-entree" style={{ '--rang': 1 }}>
-              <span className="contact-carte__icone contact-carte__icone--terrain">
-                <IconeRepere />
-              </span>
-              <h2 className="contact-carte__titre">Sur le terrain</h2>
+              <p className="contact-carte__surtitre">Sur le terrain</p>
+              <h2 className="contact-carte__titre">Madagascar, au plus près des familles</h2>
               <p className="contact-carte__texte">
-                HOPE agit à Madagascar, auprès des enfants orphelins et des mères célibataires.
+                HOPE agit auprès des enfants orphelins et des mères célibataires : scolarité, employabilité, soins,
+                alimentation.
               </p>
             </div>
 

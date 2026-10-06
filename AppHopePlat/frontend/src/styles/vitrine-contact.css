@@ -163,8 +163,11 @@
 
 /* ------------------------------- Les cartes ------------------------------- */
 
+/* Sans icone : un surtitre orange precede d'un filet, qui s'allonge au
+   survol pendant que la carte se souleve. */
 .contact-carte {
-  padding: 24px 24px 22px;
+  position: relative;
+  padding: 24px 26px 24px;
   border-radius: 18px;
   background: #ffffff;
   box-shadow: 0 18px 40px -26px rgba(53, 51, 67, 0.5);
@@ -178,59 +181,183 @@
     transform: translateY(-4px);
     box-shadow: 0 26px 44px -26px rgba(93, 86, 150, 0.5);
   }
+
+  .contact-carte:hover .contact-carte__surtitre::before {
+    width: 40px;
+  }
 }
 
-.contact-carte__icone {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  margin-bottom: 14px;
-  border-radius: 13px;
-  background: var(--hope-bleu-clair);
-  color: var(--hope-violet);
+.contact-carte__surtitre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  /* L'orange brun des notes de la plateforme : lisible en petit (5,6:1). */
+  color: #8a5c12;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
-.contact-carte__icone svg {
-  width: 22px;
-  height: 22px;
-}
-
-.contact-carte__icone--terrain {
-  background: color-mix(in srgb, var(--hope-jaune) 55%, #ffffff);
-  color: var(--hope-orange-fonce);
+.contact-carte__surtitre::before {
+  content: '';
+  width: 24px;
+  height: 3px;
+  flex: none;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--hope-orange), var(--hope-jaune));
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .contact-carte__titre {
-  margin: 0;
+  margin: 10px 0 0;
   font-family: var(--vitrine-titre);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
+  line-height: 1.3;
   color: var(--hope-violet);
 }
 
 .contact-carte__texte {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   font-size: 14.5px;
   font-weight: 600;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--hope-texte-doux);
 }
 
-.contact-carte__lien {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--hope-violet);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--hope-violet) 35%, transparent);
-  text-underline-offset: 4px;
-  transition: text-decoration-color 0.2s ease;
+/* L'adresse, en grand, et le bouton pour la copier d'un geste. */
+.contact-carte__courriel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
 }
 
-.contact-carte__lien:hover {
-  text-decoration-color: var(--hope-orange);
+.contact-carte__lien {
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--hope-violet);
+  text-decoration: none;
+}
+
+/* Le soulignement part de la gauche au survol. */
+.contact-carte__lien::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -3px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--hope-orange);
+  transform: scaleX(0.28);
+  transform-origin: left center;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.contact-carte__lien:hover::after,
+.contact-carte__lien:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.contact-carte__copier {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1.5px solid color-mix(in srgb, var(--hope-violet) 30%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hope-violet);
+  font-family: var(--vitrine-police);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.contact-carte__copier:hover {
+  border-color: var(--hope-violet);
+  background: color-mix(in srgb, var(--hope-violet) 8%, #ffffff);
+}
+
+.contact-carte__copier:active {
+  transform: scale(0.95);
+}
+
+.contact-carte__copier--fait {
+  border-color: #2c8f63;
+  background: #e6f4ec;
+  color: #1f6b48;
+  animation: contact-copie 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.contact-carte__copier:focus-visible,
+.contact-carte__lien:focus-visible {
+  outline: 3px solid var(--hope-bleu);
+  outline-offset: 3px;
+}
+
+/* Le delai de reponse : un badge, et un point qui respire. */
+.contact-carte__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 16px 0 0;
+  padding: 7px 13px 7px 11px;
+  border-radius: 999px;
+  background: var(--hope-bleu-clair);
+  color: var(--hope-violet-fonce);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.contact-carte__pouls {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--hope-orange);
+}
+
+.contact-carte__pouls::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--hope-orange);
+  opacity: 0;
+  animation: contact-pouls 2.4s ease-out infinite;
+}
+
+@keyframes contact-pouls {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.6);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes contact-copie {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: none;
+  }
 }
 
 .contact-carte--agir {
@@ -587,7 +714,15 @@
   }
 
   .contact-carte,
+  .contact-carte__surtitre::before,
+  .contact-carte__lien::after,
+  .contact-carte__copier,
   .contact-sujet {
     transition: none;
+  }
+
+  .contact-carte__pouls::after,
+  .contact-carte__copier--fait {
+    animation: none;
   }
 }
