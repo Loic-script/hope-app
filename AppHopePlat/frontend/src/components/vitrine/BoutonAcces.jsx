@@ -9,8 +9,8 @@ import { LIEN_CONNEXION, LIEN_DON } from './liens.js';
  * deux portes.
  *
  *   - la partie principale est un lien dont le mot change toutes les
- *     trois secondes, en glissant : "Faire un don", puis "Connexion",
- *     puis de nouveau le don. Il mene la ou son mot le dit ;
+ *     cinq secondes, en glissant : "Faire un don", puis "Connexion",
+ *     puis de nouveau le don, sans fin. Il mene la ou son mot le dit ;
  *   - la fleche ouvre un petit menu qui nomme les deux portes en clair,
  *     pour qui ne veut pas attendre le bon mot.
  *
@@ -29,7 +29,7 @@ const OPTIONS = [
 ];
 
 /** Le temps qu'un mot reste affiche avant de laisser la place a l'autre. */
-const CADENCE = 3000;
+const CADENCE = 5000;
 /** La duree du glissement (vitrine.css, acces-entre / acces-sort). */
 const GLISSEMENT = 480;
 
