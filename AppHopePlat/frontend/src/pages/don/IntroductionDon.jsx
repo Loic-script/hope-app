@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 
 import mainCoeur from '../../assets/vitrine/icones/main-coeur.png';
 import { IconeFleche } from '../../components/HopeIcons.jsx';
-import { useCompteur } from '../../hooks/useApparition.js';
 
 /**
  * L'introduction du don sans compte (pages/don/DonSansCompte.jsx) : avant
@@ -11,11 +10,8 @@ import { useCompteur } from '../../hooks/useApparition.js';
  *
  * Tout entre en scene l'un apres l'autre ; les rayons du soleil tournent
  * lentement autour de la main qui tend un coeur (visuel fourni par
- * HOPE), les deux chiffres se comptent sous les yeux. Le
- * visiteur qui a demande moins de mouvement voit tout en place, d'un coup
- * (don-invite.css, prefers-reduced-motion).
- *
- * Les chiffres sont ceux que le site affiche dans "Nos impacts".
+ * HOPE). Le visiteur qui a demande moins de mouvement voit tout en place,
+ * d'un coup (don-invite.css, prefers-reduced-motion).
  */
 
 const ETAPES = [
@@ -23,22 +19,6 @@ const ETAPES = [
   { numero: 2, titre: 'Vous choisissez', texte: 'Un projet précis, ou le fonds HOPE.' },
   { numero: 3, titre: 'Vous payez à votre façon', texte: 'MVola, Orange Money, carte, virement…' },
 ];
-
-const GAGES = ['Sans créer de compte', 'Confirmé par l’équipe HOPE', 'Reçu par courriel'];
-
-/** Un chiffre qui monte de zero a sa valeur, des l'ouverture. */
-function Chiffre({ valeur, libelle, rang }) {
-  const compte = useCompteur(valeur, true, 1500);
-  return (
-    <div className="don-intro__chiffre" style={{ '--rang': rang }}>
-      <dt className="don-intro__nombre">
-        <span aria-hidden="true">{compte}</span>
-        <span className="sr-only">{valeur}</span>
-      </dt>
-      <dd className="don-intro__libelle">{libelle}</dd>
-    </div>
-  );
-}
 
 export default function IntroductionDon({ onCommencer }) {
   return (
@@ -87,24 +67,11 @@ export default function IntroductionDon({ onCommencer }) {
         ))}
       </ol>
 
-      <dl className="don-intro__chiffres" style={{ '--rang': 5 }}>
-        <Chiffre valeur={300} libelle="enfants orphelins soutenus" rang={0} />
-        <Chiffre valeur={100} libelle="mères célibataires accompagnées" rang={1} />
-      </dl>
-
-      <ul className="don-intro__gages" style={{ '--rang': 6 }} aria-label="Ce qui vous est garanti">
-        {GAGES.map((gage) => (
-          <li key={gage} className="don-intro__gage">
-            {gage}
-          </li>
-        ))}
-      </ul>
-
-      <button type="button" className="parcours__continuer don-intro__bouton" style={{ '--rang': 7 }} onClick={onCommencer}>
+      <button type="button" className="parcours__continuer don-intro__bouton" style={{ '--rang': 5 }} onClick={onCommencer}>
         Commencer mon don
         <IconeFleche className="parcours__fleche" />
       </button>
-      <p className="don-intro__compte" style={{ '--rang': 8 }}>
+      <p className="don-intro__compte" style={{ '--rang': 6 }}>
         Vous avez déjà un compte ? <Link to="/authentification">Se connecter</Link>
       </p>
     </section>

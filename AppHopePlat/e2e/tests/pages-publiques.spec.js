@@ -169,7 +169,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await expect(page).toHaveURL(/\/faire-un-don$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Votre geste change une vie');
   await expect(page.locator('.don-intro__etape')).toHaveCount(3);
-  await expect(page.locator('.don-intro__nombre').first()).toContainText('300');
   await sansDebordement(page);
   await page.getByRole('button', { name: 'Commencer mon don' }).click();
 

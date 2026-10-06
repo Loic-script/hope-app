@@ -3,9 +3,8 @@
 
    Dans l'habit du parcours (parcours-donateur.css) : la colonne de
    700 px, le bouton orange, la police des titres. Tout entre en scene
-   l'un apres l'autre (--rang), le soleil tourne lentement, les chiffres
-   se comptent (useCompteur). Moins de mouvement demande : tout est en
-   place d'un coup.
+   l'un apres l'autre (--rang), le soleil tourne lentement. Moins de
+   mouvement demande : tout est en place d'un coup.
    ============================================================ */
 
 .don-intro {
@@ -182,73 +181,6 @@
   color: var(--hope-texte-doux);
 }
 
-/* ----------------------------- Les chiffres ----------------------------- */
-
-.don-intro__chiffres {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  width: 100%;
-  max-width: 560px;
-  margin: 30px 0 0;
-}
-
-.don-intro__chiffre {
-  padding: 18px 16px 16px;
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 16px 34px -26px rgba(53, 51, 67, 0.5);
-}
-
-.don-intro__nombre {
-  margin: 0;
-  font-size: clamp(32px, 4.4vw, 40px);
-  font-weight: 800;
-  line-height: 1;
-  color: var(--hope-orange);
-  font-variant-numeric: tabular-nums;
-}
-
-.don-intro__libelle {
-  margin: 8px 0 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--hope-violet);
-}
-
-/* ------------------------------- Les gages ------------------------------- */
-
-.don-intro__gages {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 10px;
-  margin: 22px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.don-intro__gage {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  background: var(--hope-bleu-clair);
-  color: var(--hope-violet-fonce);
-  font-size: 13.5px;
-  font-weight: 700;
-}
-
-.don-intro__gage::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--hope-orange);
-}
-
 /* ------------------------------- Le bouton ------------------------------- */
 
 .don-intro__bouton {
@@ -373,10 +305,6 @@
 
   .don-intro__etape-texte {
     max-width: none;
-  }
-
-  .don-intro__chiffres {
-    gap: 10px;
   }
 
   .don-intro__bouton {
