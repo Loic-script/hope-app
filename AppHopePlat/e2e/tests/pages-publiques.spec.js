@@ -33,9 +33,11 @@ test('la politique de confidentialite : sommaire, articles, contact', async ({ p
   await sansDebordement(page);
 });
 
-test('sans session, l administration renvoie vers sa connexion', async ({ page }) => {
+test('sans session, l administration renvoie vers la porte unique, le choix "Aucun" fait', async ({ page }) => {
   await page.goto('/admin');
-  await expect(page).toHaveURL(/\/admin\/login$/);
+  await expect(page).toHaveURL(/\/authentification\?type=aucun$/);
+  await expect(page.locator('#typeConnexion')).toHaveValue('aucun');
+  await expect(page.locator('label[for="email"]')).toHaveText('Identifiant');
 });
 
 test('l API refuse proprement : route inconnue, session absente, origine etrangere', async ({ request }) => {

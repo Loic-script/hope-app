@@ -7,11 +7,12 @@ import { expect, test } from '@playwright/test';
 import { ADMIN, aucunJetonLisible, sansDebordement } from './outils.js';
 
 test('connexion, creation de categorie, journal d audit, deconnexion', async ({ page, context }, testInfo) => {
-  await page.goto('/admin/login');
-  await page.fill('input[name="adminLog"]', ADMIN.adminLog);
-  await page.fill('input[name="password"]', ADMIN.password);
-  await page.getByRole('button', { name: /connecter/i }).first().click();
-  await expect(page).not.toHaveURL(/\/admin\/login/, { timeout: 20_000 });
+  await page.goto('/authentification?type=aucun');
+  await expect(page.locator('#typeConnexion')).toHaveValue('aucun');
+  await page.fill('#email', ADMIN.adminLog);
+  await page.fill('#motDePasse', ADMIN.password);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await expect(page).toHaveURL(/\/admin(\/|$)/, { timeout: 20_000 });
 
   const cookie = (await context.cookies()).find((c) => c.name === 'hope_admin');
   expect(cookie?.httpOnly).toBe(true);

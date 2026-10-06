@@ -28,7 +28,6 @@ import ChargementPage from '../components/ChargementPage.jsx';
  * l'espace administrateur, ni un benevole celui du bailleur. Seules la
  * porte d'entree (Authentification) et la redirection partent d'emblee.
  */
-const AdminLogin = lazy(() => import('../pages/AdminLogin.jsx'));
 const AdminLoginSuccess = lazy(() => import('../pages/AdminLoginSuccess.jsx'));
 const AdminHome = lazy(() => import('../pages/admin/AdminHome.jsx'));
 const BeneficiariesPage = lazy(() => import('../pages/admin/BeneficiariesPage.jsx'));
@@ -148,7 +147,7 @@ function routesPaiement(base, espace) {
  *   /faire-un-don    le don sans compte, depuis le site vitrine
  *   /authentification connexion et inscription des utilisateurs
  *   /donateur/...    espace donateur : actualites, dons, projets, profil
- *   /admin/login     connexion administrateur
+ *   /admin/login     renvoie vers /authentification (choix "Aucun")
  *   /benevole/...    espace benevole : projets, taches, journal
  *   /bailleur/...    espace partenaire : suivi des financements
  *   /admin/...     espace administrateur, protege par RequireAuth
@@ -201,7 +200,9 @@ export default function AppRoutes() {
       </Route>
       {/* Le choix de l'espace (administration ou utilisateurs), qui etait a la racine. */}
       <Route path="/espaces" element={<Redirection />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
+      {/* L'ancienne page de connexion administrateur : la porte unique la remplace,
+          le choix "Aucun" deja fait. */}
+      <Route path="/admin/login" element={<Navigate to="/authentification?type=aucun" replace />} />
 
       {/* ----- Faire un don sans compte, depuis le site vitrine ----- */}
       <Route

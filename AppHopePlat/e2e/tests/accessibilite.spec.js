@@ -72,7 +72,7 @@ async function auditer(page, nom) {
 }
 
 test('pages publiques', async ({ page }) => {
-  for (const chemin of ['/', '/nous-decouvrir', '/nos-projets', '/actualites', '/s-engager', '/contact', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie', '/admin/login']) {
+  for (const chemin of ['/', '/nous-decouvrir', '/nos-projets', '/actualites', '/s-engager', '/contact', '/authentification', '/confidentialite', '/conditions-utilisation', '/mot-de-passe-oublie']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');
     await auditer(page, chemin);
@@ -107,11 +107,12 @@ test('espace donateur', async ({ page, request }, testInfo) => {
 });
 
 test('administration', async ({ page }) => {
-  await page.goto('/admin/login');
-  await page.fill('input[name="adminLog"]', ADMIN.adminLog);
-  await page.fill('input[name="password"]', ADMIN.password);
-  await page.getByRole('button', { name: /connecter/i }).first().click();
-  await expect(page).not.toHaveURL(/\/admin\/login/, { timeout: 20_000 });
+  await page.goto('/authentification?type=aucun');
+  await expect(page.locator('#typeConnexion')).toHaveValue('aucun');
+  await page.fill('#email', ADMIN.adminLog);
+  await page.fill('#motDePasse', ADMIN.password);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await expect(page).toHaveURL(/\/admin(\/|$)/, { timeout: 20_000 });
   for (const chemin of ['/admin', '/admin/projects', '/admin/budget', '/admin/audit']) {
     await page.goto(chemin);
     await page.waitForLoadState('networkidle');

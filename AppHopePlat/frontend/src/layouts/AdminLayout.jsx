@@ -190,7 +190,7 @@ export default function AdminLayout() {
 
   async function seDeconnecter() {
     await authService.deconnecter();
-    navigate('/admin/login', { replace: true });
+    navigate('/authentification', { replace: true });
   }
 
   return (

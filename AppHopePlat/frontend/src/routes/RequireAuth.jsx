@@ -9,7 +9,8 @@ import * as authService from '../services/auth.service.js';
  * On ne se contente pas de constater la presence d'un jeton dans le
  * navigateur : le jeton est soumis au backend via GET /api/admin/me. C'est
  * lui qui verifie la signature, l'expiration et l'existence du compte. Sans
- * confirmation du serveur, l'utilisateur est renvoye vers /admin/login.
+ * confirmation du serveur, l'utilisateur est renvoye vers la page
+ * d'authentification, le choix "Aucun" deja fait.
  */
 export default function RequireAuth() {
   const emplacement = useLocation();
@@ -56,7 +57,7 @@ export default function RequireAuth() {
   }
 
   if (etat === 'refuse') {
-    return <Navigate to="/admin/login" replace state={{ depuis: emplacement.pathname }} />;
+    return <Navigate to="/authentification?type=aucun" replace state={{ depuis: emplacement.pathname }} />;
   }
 
   return <Outlet context={{ admin, rafraichir }} />;

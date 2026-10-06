@@ -91,12 +91,13 @@ api.interceptors.response.use(
   (reponse) => reponse,
   (erreur) => {
     const urlAppelee = erreur?.config?.url ?? '';
-    const surLaPageDeConnexion = window.location.pathname.startsWith('/admin/login');
+    const chemin = window.location.pathname;
+    const surLaPageDeConnexion = chemin.startsWith('/admin/login') || chemin.startsWith('/authentification');
 
     if (erreur?.response?.status === 401 && !urlAppelee.includes('/admin/login') && !surLaPageDeConnexion) {
       effacerStockage(CLE_JETON);
       effacerStockage(CLE_ADMIN);
-      window.location.assign('/admin/login');
+      window.location.assign('/authentification?type=aucun');
     }
     return Promise.reject(erreur);
   }

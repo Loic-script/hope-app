@@ -12,6 +12,7 @@ import {
   IconeFleche,
   IconeGroupe,
   IconeImmeuble,
+  IconeNeutre,
   IconeOeil,
   IconeOeilBarre,
   IconePoigneeMain,
@@ -22,6 +23,7 @@ import { messageErreur } from '../services/api.js';
 import { CLE_JETON_BENEVOLE, ecrireStockage } from '../services/apiBenevole.js';
 import { TEMOIN_SESSION } from '../services/api.js';
 import { focusAutomatique } from '../utils/ecran.js';
+import * as authService from '../services/auth.service.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 
 /** Message unique en cas d'echec : il ne revele jamais quel champ est faux. */
@@ -42,6 +44,14 @@ const TYPES_PAR_DEFAUT = [
   { cle: 'benevole', libelle: 'Bénévole', validationRequise: true },
   { cle: 'bailleur', libelle: 'Bailleur', validationRequise: true },
 ];
+
+/*
+ * "Aucun" : le dernier choix de la connexion. Il ne dit pas son nom --
+ * c'est la porte de l'administration : avec lui, le premier champ prend
+ * l'identifiant administrateur et la connexion passe par
+ * auth.service. L'inscription ne le propose pas.
+ */
+const AUCUN = { cle: 'aucun', libelle: 'Aucun', validationRequise: false };
 
 /** Adresse du site public HOPE (pas encore developpe a cette etape). */
 const SITE_PUBLIC = import.meta.env.VITE_SITE_URL ?? '/';
@@ -230,10 +240,11 @@ export default function Authentification() {
 function Connexion({ navigate, types }) {
   // Le lien d'un courriel d'acces (compte ouvert par l'equipe) porte
   // l'adresse et le type : ?email=...&type=benevole.
+  const emplacement = useLocation();
   const [email, setEmail] = useState(() => new URLSearchParams(window.location.search).get('email') ?? '');
   const [typeUtilisateur, setTypeUtilisateur] = useState(() => {
     const type = new URLSearchParams(window.location.search).get('type') ?? '';
-    return ['donateur', 'benevole', 'bailleur'].includes(type) ? type : '';
+    return ['donateur', 'benevole', 'bailleur', AUCUN.cle].includes(type) ? type : '';
   });
   // Le type choisi ne correspond pas au compte : c'est ce champ-la
   // qu'on designe, pas l'adresse ni le mot de passe.
@@ -259,6 +270,13 @@ function Connexion({ navigate, types }) {
 
     setChargement(true);
     try {
+      if (typeUtilisateur === AUCUN.cle) {
+        // L'administration : le cookie de session est pose par le serveur ;
+        // on revient la ou l'on voulait aller, sinon a l'accueil de l'espace.
+        await authService.connecter(email.trim(), motDePasse, seSouvenir);
+        navigate(emplacement.state?.depuis ?? '/admin', { replace: true });
+        return;
+      }
       const session = await utilisateurService.connecter(
         email.trim(),
         motDePasse,
@@ -296,12 +314,14 @@ function Connexion({ navigate, types }) {
   }
 
   const champEnErreur = erreur === MESSAGE_ERREUR;
+  // Avec "Aucun", le premier champ est un identifiant, pas une adresse.
+  const identifiant = typeUtilisateur === AUCUN.cle;
 
   return (
     <form className={`formulaire${erreur && !enAttente ? ' formulaire--refus' : ''}`} onSubmit={soumettre} noValidate>
       <div className="champ">
         <label className="champ__label" htmlFor="email">
-          Adresse électronique
+          {identifiant ? 'Identifiant' : 'Adresse électronique'}
         </label>
         <div className={`champ__boite${champEnErreur ? ' champ__boite--erreur' : ''}`}>
           <IconeUtilisateur className="champ__icone" />
@@ -309,9 +329,9 @@ function Connexion({ navigate, types }) {
             id="email"
             name="email"
             className="champ__saisie"
-            type="email"
-            autoComplete="email"
-            placeholder="vous@exemple.mg"
+            type={identifiant ? 'text' : 'email'}
+            autoComplete={identifiant ? 'username' : 'email'}
+            placeholder={identifiant ? 'Votre identifiant' : 'vous@exemple.mg'}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={chargement}
@@ -322,7 +342,7 @@ function Connexion({ navigate, types }) {
 
       <ChampType
         id="typeConnexion"
-        types={types}
+        types={[...types, AUCUN]}
         valeur={typeUtilisateur}
         onChange={(e) => {
           setTypeUtilisateur(e.target.value);
@@ -676,6 +696,7 @@ const ICONES_TYPES = {
   donateur: IconeCoeur,
   benevole: IconePoigneeMain,
   bailleur: IconeImmeuble,
+  aucun: IconeNeutre,
 };
 
 /**

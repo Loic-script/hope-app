@@ -22,7 +22,7 @@ export default function AdminLoginSuccess() {
   async function seDeconnecter() {
     setDeconnexionEnCours(true);
     await authService.deconnecter();
-    navigate('/admin/login', { replace: true });
+    navigate('/authentification', { replace: true });
   }
 
   return (

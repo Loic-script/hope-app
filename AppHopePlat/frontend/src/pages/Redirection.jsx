@@ -15,7 +15,7 @@ export default function Redirection() {
       <h1 className="redirection__titre">Espace de redirection</h1>
 
       <nav className="redirection__choix" aria-label="Choix de l’espace">
-        <Link className="redirection__lien" to="/admin/login">
+        <Link className="redirection__lien" to="/authentification?type=aucun">
           Admin
         </Link>
         <Link

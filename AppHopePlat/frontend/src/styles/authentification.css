@@ -219,6 +219,10 @@
   color: var(--hope-lien);
 }
 
+.liste-type__icone--aucun {
+  color: var(--hope-texte-doux);
+}
+
 .liste-type--ouverte .liste-type__icone {
   transform: scale(1.1);
 }
@@ -299,6 +303,11 @@
 .liste-type__option--bailleur .liste-type__pastille {
   background-color: rgba(134, 185, 222, 0.24);
   color: var(--hope-lien);
+}
+
+.liste-type__option--aucun .liste-type__pastille {
+  background-color: #eef0f5;
+  color: var(--hope-texte-doux);
 }
 
 .liste-type__nom {

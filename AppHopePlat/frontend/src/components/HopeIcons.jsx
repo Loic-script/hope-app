@@ -192,6 +192,16 @@ export function IconeTelephone({ className = '' }) {
   );
 }
 
+/** Un cercle barre d'un tiret : "aucun". */
+export function IconeNeutre({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8.5 12h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Une enveloppe : le courriel. */
 export function IconeEnveloppe({ className = '' }) {
   return (
