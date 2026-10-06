@@ -9,8 +9,11 @@ import { LIEN_CONNEXION, LIEN_DON } from './liens.js';
  * deux portes.
  *
  *   - la partie principale est un lien dont le mot change toutes les
- *     cinq secondes, en glissant : "Faire un don", puis "Connexion",
- *     puis de nouveau le don, sans fin. Il mene la ou son mot le dit ;
+ *     cinq secondes : "Faire un don", puis "Connexion", puis de nouveau
+ *     le don, sans fin. Les lettres du mot qui part basculent et
+ *     s'envolent une a une, celles du mot qui arrive se redressent en
+ *     cascade, et un eclat traverse le bouton. Il mene la ou son mot le
+ *     dit ;
  *   - la fleche ouvre un petit menu qui nomme les deux portes en clair,
  *     pour qui ne veut pas attendre le bon mot.
  *
@@ -30,8 +33,25 @@ const OPTIONS = [
 
 /** Le temps qu'un mot reste affiche avant de laisser la place a l'autre. */
 const CADENCE = 5000;
-/** La duree du glissement (vitrine.css, acces-entre / acces-sort). */
-const GLISSEMENT = 480;
+/** Le temps que le mot sortant finisse de s'envoler, lettre apres lettre (vitrine.css). */
+const GLISSEMENT = 700;
+
+/**
+ * Un mot lettre par lettre, chacune avec son rang (--i) pour la cascade.
+ * Les lettres sont cachees aux lecteurs d'ecran : le mot entier leur est
+ * donne a part.
+ */
+function Lettres({ mot }) {
+  return (
+    <span className="vitrine-acces__lettres" aria-hidden="true">
+      {[...mot].map((lettre, i) => (
+        <span key={`${i}-${lettre}`} className="vitrine-acces__lettre" style={{ '--i': i }}>
+          {lettre === ' ' ? ' ' : lettre}
+        </span>
+      ))}
+    </span>
+  );
+}
 
 function mouvementReduit() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -106,16 +126,19 @@ export default function BoutonAcces() {
         <span className="vitrine-acces__gabarit" aria-hidden="true">
           Faire un don
         </span>
+        <span className="sr-only">{courant.libelle}</span>
         <span className="vitrine-acces__mots">
           {sortant !== null && (
-            <span key={`sortant-${sortant}`} className="vitrine-acces__mot vitrine-acces__mot--sortant" aria-hidden="true">
-              {OPTIONS[sortant].libelle}
+            <span key={`sortant-${sortant}`} className="vitrine-acces__mot vitrine-acces__mot--sortant">
+              <Lettres mot={OPTIONS[sortant].libelle} />
             </span>
           )}
-          <span key={`courant-${courant.cle}`} className="vitrine-acces__mot vitrine-acces__mot--courant">
-            {courant.libelle}
+          <span key={`courant-${courant.cle}`} className="vitrine-acces__mot vitrine-acces__mot--courant" data-mot={courant.libelle}>
+            <Lettres mot={courant.libelle} />
           </span>
         </span>
+        {/* L'eclat qui traverse le bouton a chaque changement de mot. */}
+        {sortant !== null && <span key={`eclat-${sortant}`} className="vitrine-acces__eclat" aria-hidden="true" />}
       </Link>
 
       <button
