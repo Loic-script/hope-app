@@ -2,18 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import couverture from '../../assets/vitrine/akany-soavina.jpg';
-import {
-  IconeCoeur,
-  IconeEnveloppe,
-  IconeFleche,
-  IconeImmeuble,
-  IconeInfo,
-  IconeMegaphone,
-  IconePoigneeMain,
-  IconeTelephone,
-  IconeUtilisateur,
-} from '../../components/HopeIcons.jsx';
-import MadagascarSilhouette from '../../components/MadagascarSilhouette.jsx';
+import { IconeEnveloppe, IconeFleche, IconeRepere, IconeTelephone, IconeUtilisateur } from '../../components/HopeIcons.jsx';
 import { Champ } from '../../components/parcours/champs.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
@@ -23,7 +12,7 @@ import { useApparition } from '../../hooks/useApparition.js';
  *
  * Le bandeau sur la photo, puis deux colonnes : a gauche, comment nous
  * joindre et pourquoi nous ecrire ; a droite, le formulaire -- nom,
- * courriel, telephone s'il veut, le sujet en pastilles, le message --
+ * courriel, telephone s'il veut, le sujet en pastilles de texte, le message --
  * dans l'habit des champs du parcours (components/parcours/champs.jsx).
  * Envoye, la carte laisse place au merci, avec la coche qui se trace.
  *
@@ -31,14 +20,6 @@ import { useApparition } from '../../hooks/useApparition.js';
  * l'equipe et accuse reception au visiteur. Un champ piege, invisible,
  * arrete les robots.
  */
-
-const ICONES_SUJETS = {
-  don: IconeCoeur,
-  benevolat: IconePoigneeMain,
-  partenariat: IconeImmeuble,
-  presse: IconeMegaphone,
-  autre: IconeInfo,
-};
 
 /** Les sujets, tels que le serveur les connait ; en attendant sa reponse. */
 const SUJETS_PAR_DEFAUT = [
@@ -269,7 +250,6 @@ function Formulaire({ sujets }) {
         <legend className="parcours__libelle">Sujet</legend>
         <div className="contact-sujets__liste" role="radiogroup" aria-label="Sujet du message">
           {sujets.map((sujet, rang) => {
-            const Icone = ICONES_SUJETS[sujet.cle] ?? IconeInfo;
             const actif = champs.sujet === sujet.cle;
             return (
               <label
@@ -286,7 +266,6 @@ function Formulaire({ sujets }) {
                   disabled={envoi}
                   className="contact-sujet__radio"
                 />
-                <Icone className="contact-sujet__icone" />
                 {sujet.libelle}
               </label>
             );
@@ -401,8 +380,8 @@ export default function Contact() {
             </div>
 
             <div className="contact-carte v-entree" style={{ '--rang': 1 }}>
-              <span className="contact-carte__icone contact-carte__icone--carte">
-                <MadagascarSilhouette />
+              <span className="contact-carte__icone contact-carte__icone--terrain">
+                <IconeRepere />
               </span>
               <h2 className="contact-carte__titre">Sur le terrain</h2>
               <p className="contact-carte__texte">
