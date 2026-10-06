@@ -53,20 +53,10 @@
   padding-bottom: 72px;
 }
 
-.contact-hero__sur-titre {
-  margin: 0;
-  color: var(--hope-jaune);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
-}
-
 .contact-hero__titre {
   display: flex;
   flex-direction: column;
-  margin: 10px 0 0;
+  margin: 0;
   font-family: var(--vitrine-titre);
   font-size: calc(var(--u) * 4.62);
   font-weight: 800;
@@ -693,7 +683,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .contact-hero__photo,
-  .contact-hero__sur-titre,
   .contact-hero__ligne,
   .contact-hero__trait::before,
   .contact-hero__trait::after,

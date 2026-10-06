@@ -62,7 +62,6 @@ function Couverture() {
       <img className="contact-hero__photo" src={couverture} alt="" fetchPriority="high" />
       <div className="contact-hero__voile" aria-hidden="true" />
       <div className="v-conteneur contact-hero__contenu">
-        <p className="contact-hero__sur-titre">Contact</p>
         <h1 className="contact-hero__titre" id="contact-hero-titre">
           <span className="contact-hero__ligne">Parlons</span>
           <span className="contact-hero__ligne">de ce qui compte.</span>
