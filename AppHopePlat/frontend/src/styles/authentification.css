@@ -148,6 +148,15 @@
   cursor: pointer;
 }
 
+/* Tant que rien n'est choisi, la liste a la couleur d'un texte indicatif. */
+.champ__selection[data-vide='true'] {
+  color: #a7abbd;
+}
+
+.champ__selection option {
+  color: var(--hope-texte);
+}
+
 .champ__erreur {
   margin-top: 5px;
   font-size: 12.5px;

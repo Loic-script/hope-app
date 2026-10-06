@@ -8,6 +8,7 @@ import photoHope from '../assets/hope-couverture.jpg';
 import {
   IconeCadenas,
   IconeFleche,
+  IconeGroupe,
   IconeOeil,
   IconeOeilBarre,
   IconeUtilisateur,
@@ -666,36 +667,17 @@ function Inscription({ types, navigate, onInscrit }) {
   );
 }
 
-/** Ce que chaque espace dit de lui : une icone et trois mots. */
-const PRESENTATION_TYPES = {
-  donateur: {
-    phrase: 'Je donne',
-    dessin: <path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" />,
-  },
-  benevole: {
-    phrase: 'Je m’engage',
-    dessin: (
-      <>
-        <path d="M7 11V7.5a1.5 1.5 0 013 0V11M10 10V6a1.5 1.5 0 013 0v4M13 10V7a1.5 1.5 0 013 0v5" />
-        <path d="M16 12v-1a1.5 1.5 0 013 0v3.5A6.5 6.5 0 0112.5 21 6 6 0 017 17.5L5 14a1.5 1.5 0 012.5-1.6L7 11" />
-      </>
-    ),
-  },
-  bailleur: {
-    phrase: 'Je finance',
-    dessin: <path d="M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z" />,
-  },
+/** Ce que chaque espace dit de lui, en trois mots, a cote de son nom. */
+const PHRASES_TYPES = {
+  donateur: 'Je donne',
+  benevole: 'Je m’engage',
+  bailleur: 'Je finance',
 };
 
 /**
- * Le type d'utilisateur : donateur, benevole ou bailleur.
- *
- * Trois tuiles plutot qu'une liste deroulante : trois choix se lisent
- * d'un regard et se prennent d'un geste. Ce sont des boutons radio --
- * les fleches du clavier passent de l'un a l'autre.
- *
- * Le <select> d'origine reste dans la page, cache et synchronise : le
- * formulaire et les outils qui le pilotent ne voient pas la difference.
+ * Le type d'utilisateur : une liste deroulante, dans la meme boite que
+ * les autres champs, avec son icone. Chaque choix dit son nom et, en
+ * trois mots, ce que l'on vient faire.
  *
  * Le meme champ sert aux deux sections. A l'inscription, il dit ce que
  * l'on vient faire ; a la connexion, dans quel espace on entre.
@@ -704,71 +686,40 @@ const PRESENTATION_TYPES = {
  *        champ sans texte (le message est alors dit sous le formulaire).
  */
 function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
-  // Un changement, d'ou qu'il vienne, passe par la meme porte que le select.
-  const choisir = (cle) => onChange({ target: { value: cle } });
-
   return (
-    <fieldset className={`champ champ-type${erreur ? ' champ-type--erreur' : ''}`} aria-describedby={`${id}-aide`}>
-      <legend className="champ__label">Type d’utilisateur</legend>
+    <div className="champ">
+      <label className="champ__label" htmlFor={id}>
+        Type d’utilisateur
+      </label>
+      <div className={`champ__boite${erreur ? ' champ__boite--erreur' : ''}`}>
+        <IconeGroupe className="champ__icone" />
+        <select
+          id={id}
+          name="typeUtilisateur"
+          className="champ__saisie champ__selection"
+          value={valeur}
+          onChange={onChange}
+          disabled={disabled}
+          aria-describedby={`${id}-aide`}
+          aria-invalid={erreur ? true : undefined}
+          data-vide={valeur === ''}
+        >
+          <option value="">{invite}</option>
+          {types.map((type) => {
+            const phrase = PHRASES_TYPES[type.cle];
+            return (
+              <option key={type.cle} value={type.cle}>
+                {phrase ? `${type.libelle} — ${phrase}` : type.libelle}
+              </option>
+            );
+          })}
+        </select>
+      </div>
       <p className="sr-only" id={`${id}-aide`}>
         {invite}
       </p>
-
-      <div className="champ-type__tuiles" role="radiogroup" aria-label="Type d’utilisateur">
-        {types.map((type, i) => {
-          const presentation = PRESENTATION_TYPES[type.cle] ?? { phrase: '', dessin: null };
-          const actif = valeur === type.cle;
-          return (
-            <label
-              key={type.cle}
-              className={`champ-type__tuile champ-type__tuile--${type.cle}${actif ? ' champ-type__tuile--active' : ''}`}
-              style={{ '--rang': i }}
-            >
-              <input
-                type="radio"
-                name={`${id}-choix`}
-                value={type.cle}
-                checked={actif}
-                onChange={() => choisir(type.cle)}
-                disabled={disabled}
-                className="champ-type__radio"
-              />
-              <span className="champ-type__coche" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M6 12.5l4 4 8-9" />
-                </svg>
-              </span>
-              <svg className="champ-type__icone" viewBox="0 0 24 24" aria-hidden="true">
-                {presentation.dessin}
-              </svg>
-              <span className="champ-type__nom">{type.libelle}</span>
-              {presentation.phrase && <span className="champ-type__phrase">{presentation.phrase}</span>}
-            </label>
-          );
-        })}
-      </div>
-
-      {/* Le select d'origine, cache et synchronise. */}
-      <select
-        id={id}
-        name="typeUtilisateur"
-        className="sr-only"
-        value={valeur}
-        onChange={onChange}
-        disabled={disabled}
-        tabIndex={-1}
-        aria-hidden="true"
-      >
-        <option value="">{invite}</option>
-        {types.map((type) => (
-          <option key={type.cle} value={type.cle}>
-            {type.libelle}
-          </option>
-        ))}
-      </select>
-
       {typeof erreur === 'string' && erreur && <p className="champ__erreur">{erreur}</p>}
-    </fieldset>
+    </div>
   );
 }
 
