@@ -4,19 +4,6 @@ import FeuilleRapport from './FeuilleRapport.jsx';
 import { messageErreur } from '../services/api.js';
 import * as service from '../services/bailleur.service.js';
 
-/**
- * Le rapport, lu dans l'espace du partenaire.
- *
- * Pourquoi ne pas montrer le PDF : le fichier devait alors circuler,
- * et un gestionnaire de telechargement installe sur le poste du
- * partenaire (Internet Download Manager et ses semblables) se saisit de
- * toute adresse finissant par .pdf avant que le navigateur ne l'affiche.
- * La fenetre restait vide et un enregistrement demarrait -- exactement
- * le contraire d'un apercu.
- *
- * Le texte arrive donc en JSON, et FeuilleRapport le met en page comme
- * le document imprime.
- */
 export default function ApercuRapport({ documentId }) {
   const [rapport, setRapport] = useState(null);
   const [refus, setRefus] = useState('');

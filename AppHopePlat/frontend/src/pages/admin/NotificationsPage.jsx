@@ -40,10 +40,8 @@ const FILTRES = [
   { valeur: 'CONTACT', label: 'Messages du site' },
 ];
 
-/** Les types qui appellent une reponse de l'equipe. */
 const DEMANDES = ['ACCOUNT_CREATED', 'TASK_REQUEST', 'TASK_DELIVERED', 'FUNDER_INTEREST', 'FIELD_PROOF', 'CONTACT'];
 
-/** Icone et teinte de la pastille selon la nature de l'evenement. */
 const APPARENCE = {
   DONATION: { Icone: IconeDons, classe: 'don' },
   INVESTMENT: { Icone: IconeBudgets, classe: 'investi' },
@@ -54,24 +52,9 @@ const APPARENCE = {
   TASK_DELIVERED: { Icone: IconeValide, classe: 'livraison' },
   FUNDER_INTEREST: { Icone: IconeOrganisation, classe: 'partenaire' },
   FIELD_PROOF: { Icone: IconePreuves, classe: 'preuve' },
-  // Un message du formulaire de contact du site : la phrase dit tout,
-  // l'equipe repond par courriel.
   CONTACT: { Icone: IconeMessages, classe: 'message' },
 };
 
-/**
- * Ou mene une notification.
- *
- * On vise l'endroit ou l'on peut AGIR, pas seulement la page qui parle du
- * sujet : un investissement ouvre l'onglet Financement du projet, un projet
- * termine son onglet Impact, un message sa conversation.
- *
- * Un don affecte mene a son projet ; un don pour le fonds n'en a pas, il
- * mene alors au journal des dons.
- *
- * @returns {string|null} null si l'evenement n'a plus de cible -- la
- *          notification reste alors affichee, simplement non cliquable.
- */
 function destination(notification) {
   const { type, projectId } = notification;
 
@@ -82,21 +65,15 @@ function destination(notification) {
     return `/admin/projects/${projectId}?onglet=impact`;
   }
   if (type === 'MESSAGE') {
-    // Le courrier des donateurs a rejoint la messagerie commune : il
-    // n'y a plus qu'un seul endroit ou lire ce qu'on nous ecrit.
     return '/admin/conversations';
   }
   if (type === 'DONATION') {
     return projectId ? `/admin/projects/${projectId}?onglet=financement` : '/admin/dons';
   }
-  // Un compte qui vient de s'ouvrir mene a son profil, dans l'onglet de
-  // son role : c'est la qu'on le valide ou qu'on lui ecrit.
   if (type === 'ACCOUNT_CREATED' && notification.utilisateurId) {
     const onglet = ONGLET_DU_ROLE[notification.compteRole] ?? 'donateurs';
     return `/admin/utilisateurs/compte/${notification.utilisateurId}?depuis=${onglet}`;
   }
-  // Une demande de tache s'ouvre sur l'ecran des taches, filtre sur
-  // celles qui attendent une decision ; une livraison, sur la tache.
   if (type === 'TASK_REQUEST') {
     return notification.tacheId
       ? `/admin/taches?demandes=1&tache=${notification.tacheId}`
@@ -105,20 +82,11 @@ function destination(notification) {
   if (type === 'TASK_DELIVERED') {
     return notification.tacheId ? `/admin/taches?tache=${notification.tacheId}` : '/admin/taches';
   }
-  // Un partenaire interesse : l'ecran ou l'equipe suit les
-  // manifestations, sous l'appel qui les a suscitees.
   if (type === 'FUNDER_INTEREST') return '/admin/actualites';
   if (type === 'FIELD_PROOF') return '/admin/proofs';
   return null;
 }
 
-/**
- * Ecran Notifications : le journal de ce qui arrive a HOPE.
- *
- * Un don reçu y apparait sous la forme demandee :
- *   « <donateur> a fait un don <ponctuel|mensuel> de <somme> pour
- *     <HOPE|projet> ».
- */
 export default function NotificationsPage() {
   const { rafraichirCompteurs, api, racineConversations, cheminMessages } = useOutletContext();
   const [filtre, setFiltre] = useState('TOUTES');
@@ -145,12 +113,6 @@ export default function NotificationsPage() {
     });
   }
 
-  /**
-   * Ouvrir une notification vaut lecture : on la marque avant de partir.
-   *
-   * Sans recharger la liste -- on la quitte -- mais en rafraichissant la
-   * pastille de l'en-tete, qui reste visible sur la page d'arrivee.
-   */
   function ouvrir(notification) {
     if (notification.isRead) return;
     notificationService
@@ -224,8 +186,6 @@ export default function NotificationsPage() {
               const apparence = APPARENCE[notification.type] ?? APPARENCE.DONATION;
               const Icone = apparence.Icone;
               const cible = destination(notification);
-              // Quelqu'un attend une reponse tant qu'elle n'est pas lue :
-              // la ligne le dit, plutot que de se fondre dans le journal.
               const aTraiter = !notification.isRead && DEMANDES.includes(notification.type);
 
               return (
@@ -248,9 +208,6 @@ export default function NotificationsPage() {
                     {aTraiter && <span className="notif__attente">À traiter</span>}
                     <p className="notif__texte">
                       {cible ? (
-                        // Le lien s'etire sur toute la ligne via son ::after,
-                        // ce qui rend la notification entiere cliquable sans
-                        // imbriquer le bouton "marquer comme lu" dedans.
                         <Link className="notif__lien" to={cible} onClick={() => ouvrir(notification)}>
                           {notification.label}
                         </Link>

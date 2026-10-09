@@ -1,18 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-/**
- * Le nombre affiche monte de 0 a sa valeur, une seule fois, a l'arrivee
- * des donnees -- en ralentissant, comme un compteur qui se pose.
- *
- * null tant que la valeur n'est pas connue : l'ecran montre un tiret.
- * Rien ne bouge si l'appareil demande de reduire les animations.
- *
- * Partage par la carte des chiffres du benevole et par l'espace donateur.
- *
- * @param {number|null} valeur
- * @param {number} delai  en millisecondes, avant de commencer a compter
- * @param {number} duree  en millisecondes
- */
 export function useDecompte(valeur, delai = 0, duree = 900) {
   const [affiche, setAffiche] = useState(null);
   const depart = useRef(0);

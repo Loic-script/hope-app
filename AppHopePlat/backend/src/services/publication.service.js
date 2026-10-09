@@ -1,23 +1,3 @@
-/**
- * Les actualites des espaces bailleur et benevole, cote administration.
- *
- * Deux natures de publication :
- *
- *   * l'actualite, qui informe. Les bailleurs et les benevoles la lisent ;
- *   * l'appel a financement, qui cherche un partenaire pour un projet.
- *     Les bailleurs seuls le lisent : un benevole ne voit aucun montant.
- *     Sa barre ne se saisit pas : elle se lit sur le projet lie -- son
- *     budget, et la somme deja investie. Un appel a donc toujours un
- *     projet, et ce projet est en cours quand on l'y rattache.
- *
- * La photo suit le projet. Sans photo propre, la publication montre
- * celle du projet lie, lue a l'affichage ; on peut la remplacer par une
- * photo televersee, et revenir ensuite a celle du projet.
- *
- * Chaque nouvelle publication previent les bailleurs dans leur cloche.
- * Une modification ou une suppression, non : on ne sonne pas pour une
- * faute corrigee.
- */
 import { transaction } from '../config/database.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 import * as espaceRepository from '../repositories/espace.repository.js';
@@ -38,17 +18,14 @@ export const STATUTS_INTERET = ['nouvelle', 'contactee', 'convertie', 'classee']
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Une photo televersee par HOPE, et rien d'autre : pas d'adresse externe. */
 const PHOTO_TELEVERSEE = /^\/media\/[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
-/** Un identifiant de publication ou d'interet : 404 s'il est mal forme. */
 function uuidRequis(valeur, quoi) {
   const texte = String(valeur ?? '');
   if (!UUID.test(texte)) throw new ErreurIntrouvable(quoi, valeur);
   return texte;
 }
 
-/** Une publication telle que l'ecran la lit : le financement en clair. */
 function presenter(publication) {
   const appel = publication.type === 'appel_financement';
   const budget = depuisBase(publication.budgetProjet);
@@ -64,12 +41,6 @@ function presenter(publication) {
   };
 }
 
-/**
- * Lit et verifie le formulaire.
- *
- * @param {object} corps
- * @param {object|null} existant la publication modifiee, null a la creation
- */
 async function valider(corps, existant = null) {
   const type = String(corps.type ?? '').trim();
   if (!Object.keys(TYPES).includes(type)) {
@@ -102,9 +73,6 @@ async function valider(corps, existant = null) {
         { projetId: 'Projet obligatoire pour un appel' }
       );
     }
-    // Lancer un appel pour un projet clos n'aurait pas de sens. On ne le
-    // verifie qu'au moment du rattachement : un appel deja publie dont
-    // le projet s'est termine depuis doit rester corrigeable.
     const nouveauRattachement =
       !existant || existant.type !== type || existant.projetId !== donnees.projetId;
     if (nouveauRattachement && projet.status !== 'IN_PROGRESS') {
@@ -121,27 +89,19 @@ async function valider(corps, existant = null) {
         mediaUrl: 'Adresse non acceptée',
       });
     }
-    // La photo du projet renvoyee telle quelle n'est pas une photo propre :
-    // on garde le lien vivant avec le projet.
     donnees.mediaUrl = projet && photo === projet.mediaUrl ? null : photo;
   }
 
   return donnees;
 }
 
-/** Efface une photo qui n'est plus rattachee a rien. */
 async function effacerPhoto(adresse) {
   if (!adresse) return;
   if (await publicationRepository.mediaEncoreUtilise(adresse)) return;
   await mediaService.supprimer(adresse);
 }
 
-/* ================================================================
-   Operations
-   ================================================================ */
-
 export async function lister() {
-  // J'aime et commentaires des accueils, a cote de chaque publication.
   const chiffres = await reactions.chiffresParPublication();
   const items = (await publicationRepository.lister())
     .map(presenter)
@@ -156,15 +116,10 @@ export async function lister() {
   };
 }
 
-/**
- * Le fil de l'espace benevole : les actualites seules, sans aucun
- * chiffre. Les appels a financement restent aux bailleurs.
- */
 export async function filBenevole() {
   return { items: await publicationRepository.listerPourBenevole() };
 }
 
-/** Publie, et previent les bailleurs. */
 export async function creer(corps = {}, admin = null) {
   const donnees = await valider(corps);
   const appel = donnees.type === 'appel_financement';
@@ -180,13 +135,11 @@ export async function creer(corps = {}, admin = null) {
         type: 'actualite',
         titre: appel ? 'Nouvel appel à financement' : 'Nouvelle actualité',
         corps: donnees.titre,
-        // Les actualites sont la page d'entree de l'espace bailleur.
         lien: '/bailleur',
       },
       client
     );
 
-    // entity_id est un entier, l'identifiant un UUID : il vit dans le libelle.
     await activityLogRepository.deposer(
       admin,
       {
@@ -221,8 +174,6 @@ export async function modifier(id, corps = {}, admin = null) {
     );
   });
 
-  // Apres validation seulement : un echec aurait laisse la publication
-  // pointer vers un fichier efface.
   if (existant.mediaUrl && existant.mediaUrl !== donnees.mediaUrl) {
     await effacerPhoto(existant.mediaUrl);
   }
@@ -252,12 +203,6 @@ export async function supprimer(id, admin = null) {
   return { id: identifiant, interets: existant.interets };
 }
 
-/**
- * La photo d'une publication, televersee.
- *
- * Une photo seulement : la carte du bailleur l'affiche en image, et une
- * video y resterait noire.
- */
 export async function televerserPhoto(fichier) {
   const media = mediaService.enregistrer(fichier);
   if (media.type !== 'PHOTO') {
@@ -269,7 +214,6 @@ export async function televerserPhoto(fichier) {
   return media;
 }
 
-/** Le suivi d'un interet : contacte, converti en partenariat, classe. */
 export async function changerStatutInteret(id, corps = {}) {
   const identifiant = uuidRequis(id, 'L’intérêt');
   const statut = String(corps.statut ?? '').trim();

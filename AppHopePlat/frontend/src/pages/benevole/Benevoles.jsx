@@ -7,15 +7,6 @@ import { urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import { nomDuPays } from '../../utils/pays.js';
 
-/**
- * Les benevoles : l'annuaire des autres membres de HOPE.
- *
- * On y cherche quelqu'un par son nom, son metier, une competence ou une
- * langue ; on ouvre son profil, ou on lui ecrit directement. Aucune
- * coordonnee n'y figure : on se joint par la messagerie de HOPE.
- */
-
-/** Sans accents ni majuscules : "Genie" trouve "Génie". */
 function normaliser(texte) {
   return String(texte ?? '')
     .normalize('NFD')
@@ -27,7 +18,6 @@ function initiales(personne) {
   return `${personne.prenom?.[0] ?? ''}${personne.nom?.[0] ?? ''}`.toUpperCase() || '?';
 }
 
-/** La photo, ou les initiales sur la couleur de la charte. */
 export function Avatar({ personne, taille = 'moyen' }) {
   const photo = urlMedia(personne.photoUrl);
   return (

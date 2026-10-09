@@ -7,21 +7,6 @@ import { Champ } from '../../components/parcours/champs.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 
-/**
- * "Contact" : ecrire a HOPE sans compte.
- *
- * Le bandeau sur la photo, puis deux colonnes : a gauche, comment nous
- * joindre et pourquoi nous ecrire ; a droite, le formulaire -- nom,
- * courriel, telephone s'il veut, le sujet en pastilles de texte, le message --
- * dans l'habit des champs du parcours (components/parcours/champs.jsx).
- * Envoye, la carte laisse place au merci, avec la coche qui se trace.
- *
- * Le serveur (POST /api/public/contact) garde le message, previent
- * l'equipe et accuse reception au visiteur. Un champ piege, invisible,
- * arrete les robots.
- */
-
-/** Les sujets, tels que le serveur les connait ; en attendant sa reponse. */
 const SUJETS_PAR_DEFAUT = [
   { cle: 'don', libelle: 'Faire un don' },
   { cle: 'benevolat', libelle: 'Devenir bénévole' },
@@ -36,10 +21,8 @@ const TELEPHONE = /^\+?[\d\s.()-]{6,20}$/;
 
 const VIDE = { nom: '', courriel: '', telephone: '', sujet: '', message: '', siteWeb: '' };
 
-/** Ordre des champs : c'est aussi l'ordre du focus en erreur. */
 const ORDRE = ['nom', 'courriel', 'telephone', 'sujet', 'message'];
 
-/** Les erreurs du formulaire, champ par champ. */
 function verifier(champs) {
   const erreurs = {};
   if (champs.nom.trim().length < 2) erreurs.nom = 'Indiquez votre nom.';
@@ -53,8 +36,6 @@ function verifier(champs) {
   else if (champs.message.length > MESSAGE_MAX) erreurs.message = `Au plus ${MESSAGE_MAX} caractères.`;
   return erreurs;
 }
-
-/* ------------------------------- Le bandeau ------------------------------- */
 
 function Couverture() {
   return (
@@ -75,8 +56,6 @@ function Couverture() {
     </section>
   );
 }
-
-/* ------------------------------- Le merci ------------------------------- */
 
 function Merci({ prenom, courriel, onRecommencer }) {
   return (
@@ -100,8 +79,6 @@ function Merci({ prenom, courriel, onRecommencer }) {
     </div>
   );
 }
-
-/* ------------------------------ Le formulaire ------------------------------ */
 
 function Formulaire({ sujets }) {
   const [champs, setChamps] = useState(VIDE);
@@ -244,7 +221,6 @@ function Formulaire({ sujets }) {
         />
       </Champ>
 
-      {/* Le sujet : des pastilles, un vrai groupe de boutons radio. */}
       <fieldset className={`contact-sujets${erreurDe('sujet') ? ' contact-sujets--erreur' : ''}`}>
         <legend className="parcours__libelle">Sujet</legend>
         <div className="contact-sujets__liste" role="radiogroup" aria-label="Sujet du message">
@@ -294,7 +270,6 @@ function Formulaire({ sujets }) {
         </Champ>
       </div>
 
-      {/* Le piege a robots : hors de l'ecran, hors du clavier, hors des lecteurs d'ecran. */}
       <div className="contact-formulaire__piege" aria-hidden="true">
         <label htmlFor="contact-site-web">Site web</label>
         <input
@@ -334,13 +309,9 @@ function Formulaire({ sujets }) {
   );
 }
 
-/* ------------------------------- Le courriel ------------------------------- */
-
-/** L'adresse de l'equipe, et de quoi la copier d'un geste. */
 function Courriel({ adresse }) {
   const [copie, setCopie] = useState(false);
 
-  // "Copie !" s'efface de lui-meme.
   useEffect(() => {
     if (!copie) return undefined;
     const minuterie = setTimeout(() => setCopie(false), 1800);
@@ -352,7 +323,6 @@ function Courriel({ adresse }) {
       await navigator.clipboard.writeText(adresse);
       setCopie(true);
     } catch {
-      // Sans presse-papiers : le lien reste la, a copier a la main.
     }
   }
 
@@ -372,14 +342,11 @@ function Courriel({ adresse }) {
   );
 }
 
-/* --------------------------------- La page --------------------------------- */
-
 export default function Contact() {
   const [ref, vu] = useApparition({ seuil: 0.05 });
   const [courrielEquipe, setCourrielEquipe] = useState(null);
   const [sujets, setSujets] = useState(SUJETS_PAR_DEFAUT);
 
-  // L'adresse de l'equipe, et les sujets tels que le serveur les connait.
   useEffect(() => {
     const controle = new AbortController();
     fetch('/api/public/contact', { signal: controle.signal })

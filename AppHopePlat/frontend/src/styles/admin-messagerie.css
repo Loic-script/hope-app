@@ -1,16 +1,8 @@
-/* ============================================================
-   HOPE - Messagerie
-
-   Deux volets : la liste des conversations a gauche, l'echange
-   selectionne a droite avec sa zone de reponse en bas.
-   ============================================================ */
-
 .messagerie {
   display: grid;
   grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
   gap: 18px;
   align-items: stretch;
-  /* Les deux volets occupent la hauteur restante sous le bandeau. */
   height: calc(100vh - var(--admin-entete-hauteur) - 190px);
   min-height: 460px;
 }
@@ -25,10 +17,6 @@
   background-color: var(--admin-surface);
   box-shadow: var(--admin-ombre);
 }
-
-/* ============================================================
-   1. Volet gauche : les conversations
-   ============================================================ */
 
 .conversations__entete {
   display: flex;
@@ -68,12 +56,6 @@
   height: 19px;
 }
 
-/*
- * La recherche, sous l'en-tete du volet.
- *
- * Elle existait deja sur l'ecran des donateurs, ecrite dans sa page ;
- * la messagerie commune la reprend, et les deux la partagent desormais.
- */
 .conversations__outils {
   position: relative;
   display: flex;
@@ -112,7 +94,6 @@
   box-shadow: 0 0 0 3px rgba(93, 86, 150, 0.16);
 }
 
-/* La photo remplit la pastille ; sans elle, ce sont les initiales. */
 .conversation__avatar img {
   width: 100%;
   height: 100%;
@@ -183,8 +164,6 @@
   min-width: 0;
 }
 
-/* Sans min-width a 0, un enfant flex refuse de passer sous sa taille de
-   contenu : l'ellipse ne se declencherait jamais. */
 .conversation__ligne > .conversation__nom,
 .conversation__ligne > .conversation__courriel {
   min-width: 0;
@@ -245,10 +224,6 @@
   color: #ffffff;
 }
 
-/* ============================================================
-   2. Volet droit : l'echange
-   ============================================================ */
-
 .echange__entete {
   display: flex;
   align-items: center;
@@ -299,23 +274,10 @@
   color: var(--admin-texte-faible);
 }
 
-/*
- * Le retour a la boite de messages.
- *
- * Invisible sur grand ecran : la liste y est deja a gauche, et un
- * bouton de retour n'aurait nulle part ou mener. Il n'apparait qu'au
- * moment ou le fil prend l'ecran a lui seul.
- */
 .echange__retour {
   display: none;
 }
 
-/* --- Bulles --- */
-
-/* La photo de l'auteur et sa bulle tiennent sur une meme ligne : c'est
-   le rang qui porte l'alignement, la bulle ne fait que se dimensionner.
-   Aligne en bas, comme dans une messagerie : la photo accompagne la fin
-   de la salve, pas son debut. */
 .bulle-rang {
   display: flex;
   align-items: flex-end;
@@ -328,10 +290,6 @@
   max-width: 88%;
 }
 
-/* La ligne est poussee a droite, mais elle mesure jusqu'a 76 % de la
-   largeur : sans justify-content, une bulle courte se posait a SON bord
-   gauche, donc au milieu de l'echange. C'est la bulle qu'on veut a
-   droite, pas seulement la ligne qui la porte. */
 .bulle-rang--envoyee {
   margin-left: auto;
   justify-content: flex-end;
@@ -345,8 +303,6 @@
   width: 30px;
   height: 30px;
   flex: none;
-  /* La bulle porte 5px de meta sous elle : sans ce recul, la photo
-     flotterait sous le texte qu'elle accompagne. */
   margin-bottom: 22px;
   overflow: hidden;
   border-radius: 50%;
@@ -362,7 +318,6 @@
   object-fit: cover;
 }
 
-/* Le creux garde la place de la photo dans une salve, sans la repeter. */
 .bulle__avatar--creux {
   background: none;
 }
@@ -372,8 +327,6 @@
   min-width: 0;
 }
 
-/* Hors d'un rang -- l'ancienne messagerie des fils HOPE -- la bulle
-   garde son propre alignement. */
 .echange__fil > .bulle {
   max-width: 76%;
   margin-bottom: 16px;
@@ -425,8 +378,6 @@
   text-align: right;
 }
 
-/* --- Zone de reponse --- */
-
 .reponse {
   display: flex;
   align-items: flex-end;
@@ -473,24 +424,9 @@
   color: var(--admin-texte-faible);
 }
 
-/* ============================================================
-   3. Adaptation aux petits ecrans
-   ============================================================ */
-
 @media (max-width: 1024px) {
-  /*
-   * Un volet a la fois.
-   *
-   * Les deux empiles, la boite et le fil se disputaient le meme ecran :
-   * il fallait defiler longuement pour atteindre le champ de saisie, et
-   * la liste restait au-dessus sans servir. La conversation ayant son
-   * adresse, elle peut prendre la page entiere -- et le retour se fait
-   * par le chevron de l'entete, ou par le bouton du navigateur.
-   */
   .messagerie {
     grid-template-columns: minmax(0, 1fr);
-    /* Toute la hauteur utile : le champ de saisie se pose en bas du
-       fil, la ou le pouce l'attend, et non apres un long defilement. */
     height: calc(100vh - var(--admin-entete-hauteur) - 150px);
     min-height: 420px;
   }
@@ -511,8 +447,6 @@
     flex: none;
     width: 32px;
     height: 32px;
-    /* Un recul a gauche pour que la cible tienne les 44 px
-       recommandes sans decaler la pastille qui la suit. */
     margin-left: -6px;
     border-radius: 50%;
     color: var(--admin-texte-doux);
@@ -529,22 +463,10 @@
   }
 }
 
-/*
- * Sur telephone, la messagerie occupe toute la hauteur utile : celle de
- * la fenetre, moins le bandeau, le retrait bas du contenu (40 px) et le
- * titre de page avec ses marges (60 px). Le grand titre disparait quand
- * un fil est ouvert (regle ci-dessous).
- *
- * dvh plutot que vh : sur un telephone, la barre d'adresse se replie
- * en defilant, et 100vh vaut la hauteur barre depliee -- le bas de la
- * conversation tombait alors hors de l'ecran.
- */
 @media (max-width: 560px) {
   .messagerie {
     height: calc(100vh - var(--admin-entete-hauteur) - 40px - 60px);
     height: calc(100dvh - var(--admin-entete-hauteur) - 40px - 60px);
-    /* Pas de plancher : sur un ecran court, mieux vaut un fil ramasse
-       qu'un bouton Envoyer hors de l'ecran. */
     min-height: 0;
   }
 

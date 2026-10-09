@@ -20,24 +20,12 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Les trois vues de la liste. */
 const FILTRES = [
   { valeur: 'tous', label: 'Tous' },
   { valeur: 'ACTIVE', label: 'Actifs' },
   { valeur: 'INACTIVE', label: 'Inactifs' },
 ];
 
-/**
- * Ecran Beneficiaires : qui a ete aide.
- *
- * Le pendant des donateurs -- l'autre bout de l'argent. Jusqu'ici, un
- * beneficiaire ne se voyait que depuis la fiche du projet auquel il est
- * rattache : impossible de savoir combien de personnes HOPE suit en
- * tout, ni de retrouver quelqu'un sans se souvenir de son projet.
- *
- * Ces donnees sont personnelles et restent internes a l'espace
- * administrateur : aucune route publique ne les sert.
- */
 export default function BeneficiariesPage() {
   const navigate = useNavigate();
   const [parametres, setParametres] = useSearchParams();
@@ -45,9 +33,6 @@ export default function BeneficiariesPage() {
   const [filtre, setFiltre] = useState('tous');
   const [modale, setModale] = useState({ ouverte: false, cible: null });
 
-  // Ouverture directe depuis l'action rapide de l'accueil. Le parametre
-  // est efface aussitot : un rafraichissement ne doit pas rouvrir le
-  // formulaire, et un retour arriere non plus.
   useEffect(() => {
     if (parametres.get('nouveau') === '1') {
       setModale({ ouverte: true, cible: null });
@@ -60,18 +45,11 @@ export default function BeneficiariesPage() {
     []
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
-  // Les projets proposes pour rattacher une nouvelle fiche.
   const { donnees: listeProjets } = useChargement(() => projectService.lister({ pageSize: 200 }), []);
 
   const libelles = catalogue?.labels ?? {};
   const tous = useMemo(() => donnees?.items ?? [], [donnees]);
 
-  /*
-   * Recherche et filtre s'appliquent ici plutot que cote serveur : la
-   * liste tient en memoire -- une association suit des centaines de
-   * personnes, pas des centaines de milliers -- et filtrer sans
-   * aller-retour rend la frappe immediate.
-   */
   const affiches = useMemo(() => {
     const terme = recherche.trim().toLowerCase();
     return tous.filter((personne) => {
@@ -124,10 +102,6 @@ export default function BeneficiariesPage() {
           <p className="carte-chiffre__libelle">Rattachés à un projet</p>
           <p className="carte-chiffre__valeur">{fmt.nombre(chiffres.rattaches)}</p>
         </div>
-        {/*
-          Le chiffre qui appelle une action : une personne enregistree que
-          rien ne rattache a un projet ne recevra rien.
-        */}
         <div className="carte-chiffre">
           <p className="carte-chiffre__libelle">Sans projet</p>
           <p className="carte-chiffre__valeur">{fmt.nombre(chiffres.sansProjet)}</p>
@@ -149,13 +123,11 @@ export default function BeneficiariesPage() {
           chargement={chargement && !donnees}
           lignes={affiches}
           cleLigne={(personne) => personne.id}
-          // Une ligne ouvre le profil de la personne.
           onLigne={(personne) => navigate(`/admin/beneficiaries/${personne.id}`)}
           colonnes={[
             {
               cle: 'fullName',
               titre: 'Bénéficiaire',
-              // Le visage d'abord : il dit qui c'est avant le nom.
               rendu: (personne) => (
                 <span className="cellule-visage">
                   <Visage src={personne.photoUrl} nom={personne.fullName} />
@@ -177,8 +149,6 @@ export default function BeneficiariesPage() {
               cle: 'age',
               titre: 'Âge',
               aligne: 'droite',
-              // Une famille n'a pas d'age, et une date de naissance
-              // inconnue est frequente sur le terrain.
               rendu: (personne) => (personne.age === null ? '—' : `${personne.age} ans`),
             },
             {
@@ -265,10 +235,6 @@ export default function BeneficiariesPage() {
         />
       </Panneau>
 
-      {/*
-        Le rattachement a un projet ne se fait pas ici mais depuis la
-        fiche du projet, ou l'on sait ce qu'on rattache et pourquoi.
-      */}
       <p className="mention-page">
         Pour rattacher un bénéficiaire à un projet, ouvrez la fiche du projet, onglet{' '}
         <Link to="/admin/projects">Bénéficiaires</Link>.

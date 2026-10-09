@@ -1,11 +1,3 @@
-/**
- * Routes de l'espace benevole, montees sous /api/benevole.
- *
- * Deux routes publiques -- s'inscrire, se connecter -- et deux protegees.
- * Les publiques sont limitees en frequence : sans cela, l'inscription
- * servirait a creer des comptes en masse, et la connexion a essayer des
- * mots de passe l'un apres l'autre.
- */
 import { Router } from 'express';
 
 import * as volunteerAuthController from '../controllers/volunteerAuth.controller.js';

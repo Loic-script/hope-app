@@ -1,14 +1,3 @@
-/**
- * Middleware de protection de l'espace donateur.
- *
- * L'espace lui-meme n'est pas encore construit : il n'y a qu'une page
- * de bienvenue. Le verrou existe deja pour qu'elle ne soit pas ouverte
- * a tous, et pour que l'espace s'y greffe sans le refaire.
- *
- * Comme ailleurs, le compte est RECHARGE depuis PostgreSQL a chaque
- * appel : un jeton vaut deux heures, un compte suspendu ne doit pas en
- * profiter jusqu'au bout.
- */
 import jwt from 'jsonwebtoken';
 
 import { config } from '../config/env.js';
@@ -19,7 +8,6 @@ import { versUtilisateurPublic } from '../services/auth.service.js';
 import { exigerSessionFraicheUtilisateur } from '../services/session.service.js';
 import { lireJeton } from '../shared/session.js';
 
-/** Verifie un JWT de l'espace donateur. */
 export function verifierJeton(token) {
   try {
     return jwt.verify(token, config.jwt.secret, {
@@ -47,8 +35,6 @@ export async function authenticateDonor(req, _res, next) {
       );
     }
 
-    // L'audience "hope-donateur" est verifiee ici : un jeton des autres
-    // espaces est rejete, meme s'il est parfaitement valide.
     const charge = verifierJeton(jeton);
 
     const compte = await volunteerRepository.trouverParId(charge.utilisateurId);

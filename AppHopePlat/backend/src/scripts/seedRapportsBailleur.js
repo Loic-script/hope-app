@@ -1,18 +1,3 @@
-/**
- * Rapports de demonstration de l'espace bailleur, rejoues seuls.
- *
- *   npm run db:seed-rapports
- *
- * Remplace les documents des deux bailleurs de demonstration -- la
- * Fondation Avenir et Telma -- par le jeu complet de documentsBailleurDemo :
- * rapports d'impact, justificatifs, conventions et un certificat, chacun
- * avec son PDF.
- *
- * Pourquoi un script a part : "db:seed-funders -- --force" recree aussi
- * les comptes, et remet donc actifs des bailleurs qu'on aurait suspendus
- * pour un essai. Celui-ci ne touche qu'a document_bailleur, et seulement
- * pour ces deux organisations. Les autres bailleurs gardent leurs pieces.
- */
 import fs from 'node:fs/promises';
 
 import { fermerPool, pool, query } from '../config/database.js';
@@ -21,7 +6,6 @@ import { fichiersDesDocuments, installerDocumentsDemo } from './documentsBailleu
 const FONDATION = 'Fondation Avenir Océan Indien';
 const TELMA = 'Telma Entreprise Citoyenne';
 
-/** Un identifiant ou rien : le script s'arrete plutot que de deviner. */
 async function exiger(sql, valeurs, description) {
   const resultat = await query(sql, valeurs);
   if (resultat.rowCount === 0) {
@@ -72,8 +56,6 @@ async function executer() {
   const anciens = await fichiersDesDocuments(query, [fondationId, telmaId]);
   const ecrits = [];
 
-  // Les lignes changent d'un bloc : un echec en cours de route laisse les
-  // anciens documents en place, et efface les fichiers deja ecrits.
   const client = await pool.connect();
   let nombre = 0;
   try {
@@ -95,7 +77,6 @@ async function executer() {
     client.release();
   }
 
-  // Les anciens fichiers seulement une fois les nouvelles lignes en place.
   await Promise.all(anciens.map((chemin) => fs.rm(chemin, { force: true })));
 
   const resume = await query(

@@ -1,15 +1,3 @@
-/* ============================================================
-   Parcours d'accueil du donateur
-
-   Une colonne centree sur un fond bleu tres pale, les rayons du soleil
-   HOPE en filigrane dans les coins. Le modele de reference est la page
-   "Faisons connaissance" (etape 1).
-
-   Mouvement : une seule entree par etape -- l'en-tete, puis le
-   formulaire -- et des transitions courtes sur les champs. Rien ne bouge
-   pour qui a demande a son systeme de reduire les animations.
-   ============================================================ */
-
 .parcours {
   --parcours-encre: #2a2839;
   --parcours-bordure: #dde3ee;
@@ -31,7 +19,6 @@
   font-family: var(--police-titre);
 }
 
-/* Les rayons du soleil, en filigrane : ils ne captent ni clic ni regard. */
 .parcours__rayons {
   position: absolute;
   bottom: -28px;
@@ -66,8 +53,6 @@
   margin: 0 auto;
 }
 
-/* ---------------- En-tete d'etape ---------------- */
-
 .parcours__entete {
   margin-top: 26px;
   text-align: center;
@@ -80,12 +65,9 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  /* Le bleu de la charte est trop pale pour un texte de cette taille :
-     sa version lisible garde la teinte et atteint le contraste. */
   color: var(--hope-lien);
 }
 
-/* La progression : cinq traits, l'etape courante plus longue. */
 .parcours__progression {
   display: flex;
   justify-content: center;
@@ -128,8 +110,6 @@
   line-height: 1.55;
   color: var(--hope-texte-doux);
 }
-
-/* ---------------- Formulaire ---------------- */
 
 .parcours__formulaire {
   display: flex;
@@ -190,11 +170,6 @@
   background-color: #eef2f8;
 }
 
-/*
- * La boite : icone a gauche, saisie au milieu, chevron a droite pour
- * une liste. La bordure et l'icone changent de couleur au focus : on voit
- * ou l'on ecrit sans avoir a chercher le curseur.
- */
 .parcours__boite {
   position: relative;
   display: flex;
@@ -241,8 +216,6 @@
   font: inherit;
   font-size: 15.5px;
   color: var(--parcours-encre);
-  /* La boite porte l'anneau de focus : la saisie n'en dessine pas un
-     second a l'interieur. */
   outline: none;
 }
 
@@ -261,13 +234,10 @@ select.parcours__saisie {
   cursor: pointer;
 }
 
-/* Sur telephone, le champ d'une longue liste est un bouton qui ouvre sa
-   page de choix : il garde l'allure de la liste qu'il remplace. */
 button.parcours__saisie {
   padding-right: 46px;
 }
 
-/* Tant que rien n'est choisi, la liste parle comme un placeholder. */
 select.parcours__saisie[data-vide='true'],
 button.parcours__saisie[data-vide='true'] {
   color: var(--parcours-placeholder);
@@ -291,11 +261,6 @@ select.parcours__saisie option {
   transform: translateY(1px);
 }
 
-/*
- * L'indicatif : une liste de tous les pays, repliee sur "+261". La liste
- * native, transparente, couvre l'affichage ; au survol et au focus, le
- * fond change pour dire que la case se choisit.
- */
 .parcours__prefixe {
   position: relative;
   flex: none;
@@ -346,7 +311,6 @@ select.parcours__saisie option {
   height: 100%;
   border: none;
   opacity: 0;
-  /* 16 px : en dessous, iOS agrandit la page a l'ouverture. */
   font-size: 16px;
   cursor: pointer;
 }
@@ -358,8 +322,6 @@ select.parcours__saisie option {
 .parcours__boite--prefixe .parcours__saisie {
   padding-left: 16px;
 }
-
-/* ---------------- Erreurs ---------------- */
 
 .parcours__champ--erreur .parcours__boite {
   border-color: var(--hope-erreur);
@@ -398,13 +360,6 @@ select.parcours__saisie option {
   margin: 0;
 }
 
-/* ---------------- Bouton ---------------- */
-
-/*
- * L'orange de la charte, assombri d'un cran : le blanc sur l'orange clair
- * ne se lit qu'a 2,4 pour 1. En orange fonce et en texte de 18 px gras,
- * il atteint le seuil de lecture des grands textes.
- */
 .parcours__continuer {
   display: inline-flex;
   align-items: center;
@@ -468,9 +423,6 @@ select.parcours__saisie option {
   animation: parcours-rotation 0.8s linear infinite;
 }
 
-/* Le don sans compte (pages/don/DonSansCompte.jsx) : la croix qui
-   ramene au site, en haut a droite de la colonne, et la note qui invite
-   a creer un compte sous le formulaire. */
 .parcours__quitter {
   position: absolute;
   top: 18px;
@@ -526,8 +478,6 @@ select.parcours__saisie option {
   color: var(--hope-erreur);
 }
 
-/* ---------------- Mouvement ---------------- */
-
 @keyframes parcours-entree {
   from {
     opacity: 0;
@@ -577,8 +527,6 @@ select.parcours__saisie option {
   }
 }
 
-/* ---------------- Telephone ---------------- */
-
 @media (max-width: 640px) {
   .parcours {
     padding: 26px 16px 56px;
@@ -601,13 +549,11 @@ select.parcours__saisie option {
     font-size: 20px;
   }
 
-  /* Deux champs cote a cote seraient trop etroits pour y ecrire. */
   .parcours__paire {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 
-  /* 16 px au moins : en dessous, iOS agrandit la page au focus. */
   .parcours__saisie {
     font-size: 16px;
   }
@@ -618,12 +564,6 @@ select.parcours__saisie option {
   }
 }
 
-
-/* ============================================================
-   Etape 2 : profil et preferences
-   ============================================================ */
-
-/* Le groupe de cartes : un fieldset sans son cadre natif. */
 .parcours__groupe {
   display: flex;
   flex-direction: column;
@@ -645,11 +585,6 @@ select.parcours__saisie option {
   gap: 14px;
 }
 
-/*
- * Une carte : icone et nom, centres. La carte retenue prend le violet de
- * la charte et une coche -- la couleur seule ne suffirait pas a la
- * distinguer pour qui la percoit mal.
- */
 .parcours__type {
   position: relative;
   display: flex;
@@ -681,14 +616,12 @@ select.parcours__saisie option {
   box-shadow: inset 0 0 0 1px var(--hope-violet);
 }
 
-/* Le focus clavier : l'anneau de la charte autour de la carte. */
 .parcours__type:has(.parcours__type-radio:focus-visible) {
   box-shadow:
     inset 0 0 0 1px var(--hope-violet),
     0 0 0 4px var(--parcours-anneau);
 }
 
-/* Le vrai bouton radio couvre la carte : c'est lui que l'on touche. */
 .parcours__type-radio {
   position: absolute;
   inset: 0;
@@ -748,7 +681,6 @@ select.parcours__saisie option {
   transform: scale(1);
 }
 
-/* Une aide sous un champ ou un groupe. */
 .parcours__aide {
   margin: 0;
   min-height: 1.5em;
@@ -757,7 +689,6 @@ select.parcours__saisie option {
   color: var(--hope-texte-doux);
 }
 
-/* Les champs d'une structure apparaissent en glissant, sans a-coup. */
 .parcours__revele {
   display: flex;
   flex-direction: column;
@@ -776,7 +707,6 @@ select.parcours__saisie option {
   }
 }
 
-/* Retour et Continuer, cote a cote : le pas en arriere, plus discret. */
 .parcours__boutons {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
@@ -869,13 +799,6 @@ select.parcours__saisie option {
   }
 }
 
-
-/* ============================================================
-   Etape 3 : l'affectation du don
-   ============================================================ */
-
-/* ---------------- Les deux facons de donner ---------------- */
-
 .parcours__modes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -928,7 +851,6 @@ select.parcours__saisie option {
   color: var(--hope-violet);
 }
 
-/* La carte retenue salue le choix d'un petit battement, une fois. */
 .parcours__mode--choisi .parcours__mode-illustration {
   animation: parcours-battement 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -951,7 +873,6 @@ select.parcours__saisie option {
   color: var(--hope-texte-doux);
 }
 
-/* Le rond d'un bouton radio, dessine : plein quand il est choisi. */
 .parcours__rond {
   position: absolute;
   top: 14px;
@@ -973,8 +894,6 @@ select.parcours__saisie option {
   background-color: var(--hope-violet);
   box-shadow: inset 0 0 0 4px #ffffff;
 }
-
-/* ---------------- Les projets ---------------- */
 
 .parcours__projets {
   display: flex;
@@ -1016,7 +935,6 @@ select.parcours__saisie option {
   right: 16px;
 }
 
-/* Un projet finance : lisible, mais il ne se choisit plus. */
 .parcours__projet--atteint {
   background-color: #fbfcfe;
   cursor: default;
@@ -1108,10 +1026,6 @@ select.parcours__saisie option {
   color: var(--hope-texte-doux);
 }
 
-/*
- * La jauge se remplit a l'arrivee. C'est une echelle qui s'anime, et non
- * une largeur : le navigateur n'a pas a recalculer la mise en page.
- */
 .parcours__jauge {
   position: relative;
   height: 8px;
@@ -1178,7 +1092,6 @@ select.parcours__saisie option {
   margin-bottom: 4px;
 }
 
-/* Des cartes grises en attendant les vraies : la page ne saute pas. */
 .parcours__projet--squelette {
   cursor: default;
 }
@@ -1205,10 +1118,6 @@ select.parcours__saisie option {
   margin-top: 14px;
 }
 
-/* ---------------- Le don non affecte ---------------- */
-
-/* En ligne : le soleil a gauche du texte. La classe d'apparition, posee
-   aussi sur l'encart, le mettrait sinon en colonne. */
 .parcours__fonds {
   display: flex;
   flex-direction: row;
@@ -1260,8 +1169,6 @@ select.parcours__saisie option {
   color: var(--parcours-encre);
 }
 
-/* ---------------- Mouvement ---------------- */
-
 @keyframes parcours-battement {
   0% {
     transform: scale(1);
@@ -1312,10 +1219,7 @@ select.parcours__saisie option {
   }
 }
 
-/* ---------------- Telephone ---------------- */
-
 @media (max-width: 640px) {
-  /* Deux grandes cartes cote a cote seraient illisibles a cette largeur. */
   .parcours__modes {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -1352,16 +1256,6 @@ select.parcours__saisie option {
   }
 }
 
-
-/* ============================================================
-   Etape 4 : le mode de paiement
-   ============================================================ */
-
-/*
- * Une colonne plus large pour huit cartes : dans 700 px, quatre cartes
- * de front n'auraient que 160 px, et les noms s'y casseraient. L'en-tete
- * et les boutons gardent la largeur des autres etapes.
- */
 .parcours__colonne--large {
   max-width: 1000px;
 }
@@ -1374,8 +1268,6 @@ select.parcours__saisie option {
   margin-inline: auto;
 }
 
-/* Le titre de section sert de legende au groupe de cartes. Il garde la
-   marge ou se pose son trait bleu, que la regle des legendes retirait. */
 .parcours__groupe > .parcours__section--legende {
   width: 100%;
   margin-bottom: 18px;
@@ -1435,10 +1327,6 @@ select.parcours__saisie option {
   box-shadow: inset 0 0 0 4px #ffffff;
 }
 
-/*
- * Tous les visuels dans la meme boite : logos et illustrations n'ont pas
- * les memes proportions, mais les noms dessous tombent a la meme hauteur.
- */
 .parcours__paiement-visuel {
   display: grid;
   place-items: center;
@@ -1538,12 +1426,6 @@ select.parcours__saisie option {
   }
 }
 
-
-/* ============================================================
-   Etape 5 : la frequence du don
-   ============================================================ */
-
-/* La seconde ligne d'une carte : plus discrete, sous la premiere. */
 .parcours__mode-detail {
   display: block;
   margin-top: 10px;
@@ -1551,10 +1433,6 @@ select.parcours__saisie option {
   color: #8a87a0;
 }
 
-/*
- * L'encart qui dit ce que le choix engage. Bleu pale, comme une note : il
- * informe, il ne met pas en garde.
- */
 .parcours__info {
   display: flex;
   align-items: center;

@@ -1,15 +1,3 @@
-/**
- * Service d'authentification de l'espace benevole.
- *
- * Meme chaine que pour l'administrateur -- verification des champs,
- * recherche en base, comparaison bcrypt, JWT -- avec une etape de plus :
- * un compte fraichement inscrit ne peut pas encore entrer. Il attend
- * qu'un administrateur l'active.
- *
- * L'audience du jeton est "hope-benevole" et non "hope-admin" : un jeton
- * de benevole est donc rejete par les routes de l'espace administrateur,
- * et reciproquement, meme si le secret de signature est le meme.
- */
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -19,28 +7,14 @@ import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
 import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
 import * as verificationCourriel from './verificationCourriel.service.js';
 
-/** Audience des jetons de cet espace. */
 const AUDIENCE = 'hope-benevole';
 
-/**
- * Hash factice compare lorsque le courriel est inconnu.
- *
- * Sans lui, une adresse inexistante repondrait bien plus vite qu'une
- * adresse connue au mauvais mot de passe : l'ecart suffirait a deviner
- * quels comptes existent. On paie donc toujours le meme calcul.
- */
 const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', 10);
 
-/** Longueur minimale du mot de passe a l'inscription. */
 const LONGUEUR_MOT_DE_PASSE = 8;
 
-/** Forme acceptee pour un courriel. Volontairement large. */
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/**
- * Retire le hash et calcule l'age avant toute sortie vers le client.
- * mot_de_passe ne doit jamais quitter le backend.
- */
 function versBenevolePublic(compte) {
   return {
     id: compte.id,
@@ -53,8 +27,6 @@ function versBenevolePublic(compte) {
     dateDeNaissance: compte.dateDeNaissance,
     age: calculerAge(compte.dateDeNaissance),
     statut: compte.statut,
-    // L'espace en a besoin pour router vers le formulaire de
-    // completion tant qu'il n'est pas rempli.
     profilComplete: Boolean(compte.profilComplete),
     roles: compte.roles ?? [],
     creeLe: compte.creeLe,
@@ -62,12 +34,6 @@ function versBenevolePublic(compte) {
   };
 }
 
-/**
- * Age en annees revolues, ou null si la date de naissance est inconnue.
- *
- * Il est calcule a chaque lecture plutot que stocke : une colonne "age"
- * serait fausse des le lendemain de l'anniversaire.
- */
 export function calculerAge(dateDeNaissance) {
   if (!dateDeNaissance) return null;
 
@@ -77,7 +43,6 @@ export function calculerAge(dateDeNaissance) {
   const aujourdhui = new Date();
   let age = aujourdhui.getFullYear() - naissance.getFullYear();
 
-  // L'anniversaire de cette annee est-il deja passe ?
   const mois = aujourdhui.getMonth() - naissance.getMonth();
   if (mois < 0 || (mois === 0 && aujourdhui.getDate() < naissance.getDate())) {
     age -= 1;
@@ -85,7 +50,6 @@ export function calculerAge(dateDeNaissance) {
   return age >= 0 ? age : null;
 }
 
-/** Construit le JWT porte par l'espace benevole. */
 function signerJeton(compte) {
   return jwt.sign(
     { utilisateurId: compte.id, email: compte.email },
@@ -99,21 +63,8 @@ function signerJeton(compte) {
   );
 }
 
-/** La portee d'un jeton qui ne sert qu'a remplir sa fiche. */
 export const PORTEE_COMPLETION = 'completion';
 
-/**
- * Le jeton remis a l'inscription d'un benevole.
- *
- * Son compte attend la validation de HOPE : il n'ouvre donc aucun ecran
- * de l'espace. Mais l'equipe a besoin de sa fiche -- competences,
- * disponibilites, pays -- justement pour decider. Ce jeton n'autorise
- * que cela : la marque "portee" le distingue, le verrou de l'espace le
- * refuse, et seule la route de completion l'accepte.
- *
- * Il vit deux heures : le temps de remplir un formulaire, pas celui
- * d'oublier un onglet ouvert.
- */
 export function signerJetonCompletion(compte) {
   return jwt.sign(
     { utilisateurId: compte.id, email: compte.email, portee: PORTEE_COMPLETION },
@@ -127,15 +78,6 @@ export function signerJetonCompletion(compte) {
   );
 }
 
-/**
- * Inscription d'un benevole.
- *
- * Le compte est cree en statut "en_attente" : il existe, mais il ne
- * donne acces a rien tant qu'un administrateur ne l'a pas active.
- *
- * @param {{ nom, prenom, email, motDePasse, confirmation }} corps
- * @returns {Promise<object>} le compte cree, sans son hash
- */
 export async function inscrire(corps = {}) {
   const nom = typeof corps.nom === 'string' ? corps.nom.trim() : '';
   const prenom = typeof corps.prenom === 'string' ? corps.prenom.trim() : '';
@@ -178,12 +120,6 @@ export async function inscrire(corps = {}) {
   return versBenevolePublic(compte);
 }
 
-/**
- * Connexion d'un benevole.
- *
- * @throws {ErreurAuthentification} identifiants refuses, ou compte pas
- *         encore active / suspendu
- */
 export async function connecter({ email, motDePasse } = {}) {
   const adresse = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const secret = typeof motDePasse === 'string' ? motDePasse : '';
@@ -197,7 +133,6 @@ export async function connecter({ email, motDePasse } = {}) {
 
   const compte = await volunteerRepository.trouverParEmailAvecHash(adresse);
 
-  // Meme cout de calcul, et meme message, que le compte existe ou non.
   const hash = compte ? compte.motDePasse : HASH_FACTICE;
   const valide = await bcrypt.compare(secret, hash);
 
@@ -205,8 +140,6 @@ export async function connecter({ email, motDePasse } = {}) {
     throw new ErreurAuthentification('Identifiants incorrects');
   }
 
-  // Le controle du statut vient APRES la verification du mot de passe :
-  // le faire avant revelerait, par le seul message, qu'un compte existe.
   if (compte.statut === 'en_attente') {
     throw new ErreurAuthentification(
       'Votre compte attend la validation d’un administrateur. Vous recevrez l’accès dès qu’il sera activé.',
@@ -239,7 +172,6 @@ export async function connecter({ email, motDePasse } = {}) {
   };
 }
 
-/** Verifie un JWT de l'espace benevole. */
 export function verifierJeton(token) {
   try {
     return jwt.verify(token, config.jwt.secret, {
@@ -257,12 +189,6 @@ export function verifierJeton(token) {
   }
 }
 
-/**
- * Recharge le compte depuis la base a partir du jeton.
- *
- * On ne se fie pas au seul contenu du JWT : le compte a pu etre suspendu
- * depuis son emission, et le jeton reste valable deux heures.
- */
 export async function recupererBenevoleAuthentifie(utilisateurId) {
   const compte = await volunteerRepository.trouverParId(utilisateurId);
 
@@ -275,15 +201,6 @@ export async function recupererBenevoleAuthentifie(utilisateurId) {
   return versBenevolePublic(compte);
 }
 
-/**
- * Le compte qui remplit sa fiche, juste apres l'inscription.
- *
- * Il attend encore la validation de HOPE : le controle de statut est
- * donc plus large qu'ailleurs -- "en attente" passe, "suspendu" non. La
- * fiche une fois remplie, le jeton ne sert plus a rien : un compte deja
- * complet est refuse, pour qu'un jeton oublie ne puisse pas la
- * reecrire.
- */
 export async function recupererBenevoleACompleter(utilisateurId) {
   const compte = await volunteerRepository.trouverParId(utilisateurId);
 

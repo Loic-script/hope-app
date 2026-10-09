@@ -8,21 +8,10 @@ import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
 import { SansImage } from './SectionsAccueil.jsx';
 
-/**
- * "Nos projets" : les projets de HOPE, lus dans la plateforme
- * (GET /api/public/projets), en cartes sur le fond de soleils.
- *
- * Le site ne recoit que ce que la plateforme veut bien montrer : le nom,
- * un extrait, le lieu, la categorie, l'etat et la photo -- ni budget,
- * ni responsable, ni beneficiaires (vitrine.service, cote serveur).
- */
-
 const ETATS = {
   COMPLETED: { classe: 'realise', libelle: 'Réalisé' },
   IN_PROGRESS: { classe: 'en-cours', libelle: 'En cours' },
 };
-
-/* ------------------------------- Le bandeau ------------------------------- */
 
 function Couverture() {
   return (
@@ -30,21 +19,17 @@ function Couverture() {
       <img className="realisations-hero__photo" src={couverture} alt="" fetchPriority="high" />
       <div className="realisations-hero__voile" aria-hidden="true" />
       <div className="realisations-hero__contenu">
-        {/* Le bloc prend la largeur du titre : le filet s'y aligne. */}
         <div className="realisations-hero__bloc">
           <h1 className="realisations-hero__titre" id="realisations-hero-titre">
             <span className="realisations-hero__ligne">Découvrez tous</span>
             <span className="realisations-hero__ligne">nos projets</span>
           </h1>
-          {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
           <div className="realisations-hero__trait" aria-hidden="true" />
         </div>
       </div>
     </section>
   );
 }
-
-/* -------------------------------- Les cartes -------------------------------- */
 
 function Carte({ projet, rang }) {
   const lien = `/nos-projets/${projet.id}`;
@@ -53,7 +38,6 @@ function Carte({ projet, rang }) {
     projet.description || projet.descriptionTitre || `Un projet de HOPE${projet.location ? ` à ${projet.location}` : ''}.`;
   return (
     <li className="v-realisation realisations-carte v-entree" style={{ '--rang': Math.min(rang, 5) }}>
-      {/* La photo mene aussi a la fiche, sans doubler le lien pour le clavier. */}
       <Link to={lien} className="v-realisation__image realisations-carte__image" tabIndex={-1} aria-hidden="true">
         {projet.photoUrl ? <img src={urlMedia(projet.photoUrl)} alt="" loading="lazy" /> : <SansImage />}
         {etat && <span className={`realisations-carte__etat realisations-carte__etat--${etat.classe}`}>{etat.libelle}</span>}
@@ -69,7 +53,6 @@ function Carte({ projet, rang }) {
   );
 }
 
-/** Six cartes vides qui respirent, le temps que la plateforme reponde. */
 function Squelettes() {
   return (
     <ul className="v-realisations__grille realisations__grille" aria-hidden="true">
@@ -85,14 +68,11 @@ function Squelettes() {
   );
 }
 
-/* --------------------------------- La page --------------------------------- */
-
 export default function NosRealisations() {
   const [ref, vu] = useApparition({ seuil: 0.05 });
   const [projets, setProjets] = useState(null);
   const [erreur, setErreur] = useState(false);
   const [recherche, setRecherche] = useState('');
-  // La liste se filtre au fil de la frappe sans jamais retenir le champ.
   const rechercheDifferee = useDeferredValue(recherche);
 
   const charger = useCallback(() => {
@@ -134,7 +114,6 @@ export default function NosRealisations() {
             <Recherche valeur={recherche} onChange={setRecherche} libelle="Rechercher un projet" />
           </div>
 
-          {/* Le nombre de resultats, dit aux lecteurs d'ecran a chaque recherche. */}
           <p className="sr-only" aria-live="polite">
             {projets && enRecherche
               ? visibles.length === 0

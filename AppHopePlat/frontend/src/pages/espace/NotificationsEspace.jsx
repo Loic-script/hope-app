@@ -12,16 +12,6 @@ import NotificationMessages from '../../components/messagerie/NotificationMessag
 import * as service from '../../services/espace.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Le fil de notifications, commun au benevole et au bailleur.
- *
- * L'ecran est le meme des deux cotes : ce qui change tient dans le
- * client axios, que la coque de l'espace fournit par le contexte. Une
- * page par espace aurait double le meme code, et la correction de l'un
- * aurait oublie l'autre.
- */
-
-/** Une icone par type d'evenement, dans la couleur qui lui va. */
 const ALLURE = {
   tache: { Icone: PleineTaches, teinte: 'bleu' },
   journal: { Icone: PleineJournal, teinte: 'violet' },
@@ -56,11 +46,6 @@ export default function NotificationsEspace() {
 
   const nonLues = items.filter((n) => !n.lu).length;
 
-  /*
-   * L'etat local est mis a jour sans recharger la liste : la ligne perd
-   * sa marque au clic, sans que la page ne tressaute. Le serveur reste
-   * la source de verite -- la pastille du menu, elle, est rechargee.
-   */
   async function lire(notification) {
     if (notification.lu) return;
     setItems((liste) =>

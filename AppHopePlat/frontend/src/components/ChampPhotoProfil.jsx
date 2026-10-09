@@ -4,19 +4,6 @@ import { messageErreur, urlMedia } from '../services/api.js';
 import { initiales } from '../utils/format.js';
 import { PhotoAgrandissable } from './VisionneuseImage.jsx';
 
-/**
- * Le champ de photo de profil, partage par les trois espaces.
- *
- * Il ne sait pas ou televerser : la fonction lui est donnee, et c'est
- * elle qui differe d'un espace a l'autre -- chacun a son client axios et
- * sa route. Le reste est identique, et l'ecrire trois fois aurait fait
- * diverger trois formulaires pour le meme geste.
- *
- * Choisir un fichier l'envoie aussitot et rend son adresse au
- * formulaire ; c'est l'enregistrement de celui-ci qui la rattache au
- * compte. Un televersement abandonne laisse donc un fichier orphelin,
- * comme cote projet : c'est le prix d'un apercu immediat.
- */
 export default function ChampPhotoProfil({
   valeur,
   nom,
@@ -41,7 +28,6 @@ export default function ChampPhotoProfil({
       setRefus(messageErreur(echec, 'Le téléversement a échoué.'));
     } finally {
       setEnvoi(false);
-      // Sans cela, rechoisir le meme fichier n'emettrait aucun evenement.
       evenement.target.value = '';
     }
   }

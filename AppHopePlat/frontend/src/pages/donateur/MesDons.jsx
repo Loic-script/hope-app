@@ -20,14 +20,6 @@ const FILTRES = [
   { cle: 'attente', label: 'En attente', garde: (d) => d.statut === 'PENDING' },
 ];
 
-/**
- * Mes dons : ce que le donateur a donne, et ou en est chacun.
- *
- * En tete, ses chiffres -- ils montent a l'arrivee. Seuls les dons recus
- * comptent dans le total ; une promesse attend que l'equipe confirme la
- * reception, et se lit a part. Puis chaque don, sur une frise, du plus
- * recent au plus ancien : pour quoi, combien, quand, et son etat.
- */
 export default function MesDons() {
   const { donateur } = useOutletContext();
   const { donnees, chargement, erreur } = useChargement(() => service.mesDons(), []);
@@ -62,7 +54,6 @@ export default function MesDons() {
 
       {erreur && <p className="don-refus">{erreur}</p>}
 
-      {/* ---------- Les chiffres ---------- */}
       <ul className="don-stats">
         <li className="don-stat don-stat--violet" style={{ '--rang': 0 }}>
           <span className="don-stat__icone" aria-hidden="true">
@@ -119,7 +110,6 @@ export default function MesDons() {
         </li>
       </ul>
 
-      {/* ---------- La frise ---------- */}
       <section className="don-carte don-frise-carte" aria-labelledby="don-frise-titre">
         <div className="don-carte__entete">
           <h2 className="don-carte__titre" id="don-frise-titre">

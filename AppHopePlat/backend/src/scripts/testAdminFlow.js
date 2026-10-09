@@ -1,21 +1,3 @@
-/**
- * Tests de bout en bout de l'espace administrateur (API seule).
- *
- *   npm run test:admin        (le serveur doit tourner : npm run dev)
- *
- * Rejoue le parcours reel de l'argent chez HOPE et verifie chaque garde-fou :
- *
- *   projet (budget necessaire)
- *     -> don affecte      -> finance directement le projet
- *     -> don non affecte  -> alimente le fonds HOPE
- *     -> investissement justifie du fonds vers un projet
- *     -> depense plafonnee par les fonds reellement recus
- *     -> justificatif, beneficiaire
- *     -> projet termine + resultat -> impact
- *
- * Toutes les donnees creees sont prefixees "[TEST]" et supprimees en fin de
- * parcours : le jeu de demonstration n'est pas pollue.
- */
 import { config } from '../config/env.js';
 import { fermerPool, query } from '../config/database.js';
 
@@ -35,7 +17,6 @@ function verifier(libelle, condition, detail = '') {
   }
 }
 
-/** Appel JSON authentifie. */
 async function appeler(methode, chemin, corps = null) {
   const reponse = await fetch(`${BASE}${chemin}`, {
     method: methode,
@@ -58,7 +39,6 @@ async function appeler(methode, chemin, corps = null) {
 async function executer() {
   console.log(`\n[HOPE] Tests de l'espace administrateur sur ${BASE}\n`);
 
-  // ---------------------------------------------------------------
   console.log('AUTHENTIFICATION');
   const sansJeton = await appeler('GET', '/admin/projects');
   verifier('GET /admin/projects sans jeton renvoie 401', sansJeton.statut === 401, `statut ${sansJeton.statut}`);
@@ -96,7 +76,6 @@ async function executer() {
     statuts.join(', ')
   );
 
-  // ---------------------------------------------------------------
   console.log('\nDONNEES DE REFERENCE');
   const catalogue = await appeler('GET', '/admin/catalog');
   verifier('GET /admin/catalog repond 200', catalogue.statut === 200);
@@ -118,7 +97,6 @@ async function executer() {
   );
   const categorieId = catalogue.corps?.categories?.[0]?.id;
 
-  // ---------------------------------------------------------------
   console.log('\nPROJET : creation avec budget necessaire');
   const creationProjet = await appeler('POST', '/admin/projects', {
     name: '[TEST] Soutien scolaire Antananarivo',
@@ -152,7 +130,6 @@ async function executer() {
   verifier('modification du projet (200)', modification.statut === 200);
   verifier('la localisation a bien change', modification.corps?.location === 'Antananarivo - Analakely');
 
-  // ---------------------------------------------------------------
   console.log('\nDONATEURS : ponctuel, regulier, international');
   const donateurLocal = await appeler('POST', '/admin/donors', {
     firstName: '[TEST]',
@@ -200,7 +177,6 @@ async function executer() {
   });
   verifier('refus d un mot de passe trop court (400)', motDePasseCourt.statut === 400, `statut ${motDePasseCourt.statut}`);
 
-  // ---------------------------------------------------------------
   console.log('\nDONS : affecte et non affecte');
   const donAffecte = await appeler('POST', '/admin/donations', {
     donorId: donateurLocal.corps.id,
@@ -237,9 +213,6 @@ async function executer() {
     moyenInterdit.corps?.code
   );
 
-  // Volontairement large : le fonds doit rester superieur au besoin restant
-  // du projet, sinon c'est la regle du fonds qui se declencherait la premiere
-  // et le test ne verifierait plus la regle du besoin.
   const donHope = await appeler('POST', '/admin/donations', {
     donorId: donateurEtranger.corps.id,
     amount: '6000000',
@@ -250,7 +223,6 @@ async function executer() {
   verifier('don non affecte enregistre (201)', donHope.statut === 201, `statut ${donHope.statut}`);
   verifier('il ne pointe aucun projet', donHope.corps?.projectId === null);
 
-  // Le projet est desormais finance par le don affecte.
   const apresDon = await appeler('GET', `/admin/projects/${projet.id}`);
   verifier(
     'le don affecte finance directement le projet',
@@ -258,7 +230,6 @@ async function executer() {
     apresDon.corps?.fundedTotal
   );
 
-  // ---------------------------------------------------------------
   console.log('\nFONDS HOPE : etat et investissements');
   const fonds = await appeler('GET', '/admin/fund');
   verifier('GET /admin/fund repond 200', fonds.statut === 200);
@@ -322,7 +293,6 @@ async function executer() {
     apresInvestissement.corps?.remainingNeed
   );
 
-  // On ne finance pas au-dela du besoin du projet.
   const auDelaDuBesoin = await appeler('POST', '/admin/investments', {
     projectId: projet.id,
     amount: '2600000',
@@ -339,7 +309,6 @@ async function executer() {
     auDelaDuBesoin.corps?.code
   );
 
-  // ---------------------------------------------------------------
   console.log('\nDEPENSES : plafonnees par les fonds reellement recus');
   const depense = await appeler('POST', '/admin/expenses', {
     projectId: projet.id,
@@ -378,7 +347,6 @@ async function executer() {
   });
   verifier('refus d un montant negatif (400)', depenseNegative.statut === 400, `statut ${depenseNegative.statut}`);
 
-  // ---------------------------------------------------------------
   console.log('\nJUSTIFICATIF');
   const pdf = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n');
   const formulaire = new FormData();
@@ -419,7 +387,6 @@ async function executer() {
   });
   verifier('refus d un format interdit (400)', uploadInterdit.status === 400, `statut ${uploadInterdit.status}`);
 
-  // ---------------------------------------------------------------
   console.log('\nBENEFICIAIRES');
   const beneficiaire = await appeler('POST', '/admin/beneficiaries', {
     firstName: '[TEST]',
@@ -438,7 +405,6 @@ async function executer() {
   });
   verifier('refus d un rattachement en doublon (422)', doublon.statut === 422, `statut ${doublon.statut}`);
 
-  // ---------------------------------------------------------------
   console.log('\nNOTIFICATIONS');
   const notifications = await appeler('GET', '/admin/notifications');
   verifier('GET /admin/notifications repond 200', notifications.statut === 200);
@@ -464,7 +430,6 @@ async function executer() {
     typeof badges.corps?.notifications === 'number' && typeof badges.corps?.messages === 'number'
   );
 
-  // ---------------------------------------------------------------
   console.log('\nMESSAGES');
   const message = await appeler('POST', '/admin/messages', {
     donorAccountId: compte.corps.account.id,
@@ -495,7 +460,6 @@ async function executer() {
   });
   verifier('la reponse peut etre remplacee explicitement', reponseForcee.statut === 200);
 
-  // ---------------------------------------------------------------
   console.log('\nCLOTURE DU PROJET ET IMPACT');
   const clotureSansResultat = await appeler('PATCH', `/admin/projects/${projet.id}/complete`, {});
   verifier(
@@ -534,7 +498,6 @@ async function executer() {
     `statut ${donApresCloture.statut}`
   );
 
-  // L'impact se mesure APRES la cloture : c'est le cas normal.
   const impact = await appeler('POST', '/admin/impacts', {
     projectId: projet.id,
     title: '[TEST] Enfants scolarises',
@@ -550,7 +513,6 @@ async function executer() {
     (termines.corps?.items ?? []).some((element) => element.id === projet.id)
   );
 
-  // ---------------------------------------------------------------
   console.log('\nARCHIVAGE ET SUPPRESSION');
   const suppressionInterdite = await appeler('DELETE', `/admin/projects/${projet.id}`);
   verifier(
@@ -585,7 +547,6 @@ async function executer() {
     !(listeParDefaut.corps?.items ?? []).some((element) => element.id === projet.id)
   );
 
-  // ---------------------------------------------------------------
   console.log('\nVUE COMPLETE ET STATISTIQUES');
   const apercu = await appeler('GET', `/admin/projects/${projet.id}/overview`);
   verifier('GET /projects/:id/overview (200)', apercu.statut === 200);
@@ -607,22 +568,12 @@ async function executer() {
   verifier('repartition des donateurs presente', typeof statistiques.corps?.donors?.total === 'number');
   verifier('repartition par categorie presente', Array.isArray(statistiques.corps?.projects?.byCategory));
 
-  // ---------------------------------------------------------------
   await nettoyer();
 
   console.log(`\n[HOPE] Resultat : ${reussis} test(s) reussi(s), ${echoues} echec(s).\n`);
   process.exit(echoues === 0 ? 0 : 1);
 }
 
-/**
- * Efface les donnees creees par ce script et par le script de test
- * d'interface (prefixe [UI]).
- *
- * L'API n'expose volontairement aucune suppression de don ni de projet
- * portant des ecritures : le nettoyage passe donc par SQL, ce qui reste
- * acceptable pour un script de test. Le jeu de demonstration n'est pas
- * touche.
- */
 async function nettoyer() {
   try {
     const projetsTest =
@@ -640,8 +591,6 @@ async function nettoyer() {
     );
     await query(`DELETE FROM expenses WHERE project_id IN ${projetsTest}`);
     await query(`DELETE FROM investments WHERE project_id IN ${projetsTest}`);
-    // Les tests investissent aussi sur des projets de demonstration :
-    // ces ecritures se reconnaissent a leur justification prefixee.
     await query(
       "DELETE FROM notifications WHERE label LIKE '%[TEST]%' OR label LIKE '%[UI]%'"
     );

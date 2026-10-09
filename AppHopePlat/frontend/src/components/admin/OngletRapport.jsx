@@ -8,22 +8,6 @@ import { messageErreur } from '../../services/api.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * L'onglet Rapport de la fiche projet.
- *
- * Trois questions, dans l'ordre ou l'equipe se les pose :
- *
- *   1. que dit le projet aujourd'hui ? -- le rapport du jour, compose a
- *      partir des donnees deja saisies, et lu dans la page ;
- *   2. a qui l'envoyer ? -- les bailleurs dont un engagement est affecte
- *      au projet ;
- *   3. qu'a-t-on deja envoye, et est-ce lu ? -- chaque envoi, avec son
- *      compteur de lecture.
- *
- * L'onglet charge ses propres donnees, a l'ouverture seulement : la vue
- * du projet alimente les autres onglets d'un seul appel, et la plupart
- * des visites n'ouvriront jamais celui-ci.
- */
 export default function OngletRapport({ projet }) {
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => projectService.recupererRapport(projet.id),
@@ -36,7 +20,6 @@ export default function OngletRapport({ projet }) {
   const [refusPdf, setRefusPdf] = useState('');
   const [pdfEnCours, setPdfEnCours] = useState(false);
 
-  // Le rapport deja envoye que l'on relit, et son contenu.
   const [relu, setRelu] = useState(null);
   const [contenuRelu, setContenuRelu] = useState(null);
   const [refusRelu, setRefusRelu] = useState('');
@@ -94,8 +77,6 @@ export default function OngletRapport({ projet }) {
     { cle: 'bailleur', titre: 'Bailleur' },
     { cle: 'publieLe', titre: 'Envoyé le', rendu: (d) => fmt.date(d.publieLe) },
     {
-      // Le vrai signal pour l'equipe : un rapport envoye n'est pas un
-      // rapport lu.
       cle: 'lecture',
       titre: 'Lecture',
       rendu: (d) =>

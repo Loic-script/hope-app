@@ -4,13 +4,11 @@ import { IconeRecherche, IconeValide } from './AdminIcons.jsx';
 import { urlMedia } from '../../services/api.js';
 import { initiales } from '../../utils/format.js';
 
-/** Le nom d'un benevole, ou son adresse tant qu'il n'en a pas donne. */
 export function nomBenevole(benevole) {
   if (!benevole) return '';
   return `${benevole.prenom ?? ''} ${benevole.nom ?? ''}`.trim() || benevole.email;
 }
 
-/** Sans accents ni casse : "Hery Rasolofo" se trouve en tapant "hery". */
 function normaliser(texte) {
   return String(texte ?? '')
     .normalize('NFD')
@@ -18,21 +16,6 @@ function normaliser(texte) {
     .toLowerCase();
 }
 
-/**
- * Choisir des benevoles : une liste de visages, pas une liste de mots.
- *
- * Une liste deroulante ne montre que des noms, et l'equipe HOPE en
- * compte des dizaines. Ici, chaque ligne porte le visage, le nom et ce
- * que la personne sait faire -- c'est la-dessus qu'on decide a qui
- * confier une tache. La recherche filtre sur les trois.
- *
- * Ceux qui sont deja choisis remontent en tete, coches : on les voit
- * sans faire defiler, et un second clic les retire.
- *
- * @param {{ benevoles: object[], choisis: string[],
- *           onBasculer: (benevoleId: string) => void,
- *           disabled?: boolean, competencesDemandees?: string[] }} proprietes
- */
 export default function ChoixBenevoles({
   benevoles = [],
   choisis = [],
@@ -56,7 +39,6 @@ export default function ChoixBenevoles({
       (benevole.competences ?? []).some((c) => normaliser(c).includes(cherche));
 
     const trouves = benevoles.filter(correspond);
-    // Les choisis d'abord : on les garde sous les yeux.
     return [
       ...trouves.filter((b) => choisis.includes(b.benevoleId)),
       ...trouves.filter((b) => !choisis.includes(b.benevoleId)),

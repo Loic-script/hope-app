@@ -5,11 +5,6 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { api } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Le journal d'audit : toute modification faite par l'equipe, et les
- * evenements de securite des comptes. Reserve au role ADMIN (le serveur
- * refuse les autres). Il se lit ; personne ne l'ecrit ni ne l'efface.
- */
 const FILTRES = [
   { valeur: '', label: 'Tout' },
   { valeur: 'admin', label: 'Équipe' },
@@ -32,7 +27,6 @@ export default function AuditPage() {
   const [recherche, setRecherche] = useState('');
   const [page, setPage] = useState(1);
 
-  // La recherche part apres une courte pause dans la frappe.
   useEffect(() => {
     const minuterie = setTimeout(() => {
       setRecherche(saisie.trim());

@@ -26,41 +26,20 @@ import { focusAutomatique } from '../utils/ecran.js';
 import * as authService from '../services/auth.service.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 
-/** Message unique en cas d'echec : il ne revele jamais quel champ est faux. */
 const MESSAGE_ERREUR = 'Adresse ou mot de passe incorrect.';
 
-/** Longueur minimale, alignee sur le controle du backend. */
 const LONGUEUR_MOT_DE_PASSE = 8;
 
-/**
- * Les trois types, connus d'avance.
- *
- * Le serveur les renvoie aussi, et sa reponse prime ; mais la liste ne
- * doit jamais rester vide le temps qu'elle arrive -- ou si elle n'arrive
- * pas : sur un telephone, un reseau lent laissait un choix sans options.
- */
 const TYPES_PAR_DEFAUT = [
   { cle: 'donateur', libelle: 'Donateur', validationRequise: false },
   { cle: 'benevole', libelle: 'Bénévole', validationRequise: true },
   { cle: 'bailleur', libelle: 'Bailleur', validationRequise: true },
 ];
 
-/*
- * "Aucun" : le dernier choix de la connexion. Il ne dit pas son nom --
- * c'est la porte de l'administration : avec lui, le premier champ prend
- * l'identifiant administrateur et la connexion passe par
- * auth.service. L'inscription ne le propose pas.
- */
 const AUCUN = { cle: 'aucun', libelle: 'Aucun', validationRequise: false };
 
-/** Adresse du site public HOPE (pas encore developpe a cette etape). */
 const SITE_PUBLIC = import.meta.env.VITE_SITE_URL ?? '/';
 
-/**
- * Quatre champs, pas un de plus : le nom, le prenom et le telephone se
- * donnent ensuite, la ou ils servent -- a la completion du profil pour
- * un benevole, dans ses parametres pour un bailleur.
- */
 const FORMULAIRE_VIDE = {
   email: '',
   typeUtilisateur: '',
@@ -69,35 +48,14 @@ const FORMULAIRE_VIDE = {
   accepteConditions: false,
 };
 
-/**
- * Authentification des utilisateurs : donateur, benevole, bailleur.
- *
- * Une seule page pour les trois, et deux sections : se connecter ou
- * s'inscrire. Le type choisi a l'inscription decide si le compte s'ouvre
- * aussitot ou attend la validation de HOPE ; celui choisi a la connexion
- * designe l'espace ou l'on entre.
- *
- * L'administrateur n'est pas concerne : son compte n'est pas cree par
- * inscription, il garde sa propre page.
- */
 export default function Authentification() {
   const navigate = useNavigate();
-  // Arrivee apres la suppression de son compte : on le confirme.
   const compteSupprime = Boolean(useLocation().state?.compteSupprime);
   const { donnees: typesServeur } = useChargement(() => utilisateurService.typesUtilisateur(), []);
   const types = typesServeur?.length ? typesServeur : TYPES_PAR_DEFAUT;
 
   const [section, setSection] = useState('connexion');
 
-  /*
-   * Le trait bleu court jusqu'a la fin du titre -- le "n" de "demain".
-   *
-   * Aucune regle de style ne donne cette largeur : quand la premiere
-   * ligne du titre passe elle-meme a la ligne, le navigateur dimensionne
-   * le bloc comme si elle tenait sur une seule, et le trait debordait. On
-   * mesure donc la fin reelle de la plus longue ligne affichee, et on la
-   * remesure quand la largeur change ou quand la police arrive.
-   */
   const titre = useRef(null);
   const [largeurTitre, setLargeurTitre] = useState(null);
   useLayoutEffect(() => {
@@ -120,7 +78,6 @@ export default function Authentification() {
 
   return (
     <div className="connexion connexion--defile">
-      {/* ----- Panneau d'illustration ----- */}
       <section
         className="connexion__illustration connexion__illustration--utilisateur"
         style={{ '--photo-hope': `url(${photoHope})` }}
@@ -153,12 +110,10 @@ export default function Authentification() {
         </div>
       </section>
 
-      {/* ----- Panneau du formulaire ----- */}
       <section className="connexion__panneau">
         <div className="carte-connexion carte-connexion--utilisateur">
           <header className="carte-connexion__entete">
             <HopeLogo />
-            {/* La cle relance l'entree en scene a chaque bascule. */}
             <h2 className="carte-connexion__titre carte-connexion__titre--anime" key={`titre-${section}`}>
               {section === 'connexion' ? 'Se connecter' : 'Créer un compte'}
             </h2>
@@ -175,8 +130,6 @@ export default function Authentification() {
             </p>
           )}
 
-          {/* Deux sections, un seul jeu d'onglets : on voit d'un coup
-              d'oeil qu'il y a les deux, et laquelle est ouverte. */}
           <div className="bascule-acces" role="tablist" data-section={section}>
             <button
               type="button"
@@ -233,21 +186,13 @@ export default function Authentification() {
   );
 }
 
-/* ================================================================
-   Section connexion : adresse, type d'utilisateur, mot de passe
-   ================================================================ */
-
 function Connexion({ navigate, types }) {
-  // Le lien d'un courriel d'acces (compte ouvert par l'equipe) porte
-  // l'adresse et le type : ?email=...&type=benevole.
   const emplacement = useLocation();
   const [email, setEmail] = useState(() => new URLSearchParams(window.location.search).get('email') ?? '');
   const [typeUtilisateur, setTypeUtilisateur] = useState(() => {
     const type = new URLSearchParams(window.location.search).get('type') ?? '';
     return ['donateur', 'benevole', 'bailleur', AUCUN.cle].includes(type) ? type : '';
   });
-  // Le type choisi ne correspond pas au compte : c'est ce champ-la
-  // qu'on designe, pas l'adresse ni le mot de passe.
   const [typeEnErreur, setTypeEnErreur] = useState(false);
   const [motDePasse, setMotDePasse] = useState('');
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
@@ -271,8 +216,6 @@ function Connexion({ navigate, types }) {
     setChargement(true);
     try {
       if (typeUtilisateur === AUCUN.cle) {
-        // L'administration : le cookie de session est pose par le serveur ;
-        // on revient la ou l'on voulait aller, sinon a l'accueil de l'espace.
         await authService.connecter(email.trim(), motDePasse, seSouvenir);
         navigate(emplacement.state?.depuis ?? '/admin', { replace: true });
         return;
@@ -283,21 +226,15 @@ function Connexion({ navigate, types }) {
         typeUtilisateur,
         seSouvenir
       );
-      // La destination est decidee par le backend : l'espace, ou le
-      // formulaire de completion s'il reste des informations a donner.
       navigate(session.destination, { replace: true });
     } catch (echec) {
       const statut = echec?.response?.status;
       const code = echec?.response?.data?.code;
 
-      // Un compte en attente de validation n'est pas une erreur de
-      // saisie : le message l'explique, et le ton n'est pas celui d'un
-      // refus.
       if (code === 'COMPTE_EN_ATTENTE') {
         setEnAttente(true);
         setErreur(echec.response.data.message);
       } else if (code === 'TYPE_INCORRECT') {
-        // Le mot de passe etait bon : le message dit quel champ changer.
         setTypeEnErreur(true);
         setErreur(echec.response.data.message);
       } else if (statut === 401) {
@@ -314,7 +251,6 @@ function Connexion({ navigate, types }) {
   }
 
   const champEnErreur = erreur === MESSAGE_ERREUR;
-  // Avec "Aucun", le premier champ est un identifiant, pas une adresse.
   const identifiant = typeUtilisateur === AUCUN.cle;
 
   return (
@@ -428,10 +364,6 @@ function Connexion({ navigate, types }) {
   );
 }
 
-/* ================================================================
-   Section inscription
-   ================================================================ */
-
 function Inscription({ types, navigate, onInscrit }) {
   const [champs, setChamps] = useState(FORMULAIRE_VIDE);
   const [erreursChamps, setErreursChamps] = useState({});
@@ -439,16 +371,8 @@ function Inscription({ types, navigate, onInscrit }) {
   const [succes, setSucces] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
-  /*
-   * Le bouton se desactive pendant l'envoi, mais un etat React n'arrive
-   * qu'au rendu suivant : deux clics tres rapproches -- ou un clic et la
-   * touche Entree -- partaient tous les deux. Le serveur creait le
-   * compte sur le premier et refusait le second, qui affichait une
-   * erreur alors que tout s'etait bien passe. Ce verrou-ci est immediat.
-   */
   const enCours = useRef(false);
 
-  // Le succes ramene a la connexion, le temps que le message se lise.
   useEffect(() => {
     if (succes === '') return undefined;
     const minuterie = setTimeout(onInscrit, 4000);
@@ -463,7 +387,6 @@ function Inscription({ types, navigate, onInscrit }) {
     };
   }
 
-  /** Controle cote client, double cote serveur. */
   function verifier() {
     const details = {};
     if (champs.email.trim() === '') details.email = 'Champ obligatoire';
@@ -506,23 +429,11 @@ function Inscription({ types, navigate, onInscrit }) {
         accepteConditions: champs.accepteConditions,
       });
 
-      /*
-       * Un benevole enchaine sur sa fiche : competences, disponibilites,
-       * pays. Son compte attend toujours la validation de HOPE, et le
-       * jeton remis ici ne vaut que pour ce formulaire.
-       */
       if (jetonCompletion && aCompleter) {
-        // Le jeton limite est deja dans le cookie ; ici, le temoin.
         ecrireStockage(CLE_JETON_BENEVOLE, TEMOIN_SESSION);
         navigate(aCompleter, { replace: true });
         return;
       }
-      /*
-       * Le compte d'un donateur s'ouvre sans attendre HOPE : il entre
-       * donc aussitot, et son parcours d'accueil commence. Lui faire
-       * retaper ce qu'il vient d'ecrire pour se connecter serait une
-       * etape pour rien.
-       */
       if (champs.typeUtilisateur === 'donateur') {
         try {
           const session = await utilisateurService.connecter(
@@ -534,7 +445,6 @@ function Inscription({ types, navigate, onInscrit }) {
           navigate(session.destination, { replace: true });
           return;
         } catch {
-          // Le compte existe : la connexion manuelle reste possible.
         }
       }
       setSucces(message);
@@ -548,7 +458,6 @@ function Inscription({ types, navigate, onInscrit }) {
     }
   }
 
-  // Ce que le type choisi implique, dit avant l'envoi.
   const typeChoisi = types.find((t) => t.cle === champs.typeUtilisateur);
 
   return (
@@ -577,8 +486,6 @@ function Inscription({ types, navigate, onInscrit }) {
         invite="Que venez-vous faire ?"
       />
 
-      {/* La regle de validation depend du type : on la dit ici, avant
-          l'envoi, plutot que de laisser la surprise a la connexion. */}
       {typeChoisi && (
         <p className={typeChoisi.validationRequise ? 'note-acces' : 'note-acces note-acces--ok'}>
           {typeChoisi.validationRequise
@@ -623,11 +530,6 @@ function Inscription({ types, navigate, onInscrit }) {
         placeholder="Saisissez-le à nouveau"
       />
 
-      {/*
-        Le consentement : sans lui, pas de compte (le serveur le verifie
-        aussi). Les textes s'ouvrent dans un nouvel onglet, pour ne pas
-        perdre ce qui est deja saisi.
-      */}
       <div className="consentement">
         <label className={`case-a-cocher case-a-cocher--texte${erreursChamps.accepteConditions ? ' case-a-cocher--erreur' : ''}`}>
           <input
@@ -691,7 +593,6 @@ function Inscription({ types, navigate, onInscrit }) {
   );
 }
 
-/** L'icone de chaque type, dans la liste et dans le champ une fois choisi. */
 const ICONES_TYPES = {
   donateur: IconeCoeur,
   benevole: IconePoigneeMain,
@@ -699,25 +600,8 @@ const ICONES_TYPES = {
   aucun: IconeNeutre,
 };
 
-/**
- * Le type d'utilisateur : une liste sur mesure, dans la meme boite que
- * les autres champs. Le bouton montre l'icone et le nom du type choisi ;
- * le panneau, sous le champ, aligne les trois types avec leur pastille,
- * et coche celui qui est pris. Au clavier : fleches, Entree, Echap,
- * Debut et Fin.
- *
- * Le <select> d'origine reste dans la page, cache et synchronise : le
- * formulaire et les outils qui le pilotent ne voient pas la difference.
- *
- * Le meme champ sert aux deux sections. A l'inscription, il dit ce que
- * l'on vient faire ; a la connexion, dans quel espace on entre.
- *
- * @param {string|boolean} erreur un message, ou true pour marquer le
- *        champ sans texte (le message est alors dit sous le formulaire).
- */
 function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
   const [ouvert, setOuvert] = useState(false);
-  // L'option sous le curseur du clavier, le temps que le panneau est ouvert.
   const [actif, setActif] = useState(-1);
   const boite = useRef(null);
   const bouton = useRef(null);
@@ -726,7 +610,6 @@ function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
   const IconeChoisie = choisi ? (ICONES_TYPES[choisi.cle] ?? IconeGroupe) : IconeGroupe;
   const idListe = `${id}-liste`;
 
-  // Un changement, d'ou qu'il vienne, passe par la meme porte que le select.
   const choisir = (cle) => {
     onChange({ target: { value: cle } });
     setOuvert(false);
@@ -739,7 +622,6 @@ function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
     setOuvert(true);
   };
 
-  // Panneau ouvert : un clic dehors le ferme.
   useEffect(() => {
     if (!ouvert) return undefined;
     const auClic = (e) => boite.current && !boite.current.contains(e.target) && setOuvert(false);
@@ -824,7 +706,6 @@ function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
                   }`}
                   style={{ '--rang': i }}
                   onPointerEnter={() => setActif(i)}
-                  // Le clic ne doit pas voler le focus au bouton : la souris choisit, le clavier garde la main.
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => choisir(type.cle)}
                 >
@@ -847,7 +728,6 @@ function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
         {invite}
       </p>
 
-      {/* Le select d'origine, cache et synchronise. */}
       <select
         id={id}
         name="typeUtilisateur"
@@ -871,7 +751,6 @@ function ChampType({ id, types, valeur, onChange, erreur, disabled, invite }) {
   );
 }
 
-/** Un champ du formulaire, libelle, icone et message d'erreur compris. */
 function Champ({
   id,
   nom,

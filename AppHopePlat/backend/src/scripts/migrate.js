@@ -1,17 +1,3 @@
-/**
- * Application du schema de la base HOPE.
- *
- *   npm run db:migrate
- *
- * Le script joue src/database/schema.sql, qui est idempotent : toutes les
- * tables sont creees en CREATE TABLE IF NOT EXISTS, les colonnes ajoutees
- * apres coup en ALTER TABLE ... ADD COLUMN IF NOT EXISTS, et les
- * declencheurs sont recrees a chaque passage. On peut donc le rejouer
- * autant de fois qu'on veut : il n'y a rien a versionner ni a defaire.
- *
- * Il ne touche pas a la table "admins", qui porte le mot de passe
- * administrateur et se cree a l'initialisation du projet.
- */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,12 +8,6 @@ import { config } from '../config/env.js';
 const dossierCourant = path.dirname(fileURLToPath(import.meta.url));
 const CHEMIN_SCHEMA = path.resolve(dossierCourant, '..', 'database', 'schema.sql');
 
-/**
- * Tables attendues apres migration, groupees par espace.
- *
- * La liste sert de filet : si une section du schema cesse de passer, on
- * le voit ici plutot que lors du premier appel d'API en echec.
- */
 const TABLES_ATTENDUES = {
   'Espace administrateur': [
     'admins',
@@ -83,14 +63,6 @@ const TABLES_ATTENDUES = {
   'Conversations': ['conversation', 'conversation_participant', 'conversation_message', 'conversation_piece'],
 };
 
-/**
- * Colonnes ajoutees apres la premiere version d'une table.
- *
- * CREATE TABLE IF NOT EXISTS ne voit pas une table qui existe deja : ces
- * colonnes n'arrivent que par ALTER TABLE. Une base plus ancienne que le
- * schema aurait donc toutes ses tables sans avoir toutes ses colonnes,
- * et le controle des tables seules ne dirait rien.
- */
 const COLONNES_ATTENDUES = [
   ['supporting_documents', 'admin_id'],
   ['utilisateur', 'profil_complete'],
@@ -128,8 +100,6 @@ async function executer() {
 
   const client = await pool.connect();
   try {
-    // Tout le schema passe dans une seule transaction : en cas d'erreur,
-    // la base reste dans son etat initial.
     await client.query('BEGIN');
     await client.query(sql);
     await client.query('COMMIT');
@@ -141,7 +111,6 @@ async function executer() {
     client.release();
   }
 
-  // ---------- Controle des tables ----------
   const presentes = await pool.query(
     `SELECT table_name
        FROM information_schema.tables
@@ -162,7 +131,6 @@ async function executer() {
     }
   }
 
-  // ---------- Controle des colonnes ajoutees apres coup ----------
   const colonnes = await pool.query(
     `SELECT table_name, column_name
        FROM information_schema.columns

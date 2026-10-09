@@ -11,25 +11,6 @@ import { PAYS_PAR_DEFAUT } from '../../utils/pays.js';
 import { EtapeAffectation, EtapeInformations, EtapePaiement } from '../donateur/Parcours.jsx';
 import IntroductionDon from './IntroductionDon.jsx';
 
-/**
- * Faire un don sans compte, depuis le site vitrine.
- *
- * Le meme habit que le parcours d'accueil du donateur. D'abord une
- * introduction (IntroductionDon) : a quoi sert le geste, comment il se
- * passe, ce qui le rend sur. Puis trois etapes : qui vous etes (avec
- * votre courriel, pour le recu), a quoi va votre don, comment vous payez.
- * Enfin la page du moyen choisi -- MVola, carte, virement... -- demande
- * le montant, enregistre le don et fait payer.
- *
- * Rien n'est enregistre avant la page de paiement : les etapes se
- * gardent ici, et une page de paiement quittee par "Retour" ramene a la
- * troisieme etape avec tout ce qui a ete saisi (state.reprise).
- *
- * Les dons sans compte sont ponctuels ; pour donner chaque mois et
- * suivre ses dons, on cree un compte (lien "Se connecter").
- */
-
-/** La base des pages de paiement de ce parcours (routes/index.jsx). */
 export const BASE_DON_INVITE = '/faire-un-don';
 
 const NOMBRE_ETAPES = 3;
@@ -43,16 +24,13 @@ export default function DonSansCompte() {
 
   const { donnees: options, chargement, erreur } = useChargement(() => donInviteService.options(), []);
 
-  // 0 : l'introduction ; au retour d'une page de paiement, la troisieme etape.
   const [etape, setEtape] = useState(reprise ? NOMBRE_ETAPES : 0);
   const [valeurs, setValeurs] = useState(() => reprise ?? VIDE);
 
-  // La page s'ouvre en haut, meme quand on arrive du bas du site.
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
-  /** Change d'etape en ramenant le haut de la page sous les yeux. */
   function allerA(numero) {
     setEtape(numero);
     const sobre = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -63,13 +41,10 @@ export default function DonSansCompte() {
     setValeurs((precedentes) => ({ ...precedentes, [cle]: saisie }));
   }
 
-  // Seuls les moyens qui ont leur page se proposent : c'est elle qui
-  // demande le montant et enregistre le don.
   const modes = (options?.modesPaiement ?? []).filter((mode) => PAGES_DE_PAIEMENT[mode.cle]);
   const projets = options?.projets ?? [];
   const pays = valeurs.informations?.pays || PAYS_PAR_DEFAUT;
 
-  /** La troisieme etape franchie : la page du moyen choisi, le don en brouillon. */
   function versLaPage(mode) {
     const page = pageDePaiement(BASE_DON_INVITE, mode);
     if (!page) return;
@@ -95,7 +70,6 @@ export default function DonSansCompte() {
             ville: informations.ville,
             pays: informations.pays,
           },
-          // De quoi revenir a la troisieme etape sans rien perdre.
           reprise: { ...valeurs, paiement: { mode } },
         },
       },
@@ -126,7 +100,6 @@ export default function DonSansCompte() {
           </p>
         )}
 
-        {/* La cle relance l'animation d'entree a chaque changement d'etape. */}
         {options && etape === 1 && (
           <EtapeInformations
             key="etape-1"

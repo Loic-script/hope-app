@@ -1,10 +1,3 @@
-/*
- * Le controle du code du frontend (npm run lint).
- *
- * Les regles recommandees de JavaScript, celles des hooks React (un hook
- * appele au mauvais endroit est une erreur), et de quoi reconnaitre le
- * JSX : un composant utilise seulement dans le JSX n'est pas "inutilise".
- */
 import js from '@eslint/js';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
@@ -28,6 +21,7 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'none' }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   {

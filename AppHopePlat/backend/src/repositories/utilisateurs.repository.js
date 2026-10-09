@@ -1,31 +1,6 @@
-/**
- * Repository de l'ecran "Utilisateurs" de l'administration.
- *
- * Trois publics, deux origines :
- *   - les comptes (table "utilisateur") : donateurs inscrits en ligne,
- *     benevoles, contacts des bailleurs ;
- *   - les fiches donateurs (table "donors") : les donateurs enregistres
- *     par l'equipe, a qui les dons sont rattaches.
- *
- * Aucune requete ne renvoie mot_de_passe. Les montants sont additionnes
- * en base, en NUMERIC, et rendus en texte : ils ne passent jamais par un
- * nombre a virgule flottante. Les dates sans heure sont rendues en texte,
- * pour ne pas glisser d'un jour selon le fuseau.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/* ================================================================
-   Listes
-   ================================================================ */
-
-/**
- * Les comptes d'un role, hors comptes supprimes.
- *
- * Les jointures donateur et bailleur valent pour tous les roles : elles
- * apportent le nom de structure d'un donateur, la raison sociale d'un
- * bailleur, et restent vides ailleurs.
- */
 export async function listerComptes(role, recherche = null, client = null) {
   const valeurs = [role];
   let condition = '';
@@ -56,7 +31,6 @@ export async function listerComptes(role, recherche = null, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Les fiches donateurs, avec leur nombre de dons et l'etat de leur compte. */
 export async function listerFiches(recherche = null, client = null) {
   const valeurs = [];
   let condition = '';
@@ -85,11 +59,6 @@ export async function listerFiches(recherche = null, client = null) {
   return versListe(resultat.rows);
 }
 
-/* ================================================================
-   Un compte
-   ================================================================ */
-
-/** Le compte, ses roles, et qui l'a active. */
 export async function trouverCompte(id, client = null) {
   const resultat = await query(
     `SELECT u.id, u.nom, u.prenom, u.email, u.telephone, u.adresse,
@@ -110,7 +79,6 @@ export async function trouverCompte(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Le parcours d'accueil d'un donateur inscrit, et le projet qu'il a choisi. */
 export async function parcoursDonateur(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT d.ville, d.pays, d.profession, d.source_connaissance,
@@ -127,13 +95,6 @@ export async function parcoursDonateur(utilisateurId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Les fiches donateurs qui portent l'adresse d'un compte.
- *
- * Un donateur inscrit en ligne et une fiche saisie par l'equipe ne sont
- * pas relies en base ; la meme adresse electronique les designe pourtant
- * comme la meme personne, et ses dons doivent se lire sur son profil.
- */
 export async function fichesDeLAdresse(email, client = null) {
   if (!email) return [];
   const resultat = await query(
@@ -144,7 +105,6 @@ export async function fichesDeLAdresse(email, client = null) {
   return resultat.rows.map((ligne) => ligne.id);
 }
 
-/** La fiche de terrain d'un benevole, notes internes comprises. */
 export async function ficheBenevole(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT b.id, b.profession, b.competences, b.langues, b.disponibilites,
@@ -160,7 +120,6 @@ export async function ficheBenevole(utilisateurId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Les missions auxquelles un benevole s'est inscrit, avec leur projet. */
 export async function missionsDuBenevole(benevoleId, client = null) {
   const resultat = await query(
     `SELECT i.id, i.statut, i.inscrit_le, i.heures_validees,
@@ -177,7 +136,6 @@ export async function missionsDuBenevole(benevoleId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** L'organisation d'un contact bailleur, notes internes comprises. */
 export async function organisationDuContact(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT b.id, b.raison_sociale, b.type_organisation, b.secteur, b.pays,
@@ -194,7 +152,6 @@ export async function organisationDuContact(utilisateurId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Les projets qu'un bailleur finance : ce qu'il a affecte a chacun. */
 export async function projetsFinances(bailleurId, client = null) {
   const resultat = await query(
     `SELECT p.id, p.name AS nom, p.reference, p.status AS statut, e.devise,
@@ -213,10 +170,6 @@ export async function projetsFinances(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Les totaux d'un bailleur, devise par devise : ce qu'il a promis, ce
- * qui est arrive, ce qui a ete reparti entre les projets.
- */
 export async function totauxBailleur(bailleurId, client = null) {
   const resultat = await query(
     `WITH engage AS (
@@ -253,10 +206,6 @@ export async function totauxBailleur(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/* ================================================================
-   Une fiche donateur, et les dons
-   ================================================================ */
-
 export async function trouverFiche(id, client = null) {
   const resultat = await query(
     `SELECT o.id, o.first_name, o.last_name, o.organization_name, o.email,
@@ -272,7 +221,6 @@ export async function trouverFiche(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Les dons de plusieurs fiches, du plus recent au plus ancien. */
 export async function donsDesFiches(ficheIds, client = null) {
   if (ficheIds.length === 0) return [];
   const resultat = await query(
@@ -290,10 +238,6 @@ export async function donsDesFiches(ficheIds, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Ce que ces fiches ont donne, en dons recus seulement : le total par
- * devise, la part laissee au fonds HOPE, et le detail par projet.
- */
 export async function syntheseDons(ficheIds, client = null) {
   if (ficheIds.length === 0) return { totaux: [], projets: [] };
   const [totaux, projets] = await Promise.all([
@@ -325,11 +269,6 @@ export async function syntheseDons(ficheIds, client = null) {
   return { totaux: versListe(totaux.rows), projets: versListe(projets.rows) };
 }
 
-/* ================================================================
-   Ecritures
-   ================================================================ */
-
-/** Les coordonnees d'un compte. Les colonnes arrivent deja validees. */
 export async function modifierCompte(id, { nom, prenom, email, telephone }, client = null) {
   await query(
     `UPDATE utilisateur
@@ -340,7 +279,6 @@ export async function modifierCompte(id, { nom, prenom, email, telephone }, clie
   );
 }
 
-/** Le nom de structure d'un donateur inscrit (NULL pour un particulier). */
 export async function modifierNomStructure(utilisateurId, nomStructure, client = null) {
   await query('UPDATE donateur SET nom_structure = $2 WHERE utilisateur_id = $1', [
     utilisateurId,
@@ -348,7 +286,6 @@ export async function modifierNomStructure(utilisateurId, nomStructure, client =
   ], client);
 }
 
-/** La raison sociale de l'organisation d'un contact bailleur. */
 export async function modifierRaisonSociale(bailleurId, raisonSociale, client = null) {
   await query('UPDATE bailleur SET raison_sociale = $2 WHERE id = $1', [
     bailleurId,
@@ -356,29 +293,11 @@ export async function modifierRaisonSociale(bailleurId, raisonSociale, client = 
   ], client);
 }
 
-/**
- * Supprime une fiche donateur.
- *
- * Le service a verifie qu'aucun don ne s'y rattache : la base le refuse
- * de toute facon (donations.donor_id ON DELETE RESTRICT).
- */
 export async function supprimerFiche(id, client = null) {
   const resultat = await query('DELETE FROM donors WHERE id = $1', [id], client);
   return resultat.rowCount > 0;
 }
 
-/**
- * Efface l'identite d'une fiche donateur sans la supprimer.
- *
- * La ligne reste : ses dons y sont rattaches (donations.donor_id, en
- * ON DELETE RESTRICT) et comptent dans les totaux des projets. Le pays et
- * l'origine restent aussi, car les statistiques les additionnent ; tout
- * ce qui designe la personne part.
- *
- * La base exige un nom ou une raison sociale (donors_identite_presente) :
- * la fiche prend celui que les ecrans affichent deja pour un don sans
- * donateur nomme.
- */
 export async function anonymiserFiche(id, client = null) {
   const resultat = await query(
     `UPDATE donors
@@ -391,14 +310,6 @@ export async function anonymiserFiche(id, client = null) {
   return resultat.rowCount > 0;
 }
 
-/**
- * Efface les dons d'une fiche : la seule facon de la supprimer ensuite,
- * la cle etant en ON DELETE RESTRICT. Les notifications qui citent ces
- * dons partent avec eux (ON DELETE CASCADE).
- *
- * Les sommes recues par les projets diminuent d'autant : a n'appeler que
- * sur demande explicite (voir utilisateurs.service).
- */
 export async function supprimerDonsDeFiche(id, client = null) {
   const resultat = await query('DELETE FROM donations WHERE donor_id = $1', [id], client);
   return resultat.rowCount;

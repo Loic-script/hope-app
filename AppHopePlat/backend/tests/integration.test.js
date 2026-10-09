@@ -1,12 +1,3 @@
-/*
- * Tests d'integration : l'application entiere, par de vraies requetes
- * HTTP, sur une base PostgreSQL jetable (tests/aide/baseDeTest.js).
- *
- * Ils couvrent ce qu'un test unitaire ne voit pas : les regles sur
- * l'argent (422), les droits (403), les doublons, la limitation des
- * tentatives (429), et que le hash d'un mot de passe ne sort jamais.
- * La traduction de chaque erreur en code HTTP est dans erreurs.test.js.
- */
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -18,7 +9,6 @@ let api;
 let fermerPool;
 let jetonAdmin;
 
-/** Un appel JSON ; rend { statut, corps, cookies }. */
 async function appel(methode, chemin, { corps, jeton, entetes = {} } = {}) {
   const reponse = await fetch(api + chemin, {
     method: methode,
@@ -43,7 +33,6 @@ const idDe = (objet) => objet?.id ?? objet?.project?.id ?? objet?.donor?.id ?? o
 
 before(async () => {
   base = await preparerBaseDeTest();
-  // L'application est importee APRES la bascule sur la base de test.
   const { creerApplication } = await import('../src/app.js');
   ({ fermerPool } = await import('../src/config/database.js'));
   serveur = creerApplication().listen(0);
@@ -59,7 +48,6 @@ after(async () => {
   await base?.detruire();
 });
 
-/** Un projet en cours, au budget donne. */
 async function creerProjet(nom, budget) {
   const { corps: catalogue } = await appel('GET', '/admin/catalog', { jeton: jetonAdmin });
   const { statut, corps } = await appel('POST', '/admin/projects', {
@@ -217,7 +205,6 @@ describe('les droits (403)', () => {
     );
     const refus = await appel('GET', '/bailleur/tableau-de-bord', { jeton });
     assert.equal(refus.statut, 403);
-
   });
 });
 
@@ -276,7 +263,6 @@ describe('la limitation des tentatives (429)', () => {
 });
 
 describe('aucune lecture ne plante (fumee)', () => {
-  /** Les routes GET d'un routeur, parametres remplaces. */
   async function routesDeLecture(module, prefixe, valeurs) {
     const { default: routeur } = await import(module);
     const routes = [];
@@ -312,8 +298,6 @@ describe('aucune lecture ne plante (fumee)', () => {
     for (const type of ['donateur', 'benevole', 'bailleur']) {
       const email = `fumee.${type}.${Date.now()}@hope.test`;
       const motDePasse = `fumee-${type}-2026`;
-      // Par le service d'inscription lui-meme : le limiteur HTTP (5 par
-      // minute) a deja servi aux tests precedents.
       await inscrire({ email, typeUtilisateur: type, motDePasse, confirmation: motDePasse, accepteConditions: true });
       await base.sql("UPDATE utilisateur SET statut = 'actif', profil_complete = TRUE WHERE email = $1", [email]);
       const { corps } = await appel('POST', '/auth/login', { corps: { email, motDePasse, typeUtilisateur: type } });
@@ -360,7 +344,6 @@ describe('beneficiaires : projet lie et argent depense', () => {
     assert.equal(cree.statut, 201, JSON.stringify(cree.corps));
     const id = cree.corps.id;
 
-    // Une depense pour une personne non rattachee au projet est refusee.
     const autre = await appel('POST', '/admin/beneficiaries', {
       jeton: jetonAdmin,
       corps: { firstName: 'Hors', lastName: 'Projet', beneficiaryType: 'FAMILY' },
@@ -393,7 +376,6 @@ describe('back office : Admin et Manager', () => {
 
     const manager = await creer('MANAGER', 'manager@hope.test');
     assert.equal(manager.statut, 201, JSON.stringify(manager.corps));
-    // SMTP coupe dans les tests : le mot de passe revient pour etre transmis.
     assert.equal(manager.corps.courrielEnvoye, false);
     assert.match(manager.corps.motDePasseProvisoire, /^.{14}$/);
     const gestion = await creer('ADMIN', 'gestion@hope.test');
@@ -405,7 +387,6 @@ describe('back office : Admin et Manager', () => {
     const jm = await connexion('manager@hope.test', manager.corps.motDePasseProvisoire);
     const jg = await connexion('gestion@hope.test', gestion.corps.motDePasseProvisoire);
 
-    // Manager : lit, cree et modifie un projet, rien d'autre.
     assert.equal((await appel('GET', '/admin/projects', { jeton: jm })).statut, 200);
     assert.equal((await appel('GET', '/admin/utilisateurs/donateurs', { jeton: jm })).statut, 403);
     assert.equal((await appel('GET', '/admin/backoffice', { jeton: jm })).statut, 403);
@@ -419,21 +400,16 @@ describe('back office : Admin et Manager', () => {
     assert.equal((await appel('PATCH', `/admin/projects/${projet.corps.id}/archive`, { jeton: jm })).statut, 403);
     assert.equal((await appel('POST', '/admin/categories', { jeton: jm, corps: { name: 'Interdite' } })).statut, 403);
 
-    // Admin back office : gere les utilisateurs, pas ses pairs.
     assert.equal((await appel('GET', '/admin/utilisateurs/benevoles', { jeton: jg })).statut, 200);
     assert.equal((await appel('GET', '/admin/backoffice', { jeton: jg })).statut, 403);
     assert.equal((await appel('POST', '/admin/categories', { jeton: jg, corps: { name: `Permise ${Date.now()}` } })).statut, 201);
 
-    // Renvoi : l'ancien mot de passe et la session tombent. Un jeton emis
-    // dans la meme seconde que la fermeture reste valide (session.service.js) :
-    // on laisse passer la seconde, sinon l'essai echoue quand il va vite.
     await new Promise((fin) => setTimeout(fin, 1100));
     const renvoi = await appel('POST', `/admin/backoffice/${gestion.corps.compte.id}/acces`, { jeton: jetonAdmin });
     assert.equal(renvoi.statut, 200);
     assert.equal((await appel('POST', '/admin/login', { corps: { adminLog: 'gestion@hope.test', password: gestion.corps.motDePasseProvisoire } })).statut, 401);
     assert.equal((await appel('GET', '/admin/me', { jeton: jg })).statut, 401);
 
-    // Suspendu : plus de connexion.
     await appel('PATCH', `/admin/backoffice/${manager.corps.compte.id}`, { jeton: jetonAdmin, corps: { status: 'SUSPENDED' } });
     assert.notEqual((await appel('POST', '/admin/login', { corps: { adminLog: 'manager@hope.test', password: manager.corps.motDePasseProvisoire } })).statut, 200);
   });

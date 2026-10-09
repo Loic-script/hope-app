@@ -7,7 +7,6 @@ import * as fmt from '../../utils/format.js';
 const RAPIDES = [10000, 25000, 50000, 100000];
 const MINIMUM = 1000;
 
-/** "2026-09-25" pour un decalage de n jours a partir d'aujourd'hui. */
 function jourIso(decalage) {
   const d = new Date();
   d.setDate(d.getDate() + decalage);
@@ -16,20 +15,10 @@ function jourIso(decalage) {
   return `${d.getFullYear()}-${mm}-${jj}`;
 }
 
-/** "jeudi 25 septembre" */
 function jourLisible(iso) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-/**
- * Le don en especes, remis en main propre a l'equipe HOPE.
- *
- * L'objet de reference : le carnet a souches. Le donateur dit combien,
- * ou (au bureau, ou chez lui) et quand ; la page lui remet un bon de
- * remise, a souche perforee, qui porte la reference du don. Le jour
- * venu, il le montre : l'equipe lui donne un recu papier, et confirme
- * le don.
- */
 export default function PaiementEspeces() {
   const {
     profil,
@@ -61,12 +50,9 @@ export default function PaiementEspeces() {
 
   useEffect(() => {
     if (!profil) return;
-    // Sans bureau renseigne, l'equipe se deplace ; l'adresse du profil
-    // sert de point de depart.
     setLieu((courant) => courant || (bureau?.disponible ? 'bureau' : 'domicile'));
     setAdresse((a) => a || [personne.adresse, personne.ville].filter(Boolean).join(', '));
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil, bureau]);
 
@@ -125,7 +111,6 @@ export default function PaiementEspeces() {
           </p>
         )}
 
-        {/* ---------- 1. Combien, ou, quand ---------- */}
         {profil && !don && (
           <form className="esp__temps" onSubmit={reserver} noValidate aria-label="Remise du don en espèces">
             <h1 className="esp__titre">Remettez votre don en main propre</h1>
@@ -260,7 +245,6 @@ export default function PaiementEspeces() {
           </form>
         )}
 
-        {/* ---------- 2. Le bon de remise ---------- */}
         {profil && don && (
           <section className="esp__temps esp__temps--bon">
             <h1 className="esp__titre esp__titre--centre" ref={titre} tabIndex={-1}>
@@ -293,7 +277,6 @@ export default function PaiementEspeces() {
                   </div>
                 </dl>
               </div>
-              {/* La souche : elle se detache, c'est la part de l'equipe. */}
               <div className="bon__souche" aria-hidden="true">
                 <span>Souche</span>
                 <strong>{don.reference}</strong>

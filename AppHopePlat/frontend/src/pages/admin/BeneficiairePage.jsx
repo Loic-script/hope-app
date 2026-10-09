@@ -11,13 +11,6 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Le profil d'un beneficiaire : qui il est, les projets qui
- * l'accompagnent, et l'argent depense pour lui.
- *
- * Donnees personnelles : la page ne vit que dans l'espace
- * administrateur, derriere la session de l'equipe.
- */
 const STATUTS_RATTACHEMENT = { ACTIVE: 'En cours', COMPLETED: 'Terminé', WITHDRAWN: 'Sorti' };
 
 const enCentimes = (valeur) => Math.round(Number(valeur ?? 0) * 100);
@@ -35,7 +28,6 @@ export default function BeneficiairePage() {
   const valides = depenses.filter((d) => d.status !== 'CANCELLED');
   const devises = [...new Set(valides.map((d) => d.currency ?? 'MGA'))];
   const total = valides.reduce((s, d) => s + enCentimes(d.amount), 0) / 100;
-  // Une depense se fait sur un de SES projets, encore en cours.
   const sesProjets = new Set((personne?.projects ?? []).map((p) => p.projectId));
   const projetsPourDepense = (enCours?.items ?? []).filter((p) => sesProjets.has(p.id));
 

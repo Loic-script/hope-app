@@ -5,19 +5,6 @@ import { Modale } from '../../components/admin/forms.jsx';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/bailleur.service.js';
 
-/**
- * Le rapport a jour d'un projet, dans une fenetre.
- *
- * Il est compose par le serveur avec les donnees du jour -- le meme que
- * l'onglet Rapport de l'administration -- et mis en page comme le
- * document imprime. Rien n'est enregistre a la lecture ; le PDF se
- * demande a part.
- *
- * Partagee par la page Projets et la page Rapports.
- *
- * @param {{ projet: { id: number, name: string, reference?: string } | null,
- *           onFermer: () => void }} props
- */
 export default function FenetreRapportProjet({ projet, onFermer }) {
   const [rapport, setRapport] = useState(null);
   const [echecLecture, setEchecLecture] = useState('');

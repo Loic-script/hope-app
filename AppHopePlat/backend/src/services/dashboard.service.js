@@ -1,15 +1,8 @@
-/**
- * Service de la page d'accueil administrateur.
- *
- * Assemble en un seul appel ce qu'affiche l'ecran /admin : chiffres cles,
- * etat du fonds, projets en cours et fil d'activite.
- */
 import * as dashboardRepository from '../repositories/dashboard.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 
 import { centimesVersTexte, depuisBase, pourcentage } from '../shared/money.js';
 
-/** Reprend les indicateurs derives utilises dans la liste des projets. */
 function enrichirProjet(projet) {
   const requis = depuisBase(projet.requiredBudget);
   const finance = depuisBase(projet.fundedTotal);
@@ -40,7 +33,6 @@ export async function recupererAccueil() {
   return {
     stats: {
       ...chiffres,
-      // Ce que HOPE peut encore engager librement.
       fondsDisponible: centimesVersTexte(hope - investi),
       tauxInvestissement: pourcentage(investi, hope),
       tauxDepense: pourcentage(depenses, affectes + investi),

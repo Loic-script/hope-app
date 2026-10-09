@@ -1,22 +1,8 @@
-/* ============================================================
-   Site vitrine : la page d'accueil (pages/vitrine/Accueil.jsx)
-
-   Trois temps : le bandeau d'appel sur la photo, les quatre activites
-   en cartes coiffees d'un soleil, les impacts sur le violet de la
-   charte. Titres en Montserrat, texte en Quicksand.
-
-   Sur ordinateur (plus de 1100 px de large), chaque section de l'accueil
-   occupe un ecran : la hauteur de la fenetre moins l'en-tete resserre
-   (72 px), --vitrine-ecran. Son contenu est centre et ses tailles se
-   resserrent en vh sur les ecrans peu hauts, pour que rien ne soit coupe.
-   ============================================================ */
-
 .vitrine {
   --vitrine-titre: 'Montserrat', 'Poppins', system-ui, sans-serif;
   --vitrine-ecran: calc(100vh - 72px);
 }
 
-/* Les boutons d'appel de la page. */
 .accueil-bouton {
   position: relative;
   display: inline-flex;
@@ -30,7 +16,6 @@
   font-size: 15.5px;
   font-weight: 700;
   text-decoration: none;
-  /* Texte blanc, comme sur la maquette ; une ombre legere le detache. */
   text-shadow: 0 1px 2px rgba(53, 51, 67, 0.25);
   transition:
     transform 0.2s ease,
@@ -54,7 +39,6 @@
   box-shadow: 0 10px 24px -10px rgba(134, 185, 222, 0.9);
 }
 
-/* Au survol, le bleu passe au violet de la charte. */
 .accueil-bouton--bleu:hover {
   background: var(--hope-violet);
 }
@@ -82,7 +66,6 @@
   outline-offset: 3px;
 }
 
-/* Les titres de section. */
 .accueil-section__titre {
   margin: 0;
   color: var(--hope-violet);
@@ -100,8 +83,6 @@
   font-size: clamp(26px, 2.5vw, 34px);
 }
 
-/* ============================ Le bandeau ============================ */
-
 .accueil-hero {
   position: relative;
   display: flex;
@@ -112,7 +93,6 @@
   isolation: isolate;
 }
 
-/* La photo s'approche doucement : un zoom lent, puis elle se pose. */
 .accueil-hero__photo {
   position: absolute;
   inset: 0;
@@ -124,8 +104,6 @@
   animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
 }
 
-/* Le voile assombrit la droite, ou se lit le texte, et laisse les
-   enfants dans la lumiere a gauche. */
 .accueil-hero__voile {
   position: absolute;
   inset: 0;
@@ -176,12 +154,6 @@
   animation-delay: 360ms;
 }
 
-/*
- * Le trait sous le titre : le motif de la charte (.trait-hope, theme.css),
- * aux proportions de la page d'authentification -- barre bleue de 6 px,
- * soleil officiel retourne (coupole en haut, rayons vers le bas), 20 px
- * d'ecart. Ici la barre s'etire jusqu'au soleil, pose au bout a droite.
- */
 .accueil-hero__trait {
   --trait-couleur: var(--hope-bleu);
   --trait-epaisseur: 6px;
@@ -196,7 +168,6 @@
 .accueil-hero__trait::before {
   flex: 1;
   width: auto;
-  /* Calee sur la coupole, qui occupe le haut du soleil retourne. */
   margin-top: calc(var(--trait-soleil) * 0.157 - var(--trait-epaisseur) / 2);
   transform-origin: right center;
   animation: hero-trait 900ms cubic-bezier(0.22, 1, 0.36, 1) 600ms both;
@@ -228,8 +199,6 @@
   animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 850ms both;
 }
 
-/* ============================ Les impacts ============================ */
-
 .accueil-impacts {
   position: relative;
   overflow: hidden;
@@ -239,7 +208,6 @@
   isolation: isolate;
 }
 
-/* Un halo de soleil qui derive lentement derriere les chiffres. */
 .accueil-impacts__halo {
   position: absolute;
   top: -30%;
@@ -254,8 +222,6 @@
   pointer-events: none;
 }
 
-/* L'espacement de la maquette : les rangees s'ecartent assez pour que
-   les filigranes, a leur taille naturelle, ne se chevauchent pas. */
 .accueil-impacts__grille {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -285,10 +251,6 @@
   transform: none;
 }
 
-/* L'icone en filigrane, derriere le chiffre. */
-/* L'icone en filigrane, centree derriere le chiffre et son texte, a sa
-   taille naturelle sur grand ecran (--largeur, en pixels), jusqu'a 58 %
-   sur telephone. Elle grandit doucement a l'apparition. */
 .impact__filigrane {
   position: absolute;
   top: 50%;
@@ -339,10 +301,6 @@
   opacity: 0.95;
 }
 
-/* ========================= Un ecran par section ========================= */
-
-/* Les activites ont leurs regles dans vitrine-activites.css, chargee
-   apres cette feuille. */
 @media (min-width: 1101px) {
   .accueil-impacts {
     display: flex;
@@ -353,8 +311,6 @@
     padding-block: clamp(32px, 5vh, 88px) clamp(32px, 6vh, 100px);
   }
 
-  /* En colonne flex, les marges automatiques de la grille ne l'etirent
-     plus : on lui rend sa pleine largeur. */
   .accueil-impacts__grille {
     width: 100%;
     gap: clamp(32px, 7vh, 160px) 72px;
@@ -378,8 +334,6 @@
     font-size: clamp(15px, min(1.4vw, 2.4vh), 19px);
   }
 }
-
-/* ============================ Petits ecrans ============================ */
 
 @media (max-width: 760px) {
   .accueil-hero {
@@ -406,7 +360,6 @@
     text-align: left;
   }
 
-  /* A gauche sur telephone : le soleil ouvre, la barre suit. */
   .accueil-hero__trait {
     flex-direction: row-reverse;
     width: 100%;
@@ -439,8 +392,6 @@
   }
 }
 
-/* ============================ Animations ============================ */
-
 @keyframes hero-zoom {
   from {
     transform: scale(1.12);
@@ -470,8 +421,6 @@
   }
 }
 
-/* Le soleil se leve : il grandit en tournant un peu, sans perdre son
-   retournement. */
 @keyframes hero-soleil {
   from {
     opacity: 0;

@@ -5,12 +5,6 @@ import { apiBailleur } from '../../services/apiBailleur.js';
 import { apiBenevole } from '../../services/apiBenevole.js';
 import { apiDonateur } from '../../services/apiDonateur.js';
 
-/**
- * Le rappel de confirmer son adresse electronique, en tete de l'espace,
- * tant que le lien du courriel d'inscription n'a pas ete ouvert. Il se
- * ferme pour la visite ; il revient a la suivante tant que l'adresse
- * n'est pas confirmee.
- */
 const CLIENTS = { donateur: apiDonateur, benevole: apiBenevole, bailleur: apiBailleur };
 const CLE_MASQUE = 'hope.verification.masquee';
 
@@ -58,7 +52,6 @@ export default function BandeauVerification({ espace }) {
     try {
       sessionStorage.setItem(CLE_MASQUE, '1');
     } catch {
-      // Stockage indisponible : le rappel reviendra au prochain affichage.
     }
   }
 

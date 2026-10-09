@@ -15,7 +15,6 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as statisticsService from '../../services/statistics.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Libelles courts des douze derniers mois : "2026-03" devient "mars". */
 const MOIS_COURTS = [
   'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
   'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.',
@@ -26,12 +25,6 @@ function libelleMois(periode) {
   return MOIS_COURTS[Number(mois) - 1] ?? periode;
 }
 
-/**
- * Serie de barres horizontales.
- *
- * @param {{ lignes: object[], champLibelle: string, champValeur: string,
- *           maximum: number, format?: Function, teinte?: string }} props
- */
 function Serie({ lignes, champLibelle, champValeur, maximum, format = fmt.montant, teinte }) {
   if (!lignes || lignes.length === 0) return <EtatVide titre="Aucune donnée" />;
 
@@ -39,7 +32,6 @@ function Serie({ lignes, champLibelle, champValeur, maximum, format = fmt.montan
     <div className="serie">
       {lignes.map((ligne) => {
         const valeur = Number(ligne[champValeur] ?? 0);
-        // Le maximum arrive en centimes depuis le service : on compare en unites.
         const echelle = maximum > 0 ? (valeur / (maximum / 100)) * 100 : 0;
 
         return (
@@ -61,12 +53,6 @@ function Serie({ lignes, champLibelle, champValeur, maximum, format = fmt.montan
   );
 }
 
-/**
- * Ecran Statistiques : le budget, les projets et les donateurs en chiffres.
- *
- * Les graphiques sont dessines en CSS, sans bibliotheque : moins de code a
- * charger, et un rendu qui reste dans la charte HOPE.
- */
 export default function StatisticsPage() {
   const { donnees, chargement, erreur } = useChargement(() => statisticsService.recuperer(), []);
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
@@ -77,7 +63,6 @@ export default function StatisticsPage() {
   const libelles = catalogue?.labels ?? {};
   const { budget, projects, donors } = donnees;
 
-  // Echelle de l'histogramme mensuel, en unites monetaires.
   const maxMensuel = Number(budget.monthlyMax) / 100 || 1;
 
   return (
@@ -87,7 +72,6 @@ export default function StatisticsPage() {
         accroche="Le budget, les projets et les donateurs en chiffres, sur les douze derniers mois."
       />
 
-      {/* ================= Budget ================= */}
       <Panneau
         titre="Dons reçus mois par mois"
         sousTitre="Part affectée à un projet et part versée au fonds HOPE."
@@ -182,7 +166,6 @@ export default function StatisticsPage() {
         </Panneau>
       </div>
 
-      {/* ================= Projets ================= */}
       <div style={{ marginTop: '18px' }} />
       <Panneau
         titre="Projets par catégorie"
@@ -255,7 +238,6 @@ export default function StatisticsPage() {
         </Panneau>
       </div>
 
-      {/* ================= Donateurs ================= */}
       <div className="cartes-chiffres" style={{ marginTop: '18px' }}>
         <article className="carte-chiffre">
           <div>

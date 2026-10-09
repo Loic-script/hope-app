@@ -8,20 +8,8 @@ import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
 import { SansImage } from './SectionsAccueil.jsx';
 
-/**
- * "Actualites" : ce que l'administration de HOPE publie, lu dans la
- * plateforme (GET /api/public/actualites). La derniere actualite fait la
- * une du bandeau ; toutes sont en cartes sur le fond de soleils.
- *
- * Le site ne recoit que le titre, un extrait, la date et la photo --
- * jamais les appels a financement, ni l'auteur, ni les cibles.
- */
-
 const FORMAT_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-/* ------------------------------- Le bandeau ------------------------------- */
-
-/** La photo fournie par HOPE, et a la une la derniere actualite publiee. */
 function Couverture({ actualites }) {
   const derniere = actualites?.[0] ?? null;
   return (
@@ -41,12 +29,10 @@ function Couverture({ actualites }) {
             </div>
           </>
         ) : derniere ? (
-          /* Le bloc prend la largeur du titre : le filet, l'extrait et le bouton s'y alignent. */
           <div className="actualites-hero__bloc">
             <h1 className="actualites-hero__titre" id="actualites-hero-titre">
               {derniere.titre}
             </h1>
-            {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
             <div className="actualites-hero__trait" aria-hidden="true" />
             {derniere.corps && <p className="actualites-hero__texte">{derniere.corps}</p>}
             <Link to={`/actualites/${derniere.id}`} className="accueil-bouton accueil-bouton--orange actualites-hero__bouton">
@@ -67,13 +53,10 @@ function Couverture({ actualites }) {
   );
 }
 
-/* -------------------------------- Les cartes -------------------------------- */
-
 function Carte({ actualite, rang }) {
   const lien = `/actualites/${actualite.id}`;
   return (
     <li className="v-actualite actualites-carte v-entree" style={{ '--rang': Math.min(rang, 5) }}>
-      {/* La photo mene aussi a l'article, sans doubler le lien pour le clavier. */}
       <Link to={lien} className="v-actualite__image actualites-carte__image" tabIndex={-1} aria-hidden="true">
         {actualite.photoUrl ? <img src={urlMedia(actualite.photoUrl)} alt="" loading="lazy" /> : <SansImage />}
       </Link>
@@ -91,7 +74,6 @@ function Carte({ actualite, rang }) {
   );
 }
 
-/** Quatre cartes vides qui respirent, le temps que la plateforme reponde. */
 function Squelettes() {
   return (
     <ul className="actualites__grille" aria-hidden="true">
@@ -107,14 +89,11 @@ function Squelettes() {
   );
 }
 
-/* --------------------------------- La page --------------------------------- */
-
 export default function Actualites() {
   const [ref, vu] = useApparition({ seuil: 0.05 });
   const [actualites, setActualites] = useState(null);
   const [erreur, setErreur] = useState(false);
   const [recherche, setRecherche] = useState('');
-  // La liste se filtre au fil de la frappe sans jamais retenir le champ.
   const rechercheDifferee = useDeferredValue(recherche);
 
   const charger = useCallback(() => {
@@ -150,7 +129,6 @@ export default function Actualites() {
             <Recherche valeur={recherche} onChange={setRecherche} libelle="Rechercher une actualité" />
           </div>
 
-          {/* Le nombre de resultats, dit aux lecteurs d'ecran a chaque recherche. */}
           <p className="sr-only" aria-live="polite">
             {actualites && enRecherche
               ? visibles.length === 0

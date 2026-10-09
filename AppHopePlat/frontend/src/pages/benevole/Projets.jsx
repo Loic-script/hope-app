@@ -5,15 +5,6 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { urlMedia } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 
-/**
- * Les projets de HOPE, vus par un benevole.
- *
- * L'espace montre ce que HOPE mene reellement : des projets, chacun
- * portant les taches qu'un benevole peut prendre.
- *
- * Rien de financier ici : un benevole vient voir ou il peut aider, pas
- * ce que le projet coute. L'API ne renvoie d'ailleurs aucun montant.
- */
 export default function Projets() {
   const { donnees, chargement, erreur } = useChargement(() => service.listerProjets(), []);
   const projets = donnees ?? [];
@@ -56,13 +47,6 @@ export default function Projets() {
   );
 }
 
-/**
- * Un projet en carte : son image, ce qu'il est, ce qu'il y a a y faire.
- *
- * La carte entiere est cliquable par un lien etire -- le titre porte le
- * lien, son ::after couvre la carte. Un <div onClick> aurait exclu le
- * clavier et les lecteurs d'ecran.
- */
 function CarteProjet({ projet }) {
   const libre = projet.tachesLibres > 0;
 
@@ -70,9 +54,6 @@ function CarteProjet({ projet }) {
     <article className="carte-projet">
       <div className="carte-projet__image">
         {projet.mediaUrl && projet.mediaType === 'VIDEO' ? (
-          // Une video en vignette : muette, sans commandes, arretee sur
-          // une image de son debut (#t=0.5). Seules ses premieres donnees
-          // sont chargees.
           <video
             src={`${urlMedia(projet.mediaUrl)}#t=0.5`}
             muted
@@ -108,8 +89,6 @@ function CarteProjet({ projet }) {
             {projet.tachesLibres} tâche{projet.tachesLibres > 1 ? 's' : ''} libre
             {projet.tachesLibres > 1 ? 's' : ''}
           </span>
-          {/* Le total situe le libre : "2 libres" ne dit pas si le
-              projet en compte trois ou trente. */}
           <span>{projet.tachesTotal} au total</span>
         </p>
       </div>

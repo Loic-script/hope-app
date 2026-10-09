@@ -19,14 +19,6 @@ import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Ecran Preuves terrain.
- *
- * Le principe tient dans la phrase des maquettes : "une photo et deux
- * lignes suffisent". L'ecran se limite donc a ce qui a ete publie et aux
- * projets dont on n'a plus de nouvelles ; la publication elle-meme passe
- * par la modale, comme partout ailleurs dans l'espace.
- */
 export default function ProofsPage() {
   const [aSupprimer, setASupprimer] = useState(null);
   const [aPublier, setAPublier] = useState({ ouverte: false, projet: null });
@@ -36,8 +28,6 @@ export default function ProofsPage() {
     []
   );
   const { donnees: projets } = useChargement(() => projectService.lister({ pageSize: 200 }), []);
-  // Les libelles des trois natures de preuve viennent du catalogue,
-  // comme ceux de tous les autres enums.
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
   const TYPES = catalogue?.labels?.proofType ?? {};
 
@@ -48,13 +38,10 @@ export default function ProofsPage() {
   const silencieux = donnees?.silentProjects ?? [];
   const seuil = donnees?.silenceThresholdDays ?? 15;
 
-  /** Ouvre la modale sur le projet a documenter en priorite. */
   function documenter(projet) {
     setAPublier({ ouverte: true, projet });
   }
 
-  // Un projet archive refuse les preuves : autant ne pas le proposer.
-  // Un projet archive refuse les preuves : autant ne pas le proposer.
   const projetsOuverts = (projets?.items ?? []).filter(
     (projet) => projet.status !== 'ARCHIVED'
   );
@@ -106,11 +93,6 @@ export default function ProofsPage() {
         </div>
       )}
 
-      {/*
-        L'alerte ouvre l'ecran : elle dit par ou commencer. Un simple
-        compteur ne le dirait pas -- d'ou la liste, et le bouton qui
-        ouvre la publication sur le projet concerne.
-      */}
       {silencieux.length > 0 && (
         <Panneau
           titre={`${silencieux.length} projet(s) sans preuve depuis plus de ${seuil} jours`}
@@ -165,9 +147,6 @@ export default function ProofsPage() {
                       <Link to={`/admin/projects/${preuve.projectId}`}>{preuve.projectName}</Link>
                       <Badge valeur={preuve.proofType} libelles={TYPES} />
                     </p>
-                    {/* Le lien s'etire sur toute la ligne via son ::after :
-                        la vignette ouvre la lecture, et le bouton
-                        Supprimer garde son propre clic. */}
                     <p className="preuve__description">
                       <Link className="preuve__lien" to={`/admin/proofs/${preuve.id}`}>
                         {preuve.description}

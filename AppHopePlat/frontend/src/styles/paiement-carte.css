@@ -1,12 +1,3 @@
-/* ==================================================================
-   Don par carte bancaire (pages/donateur/PaiementCarte.jsx)
-
-   La mise en page des caisses en ligne : a gauche, sur fond sombre, ce
-   que l'on paie ; a droite, sur fond clair, les coordonnees et le moyen
-   de paiement. Champs groupes a bords partages, gris tres doux, une
-   seule couleur d'action -- le violet de HOPE.
-   ================================================================== */
-
 .carte {
   --ct-nuit: #0c0b12;
   --ct-nuit-2: #1b1a24;
@@ -31,7 +22,6 @@
   font-family: var(--police-titre);
 }
 
-/* ---------- Le resume, sur fond sombre ---------- */
 .carte__resume {
   position: relative;
   overflow: hidden;
@@ -154,7 +144,6 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Les devises : un curseur glisse sous la devise choisie. */
 .carte__devises {
   position: relative;
   display: grid;
@@ -227,7 +216,6 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* Le detail : replie sur telephone, ouvert sur ordinateur. */
 .carte__details-bouton {
   display: inline-flex;
   align-items: center;
@@ -318,7 +306,6 @@
   color: var(--ct-jaune);
 }
 
-/* ---------- Le paiement, sur fond clair ---------- */
 .carte__paiement {
   flex: 1;
   background: #fff;
@@ -349,7 +336,6 @@
   gap: 6px;
 }
 
-/* Le montant : un grand champ, la devise au bout. */
 .carte__montant {
   display: flex;
   align-items: center;
@@ -440,7 +426,6 @@
   text-align: center;
 }
 
-/* Coordonnees : la ligne grise des caisses en ligne. */
 .carte__gris {
   display: flex;
   align-items: center;
@@ -526,7 +511,6 @@
   cursor: pointer;
 }
 
-/* ---------- Le bouton ---------- */
 .carte__payer {
   position: relative;
   display: inline-flex;
@@ -624,7 +608,6 @@
   outline: none;
 }
 
-/* ---------- Attente ---------- */
 .carte__attente {
   display: flex;
   align-items: center;
@@ -661,7 +644,6 @@
   color: var(--ct-rouge);
 }
 
-/* ---------- Merci ---------- */
 .carte__merci {
   display: flex;
   flex-direction: column;
@@ -793,10 +775,6 @@
   transform: translateX(3px);
 }
 
-/* ==================================================================
-   Ordinateur : les deux volets cote a cote, sur toute la hauteur. Le
-   detail du don est toujours ouvert ; le montant s'affiche en grand.
-   ================================================================== */
 @media (min-width: 900px) {
   .carte {
     display: grid;
@@ -855,10 +833,6 @@
   }
 }
 
-/* ==================================================================
-   Telephone : le resume se resserre en tete, le detail se replie, et
-   le formulaire tient dans l'ecran.
-   ================================================================== */
 @media (max-width: 600px) {
   .carte__resume-dedans {
     padding: 8px 14px 6px;
@@ -920,9 +894,6 @@
     margin-top: 12px;
   }
 
-  /* Ce qui se lit deja ailleurs : le montant dans son champ, les
-     titres de section dans ce qu'ils annoncent. Caches a l'oeil, gardes
-     pour les lecteurs d'ecran. */
   .carte__grand,
   .carte__rubrique--section,
   .carte__champ > .carte__rubrique {
@@ -960,7 +931,6 @@
     margin-top: 10px;
   }
 
-  /* "Voir le detail" monte sur la ligne du logo, a droite. */
   .carte__resume-dedans {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -993,7 +963,6 @@
   }
 }
 
-/* Moins de mouvement : les etats restent, les animations s'effacent. */
 @media (prefers-reduced-motion: reduce) {
   .carte *,
   .carte *::before,
@@ -1009,16 +978,6 @@
   }
 }
 
-/* ==================================================================
-   Le cadre de Stripe, et le montant fixe au-dessus
-   ================================================================== */
-
-/*
- * Le cadre ou l'on tape sa carte appartient a Stripe : il vit dans une
- * fenetre a lui, que cette page ne peut ni lire ni recopier. On lui
- * donne seulement sa place, et les couleurs de HOPE (voir APPARENCE
- * dans PaiementCarte.jsx).
- */
 .carte__stripe {
   min-height: 220px;
   padding: 16px 14px;
@@ -1028,7 +987,6 @@
   box-shadow: 0 2px 8px rgba(20, 20, 40, 0.04);
 }
 
-/* Le montant est arrete : il se rappelle, et se corrige d'un clic. */
 .carte__somme-fixe {
   display: flex;
   align-items: center;
@@ -1064,10 +1022,6 @@
   cursor: default;
 }
 
-/* ==================================================================
-   La carte indisponible : aucune cle de paiement n'est configuree
-   ================================================================== */
-
 .carte__temps {
   display: flex;
   flex-direction: column;
@@ -1083,7 +1037,6 @@
   color: var(--ct-doux);
 }
 
-/* Les deux sorties : un autre moyen, ou plus tard. */
 .carte__bouton {
   display: inline-flex;
   align-items: center;

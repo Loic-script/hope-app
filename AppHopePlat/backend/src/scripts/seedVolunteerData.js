@@ -1,31 +1,8 @@
-/**
- * Jeu de donnees de demonstration de l'espace benevole.
- *
- *   npm run db:seed-volunteers             installe si l'espace est vide
- *   npm run db:seed-volunteers -- --force  efface et recommence
- *
- * Cree six benevoles et une trentaine de taches reparties sur les cinq
- * projets : a prendre, en cours, et livrees.
- *
- * Le jeu est volontairement retrospectif : un espace ou tout est a
- * faire ne montre ni journal, ni badge. Une quinzaine de taches sont
- * donc deja livrees, et s'etalent sur trois mois pour que le journal ait
- * une histoire a raconter -- les plus recentes attendent encore la
- * validation de HOPE, pour que les deux etats se voient.
- *
- * L'espace ne propose plus de missions. Les tables existent encore dans
- * le schema ; le script les vide pour qu'une base plus ancienne ne garde
- * pas de donnees que plus rien n'affiche.
- *
- * Le script suppose que les projets existent : lancer d'abord
- * "npm run db:seed-demo -- --force".
- */
 import { fermerPool, query } from '../config/database.js';
 import * as volunteerAuthService from '../services/volunteerAuth.service.js';
 
 const FORCER = process.argv.includes('--force');
 
-/** Horodatage decale de n jours, a l'heure indiquee. */
 function quand(joursDecalage, heure = 8) {
   const date = new Date();
   date.setDate(date.getDate() + joursDecalage);
@@ -33,31 +10,20 @@ function quand(joursDecalage, heure = 8) {
   return date.toISOString();
 }
 
-/** Date nue AAAA-MM-JJ, decalee de n jours. */
 function jour(decalage = 0) {
   const date = new Date();
   date.setDate(date.getDate() + decalage);
   return date.toISOString().slice(0, 10);
 }
 
-// Les tables de missions restent listees : sur une base anterieure,
-// elles contiennent encore des lignes que plus aucun ecran ne montre.
 const TABLES = ['avis_mission', 'inscription_mission', 'tache', 'mission'];
 
 async function vider() {
   console.log('[HOPE] --force : suppression des donnees de l espace benevole...');
   await query(`TRUNCATE ${TABLES.join(', ')} CASCADE`);
-  // Les comptes de demonstration repartent aussi, fiche comprise.
   await query(`DELETE FROM utilisateur WHERE email LIKE '%@benevole.hope.example'`);
 }
 
-/**
- * Les six benevoles de demonstration.
- *
- * Cinq sont valides par HOPE ; la derniere, inscrite la semaine passee,
- * ne l'est pas encore. Cet etat reste represente : c'est lui que
- * l'administrateur voit en attente dans l'ecran Benevoles.
- */
 const BENEVOLES = [
   {
     cle: 'tokiana',
@@ -144,7 +110,6 @@ const BENEVOLES = [
     langues: ['malgache', 'francais'],
     disponibilites: { lundi: ['soir'], mercredi: ['soir'] },
     rayonKm: 5,
-    // Inscrite la semaine derniere : HOPE ne l'a pas encore validee.
     valideParHope: false,
     depuis: -6,
     contactUrgenceNom: 'Fara Razafindrakoto',
@@ -153,10 +118,6 @@ const BENEVOLES = [
 ];
 
 async function installer() {
-  // --- Projets d'accueil des taches ---------------------------------
-  //
-  // On ne filtre pas sur le statut : une tache livree il y a trois mois
-  // peut tres bien porter sur un projet aujourd'hui termine.
   const projets = await query('SELECT id, name FROM projects ORDER BY id');
   if (projets.rowCount === 0) {
     throw new Error('Aucun projet en base. Lancez d abord : npm run db:seed-demo -- --force');
@@ -164,13 +125,6 @@ async function installer() {
 
   const parNom = new Map(projets.rows.map((p) => [p.name, p.id]));
 
-  /**
-   * Identifiant d'un projet, par son nom.
-   *
-   * Volontairement sans repli : un nom mal orthographie rattacherait
-   * la tache au mauvais projet sans que personne ne le voie. Mieux
-   * vaut arreter le script.
-   */
   const projet = (nom) => {
     const id = parNom.get(nom);
     if (id === undefined) {
@@ -185,7 +139,6 @@ async function installer() {
   const admin = await query('SELECT id FROM admins ORDER BY id LIMIT 1');
   const encadreur = admin.rows[0]?.id ?? null;
 
-  // --- Benevoles ------------------------------------------------------
   const fiches = new Map();
   for (const profil of BENEVOLES) {
     const compte = await volunteerAuthService.inscrire({
@@ -196,15 +149,6 @@ async function installer() {
       confirmation: 'benevole2026',
     });
 
-    /*
-     * Les comptes de demonstration sont directement utilisables : on
-     * saute l'etape d'activation, deja eprouvee ailleurs.
-     *
-     * Le profil est marque complet dans la foulee. Sans cela, l'espace
-     * renvoie sur "Completez votre profil" des la connexion -- alors
-     * meme que la fiche posee plus bas contient tout ce que ce
-     * formulaire demande.
-     */
     await query(
       `UPDATE utilisateur SET statut = 'actif', profil_complete = TRUE WHERE id = $1`,
       [compte.id]
@@ -238,23 +182,13 @@ async function installer() {
     fiches.set(profil.cle, { ...profil, utilisateurId: compte.id, benevoleId: fiche.rows[0].id });
   }
 
-  /** Identifiant de fiche, par cle -- avec le meme parti pris que projet(). */
   const benevole = (cle) => {
     const fiche = fiches.get(cle);
     if (!fiche) throw new Error(`Benevole introuvable : « ${cle} »`);
     return fiche.benevoleId;
   };
 
-  // --- Taches -----------------------------------------------------------
-  //
-  // Une tache "a_faire" n'a pas de titulaire -- la base l'impose, et
-  // c'est ce qui la rend visible a tous dans "tâches à prendre".
-  //
-  // "prise" et "livree" sont des decalages en jours. Une tache livree
-  // depuis moins d'une semaine n'est pas encore validee par HOPE : le
-  // journal montre ainsi les deux etats.
   const TACHES = [
-    // ----- En cours -----
     { projet: 'Soutien scolaire Antananarivo', titre: 'Préparer 30 kits de fournitures',
       description: 'Composer les kits : cahiers, stylos, ardoise, règle. Liste fournie par la coordinatrice.',
       echeance: jour(9), statut: 'en_cours', benevole: 'tokiana', prise: -3 },
@@ -268,7 +202,6 @@ async function installer() {
       description: 'Fixer l’itinéraire et prévenir les trois comités de gestion de la date de passage.',
       echeance: jour(6), statut: 'en_cours', benevole: 'hery', prise: -4 },
 
-    // ----- Livrees : trois mois d'histoire -----
     { projet: "Puits d'eau potable Mahajanga", titre: 'Rédiger le compte rendu de la sensibilisation',
       description: 'Deux pages : ce qui a été dit, les questions revenues le plus souvent, ce qu’il reste à faire.',
       statut: 'livree', benevole: 'tokiana', prise: -9, livree: -4 },
@@ -316,7 +249,6 @@ async function installer() {
       description: 'Une page, avec son accord écrit, pour la lettre aux donateurs.',
       statut: 'livree', benevole: 'anjara', prise: -30, livree: -26 },
 
-    // ----- A prendre -----
     { projet: 'Cantines scolaires de Fianarantsoa', titre: 'Établir la liste des fournisseurs de riz',
       description: 'Comparer trois fournisseurs locaux : prix au kilo, capacité, délai de livraison.',
       echeance: jour(12) },
@@ -364,19 +296,15 @@ async function installer() {
         projet(t.projet),
         t.titre,
         t.description ?? null,
-        // Une tache livree avait son echeance quelques jours apres la
-        // livraison : une date passee, mais tenue.
         t.echeance ?? (livree ? jour(t.livree + 3) : null),
         statut,
         prise,
         livree ? quand(t.livree, 16) : null,
         livree ? membre : null,
-        // Moins d'une semaine : HOPE n'a pas encore valide la livraison.
         livree && t.livree <= -7 ? encadreur : null,
       ]
     );
 
-    // L'equipe de la tache : le benevole qui l'a prise.
     if (membre) {
       await query(
         `INSERT INTO tache_benevole (tache_id, benevole_id, statut, origine, affectee_le)

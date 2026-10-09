@@ -1,18 +1,3 @@
-/**
- * Les savoir-faire de HOPE, en un seul endroit.
- *
- * Deux ecrans s'en servent, et c'est tout l'interet : le benevole coche
- * ce qu'il sait faire, l'equipe coche ce qu'une tache demande. Les deux
- * ecrivent alors les memes intitules -- une tache se rapproche d'un
- * benevole, ce qu'un texte libre ne permettait pas.
- *
- * La liste n'est pas un catalogue de metiers : elle reprend ce que les
- * taches des projets demandent reellement. "Autre" reste des deux
- * cotes : aucune liste ne prevoit tout, et un savoir-faire inattendu
- * est precisement celui qu'il ne faut pas perdre.
- */
-
-/** Les familles, dans l'ordre ou elles se lisent. */
 export const FAMILLES_COMPETENCES = [
   {
     titre: 'Sur le terrain',
@@ -71,7 +56,6 @@ export const FAMILLES_COMPETENCES = [
   },
 ];
 
-/** Les langues qu'on entend le plus souvent sur les projets. */
 export const LANGUES = [
   'Malgache',
   'Français',
@@ -83,5 +67,4 @@ export const LANGUES = [
   'Arabe',
 ];
 
-/** Toutes les competences proposees, a plat. */
 export const COMPETENCES = FAMILLES_COMPETENCES.flatMap((famille) => famille.competences);

@@ -1,12 +1,3 @@
-/**
- * Service des donateurs.
- *
- * Trois profils, comme decrit dans le cahier des charges :
- *   * donateur ponctuel  : pas de compte, on ne garde que son identite ;
- *   * donateur regulier  : dispose d'un compte pour suivre ses dons ;
- *   * donateur international : donne depuis l'etranger, ce qui change les
- *     moyens de paiement disponibles.
- */
 import bcrypt from 'bcrypt';
 
 import * as donorRepository from '../repositories/donor.repository.js';
@@ -17,16 +8,10 @@ import { texteFacultatif, texteRequis, identifiantRequis, valeurParmi } from '..
 export const ORIGINES = ['LOCAL', 'INTERNATIONAL'];
 export const STATUTS_COMPTE = ['ACTIVE', 'SUSPENDED'];
 
-/** Cout du hachage, aligne sur celui du compte administrateur. */
 const TOURS_BCRYPT = 12;
 
-/** Longueur minimale d'un mot de passe de compte donateur. */
 const LONGUEUR_MOT_DE_PASSE = 8;
 
-/**
- * @param {{ compte?: string, origine?: string, search?: string }} requete
- *        compte = 'AVEC' | 'SANS' | undefined
- */
 export async function lister(requete = {}) {
   let avecCompte = null;
   if (requete.account === 'AVEC') avecCompte = true;
@@ -50,7 +35,6 @@ export async function recupererParId(id) {
   return donateur;
 }
 
-/** Valide l'identite : un particulier a un nom, une organisation une raison sociale. */
 function validerIdentite({ prenom, nom, organisation }) {
   if (!prenom && !nom && !organisation) {
     throw new ErreurRegleMetier(
@@ -69,8 +53,6 @@ export async function creer(corps = {}) {
 
   const pays = texteFacultatif(corps.country, 'country', { max: 120 }) ?? 'Madagascar';
 
-  // L'origine se deduit du pays si elle n'est pas imposee : un donateur
-  // hors de Madagascar est un donateur international.
   const origine = corps.origin
     ? valeurParmi(corps.origin, 'origin', ORIGINES)
     : pays.trim().toLowerCase() === 'madagascar'
@@ -119,14 +101,6 @@ export async function mettreAJour(id, corps = {}) {
   return donorRepository.mettreAJour(donorId, colonnes);
 }
 
-// ------------------------------------------------------------------
-// Comptes donateurs
-// ------------------------------------------------------------------
-
-/**
- * Ouvre un compte pour un donateur existant : il devient donateur regulier.
- * Le mot de passe est hashe avec bcrypt et n'est jamais renvoye.
- */
 export async function ouvrirCompte(donorId, corps = {}) {
   const id = identifiantRequis(donorId, 'donorId');
   const donateur = await donorRepository.trouverParId(id);

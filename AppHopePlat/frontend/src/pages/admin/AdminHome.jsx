@@ -21,12 +21,6 @@ import * as dashboardService from '../../services/dashboard.service.js';
 import photoBandeau from '../../assets/hope-bandeau.jpg';
 import silhouette from '../../assets/hope-madagascar.png';
 
-/**
- * Les quatre gestes du quotidien.
- *
- * Chacun ouvre directement le formulaire, les ecrans concernes sachant
- * lire le parametre qui le declenche.
- */
 const RACCOURCIS = [
   { to: '/admin/projects/new', label: 'Créer un projet', Icone: IconeProjets },
   { to: '/admin/budget?depense=1', label: 'Enregistrer une dépense', Icone: IconeDepenses },
@@ -34,13 +28,6 @@ const RACCOURCIS = [
   { to: '/admin/dons?don=1', label: 'Affecter un don', Icone: IconeDons },
 ];
 
-/**
- * Accueil de l'espace administrateur.
- *
- * Quatre chiffres cles, la lecture du budget, les projets en cours, le fil
- * d'activite et les actions rapides. Pas de graphique ici : ils ont leur
- * ecran dedie.
- */
 export default function AdminHome() {
   const { admin } = useOutletContext();
 
@@ -51,7 +38,6 @@ export default function AdminHome() {
 
   return (
     <>
-      {/* ---------- Bandeau de bienvenue ---------- */}
       <section className="accueil__bandeau" style={{ '--photo-bandeau': `url(${photoBandeau})` }}>
         <p className="page-entete__fil">
           Accueil
@@ -70,17 +56,9 @@ export default function AdminHome() {
         <Chargement texte="Chargement du tableau de bord…" />
       ) : (
         <>
-        
 
-          {/* ---------- Deux colonnes ---------- */}
           <div className="accueil__colonnes" style={{ marginTop: '18px' }}>
             <div className="accueil__pile">
-              {/*
-                Les projets en cours, en fil de publications : chacun se
-                lit comme un message d'un reseau social -- qui, quand, ou,
-                ce qu'il fait, sa photo en grand, son financement -- avec
-                une seule action, voir le projet.
-              */}
               <section className="fil-accueil" aria-labelledby="fil-accueil-titre">
                 <div className="fil-accueil__entete">
                   <div>
@@ -116,16 +94,6 @@ export default function AdminHome() {
               </section>
             </div>
             <div className="accueil__pile">
-              {/*
-                Les quatre gestes du quotidien, a portee de clic depuis
-                l'accueil. Chacun mene la ou l'action se fait, et non a une
-                page d'ou il faudrait encore la chercher -- d'ou les
-                parametres "?don=1" et "?nouveau=1", que les deux ecrans
-                concernes savent lire.
-
-                La depense fait exception : elle appartient toujours a un
-                projet, et il faut donc en designer un d'abord.
-              */}
               <Panneau titre="Actions rapides" serre>
                 <div className="actions-rapides">
                   {RACCOURCIS.map(({ to, label, Icone }) => (

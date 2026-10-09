@@ -1,17 +1,3 @@
-/**
- * Service des taches.
- *
- * Une tache se confie a une equipe d'un ou plusieurs benevoles. L'equipe
- * HOPE peut y affecter qui elle veut ; un benevole, lui, demande a la
- * prendre ou a la rejoindre, et sa demande attend la decision de HOPE.
- * N'importe quel membre de l'equipe la declare livree pour tous, avec s'il
- * le veut des photos, des videos et un commentaire.
- *
- * Toute decision prend la tache sous verrou : deux gestes simultanes --
- * deux demandes acceptees, un retrait pendant une livraison -- ne doivent
- * pas laisser un statut qui contredit l'equipe. Chacune previent le
- * benevole concerne dans sa cloche.
- */
 import { transaction } from '../config/database.js';
 import { plafondPreuve } from '../middleware/upload.middleware.js';
 import * as espaceRepository from '../repositories/espace.repository.js';
@@ -25,28 +11,24 @@ const STATUTS = ['a_faire', 'en_cours', 'livree'];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Un identifiant de tache ou de benevole : 404 s'il est mal forme. */
 function uuid(valeur, quoi) {
   const texte = String(valeur ?? '');
   if (!UUID.test(texte)) throw new ErreurIntrouvable(quoi, valeur);
   return texte;
 }
 
-/** La tache verrouillee, ou 404. */
 async function verrouiller(id, client) {
   const tache = await taskRepository.verrouiller(uuid(id, 'La tâche'), client);
   if (!tache) throw new ErreurIntrouvable('La tâche', id);
   return tache;
 }
 
-/** Une tache livree ne change plus d'equipe. */
 function exigerNonLivree(tache) {
   if (tache.statut === 'livree') {
     throw new ErreurRegleMetier('Cette tâche est livrée : son équipe ne change plus.', 'TACHE_LIVREE');
   }
 }
 
-/** Previent des benevoles, par leur fiche, dans leur cloche. */
 async function prevenir(benevoleIds, { titre, corps }, client) {
   const comptes = await taskRepository.comptesDes(benevoleIds, client);
   for (const compte of comptes) {
@@ -57,21 +39,10 @@ async function prevenir(benevoleIds, { titre, corps }, client) {
   }
 }
 
-/* ================================================================
-   Cote administration
-   ================================================================ */
-
-/** Les taches d'un projet, pour la fiche projet du back-office. */
 export async function listerParProjet(projetId) {
   return taskRepository.lister({ projetId });
 }
 
-/**
- * Toutes les taches, pour la page Taches.
- *
- * @param {{ statut?: string, demandes?: string, projetId?: string }} requete
- *   demandes=1 : seulement celles qui ont des demandes a valider.
- */
 export async function listerPourAdmin(requete = {}) {
   const statut = requete.statut ? String(requete.statut) : null;
   if (statut && !STATUTS.includes(statut)) {
@@ -88,29 +59,16 @@ export async function listerPourAdmin(requete = {}) {
   return { items, counts };
 }
 
-/** Une tache, pour sa fenetre : equipe, demandes, preuve. */
 export async function recupererPourAdmin(id) {
   const tache = await taskRepository.trouverParId(uuid(id, 'La tâche'));
   if (!tache) throw new ErreurIntrouvable('La tâche', id);
   return tache;
 }
 
-/** Les benevoles qu'on peut affecter. */
 export async function benevolesAffectables() {
   return { items: await taskRepository.benevolesAffectables() };
 }
 
-/**
- * Cree une tache sur un projet.
- *
- * Elle peut naitre sans equipe -- visible de tous les benevoles, qui la
- * demandent -- ou avec : l'equipe HOPE sait parfois d'avance a qui elle
- * la confie, et la lui poser tout de suite lui evite un aller-retour.
- *
- * La date de fin est facultative ; donnee, elle doit etre une date. La
- * priorite, elle, a une valeur par defaut : une tache sans priorite
- * declaree est une tache moyenne.
- */
 export async function creerPourProjet(projetId, corps = {}) {
   const titre = String(corps.titre ?? '').trim();
   const description = String(corps.description ?? '').trim();
@@ -169,8 +127,6 @@ export async function creerPourProjet(projetId, corps = {}) {
       client
     );
 
-    // L'equipe posee des la creation : les benevoles en sont prevenus,
-    // comme lors d'une affectation ordinaire.
     if (benevoleIds.length > 0) {
       for (const benevoleId of benevoleIds) {
         await taskRepository.affecter(tache.id, benevoleId, null, client);
@@ -191,16 +147,8 @@ export async function creerPourProjet(projetId, corps = {}) {
   });
 }
 
-/** Les priorites, de la plus pressante a la moins pressante. */
 export const PRIORITES = ['urgente', 'haute', 'moyenne', 'simple'];
 
-/**
- * L'equipe est-elle complete ?
- *
- * Le maximum pose a la creation ferme l'equipe : sans lui, une tache
- * pour deux personnes se retrouve a douze, et onze repartent decues.
- * Sans maximum, rien ne limite -- c'est le cas par defaut.
- */
 function exigerDeLaPlace(tache, ajoutes = 1) {
   const maximum = tache.benevolesMax ?? null;
   if (maximum === null) return;
@@ -214,7 +162,6 @@ function exigerDeLaPlace(tache, ajoutes = 1) {
   }
 }
 
-/** Un nombre de benevoles : entier positif, ou rien. */
 function nombreDeBenevoles(valeur, champ) {
   if (valeur === undefined || valeur === null || valeur === '') return null;
   const nombre = Number(valeur);
@@ -226,19 +173,10 @@ function nombreDeBenevoles(valeur, champ) {
   return nombre;
 }
 
-/** Comment nommer un benevole dans une notification. */
 function nomDuBenevole(fiche) {
   return `${fiche.prenom ?? ''} ${fiche.nom ?? ''}`.trim() || fiche.email || 'Un bénévole';
 }
 
-/**
- * Ce qu'une tache demande de savoir faire.
- *
- * Les memes intitules que la fiche du benevole : ce sont eux qui
- * permettront de rapprocher l'une de l'autre. Les doublons et les
- * blancs tombent, et la liste reste courte -- une tache qui exige dix
- * competences n'en exige aucune.
- */
 function competences(valeur) {
   if (valeur === undefined || valeur === null) return [];
   if (!Array.isArray(valeur)) {
@@ -261,19 +199,6 @@ function competences(valeur) {
   return propres;
 }
 
-/**
- * Modifie une tache deja creee.
- *
- * Les memes controles qu'a la creation : c'est le meme formulaire, et
- * une regle qui ne vaudrait qu'a l'ouverture ne vaudrait rien. Deux
- * differences seulement :
- *
- *   * le projet ne change pas. Une tache appartient a son projet depuis
- *     sa naissance -- son equipe, ses preuves et son historique y sont
- *     rattaches ;
- *   * le maximum ne peut pas descendre sous l'equipe deja formee : on
- *     ne met personne dehors par une modification de formulaire.
- */
 export async function modifier(id, corps = {}) {
   const identifiant = uuid(id, 'La tâche');
   const titre = String(corps.titre ?? '').trim();
@@ -332,13 +257,6 @@ export async function modifier(id, corps = {}) {
   });
 }
 
-/**
- * Retire une tache.
- *
- * Seulement si personne n'y travaille : effacer sous les pieds d'une
- * equipe lui ferait perdre son travail sans un mot. Les demandes en
- * attente, elles, partent avec la tache.
- */
 export async function supprimer(id) {
   return transaction(async (client) => {
     const tache = await verrouiller(id, client);
@@ -354,13 +272,6 @@ export async function supprimer(id) {
   });
 }
 
-/**
- * Affecte un ou plusieurs benevoles.
- *
- * Une demande en attente d'un benevole affecte vaut acceptation. Ceux qui
- * sont deja dans l'equipe sont ignores sans erreur : cocher deux fois la
- * meme personne ne doit rien casser.
- */
 export async function affecter(id, corps = {}, admin = null) {
   const demandes = Array.isArray(corps.benevoleIds) ? corps.benevoleIds : [];
   const benevoleIds = [...new Set(demandes.map((b) => String(b)))];
@@ -382,7 +293,6 @@ export async function affecter(id, corps = {}, admin = null) {
     const tache = await verrouiller(id, client);
     exigerNonLivree(tache);
 
-    // On ne compte que ceux qui vont vraiment entrer dans l'equipe.
     const absents = [];
     for (const benevoleId of benevoleIds) {
       const place = await taskRepository.place(tache.id, benevoleId, client);
@@ -412,7 +322,6 @@ export async function affecter(id, corps = {}, admin = null) {
   });
 }
 
-/** Retire un benevole de l'equipe. Le dernier parti, la tache redevient a faire. */
 export async function retirer(id, benevoleId, _admin = null) {
   const benevole = uuid(benevoleId, 'Le bénévole');
   return transaction(async (client) => {
@@ -438,7 +347,6 @@ export async function retirer(id, benevoleId, _admin = null) {
   });
 }
 
-/** Accepte une demande : le benevole rejoint l'equipe. */
 export async function accepter(id, benevoleId, admin = null) {
   const benevole = uuid(benevoleId, 'La demande');
   return transaction(async (client) => {
@@ -464,7 +372,6 @@ export async function accepter(id, benevoleId, admin = null) {
   });
 }
 
-/** Refuse une demande. Le benevole pourra redemander plus tard. */
 export async function refuser(id, benevoleId, admin = null) {
   const benevole = uuid(benevoleId, 'La demande');
   return transaction(async (client) => {
@@ -487,20 +394,10 @@ export async function refuser(id, benevoleId, admin = null) {
   });
 }
 
-/* ================================================================
-   Cote benevole
-   ================================================================ */
-
-/** Les chiffres de la vue d'ensemble de l'espace benevole. */
 export async function apercu() {
   return taskRepository.apercu();
 }
 
-/**
- * Les taches qu'un benevole peut demander : toutes celles qui ne sont pas
- * livrees et dont il ne fait pas deja partie -- libres, ou deja en cours
- * avec d'autres. Chacune dit ou en est sa demande.
- */
 export async function listerAPrendre(utilisateurId) {
   const fiche = await profileRepository.garantir(utilisateurId);
   const items = await taskRepository.lister(
@@ -510,12 +407,6 @@ export async function listerAPrendre(utilisateurId) {
   return { items };
 }
 
-/**
- * "Mes taches" : celles ou il est affecte.
- *
- * @param {string} utilisateurId
- * @param {{ statut?: string }} requete
- */
 export async function mesTaches(utilisateurId, requete = {}) {
   const fiche = await profileRepository.garantir(utilisateurId);
 
@@ -534,16 +425,11 @@ export async function mesTaches(utilisateurId, requete = {}) {
   return { items, counts: compteurs };
 }
 
-/** Les taches d'un projet, vues par un benevole : sa place sur chacune. */
 export async function listerPourBenevoleParProjet(projetId, utilisateurId) {
   const fiche = await profileRepository.garantir(utilisateurId);
   return taskRepository.lister({ projetId }, { vue: 'benevole', benevoleId: fiche.id });
 }
 
-/**
- * Le benevole demande une tache : la prendre si elle est libre, la
- * rejoindre sinon. Sa demande attend la decision de l'equipe HOPE.
- */
 export async function demander(id, utilisateurId) {
   return transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
@@ -567,7 +453,6 @@ export async function demander(id, utilisateurId) {
     await taskRepository.demander(tache.id, fiche.id, client);
     const vue = await taskRepository.trouverPourBenevole(tache.id, fiche.id, client);
 
-    // Une demande qui dort est un benevole qui attend : la cloche le dit.
     await signalerDemandeDeTache(
       {
         qui: nomDuBenevole(fiche),
@@ -582,7 +467,6 @@ export async function demander(id, utilisateurId) {
   });
 }
 
-/** Le benevole retire sa demande avant la decision. */
 export async function annulerDemande(id, utilisateurId) {
   return transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
@@ -597,7 +481,6 @@ export async function annulerDemande(id, utilisateurId) {
   });
 }
 
-/** Le benevole quitte la tache. Le dernier parti, elle redevient a faire. */
 export async function relacher(id, utilisateurId) {
   return transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
@@ -617,19 +500,9 @@ export async function relacher(id, utilisateurId) {
   });
 }
 
-/** Nombre de fichiers qu'une livraison peut porter. */
 const MAX_FICHIERS_LIVRAISON = 6;
 
-/**
- * Verifie les fichiers d'une livraison.
- *
- * Le televersement accepte aussi le PDF, parce qu'il sert aux preuves
- * terrain ; une livraison, elle, se prouve par ce qu'on a vu : une photo
- * ou une video. Le plafond depend du type -- multer ne connait que le
- * plus haut des deux.
- */
 function verifierFichiersLivraison(fichiers) {
-  // Photos et videos sont facultatives : une tache peut se livrer sans.
   if (fichiers.length > MAX_FICHIERS_LIVRAISON) {
     throw new ErreurValidation(`Une livraison porte au plus ${MAX_FICHIERS_LIVRAISON} fichiers.`, {
       files: 'Trop de fichiers',
@@ -655,17 +528,6 @@ function verifierFichiersLivraison(fichiers) {
   }
 }
 
-/**
- * Un membre de l'equipe declare la tache livree, preuve a l'appui, pour
- * toute l'equipe.
- *
- * Les fichiers et le changement de statut vont ensemble, dans la meme
- * transaction : une tache livree sans preuve, ou une preuve sans tache
- * livree, serait un etat que l'ecran ne sait pas montrer.
- *
- * @param {Array<object>} fichiers ceux que multer a deja ecrits sur le
- *        disque. En cas de refus, c'est le controleur qui les efface.
- */
 export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
   verifierFichiersLivraison(fichiers);
   const commentaire = texteFacultatif(corps?.commentaire, 'commentaire', { max: 2000 });
@@ -709,15 +571,6 @@ export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
   });
 }
 
-/**
- * Un fichier de livraison, pour le servir.
- *
- * Avec un utilisateur : seule l'equipe de la tache y accede. Un refus se
- * dit "introuvable" -- repondre "interdit" confirmerait que la tache
- * d'une autre equipe a une preuve. Sans utilisateur, c'est l'equipe HOPE.
- *
- * @param {string|null} utilisateurId
- */
 export async function fichierDeLivraison(tacheId, fichierId, utilisateurId = null) {
   const numero = Number(fichierId);
   if (!Number.isInteger(numero) || numero <= 0 || !UUID.test(String(tacheId ?? ''))) {

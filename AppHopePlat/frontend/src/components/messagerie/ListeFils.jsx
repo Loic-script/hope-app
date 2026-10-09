@@ -4,7 +4,6 @@ import { IconeRecherche } from '../admin/AdminIcons.jsx';
 import Avatar from './Avatar.jsx';
 import { apercu, correspond, heureRelative } from './outils.js';
 
-/** Les groupes de contacts, dans l'ordre ou ils se lisent. */
 const GROUPES = [
   { cle: 'equipe', titre: 'Équipe HOPE' },
   { cle: 'donateur', titre: 'Donateurs' },
@@ -13,45 +12,17 @@ const GROUPES = [
   { cle: 'autre', titre: 'Autres' },
 ];
 
-/** Le groupe d'une personne de l'annuaire. */
 function groupeDe(personne) {
   if (personne.type === 'equipe' || personne.role === 'equipe') return 'equipe';
   return GROUPES.some((g) => g.cle === personne.role) ? personne.role : 'autre';
 }
 
-/**
- * La liste des conversations, et sous elle les contacts.
- *
- * Les conversations d'abord, par activite. Puis, sans attendre de
- * recherche, les personnes avec qui aucun echange n'existe encore --
- * l'equipe HOPE en tete, puis donateurs, partenaires, benevoles : on
- * voit a qui l'on peut ecrire, et un clic ouvre la conversation.
- *
- * La recherche porte sur le nom, le sous-titre et l'apercu, sans accents
- * ni casse, et filtre les deux listes a la fois.
- *
- * @param {{
- *   fils: object[], actif: number|null, chargement: boolean,
- *   onOuvrir: (id: number) => void,
- *   onNouvelle: (personne: object) => Promise<void>,
- *   chargerJoignables: () => Promise<object[]>,
- *   actions?: React.ReactNode,
- * }} props
- */
 export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvelle, chargerJoignables, actions }) {
   const [recherche, setRecherche] = useState('');
   const [joignables, setJoignables] = useState(null);
   const [ouverture, setOuverture] = useState(null);
   const liste = useRef(null);
 
-  // L'annuaire se charge a l'ouverture : les contacts s'affichent sous
-  // les conversations, sans qu'il faille chercher.
-  //
-  // Il se relit quand une conversation s'ajoute (on vient d'ecrire a un
-  // contact : il passe dans les conversations). La liste affichee n'est
-  // jamais videe pendant ce temps : la nouvelle la remplace a son arrivee.
-  // Un echec (reseau coupe, serveur qui redemarre) est retente trois fois,
-  // a intervalles croissants.
   const [version, setVersion] = useState(0);
   const [essai, setEssai] = useState(0);
   useEffect(() => {
@@ -75,7 +46,6 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
   const nombreFils = fils.length;
   const nombreConnu = useRef(null);
   useEffect(() => {
-    // Le premier nombre connu n'est pas un ajout.
     if (nombreConnu.current !== null && nombreConnu.current !== nombreFils) setVersion((v) => v + 1);
     nombreConnu.current = nombreFils;
   }, [nombreFils]);
@@ -85,7 +55,6 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
     [fils, recherche]
   );
 
-  // Les contacts sans conversation, filtres par la recherche, par groupe.
   const contacts = useMemo(() => {
     if (!joignables) return [];
     const libres = joignables.filter(
@@ -100,7 +69,6 @@ export default function ListeFils({ fils, actif, chargement, onOuvrir, onNouvell
   }, [joignables, recherche]);
   const nombreContacts = contacts.reduce((total, g) => total + g.personnes.length, 0);
 
-  /** Fleches haut et bas pour passer d'une ligne a l'autre. */
   function surTouche(evenement) {
     if (evenement.key !== 'ArrowDown' && evenement.key !== 'ArrowUp') return;
     const lignes = [...liste.current.querySelectorAll('[data-ligne]')];

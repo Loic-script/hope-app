@@ -5,12 +5,6 @@ import ChargementPage from '../components/ChargementPage.jsx';
 import EnteteVitrine from '../components/vitrine/EnteteVitrine.jsx';
 import PiedVitrine from '../components/vitrine/PiedVitrine.jsx';
 
-/**
- * Le site vitrine de HOPE : l'en-tete, la page, le pied.
- *
- * Public, sans compte. Chaque changement de page ramene en haut : un site
- * vitrine se lit de haut en bas, on n'arrive pas au milieu d'une page.
- */
 export default function VitrineLayout() {
   const { pathname } = useLocation();
 

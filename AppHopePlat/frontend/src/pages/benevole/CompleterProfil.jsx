@@ -34,7 +34,6 @@ import { FAMILLES_COMPETENCES, LANGUES } from '../../utils/competences.js';
 import { focusAutomatique, useEcranTelephone } from '../../utils/ecran.js';
 import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomDuPays } from '../../utils/pays.js';
 
-/** Quatre etapes ; la cinquieme veut dire "fiche envoyee". */
 const NOMBRE_ETAPES = 4;
 
 const JOURS = [
@@ -54,7 +53,6 @@ const MOMENTS = [
   { cle: 'journee', label: 'Journée', heures: 'toute la journée' },
 ];
 
-/** Les etapes, dans l'ordre : leur titre sert aussi de reperes. */
 const ETAPES = [
   { titre: 'Faisons connaissance', accroche: 'Qui vous êtes, et comment l’équipe vous joint.' },
   {
@@ -71,26 +69,8 @@ const ETAPES = [
   },
 ];
 
-/**
- * Le formulaire d'accueil d'un benevole, en quatre etapes.
- *
- * Il s'ouvre des l'inscription, avant meme que HOPE ne valide le
- * compte : c'est justement cette fiche -- savoir-faire, disponibilites,
- * pays -- qui permet a l'equipe de decider. Le jeton remis a
- * l'inscription ne vaut que pour elle (voir signerJetonCompletion cote
- * serveur).
- *
- * La mise en page est celle du parcours du donateur : meme progression,
- * memes champs, meme telephone en deux morceaux -- l'indicatif choisi
- * parmi tous les pays, puis le numero, verifie avant d'etre envoye.
- *
- * Une fois la fiche envoyee, le benevole ne rentre pas encore : il voit
- * un ecran qui dit ce qu'il attend, et ce qui se passera ensuite.
- */
 export default function CompleterProfil() {
   const navigate = useNavigate();
-  // Monte hors de la coque : un compte en attente n'a pas de contexte
-  // d'espace. Un compte deja actif, lui, en a un.
   const contexte = useOutletContext() ?? {};
   const { benevole, rafraichir } = contexte;
   const surTelephone = useEcranTelephone();
@@ -128,7 +108,6 @@ export default function CompleterProfil() {
     setErreurs((precedentes) => (precedentes[nom] ? { ...precedentes, [nom]: undefined } : precedentes));
   }
 
-  /** Coche ou decoche une valeur dans une liste (competences, langues). */
   function basculer(nom, valeur) {
     setChamps((precedents) => {
       const actuelles = precedents[nom];
@@ -142,7 +121,6 @@ export default function CompleterProfil() {
     setErreurs((precedentes) => (precedentes[nom] ? { ...precedentes, [nom]: undefined } : precedentes));
   }
 
-  /** Coche ou decoche un moment pour un jour donne. */
   function basculerDisponibilite(jour, moment) {
     setChamps((precedents) => {
       const actuels = precedents.disponibilites[jour] ?? [];
@@ -158,7 +136,6 @@ export default function CompleterProfil() {
     });
   }
 
-  /** Les erreurs de l'etape courante ; vide si l'on peut continuer. */
   function verifier(numero) {
     const trouvees = {};
     if (numero === 1) {
@@ -183,7 +160,6 @@ export default function CompleterProfil() {
     return trouvees;
   }
 
-  /** Change d'etape en ramenant le haut de la page sous les yeux. */
   function allerA(numero) {
     setEtape(numero);
     setErreur('');
@@ -201,7 +177,6 @@ export default function CompleterProfil() {
     else envoyer();
   }
 
-  /** Une liste libre "a, b" devient ['a', 'b'] ; les doublons tombent. */
   function listeComplete(choisies, libres) {
     const ajoutees = libres
       .split(',')
@@ -230,12 +205,6 @@ export default function CompleterProfil() {
           numeroInternational(champs.contactUrgenceTel, champs.contactUrgenceIndicatif) ?? '',
       });
 
-      /*
-       * Compte deja actif : la garde relit le profil et ouvre l'espace.
-       * Compte en attente : on ne rentre pas, et le jeton de completion
-       * ne sert plus a rien -- on l'efface plutot que de le laisser
-       * trainer dans le navigateur.
-       */
       if (data.enAttente) {
         effacerStockage(CLE_JETON_BENEVOLE);
         effacerStockage(CLE_BENEVOLE);
@@ -264,7 +233,6 @@ export default function CompleterProfil() {
 
         <EntetePas etape={etape} />
 
-        {/* La cle relance l'animation d'entree a chaque changement d'etape. */}
         <div className="parcours__formulaire" key={etape}>
           {etape === 1 && (
             <EtapeVous
@@ -307,8 +275,6 @@ export default function CompleterProfil() {
             </p>
           )}
 
-          {/* La premiere etape n'a pas de retour : le bouton prend
-              alors toute la largeur, comme chez le donateur. */}
           {etape === 1 ? (
             <Suivant etape={etape} envoi={envoi} onClick={continuer} />
           ) : (
@@ -331,7 +297,6 @@ export default function CompleterProfil() {
   );
 }
 
-/** Le bouton qui avance : "Continuer", puis "Envoyer ma fiche". */
 function Suivant({ etape, envoi, onClick }) {
   return (
     <button type="button" className="parcours__continuer" onClick={onClick} disabled={envoi}>
@@ -340,10 +305,6 @@ function Suivant({ etape, envoi, onClick }) {
     </button>
   );
 }
-
-/* ================================================================
-   Le fil des etapes
-   ================================================================ */
 
 function EntetePas({ etape }) {
   const { titre, accroche } = ETAPES[etape - 1];
@@ -374,17 +335,11 @@ function EntetePas({ etape }) {
   );
 }
 
-/** Le champ du parcours, avec le prefixe d'identifiant du benevole. */
 function Champ(proprietes) {
   return <ChampParcours prefixeId="benevole" {...proprietes} />;
 }
 
-/* ================================================================
-   Etape 1 : vous
-   ================================================================ */
-
 function EtapeVous({ champs, erreurs, envoi, surTelephone, modifier }) {
-  // Tant qu'on ne l'a pas choisi soi-meme, l'indicatif suit le pays.
   const [indicatifChoisi, setIndicatifChoisi] = useState(false);
 
   function changerPays(valeur) {
@@ -515,10 +470,6 @@ function EtapeVous({ champs, erreurs, envoi, surTelephone, modifier }) {
   );
 }
 
-/* ================================================================
-   Etape 2 : ce que vous savez faire
-   ================================================================ */
-
 function EtapeSavoirFaire({ champs, erreurs, envoi, basculer, modifier }) {
   const choisies = champs.competences.length;
 
@@ -602,7 +553,6 @@ function EtapeSavoirFaire({ champs, erreurs, envoi, basculer, modifier }) {
   );
 }
 
-/** Une competence, une langue : un bouton qui se coche. */
 function Puce({ actif, onClick, disabled, children }) {
   return (
     <button
@@ -619,10 +569,6 @@ function Puce({ actif, onClick, disabled, children }) {
     </button>
   );
 }
-
-/* ================================================================
-   Etape 3 : les disponibilites
-   ================================================================ */
 
 function EtapeDisponibilites({ disponibilites, envoi, onBasculer }) {
   const creneaux = useMemo(
@@ -674,10 +620,6 @@ function EtapeDisponibilites({ disponibilites, envoi, onBasculer }) {
   );
 }
 
-/* ================================================================
-   Etape 4 : en cas d'urgence
-   ================================================================ */
-
 function EtapeUrgence({ champs, erreurs, envoi, surTelephone, modifier }) {
   return (
     <>
@@ -726,23 +668,9 @@ function EtapeUrgence({ champs, erreurs, envoi, surTelephone, modifier }) {
   );
 }
 
-/* ================================================================
-   L'ecran d'attente
-   ================================================================ */
-
-/**
- * La fiche est partie : le compte attend maintenant l'equipe.
- *
- * L'ecran dit trois choses, dans cet ordre : c'est bien enregistre, ce
- * qu'il se passe maintenant, et quand revenir. Sans cela, le benevole
- * retourne a la connexion, se voit refuser l'entree, et croit s'etre
- * trompe.
- */
 function EcranAttente({ message }) {
   const titre = useRef(null);
 
-  // Le changement d'ecran n'est pas une navigation : sans ce focus, un
-  // lecteur d'ecran resterait sur le bouton qui vient de disparaitre.
   useEffect(() => {
     titre.current?.focus();
   }, []);

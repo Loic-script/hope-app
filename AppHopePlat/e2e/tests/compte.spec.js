@@ -1,8 +1,3 @@
-/*
- * Le compte d'un donateur : le rappel de confirmation, le mot de passe
- * oublie, le changement de mot de passe (les autres sessions tombent),
- * la suppression du compte.
- */
 import { expect, test } from '@playwright/test';
 
 import { adresseUnique, connecter, dernierLien, donateurPret, sansDebordement } from './outils.js';
@@ -36,7 +31,6 @@ test('securite du compte : rappel, changement de mot de passe, suppression', asy
   const second = 'second-mdp-2026!';
   await donateurPret(request, email, premier, { complet: true });
 
-  // Un autre appareil, deja connecte.
   const autre = await browser.newContext();
   const autrePage = await autre.newPage();
   await connecter(autrePage, { email, motDePasse: premier });
@@ -58,14 +52,12 @@ test('securite du compte : rappel, changement de mot de passe, suppression', asy
   await page.getByRole('button', { name: 'Changer mon mot de passe' }).click();
   await expect(page.locator('.securite__succes')).toContainText('changé');
 
-  // Cet appareil reste connecte ; l'autre non.
   const ici = await page.evaluate(async () => (await fetch('/api/donateur/me')).status);
   expect(ici).toBe(200);
   const labas = await autrePage.evaluate(async () => (await fetch('/api/donateur/me')).status);
   expect(labas).toBe(401);
   await autre.close();
 
-  // Supprimer le compte : mot de passe et le mot SUPPRIMER.
   await securite.getByRole('button', { name: 'Supprimer', exact: true }).click();
   const confirmer = page.getByRole('button', { name: 'Supprimer définitivement' });
   await page.fill('#motDePasseSuppression', second);

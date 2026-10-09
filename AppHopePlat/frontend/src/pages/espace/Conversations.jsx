@@ -9,21 +9,6 @@ import { useEcranEtroit } from '../../components/messagerie/useEcranEtroit.js';
 import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/messagerie.service.js';
 
-/**
- * La messagerie, commune a tous les espaces.
- *
- * Tout le monde ecrit a qui il peut joindre : benevole, bailleur,
- * donateur, equipe. L'ecran ne connait pas les roles -- c'est le jeton
- * porte par le client axios qui dit qui parle, et le serveur qui decide
- * de ce qu'on voit.
- *
- * - Grand ecran : la liste a gauche, le fil a droite. Sans ?t= dans
- *   l'adresse, le plus recent s'ouvre.
- * - Telephone : un volet a la fois. La page s'ouvre sur la liste seule ;
- *   un fil s'ouvre en plein ecran, par-dessus la barre, avec son retour.
- *   Aucun fil n'est choisi par defaut -- et donc aucun n'est marque lu
- *   sans avoir ete regarde.
- */
 export default function Conversations() {
   const {
     api,
@@ -43,7 +28,6 @@ export default function Conversations() {
   const [erreur, setErreur] = useState('');
   const [annonce, setAnnonce] = useState('');
 
-  // Les anciennes adresses /messages/:id menent au meme fil, sous ?t=.
   useEffect(() => {
     if (idChemin) navigate(`${cheminMessages}?t=${idChemin}`, { replace: true });
   }, [idChemin, cheminMessages, navigate]);
@@ -65,7 +49,6 @@ export default function Conversations() {
   }, [charger]);
 
   const demande = Number(parametres.get('t')) || null;
-  // Sur grand ecran seulement, le plus recent s'ouvre par defaut.
   const affiche = demande ?? (etroit ? null : (fils[0]?.id ?? null));
 
   const ouvrir = useCallback(
@@ -75,7 +58,6 @@ export default function Conversations() {
 
   const revenirALaListe = useCallback(() => setParametres({}), [setParametres]);
 
-  /** Un fil marque lu : sa pastille s'eteint, et celle du menu suit. */
   const surLu = useCallback(
     (id) => {
       setFils((liste) => liste.map((fil) => (fil.id === id ? { ...fil, nonLus: 0 } : fil)));
@@ -96,7 +78,6 @@ export default function Conversations() {
     }
   }
 
-  /** Le groupe quitte : retour a la liste, avec confirmation. */
   const surQuitte = useCallback(
     (nom) => {
       setParametres({});
@@ -108,9 +89,6 @@ export default function Conversations() {
   );
 
   const pleinEcran = etroit && affiche !== null;
-  // Donateurs et bailleurs n'ont que l'equipe HOPE pour contact : un
-  // groupe n'aurait personne a reunir. Le serveur le refuserait de toute
-  // facon (conversationRepository.joignables).
   const groupesPermis = !/^\/(donateur|bailleur)\//.test(cheminMessages ?? '');
 
   return (

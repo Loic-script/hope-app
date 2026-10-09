@@ -28,15 +28,6 @@ const FILTRES_DONS = [
   { valeur: 'MONTHLY', label: 'Mensuels' },
 ];
 
-/**
- * Ecran "Dons recus" : le journal de tous les dons, affectes ou non,
- * ponctuels ou mensuels.
- *
- * Il vivait dans l'ancien ecran Donateurs ; les donateurs ont rejoint
- * l'ecran Utilisateurs, et le journal a gardé son ecran. C'est ici qu'on
- * enregistre un don, qu'on encaisse une echeance, et qu'on genere les
- * echeances du mois des dons mensuels.
- */
 export default function DonsPage() {
   const [parametres, setParametres] = useSearchParams();
 
@@ -48,7 +39,6 @@ export default function DonsPage() {
   const ouvrir = (nom, cible = null) => setModale({ nom, cible });
   const fermer = () => setModale({ nom: null, cible: null });
 
-  // Ouverture directe depuis l'action rapide de l'accueil.
   useEffect(() => {
     if (parametres.get('don') === '1') {
       ouvrir('don');
@@ -61,8 +51,6 @@ export default function DonsPage() {
     return () => clearTimeout(minuterie);
   }, [recherche]);
 
-  // Les fiches donateurs : la fenetre d'enregistrement d'un don y choisit
-  // le donateur.
   const { donnees: donateurs, recharger: rechargerDonateurs } = useChargement(
     () => donorService.lister({}),
     []
@@ -100,12 +88,6 @@ export default function DonsPage() {
   const [messageEcheances, setMessageEcheances] = useState('');
   const [aEncaisser, setAEncaisser] = useState(null);
 
-  /**
-   * Confirme la reception d'une echeance.
-   *
-   * Rien n'a ete preleve : c'est l'administrateur qui atteste que l'argent
-   * est arrive. Le don entre alors dans les totaux du fonds et du projet.
-   */
   async function encaisser() {
     setEnvoi(true);
     try {
@@ -120,10 +102,6 @@ export default function DonsPage() {
     }
   }
 
-  /**
-   * Cree les occurrences du mois pour les dons mensuels.
-   * Aucun argent n'est preleve : elles arrivent en attente d'encaissement.
-   */
   async function genererEcheances() {
     setEnvoi(true);
     setMessageEcheances('');
@@ -167,7 +145,6 @@ export default function DonsPage() {
 
       {messageEcheances && <Alerte type="info">{messageEcheances}</Alerte>}
 
-      {/* ================= Journal ================= */}
       <Panneau serre>
         <BarreOutils
           recherche={recherche}

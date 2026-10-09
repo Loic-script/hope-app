@@ -1,14 +1,3 @@
-/* ============================================================
-   HOPE - Logotype officiel
-
-   Le trace des formes vit dans HopeLogo.jsx. Ici on ne fixe que la
-   taille et les couleurs.
-
-   Chaque partie du logo tire sa couleur d'une variable : le meme trace
-   sert ainsi sur fond clair comme sur le bandeau sombre, sans avoir a
-   dupliquer le dessin ni a charger une seconde image.
-   ============================================================ */
-
 .hope-logo {
   --logo-lettres: var(--hope-violet);
   --logo-signature: var(--hope-violet);
@@ -17,12 +6,8 @@
   --logo-dome: var(--hope-jaune);
 
   display: block;
-  /* Le rapport largeur/hauteur est porte par le viewBox : on ne pilote
-     que la hauteur, la largeur suit toute seule. */
   height: 68px;
   width: auto;
-  /* Centre le logo quand le parent aligne son contenu au centre :
-     un SVG en display:block ne repond pas a text-align. */
   margin-inline: auto;
 }
 

@@ -1,19 +1,3 @@
-/**
- * Service des comptes de l'equipe HOPE.
- *
- * Trois roles, du plus large au plus etroit :
- *
- *   ADMIN        tout, y compris investir le fonds, supprimer un projet
- *                et gerer les comptes de l'equipe ;
- *   COORDINATOR  le travail de terrain : projets, preuves, depenses,
- *                beneficiaires, impacts, messages ;
- *   VIEWER       consultation seule.
- *
- * Deux garde-fous, tous deux la pour eviter de verrouiller la
- * plateforme :
- *   * on ne retire jamais le dernier ADMIN actif ;
- *   * on ne suspend ni ne retrograde son propre compte.
- */
 import bcrypt from 'bcrypt';
 
 import * as adminRepository from '../repositories/admin.repository.js';
@@ -27,17 +11,14 @@ import { fermerSessionsAdmin } from './session.service.js';
 export const ROLES = ['ADMIN', 'COORDINATOR', 'VIEWER'];
 export const STATUTS = ['ACTIVE', 'SUSPENDED'];
 
-/** Libelles affichables, exposes au frontend avec la liste. */
 export const LIBELLES_ROLES = {
   ADMIN: 'Administrateur',
   COORDINATOR: 'Coordinateur',
   VIEWER: 'Lecture seule',
-  // Les roles des comptes back office (onglet Back office des utilisateurs).
   GESTIONNAIRE: 'Admin (back office)',
   MANAGER: 'Manager',
 };
 
-/** Longueur minimale d'un mot de passe, alignee sur les comptes donateurs. */
 const LONGUEUR_MINIMALE = 8;
 
 function verifierMotDePasse(valeur, champ) {
@@ -64,7 +45,6 @@ export async function lister() {
   };
 }
 
-/** Cree un compte pour un membre de l'equipe. */
 export async function creer(corps = {}, auteur = null) {
   const adminLog = texteRequis(corps.adminLog, 'adminLog', { max: 100 });
   const fullName = texteRequis(corps.fullName, 'fullName', { max: 160 });
@@ -95,7 +75,6 @@ export async function creer(corps = {}, auteur = null) {
   return cree;
 }
 
-/** Modifie le nom affiche, le role ou le statut d'un compte. */
 export async function mettreAJour(id, corps = {}, auteur = null) {
   const adminId = identifiantRequis(id, 'id');
 
@@ -106,8 +85,6 @@ export async function mettreAJour(id, corps = {}, auteur = null) {
   const role = corps.role ? valeurParmi(corps.role, 'role', ROLES) : null;
   const status = corps.status ? valeurParmi(corps.status, 'status', STATUTS) : null;
 
-  // On ne se retire pas soi-meme ses propres droits : la personne se
-  // retrouverait enfermee dehors sans pouvoir revenir en arriere.
   const cestSoi = auteur !== null && auteur.id === adminId;
   if (cestSoi && ((role !== null && role !== admin.role) || status === 'SUSPENDED')) {
     throw new ErreurRegleMetier(
@@ -116,8 +93,6 @@ export async function mettreAJour(id, corps = {}, auteur = null) {
     );
   }
 
-  // Retirer le dernier administrateur actif verrouillerait la plateforme :
-  // plus personne ne pourrait gerer les comptes.
   const perdSonRoleAdmin = admin.role === 'ADMIN' && ((role && role !== 'ADMIN') || status === 'SUSPENDED');
   if (perdSonRoleAdmin && (await adminRepository.compterAdministrateursActifs(adminId)) === 0) {
     throw new ErreurRegleMetier(
@@ -150,11 +125,6 @@ export async function mettreAJour(id, corps = {}, auteur = null) {
   return misAJour;
 }
 
-/**
- * Un administrateur reinitialise le mot de passe d'un autre compte.
- * Il n'a pas a connaitre l'ancien : c'est une remise a zero, pas un
- * changement volontaire.
- */
 export async function reinitialiserMotDePasse(id, corps = {}, auteur = null) {
   const adminId = identifiantRequis(id, 'id');
 
@@ -174,19 +144,6 @@ export async function reinitialiserMotDePasse(id, corps = {}, auteur = null) {
   return { id: adminId, updated: true };
 }
 
-/**
- * Chacun change son propre mot de passe, en fournissant l'ancien.
- *
- * L'ancien est exige meme si la session est valide : sans cela, un poste
- * laisse ouvert quelques minutes suffirait a s'approprier le compte.
- */
-/**
- * Pose ou retire la photo de profil d'un membre de l'equipe.
- *
- * Seule une adresse servie par HOPE est acceptee : une adresse
- * exterieure ferait charger au navigateur une image dont personne ici ne
- * repond.
- */
 export async function changerSaPhoto(adminId, corps = {}) {
   const valeur = corps.photoUrl;
   let photo = null;
@@ -236,7 +193,6 @@ export async function changerSonMotDePasse(admin, corps = {}) {
   return { id: complet.id, updated: true };
 }
 
-/** Le journal, tel qu'affiche dans le panneau "Activité récente". */
 export async function journal(requete = {}) {
   const items = await activityLogRepository.lister({
     limite: Math.min(Number.parseInt(requete.limit ?? '30', 10) || 30, 200),

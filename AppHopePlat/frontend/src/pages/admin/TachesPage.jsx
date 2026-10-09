@@ -20,7 +20,6 @@ import * as taskService from '../../services/task.service.js';
 import * as fmt from '../../utils/format.js';
 import { delaiRestant, LIBELLES_PRIORITE, TEINTES_PRIORITE } from '../../utils/priorites.js';
 
-/** Les onglets, et le filtre que chacun envoie au serveur. */
 const FILTRES = {
   toutes: {},
   demandes: { demandes: '1' },
@@ -29,14 +28,6 @@ const FILTRES = {
   livree: { statut: 'livree' },
 };
 
-/**
- * Toutes les taches, tous projets confondus.
- *
- * L'onglet de chaque projet ne montre que les siennes ; ici l'equipe voit
- * d'un coup ce qui attend une decision -- les demandes des benevoles --
- * ce qui n'a encore personne, et ce qui avance. Un clic sur une tache
- * ouvre sa fenetre : equipe, demandes, preuve.
- */
 export default function TachesPage() {
   const [filtre, setFiltre] = useState('toutes');
   const [recherche, setRecherche] = useState('');
@@ -48,11 +39,6 @@ export default function TachesPage() {
     [filtre]
   );
 
-  /*
-   * De quoi creer une tache d'ici : la liste des projets -- il faut bien
-   * en choisir un -- et celle des benevoles affectables, pour poser
-   * l'equipe tout de suite. Chargees une fois, a l'ouverture de la page.
-   */
   const { donnees: projets } = useChargement(
     () => projectService.lister({ status: 'IN_PROGRESS', pageSize: 200 }),
     []
@@ -62,11 +48,6 @@ export default function TachesPage() {
   const toutes = useMemo(() => donnees?.items ?? [], [donnees]);
   const compteurs = donnees?.counts ?? {};
 
-  /*
-   * La recherche filtre la liste de l'onglet, sans aller-retour : le
-   * titre, le projet, l'equipe (prenom, nom), la priorite et le statut.
-   * Les accents et la casse ne comptent pas : « equipe » trouve « Équipe ».
-   */
   const taches = useMemo(() => {
     const plier = (texte) =>
       String(texte ?? '')
@@ -127,8 +108,6 @@ export default function TachesPage() {
             {
               cle: 'titre',
               titre: 'Tâche',
-              // La colonne qui porte le texte : tout ce qui reste de
-              // largeur lui revient.
               largeur: '30%',
               rendu: (tache) => (
                 <div>
@@ -161,8 +140,6 @@ export default function TachesPage() {
               cle: 'echeance',
               titre: 'Date de fin',
               aligne: 'centre',
-              // La date tient sur une ligne, le delai sur la suivante :
-              // 175 px evitent que les deux se coupent en trois.
               largeur: '175px',
               rendu: (tache) => <DateDeFin tache={tache} />,
             },
@@ -244,7 +221,6 @@ export default function TachesPage() {
   );
 }
 
-/** Les visages de l'equipe, serres ; au-dela de quatre, un compte. */
 export function EquipeEnBref({ equipe = [] }) {
   if (equipe.length === 0) return <span className="budget__hors">Personne</span>;
   const nom = (p) => `${p.prenom ?? ''} ${p.nom ?? ''}`.trim();
@@ -259,12 +235,6 @@ export function EquipeEnBref({ equipe = [] }) {
   );
 }
 
-/**
- * La date de fin, et ce qu'il en reste.
- *
- * Le seul jour ne dit pas s'il presse : "12/10" demande un calcul,
- * "A rendre dans 2 jours" non. Les deux se lisent donc ensemble.
- */
 function DateDeFin({ tache }) {
   if (!tache.echeance) return '—';
   const delai = delaiRestant(tache.echeance, tache.statut);
@@ -274,8 +244,6 @@ function DateDeFin({ tache }) {
       <div className="table__principal">{fmt.date(tache.echeance)}</div>
       {delai && (
         <div className={`table__secondaire${delai.pressant ? ' table__secondaire--alerte' : ''}`}>
-          {/* "À rendre dans 88 jours" tiendrait sur trois lignes dans une
-              colonne de tableau : le verbe est deja dans l entete. */}
           {delai.texte.replace('À rendre ', '')}
         </div>
       )}
@@ -283,7 +251,6 @@ function DateDeFin({ tache }) {
   );
 }
 
-/** "2 à 4", "au moins 2", "au plus 4" : la taille d'equipe voulue. */
 function tailleVoulue({ benevolesMin, benevolesMax }) {
   if (benevolesMin && benevolesMax) return `${benevolesMin} à ${benevolesMax}`;
   if (benevolesMin) return `au moins ${benevolesMin}`;

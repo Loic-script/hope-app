@@ -1,9 +1,3 @@
-/**
- * Repository des depenses (utilisation des fonds d'un projet).
- *
- * Une depense est justifiee par sa description et prouvee par un ou
- * plusieurs justificatifs (facture, recu, preuve bancaire, contrat).
- */
 import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
@@ -25,10 +19,6 @@ const JOINTURES = `
   ) doc ON TRUE
 `;
 
-/**
- * @param {{ projectId?: number, statut?: string, recherche?: string,
- *           sansJustificatif?: boolean, limite?: number, decalage?: number }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -112,10 +102,6 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
-/**
- * Total depense sur un projet, hors depenses annulees.
- * @param {{ saufDepenseId?: number|null }} options exclut la depense en cours de modification
- */
 export async function totalParProjet(projectId, { saufDepenseId = null } = {}, client = null) {
   const resultat = await query(
     `SELECT COALESCE(SUM(amount), 0) AS montant
@@ -128,7 +114,6 @@ export async function totalParProjet(projectId, { saufDepenseId = null } = {}, c
   return resultat.rows[0].montant;
 }
 
-/** Repartition des depenses par categorie, pour l'ecran Statistiques. */
 export async function repartitionParCategorie(client = null) {
   const resultat = await query(
     `SELECT COALESCE(NULLIF(TRIM(category), ''), 'Non classé') AS category,

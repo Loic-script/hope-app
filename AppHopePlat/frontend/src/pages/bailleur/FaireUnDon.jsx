@@ -3,19 +3,6 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import ParcoursDon from '../../components/don/ParcoursDon.jsx';
 import * as service from '../../services/bailleur.service.js';
 
-/**
- * Faire un don depuis l'espace bailleur : le parcours commun (ParcoursDon).
- *
- * Depuis le menu, il commence par la destination : un don non affecte
- * (HOPE l'emploie ou le besoin est le plus grand) ou affecte a un projet
- * choisi ; puis le mode de paiement. Depuis une publication
- * (?projet=12), le projet est deja choisi.
- *
- * Le partenaire finance le projet : pas de don mensuel, mais il choisit
- * son mode de paiement. Il voit ou en est le financement -- il le voit
- * deja partout dans son espace. C'est une promesse ; l'equipe HOPE le
- * contacte pour le paiement et confirme a reception.
- */
 export default function FaireUnDon() {
   const { bailleur, rafraichirCompteurs } = useOutletContext();
   const [parametres] = useSearchParams();

@@ -4,16 +4,6 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import * as authService from '../services/auth.service.js';
 import { URL_API } from '../services/api.js';
 
-/**
- * Page de confirmation de connexion.
- *
- * Volontairement minimaliste : elle ne sert qu'a prouver que la chaine
- * complete fonctionne (React -> API Node -> PostgreSQL -> bcrypt -> JWT).
- * Le tableau de bord sera developpe dans une etape ulterieure.
- *
- * L'acces est controle en amont par RequireAuth, qui appelle
- * GET /api/admin/me avant d'afficher quoi que ce soit.
- */
 export default function AdminLoginSuccess() {
   const navigate = useNavigate();
   const { admin } = useOutletContext();

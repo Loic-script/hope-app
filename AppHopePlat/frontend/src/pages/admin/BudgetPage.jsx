@@ -24,14 +24,8 @@ import * as fundService from '../../services/fund.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Une somme en centimes : additionner des montants sans erreur d'arrondi. */
 const enCentimes = (valeur) => Math.round(Number(valeur ?? 0) * 100);
 
-/**
- * Le total des projets, devise par devise : une ligne par devise, placee
- * sous les projets. Additionner des ariary et des euros ne voudrait rien
- * dire.
- */
 function lignesDeTotal(projets) {
   const parDevise = new Map();
   for (const projet of projets) {
@@ -65,29 +59,16 @@ function lignesDeTotal(projets) {
   }));
 }
 
-/**
- * Une somme des totaux, devise par devise : "12 400 000 Ar", ou
- * "12 400 000 Ar + 3 000 EUR" si les projets ne partagent pas une devise.
- */
 function somme(totaux, champ) {
   if (totaux.length === 0) return fmt.montant(null);
   return totaux.map((total) => fmt.montant(total[champ], total.currency)).join(' + ');
 }
 
-/** Une part, en pourcentage entier : "76 %". */
 function part(valeur, sur) {
   const base = enCentimes(sur);
   return base > 0 ? `${Math.round((enCentimes(valeur) * 100) / base)} %` : '—';
 }
 
-/**
- * Ecran Budget : l'etat du fonds et son emploi.
- *
- * Il repond a trois questions dans cet ordre :
- *   combien avons-nous reçu, et sous quelle forme ?
- *   qu'avons-nous deja engage ?
- *   que reste-t-il a investir, et sur quel projet ?
- */
 export default function BudgetPage() {
   const [parametres, setParametres] = useSearchParams();
   const [modaleOuverte, setModaleOuverte] = useState(false);
@@ -95,36 +76,24 @@ export default function BudgetPage() {
   const [fondOuvert, setFondOuvert] = useState(false);
 
   const { donnees, chargement, erreur, recharger } = useChargement(() => fundService.etat(), []);
-  /*
-   * L'etat du fonds ne porte des projets que ce qu'il faut pour
-   * investir : leur besoin restant. Une depense se heurte a une autre
-   * limite -- les fonds deja recus et pas encore depenses -- que seule
-   * la liste complete des projets connait.
-   */
   const { donnees: listeProjets, recharger: rechargerProjets } = useChargement(
     () => projectService.lister({ status: 'IN_PROGRESS', pageSize: 200 }),
     []
   );
-  // Le budget de chaque projet, termines compris : ce qu'il fallait,
-  // ce qui est arrive, ce qui manque, ce qui est sorti. Les projets
-  // archives n'y figurent plus.
   const { donnees: tousLesProjets, recharger: rechargerBudgets } = useChargement(
     () => projectService.lister({ pageSize: 200 }),
     []
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
-  // Le detail des depenses : les plus recentes d'abord.
   const { donnees: listeDepenses, chargement: chargementDepenses, recharger: rechargerDepenses } = useChargement(
     () => expenseService.lister({ pageSize: 200 }),
     []
   );
-  // Un fonds s'alimente d'un don : il faut donc savoir de qui il vient.
   const { donnees: donateurs, recharger: rechargerDonateurs } = useChargement(
     () => donorService.lister({ pageSize: 200 }),
     []
   );
 
-  // Ouvertures directes depuis les actions rapides de l'accueil.
   useEffect(() => {
     if (parametres.get('investir') === '1') {
       setModaleOuverte(true);
@@ -141,8 +110,6 @@ export default function BudgetPage() {
   const resume = donnees?.summary;
   const projets = donnees?.projects ?? [];
   const investissements = donnees?.investments ?? [];
-  // Le service refuse une depense sur un projet qui n'est pas en cours :
-  // autant ne pas le proposer.
   const projetsOuverts = (listeProjets?.items ?? []).filter(
     (projet) => projet.status === 'IN_PROGRESS'
   );
@@ -150,7 +117,6 @@ export default function BudgetPage() {
   const budgets = tousLesProjets?.items ?? [];
   const totaux = lignesDeTotal(budgets);
   const lignesBudget = budgets.length > 0 ? [...budgets, ...totaux] : [];
-  // Les parts ne se calculent que dans une seule devise.
   const unique = totaux.length === 1 ? totaux[0] : null;
 
   return (
@@ -160,16 +126,6 @@ export default function BudgetPage() {
         accroche="Les dons affectés vont directement aux projets. Les dons non affectés forment le fonds HOPE, que vous répartissez."
         actions={
           <>
-            {/*
-              Alimenter le fonds et le repartir sont les deux mouvements
-              de cet ecran : l'argent qui entre, puis celui qui part vers
-              un projet. D'ou deux boutons cote a cote.
-
-              Le don s'ouvre sur "Non affecte (fonds HOPE)", qui est la
-              valeur par defaut du formulaire : c'est bien le fonds que
-              l'on alimente ici. L'affectation reste modifiable -- un don
-              recu pour un projet precis s'enregistre aussi bien d'ici.
-            */}
             <button
               type="button"
               className="btn btn--neutre"
@@ -194,29 +150,20 @@ export default function BudgetPage() {
 
       {erreur && <Alerte>{erreur}</Alerte>}
 
-      {/* Le budget de HOPE, toujours sous les yeux : une carte que l'on deplace. */}
       <FondsFlottant
         resume={resume}
         onInvestir={() => setModaleOuverte(true)}
         peutInvestir={Number(resume?.availableTotal ?? 0) > 0 && projets.length > 0}
       />
 
-      {/*
-        ---------- Les quatre sommes du budget ----------
-        Ce que HOPE a recu, ce qu'il faut aux projets, ce qui reste a
-        trouver, ce que le fonds HOPE a deja investi. Le detail suit :
-        ou va l'argent, le budget de chaque projet, les depenses.
-      */}
       <CartesBudget
         resume={resume}
-        // Aucun projet : des sommes nulles plutot qu'un tiret.
         total={totaux.length === 0 ? { requiredBudget: 0, fundedTotal: 0, remainingNeed: 0, currency: 'MGA' } : unique}
         texteNecessaire={somme(totaux, 'requiredBudget')}
         texteRestant={somme(totaux, 'remainingNeed')}
         nombreProjets={budgets.length}
       />
 
-      {/* ---------- Lecture visuelle du budget ---------- */}
       <Panneau
         titre="Où va l’argent"
         sousTitre="Les largeurs des segments sont proportionnelles aux montants réellement reçus."
@@ -225,12 +172,6 @@ export default function BudgetPage() {
         <FluxDesFonds summary={resume} />
       </Panneau>
 
-      {/*
-        ---------- Le budget des projets ----------
-        Les quatre sommes de chaque projet, et leur total : le budget
-        necessaire, les sommes recues (dons affectes et fonds HOPE
-        investi), ce qui reste a financer, et ce qui est deja depense.
-      */}
       <Panneau
         titre="Budget des projets"
         sousTitre="Le reste à financer, c’est le budget nécessaire moins les sommes reçues."
@@ -338,7 +279,6 @@ export default function BudgetPage() {
         />
       </Panneau>
 
-      {/* ---------- Le detail des depenses ---------- */}
       <Panneau
         titre="Détail des dépenses"
         sousTitre="Chaque sortie d’argent, sa catégorie et son justificatif. Une ligne mène à l’onglet Dépenses du projet."
@@ -351,7 +291,6 @@ export default function BudgetPage() {
         />
       </Panneau>
 
-      {/* ---------- Historique des investissements ---------- */}
       <Panneau
         titre="Investissements du fonds HOPE"
         sousTitre="Chaque décision d’emploi du fonds, avec sa justification."
@@ -426,12 +365,6 @@ export default function BudgetPage() {
         }}
       />
 
-      {/*
-        La depense n'a plus de bouton sur cet ecran, mais l'action rapide
-        de l'accueil ouvre toujours son formulaire ici : c'est la seule
-        page qui connaisse a la fois les projets et leurs fonds
-        disponibles.
-      */}
       <DepenseModale
         ouverte={depenseOuverte}
         projets={projetsOuverts}

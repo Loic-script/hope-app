@@ -6,18 +6,6 @@ import { PleineMessages } from '../../components/IconesPleines.jsx';
 import * as service from '../../services/espace.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * La correspondance avec l'equipe HOPE, commune aux espaces.
- *
- * Meme ossature que la messagerie de l'administration : les fils a
- * gauche, l'echange a droite, en bulles. Les deux ecrans montrent la
- * meme chose vue des deux bouts -- il n'y avait pas de raison qu'ils se
- * ressemblent si peu.
- *
- * Un fil est une vraie conversation : chaque prise de parole est une
- * ligne, et les deux bouts peuvent repondre. Une nouvelle question ouvre
- * un nouveau fil, par le bouton "Ecrire" de la liste.
- */
 export default function MessagesEspace() {
   const { api, rafraichirCompteurs } = useOutletContext();
 
@@ -26,13 +14,11 @@ export default function MessagesEspace() {
   const [erreur, setErreur] = useState(null);
   const [actif, setActif] = useState(null);
 
-  // La composition : ouverte par le "+", et au premier message.
   const [compose, setCompose] = useState(false);
   const [sujet, setSujet] = useState('');
   const [corps, setCorps] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [details, setDetails] = useState({});
-  // La reponse dans un fil ouvert, distincte de la composition.
   const [reponse, setReponse] = useState('');
 
   const charger = useCallback(async () => {
@@ -40,11 +26,9 @@ export default function MessagesEspace() {
       const liste = await service.messages(api);
       setItems(liste);
       setErreur(null);
-      // On garde le fil ouvert s'il existe encore ; sinon le plus recent.
       setActif((courant) =>
         liste.some((m) => m.id === courant) ? courant : (liste[0]?.id ?? null)
       );
-      // La lecture eteint la pastille cote serveur : le menu doit le savoir.
       rafraichirCompteurs?.();
     } catch (e) {
       setErreur(e.response?.data?.message ?? 'Impossible de charger vos messages.');
@@ -118,7 +102,6 @@ export default function MessagesEspace() {
       {erreur && <p className="alerte-benevole">{erreur}</p>}
 
       <div className="messagerie">
-        {/* ================= Les fils ================= */}
         <section className="messagerie__volet">
           <div className="conversations__entete">
             <div>
@@ -159,8 +142,6 @@ export default function MessagesEspace() {
                   className={
                     'conversation' +
                     (message.id === actif ? ' conversation--active' : '') +
-                    // Une reponse non lue met le fil en avant, comme un
-                    // message non lu cote administration.
                     (message.nonLus > 0 ? ' conversation--nouvelle' : '')
                   }
                   onClick={() => {
@@ -197,7 +178,6 @@ export default function MessagesEspace() {
           </div>
         </section>
 
-        {/* ================= L'echange, ou la composition ================= */}
         <section className="messagerie__volet">
           {compose ? (
             <>
@@ -294,10 +274,6 @@ export default function MessagesEspace() {
               </header>
 
               <div className="echange__fil">
-                {/* Le mien a droite, celui de HOPE a gauche : l'inverse de
-                    l'ecran d'administration, ou c'est HOPE qui ecrit. Pas
-                    de sujet dans les bulles : l'en-tete du volet le porte
-                    deja, juste au-dessus. */}
                 {ouvert.entrees.map((entree) => (
                   <Bulle
                     key={entree.id}
@@ -317,8 +293,6 @@ export default function MessagesEspace() {
                 )}
               </div>
 
-              {/* La conversation continue : on repond dans le fil, comme
-                  l'equipe le fait de son cote. */}
               <form className="reponse" onSubmit={repondre}>
                 <textarea
                   value={reponse}
@@ -344,12 +318,10 @@ export default function MessagesEspace() {
   );
 }
 
-/** La derniere parole d'un fil : celle qui le resume dans la liste. */
 function derniere(fil) {
   return fil.entrees?.[fil.entrees.length - 1] ?? null;
 }
 
-/** Une bulle du fil : la mienne, ou celle de HOPE. */
 function Bulle({ sens, sujet, contenu, horodatage, legende }) {
   return (
     <article className={`bulle bulle--${sens}`}>

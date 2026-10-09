@@ -14,7 +14,6 @@ import { VisuelPaiement } from '../VisuelsPaiement.jsx';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 
-/** Les etapes possibles, dans l'ordre ; chaque espace garde celles qui le concernent. */
 const TOUTES_LES_ETAPES = [
   { cle: 'destination', libelle: 'Destination' },
   { cle: 'montant', libelle: 'Montant' },
@@ -22,67 +21,28 @@ const TOUTES_LES_ETAPES = [
   { cle: 'confirmation', libelle: 'Confirmation' },
 ];
 
-/**
- * Avec des pages de paiement (les espaces) : le moyen d'abord, puis la
- * destination si elle n'est pas deja donnee -- et le rythme avec elle.
- */
 const ETAPES_AVEC_PAGES = [
   { cle: 'paiement', libelle: 'Paiement' },
   { cle: 'destination', libelle: 'Destination' },
 ];
 
-/** Des montants pour commencer, selon la devise ; on peut toujours saisir le sien. */
 const MONTANTS_PROPOSES = {
   MGA: [10000, 25000, 50000, 100000, 250000],
   EUR: [10, 25, 50, 100, 250],
   USD: [10, 25, 50, 100, 250],
 };
 
-/** Les confettis du merci : place, angle et retard fixes, pour que le dessin soit stable. */
 const CONFETTIS = [
   [8, -18, 0], [18, 24, 80], [28, -30, 160], [38, 12, 40], [48, -8, 120], [58, 30, 200],
   [68, -22, 60], [78, 16, 140], [88, -28, 20], [14, 34, 180], [52, -34, 100], [84, 8, 220],
 ];
 
-/** "25 000", "25000,50" -> 25000.5 ; NaN si ce n'est pas un montant. */
 function lireMontant(texte) {
   const propre = String(texte ?? '').replace(/[\s\u202f\u00a0]/g, '').replace(',', '.');
   if (!/^\d+(\.\d{1,2})?$/.test(propre)) return Number.NaN;
   return Number(propre);
 }
 
-/**
- * Le parcours d'un don, commun aux espaces donateur, bailleur et benevole.
- *
- * Quatre etapes au plus : a quoi servira le don, combien (et a quel rythme,
- * pour le donateur), comment il sera paye, puis le recapitulatif -- et le
- * merci. Aucun paiement ne passe par l'ecran : c'est une PROMESSE de don,
- * que l'equipe HOPE confirme a reception. Le parcours le dit la ou cela
- * compte : personne ne doit croire avoir paye.
- *
- * Chaque espace regle ce qui le concerne :
- *   - projetImpose : le don va a ce projet (le bouton "Faire un don" d'une
- *     publication) -- l'etape Destination disparait, le projet s'affiche
- *     en tete ; projetPropose le pre-choisit seulement ;
- *   - avecRythme : le donateur peut donner chaque mois ; le bailleur et le
- *     benevole donnent une fois ;
- *   - avecFinances : le financement du projet (jauge, ce qu'il manque) --
- *     jamais chez le benevole, qui ne voit pas l'argent des projets ;
- *   - etiquettesDestination : une etiquette sur chaque choix de l'etape
- *     Destination, { HOPE, PROJECT } -- "Don non affecte" / "Don affecte"
- *     chez le bailleur, qui parle ce vocabulaire ;
- *   - destinationDabord : avec des pages de paiement, la destination se
- *     choisit avant le moyen (le bailleur : affecte ou non, puis comment
- *     payer).
- *
- * @param {object} props
- * @param {() => Promise<{ modes: object[], devises: object[], preferences?: object }>} props.chargerOptions
- * @param {() => Promise<object[]>} props.chargerProjets  projets : { id, nom, image, lieu, categorie, devise, taux?, restant?, atteint? }
- * @param {(don: object) => Promise<{ don: object }>} props.envoyer
- * @param {string} [props.payer]  la base des pages de paiement de l'espace
- *   ("/bailleur/payer") : la confirmation y mene, le don en brouillon,
- *   et c'est la page du moyen choisi qui l'enregistre.
- */
 export default function ParcoursDon({
   prenom,
   chargerOptions,
@@ -108,8 +68,6 @@ export default function ParcoursDon({
 
   const etapes = useMemo(() => {
     const sansDestination = (e) => !(projetImpose && e.cle === 'destination');
-    // Avec des pages de paiement, comme au formulaire d'inscription : le
-    // moyen d'abord, puis sa page, ou se disent le montant et le reste.
     if (payer) {
       const ordre = destinationDabord ? [...ETAPES_AVEC_PAGES].reverse() : ETAPES_AVEC_PAGES;
       return ordre.filter(sansDestination);
@@ -132,7 +90,6 @@ export default function ParcoursDon({
   const [envoi, setEnvoi] = useState(false);
   const [resultat, setResultat] = useState(null);
 
-  // Les options et les projets, une fois.
   useEffect(() => {
     let annule = false;
     Promise.all([chargerOptions(), chargerProjets()])
@@ -145,11 +102,9 @@ export default function ParcoursDon({
     return () => {
       annule = true;
     };
-    // Les chargeurs viennent de la page : on ne recharge pas a chaque rendu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Les preferences pre-remplissent le formulaire, une fois tout arrive.
   useEffect(() => {
     if (pret || !options || !projets) return;
     const ouverts = projets.filter((p) => !p.atteint);
@@ -186,7 +141,6 @@ export default function ParcoursDon({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /** Chaque etape se verifie avant d'avancer : l'erreur se dit la ou elle est. */
   function suivante() {
     if (etape === 'destination') {
       if (!affectation) return setRefus('Choisissez à quoi servira votre don.');
@@ -199,11 +153,6 @@ export default function ParcoursDon({
     return aller(rang + 1);
   }
 
-  /**
-   * Avec des pages de paiement : la derniere etape verifiee, on part sur
-   * la page du moyen, le don en brouillon. C'est elle qui demande le
-   * montant, fait payer et enregistre le don.
-   */
   function versLaPage() {
     if (!mode) return setRefus('Choisissez votre mode de paiement.');
     if (!affectation) return setRefus('Choisissez à quoi servira votre don.');
@@ -259,7 +208,6 @@ export default function ParcoursDon({
   if (erreurChargement) return <p className="don-refus">{erreurChargement}</p>;
   if (!pret) return <p className="don-vide">Préparation de votre don…</p>;
 
-  /* ---------------- Le merci ---------------- */
   if (resultat) {
     const don = resultat.don;
     return (
@@ -322,7 +270,6 @@ export default function ParcoursDon({
     );
   }
 
-  /* ---------------- Les etapes ---------------- */
   const projetEnTete = projetImpose ? projetChoisi : null;
 
   return (
@@ -339,7 +286,6 @@ export default function ParcoursDon({
         </p>
       </header>
 
-      {/* Le projet que ce don soutient, quand il vient d'une publication. */}
       {projetEnTete && (
         <section className="don-projet-tete">
           <span className="don-projet-tete__image" aria-hidden="true">
@@ -362,7 +308,6 @@ export default function ParcoursDon({
         </section>
       )}
 
-      {/* La progression : les pas, et la ligne qui se remplit. */}
       {etapes.length > 1 && (
       <ol
         className="don-pas"
@@ -386,7 +331,6 @@ export default function ParcoursDon({
 
       <div className="don-disposition">
         <div key={etape} className={`don-etape don-etape--${sens}`}>
-          {/* ---------- Destination ---------- */}
           {etape === 'destination' && (
             <section aria-labelledby="don-etape-destination">
               <h2 className="don-etape__titre" id="don-etape-destination">
@@ -477,7 +421,6 @@ export default function ParcoursDon({
                 </div>
               )}
 
-              {/* Sans etape montant, le rythme se choisit ici. */}
               {payer && avecRythme && (
                 <>
                   <h3 className="don-etape__sous-titre">À quel rythme ?</h3>
@@ -505,7 +448,6 @@ export default function ParcoursDon({
             </section>
           )}
 
-          {/* ---------- Montant (et rythme) ---------- */}
           {etape === 'montant' && (
             <section aria-labelledby="don-etape-montant">
               <h2 className="don-etape__titre" id="don-etape-montant">
@@ -598,7 +540,6 @@ export default function ParcoursDon({
             </section>
           )}
 
-          {/* ---------- Paiement ---------- */}
           {etape === 'paiement' && (
             <section aria-labelledby="don-etape-paiement">
               <h2 className="don-etape__titre" id="don-etape-paiement">
@@ -641,7 +582,6 @@ export default function ParcoursDon({
             </section>
           )}
 
-          {/* ---------- Confirmation ---------- */}
           {etape === 'confirmation' && (
             <section aria-labelledby="don-etape-confirmation">
               <h2 className="don-etape__titre" id="don-etape-confirmation">
@@ -717,7 +657,6 @@ export default function ParcoursDon({
           </div>
         </div>
 
-        {/* Le recapitulatif qui suit la saisie, sur grand ecran. */}
         <aside className="don-resume" aria-label="Votre don">
           <p className="don-resume__titre">Votre don</p>
           {payer ? (

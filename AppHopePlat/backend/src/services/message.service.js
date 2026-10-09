@@ -1,11 +1,3 @@
-/**
- * Service de la messagerie.
- *
- * Seul un donateur disposant d'un compte peut ecrire a HOPE : c'est l'un
- * des avantages du compte donateur. L'espace donateur n'existant pas
- * encore, l'administrateur peut saisir un message recu par un autre canal
- * pour ne pas perdre l'echange.
- */
 import { transaction } from '../config/database.js';
 import * as messageRepository from '../repositories/message.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
@@ -33,7 +25,6 @@ export async function recupererParId(id) {
   return message;
 }
 
-/** Enregistre un message venant d'un donateur avec compte. */
 export async function creer(corps = {}) {
   const donorAccountId = identifiantRequis(corps.donorAccountId, 'donorAccountId');
   const sujet = texteRequis(corps.subject, 'subject', { max: 200 });
@@ -59,7 +50,6 @@ export async function creer(corps = {}) {
   });
 }
 
-/** Ouvre un message : il passe de "nouveau" a "lu". */
 export async function marquerLu(id) {
   const messageId = identifiantRequis(id, 'id');
   const message = await messageRepository.marquerLu(messageId);
@@ -67,7 +57,6 @@ export async function marquerLu(id) {
   return message;
 }
 
-/** Repond a un message. La reponse remplace la precedente s'il y en a une. */
 export async function repondre(id, corps = {}) {
   const messageId = identifiantRequis(id, 'id');
   const existant = await messageRepository.trouverParId(messageId);

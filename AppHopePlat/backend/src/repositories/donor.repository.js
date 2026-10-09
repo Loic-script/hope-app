@@ -1,12 +1,3 @@
-/**
- * Repository des donateurs et de leurs comptes.
- *
- * Deux populations, comme le demande l'ecran Donateurs :
- *   * le donateur SANS compte : il a donne ponctuellement, on ne connait
- *     de lui que son identite et la date de son don ;
- *   * le donateur AVEC compte (donateur regulier) : il dispose d'un espace
- *     personnel, on connait en plus son identifiant de compte.
- */
 import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
@@ -43,9 +34,6 @@ const JOINTURES = `
   ) don ON TRUE
 `;
 
-/**
- * @param {{ avecCompte?: boolean|null, origine?: string, recherche?: string }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -114,7 +102,6 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
-/** Repartition affichee en tete de l'ecran Donateurs. */
 export async function synthese(client = null) {
   const resultat = await query(
     `SELECT
@@ -131,10 +118,6 @@ export async function synthese(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-// ------------------------------------------------------------------
-// Comptes donateurs
-// ------------------------------------------------------------------
-
 export async function trouverCompteParDonateur(donorId, client = null) {
   const resultat = await query(
     'SELECT id, donor_id, email, status, last_login_at, created_at FROM donor_accounts WHERE donor_id = $1',
@@ -144,10 +127,6 @@ export async function trouverCompteParDonateur(donorId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Cree le compte d'un donateur regulier.
- * Le mot de passe arrive deja hashe : le service en garde la responsabilite.
- */
 export async function creerCompte({ donorId, email, passwordHash }, client = null) {
   const resultat = await query(
     `INSERT INTO donor_accounts (donor_id, email, password_hash)
@@ -169,7 +148,6 @@ export async function changerStatutCompte(id, statut, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Comptes actifs, pour proposer un expediteur lors d'un message de test. */
 export async function listerComptes(client = null) {
   const resultat = await query(
     `SELECT a.id, a.donor_id, a.email, a.status, a.last_login_at, a.created_at,

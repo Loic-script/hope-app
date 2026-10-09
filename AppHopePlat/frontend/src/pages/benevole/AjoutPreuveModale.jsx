@@ -5,13 +5,6 @@ import { messageErreur } from '../../services/api.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Les natures d'une preuve, et ce que chacune accepte comme fichier.
- *
- * Un temoignage se suffit de son texte ; les trois autres portent au
- * moins un fichier du bon genre -- le serveur refuserait une video
- * annoncee comme photo.
- */
 const NATURES = [
   { cle: 'PHOTO', libelle: 'Photo', accepte: 'image/*', prefixe: 'image/' },
   { cle: 'VIDEO', libelle: 'Vidéo', accepte: 'video/*', prefixe: 'video/' },
@@ -24,7 +17,6 @@ const NATURES = [
   { cle: 'TESTIMONY', libelle: 'Témoignage', accepte: null, prefixe: null },
 ];
 
-/** Plafonds, alignes sur ceux du serveur. */
 const MAX_FICHIERS = 12;
 const MAX_FICHIER = 10 * 1024 * 1024;
 const MAX_VIDEO = 50 * 1024 * 1024;
@@ -38,14 +30,6 @@ const FORMATS = new Set([
   'application/pdf',
 ]);
 
-/**
- * Verifie un fichier avant l'envoi, pour la nature choisie.
- *
- * Le serveur refuserait de toute facon ; le dire ici evite de televerser
- * cinquante megaoctets pour apprendre que le format ne convenait pas.
- *
- * @returns {string|null} la raison du refus, ou null
- */
 function refusDuFichier(fichier, nature) {
   if (!FORMATS.has(fichier.type)) {
     return `« ${fichier.name} » : format non accepté (photos JPG, PNG, WEBP ; vidéos MP4, MOV, WEBM ; PDF).`;
@@ -60,14 +44,6 @@ function refusDuFichier(fichier, nature) {
   return null;
 }
 
-/**
- * Ajouter une preuve terrain a un projet.
- *
- * "Une photo et deux lignes suffisent" : la nature, ce qui s'est passe,
- * le jour, et les fichiers. Chaque fichier choisi s'affiche avant l'envoi
- * -- on verifie ce qu'on envoie, et on retire ce qui n'aurait pas du
- * partir.
- */
 export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
   const [nature, setNature] = useState(NATURES[0]);
   const [description, setDescription] = useState('');
@@ -77,7 +53,6 @@ export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
   const [envoi, setEnvoi] = useState(false);
   const [survol, setSurvol] = useState(false);
 
-  // Les apercus vivent en memoire : on les rend quand ils ne servent plus.
   const apercus = useRef(new Map());
   useEffect(() => {
     const enCours = apercus.current;
@@ -119,11 +94,6 @@ export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
     setFichiers((actuels) => actuels.filter((element) => element !== fichier));
   }
 
-  /**
-   * Changer de nature garde les fichiers qui lui conviennent : une photo
-   * reste valable pour un document, pas pour une video. Un temoignage
-   * n'en garde aucun.
-   */
   function choisirNature(suivante) {
     const gardes = suivante.accepte
       ? fichiers.filter((fichier) => !refusDuFichier(fichier, suivante))
@@ -182,7 +152,6 @@ export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
       ouverte
       titre="Ajouter une preuve terrain"
       sousTitre={projet.name}
-      // Pendant l'envoi, fermer abandonnerait un televersement en cours.
       onFermer={envoi ? () => {} : onFermer}
       erreur={refus}
       pied={
@@ -249,7 +218,6 @@ export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
 
         {nature.accepte && (
           <>
-            {/* La zone de depot est aussi un bouton : on clique, ou on glisse. */}
             <label
               className={`livraison__depot${survol ? ' livraison__depot--survol' : ''}${
                 plein ? ' livraison__depot--plein' : ''
@@ -272,7 +240,6 @@ export default function AjoutPreuveModale({ projet, onFermer, onAjoutee }) {
                 disabled={envoi || plein}
                 onChange={(evenement) => {
                   ajouter([...(evenement.target.files ?? [])]);
-                  // Sans cela, rechoisir le meme fichier n'emettrait rien.
                   evenement.target.value = '';
                 }}
               />

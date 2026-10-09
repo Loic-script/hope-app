@@ -1,10 +1,3 @@
-/**
- * Service des justificatifs.
- *
- * Un justificatif est le document qui prouve une depense (facture, recu,
- * preuve bancaire, contrat). La description de la depense reste dans
- * expenses.description : le justificatif ne la remplace pas.
- */
 import path from 'node:path';
 
 import * as documentRepository from '../repositories/document.repository.js';
@@ -34,12 +27,6 @@ export const TYPES = [
   'OTHER',
 ];
 
-/**
- * Libelles metier, utilises par le frontend pour l'affichage.
- *
- * L'ordre suit celui du cahier des charges : les pieces comptables
- * d'abord, les preuves d'execution ensuite.
- */
 export const LIBELLES_TYPES = {
   INVOICE: 'Facture',
   RECEIPT: 'Reçu',
@@ -54,7 +41,6 @@ export const LIBELLES_TYPES = {
   OTHER: 'Autre',
 };
 
-/** Ajoute l'URL de telechargement servie par l'API. */
 function enrichir(document) {
   if (!document) return null;
   return {
@@ -89,13 +75,6 @@ export async function recupererParId(id) {
   return enrichir(document);
 }
 
-/**
- * Enregistre un justificatif deja televerse par le middleware multer.
- *
- * @param {number|string} expenseId depense justifiee
- * @param {Express.Multer.File} fichier fichier ecrit sur le disque
- * @param {Record<string, unknown>} corps champs du formulaire
- */
 export async function creer(expenseId, fichier, corps = {}, admin = null) {
   const id = identifiantRequis(expenseId, 'expenseId');
 
@@ -107,19 +86,14 @@ export async function creer(expenseId, fichier, corps = {}, admin = null) {
 
   const depense = await expenseRepository.trouverParId(id);
   if (!depense) {
-    // La depense n'existe pas : on ne conserve pas le fichier orphelin.
     await supprimerFichier(fichier.path);
     throw new ErreurIntrouvable('La depense', id);
   }
 
   const document = await documentRepository.creer({
     expenseId: id,
-    // Qui a depose le fichier : repond a la propriete "Personne qui l'a
-    // ajoute" du cahier des charges.
     adminId: admin?.id ?? null,
     documentType: valeurParmi(corps.documentType, 'documentType', TYPES, { defaut: 'INVOICE' }),
-    // On garde le nom d'origine pour l'affichage, mais il ne sert jamais de
-    // chemin sur le disque : seul le nom genere par multer est stocke.
     fileName: texteFacultatif(corps.fileName, 'fileName', { max: 255 }) ?? fichier.originalname,
     filePath: fichier.filename,
     mimeType: fichier.mimetype,
@@ -131,11 +105,6 @@ export async function creer(expenseId, fichier, corps = {}, admin = null) {
   return enrichir(document);
 }
 
-/**
- * Chemin absolu du fichier, pour le telechargement.
- * Le chemin est reconstruit depuis le dossier de stockage et le nom stocke :
- * une valeur piegee en base ne peut pas faire sortir du dossier.
- */
 export async function preparerTelechargement(id) {
   const document = await recupererParId(id);
   const nomSurDisque = path.basename(document.filePath);
@@ -146,7 +115,6 @@ export async function preparerTelechargement(id) {
   };
 }
 
-/** Supprime un justificatif (ligne en base et fichier sur le disque). */
 export async function supprimer(id) {
   const documentId = identifiantRequis(id, 'id');
   const document = await documentRepository.trouverParId(documentId);

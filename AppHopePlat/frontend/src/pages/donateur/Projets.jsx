@@ -8,15 +8,6 @@ import * as service from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
 import { normaliser } from '../../components/ChoixSurPage.jsx';
 
-/**
- * Les projets que l'on peut soutenir.
- *
- * Chaque carte dit ce qu'est le projet, ou en est sa collecte, et mene a
- * sa fiche ou au don. Ceux qui ont le plus besoin de soutien viennent en
- * premier -- l'API les classe ainsi ; un projet deja finance vient en
- * dernier, marque comme tel. La recherche porte sur le nom, le lieu et la
- * categorie, sans tenir compte des accents.
- */
 export default function Projets() {
   const { donnees, chargement, erreur } = useChargement(() => service.listerProjets(), []);
   const [recherche, setRecherche] = useState('');

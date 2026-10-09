@@ -15,17 +15,6 @@ const MOMENTS = [
   { cle: 'journee', label: 'Journée' },
 ];
 
-/**
- * Mon profil de benevole.
- *
- * Ce qui se saisit ici sert a confier les bonnes taches : ce que l'on
- * sait faire, quand on est libre, jusqu'ou l'on se deplace.
- *
- * Deux informations sont affichees sans etre modifiables : le nom et
- * la validation par HOPE. La premiere identifie, la seconde atteste que
- * l'equipe a verifie le profil -- si le benevole pouvait la cocher
- * lui-meme, elle ne vaudrait plus rien.
- */
 export default function MonProfil() {
   const { donnees, chargement, erreur, recharger } = useChargement(
     () => service.recupererProfil(),
@@ -37,7 +26,6 @@ export default function MonProfil() {
   const [refus, setRefus] = useState('');
   const [succes, setSucces] = useState('');
 
-  // Le formulaire part de ce que le serveur a renvoye.
   useEffect(() => {
     if (!donnees) return;
     setChamps({
@@ -61,7 +49,6 @@ export default function MonProfil() {
     setChamps((precedents) => ({ ...precedents, [nom]: valeur }));
   }
 
-  /** Coche ou decoche un moment pour un jour donne. */
   function basculerDisponibilite(jour, moment) {
     setChamps((precedents) => {
       const actuels = precedents.disponibilites[jour] ?? [];
@@ -95,7 +82,6 @@ export default function MonProfil() {
         adresse: champs.adresse,
         telephone: champs.telephone,
         dateDeNaissance: champs.dateDeNaissance || null,
-        // Vide vaut effacement : le service le traduit en NULL.
         photoUrl: champs.photoUrl,
         masqueSite: champs.masqueSite,
       });
@@ -148,11 +134,6 @@ export default function MonProfil() {
         <fieldset className="profil-benevole__groupe">
           <legend>Identité</legend>
 
-          {/*
-            La photo n'est pas obligatoire : l'espace affiche les
-            initiales a defaut, et personne ne doit se sentir tenu de
-            montrer son visage pour aider.
-          */}
           <ChampPhotoProfil
             valeur={champs.photoUrl}
             nom={`${donnees.prenom} ${donnees.nom}`.trim() || donnees.email}
@@ -162,7 +143,6 @@ export default function MonProfil() {
             aide="Une image — JPEG, PNG ou WebP. Visible par l’équipe HOPE, les autres bénévoles et, sauf refus ci-dessous, sur le site public."
           />
 
-          {/* Le nom se renseigne ici : l'inscription ne le demande plus. */}
           <Champ
             id="prenom"
             libelle="Prénom"
@@ -264,11 +244,6 @@ export default function MonProfil() {
         <fieldset className="profil-benevole__groupe">
           <legend>Sur le site de HOPE</legend>
 
-          {/*
-            La rubrique "Les benevoles" du site public presente les
-            benevoles actifs par leur prenom et leur photo ; cette case
-            permet a chacun de s'en retirer, et d'y revenir, quand il veut.
-          */}
           <p className="profil-benevole__note">
             Le site public de HOPE présente ses bénévoles dans la rubrique « Les bénévoles » : votre prénom et votre
             photo, rien d’autre — ni votre nom, ni vos coordonnées.
@@ -319,7 +294,6 @@ export default function MonProfil() {
   );
 }
 
-/** Un champ de saisie du profil. */
 function Champ({ id, libelle, valeur, onChange, aide, type = 'text', ...reste }) {
   return (
     <div className="profil-benevole__champ">

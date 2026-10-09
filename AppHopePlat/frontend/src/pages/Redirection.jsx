@@ -1,14 +1,5 @@
 import { Link } from 'react-router-dom';
 
-/**
- * Page d'entree du site.
- *
- * Deux portes, et non quatre : l'administration d'un cote, les
- * utilisateurs de l'autre. Donateur, benevole et bailleur passent par le
- * meme formulaire, qui leur demande ce qu'ils viennent faire -- leur
- * proposer trois boutons ici puis reposer la question ensuite serait
- * demander deux fois la meme chose.
- */
 export default function Redirection() {
   return (
     <main className="redirection">

@@ -1,19 +1,8 @@
-/**
- * L'annuaire des benevoles, dans l'espace benevole : se connaitre entre
- * membres, voir le profil d'un autre, et lui ecrire par la messagerie.
- *
- * Le profil qu'on lit d'un autre est un profil public : ce qui aide a
- * travailler ensemble (metier, competences, langues, disponibilites,
- * taches livrees), rien de ce qui touche a la vie privee. Pour le
- * joindre, on passe par la messagerie de HOPE, jamais par ses
- * coordonnees.
- */
 import * as annuaire from '../repositories/annuaireBenevoles.repository.js';
 import { ErreurIntrouvable } from '../shared/errors.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Les memes paliers que le journal de chacun (volunteerProfile.service.js). */
 const BADGES = [
   { cle: 'premiere-tache', libelle: 'Première tâche livrée', taches: 1 },
   { cle: 'cinq-taches', libelle: '5 tâches livrées', taches: 5 },
@@ -40,13 +29,11 @@ function versCarte(ligne) {
   };
 }
 
-/** Les autres benevoles actifs. */
 export async function lister(utilisateurId) {
   const lignes = await annuaire.lister(utilisateurId);
   return { items: lignes.map(versCarte) };
 }
 
-/** Le profil public d'un benevole actif. */
 export async function profil(utilisateurId, id) {
   if (!UUID.test(String(id ?? ''))) throw new ErreurIntrouvable('Le bénévole', id);
   const ligne = await annuaire.trouver(id);

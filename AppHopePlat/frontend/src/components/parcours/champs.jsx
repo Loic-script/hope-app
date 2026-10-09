@@ -5,33 +5,6 @@ import ChoixSurPage, { parLettre } from '../ChoixSurPage.jsx';
 import { IconeChevronBas } from '../HopeIcons.jsx';
 import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomAnglais, nomDuPays } from '../../utils/pays.js';
 
-/**
- * Les pieces communes aux parcours d'accueil.
- *
- * Le donateur a ouvert la voie : un champ avec son icone et son erreur,
- * un telephone en deux morceaux -- l'indicatif choisi dans la liste de
- * tous les pays, puis le numero --, et les rayons du soleil en
- * filigrane. Le benevole remplit une autre fiche, mais la saisie doit
- * se faire de la meme facon : c'est la meme maison.
- *
- * Ces composants portent les classes "parcours__*" (parcours-donateur.css).
- * Le nom vient du premier parcours ; renommer un millier de lignes de
- * style n'apprendrait rien a personne.
- */
-
-/*
- * Sur telephone, les longues listes -- pays, indicatif -- s'ouvrent sur
- * une page a part, recherche en haut (ChoixSurPage). On les y cherche en
- * francais comme en anglais -- "Allemagne" ou "Germany" --, et
- * l'indicatif par son numero, avec ou sans "+".
- */
-
-/**
- * Les pays sur la page de choix : Madagascar en suggestion, puis tous
- * les pays -- Madagascar compris -- ranges par lettre, chacun avec son
- * drapeau. Pour l'indicatif, chaque ligne porte aussi "+261", et se
- * cherche par "261" ou "+261".
- */
 function groupesDePays(avecIndicatif) {
   const options = PAYS.map((pays) => {
     const indicatif = indicatifDe(pays.code);
@@ -56,19 +29,9 @@ function groupesDePays(avecIndicatif) {
 export const GROUPES_PAYS = groupesDePays(false);
 export const GROUPES_INDICATIF = groupesDePays(true);
 
-/**
- * Un choix fait sur la page de choix, rendu comme un changement de liste
- * native : les gestionnaires du formulaire n'ont pas a distinguer l'un
- * de l'autre.
- */
 export const commeUneListe = (gestionnaire) => (valeur) =>
   gestionnaire({ target: { value: valeur, tagName: 'SELECT' } });
 
-/* ------------------------------------------------------------------
-   Le telephone
-   ------------------------------------------------------------------ */
-
-/** Le numero tel qu'on le montre : national s'il vient du pays choisi. */
 export function numeroAffiche(telephone, indicatif) {
   const numero = parsePhoneNumberFromString(telephone ?? '');
   if (!numero) return telephone ?? '';
@@ -77,7 +40,6 @@ export function numeroAffiche(telephone, indicatif) {
     : numero.formatInternational();
 }
 
-/** Le numero saisi, au format international, ou null s'il ne vaut rien. */
 export function numeroInternational(saisie, indicatif) {
   const texte = String(saisie ?? '').trim();
   if (texte === '') return null;
@@ -86,22 +48,10 @@ export function numeroInternational(saisie, indicatif) {
   return parsePhoneNumberFromString(texte, code)?.number ?? null;
 }
 
-/** Le pays d'un numero deja enregistre ("+33612..." -> "FR"), s'il se deduit. */
 export function paysDuNumero(telephone) {
   return parsePhoneNumberFromString(telephone ?? '')?.country ?? null;
 }
 
-/**
- * L'indicatif du telephone : tous les pays, Madagascar en tete.
- *
- * Replie, il ne montre que "+261" : le nom du pays ne tiendrait pas
- * devant le numero. Ouvert, c'est la liste native du systeme -- "Pays
- * (+indicatif)" -- que le clavier et les lecteurs d'ecran savent
- * parcourir, et qui s'ouvre en roue sur un telephone. Elle est posee,
- * transparente, sur l'affichage : c'est elle que l'on touche.
- *
- * Sur telephone, la meme case ouvre la page de choix, avec sa recherche.
- */
 export function SelecteurIndicatif({ valeur, onChange, disabled, surPage = false, id = 'indicatif' }) {
   const affichage = (
     <span className="parcours__indicatif" aria-hidden="true">
@@ -151,19 +101,6 @@ export function SelecteurIndicatif({ valeur, onChange, disabled, surPage = false
   );
 }
 
-/* ------------------------------------------------------------------
-   Le champ
-   ------------------------------------------------------------------ */
-
-/**
- * Un champ : libelle, icone, saisie, erreur.
- *
- * La saisie arrive en enfant ; ce composant lui donne son id, et la
- * relie a son message d'erreur pour les lecteurs d'ecran.
- *
- * "prefixe" tient l'indicatif du telephone, "liste" ajoute le chevron
- * d'une liste deroulante.
- */
 export function Champ({
   id,
   prefixeId = 'parcours',
@@ -218,10 +155,6 @@ export function Champ({
   );
 }
 
-/**
- * Les rayons du soleil HOPE, en filigrane dans les coins bas de la page.
- * Purement decoratifs.
- */
 export function RayonsDecor({ className }) {
   return (
     <svg className={className} viewBox="0 0 240 240" aria-hidden="true" focusable="false">

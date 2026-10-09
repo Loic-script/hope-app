@@ -20,13 +20,6 @@ import * as impactService from '../../services/impact.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Ecran Impact : le resultat des projets.
- *
- * Deux lectures complementaires :
- *   les projets termines, avec leur date de fin et leur resultat ecrit ;
- *   les indicateurs chiffres, tous projets confondus.
- */
 export default function ImpactPage() {
   const [ongletActif, setOngletActif] = useState('resultats');
   const [modale, setModale] = useState({ nom: null, cible: null });
@@ -47,9 +40,6 @@ export default function ImpactPage() {
     recharger: rechargerImpacts,
   } = useChargement(() => impactService.lister(), []);
 
-  // Les preuves terrain alimentent la ligne "Activite" : ce qui a ete
-  // fait avec l'argent, entre la depense et le resultat. Une seule
-  // requete, regroupee ensuite par projet, plutot qu'une par projet.
   const { donnees: preuves } = useChargement(() => fieldProofService.lister(), []);
 
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
@@ -77,13 +67,10 @@ export default function ImpactPage() {
 
   const libelles = catalogue?.labels ?? {};
 
-  // La fiche projet affiche les memes indicateurs : la mise en forme est
-  // partagee plutot que recopiee (fmt.libelleIndicateur).
   const libelleIndicateur = (code) => fmt.libelleIndicateur(code, impacts?.indicators ?? []);
   const projetsTermines = termines?.items ?? [];
   const mesures = impacts?.items ?? [];
 
-  // Cumul des indicateurs, toutes mesures confondues.
   const cumul = mesures.reduce((total, impact) => {
     const cle = `${impact.indicator}|${impact.unit ?? ''}`;
     total[cle] = total[cle] ?? { indicator: impact.indicator, unit: impact.unit, total: 0, nombre: 0 };
@@ -93,7 +80,6 @@ export default function ImpactPage() {
   }, {});
   const indicateursCumules = Object.values(cumul).sort((a, b) => b.total - a.total);
 
-  /** Regroupe une liste par projet, pour la chaine de resultats. */
   function parProjet(liste) {
     const groupes = {};
     for (const element of liste ?? []) {
@@ -148,7 +134,6 @@ export default function ImpactPage() {
         onChange={setOngletActif}
       />
 
-      {/* ================= Projets termines ================= */}
       {ongletActif === 'resultats' && (
         <>
           <Panneau
@@ -236,11 +221,6 @@ export default function ImpactPage() {
                   </Link>
                 }
               >
-                {/*
-                  La chaine de resultats, dans l'ordre ou elle se lit :
-                  ce qu'on a depense, ce qu'on a fait, ce qu'on a obtenu,
-                  ce que cela a change.
-                */}
                 <dl className="chaine">
                   <dt className="chaine__terme">Dépenses</dt>
                   <dd className="chaine__valeur">
@@ -294,7 +274,6 @@ export default function ImpactPage() {
         </>
       )}
 
-      {/* ================= Indicateurs ================= */}
       {ongletActif === 'mesures' && (
         <>
           {indicateursCumules.length > 0 && (

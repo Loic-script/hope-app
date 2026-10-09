@@ -46,17 +46,8 @@ import * as impactService from '../../services/impact.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Fiche complete d'un projet : le centre du systeme.
- *
- * Un seul appel a /api/admin/projects/:id/overview alimente les six
- * onglets. Chaque action recharge cette vue pour que les totaux restent
- * coherents.
- */
-/** Statut d'une tache, tel qu'il s'affiche. */
 const STATUTS_TACHE = { a_faire: 'À faire', en_cours: 'En cours', livree: 'Livrée' };
 
-/** Le financement d'un bailleur : son organisation, son engagement. */
 const TYPES_ORGANISATION = {
   fondation_privee: 'Fondation privée',
   entreprise: 'Entreprise',
@@ -81,12 +72,8 @@ export default function ProjectDetailPage() {
   const [ongletActif, setOngletActif] = useState(parametres.get('onglet') ?? 'general');
 
   const [modale, setModale] = useState({ nom: null, cible: null });
-  // Les ecritures qui ont retenu la suppression : le second
-  // avertissement les nomme.
   const [retenu, setRetenu] = useState(null);
-  // La preuve d'une tache livree, ouverte en grand.
   const [preuveTache, setPreuveTache] = useState(null);
-  // La tache ouverte dans sa fenetre : equipe, demandes, preuve.
   const [tacheOuverte, setTacheOuverte] = useState(null);
   const ouvrir = (nom, cible = null) => setModale({ nom, cible });
   const fermer = () => setModale({ nom: null, cible: null });
@@ -96,11 +83,6 @@ export default function ProjectDetailPage() {
     [id]
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
-  /*
-   * Les preuves ne viennent pas de l'apercu : celui-ci alimente les six
-   * onglets d'un seul appel, et rien ne sert d'aller chercher des images
-   * pour six visiteurs sur sept qui n'ouvriront jamais l'onglet Impact.
-   */
   const { donnees: preuves, recharger: rechargerPreuves } = useChargement(
     () => fieldProofService.listerParProjet(id),
     [id]
@@ -128,25 +110,11 @@ export default function ProjectDetailPage() {
 
   const libelles = catalogue?.labels ?? {};
   const listePreuves = preuves?.items ?? [];
-  // Meme mise en forme que l'ecran Impact : sans elle, le tableau affiche
-  // "people_with_water_access" au lieu de "Personnes ayant acces a l'eau".
   const libelleIndicateur = (code) =>
     fmt.libelleIndicateur(code, catalogue?.indicators ?? []);
   const projet = donnees?.project;
   const finance = donnees?.finance;
 
-  /*
-   * Le tableau du budget : une ligne par categorie, prevu et reel.
-   *
-   * Les deux sources sont reunies ici plutot qu'en base : le devis dit ce
-   * qui etait prevu, les depenses ce qui a eu lieu, et une categorie peut
-   * n'exister que d'un cote. Une depense hors budget doit se voir -- c'est
-   * meme le premier interet de la colonne.
-   *
-   * "prevu" vaut null, et non zero, quand la categorie ne figure pas au
-   * devis : un zero laisserait croire a une enveloppe vide, alors qu'il
-   * n'y avait pas d'enveloppe du tout.
-   */
   const lignesBudget = useMemo(() => {
     const lignes = new Map();
 
@@ -154,8 +122,6 @@ export default function ProjectDetailPage() {
       const categorie = poste.category ?? '—';
       const prevu = Number(poste.amount ?? 0);
       const existante = lignes.get(categorie);
-      // Deux postes de meme categorie ne peuvent plus etre saisis, mais
-      // les devis d'avant en contiennent : on les additionne.
       lignes.set(categorie, {
         categorie,
         prevu: (existante?.prevu ?? 0) + prevu,
@@ -176,23 +142,12 @@ export default function ProjectDetailPage() {
     return [...lignes.values()]
       .map((ligne) => ({
         ...ligne,
-        // Le reste de l'enveloppe. Sans enveloppe, tout ce qui est sorti
-        // est un depassement : le reste est alors negatif.
         reste: (ligne.prevu ?? 0) - ligne.reel,
         depasse: ligne.prevu !== null && ligne.reel > ligne.prevu,
       }))
       .sort((a, b) => a.categorie.localeCompare(b.categorie, 'fr'));
   }, [projet]);
 
-  /**
-   * Les trois totaux du budget.
-   *
-   * Sommes des lignes, et non des champs du projet : le budget
-   * necessaire enregistre peut avoir ete saisi a la main, sans devis, et
-   * ne couvrirait alors aucune des categories du tableau. Additionner ce
-   * qu'on affiche garantit que la colonne et son total disent la meme
-   * chose.
-   */
   const totauxBudget = useMemo(() => {
     const prevu = lignesBudget.reduce((somme, l) => somme + (l.prevu ?? 0), 0);
     const reel = lignesBudget.reduce((somme, l) => somme + l.reel, 0);
@@ -210,18 +165,11 @@ export default function ProjectDetailPage() {
   async function archiver() {
     await soumettre(() => projectService.archiver(projet.id), { onSucces: rechargerTout });
   }
-  /*
-   * Supprimer efface : on revient donc a la liste, et non a une fiche
-   * qui n'existe plus. Le serveur refuse si le projet a porte de
-   * l'argent -- c'est alors l'archivage qui conserve son histoire.
-   */
   async function supprimerProjet() {
     try {
       await projectService.supprimer(projet.id);
       navigate('/admin/projects', { replace: true });
     } catch (echec) {
-      // Refus pour cause d'ecritures : le second avertissement prend la
-      // suite et dit ce que la suppression forcee detruirait.
       const donnees = echec?.response?.data;
       if (donnees?.code === 'PROJET_AVEC_ECRITURES') {
         setRetenu(donnees.details ?? {});
@@ -237,13 +185,6 @@ export default function ProjectDetailPage() {
       onSucces: () => navigate('/admin/projects', { replace: true }),
     });
   }
-  /**
-   * Confirme la reception d'un don en attente.
-   *
-   * Rien n'a ete preleve : la plateforme n'est reliee a aucun prestataire
-   * de paiement. C'est l'administrateur qui atteste que l'argent est
-   * arrive, et le don entre alors dans les totaux.
-   */
   async function encaisser() {
     await soumettre(() => donationService.changerStatut(modale.cible.id, 'RECEIVED'), {
       onSucces: rechargerTout,
@@ -272,30 +213,16 @@ export default function ProjectDetailPage() {
   const enCours = projet.status === 'IN_PROGRESS';
   const archive = projet.status === 'ARCHIVED';
 
-  // Les financements des bailleurs, et leur total quand ils partagent
-  // une meme devise : additionner ariary et euros ne voudrait rien dire.
   const affectationsBailleurs = donnees.funderAllocations ?? [];
   const devisesBailleurs = [...new Set(affectationsBailleurs.map((a) => a.devise))];
   const totalBailleurs = affectationsBailleurs.reduce((somme, a) => somme + Number(a.montant), 0);
   const nombreBailleurs = new Set(affectationsBailleurs.map((a) => a.bailleurId)).size;
 
-  /*
-   * Une mesure appartient a l'un des deux tableaux selon qu'elle nomme
-   * un objectif. Le partage se fait ici, et non en base : c'est la meme
-   * table, et une mesure passe de l'un a l'autre en changeant d'objectif.
-   */
   const impactsGeneraux = donnees.impacts.filter((impact) => !impact.objectiveId);
   const impactsParObjectif = donnees.impacts.filter((impact) => impact.objectiveId);
 
-  // Sans objectifs, il n'y a rien a mesurer objectif par objectif.
   const sansObjectifs = (projet.objectives?.length ?? 0) === 0;
 
-  /**
-   * Le nom d'une mesure, qui ouvre sa fenetre de modification -- d'ou
-   * l'on peut aussi la supprimer. Il remplace la colonne d'actions : on
-   * agit sur une mesure en la designant. Sur un projet archive, plus rien
-   * ne se modifie : le nom reste un simple texte.
-   */
   function nomMesure(impact, portee, className) {
     if (archive) return <strong className={className}>{impact.title}</strong>;
     return (
@@ -310,11 +237,6 @@ export default function ProjectDetailPage() {
     );
   }
 
-  /**
-   * Les mesures par objectif : toutes les colonnes centrees, et Modifier
-   * / Supprimer en fin de ligne. Un projet archive ne se modifie plus :
-   * la colonne des actions disparait avec lui.
-   */
   const colonnesMesures = [
     {
       cle: 'title',
@@ -387,29 +309,17 @@ export default function ProjectDetailPage() {
     },
     { cle: 'depenses', label: 'Dépenses', compteur: donnees.expenses.length },
     {
-      // Les justificatifs ne sont plus un onglet : ils se rattachent a
-      // une depense, et c'est en face d'elle qu'on les ajoute et qu'on
-      // les ouvre, dans l'onglet Depenses.
       cle: 'taches',
       label: 'Tâches à faire',
       compteur: (donnees.tasks ?? []).length,
     },
     { cle: 'beneficiaires', label: 'Bénéficiaires', compteur: donnees.beneficiaries.length },
     { cle: 'impact', label: 'Impact', compteur: donnees.impacts.length },
-    // Pas de compteur : les rapports envoyes ne viennent pas de la vue du
-    // projet, et l'onglet ne les charge qu'a son ouverture.
     { cle: 'rapport', label: 'Rapport' },
   ];
 
   return (
     <>
-      {/*
-        La photo du projet, en couverture de sa fiche : on reconnait le
-        projet avant d'en lire le nom, et elle reste en vue quel que soit
-        l'onglet ouvert. Une photo s'agrandit d'un clic ; une video se
-        regarde sur place. Sans media, pas de couverture : un cadre vide
-        n'apprendrait rien.
-      */}
       {projet.mediaUrl && (
         <div
           className={`couverture-projet${
@@ -499,7 +409,6 @@ export default function ProjectDetailPage() {
         </Alerte>
       )}
 
-      {/* ---------- Bandeau financier ---------- */}
       <div className="resume-financier" style={{ margin: '18px 0' }}>
         <div className="resume-financier__bloc">
           <p className="resume-financier__libelle">Budget nécessaire</p>
@@ -541,7 +450,6 @@ export default function ProjectDetailPage() {
 
       <Onglets onglets={ONGLETS} actif={ongletActif} onChange={changerOnglet} />
 
-      {/* ================= Vue generale ================= */}
       {ongletActif === 'general' && (
         <>
           <Panneau titre="Informations du projet">
@@ -579,12 +487,6 @@ export default function ProjectDetailPage() {
             </Panneau>
           )}
 
-          {/*
-            Les objectifs specifiques, juste sous la description : elle
-            dit ce qu'est le projet, eux ce qu'il doit avoir accompli. Le
-            panneau se montre meme vide -- un projet sans objectif doit se
-            voir, puisque l'impact se mesure objectif par objectif.
-          */}
           <Panneau
             titre="Objectifs spécifiques"
             sousTitre={sansObjectifs ? undefined : `${projet.objectives.length} objectif(s)`}
@@ -612,12 +514,6 @@ export default function ProjectDetailPage() {
             )}
           </Panneau>
 
-          {/*
-            Le budget, categorie par categorie : ce qui etait prevu, et ce
-            qui a ete depense. Il n'apparait que s'il y a quelque chose a
-            montrer -- un projet dont le montant a ete saisi directement,
-            et ou rien n'a encore ete depense, n'a pas de tableau.
-          */}
           {lignesBudget.length > 0 && (
             <Panneau
               titre="Budget"
@@ -635,9 +531,6 @@ export default function ProjectDetailPage() {
                     aligne: 'droite',
                     rendu: (ligne) =>
                       ligne.prevu === null ? (
-                        // Depense dans une categorie que le budget n'avait
-                        // pas prevue : le tiret le dit, un zero laisserait
-                        // croire a une enveloppe vide.
                         <span className="budget__hors">—</span>
                       ) : (
                         <strong>{fmt.montant(ligne.prevu, projet.currency)}</strong>
@@ -654,8 +547,6 @@ export default function ProjectDetailPage() {
                     ),
                   },
                   {
-                    // Ce qui reste de l'enveloppe. Negatif, c'est un
-                    // depassement : la couleur le dit, et le signe aussi.
                     cle: 'reste',
                     titre: 'Reste',
                     aligne: 'droite',
@@ -667,12 +558,6 @@ export default function ProjectDetailPage() {
                   },
                 ]}
               />
-              {/*
-                Les trois totaux, dans l'ordre des colonnes : ce qu'il
-                faut, ce qui est sorti, ce qui reste. Ce reste est celui du
-                budget, et non de la tresorerie -- l'argent disponible est
-                une autre affaire, et il a son propre panneau.
-              */}
               <dl className="budget__totaux">
                 <div>
                   <dt>Budget nécessaire</dt>
@@ -698,11 +583,8 @@ export default function ProjectDetailPage() {
         </>
       )}
 
-      {/* ================= Financement ================= */}
       {ongletActif === 'financement' && (
         <>
-          {/* Deux tableaux, deux origines : les dons des donateurs, puis
-              les financements des bailleurs. */}
           <Panneau
             titre="Dons des donateurs"
             sousTitre={`${fmt.montant(finance.designatedTotal, projet.currency)} versés directement par des donateurs`}
@@ -928,7 +810,6 @@ export default function ProjectDetailPage() {
         </>
       )}
 
-      {/* ================= Depenses ================= */}
       {ongletActif === 'depenses' && (
         <Panneau
           titre="Utilisation des fonds"
@@ -965,9 +846,6 @@ export default function ProjectDetailPage() {
                 ),
               },
               {
-                // Sortie de la ligne secondaire de la description, ou elle
-                // se lisait mal : c'est elle qui rapproche la depense du
-                // budget, elle merite sa colonne.
                 cle: 'category',
                 titre: 'Catégorie',
                 rendu: (d) =>
@@ -1059,8 +937,6 @@ export default function ProjectDetailPage() {
         </Panneau>
       )}
 
-      {/* ================= Justificatifs ================= */}
-      {/* ================= Taches ================= */}
       {ongletActif === 'taches' && (
         <Panneau
           titre="Tâches à faire"
@@ -1082,7 +958,6 @@ export default function ProjectDetailPage() {
         >
           <Tableau
             lignes={donnees.tasks ?? []}
-            // Un clic sur la tache ouvre sa fenetre.
             onLigne={(tache) => setTacheOuverte(tache.id)}
             colonnes={[
               {
@@ -1126,14 +1001,11 @@ export default function ProjectDetailPage() {
                 ),
               },
               {
-                // Qui y travaille : une tache se confie a une equipe.
                 cle: 'equipe',
                 titre: 'Équipe',
                 rendu: (tache) => <EquipeEnBref equipe={tache.equipe} />,
               },
               {
-                // Les benevoles qui demandent a la prendre ou a la
-                // rejoindre : c'est a l'equipe de trancher.
                 cle: 'demandes',
                 titre: 'Demandes',
                 rendu: (tache) =>
@@ -1148,8 +1020,6 @@ export default function ProjectDetailPage() {
                   ),
               },
               {
-                // La preuve jointe a la livraison : c'est sur elle que
-                // l'equipe juge qu'une tache est vraiment faite.
                 cle: 'files',
                 titre: 'Preuve',
                 rendu: (tache) =>
@@ -1199,7 +1069,6 @@ export default function ProjectDetailPage() {
         />
       )}
 
-      {/* ================= Beneficiaires ================= */}
       {ongletActif === 'beneficiaires' && (
         <Panneau
           titre="Qui a été aidé"
@@ -1288,14 +1157,8 @@ export default function ProjectDetailPage() {
         </Panneau>
       )}
 
-      {/* ================= Impact ================= */}
       {ongletActif === 'impact' && (
         <>
-          {/*
-            Les totaux, en tete : ils additionnent tout ce qui a ete
-            mesure, general et par objectif. C'est un resume, pas une
-            liste -- les deux tableaux qui suivent, eux, s'editent.
-          */}
           {donnees.impactSummary.length > 0 && (
             <div className="cartes-chiffres">
               {donnees.impactSummary.map((ligne) => (
@@ -1311,13 +1174,6 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          {/*
-            Deux tableaux, deux questions. Celui-ci porte ce que le projet
-            a produit dans son ensemble -- ce que sa description annonce.
-            Celui du dessous detaille objectif par objectif. Une mesure
-            appartient a l'un ou a l'autre selon qu'elle nomme un
-            objectif, et se modifie des deux cotes de la meme facon.
-          */}
           <Panneau
             titre="Impact général du projet"
             sousTitre={
@@ -1338,11 +1194,6 @@ export default function ProjectDetailPage() {
               )
             }
           >
-            {/*
-              Un texte, et non un tableau : une phrase par impact, qui se
-              lit comme un compte rendu. "Habitants desservis en eau
-              potable : 400 personnes, mesure le 17/08/2026."
-            */}
             {impactsGeneraux.length > 0 ? (
               <div className="impact-texte">
                 {impactsGeneraux.map((impact) => (
@@ -1385,9 +1236,6 @@ export default function ProjectDetailPage() {
             titre="Mesures par objectif"
             sousTitre="Chaque mesure enregistrée, et l’objectif spécifique qu’elle documente"
             actions={
-              /* Un projet sans objectifs n'a rien a mesurer ici. Le
-                 bouton reste en place -- le faire disparaitre laisse
-                 chercher -- mais inactif, et il dit pourquoi. */
               !archive && (
                 <button
                   type="button"
@@ -1420,7 +1268,6 @@ export default function ProjectDetailPage() {
                   }
                   action={
                     archive ? null : sansObjectifs ? (
-                      // La suite est ailleurs : autant y mener.
                       <Link className="btn btn--principal" to={`/admin/projects/${projet.id}/edit`}>
                         Ajouter des objectifs
                       </Link>
@@ -1440,14 +1287,6 @@ export default function ProjectDetailPage() {
             />
           </Panneau>
 
-          {/*
-            Les preuves ferment l'onglet, apres les chiffres : un impact
-            dit COMBIEN, une preuve montre QUE c'est arrive. L'ordre suit
-            la lecture -- le total, puis le detail, puis ce qui l'atteste.
-
-            A ne pas confondre avec les justificatifs de l'onglet du meme
-            nom : ceux-la prouvent une depense, ceux-ci une action.
-          */}
           <Panneau
             titre="Preuves terrain"
             sousTitre="Une photo et deux lignes suffisent — c’est ce que verra le donateur."
@@ -1519,10 +1358,8 @@ export default function ProjectDetailPage() {
         </>
       )}
 
-      {/* ================= Rapport ================= */}
       {ongletActif === 'rapport' && <OngletRapport projet={projet} />}
 
-      {/* ================= Modales ================= */}
       <InvestirModale
         ouverte={modale.nom === 'investir'}
         projetVerrouille={{ ...projet, remainingNeed: finance.remainingNeed }}
@@ -1583,8 +1420,6 @@ export default function ProjectDetailPage() {
         />
       )}
 
-      {/* Une seule fenetre pour les deux tableaux : ce qui change est la
-          portee de la mesure -- le projet entier, ou un objectif. */}
       <ImpactModale
         ouverte={modale.nom === 'impactGeneral' || modale.nom === 'impactObjectif'}
         portee={modale.nom === 'impactObjectif' ? 'objectif' : 'general'}
@@ -1595,8 +1430,6 @@ export default function ProjectDetailPage() {
         beneficiaires={donnees.beneficiaries}
         onFermer={fermer}
         onEnregistre={rechargerTout}
-        // Supprimer se demande depuis la fenetre : la confirmation prend
-        // sa place.
         onSupprimer={(impact) => ouvrir('supprimerImpact', impact)}
       />
 

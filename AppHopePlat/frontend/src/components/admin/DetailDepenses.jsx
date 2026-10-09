@@ -4,18 +4,6 @@ import { Link } from 'react-router-dom';
 import { Tableau } from './ui.jsx';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Le detail des depenses, sur l'ecran Budget : ou part l'argent recu.
- *
- *   - trois chiffres : le total depense, le nombre de depenses, celles
- *     qui n'ont pas encore de justificatif ;
- *   - la repartition par categorie, en barres proportionnelles ;
- *   - la liste, filtrable par projet et par mot, chaque ligne menant a
- *     l'onglet Depenses de son projet.
- *
- * Seules les depenses enregistrees comptent : une depense annulee n'a
- * rien coute.
- */
 const PAR_PAGE = 8;
 
 const enCentimes = (valeur) => Math.round(Number(valeur ?? 0) * 100);
@@ -49,7 +37,6 @@ export default function DetailDepenses({ depenses, chargement, sommesRecues }) {
     );
   }, [valides, projet, recherche]);
 
-  // La devise commune, s'il n'y en a qu'une : sinon pas de somme globale.
   const devises = [...new Set(filtrees.map((d) => d.currency ?? 'MGA'))];
   const devise = devises.length <= 1 ? devises[0] ?? 'MGA' : null;
   const totalCentimes = filtrees.reduce((s, d) => s + enCentimes(d.amount), 0);

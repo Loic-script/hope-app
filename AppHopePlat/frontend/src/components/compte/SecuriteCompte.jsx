@@ -7,17 +7,9 @@ import { apiBenevole } from '../../services/apiBenevole.js';
 import { apiDonateur } from '../../services/apiDonateur.js';
 import { effacerToutesLesSessions } from '../../services/utilisateur.service.js';
 
-/**
- * La securite du compte, commune aux trois espaces : changer son mot de
- * passe, supprimer son compte. Les deux demandent le mot de passe actuel.
- *
- * Le client HTTP est celui de l'espace : son cookie de session, et
- * l'en-tete qui dit au serveur de quel espace on parle.
- */
 const CLIENTS = { donateur: apiDonateur, benevole: apiBenevole, bailleur: apiBailleur };
 const LONGUEUR = 8;
 
-/** Une estimation simple de la solidite, pour guider sans bloquer. */
 function solidite(motDePasse) {
   let points = 0;
   if (motDePasse.length >= LONGUEUR) points += 1;
@@ -71,7 +63,6 @@ function ChampSecret({ id, libelle, valeur, onChange, visible, erreur, autoCompl
   );
 }
 
-/** Changer son mot de passe. */
 function ChangerMotDePasse({ client }) {
   const [ouvert, setOuvert] = useState(false);
   const [champs, setChamps] = useState({ actuel: '', nouveau: '', confirmation: '' });
@@ -217,7 +208,6 @@ function ChangerMotDePasse({ client }) {
   );
 }
 
-/** Supprimer son compte, derriere une fenetre de confirmation. */
 function SupprimerCompte({ client }) {
   const navigate = useNavigate();
   const [ouvert, setOuvert] = useState(false);

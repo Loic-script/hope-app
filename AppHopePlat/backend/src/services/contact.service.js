@@ -1,22 +1,9 @@
-/**
- * Le formulaire de contact du site vitrine.
- *
- * Un visiteur ecrit a HOPE sans compte : son nom, son courriel, un
- * telephone s'il veut, le sujet et le message. Le message est garde
- * (contact_messages), l'equipe le voit dans sa cloche (notification
- * CONTACT) et le recoit en entier par courriel ; le visiteur recoit un
- * accuse de reception.
- *
- * Un champ piege, invisible pour une personne, arrete les robots : s'il
- * est rempli, on repond "merci" sans rien garder.
- */
 import { transaction } from '../config/database.js';
 import * as contactRepository from '../repositories/contactMessage.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
 import { ErreurValidation } from '../shared/errors.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
-/** Les sujets proposes par le formulaire ; la base les connait (schema.sql). */
 export const SUJETS = [
   { cle: 'don', libelle: 'Faire un don' },
   { cle: 'benevolat', libelle: 'Devenir bénévole' },
@@ -31,7 +18,6 @@ const MESSAGE_MAX = 2000;
 
 const MERCI = 'Merci ! Votre message est bien arrivé. L’équipe HOPE vous répond sous 48 h ouvrées.';
 
-/** Un texte obligatoire, borne ; l'erreur s'ajoute aux details. */
 function requis(valeur, champ, { min = 1, max }, details) {
   const texte = String(valeur ?? '').trim();
   if (texte === '') details[champ] = 'Champ obligatoire';
@@ -40,18 +26,11 @@ function requis(valeur, champ, { min = 1, max }, details) {
   return texte;
 }
 
-/** Les options du formulaire. */
 export function options() {
   return { sujets: SUJETS };
 }
 
-/**
- * POST /api/public/contact
- *
- * @param {{ nom, courriel, telephone?, sujet, message, siteWeb? }} corps
- */
 export async function envoyer(corps = {}) {
-  // Le piege a robots : personne ne voit ce champ. Rempli, on fait comme si.
   if (String(corps.siteWeb ?? '').trim() !== '') return { message: MERCI };
 
   const details = {};

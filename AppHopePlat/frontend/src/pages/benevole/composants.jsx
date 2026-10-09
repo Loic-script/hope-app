@@ -1,11 +1,9 @@
-/** Statut d'une tache. */
 export const STATUTS_TACHE = {
   a_faire: 'À faire',
   en_cours: 'En cours',
   livree: 'Livrée',
 };
 
-/** Une pastille de statut, quel que soit le domaine. */
 export function Pastille({ valeur, libelles, teinte }) {
   return (
     <span className={`pastille pastille--${teinte ?? 'gris'}`}>
@@ -14,12 +12,6 @@ export function Pastille({ valeur, libelles, teinte }) {
   );
 }
 
-/**
- * L'equipe d'une tache, en prenoms : "Avec Hery, Faniry".
- *
- * Seulement des prenoms : les photos des benevoles ne sont montrees qu'a
- * l'equipe HOPE.
- */
 export function EquipeTache({ tache, className = 'equipe-tache' }) {
   const equipe = tache.equipe ?? [];
   if (equipe.length === 0) return null;
@@ -32,16 +24,6 @@ export function EquipeTache({ tache, className = 'equipe-tache' }) {
   );
 }
 
-/**
- * Ce qu'un benevole peut faire d'une tache qui n'est pas encore la sienne.
- *
- * Prendre une tache, c'est la demander : l'equipe HOPE valide. Libre, on
- * la demande ; deja prise par d'autres, on demande a la rejoindre. Une
- * demande en attente s'annule ; une demande refusee se renouvelle.
- *
- * @param {{ tache: object, envoi: boolean, onDemander: Function,
- *           onAnnuler: Function, classeBouton?: string, classeSecondaire?: string }} props
- */
 export function ActionDemande({
   tache,
   envoi,

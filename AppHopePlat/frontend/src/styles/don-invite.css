@@ -1,12 +1,3 @@
-/* ============================================================
-   Le don sans compte : l'introduction (pages/don/IntroductionDon.jsx)
-
-   Dans l'habit du parcours (parcours-donateur.css) : la colonne de
-   700 px, le bouton orange, la police des titres. Tout entre en scene
-   l'un apres l'autre (--rang), le soleil tourne lentement. Moins de
-   mouvement demande : tout est en place d'un coup.
-   ============================================================ */
-
 .don-intro {
   display: flex;
   flex-direction: column;
@@ -15,13 +6,10 @@
   text-align: center;
 }
 
-/* Chaque bloc arrive a son tour, de bas en haut. */
 .don-intro > * {
   animation: don-intro-entree 0.65s var(--parcours-rythme) both;
   animation-delay: calc(var(--rang, 0) * 95ms + 80ms);
 }
-
-/* ------------------------------ Le soleil ------------------------------ */
 
 .don-intro__soleil {
   --soleil: clamp(132px, 22vw, 168px);
@@ -48,8 +36,6 @@
   );
 }
 
-/* La couronne tourne en une minute : assez lent pour vivre sans
-   distraire. */
 .don-intro__couronne {
   width: 100%;
   height: 100%;
@@ -61,8 +47,6 @@
   fill: var(--hope-orange);
 }
 
-/* Le disque dans son anneau jaune, et la main qui tend un coeur ; il bat
-   deux fois a l'arrivee, puis se tient tranquille. */
 .don-intro__coeur {
   inset: 21%;
   display: grid;
@@ -82,8 +66,6 @@
   height: 62%;
   object-fit: contain;
 }
-
-/* ------------------------------ Les textes ------------------------------ */
 
 .don-intro__sur-titre {
   margin: 0;
@@ -112,10 +94,6 @@
   color: var(--hope-texte-doux);
 }
 
-/* ------------------------------ Les etapes ------------------------------ */
-
-/* Trois jalons relies par un filet qui se trace de gauche a droite ;
-   chaque numero se pose avec un leger rebond. */
 .don-intro__etapes {
   position: relative;
   display: grid;
@@ -181,8 +159,6 @@
   color: var(--hope-texte-doux);
 }
 
-/* ------------------------------- Le bouton ------------------------------- */
-
 .don-intro__bouton {
   position: relative;
   max-width: 420px;
@@ -190,7 +166,6 @@
   overflow: hidden;
 }
 
-/* Un reflet le traverse une fois, quand tout est en place. */
 .don-intro__bouton::after {
   content: '';
   position: absolute;
@@ -212,8 +187,6 @@
   color: var(--hope-violet);
   font-weight: 700;
 }
-
-/* ------------------------------ Mouvements ------------------------------ */
 
 @keyframes don-intro-entree {
   from {
@@ -268,10 +241,7 @@
   }
 }
 
-/* ------------------------------ Petits ecrans ------------------------------ */
-
 @media (max-width: 640px) {
-  /* Les jalons en liste, le numero a gauche ; plus de filet. */
   .don-intro__etapes {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;

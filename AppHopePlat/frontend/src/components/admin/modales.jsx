@@ -1,9 +1,3 @@
-/**
- * Modales de l'espace administrateur.
- *
- * Petites actions en modale, actions complexes sur page dediee : la
- * creation d'un projet a sa propre page, tout le reste passe par ici.
- */
 import { useEffect, useMemo, useState } from 'react';
 
 import {
@@ -34,14 +28,6 @@ import * as impactService from '../../services/impact.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/* ==================================================================
-   Investir le fonds HOPE dans un projet
-   ================================================================== */
-
-/**
- * @param {{ ouverte, projets: object[], disponible: string,
- *           projetVerrouille?: object|null, onFermer, onEnregistre }} props
- */
 export function InvestirModale({
   ouverte,
   projets = [],
@@ -68,7 +54,6 @@ export function InvestirModale({
     [projets, projectId, projetVerrouille]
   );
 
-  // Le plafond, c'est le plus petit des deux : le fonds ou le besoin du projet.
   const plafond = projetChoisi
     ? Math.min(Number(disponible), Number(projetChoisi.remainingNeed ?? disponible))
     : Number(disponible);
@@ -168,10 +153,6 @@ export function InvestirModale({
   );
 }
 
-/* ==================================================================
-   Terminer un projet
-   ================================================================== */
-
 export function TerminerProjetModale({ ouverte, projet, onFermer, onEnregistre }) {
   const [resultat, setResultat] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
@@ -218,10 +199,6 @@ export function TerminerProjetModale({ ouverte, projet, onFermer, onEnregistre }
   );
 }
 
-/* ==================================================================
-   Donateur
-   ================================================================== */
-
 const DONATEUR_VIDE = {
   firstName: '',
   lastName: '',
@@ -260,7 +237,6 @@ export function DonateurModale({ ouverte, donateur = null, libelles = {}, onFerm
   function modifier(champ, valeur) {
     setFormulaire((actuel) => {
       const suivant = { ...actuel, [champ]: valeur };
-      // L'origine suit le pays tant que l'utilisateur ne la force pas.
       if (champ === 'country') {
         suivant.origin = valeur.trim().toLowerCase() === 'madagascar' ? 'LOCAL' : 'INTERNATIONAL';
       }
@@ -358,10 +334,6 @@ export function DonateurModale({ ouverte, donateur = null, libelles = {}, onFerm
   );
 }
 
-/* ==================================================================
-   Ouverture d'un compte donateur
-   ================================================================== */
-
 export function CompteDonateurModale({ ouverte, donateur, onFermer, onEnregistre }) {
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
@@ -425,10 +397,6 @@ export function CompteDonateurModale({ ouverte, donateur, onFermer, onEnregistre
   );
 }
 
-/* ==================================================================
-   Don
-   ================================================================== */
-
 const DON_VIDE = {
   donorId: '',
   amount: '',
@@ -442,13 +410,6 @@ const DON_VIDE = {
   message: '',
 };
 
-/**
- * Saisie d'un don recu.
- *
- * Le formulaire suit la logique metier : on choisit d'abord si le don est
- * affecte a un projet ou destine au fonds HOPE, et les moyens de paiement
- * proposes dependent de la localisation du donateur.
- */
 export function DonModale({
   ouverte,
   donateurs = [],
@@ -481,14 +442,12 @@ export function DonModale({
     [donateurs, formulaire.donorId, donateurVerrouille]
   );
 
-  // Les moyens de paiement dependent de la localisation du donateur.
   const moyensDisponibles = donateurChoisi ? (moyensPaiement[donateurChoisi.origin] ?? []) : [];
 
   function modifier(champ, valeur) {
     setFormulaire((actuel) => {
       const suivant = { ...actuel, [champ]: valeur };
       if (champ === 'allocation' && valeur === 'HOPE') suivant.projectId = '';
-      // Changer de donateur peut invalider le moyen de paiement choisi.
       if (champ === 'donorId') suivant.paymentMethod = '';
       return suivant;
     });
@@ -661,10 +620,6 @@ export function DonModale({
   );
 }
 
-/* ==================================================================
-   Depense
-   ================================================================== */
-
 const DEPENSE_VIDE = {
   amount: '',
   description: '',
@@ -673,25 +628,12 @@ const DEPENSE_VIDE = {
   expenseDate: '',
 };
 
-/**
- * Enregistre une depense.
- *
- * Deux chemins y menent. Depuis la fiche d'un projet, celui-ci est deja
- * connu. Depuis le budget, il faut le choisir : seuls les projets en
- * cours sont proposes -- le service refuse les autres -- et chaque
- * option porte ses fonds disponibles, qui sont la vraie contrainte.
- *
- * @param {{ ouverte, projet?: object|null, projets?: object[],
- *           depense?: object|null, categories: string[], onFermer,
- *           onEnregistre }} props
- */
 export function DepenseModale({
   ouverte,
   projet = null,
   projets = [],
   depense = null,
   categories = [],
-  // La personne pour qui l'argent est depense, si l'on vient de sa fiche.
   beneficiaire = null,
   onFermer,
   onEnregistre,
@@ -701,8 +643,6 @@ export function DepenseModale({
   const [projectId, setProjectId] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
-  // Le projet designe : celui qu'on a fixe, ou celui qu'on vient de
-  // choisir. C'est lui qui porte les fonds disponibles affiches.
   const projetChoisi =
     projet ?? projets.find((element) => String(element.id) === String(projectId)) ?? null;
 
@@ -721,7 +661,6 @@ export function DepenseModale({
           }
         : { ...DEPENSE_VIDE, expenseDate: fmt.aujourdhui() }
     );
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ouverte, depense, setErreur]);
 
@@ -763,9 +702,6 @@ export function DepenseModale({
       libelleValider={edition ? 'Enregistrer' : 'Enregistrer la dépense'}
       large
     >
-      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis un
-          projet, et jamais en modification : une depense ne change pas
-          de projet, on l'annule et on la ressaisit. */}
       {!projet && !edition && (
         <ChampSelection
           label="Projet concerné"
@@ -835,16 +771,6 @@ export function DepenseModale({
   );
 }
 
-/* ==================================================================
-   Justificatif
-   ================================================================== */
-
-/**
- * @param {object} props
- * @param {object} [props.depense] depense a justifier ; si elle n'est pas
- *        fournie, la modale la fait choisir dans props.depenses
- * @param {object[]} [props.depenses] depenses du projet, pour ce choix
- */
 export function JustificatifModale({
   ouverte,
   depense,
@@ -860,8 +786,6 @@ export function JustificatifModale({
   const [depenseChoisie, setDepenseChoisie] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
-  // Un justificatif ne se rattache jamais au projet, toujours a une
-  // depense precise : soit on arrive depuis elle, soit on la designe.
   const depenseId = depense?.id ?? (depenseChoisie ? Number(depenseChoisie) : null);
 
   useEffect(() => {
@@ -910,8 +834,6 @@ export function JustificatifModale({
       erreur={erreur}
       libelleValider="Téléverser"
     >
-      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis une
-          depense : inutile de faire redesigner ce qu'on vient de designer. */}
       {!depense && (
         <ChampSelection
           label="Dépense justifiée"
@@ -974,10 +896,6 @@ export function JustificatifModale({
   );
 }
 
-/* ==================================================================
-   Beneficiaire
-   ================================================================== */
-
 const BENEFICIAIRE_VIDE = {
   firstName: '',
   lastName: '',
@@ -988,8 +906,6 @@ const BENEFICIAIRE_VIDE = {
   country: 'Madagascar',
   status: 'ACTIVE',
   notes: '',
-  // A la creation seulement : le projet lie, et l'argent depense pour la
-  // personne sur ce projet. Tous deux facultatifs.
   projectId: '',
   depenseMontant: '',
   depenseObjet: '',
@@ -1001,7 +917,6 @@ export function BeneficiaireModale({
   projet = null,
   beneficiaire = null,
   libelles = {},
-  // Les projets proposes pour le rattachement (creation, hors fiche projet).
   projets = [],
   categories = [],
   onFermer,
@@ -1011,11 +926,6 @@ export function BeneficiaireModale({
   const [formulaire, setFormulaire] = useState(BENEFICIAIRE_VIDE);
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
-  /*
-   * La photo : l'adresse signee de l'apercu, le nom du fichier a
-   * rattacher, et si elle a change. Elle n'est envoyee que dans ce cas --
-   * une fiche enregistree sans y toucher garde sa photo.
-   */
   const [photo, setPhoto] = useState({ apercu: '', fichier: null, modifiee: false });
 
   useEffect(() => {
@@ -1043,7 +953,6 @@ export function BeneficiaireModale({
     setFormulaire((actuel) => ({ ...actuel, [champ]: valeur }));
   }
 
-  /** Televerse, garde le nom du fichier, et rend l'adresse d'apercu. */
   async function televerserPhoto(fichier) {
     const resultat = await beneficiaryService.televerserPhoto(fichier);
     setPhoto({ apercu: resultat.url, fichier: resultat.fichier, modifiee: true });
@@ -1051,8 +960,6 @@ export function BeneficiaireModale({
   }
 
   function changerPhoto(adresse) {
-    // Seul "Retirer" arrive ici avec une adresse vide ; un televersement
-    // a deja tout renseigne.
     if (!adresse) setPhoto({ apercu: '', fichier: null, modifiee: true });
   }
 
@@ -1177,10 +1084,6 @@ export function BeneficiaireModale({
           disabled={envoi}
         />
 
-        {/*
-          Le projet lie et l'argent depense : a la creation seulement. Ensuite,
-          la fiche du beneficiaire rattache et enregistre les depenses.
-        */}
         {!edition && (
           <>
             <p className="formulaire-grille__intertitre">Projet et dépense</p>
@@ -1239,10 +1142,6 @@ export function BeneficiaireModale({
     </ModaleFormulaire>
   );
 }
-
-/* ==================================================================
-   Rattachement d'un beneficiaire existant
-   ================================================================== */
 
 export function RattachementModale({ ouverte, projet, beneficiaires = [], onFermer, onEnregistre }) {
   const [beneficiaryId, setBeneficiaryId] = useState('');
@@ -1313,25 +1212,6 @@ export function RattachementModale({ ouverte, projet, beneficiaires = [], onFerm
   );
 }
 
-/* ==================================================================
-   Tache de projet
-   ================================================================== */
-
-/**
- * Poser une tache sur un projet.
- *
- * Elle nait libre : aucun champ ne designe de benevole, et c'est
- * volontaire. Une tache attribuee d'office n'est pas du benevolat --
- * c'est celui qui la prend qui s'y engage.
- */
-/**
- * Ajouter une tache, ou en modifier une.
- *
- * Le meme formulaire sert aux deux : ce qu'on demande a la creation est
- * exactement ce qu'on corrige ensuite. Passer "tache" le remplit et fait
- * basculer en modification -- le projet devient alors fixe, et l'equipe
- * se gere depuis la fenetre de la tache, ou elle a ses propres gestes.
- */
 export function TacheModale({
   ouverte,
   projet = null,
@@ -1360,7 +1240,6 @@ export function TacheModale({
     setTitre(tache?.titre ?? '');
     setDescription(tache?.description ?? '');
     setProjetId(tache ? String(tache.projetId) : projet ? String(projet.id) : '');
-    // La date arrive en ISO ; le champ la veut en AAAA-MM-JJ.
     setEcheance(tache?.echeance ? String(tache.echeance).slice(0, 10) : '');
     setPriorite(tache?.priorite ?? 'moyenne');
     setMinimum(tache?.benevolesMin ? String(tache.benevolesMin) : '');
@@ -1370,12 +1249,6 @@ export function TacheModale({
     setEquipe([]);
   }, [ouverte, projet, tache, setErreur]);
 
-  /*
-   * Les deux listes se remplissent de la meme facon : on choisit dans la
-   * liste deroulante, la valeur rejoint ce qui est deja choisi, et la
-   * liste se remet sur son intitule -- prete pour le suivant. Ce qui est
-   * choisi s'affiche dessous, chacun avec sa croix.
-   */
   function ajouter(competence) {
     if (competence === '') return;
     setCompetences((choisies) =>
@@ -1396,8 +1269,6 @@ export function TacheModale({
   }
 
   async function enregistrer() {
-    // Les memes intitules que la fiche du benevole, plus ce que l'equipe
-    // ajoute a la main : c'est ce rapprochement qui fait leur utilite.
     const requises = [
       ...new Set([
         ...competences,
@@ -1497,12 +1368,6 @@ export function TacheModale({
           disabled={envoi}
         />
 
-        {/*
-          La priorite dit ce qui passe devant. Elle ne suffit pourtant
-          pas : une tache moyenne a rendre demain presse plus qu'une
-          haute a rendre dans deux mois. Le serveur combine les deux
-          pour l'ordre d'affichage, ici comme chez le benevole.
-        */}
         <div className="champ-admin">
           <span className="champ-admin__label" id="tache-priorite">
             Priorité
@@ -1564,12 +1429,6 @@ export function TacheModale({
           </p>
         </div>
 
-        {/*
-          L'experience requise : les memes intitules que la fiche du
-          benevole, dans une liste deroulante rangee par famille. Ecrite
-          dans la description, elle ne servait qu'a la lecture ; choisie
-          ici, elle dit a qui proposer la tache.
-        */}
         <ChampSelection
           label="Expérience requise"
           id="tache-competences"
@@ -1625,17 +1484,6 @@ export function TacheModale({
           pleineLargeur
         />
 
-        {/*
-          L'equipe peut etre posee des la creation : quand on sait deja a
-          qui confier la tache, la lui donner tout de suite evite un
-          aller-retour. Sinon, la tache reste ouverte aux demandes.
-        */}
-        {/*
-          On ne choisit pas une personne dans une liste de mots : le
-          visage, le nom et ce qu'elle sait faire, c'est la-dessus que
-          l'equipe decide a qui confier la tache. Les competences que la
-          tache demande sont mises en avant sur chaque ligne.
-        */}
         {!edition && benevoles && benevoles.length > 0 && (
           <div className="champ-admin champ-admin--pleine-largeur">
             <span className="champ-admin__label" id="tache-affectation">
@@ -1660,10 +1508,6 @@ export function TacheModale({
   );
 }
 
-/* ==================================================================
-   Impact
-   ================================================================== */
-
 const IMPACT_VIDE = {
   title: '',
   description: '',
@@ -1683,15 +1527,9 @@ export function ImpactModale({
   indicateurs = [],
   objectifs = null,
   beneficiaires = [],
-  // 'general' : la mesure porte sur le projet entier, et le choix de
-  // l'objectif n'a pas lieu d'etre. 'objectif' : elle en documente un,
-  // et il faut le nommer. null : les deux sont possibles, comme sur
-  // l'ecran Impact qui ne sait pas d'ou vient la mesure.
   portee = null,
   onFermer,
   onEnregistre,
-  // Facultatif : en modification, un bouton "Supprimer" le propose. La
-  // fiche projet s'en sert, ses listes n'ayant plus de colonne d'actions.
   onSupprimer = null,
 }) {
   const edition = Boolean(impact);
@@ -1699,18 +1537,9 @@ export function ImpactModale({
   const [projectId, setProjectId] = useState('');
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
 
-  /*
-   * Les objectifs du projet mesure.
-   *
-   * La fiche projet les a deja et les passe ; l'ecran Impact, lui, ne
-   * sait de quel projet il s'agit qu'une fois celui-ci choisi, et va
-   * alors les chercher.
-   */
   const [objectifsCharges, setObjectifsCharges] = useState([]);
   const objectifsDuProjet = objectifs ?? objectifsCharges;
 
-  // Le choix n'apparait que s'il y a quelque chose a choisir, et que la
-  // mesure n'est pas declaree generale d'avance.
   const choisirObjectif = portee !== 'general' && objectifsDuProjet.length > 0;
 
   useEffect(() => {
@@ -1726,8 +1555,6 @@ export function ImpactModale({
         if (!annule) setObjectifsCharges(projetLu?.objectives ?? []);
       })
       .catch(() => {
-        // Sans objectifs, la mesure reste generale : ce n'est pas une
-        // raison d'empecher de l'enregistrer.
         if (!annule) setObjectifsCharges([]);
       });
 
@@ -1760,14 +1587,12 @@ export function ImpactModale({
     setFormulaire((actuel) => ({ ...actuel, [champ]: valeur }));
   }
 
-  /** Choisir un indicateur suggere preremplit son unite et son titre. */
   function choisirIndicateur(code) {
     const suggere = indicateurs.find((element) => element.code === code);
     setFormulaire((actuel) => ({
       ...actuel,
       indicator: code,
       unit: suggere?.unit ?? actuel.unit,
-      // Le titre suit l'indicateur choisi (il n'est plus saisi).
       title: suggere?.label ?? '',
     }));
   }
@@ -1775,12 +1600,6 @@ export function ImpactModale({
   async function enregistrer() {
     const mesureObjectif = portee === 'objectif';
 
-    /*
-     * Une mesure d'objectif sans objectif n'a pas d'indicateur -- c'est
-     * l'objectif qui le donne. Le serveur repondrait que le champ
-     * "indicator" manque, ce qui ne veut rien dire pour qui remplit ce
-     * formulaire : on le dit ici, dans ses mots.
-     */
     if (mesureObjectif && !formulaire.objectiveId) {
       setErreur(
         objectifsDuProjet.length === 0
@@ -1795,9 +1614,6 @@ export function ImpactModale({
       projectId: Number(projectId),
       description: formulaire.description || null,
       unit: formulaire.unit || null,
-      // Champs retires du formulaire de l'objectif : on ne les envoie
-      // pas plutot que d'envoyer du vide, pour que le serveur deduise
-      // l'indicateur de l'objectif et laisse la mesure collective.
       ...(mesureObjectif ? { indicator: undefined, beneficiaryId: null } : {}),
       objectiveId:
         portee === 'general' || formulaire.objectiveId === ''
@@ -1871,11 +1687,6 @@ export function ImpactModale({
           />
         )}
 
-        {/*
-          L'objectif que la mesure documente. Facultatif : une mesure
-          peut porter sur le projet entier -- elle rejoint alors le
-          cumul general sans se ranger sous un point precis.
-        */}
         {choisirObjectif && (
           <ChampSelection
             label="Objectif spécifique mesuré"
@@ -1899,14 +1710,6 @@ export function ImpactModale({
           />
         )}
 
-        {/* Plus de champ Titre : le serveur le deduit de l'objectif ou de
-            l'indicateur mesure. */}
-
-        {/*
-          L'indicateur ne se saisit que pour une mesure generale : quand
-          la mesure documente un objectif, c'est l'objectif qui dit ce
-          qu'on compte, et le serveur reprend son intitule.
-        */}
         {portee !== 'objectif' && (
           <>
             <ChampSelection
@@ -1999,28 +1802,8 @@ export function ImpactModale({
   );
 }
 
-/* ==================================================================
-   Publier une preuve terrain
-   ================================================================== */
-
-/**
- * Un temoignage se suffit de son texte ; les deux autres portent un
- * fichier. C'est une regle metier et non un libelle : elle reste ici,
- * la ou les noms des trois types viennent du catalogue.
- */
 const TYPES_PREUVE_AVEC_FICHIER = new Set(['PHOTO', 'VIDEO', 'DOCUMENT']);
 
-/**
- * Publie une preuve depuis la fiche d'un projet.
- *
- * Deux chemins y menent. Depuis la fiche d'un projet, celui-ci est deja
- * connu et le champ ne s'affiche pas : inutile de faire redesigner ce
- * qu'on vient de designer. Depuis l'ecran Preuves terrain, il faut le
- * choisir.
- *
- * @param {{ ouverte, projet?: object|null, projets?: object[],
- *           libelles: object, onFermer, onEnregistre }} props
- */
 export function PreuveModale({
   ouverte,
   projet = null,
@@ -2091,8 +1874,6 @@ export function PreuveModale({
       erreur={erreur}
       libelleValider="Publier la preuve"
     >
-      {/* Le choix n'apparait que si l'on n'arrive pas deja depuis un
-          projet : inutile de faire redesigner ce qu'on vient de designer. */}
       {!projet && (
         <ChampSelection
           label="Projet concerné"

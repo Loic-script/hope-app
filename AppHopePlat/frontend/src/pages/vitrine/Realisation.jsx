@@ -5,12 +5,6 @@ import { MessageFiche, Paragraphes } from '../../components/vitrine/fiche.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { urlMedia } from '../../services/api.js';
 
-/**
- * La fiche publique d'un projet de HOPE (GET /api/public/projets/:id) :
- * sa photo, son nom, son lieu et son domaine, sa description et, s'il
- * est termine, ce qu'il a permis. Rien de l'argent ni des personnes.
- */
-
 const MOIS = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
 
 const ETATS = {
@@ -18,7 +12,6 @@ const ETATS = {
   IN_PROGRESS: { classe: 'en-cours', libelle: 'En cours' },
 };
 
-/** "mars 2026" ; une date nue (AAAA-MM-JJ) est lue a midi pour ne pas changer de jour. */
 function moisLisible(valeur) {
   if (!valeur) return null;
   const texte = String(valeur);

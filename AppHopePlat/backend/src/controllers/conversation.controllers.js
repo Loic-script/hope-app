@@ -1,12 +1,3 @@
-/**
- * Controleurs de la messagerie, partages par les espaces et
- * l'administration.
- *
- * L'acteur est deduit de ce que le verrou a pose sur la requete :
- * req.admin pour l'equipe, req.utilisateurId pour un espace. Il ne vient
- * jamais du corps ni de l'URL -- c'est ce qui empeche d'ecrire sous
- * l'identite d'un autre.
- */
 import fs from 'node:fs';
 
 import * as conversationService from '../services/conversation.service.js';
@@ -15,17 +6,11 @@ import { ErreurIntrouvable } from '../shared/errors.js';
 
 import { gerer } from './handler.js';
 
-/**
- * Qui parle, d'apres ce que le verrou a etabli. L'espace d'un utilisateur
- * (l'audience de son jeton) decide de qui il peut joindre : voir
- * conversationRepository.joignables.
- */
 export function acteurDe(req) {
   if (req.admin?.id) return { type: 'admin', id: req.admin.id };
   return { type: 'utilisateur', id: req.utilisateurId ?? req.benevole?.utilisateurId, espace: req.espace ?? null };
 }
 
-/** "moi" accompagne chaque reponse : l'ecran n'a pas a deviner qui il est. */
 function moi(req) {
   const acteur = acteurDe(req);
   return { type: acteur.type, id: String(acteur.id) };
@@ -89,16 +74,6 @@ export const conversations = {
   ),
 };
 
-/**
- * Lecture d'un fichier de la messagerie, par adresse signee.
- *
- * Aucune session ici : <img> et <video> n'en envoient pas. La signature
- * dit qui demande ; la participation est reverifiee avant de servir.
- * Toute adresse fausse, expiree ou etrangere repond 404.
- *
- * res.sendFile traite les requetes Range : une video se lit et s'avance
- * sans etre telechargee en entier.
- */
 export const fichiers = {
   groupe: gerer(async (req, res) => {
     const acteur = pieceJointe.verifierSignature('groupe', req.params.id, req.query);
@@ -144,9 +119,7 @@ export const fichiers = {
             'Content-Type': piece.typeMime,
             'Content-Disposition': pieceJointe.disposition(piece.nomOrigine, req.query.telecharger === '1'),
             'X-Content-Type-Options': 'nosniff',
-            // Prive : ni proxy ni cache partage ne doit garder une piece.
             'Cache-Control': 'private, max-age=3600',
-            // L'adresse porte sa signature : elle ne doit pas fuir en Referer.
             'Referrer-Policy': 'no-referrer',
           },
         },

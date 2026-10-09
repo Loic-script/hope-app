@@ -60,23 +60,13 @@ import {
 } from '../../utils/fuseaux.js';
 import { PAYS, PAYS_PAR_DEFAUT, indicatifDe, nomAnglais, nomDuPays } from '../../utils/pays.js';
 
-/** Le parcours compte cinq etapes ; la sixieme veut dire "termine". */
 const NOMBRE_ETAPES = 5;
-
-/*
- * Sur telephone, les quatre longues listes -- pays, indicatif, langue,
- * fuseau horaire -- s'ouvrent sur une page a part, recherche en haut
- * (ChoixSurPage). On les y cherche en francais comme en anglais --
- * "Allemagne" ou "Germany" --, et l'indicatif par son numero, avec ou
- * sans "+". Sur ordinateur, les listes natives restent.
- */
 
 const nomsDeLangueEnAnglais =
   typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
     ? new Intl.DisplayNames(['en'], { type: 'language' })
     : null;
 
-/** "es" -> "Spanish" : une langue se cherche aussi sous son nom anglais. */
 function langueEnAnglais(code) {
   try {
     return nomsDeLangueEnAnglais?.of(code) ?? '';
@@ -85,31 +75,11 @@ function langueEnAnglais(code) {
   }
 }
 
-/**
- * "Espagnol (español)" -> ["Espagnol", "español"] : le serveur accole a
- * chaque langue son propre nom ; la page de choix l'ecrit dessous, en
- * plus petit.
- */
 function deuxNomsDeLangue(libelle) {
   const trouve = /^(.+?) \((.+)\)$/.exec(libelle ?? '');
   return trouve ? [trouve[1], trouve[2]] : [libelle, undefined];
 }
 
-/**
- * Le parcours d'accueil du donateur.
- *
- * Il s'ouvre des l'inscription : informations personnelles, profil du
- * donateur, affectation du don, mode de paiement, frequence. Chaque
- * etape est enregistree en la quittant ; le serveur retient ou
- * reprendre, et un donateur qui s'arrete en chemin retrouve sa place.
- *
- * "Terminer", a la cinquieme, clot le parcours : le compte est marque
- * complet et le donateur entre dans son espace.
- *
- * "Continuer" mene toujours a l'etape suivante, meme quand on revient
- * corriger une etape deja franchie. "Retour" garde ce qu'on a saisi sur
- * la page qu'on quitte : revenir a une etape ne doit rien faire perdre.
- */
 export default function Parcours() {
   const navigate = useNavigate();
   const emplacement = useLocation();
@@ -117,16 +87,10 @@ export default function Parcours() {
   const { donnees, chargement, erreur } = useChargement(() => donateurService.recupererProfil(), []);
 
   const [etape, setEtape] = useState(null);
-  // La fiche telle que le serveur l'a renvoyee apres la derniere etape :
-  // revenir en arriere doit montrer ce qui vient d'etre enregistre, pas
-  // ce qui avait ete lu a l'ouverture de la page.
   const [misAJour, setMisAJour] = useState(null);
   const profil = misAJour ?? donnees;
-  // Ce qui a ete saisi sur une etape quittee par "Retour", sans etre
-  // enregistre : on le retrouve en y revenant.
   const [brouillons, setBrouillons] = useState({});
 
-  /** Une etape vient d'etre enregistree : on passe a la suivante. */
   async function apresEnregistrement(numero, reponse) {
     setMisAJour(reponse);
     setBrouillons((precedents) => ({ ...precedents, [numero]: undefined }));
@@ -140,14 +104,11 @@ export default function Parcours() {
       navigate('/donateur', { replace: true });
       return;
     }
-    // Un retour depuis la page MVola peut demander une etape deja
-    // franchie : le choix du paiement, a corriger.
     const demandee = Number(emplacement.state?.etape);
     const retour = demandee >= 1 && demandee <= donnees.etapeSuivante ? demandee : null;
     setEtape((courante) => courante ?? retour ?? donnees.etapeSuivante);
   }, [donnees, navigate, emplacement.state]);
 
-  /** Change d'etape en ramenant le haut de la page sous les yeux. */
   function allerA(numero) {
     setEtape(numero);
     const sobre = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -173,7 +134,6 @@ export default function Parcours() {
           </p>
         )}
 
-        {/* La cle relance l'animation d'entree a chaque changement d'etape. */}
         {profil && etape === 1 && (
           <EtapeInformations
             key="etape-1"
@@ -217,8 +177,6 @@ export default function Parcours() {
               allerA(3);
             }}
             onSuivante={async (reponse) => {
-              // Les paiements mobiles se font sur leur propre page,
-              // puis le parcours reprend a la cinquieme etape.
               const page = pageDePaiement('/donateur/completer-profil', reponse?.paiement?.mode);
               if (page) {
                 await rafraichir?.();
@@ -240,8 +198,6 @@ export default function Parcours() {
               allerA(4);
             }}
             onTerminer={async () => {
-              // Le parcours est clos : la garde doit relire un compte
-              // desormais complet avant qu'on entre dans l'espace.
               await rafraichir?.();
               navigate('/donateur', { replace: true, state: { parcoursTermine: true } });
             }}
@@ -252,25 +208,11 @@ export default function Parcours() {
   );
 }
 
-/* ================================================================
-   Etape 1 : informations personnelles
-   ================================================================ */
-
-/** Ordre des champs obligatoires : c'est aussi l'ordre du focus en erreur. */
 const OBLIGATOIRES = ['nom', 'prenom', 'adresse', 'ville', 'pays', 'telephone'];
 
-/* Le don sans compte (pages/don/DonSansCompte.jsx) remplit la meme etape,
-   avec son courriel -- pour le recu -- et sans adresse postale, que la
-   fiche d'un donateur sans compte ne garde pas. */
 const ORDRE_INVITE = ['nom', 'prenom', 'courriel', 'ville', 'pays', 'telephone'];
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/**
- * Le numero tel qu'on l'affiche : national s'il est de l'indicatif
- * choisi, international sinon. Le serveur, lui, le garde au format
- * +261...
- */
-/** Les erreurs du formulaire, champ par champ. */
 function verifier(champs, invite = false) {
   const erreurs = {};
   if (champs.nom.trim() === '') erreurs.nom = 'Indiquez votre nom.';
@@ -295,15 +237,6 @@ function verifier(champs, invite = false) {
   return erreurs;
 }
 
-/**
- * @param {object} props
- * @param {(valeurs: object) => Promise<object>} [props.enregistrer]  ou
- *   vont les valeurs : le serveur (etape 1 du parcours), ou le parent
- *   (don sans compte, qui les garde jusqu'au paiement)
- * @param {'compte'|'invite'} [props.variante]  "invite" : avec le
- *   courriel, sans adresse, ville facultative, ni profession ni source
- * @param {number} [props.total]  le nombre de points de la progression
- */
 export function EtapeInformations({
   initiales,
   sources,
@@ -314,11 +247,6 @@ export function EtapeInformations({
 }) {
   const invite = variante === 'invite';
   const ordre = invite ? ORDRE_INVITE : [...OBLIGATOIRES, 'profession', 'source'];
-  /*
-   * L'indicatif est distinct du pays de residence : on peut vivre en
-   * France et garder un numero malgache. Il part du numero deja
-   * enregistre, a defaut du pays, a defaut de Madagascar.
-   */
   const [champs, setChamps] = useState(() => {
     const indicatif = paysDuNumero(initiales.telephone) ?? (initiales.pays || PAYS_PAR_DEFAUT);
     return {
@@ -334,13 +262,9 @@ export function EtapeInformations({
       source: initiales.source ?? '',
     };
   });
-  // Tant qu'on ne l'a pas choisi soi-meme, l'indicatif suit le pays : on
-  // n'a pas a le chercher deux fois. Une fois choisi, on le respecte.
   const [indicatifChoisi, setIndicatifChoisi] = useState(() =>
     Boolean(paysDuNumero(initiales.telephone))
   );
-  // Un champ n'est juge qu'une fois quitte : on ne reproche pas a
-  // quelqu'un ce qu'il est en train d'ecrire.
   const [touches, setTouches] = useState({});
   const [erreursServeur, setErreursServeur] = useState({});
   const [soumis, setSoumis] = useState(false);
@@ -358,14 +282,12 @@ export function EtapeInformations({
       const valeur = evenement.target.value;
       setChamps((precedents) => ({ ...precedents, [champ]: valeur }));
       setErreursServeur((precedentes) => ({ ...precedentes, [champ]: undefined }));
-      // Un choix dans une liste est acheve des qu'il est fait.
       if (evenement.target.tagName === 'SELECT') {
         setTouches((precedents) => ({ ...precedents, [champ]: true }));
       }
     };
   }
 
-  /** Le pays de residence ; l'indicatif le suit s'il n'a pas ete choisi. */
   function modifierPays(evenement) {
     const valeur = evenement.target.value;
     modifier('pays')(evenement);
@@ -385,8 +307,6 @@ export function EtapeInformations({
     return () => {
       setTouches((precedents) => ({ ...precedents, [champ]: true }));
       if (champ === 'telephone') {
-        // Un numero saisi avec son "+" dit lui-meme son pays : l'indicatif
-        // s'y range. "+33 6 12 34 56 78" -> +33 et "06 12 34 56 78".
         const texte = champs.telephone.trim();
         const international = texte.startsWith('+')
           ? parsePhoneNumberFromString(texte)
@@ -400,7 +320,6 @@ export function EtapeInformations({
           }));
           return;
         }
-        // Un numero valide se remet en forme : 0341234567 -> 034 12 345 67.
         const valide = numeroInternational(champs.telephone, champs.indicatif);
         if (valide) {
           setChamps((precedents) => ({
@@ -412,7 +331,6 @@ export function EtapeInformations({
     };
   }
 
-  /** Porte le focus sur le premier champ en erreur, dans l'ordre du formulaire. */
   function focaliserPremiereErreur(erreurs) {
     const premier = ordre.find((champ) => erreurs[champ]);
     if (premier) formulaire.current?.querySelector(`#donateur-${premier}`)?.focus();
@@ -670,9 +588,6 @@ export function EtapeInformations({
           )}
         </button>
 
-        {/* Sous le bouton, la ou le regard se pose apres le clic. Toujours
-            present, meme vide : une zone d'alerte ajoutee apres coup
-            n'est pas toujours annoncee par les lecteurs d'ecran. */}
         <p className="parcours__recap" role="alert">
           {refus ||
             (nbErreurs > 0
@@ -684,11 +599,6 @@ export function EtapeInformations({
   );
 }
 
-/* ================================================================
-   Etape 2 : profil et preferences
-   ================================================================ */
-
-/** L'icone de chaque type de donateur. */
 const ICONES_TYPE = {
   particulier: IconeUtilisateur,
   entreprise: IconeImmeuble,
@@ -698,7 +608,6 @@ const ICONES_TYPE = {
   international: IconeGlobe,
 };
 
-/** Le libelle de la raison sociale, selon le type de structure. */
 const LIBELLE_STRUCTURE = {
   entreprise: 'Nom de l’entreprise',
   fondation: 'Nom de la fondation',
@@ -706,13 +615,8 @@ const LIBELLE_STRUCTURE = {
   partenaire: 'Nom de la structure partenaire',
 };
 
-/** Ordre des champs de l'etape : c'est aussi l'ordre du focus en erreur. */
 const CHAMPS_PROFIL = ['type', 'nomStructure', 'siteWeb', 'devise', 'langue', 'fuseau'];
 
-/**
- * Une adresse de site, completee : "hope.mg" -> "https://hope.mg".
- * Vide si rien n'est saisi, null si ce n'est pas une adresse.
- */
 function siteComplet(valeur) {
   const texte = String(valeur ?? '').trim();
   if (texte === '') return '';
@@ -726,7 +630,6 @@ function siteComplet(valeur) {
   }
 }
 
-/** Les erreurs de l'etape 2, champ par champ. */
 function verifierProfil(champs, types) {
   const erreurs = {};
   const type = types.find((t) => t.cle === champs.type);
@@ -743,17 +646,6 @@ function verifierProfil(champs, types) {
   return erreurs;
 }
 
-/**
- * Etape 2 : le profil du donateur et ses preferences.
- *
- * Tant qu'elle n'a jamais ete enregistree, devise, langue et fuseau sont
- * proposes d'apres le pays donne a l'etape 1 : un donateur malgache
- * trouve l'ariary, le francais et Antananarivo deja choisis. Tout reste
- * modifiable.
- *
- * La raison sociale et le site web n'apparaissent que pour une
- * structure : a un particulier, ils ne demanderaient rien d'utile.
- */
 function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
   const types = options.types ?? [];
   const [champs, setChamps] = useState(() => ({
@@ -771,8 +663,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
   const [refus, setRefus] = useState('');
   const formulaire = useRef(null);
 
-  // Les fuseaux du pays tout de suite ; les quatre cents autres juste
-  // apres l'affichage : les calculer d'emblee retarderait la page.
   const locaux = useMemo(() => fuseauxDuPays(pays), [pays]);
   const [autres, setAutres] = useState([]);
   useEffect(() => {
@@ -784,11 +674,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
 
   const telephone = useEcranTelephone();
 
-  /*
-   * Les langues ou HOPE ecrit deja, puis toutes les autres par lettre.
-   * Chacune porte son code ("ES") et, dessous, son nom dans la langue
-   * meme ("español") -- celui qui la parle la reconnait d'un coup d'oeil.
-   */
   const groupesLangues = useMemo(() => {
     const langues = (options.langues ?? []).map((langue) => {
       const [francais, propre] = deuxNomsDeLangue(langue.libelle);
@@ -811,12 +696,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
     ];
   }, [options.langues]);
 
-  /*
-   * Les fuseaux : ceux du pays d'abord, puis tous les autres, ranges par
-   * pays et par lettre. Chaque ligne : le drapeau, le pays, la ville
-   * dessous, le decalage a droite. On les trouve par la ville, le pays ou
-   * le decalage : "tana", "Madagascar", "UTC+3", "+3".
-   */
   const groupesFuseaux = useMemo(() => {
     const option = (nom, code) => {
       const ecart = decalage(nom);
@@ -865,7 +744,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
   function quitter(champ) {
     return () => {
       setTouches((precedents) => ({ ...precedents, [champ]: true }));
-      // "hope.mg" se complete en "https://hope.mg" des qu'on quitte le champ.
       if (champ === 'siteWeb') {
         const complet = siteComplet(champs.siteWeb);
         if (complet) setChamps((precedents) => ({ ...precedents, siteWeb: complet }));
@@ -927,8 +805,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
   }
 
   const nbErreurs = soumis ? CHAMPS_PROFIL.filter((champ) => erreurDe(champ)).length : 0;
-  // Un fuseau deja enregistre reste choisissable meme avant que la liste
-  // complete ne soit prete.
   const fuseauHorsListe =
     champs.fuseau &&
     !locaux.includes(champs.fuseau) &&
@@ -953,8 +829,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
           Profil et préférences
         </h2>
 
-        {/* Un groupe de boutons radio : les fleches du clavier passent
-            d'une carte a l'autre, comme dans toute liste de choix. */}
         <fieldset className="parcours__groupe" aria-describedby="donateur-type-aide">
           <legend className="parcours__libelle">Type de donateur</legend>
           <div className="parcours__types">
@@ -984,7 +858,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
               );
             })}
           </div>
-          {/* Ce que le type implique, dit a mesure qu'on le choisit. */}
           <p className="parcours__aide" id="donateur-type-aide" aria-live="polite">
             {typeChoisi?.description ?? ''}
           </p>
@@ -1052,9 +925,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
           </Champ>
 
           <Champ id="langue" libelle="Langue" erreur={erreurDe('langue')} Icone={IconeLangue} liste>
-            {/* Les langues dans lesquelles HOPE ecrit deja, puis toutes les
-                autres : on trouve vite la sienne sans faire defiler cent
-                soixante-dix noms. */}
             {telephone ? (
               <ChoixSurPage
                 nom="Langue"
@@ -1167,11 +1037,6 @@ function EtapeProfil({ initiales, pays, options, onRetour, onSuivante }) {
   );
 }
 
-/* ================================================================
-   Etape 3 : l'affectation du don
-   ================================================================ */
-
-/** Les deux facons d'affecter un don : le vocabulaire de donations.allocation. */
 const MODES_AFFECTATION = [
   {
     cle: 'PROJECT',
@@ -1187,7 +1052,6 @@ const MODES_AFFECTATION = [
   },
 ];
 
-/** "Fianarantsoa" et "fianarantsoa" se valent, "Santé" et "sante" aussi. */
 function normaliser(texte) {
   return String(texte ?? '')
     .normalize('NFD')
@@ -1195,22 +1059,6 @@ function normaliser(texte) {
     .toLowerCase();
 }
 
-/**
- * Etape 3 : l'affectation du don.
- *
- * Le modele proposait une liste deroulante et la fiche du seul projet
- * choisi. Les projets sont ici des cartes que l'on compare d'un regard :
- * image, lieu, jauge, ce qu'il reste a reunir. Ceux qui ont le plus
- * besoin de soutien viennent d'abord ; un projet deja finance reste
- * visible -- il dit ce que les dons ont permis -- mais ne se choisit plus.
- */
-/**
- * @param {object} props
- * @param {() => Promise<{ items: object[] }>} [props.chargerProjets]  les
- *   projets a proposer ; le don sans compte les apporte deja charges
- * @param {(choix: object) => Promise<object>} [props.enregistrer]
- * @param {number} [props.etape]  le numero affiche ; [props.total] les points
- */
 export function EtapeAffectation({
   initiales,
   onRetour,
@@ -1237,7 +1085,6 @@ export function EtapeAffectation({
   const affecte = choix.affectation === 'PROJECT';
   const projetChoisi = projets.find((projet) => projet.id === choix.projetId);
 
-  // Un projet choisi naguere, puis finance ou retire depuis, ne compte plus.
   const projetValable = projetChoisi && !projetChoisi.atteint;
   const erreurProjet =
     erreurServeur ||
@@ -1245,7 +1092,6 @@ export function EtapeAffectation({
       ? 'Choisissez le projet que vous voulez soutenir.'
       : '');
 
-  // Au-dela de six projets, une recherche aide a trouver le sien.
   const avecRecherche = projets.length > 6;
   const visibles = recherche.trim()
     ? projets.filter((projet) =>
@@ -1311,7 +1157,6 @@ export function EtapeAffectation({
         noValidate
         aria-label="Affectation de votre don"
       >
-        {/* Deux grandes cartes : un vrai groupe de boutons radio. */}
         <fieldset className="parcours__groupe">
           <legend className="sr-only">Comment votre don sera-t-il utilisé ?</legend>
           <div className="parcours__modes">
@@ -1462,11 +1307,6 @@ export function EtapeAffectation({
   );
 }
 
-/**
- * Un projet, tel qu'un donateur le compare : image, categorie, lieu, nom,
- * accroche, jauge et ce qu'il reste a reunir. Le bouton radio couvre la
- * carte ; son nom accessible dit l'essentiel en une phrase.
- */
 function CarteProjet({ projet, choisi, onChange, disabled }) {
   const taux = Math.min(100, Math.max(0, Number(projet.taux ?? 0)));
   const nomAccessible = projet.atteint
@@ -1545,28 +1385,6 @@ function CarteProjet({ projet, choisi, onChange, disabled }) {
   );
 }
 
-/* ================================================================
-   Etape 4 : le mode de paiement
-   ================================================================ */
-
-/* Le visuel de chaque moyen vient de VisuelsPaiement.jsx, partage avec
-   "Faire un don" de l'espace donateur. */
-
-/**
- * Etape 4 : le mode de paiement.
- *
- * Huit cartes, dans l'ordre du modele : les moyens de Madagascar, puis
- * ceux de l'etranger. Pour un donateur qui vit hors de Madagascar, ces
- * derniers passent devant -- MVola ne lui est guere utile en premier.
- *
- * Rien n'est coche d'avance : un moyen de paiement se choisit, il ne se
- * subit pas. Le choix fait, une phrase dit ce qu'il suppose.
- */
-/**
- * @param {object} props
- * @param {(choix: { mode: string }) => Promise<object>} [props.enregistrer]
- * @param {number} [props.etape]  le numero affiche ; [props.total] les points
- */
 export function EtapePaiement({
   initiales,
   pays,
@@ -1666,7 +1484,6 @@ export function EtapePaiement({
             })}
           </div>
 
-          {/* Ce que le moyen choisi suppose, dit a mesure qu'on le choisit. */}
           <p className="parcours__aide parcours__paiement-aide" id="donateur-paiement-aide" aria-live="polite">
             {choisi
               ? choisi.description
@@ -1712,20 +1529,11 @@ export function EtapePaiement({
   );
 }
 
-/* ================================================================
-   Etape 5 : la frequence du don
-   ================================================================ */
-
-/** L'illustration de chaque frequence. */
 const ILLUSTRATIONS_FREQUENCE = {
   ONE_TIME: IconeRecuCoche,
   MONTHLY: IconeCalendrierRenouvele,
 };
 
-/**
- * Le moyen de paiement tel qu'on le dit dans une phrase : "par MVola",
- * "en especes", "par carte bancaire".
- */
 const MOYEN_DANS_UNE_PHRASE = {
   mvola: 'par MVola',
   orange_money: 'par Orange Money',
@@ -1737,16 +1545,6 @@ const MOYEN_DANS_UNE_PHRASE = {
   plateforme: 'sur une plateforme de paiement',
 };
 
-/**
- * Etape 5 : la frequence du don, et la fin du parcours.
- *
- * Le modele annoncait "Votre premier don est deja paye" : c'est faux --
- * aucun paiement n'a lieu pendant ce parcours. L'encart dit donc ce qui
- * est vrai : rien n'est preleve ici, et comment le don sera regle.
- *
- * Le don ponctuel est retenu d'avance, comme dans le modele : il
- * n'engage a rien au-dela d'un versement.
- */
 function EtapeFrequence({ initiales, frequences, modePaiement, onRetour, onTerminer }) {
   const [frequence, setFrequence] = useState(initiales.valeur || 'ONE_TIME');
   const [envoi, setEnvoi] = useState(false);
@@ -1814,7 +1612,6 @@ function EtapeFrequence({ initiales, frequences, modePaiement, onRetour, onTermi
           </div>
         </fieldset>
 
-        {/* Ce que le choix engage, dit a mesure qu'on le fait. */}
         <p className="parcours__info" aria-live="polite">
           <IconeInfo className="parcours__info-icone" />
           <span>{information}</span>
@@ -1855,16 +1652,6 @@ function EtapeFrequence({ initiales, frequences, modePaiement, onRetour, onTermi
   );
 }
 
-/* ================================================================
-   Pieces communes
-   ================================================================ */
-
-/**
- * L'en-tete d'une etape : son numero, sa progression, son titre.
- *
- * La barre sous "Etape 1" compte les cinq etapes : on sait ou l'on est,
- * et combien il en reste, sans avoir a le lire.
- */
 export function EntetePas({ etape, titre, accroche, total = NOMBRE_ETAPES }) {
   return (
     <header className="parcours__entete">
@@ -1892,10 +1679,6 @@ export function EntetePas({ etape, titre, accroche, total = NOMBRE_ETAPES }) {
   );
 }
 
-/**
- * Les deux pieces communes, avec le prefixe d'identifiant du donateur :
- * les tests et les libelles visent "donateur-nom", "donateur-indicatif".
- */
 function Champ(proprietes) {
   return <ChampParcours prefixeId="donateur" {...proprietes} />;
 }

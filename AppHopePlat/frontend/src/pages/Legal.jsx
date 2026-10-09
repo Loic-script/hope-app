@@ -3,26 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import HopeLogo from '../components/HopeLogo.jsx';
 
-/**
- * Les deux textes legaux de HOPE, publics :
- *
- *   /confidentialite          la politique de confidentialite ;
- *   /conditions-utilisation   les conditions generales d'utilisation.
- *
- * Une seule mise en page : un entete, le sommaire (colle a gauche sur
- * ordinateur, repliable sur telephone, qui suit la lecture), puis les
- * articles. La version affichee est celle que le serveur enregistre a
- * l'inscription (backend/src/shared/conditions.js) : les deux doivent
- * changer ensemble.
- */
 export const VERSION_CONDITIONS = '2026-09-25';
 const DATE_VERSION = '25 septembre 2026';
 
-/*
- * L'adresse de contact de l'association : celle que le serveur publie
- * (EQUIPE_EMAIL, lue par /api/public/contact), sinon VITE_HOPE_CONTACT
- * fixee a la construction. Aucune : la messagerie des espaces.
- */
 let contactConnu = import.meta.env.VITE_HOPE_CONTACT ?? '';
 const abonnes = new Set();
 let demande = null;
@@ -60,9 +43,6 @@ function Contact() {
   );
 }
 
-/* ------------------------------------------------------------
-   Politique de confidentialite
-   ------------------------------------------------------------ */
 const CONFIDENTIALITE = [
   {
     id: 'qui',
@@ -257,9 +237,6 @@ const CONFIDENTIALITE = [
   },
 ];
 
-/* ------------------------------------------------------------
-   Conditions generales d'utilisation
-   ------------------------------------------------------------ */
 const CONDITIONS = [
   {
     id: 'objet',
@@ -441,7 +418,6 @@ const DOCUMENTS = {
   },
 };
 
-/** La page commune aux deux textes. */
 function PageLegale({ cle }) {
   const navigate = useNavigate();
   const document_ = DOCUMENTS[cle];
@@ -449,7 +425,6 @@ function PageLegale({ cle }) {
   const [sommaireOuvert, setSommaireOuvert] = useState(false);
   const corps = useRef(null);
 
-  // Le titre de l'onglet suit le texte affiche.
   useEffect(() => {
     const avant = window.document.title;
     window.document.title = `${document_.titre} — HOPE`;
@@ -459,7 +434,6 @@ function PageLegale({ cle }) {
     };
   }, [document_.titre]);
 
-  // Le sommaire suit la lecture : l'article le plus haut encore visible.
   useEffect(() => {
     const articles = [...(corps.current?.querySelectorAll('.legal__article') ?? [])];
     if (articles.length === 0 || typeof IntersectionObserver === 'undefined') return undefined;

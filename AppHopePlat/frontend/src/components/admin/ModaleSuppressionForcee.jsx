@@ -3,23 +3,6 @@ import { useEffect, useState } from 'react';
 import { IconeAlerte } from './AdminIcons.jsx';
 import { Modale } from './forms.jsx';
 
-/**
- * Le dernier avertissement avant une suppression irreversible.
- *
- * Un projet qui a recu un don ou paye une depense ne s'efface pas : la
- * regle protege l'historique, et l'archivage existe pour cela. Il
- * arrive pourtant qu'un projet soit ouvert par erreur, avec de
- * l'argent saisi par erreur aussi. Cette fenetre est ce detour-la.
- *
- * Elle ne demande pas "etes-vous sur ?" -- personne ne lit cette
- * question. Elle dit, ligne par ligne, ce qui va disparaitre et ce qui
- * survivra, puis demande d'ecrire le nom du projet : le temps de
- * l'ecrire est le temps de se raviser.
- *
- * @param {{ ouverte: boolean, projet: object|null, ecritures?: object,
- *           onFermer: () => void, onConfirmer: () => void,
- *           envoi?: boolean, erreur?: string }} proprietes
- */
 export default function ModaleSuppressionForcee({
   ouverte,
   projet,
@@ -40,8 +23,6 @@ export default function ModaleSuppressionForcee({
   const nom = projet.name ?? projet.nom ?? '';
   const concorde = saisi.trim().toLowerCase() === nom.trim().toLowerCase();
 
-  // Ce que l'on sait du projet : la liste en dit le sort, meme quand le
-  // compte exact n'est pas connu de cet ecran.
   const dons = ecritures?.dons ?? null;
   const depenses = ecritures?.depenses ?? null;
   const investissements = ecritures?.investissements ?? null;

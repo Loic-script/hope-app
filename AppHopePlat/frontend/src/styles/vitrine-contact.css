@@ -1,16 +1,3 @@
-/* ============================================================
-   Site vitrine : "Contact" (pages/vitrine/Contact.jsx)
-
-   Le bandeau sur la photo, a la meme echelle que les autres bandeaux
-   (--u : 10 px a 1366 px de large) ; puis deux colonnes sur le fond de
-   soleils : les cartes pour nous joindre, et le formulaire dans l'habit
-   des champs du parcours (parcours-donateur.css). Les mouvements
-   d'entree (hero-zoom, hero-monte, engager-filet...) viennent de
-   vitrine-accueil.css et vitrine-engager.css.
-   ============================================================ */
-
-/* ------------------------------- Le bandeau ------------------------------- */
-
 .contact-hero {
   --u: clamp(6px, 0.732vw, 10px);
 
@@ -80,7 +67,6 @@
   animation-delay: 400ms;
 }
 
-/* Le filet bleu et le soleil renverse, comme sur les autres bandeaux. */
 .contact-hero__trait {
   position: relative;
   width: min(100%, calc(var(--u) * 46));
@@ -126,9 +112,6 @@
   animation: hero-monte 800ms cubic-bezier(0.22, 1, 0.36, 1) 550ms both;
 }
 
-/* ------------------------------ Les colonnes ------------------------------ */
-
-/* Le fond de soleils de la page d'authentification, comme "Nos projets". */
 .contact {
   padding: clamp(48px, 6vw, 80px) 0 clamp(64px, 8vw, 96px);
   background-color: var(--hope-fond-panneau);
@@ -151,10 +134,6 @@
   gap: 18px;
 }
 
-/* ------------------------------- Les cartes ------------------------------- */
-
-/* Sans icone : un surtitre orange precede d'un filet, qui s'allonge au
-   survol pendant que la carte se souleve. */
 .contact-carte {
   position: relative;
   padding: 24px 26px 24px;
@@ -182,7 +161,6 @@
   align-items: center;
   gap: 10px;
   margin: 0;
-  /* L'orange brun des notes de la plateforme : lisible en petit (5,6:1). */
   color: #8a5c12;
   font-size: 12.5px;
   font-weight: 700;
@@ -217,7 +195,6 @@
   color: var(--hope-texte-doux);
 }
 
-/* L'adresse, en grand, et le bouton pour la copier d'un geste. */
 .contact-carte__courriel {
   display: flex;
   flex-wrap: wrap;
@@ -237,7 +214,6 @@
   text-decoration: none;
 }
 
-/* Le soulignement part de la gauche au survol. */
 .contact-carte__lien::after {
   content: '';
   position: absolute;
@@ -297,7 +273,6 @@
   outline-offset: 3px;
 }
 
-/* Le delai de reponse : un badge, et un point qui respire. */
 .contact-carte__badge {
   display: inline-flex;
   align-items: center;
@@ -378,8 +353,6 @@
   color: var(--hope-violet);
 }
 
-/* ----------------------------- Le formulaire ----------------------------- */
-
 .contact__carte {
   padding: clamp(24px, 3vw, 40px);
   border-radius: 22px;
@@ -387,8 +360,6 @@
   box-shadow: 0 24px 56px -30px rgba(53, 51, 67, 0.55);
 }
 
-/* Les champs du parcours lisent leurs couleurs sur .parcours : on les
-   leur donne ici, hors du parcours. */
 .contact-formulaire {
   --parcours-encre: #2a2839;
   --parcours-bordure: #dde3ee;
@@ -418,8 +389,6 @@
   color: var(--hope-texte-doux);
 }
 
-/* Les champs du parcours se suivent de 18 px ; dans la paire, la grille
-   les range deja cote a cote, sans marge. */
 .contact-formulaire > .parcours__champ + .parcours__champ,
 .contact-formulaire > .parcours__paire + .parcours__champ,
 .contact-formulaire .contact-sujets,
@@ -431,7 +400,6 @@
   margin-top: 0;
 }
 
-/* Le message : la boite s'ouvre en hauteur, l'icone reste en haut. */
 .contact-formulaire__message .parcours__boite {
   align-items: flex-start;
 }
@@ -448,8 +416,6 @@
   resize: vertical;
 }
 
-/* Les sujets en pastilles de texte : la choisie se remplit de violet,
-   les autres s'eclairent au survol ; elles entrent l'une apres l'autre. */
 .contact-sujets {
   min-width: 0;
   margin: 0;
@@ -512,7 +478,6 @@
   box-shadow: 0 10px 22px -12px rgba(93, 86, 150, 0.8);
 }
 
-/* Choisie et survolee : elle fonce au lieu de s'eclaircir sous le texte blanc. */
 .contact-sujet--actif:hover {
   border-color: var(--hope-violet-fonce);
   background: var(--hope-violet-fonce);
@@ -532,7 +497,6 @@
   margin-top: 8px;
 }
 
-/* Le piege a robots : hors de l'ecran. */
 .contact-formulaire__piege {
   position: absolute;
   left: -10000px;
@@ -558,10 +522,6 @@
   color: var(--hope-violet);
 }
 
-/* -------------------------------- Le merci -------------------------------- */
-
-/* La coche se trace : le cercle d'abord, le trait ensuite ; le reste
-   arrive en dessous, l'un apres l'autre. */
 .contact-merci {
   display: flex;
   flex-direction: column;
@@ -635,14 +595,11 @@
   }
 }
 
-/* ------------------------------ Petits ecrans ------------------------------ */
-
 @media (max-width: 900px) {
   .contact__grille {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Le formulaire d'abord : c'est pour lui qu'on vient. */
   .contact__carte {
     order: -1;
   }

@@ -1,21 +1,7 @@
-/* ============================================================
-   HOPE - Actualites de l'espace bailleur, cote administration
-
-   La page se lit comme celle des projets : la meme barre d'outils, puis
-   la meme carte -- le visuel a gauche, le contenu a droite, les mesures
-   et les actions au pied. Ce fichier n'en decrit que les differences,
-   la carte elle-meme vient de admin-publications.css.
-
-   Sous un appel a financement, les bailleurs interesses.
-   ============================================================ */
-
-/* L'appel a financement demande une suite : il se distingue, comme dans
-   l'espace bailleur. */
 .publication--appel {
   border-left: 3px solid var(--hope-orange);
 }
 
-/* Le cadre sans photo n'est pas un lien ici : rien ne s'allume au survol. */
 .publication__sans-visuel--fige {
   cursor: default;
 }
@@ -24,7 +10,6 @@
   background-color: var(--hope-bleu-clair);
 }
 
-/* Le surtitre porte le projet lie : le lien garde la couleur du surtitre. */
 .publication__surtitre a {
   color: inherit;
   text-decoration: none;
@@ -38,30 +23,20 @@
   color: var(--etat-ambre);
 }
 
-/* Le titre d'une actualite n'est pas un lien, et peut etre une longue
-   phrase : il se coupe plutot que de deborder de la carte. */
 .publication__titre--actualite {
   overflow-wrap: anywhere;
 }
 
-/* Trois lignes du texte, ses retours a la ligne conserves : de quoi
-   reconnaitre la publication sans ouvrir le formulaire. */
 .publication__texte--actualite {
   -webkit-line-clamp: 3;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
 
-/* Le pied prend la place libre et se cale en bas de la carte. */
 .publication--actualite .publication__pied {
   margin-top: auto;
 }
 
-/*
- * Le financement d'un appel, en clair : ce qui est recu, le budget, la
- * part faite, ce qui manque. Pas de jauge ici -- la barre du projet se
- * lit sur sa propre carte, dans la page Projets.
- */
 .publication__financement {
   display: flex;
   flex-wrap: wrap;
@@ -97,8 +72,6 @@
   font-size: 12.5px;
   color: var(--etat-vert);
 }
-
-/* --- Les bailleurs interesses --- */
 
 .interets-admin {
   margin-top: 16px;
@@ -217,8 +190,6 @@
   color: var(--admin-texte);
 }
 
-/* --- Formulaire --- */
-
 .actualite-form__types {
   align-self: flex-start;
   flex-wrap: wrap;
@@ -250,11 +221,6 @@
     justify-content: flex-start;
   }
 }
-
-/* ------------------------------------------------------------
-   Les reactions des utilisateurs : J'aime, et les commentaires que
-   seule l'equipe lit. La liste se deplie sous la carte.
-   ------------------------------------------------------------ */
 
 .reactions-admin {
   margin-top: 14px;

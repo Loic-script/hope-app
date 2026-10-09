@@ -1,36 +1,14 @@
-/**
- * Repository de la messagerie.
- *
- * Un fil reunit des participants ; chacun peut y ecrire. Deux tables
- * d'identite coexistent dans HOPE -- "utilisateur" pour ceux qui
- * s'inscrivent, "admins" pour l'equipe -- et toutes les fonctions d'ici
- * recoivent donc un "acteur" : { type: 'utilisateur' | 'admin', id }.
- *
- * Aucune regle metier ici : qui peut lire, ecrire ou transferer se
- * decide dans le service. Ce fichier ne fait que dire la verite de la
- * base, en une requete chaque fois que c'est possible.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/** La colonne qui porte un acteur, dans une table a double identite. */
 function colonne(acteur, prefixe = '') {
   return `${prefixe}${acteur.type === 'admin' ? 'admin_id' : 'utilisateur_id'}`;
 }
 
-/** Valeurs des deux colonnes d'identite, pour un INSERT. */
 function identites(acteur) {
   return acteur.type === 'admin' ? [null, Number(acteur.id)] : [String(acteur.id), null];
 }
 
-/**
- * Une personne, telle que la messagerie la montre.
- *
- * Attend les alias : u (utilisateur), a (admins), r (role principal),
- * bn (benevole), bc (bailleur_contact), bl (bailleur). Le role principal
- * est choisi par ordre d'interet : un contact de bailleur se presente
- * par son organisation avant tout.
- */
 const PERSONNE = `
   json_build_object(
     'type', CASE WHEN a.id IS NOT NULL THEN 'admin' ELSE 'utilisateur' END,
@@ -52,7 +30,6 @@ const PERSONNE = `
   )
 `;
 
-/** Les jointures qui nourrissent PERSONNE, a partir de p.utilisateur_id / p.admin_id. */
 const JOINTURES_PERSONNE = `
   LEFT JOIN utilisateur u ON u.id = p.utilisateur_id
   LEFT JOIN admins a ON a.id = p.admin_id
@@ -68,7 +45,6 @@ const JOINTURES_PERSONNE = `
   LEFT JOIN bailleur bl ON bl.id = bc.bailleur_id
 `;
 
-/** Les participants d'un fil (alias c), avec leur date d'ajout. */
 const PARTICIPANTS = `
   COALESCE((
     SELECT json_agg(
@@ -81,7 +57,6 @@ const PARTICIPANTS = `
   ), '[]'::json) AS participants
 `;
 
-/** Les pieces d'un message (alias m), sans le nom de fichier sur le disque. */
 const PIECES = `
   COALESCE((
     SELECT json_agg(
@@ -95,11 +70,6 @@ const PIECES = `
   ), '[]'::json)
 `;
 
-/* ================================================================
-   Participation et non-lus
-   ================================================================ */
-
-/** L'acteur participe-t-il a ce fil ? La seule porte d'acces. */
 export async function estParticipant(acteur, conversationId, client = null) {
   const resultat = await query(
     `SELECT 1 FROM conversation_participant
@@ -110,23 +80,10 @@ export async function estParticipant(acteur, conversationId, client = null) {
   return resultat.rowCount > 0;
 }
 
-/**
- * Condition "ce message n'est pas de moi", sur l'alias m.
- *
- * IS DISTINCT FROM et non <> : un message d'un compte supprime a ses
- * deux colonnes a NULL, et doit compter comme ecrit par un autre.
- */
 function pasDeMoi(acteur, rang) {
   return `m.${colonne(acteur)} IS DISTINCT FROM $${rang}`;
 }
 
-/**
- * Le total des non-lus d'un acteur, et le fil du plus recent.
- *
- * Non-lu : un message non supprime, ecrit par un autre, envoye apres la
- * derniere lecture. Le fil du plus recent sert a la notification, qui y
- * mene directement.
- */
 export async function nonLus(acteur, client = null, exclus = []) {
   const resultat = await query(
     `SELECT COUNT(*)::int AS total,
@@ -146,24 +103,10 @@ export async function nonLus(acteur, client = null, exclus = []) {
   return { total: resultat.rows[0].total, dernierFil: resultat.rows[0].dernier_fil ?? null };
 }
 
-/** Le seul total : ce que la pastille du menu affiche. */
 export async function compterNonLues(acteur, client = null) {
   return (await nonLus(acteur, client)).total;
 }
 
-/**
- * Marque le fil lu jusqu'a un message, ou jusqu'a maintenant.
- *
- * Jusqu'a un message plutot qu'a une heure venue du navigateur : une date
- * JavaScript s'arrete a la milliseconde, PostgreSQL garde la microseconde,
- * et le dernier message affiche serait reste "plus recent" que sa propre
- * lecture -- donc non lu. L'heure est relue ici, exacte.
- *
- * GREATEST : une lecture ne recule jamais -- deux onglets ouverts sur le
- * meme fil ne doivent pas se faire perdre la lecture l'un a l'autre.
- *
- * @param {number|null} messageId un message de ce fil ; null pour "maintenant"
- */
 export async function marquerLu(acteur, conversationId, messageId = null, client = null) {
   await query(
     `UPDATE conversation_participant
@@ -181,17 +124,6 @@ export async function marquerLu(acteur, conversationId, messageId = null, client
   );
 }
 
-/* ================================================================
-   Lecture des fils
-   ================================================================ */
-
-/**
- * Les fils d'un acteur, le plus recemment anime en tete.
- *
- * Un fil sans message -- un groupe tout juste cree -- se classe a sa date
- * de creation. Le dernier message est rendu meme supprime : la liste doit
- * pouvoir dire "Message supprime".
- */
 export async function lister(acteur, client = null) {
   const resultat = await query(
     `SELECT c.id, c.type, c.nom, c.photo_fichier, c.assistance, c.cree_le,
@@ -230,7 +162,6 @@ export async function lister(acteur, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Un fil, avec ses participants. Sans verification d'acces : le service la fait. */
 export async function trouver(conversationId, client = null) {
   const resultat = await query(
     `SELECT c.id, c.type, c.nom, c.photo_fichier, c.assistance, c.cree_le, ${PARTICIPANTS}
@@ -242,7 +173,6 @@ export async function trouver(conversationId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** La date de derniere lecture d'un acteur dans un fil. */
 export async function luLe(acteur, conversationId, client = null) {
   const resultat = await query(
     `SELECT lu_jusqu_a FROM conversation_participant
@@ -253,7 +183,6 @@ export async function luLe(acteur, conversationId, client = null) {
   return resultat.rows[0]?.lu_jusqu_a ?? null;
 }
 
-/** Les messages d'un fil, du plus ancien au plus recent, pieces comprises. */
 export async function messages(conversationId, client = null) {
   const resultat = await query(
     `SELECT m.id, m.corps, m.cree_le, m.modifie_le, m.supprime_le, m.transfere,
@@ -273,7 +202,6 @@ export async function messages(conversationId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Un message, avec ce qu'il faut pour decider qui peut y toucher. */
 export async function trouverMessage(messageId, client = null) {
   const resultat = await query(
     `SELECT m.id, m.conversation_id, m.corps, m.cree_le, m.modifie_le, m.supprime_le,
@@ -289,23 +217,10 @@ export async function trouverMessage(messageId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/* ================================================================
-   Retrouver ou creer un fil
-   ================================================================ */
-
-/**
- * Verrou transactionnel sur une cle.
- *
- * Deux clics rapides sur "Envoyer un message" arrivent en parallele :
- * sans verrou, les deux cherchent le fil, ne le trouvent pas, et en
- * creent chacun un. Le verrou les met en file ; le second trouve ce que
- * le premier a cree.
- */
 export async function verrouiller(cle, client) {
   await query('SELECT pg_advisory_xact_lock(hashtext($1))', [cle], client);
 }
 
-/** Le fil individuel qui reunit exactement ces deux personnes. */
 export async function trouverIndividuel(a, b, client = null) {
   const resultat = await query(
     `SELECT c.id
@@ -324,14 +239,6 @@ export async function trouverIndividuel(a, b, client = null) {
   return resultat.rows[0]?.id ?? null;
 }
 
-/**
- * Le fil d'assistance d'un utilisateur.
- *
- * Les anciens fils "ecrire a HOPE" etaient ouverts un par sujet : un
- * utilisateur peut donc en avoir plusieurs. On reprend le plus
- * recemment anime -- celui ou la conversation en est restee -- plutot
- * que de fusionner un historique que chacun a lu dans cet ordre.
- */
 export async function trouverAssistance(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT c.id
@@ -346,7 +253,6 @@ export async function trouverAssistance(utilisateurId, client = null) {
   return resultat.rows[0]?.id ?? null;
 }
 
-/** Cree un fil vide. Les participants s'ajoutent ensuite. */
 export async function creerFil(
   { type = 'individuel', nom = null, photoFichier = null, assistance = false },
   client = null
@@ -361,16 +267,6 @@ export async function creerFil(
   return resultat.rows[0].id;
 }
 
-/**
- * Ajoute des participants ; ceux qui y sont deja sont ignores.
- *
- * Les index uniques sont partiels -- une colonne d'identite vaut NULL --
- * d'ou le predicat repete dans ON CONFLICT.
- *
- * @param {Date|string|null} luLe la lecture de depart : NULL pour tout
- *        lire comme neuf, NOW() pour arriver a jour.
- * @returns {Promise<number>} le nombre de participants reellement ajoutes
- */
 export async function ajouterParticipants(conversationId, acteurs, luLe = null, client = null) {
   let ajoutes = 0;
   for (const acteur of acteurs) {
@@ -390,13 +286,6 @@ export async function ajouterParticipants(conversationId, acteurs, luLe = null, 
   return ajoutes;
 }
 
-/**
- * Inscrit l'equipe active a tous les fils d'assistance ou elle manque.
- *
- * Un administrateur cree apres un fil n'y figurait pas ; la participation
- * etant la seule porte, il ne l'aurait jamais vu. Il arrive a jour : lui
- * faire lire comme neuf tout l'historique n'aurait pas de sens.
- */
 export async function rattacherEquipeAuxAssistances(client = null) {
   await query(
     `INSERT INTO conversation_participant (conversation_id, admin_id, lu_jusqu_a)
@@ -410,13 +299,11 @@ export async function rattacherEquipeAuxAssistances(client = null) {
   );
 }
 
-/** Les administrateurs actifs : l'equipe, a inscrire a un fil d'assistance. */
 export async function equipeActive(client = null) {
   const resultat = await query(`SELECT id FROM admins WHERE status = 'ACTIVE' ORDER BY id`, [], client);
   return resultat.rows.map((ligne) => ({ type: 'admin', id: ligne.id }));
 }
 
-/** Retire un participant. Rend le nombre de participants restants. */
 export async function retirerParticipant(acteur, conversationId, client = null) {
   await query(
     `DELETE FROM conversation_participant WHERE conversation_id = $1 AND ${colonne(acteur)} = $2`,
@@ -431,7 +318,6 @@ export async function retirerParticipant(acteur, conversationId, client = null) 
   return reste.rows[0].n;
 }
 
-/** Supprime un fil ; messages et pieces partent en cascade. Rend les fichiers a effacer. */
 export async function supprimerFil(conversationId, client = null) {
   const fichiers = await query(
     `SELECT pc.fichier
@@ -447,11 +333,6 @@ export async function supprimerFil(conversationId, client = null) {
   return fichiers.rows.map((ligne) => ligne.fichier);
 }
 
-/* ================================================================
-   Ecriture des messages
-   ================================================================ */
-
-/** Depose un message et remonte le fil. */
 export async function ajouterMessage(
   { conversationId, acteur, auteurNom, corps = '', transfere = false },
   client = null
@@ -469,7 +350,6 @@ export async function ajouterMessage(
   return versObjet(resultat.rows[0]);
 }
 
-/** Enregistre les pieces d'un message, dans l'ordre donne. */
 export async function ajouterPieces(messageId, pieces, client = null) {
   for (const [rang, piece] of pieces.entries()) {
     await query(
@@ -482,7 +362,6 @@ export async function ajouterPieces(messageId, pieces, client = null) {
   }
 }
 
-/** Remplace le texte d'un message et note la modification. */
 export async function modifierMessage(messageId, corps, client = null) {
   await query(
     `UPDATE conversation_message SET corps = $2, modifie_le = NOW() WHERE id = $1`,
@@ -491,13 +370,6 @@ export async function modifierMessage(messageId, corps, client = null) {
   );
 }
 
-/**
- * Suppression logique : texte vide, date posee, pieces retirees.
- *
- * Rend les fichiers a effacer du disque. L'appelant les efface APRES la
- * transaction : un echec en cours de route ne doit pas laisser une
- * ligne pointant vers un fichier deja parti.
- */
 export async function supprimerMessage(messageId, client = null) {
   const pieces = await query(
     'DELETE FROM conversation_piece WHERE message_id = $1 RETURNING fichier',
@@ -512,7 +384,6 @@ export async function supprimerMessage(messageId, client = null) {
   return pieces.rows.map((ligne) => ligne.fichier);
 }
 
-/** Les pieces d'un message avec leur nom sur le disque : pour les dupliquer. */
 export async function piecesAvecFichiers(messageId, client = null) {
   const resultat = await query(
     `SELECT nom_origine, type, type_mime, fichier, taille
@@ -525,7 +396,6 @@ export async function piecesAvecFichiers(messageId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Une piece, avec le fil de son message, pour en controler l'acces. */
 export async function trouverPiece(pieceId, client = null) {
   const resultat = await query(
     `SELECT pc.id, pc.nom_origine, pc.type, pc.type_mime, pc.fichier, pc.taille,
@@ -539,7 +409,6 @@ export async function trouverPiece(pieceId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Toutes les pieces d'un fil, de la plus recente a la plus ancienne. */
 export async function piecesDuFil(conversationId, client = null) {
   const resultat = await query(
     `SELECT pc.id, pc.nom_origine AS nom, pc.type, pc.type_mime, pc.taille,
@@ -554,7 +423,6 @@ export async function piecesDuFil(conversationId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Modifie le nom ou la photo d'un groupe. */
 export async function modifierGroupe(conversationId, { nom, photoFichier }, client = null) {
   await query(
     `UPDATE conversation
@@ -566,38 +434,11 @@ export async function modifierGroupe(conversationId, { nom, photoFichier }, clie
   );
 }
 
-/* ================================================================
-   Annuaire
-   ================================================================ */
-
-/**
- * Qui chaque espace peut joindre, en plus de l'equipe HOPE (le fil
- * d'assistance, propose a tout utilisateur) :
- *   - espace benevole : les autres benevoles ;
- *   - espaces donateur et bailleur : personne d'autre que l'equipe.
- * L'administration, elle, joint tout le monde.
- */
 const ROLE_JOIGNABLE_PAR_ESPACE = { 'hope-benevole': 'benevole' };
 
-/**
- * Les personnes qu'un acteur peut joindre.
- *
- * L'equipe joint tous les comptes, y compris ceux qui attendent leur
- * activation -- un candidat a qui l'on doit une reponse --, et les autres
- * administrateurs. Un utilisateur ne joint que ce que son espace permet
- * (ROLE_JOIGNABLE_PAR_ESPACE) ; les administrateurs, il les joint en bloc,
- * par le fil d'assistance.
- *
- * Toute ouverture de fil passe par ici (nouvelle conversation, groupe,
- * ajout de membres, transfert, bouton d'une fiche) : la regle vaut
- * partout.
- *
- * On s'exclut soi-meme : s'ecrire n'a pas de sens.
- */
 export async function joignables(acteur, client = null) {
   const equipe = acteur.type === 'admin';
   const roleJoignable = equipe ? null : ROLE_JOIGNABLE_PAR_ESPACE[acteur.espace] ?? null;
-  // Un utilisateur dont l'espace ne joint personne : inutile d'interroger.
   if (!equipe && !roleJoignable) return [];
   const resultat = await query(
     `SELECT ${PERSONNE} AS personne
@@ -627,7 +468,6 @@ export async function joignables(acteur, client = null) {
   return resultat.rows.map((ligne) => ligne.personne);
 }
 
-/** Une personne precise, si elle existe. */
 export async function personne(acteur, client = null) {
   const resultat = await query(
     `SELECT ${PERSONNE} AS personne
@@ -640,7 +480,6 @@ export async function personne(acteur, client = null) {
   return resultat.rows[0]?.personne ?? null;
 }
 
-/** Les contacts d'une organisation, le principal en tete. */
 export async function contactsDeBailleur(bailleurId, client = null) {
   const resultat = await query(
     `SELECT bc.utilisateur_id, bc.contact_principal

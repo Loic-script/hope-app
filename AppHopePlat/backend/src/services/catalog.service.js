@@ -1,13 +1,3 @@
-/**
- * Service de reference : categories de projet et listes de valeurs.
- *
- * Le frontend appelle une seule fois /api/admin/catalog pour remplir tous
- * ses menus deroulants, au lieu de coder les enumerations en dur.
- *
- * Note : les commentaires restent sans accents, mais les libelles ci-dessous
- * sont du contenu affiche a l'ecran : ils sont donc en francais correct,
- * accents compris (la base et l'API sont en UTF-8).
- */
 import * as categoryRepository from '../repositories/projectCategory.repository.js';
 
 import { ErreurRegleMetier } from '../shared/errors.js';
@@ -17,7 +7,6 @@ import { INDICATEURS_SUGGERES } from './impact.service.js';
 import { MOYENS_PAIEMENT } from './donation.service.js';
 import { CATEGORIES as CATEGORIES_DEPENSE } from './expense.service.js';
 
-/** Categories creees automatiquement au premier demarrage. */
 export const CATEGORIES_PAR_DEFAUT = [
   { name: 'Scolarité', description: 'Frais de scolarité, fournitures et soutien scolaire' },
   { name: 'Soins', description: 'Consultations, médicaments et suivi médical' },
@@ -31,7 +20,6 @@ export const CATEGORIES_PAR_DEFAUT = [
   { name: 'Urgence', description: "Réponse aux situations d'urgence et aux catastrophes" },
 ];
 
-/** Libelles francais partages avec le frontend. */
 export const LIBELLES = {
   projectStatus: {
     IN_PROGRESS: 'En cours',
@@ -100,14 +88,11 @@ export const LIBELLES = {
   },
   mediaType: { PHOTO: 'Photo', VIDEO: 'Vidéo' },
 
-  // Ce qu'un projet sert : la mission de HOPE, ou HOPE elle-meme.
   projectType: {
     HOPE: 'Projet HOPE',
     INTERNAL: 'Projet interne',
   },
 
-  // Nature d'une preuve terrain. Elle manquait ici : chaque ecran qui en
-  // affichait recopiait les trois libelles pour son propre compte.
   proofType: {
     PHOTO: 'Photo',
     VIDEO: 'Vidéo',
@@ -116,7 +101,6 @@ export const LIBELLES = {
   },
 };
 
-/** Tout ce dont le frontend a besoin pour ses formulaires. */
 export async function recuperer() {
   return {
     categories: await categoryRepository.lister(),
@@ -124,7 +108,6 @@ export async function recuperer() {
     currencies: DEVISES_ACCEPTEES,
     defaultCurrency: DEVISE_PAR_DEFAUT,
     indicators: INDICATEURS_SUGGERES,
-    // Les moyens de paiement dependent de la localisation du donateur.
     paymentMethods: MOYENS_PAIEMENT,
     expenseCategories: CATEGORIES_DEPENSE,
   };
@@ -148,7 +131,6 @@ export async function creerCategorie(corps = {}) {
   });
 }
 
-/** Cree les categories de reference si elles n'existent pas (idempotent). */
 export async function installerCategoriesParDefaut() {
   const creees = [];
   for (const categorie of CATEGORIES_PAR_DEFAUT) {

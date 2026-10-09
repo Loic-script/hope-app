@@ -1,35 +1,15 @@
-/**
- * Service du profil benevole et du journal d'heures.
- *
- * Le profil est a cheval sur deux tables : "utilisateur" pour l'etat
- * civil, "benevole" pour ce qui ne sert qu'au terrain. Le benevole
- * modifie les deux depuis un seul formulaire, mais pas tout : son
- * statut de compte et sa validation par HOPE ne lui appartiennent pas.
- */
 import { transaction } from '../config/database.js';
 import * as profileRepository from '../repositories/volunteerProfile.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { calculerAge } from './volunteerAuth.service.js';
 
-/** Jours acceptes dans les disponibilites. */
 const JOURS = [
   'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche',
 ];
 
-/** Moments de la journee acceptes. */
 const MOMENTS = ['matin', 'apres-midi', 'soir', 'journee'];
 
-/**
- * Paliers de reconnaissance du journal.
- *
- * Ils ne sont pas stockes : un badge se deduit des totaux, et une table
- * de badges se desynchroniserait a la premiere tache relachee.
- *
- * Deux mesures, et deux seulement : le nombre de taches livrees, et le
- * nombre de projets differents soutenus -- aider sur plusieurs fronts
- * compte autant que beaucoup aider au meme endroit.
- */
 const BADGES = [
   { cle: 'premiere-tache', libelle: 'Première tâche livrée', taches: 1 },
   { cle: 'cinq-taches', libelle: '5 tâches livrées', taches: 5 },
@@ -38,7 +18,6 @@ const BADGES = [
   { cle: 'pilier', libelle: 'Pilier HOPE', taches: 30, projets: 5 },
 ];
 
-/** Retire de la fiche ce qui ne doit pas sortir vers le benevole. */
 function versProfilPublic(fiche) {
   return {
     id: fiche.id,
@@ -58,15 +37,12 @@ function versProfilPublic(fiche) {
     disponibilites: fiche.disponibilites ?? {},
     accepteTerrain: fiche.accepteTerrain,
     accepteDistance: fiche.accepteDistance,
-    // S'il a demande a ne pas paraitre (prenom et photo) sur le site public.
     masqueSite: fiche.masqueSite,
     contactUrgenceNom: fiche.contactUrgenceNom,
     contactUrgenceTel: fiche.contactUrgenceTel,
     valideParHope: fiche.valideParHope,
     valideLe: fiche.valideLe,
     benevoleDepuis: fiche.benevoleDepuis,
-    // notes_internes n'est volontairement pas reprise : elle est
-    // reservee a l'equipe HOPE.
   };
 }
 
@@ -76,7 +52,6 @@ export async function recuperer(utilisateurId) {
   return versProfilPublic(fiche);
 }
 
-/** Liste de textes courts, nettoyee et dedoublonnee. */
 function listeDeTextes(valeur, champ, { max = 60 } = {}) {
   if (valeur === undefined) return undefined;
   if (valeur === null || valeur === '') return [];
@@ -96,13 +71,6 @@ function listeDeTextes(valeur, champ, { max = 60 } = {}) {
   return [...new Set(nettoyes)];
 }
 
-/**
- * Valide les disponibilites.
- *
- * Forme attendue : { "mercredi": ["matin"], "samedi": ["journee"] }.
- * On refuse le reste plutot que de stocker un JSON quelconque : la
- * colonne est libre, mais l'ecran qui la lit ne l'est pas.
- */
 function disponibilitesValides(valeur, champ = 'disponibilites') {
   if (valeur === undefined) return undefined;
   if (valeur === null || valeur === '') return {};
@@ -139,7 +107,6 @@ function disponibilitesValides(valeur, champ = 'disponibilites') {
   return resultat;
 }
 
-/** Texte court facultatif, ou null. */
 function texte(valeur, champ, max) {
   if (valeur === undefined) return undefined;
   const propre = String(valeur ?? '').trim();
@@ -152,26 +119,12 @@ function texte(valeur, champ, max) {
   return propre;
 }
 
-/** Booleen tolerant aux chaines "true" / "false" des formulaires. */
 function booleen(valeur) {
   if (valeur === undefined) return undefined;
   if (typeof valeur === 'boolean') return valeur;
   return String(valeur).trim().toLowerCase() === 'true';
 }
 
-/**
- * Met a jour son propre profil.
- *
- * Ni le statut du compte ni valide_par_hope ne sont modifiables ici :
- * ils relevent de l'equipe HOPE. Un benevole qui pourrait se valider
- * lui-meme rendrait la validation sans objet.
- */
-/**
- * Verifie l'adresse d'une photo de profil.
- *
- * Elle doit venir du dossier des medias de HOPE : c'est le televersement
- * de l'espace qui la produit. Une chaine vide efface la photo.
- */
 function photoValide(valeur) {
   if (valeur === undefined) return undefined;
   if (valeur === null || String(valeur).trim() === '') return null;
@@ -185,13 +138,6 @@ function photoValide(valeur) {
   return adresse;
 }
 
-/**
- * Un nom ou un prenom.
- *
- * L'inscription ne les demande plus : ils arrivent ici. Absent, le champ
- * ne change pas ; fourni, il ne peut pas etre vide -- on renseigne son
- * nom, on ne l'efface pas.
- */
 function nomPropre(valeur, champ) {
   if (valeur === undefined) return undefined;
   const propre = String(valeur ?? '').trim();
@@ -208,20 +154,10 @@ function nomPropre(valeur, champ) {
   return propre;
 }
 
-/**
- * Le telephone est UNIQUE : un numero deja porte par un autre compte
- * doit revenir comme une erreur de champ, pas comme une erreur interne.
- */
 function numeroDejaPris(erreur) {
   return erreur?.code === '23505' && String(erreur.constraint ?? '').includes('telephone');
 }
 
-/**
- * Le pays d'origine, en code ISO a deux lettres.
- *
- * Meme forme que chez le donateur : "MG", jamais "Madagascar" ecrit de
- * dix facons. Une chaine vide efface le choix.
- */
 function paysIso(valeur) {
   if (valeur === undefined) return undefined;
   const code = String(valeur ?? '').trim().toUpperCase();
@@ -242,8 +178,6 @@ export async function mettreAJour(utilisateurId, corps = {}) {
     competences: listeDeTextes(corps.competences, 'competences'),
     langues: listeDeTextes(corps.langues, 'langues'),
     disponibilites: disponibilitesValides(corps.disponibilites),
-    // La distance acceptee depuis le quartier ne se demande plus : la
-    // colonne rayon_km reste en base, mais n'est plus ni lue ni ecrite.
     accepte_terrain: booleen(corps.accepteTerrain),
     accepte_distance: booleen(corps.accepteDistance),
     masque_site: booleen(corps.masqueSite),
@@ -251,7 +185,6 @@ export async function mettreAJour(utilisateurId, corps = {}) {
     contact_urgence_tel: texte(corps.contactUrgenceTel, 'contactUrgenceTel', 20),
   };
 
-  // Les disponibilites sont une colonne JSONB : pg attend une chaine.
   if (colonnesFiche.disponibilites !== undefined) {
     colonnesFiche.disponibilites = JSON.stringify(colonnesFiche.disponibilites);
   }
@@ -261,9 +194,6 @@ export async function mettreAJour(utilisateurId, corps = {}) {
     prenom: nomPropre(corps.prenom, 'prenom'),
     adresse: texte(corps.adresse, 'adresse', 255),
     telephone: texte(corps.telephone, 'telephone', 20),
-    // La photo de profil. Seule une adresse servie par HOPE est acceptee :
-    // une adresse exterieure ferait charger au navigateur une image dont
-    // personne ici ne repond, et suivrait le benevole d'un site a l'autre.
     photo_url: photoValide(corps.photoUrl),
     date_de_naissance: corps.dateDeNaissance === undefined
       ? undefined
@@ -286,9 +216,6 @@ export async function mettreAJour(utilisateurId, corps = {}) {
   }
 }
 
-/**
- * Journal d'heures : les totaux, le detail, et les badges obtenus.
- */
 export async function journal(utilisateurId) {
   const fiche = await profileRepository.garantir(utilisateurId);
   if (!fiche) throw new ErreurIntrouvable('Le profil bénévole', utilisateurId);
@@ -301,13 +228,6 @@ export async function journal(utilisateurId) {
   const taches = Number(totaux.tachesLivrees ?? 0);
   const projets = Number(totaux.projetsAides ?? 0);
 
-  /*
-   * Les paliers sortent avec le badge.
-   *
-   * Sans eux, l'ecran ne peut dire qu'une chose -- obtenu, ou pas -- la
-   * ou le benevole veut savoir ce qui lui manque encore. Ce sont des
-   * constantes publiques, rien de sensible.
-   */
   const badges = BADGES.map((badge) => ({
     cle: badge.cle,
     libelle: badge.libelle,
@@ -330,18 +250,7 @@ export async function journal(utilisateurId) {
   };
 }
 
-/**
- * Completion du profil, apres la premiere connexion.
- *
- * Meme traitement que la mise a jour ordinaire, plus le marqueur qui
- * evite de redemander le formulaire a chaque visite. Un benevole peut
- * legitimement ne declarer aucune competence : c'est pour cela que le
- * marqueur est explicite et non deduit du contenu de la fiche.
- */
 export async function completer(utilisateurId, corps = {}) {
-  // Le nom est demande ici, et non plus a l'inscription : la completion
-  // est le seul passage oblige avant d'entrer dans l'espace, et l'equipe
-  // ne confie pas une tache a une adresse electronique.
   const manquants = {};
   if (String(corps.prenom ?? '').trim() === '') manquants.prenom = 'Champ obligatoire';
   if (String(corps.nom ?? '').trim() === '') manquants.nom = 'Champ obligatoire';
@@ -352,12 +261,6 @@ export async function completer(utilisateurId, corps = {}) {
   const profil = await mettreAJour(utilisateurId, corps);
   await volunteerRepository.marquerProfilComplete(utilisateurId);
 
-  /*
-   * Un benevole attend la validation de HOPE : sa fiche remplie, il ne
-   * rentre pas encore. La reponse dit lequel des deux ecrans montrer --
-   * l'espace, ou la page d'attente -- plutot que de laisser le client
-   * le deviner.
-   */
   const compte = await volunteerRepository.trouverParId(utilisateurId);
   const enAttente = compte?.statut === 'en_attente';
 

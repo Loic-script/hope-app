@@ -10,13 +10,6 @@ import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
 
-/**
- * La suite de l'accueil du site vitrine : nos projets et les
- * actualites (les trois dernieres de chaque, lues dans la plateforme),
- * nos partenaires, et l'appel a contribuer.
- */
-
-/** Une image absente : le cadre reste habite par une icone. */
 export function SansImage() {
   return (
     <span className="v-sans-image" aria-hidden="true">
@@ -29,7 +22,6 @@ export function SansImage() {
   );
 }
 
-/** L'en-tete d'une section : son titre a gauche, son lien "Tout voir" a droite. */
 function EnteteSection({ id, titre, lien, libelleLien }) {
   return (
     <div className="v-entete-section">
@@ -43,13 +35,6 @@ function EnteteSection({ id, titre, lien, libelleLien }) {
   );
 }
 
-/* ============================== Nos projets ============================== */
-
-/**
- * Les trois derniers projets de HOPE, tels que la plateforme les montre
- * au site (GET /api/public/projets) : nom, extrait, photo. Chaque carte
- * mene a la fiche du projet.
- */
 export function Realisations() {
   const [ref, vu] = useApparition({ seuil: 0.15 });
   const [projets, setProjets] = useState(null);
@@ -109,8 +94,6 @@ export function Realisations() {
   );
 }
 
-/* ============================ Les actualites ============================ */
-
 const FORMAT_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
 function IconeChevron({ sens }) {
@@ -138,7 +121,6 @@ export function Actualites() {
     };
   }, []);
 
-  // Les fleches s'eteignent aux bouts de la piste.
   const mesurer = useCallback(() => {
     const el = piste.current;
     if (!el) return;
@@ -214,15 +196,6 @@ export function Actualites() {
   );
 }
 
-/* ============================ Nos partenaires ============================ */
-
-/*
- * Les logos des partenaires, fournis par HOPE, recadres sur leur contenu et
- * enregistres a deux fois leur taille d'affichage. `hauteur` egalise leur
- * surface a l'ecran : un logo presque carre (HN, L'Alliee Virtuelle) est
- * affiche plus haut qu'un logo tres large (CanCham), et tous paraissent de
- * meme importance. Les quatre tiennent sur une ligne.
- */
 const PARTENAIRES = [
   { nom: 'HN', logo: logoHn, hauteur: 74 },
   { nom: 'CanCham — Chambre de Commerce et de Coopération Canada-Madagascar', logo: logoCanCham, hauteur: 52 },
@@ -248,8 +221,6 @@ export function Partenaires() {
   );
 }
 
-/* ============================ Contribuer ============================ */
-
 export function Contribuer() {
   const [ref, vu] = useApparition({ seuil: 0.25 });
   return (
@@ -263,7 +234,6 @@ export function Contribuer() {
             <strong>Aider une vie</strong> dès aujourd’hui ?
           </span>
         </h2>
-        {/* Le soleil ouvre, la barre suit : le motif de la page d'authentification. */}
         <div className="trait-hope trait-hope--renverse v-contribuer__trait" aria-hidden="true" />
         <p className="v-contribuer__texte v-entree" style={{ '--rang': 2 }}>
           L’espoir commence par une intention, mais il se réalise par l’action. Rejoignez{' '}

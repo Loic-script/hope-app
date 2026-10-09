@@ -16,27 +16,8 @@ import { heure, libelleJour, memeJour } from './outils.js';
 import Saisie from './Saisie.jsx';
 import TexteMessage from './TexteMessage.jsx';
 
-/**
- * Un fil ouvert : son en-tete, ses messages, sa zone de saisie.
- *
- * Il n'est rendu que s'il est affiche. C'est ce qui permet de le marquer
- * lu ici, sans autre precaution : sur un telephone, un fil choisi par
- * defaut mais cache derriere la liste n'est tout simplement pas monte.
- *
- * @param {{
- *   api: object, racine: string, id: number,
- *   pleinEcran: boolean, onRetour: () => void,
- *   onLu: (id: number, nonLus: {total: number}) => void,
- *   onActivite: () => void,
- *   onOuvrirFil: (id: number) => void,
- *   espace: 'admin'|'benevole'|'bailleur',
- *   onQuitte: (nom: string) => void,
- * }} props
- */
 export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onActivite, onOuvrirFil, espace, onQuitte }) {
   const [donnees, setDonnees] = useState(null);
-  // Le panneau d'information : ferme a chaque changement de fil, puisque
-  // le fil est remonte (sa cle est son identifiant).
   const [panneau, setPanneau] = useState(false);
   const [eclat, setEclat] = useState(null);
   const [erreur, setErreur] = useState('');
@@ -57,8 +38,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     }
   }, [api, racine, id]);
 
-  // Changer de fil repart d'un ecran vide : sinon les messages du fil
-  // precedent resteraient affiches sous le nom du nouveau.
   useEffect(() => {
     setDonnees(null);
     setErreur('');
@@ -69,15 +48,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
   const messages = donnees?.conversation?.id === id ? donnees.messages : null;
   const dernier = messages?.[messages.length - 1] ?? null;
 
-  /*
-   * Marquer lu, depuis le navigateur, une fois le fil affiche.
-   *
-   * Jusqu'au dernier message montre, et pas "maintenant" : un message
-   * arrive entre le chargement et cet appel n'a pas ete vu. On designe
-   * ce message par son identifiant -- son heure, arrondie a la
-   * milliseconde par JavaScript, le laisserait non lu. Un onglet en
-   * arriere-plan attend d'etre regarde.
-   */
   useEffect(() => {
     if (!messages) return undefined;
     const cle = `${id}:${dernier?.id ?? 'vide'}`;
@@ -90,7 +60,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
         .marquerLu(api, racine, id, dernier?.id ?? null)
         .then((resultat) => onLu?.(id, resultat))
         .catch(() => {
-          // Un echec laisse le fil non lu : on reessaiera au prochain affichage.
           dejaLu.current = '';
         });
     };
@@ -100,7 +69,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     return () => document.removeEventListener('visibilitychange', marquer);
   }, [messages, dernier, id, api, racine, onLu]);
 
-  // En plein ecran, la page dessous ne doit pas defiler avec le fil.
   useEffect(() => {
     if (!pleinEcran) return undefined;
     const avant = document.body.style.overflow;
@@ -110,7 +78,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     };
   }, [pleinEcran]);
 
-  // En bas a l'ouverture, et a chaque nouveau message.
   useLayoutEffect(() => {
     const element = defilement.current;
     if (element) element.scrollTop = element.scrollHeight;
@@ -124,7 +91,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     onActivite?.();
   }
 
-  /** Un message modifie ou supprime prend la place de l'ancien, sans recharger le fil. */
   const remplacer = useCallback(
     (message) =>
       setDonnees((actuel) =>
@@ -135,10 +101,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     [id]
   );
 
-  /*
-   * Apres un transfert vers un seul fil, on l'ouvre -- et si c'est celui-ci,
-   * on le recharge : la copie doit y apparaitre.
-   */
   const ouvrirFil = useCallback(
     (cible) => {
       if (Number(cible) === Number(id)) charger();
@@ -147,10 +109,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
     [id, charger, onOuvrirFil]
   );
 
-  /*
-   * Aller a un message trouve par la recherche : le faire defiler au centre
-   * et le faire briller un instant, pour que l'oeil le retrouve.
-   */
   const allerAuMessage = useCallback((messageId) => {
     const element = document.getElementById(`message-${messageId}`);
     if (!element) return;
@@ -162,8 +120,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
   const conversation = donnees?.conversation?.id === id ? donnees.conversation : null;
   const groupe = conversation?.type === 'groupe';
 
-  // Le nom mene au profil de la personne quand il en existe un ; sinon il
-  // ouvre le panneau, qui en tient lieu.
   const interlocuteur = conversation?.interlocuteur
     ? conversation.participants.find(
         (p) => p.type === conversation.interlocuteur.type && p.id === conversation.interlocuteur.id
@@ -283,7 +239,6 @@ export default function Fil({ api, racine, id, pleinEcran, onRetour, onLu, onAct
   );
 }
 
-/** L'avatar, le nom et le sous-titre de l'en-tete. */
 function IdentiteFil({ conversation }) {
   return (
     <>
@@ -296,18 +251,8 @@ function IdentiteFil({ conversation }) {
   );
 }
 
-/** Hauteur maximale du champ d'edition, dans la bulle. */
 const HAUTEUR_EDITION = 200;
 
-/**
- * Une bulle.
- *
- * Les siennes a droite, dans la couleur principale ; celles des autres a
- * gauche, en gris. Dans un groupe, le nom de l'auteur se pose au-dessus.
- *
- * Le bouton ⋯ ouvre les actions : transferer et copier pour tous, modifier
- * et supprimer pour l'auteur seulement. Un message supprime n'en a plus.
- */
 export function Bulle({ message, groupe, eclat = false }) {
   const actions = useActionsFil();
   const moi = message.estDeMoi;
@@ -369,13 +314,6 @@ export function Bulle({ message, groupe, eclat = false }) {
   );
 }
 
-/**
- * L'edition d'un message, dans sa bulle.
- *
- * Entree enregistre, Echap annule. L'edition ne se ferme qu'une fois
- * l'enregistrement termine : un clic ne suffit pas, et le bouton garde
- * son etat "en cours" jusqu'a la reponse.
- */
 function EditionBulle({ message, onFermer }) {
   const actions = useActionsFil();
   const [texte, setTexte] = useState(message.texte);

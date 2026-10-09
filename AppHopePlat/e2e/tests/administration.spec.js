@@ -1,7 +1,3 @@
-/*
- * L'espace administrateur : connexion en cookie, une modification, et
- * sa trace dans le journal d'audit.
- */
 import { expect, test } from '@playwright/test';
 
 import { ADMIN, aucunJetonLisible, sansDebordement } from './outils.js';
@@ -18,7 +14,6 @@ test('connexion, creation de categorie, journal d audit, deconnexion', async ({ 
   expect(cookie?.httpOnly).toBe(true);
   await aucunJetonLisible(page);
 
-  // Une modification, par l'API de la session ouverte (le cookie suffit).
   const nom = `Categorie ${testInfo.project.name} ${Date.now()}`;
   const statut = await page.evaluate(async (n) => {
     const r = await fetch('/api/admin/categories', {

@@ -1,12 +1,3 @@
-/**
- * Gestion des comptes bailleurs, cote administrateur.
- *
- * Meme mecanique que pour les benevoles : l'inscription depose une
- * demande, c'est l'administrateur qui ouvre l'acces. La difference est
- * qu'activer un bailleur fait aussi passer son organisation de
- * "prospect" a "actif" -- un partenaire dont personne ne peut se
- * connecter n'est pas encore un partenaire.
- */
 import { query, transaction } from '../config/database.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { versListe } from '../shared/mapping.js';
@@ -16,13 +7,6 @@ import * as courrielsAuto from './courrielsAutomatiques.service.js';
 const STATUTS_ADMIN = ['actif', 'suspendu', 'supprime'];
 const STATUTS = ['en_attente', ...STATUTS_ADMIN];
 
-/**
- * Verifie qu'un statut fait partie d'une liste.
- *
- * On n'utilise pas valeurParmi() de shared/validation : elle passe la
- * valeur en majuscules, ce qui convient aux enums du reste du projet
- * mais pas aux statuts de ces tables, ecrits en minuscules.
- */
 function statutParmi(valeur, autorises) {
   const texte = String(valeur ?? '').trim().toLowerCase();
   if (!autorises.includes(texte)) {
@@ -34,12 +18,6 @@ function statutParmi(valeur, autorises) {
   return texte;
 }
 
-/**
- * Liste les comptes bailleurs, demandes en attente d'abord.
- *
- * Chaque ligne joint l'organisation : sans elle, l'administrateur ne
- * saurait pas qui il active.
- */
 export async function lister(requete = {}) {
   const statut = requete.statut ? statutParmi(requete.statut, STATUTS) : null;
   const valeurs = [];
@@ -78,12 +56,6 @@ export async function lister(requete = {}) {
   return { items: versListe(resultat.rows), counts: compteurs };
 }
 
-/**
- * Change le statut d'un compte bailleur.
- *
- * L'activation entraine celle de l'organisation ; la suspension ne la
- * retire pas -- un autre contact peut rester actif.
- */
 export async function changerStatut(id, corps = {}, admin = null) {
   const statut = statutParmi(corps.statut, STATUTS_ADMIN);
 
@@ -103,8 +75,6 @@ export async function changerStatut(id, corps = {}, admin = null) {
     );
 
     if (statut === 'actif') {
-      // L'organisation quitte l'etat de prospect, et sa date de
-      // partenariat part du jour de l'activation.
       await query(
         `UPDATE bailleur b
             SET statut = 'actif',
@@ -124,7 +94,6 @@ export async function changerStatut(id, corps = {}, admin = null) {
   return resultat;
 }
 
-/** Raccourci de l'action la plus courante. */
 export async function activer(id, admin = null) {
   return changerStatut(id, { statut: 'actif' }, admin);
 }

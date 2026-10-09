@@ -1,12 +1,3 @@
-/* ==================================================================
-   Paiement par MVola (pages/donateur/PaiementMvola.jsx)
-
-   La grammaire de l'application MVola, que le donateur a en poche :
-   un cadre jaune epais, une carte "solde" jaune au-dessus d'un bandeau
-   noir, des pastilles rondes cerclees, une pilule noire qui dit ou l'on
-   en est. Le logo HOPE reste dans l'en-tete : c'est HOPE qui recoit.
-   ================================================================== */
-
 .mvola {
   --mv-jaune: #ffd400;
   --mv-jaune-vif: #ffe03d;
@@ -35,7 +26,6 @@
   overflow-x: hidden;
 }
 
-/* Un soleil jaune qui respire derriere le cadre. */
 .mvola__halo {
   position: absolute;
   top: -180px;
@@ -56,7 +46,6 @@
   }
 }
 
-/* Le cadre : le telephone de la maquette, bord jaune epais. */
 .mvola__cadre {
   position: relative;
   width: 100%;
@@ -78,7 +67,6 @@
   }
 }
 
-/* ---------- En-tete ---------- */
 .mvola__entete {
   display: flex;
   align-items: center;
@@ -155,7 +143,6 @@
   border-radius: 10px;
 }
 
-/* ---------- La pilule qui avance ---------- */
 .mvola__pas {
   display: flex;
   gap: 6px;
@@ -182,7 +169,6 @@
   opacity: 0.35;
 }
 
-/* ---------- Chaque temps entre en glissant ---------- */
 .mvola__temps {
   animation: mvola-temps 0.5s var(--mv-doux) both;
 }
@@ -224,7 +210,6 @@
   color: var(--mv-noir);
 }
 
-/* ---------- La carte "solde" : jaune dessus, noire dessous ---------- */
 .mvola__solde {
   overflow: hidden;
   border-radius: 16px;
@@ -259,7 +244,6 @@
   margin-top: 4px;
 }
 
-/* Le champ prend la largeur de ce qu'il contient : "Ar" suit le nombre. */
 .mvola__montant {
   width: calc(var(--chiffres, 1) * 0.6em + 0.08em);
   max-width: 100%;
@@ -315,14 +299,12 @@
   font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.3;
-  /* Deux lignes au plus : un nom de projet se lit en entier. */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
-/* ---------- Montants rapides : des pastilles rondes ---------- */
 .mvola__rubrique {
   margin: 14px 0 10px;
   font-size: 0.9rem;
@@ -383,7 +365,6 @@
   font-weight: 700;
 }
 
-/* ---------- Champs ---------- */
 .mvola__champ {
   display: flex;
   flex-direction: column;
@@ -478,7 +459,6 @@
   text-align: center;
 }
 
-/* ---------- Les trois gestes : les tuiles de l'application ---------- */
 .mvola__gestes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -516,7 +496,6 @@
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 6px 14px rgba(20, 20, 20, 0.06);
-  /* Un anneau jaune passe d'une tuile a l'autre : l'ordre des gestes. */
   animation: mvola-tour 3.6s ease-in-out infinite;
   animation-delay: calc(0.8s + var(--rang) * 1.2s);
 }
@@ -574,7 +553,6 @@
   color: var(--mv-gris);
 }
 
-/* ---------- Le destinataire, a recopier ---------- */
 .mvola__destinataire {
   overflow: hidden;
   border-radius: 16px;
@@ -650,7 +628,6 @@
   color: #fff;
 }
 
-/* Composer #111# : utile sur telephone, discret ailleurs. */
 .mvola__composer {
   position: relative;
   display: flex;
@@ -687,7 +664,6 @@
   }
 }
 
-/* ---------- Boutons ---------- */
 .mvola__actions {
   display: flex;
   flex-direction: column;
@@ -716,7 +692,6 @@
   transition: transform 0.25s var(--mv-ressort), box-shadow 0.25s;
 }
 
-/* Un reflet jaune traverse le bouton au survol. */
 .mvola__bouton::before {
   content: '';
   position: absolute;
@@ -786,7 +761,6 @@
   outline: none;
 }
 
-/* ---------- Attente ---------- */
 .mvola__attente {
   display: flex;
   align-items: center;
@@ -825,7 +799,6 @@
   font-size: 0.9rem;
 }
 
-/* ---------- Merci ---------- */
 .mvola__sceau {
   position: relative;
   width: 104px;
@@ -876,7 +849,6 @@
   border-radius: 50%;
   border: 2px solid var(--mv-jaune);
   opacity: 0;
-  /* Trois ondes, puis le calme : le merci ne clignote pas sans fin. */
   animation: mvola-onde 2.4s 0.5s var(--mv-doux) 3;
 }
 
@@ -895,7 +867,6 @@
   }
 }
 
-/* Huit etincelles jaillissent du sceau, une fois. */
 .mvola__etincelle {
   position: absolute;
   top: 50%;
@@ -928,7 +899,6 @@
   }
 }
 
-/* Le recu : un ticket aux bords decoupes. */
 .mvola__recu {
   position: relative;
   margin: 18px 0 0;
@@ -1007,7 +977,6 @@
   }
 }
 
-/* ---------- Pied ---------- */
 .mvola__pied {
   display: flex;
   align-items: center;
@@ -1032,17 +1001,11 @@
   stroke-linejoin: round;
 }
 
-/* ---------- Ce qui n'existe qu'a une taille d'ecran ---------- */
 .mvola__cote,
 .mvola__etape-texte {
   display: none;
 }
 
-/* ==================================================================
-   Ordinateur : pas un telephone pose au milieu de l'ecran, mais une
-   page de paiement large -- la colonne jaune raconte le don, la
-   colonne blanche le fait avancer.
-   ================================================================== */
 @media (min-width: 900px) {
   .mvola {
     align-items: center;
@@ -1068,7 +1031,6 @@
       0 8px 24px rgba(20, 20, 20, 0.06);
   }
 
-  /* --- La colonne jaune --- */
   .mvola__cote {
     position: relative;
     display: flex;
@@ -1081,7 +1043,6 @@
       var(--mv-jaune);
   }
 
-  /* Un grand soleil pale, dans l'angle : le decor, rien de plus. */
   .mvola__cote::after {
     content: '';
     position: absolute;
@@ -1148,7 +1109,6 @@
     color: #3d3300;
   }
 
-  /* Les trois temps, relies par un fil. */
   .mvola__etapes {
     display: flex;
     flex-direction: column;
@@ -1236,7 +1196,6 @@
     opacity: 0.72;
   }
 
-  /* Le don tel qu'il se precise. */
   .mvola__resume {
     margin: 4px 0 0;
     padding: 6px 20px;
@@ -1306,7 +1265,6 @@
     stroke-linejoin: round;
   }
 
-  /* --- La colonne blanche --- */
   .mvola__principal {
     display: flex;
     flex-direction: column;
@@ -1396,11 +1354,6 @@
   }
 }
 
-/* ==================================================================
-   Telephone : la page tient dans l'ecran. Tout se resserre -- marges,
-   pastilles, textes d'aide --, et ce que le pied de page dit deja
-   n'est pas repete.
-   ================================================================== */
 @media (max-width: 480px) {
   .mvola {
     align-items: stretch;
@@ -1477,7 +1430,6 @@
     line-height: 1.45;
   }
 
-  /* La carte "solde", plus basse. */
   .mvola__solde-haut {
     padding: 12px 14px 10px;
   }
@@ -1515,7 +1467,6 @@
     margin-top: 4px;
   }
 
-  /* Les montants rapides : une rangee de pilules, plus de pastilles. */
   .mvola__rapides {
     grid-template-columns: repeat(5, 1fr);
     gap: 5px;
@@ -1582,7 +1533,6 @@
     font-size: 0.85rem;
   }
 
-  /* L'envoi : les trois gestes en une rangee basse. */
   .mvola__gestes {
     gap: 6px;
     margin-bottom: 10px;
@@ -1632,7 +1582,6 @@
     font-size: 0.78rem;
   }
 
-  /* Le titulaire est deja dans le libelle du numero. */
   .mvola__destinataire-nom {
     display: none;
   }
@@ -1643,7 +1592,6 @@
     font-size: 0.82rem;
   }
 
-  /* Le merci. */
   .mvola__temps--merci {
     display: flex;
     flex: 1;
@@ -1670,7 +1618,6 @@
     padding: 8px 0;
   }
 
-  /* Le pied descend en bas de l'ecran, sans pousser le reste. */
   .mvola__pied {
     margin: auto 0 0;
     padding-top: 8px;
@@ -1682,9 +1629,6 @@
   }
 }
 
-/* Les petits ecrans (iPhone SE, 568px de haut) : on garde l'essentiel.
-   Les trois gestes se lisent deja dans le titre et le bouton #111#, et
-   le pied de page cede sa place. */
 @media (max-width: 480px) and (max-height: 620px) {
   .mvola__gestes,
   .mvola__pied {
@@ -1721,7 +1665,6 @@
   }
 }
 
-/* Moins de mouvement : les etats restent, les animations s'effacent. */
 @media (prefers-reduced-motion: reduce) {
   .mvola *,
   .mvola *::before,

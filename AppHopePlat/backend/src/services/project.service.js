@@ -1,14 +1,3 @@
-/**
- * Service des projets.
- *
- * Cycle de vie voulu par HOPE :
- *
- *   creation -> EN COURS -> (Terminer + resultat) -> TERMINE -> ARCHIVE
- *
- * Un projet nait toujours EN COURS. Il porte son "budget necessaire" ; ce
- * budget est finance par les dons affectes et par les investissements du
- * fonds HOPE, et consomme par les depenses.
- */
 import { transaction } from '../config/database.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as taskRepository from '../repositories/task.repository.js';
@@ -24,8 +13,6 @@ import * as notificationRepository from '../repositories/notification.repository
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
 import * as mediaService from './media.service.js';
-// Le devis parle le vocabulaire des depenses : c'est ce qui permettra
-// de comparer le prevu au reel, poste par poste.
 import { CATEGORIES as CATEGORIES_DEPENSE } from './expense.service.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
@@ -42,16 +29,8 @@ import {
 
 export const STATUTS = ['IN_PROGRESS', 'COMPLETED', 'ARCHIVED'];
 
-/** HOPE : la mission. INTERNAL : faire evoluer HOPE elle-meme. */
 export const TYPES = ['HOPE', 'INTERNAL'];
 
-/**
- * Ajoute les indicateurs derives d'un projet.
- *
- *   finance   = dons affectes + investissements du fonds HOPE
- *   restant   = ce qu'il manque encore pour couvrir le budget necessaire
- *   engageable = fonds recus non encore depenses
- */
 function enrichir(projet) {
   if (!projet) return null;
 
@@ -70,7 +49,6 @@ function enrichir(projet) {
   };
 }
 
-/** Refuse toute ecriture sur un projet qui n'est plus en cours. */
 function exigerProjetEnCours(projet) {
   if (projet.status === 'COMPLETED') {
     throw new ErreurRegleMetier(
@@ -86,25 +64,8 @@ function exigerProjetEnCours(projet) {
   }
 }
 
-/** Valide et normalise les champs du formulaire de projet. */
-/**
- * Nombre d'objectifs specifiques acceptes par projet.
- *
- * Dix : au-dela, ce ne sont plus des objectifs mais un plan d'action,
- * et la liste cesse de se relire d'un coup d'oeil.
- */
 export const MAX_OBJECTIFS = 10;
 
-/**
- * Nettoie la liste des objectifs specifiques.
- *
- * Les lignes vides sont retirees plutot que refusees : le formulaire en
- * laisse une derriere lui des qu'on clique "+ Ajouter" sans la remplir,
- * et bloquer l'enregistrement pour cela serait penible.
- *
- * @param {unknown} valeur ce qu'a envoye le client
- * @returns {string[]} libelles, dans l'ordre de saisie
- */
 function preparerObjectifs(valeur) {
   if (!Array.isArray(valeur)) {
     throw new ErreurValidation('Les objectifs spécifiques doivent former une liste.', {
@@ -135,26 +96,8 @@ function preparerObjectifs(valeur) {
   return libelles;
 }
 
-/**
- * Nombre de postes acceptes dans un devis.
- *
- * Trente : de quoi detailler un projet de terrain sans transformer le
- * formulaire en tableur.
- */
 export const MAX_POSTES_DEVIS = 30;
 
-/**
- * Nettoie et valide le devis.
- *
- * Comme pour les objectifs, une ligne entierement vide est ecartee sans
- * bruit : le formulaire en laisse une derriere lui des qu'on clique
- * "+ Ajouter un poste" sans la remplir. Une ligne commencee mais
- * incomplete, elle, est refusee -- un poste sans montant fausserait le
- * total en silence, et un poste sans categorie n'aurait pas de nom.
- *
- * @returns {{ label: string, category: string|null, amount: string,
- *             centimes: number }[]}
- */
 function preparerDevis(valeur) {
   if (!Array.isArray(valeur)) {
     throw new ErreurValidation('Le devis doit former une liste de postes.', {
@@ -177,17 +120,6 @@ function preparerDevis(valeur) {
   const vues = new Set();
 
   return lignes.map((ligne, rang) => {
-    /*
-     * La categorie identifie le poste.
-     *
-     * Le devis n'a plus d'intitule libre : deux champs suffisent, une
-     * categorie et un montant. Elle devient donc obligatoire, la ou elle
-     * etait facultative -- un poste sans categorie n'aurait plus de nom
-     * du tout.
-     *
-     * Le vocabulaire reste celui des depenses : c'est ce qui permet de
-     * comparer le prevu au reel, poste par poste.
-     */
     const categorie = String(ligne?.category ?? '').trim();
     if (categorie === '') {
       throw new ErreurValidation(`Le poste ${rang + 1} du devis n’a pas de catégorie.`, {
@@ -199,8 +131,6 @@ function preparerDevis(valeur) {
         quoteItems: 'Catégorie inconnue',
       });
     }
-    // Deux postes de la meme categorie ne se distinguent plus l'un de
-    // l'autre : ils doivent etre additionnes, pas listes deux fois.
     if (vues.has(categorie)) {
       throw new ErreurValidation(
         `La catégorie « ${categorie} » figure deux fois : additionnez les montants.`,
@@ -209,8 +139,6 @@ function preparerDevis(valeur) {
     }
     vues.add(categorie);
 
-    // L'intitule reste en base -- les devis saisis avant gardent le leur.
-    // A defaut, c'est la categorie qui le tient.
     const libelle = String(ligne?.label ?? '').trim() || categorie;
     if (libelle.length > 200) {
       throw new ErreurValidation(`L’intitulé du poste ${rang + 1} dépasse 200 caractères.`, {
@@ -218,8 +146,6 @@ function preparerDevis(valeur) {
       });
     }
 
-    // Le controle d'absence est fait ici : enCentimes dirait "Le champ
-    // "le montant du poste 1" est obligatoire", ce qui se lit mal.
     if (String(ligne?.amount ?? '').trim() === '') {
       throw new ErreurValidation(`Le poste ${rang + 1} du devis n’a pas de montant.`, {
         quoteItems: 'Montant manquant',
@@ -241,8 +167,6 @@ async function preparerDonnees(corps, { creation }) {
   if (creation || corps.name !== undefined) {
     donnees.name = texteRequis(corps.name, 'name', { max: 200 });
   }
-  // Un projet sans type choisi est un projet de terrain : c'est le cas
-  // de tous ceux qui existaient avant que le choix n'existe.
   if (creation || corps.projectType !== undefined) {
     donnees.projectType = valeurParmi(corps.projectType, 'projectType', TYPES, {
       defaut: 'HOPE',
@@ -256,8 +180,6 @@ async function preparerDonnees(corps, { creation }) {
   if (creation || corps.description !== undefined) {
     donnees.description = texteFacultatif(corps.description, 'description', { max: 5000 });
   }
-  // La categorie se tape librement (categoryName) : elle est retrouvee par
-  // son nom, ou creee. categoryId reste accepte pour les autres clients.
   if (corps.categoryName !== undefined) {
     const nom = texteFacultatif(corps.categoryName, 'categoryName', { max: 120 });
     donnees.categoryId = nom === null ? null : (await categoryRepository.trouverOuCreerParNom(nom)).id;
@@ -274,8 +196,6 @@ async function preparerDonnees(corps, { creation }) {
   if (creation || corps.managerName !== undefined) {
     donnees.managerName = texteFacultatif(corps.managerName, 'managerName', { max: 160 });
   }
-  // La date de debut n'est pas saisissable : un projet demarre le jour de sa
-  // creation. Elle est fixee ici, et plus jamais modifiee ensuite.
   if (creation) {
     donnees.startDate = dateRequise(null, 'startDate', { defautAujourdhui: true });
   }
@@ -306,21 +226,6 @@ async function preparerDonnees(corps, { creation }) {
   return donnees;
 }
 
-/**
- * Le budget necessaire, en centimes.
- *
- * Des qu'un devis porte au moins un poste, c'est leur somme qui fait
- * foi : le champ saisi est alors ignore, et le formulaire le montre en
- * lecture seule. Sans devis, on retombe sur la saisie directe -- celui
- * qui connait deja le montant ne doit pas etre oblige de le detailler.
- *
- * @param {boolean} obligatoire a la creation, un projet sans devis doit
- *        porter un montant : l'absence est alors une erreur, pas un
- *        "on n'y touche pas".
- * @returns {number|null} null quand rien ne permet de le determiner,
- *          ce qui n'arrive qu'a la modification d'un projet sans devis
- *          dont on ne touche pas au budget.
- */
 function budgetNecessaire(devis, montantSaisi, { obligatoire = false } = {}) {
   if (devis !== undefined && devis.length > 0) {
     return devis.reduce((total, ligne) => total + ligne.centimes, 0);
@@ -331,7 +236,6 @@ function budgetNecessaire(devis, montantSaisi, { obligatoire = false } = {}) {
   return null;
 }
 
-/** Liste paginee et filtrable. */
 export async function lister(requete = {}) {
   const { page, taille, decalage } = pagination(requete);
 
@@ -359,7 +263,6 @@ export async function recupererParId(id) {
   return enrichir(projet);
 }
 
-/** Vue complete : tout ce qu'affichent les onglets de la fiche projet. */
 export async function recupererApercu(id) {
   const projectId = identifiantRequis(id, 'id');
   const projet = await projectRepository.trouverParId(projectId);
@@ -403,7 +306,6 @@ export async function recupererApercu(id) {
       spendingRate: enrichi.spendingRate,
     },
     donations: dons,
-    // Les financements des bailleurs, a cote des dons des donateurs.
     funderAllocations: affectationsBailleurs,
     investments: investissements,
     expenses: depenses,
@@ -415,7 +317,6 @@ export async function recupererApercu(id) {
   };
 }
 
-/** Cree un projet. Il demarre systematiquement en cours. */
 export async function creer(corps = {}, auteur = null) {
   const donnees = await preparerDonnees(corps, { creation: true });
   const budget = budgetNecessaire(donnees.quoteItems, corps.requiredBudget, {
@@ -438,7 +339,6 @@ export async function creer(corps = {}, auteur = null) {
   return enrichir(projet);
 }
 
-/** Modifie un projet en cours. */
 export async function mettreAJour(id, corps = {}) {
   const projectId = identifiantRequis(id, 'id');
   const existant = await projectRepository.trouverParId(projectId);
@@ -463,12 +363,6 @@ export async function mettreAJour(id, corps = {}) {
     media_type: donnees.mediaType,
   };
 
-  /*
-   * Le budget necessaire ne peut pas descendre sous ce qui est deja
-   * engage. La regle vaut aussi quand le montant vient du devis : c'est
-   * alors le retrait d'un poste qui la declenche, et le message doit le
-   * dire, sinon on cherche l'erreur du cote du budget.
-   */
   const nouveau = budgetNecessaire(donnees.quoteItems, corps.requiredBudget);
   if (nouveau !== null) {
     const depense = depuisBase(existant.spentTotal);
@@ -485,8 +379,6 @@ export async function mettreAJour(id, corps = {}) {
     colonnes.required_budget = centimesVersTexte(nouveau);
   }
 
-  // Les objectifs ne sont pas une colonne : ils vivent dans leur propre
-  // table, et ne sont reecrits que si le client les a envoyes.
   if (donnees.objectives !== undefined) {
     await projectRepository.remplacerObjectifs(projectId, donnees.objectives);
   }
@@ -496,8 +388,6 @@ export async function mettreAJour(id, corps = {}) {
 
   const misAJour = await projectRepository.mettreAJour(projectId, colonnes);
 
-  // Le media precedent devient inutile : on libere le disque. Une adresse
-  // externe n'est evidemment pas touchee.
   if (colonnes.media_url !== undefined && existant.mediaUrl !== colonnes.media_url) {
     await mediaService.supprimer(existant.mediaUrl);
   }
@@ -505,10 +395,6 @@ export async function mettreAJour(id, corps = {}) {
   return enrichir(misAJour);
 }
 
-/**
- * Termine un projet et enregistre son resultat.
- * Le resultat est obligatoire : c'est lui qui alimente l'ecran Impact.
- */
 export async function terminer(id, corps = {}, auteur = null) {
   const projectId = identifiantRequis(id, 'id');
 
@@ -547,7 +433,6 @@ export async function terminer(id, corps = {}, auteur = null) {
   });
 }
 
-/** Rouvre un projet termine. */
 export async function rouvrir(id) {
   const projectId = identifiantRequis(id, 'id');
   const projet = await projectRepository.trouverParId(projectId);
@@ -559,7 +444,6 @@ export async function rouvrir(id) {
   return enrichir(await projectRepository.rouvrir(projectId));
 }
 
-/** Archive un projet deja termine. */
 export async function archiver(id) {
   const projectId = identifiantRequis(id, 'id');
   const projet = await projectRepository.trouverParId(projectId);
@@ -577,13 +461,6 @@ export async function archiver(id) {
   return enrichir(await projectRepository.archiver(projectId));
 }
 
-/**
- * Supprime un projet.
- *
- * La suppression n'est possible que sur un projet vierge de tout mouvement
- * financier : dès qu'un don, un investissement ou une dépense s'y rattache,
- * l'historique comptable prime et le projet doit être terminé puis archivé.
- */
 export async function supprimer(id, { force = false, admin = null } = {}) {
   const projectId = identifiantRequis(id, 'id');
   const projet = await projectRepository.trouverParId(projectId);
@@ -592,11 +469,6 @@ export async function supprimer(id, { force = false, admin = null } = {}) {
   const ecritures = await projectRepository.compterEcritures(projectId);
   const total = ecritures.dons + ecritures.investissements + ecritures.depenses;
 
-  /*
-   * La suppression forcee : l'equipe a lu ce qu'elle detruit et l'a
-   * confirme. Elle reste une exception, et se lit dans le journal --
-   * qui, quoi, combien -- parce qu'on ne retrouvera rien apres.
-   */
   if (force && total > 0) {
     await transaction(async (client) => {
       const touche = await projectRepository.detacherEcritures(projectId, client);
@@ -643,16 +515,11 @@ export async function supprimer(id, { force = false, admin = null } = {}) {
   return { id: projectId, deleted: true };
 }
 
-/** Projets termines, pour l'ecran Impact. */
 export async function listerTermines() {
   const projets = await projectRepository.listerTermines();
   return { items: projets.map(enrichir) };
 }
 
-/**
- * Charge un projet et refuse l'operation s'il n'accepte plus d'ecriture.
- * Utilise par les services investissement, depense, beneficiaire et impact.
- */
 export async function chargerProjetOuvert(projectId, client = null) {
   const projet = client
     ? await projectRepository.trouverPourMiseAJour(projectId, client)

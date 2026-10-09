@@ -1,28 +1,9 @@
-/* ============================================================
-   HOPE - La fiche d'accueil du benevole
-
-   Elle emprunte sa mise en page au parcours du donateur
-   (parcours-donateur.css) : meme colonne, meme progression, memes
-   champs. Ne sont ecrits ici que ses trois ecrans propres -- les
-   competences a cocher, la grille des disponibilites, et l'attente de
-   la validation.
-   ============================================================ */
-
-/* ------------------------------------------------------------
-   Ce que vous savez faire
-   ------------------------------------------------------------ */
-
 .savoirs {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-/*
- * Les familles arrivent l'une apres l'autre : l'oeil suit la liste
- * plutot que de la recevoir d'un bloc. Au-dela de la cinquieme, le
- * decalage ne dirait plus rien.
- */
 .savoirs__famille {
   animation: savoirs-entree 0.45s cubic-bezier(0.22, 0.8, 0.3, 1) both;
   animation-delay: calc(var(--rang, 0) * 70ms);
@@ -47,8 +28,6 @@
   margin-top: 4px;
 }
 
-/* Le compte des choix : il change, donc il se lit -- c'est une region
-   "polie", annoncee sans couper la lecture en cours. */
 .savoirs__compte {
   margin-top: 2px;
   font-size: 13.5px;
@@ -60,8 +39,6 @@
   font-weight: 600;
   color: var(--hope-violet-lisible);
 }
-
-/* --- La puce d'une competence --- */
 
 .puce-savoir {
   position: relative;
@@ -95,11 +72,6 @@
   cursor: default;
 }
 
-/*
- * Choisie : la puce se remplit et la coche apparait en glissant. Elle
- * pousse le libelle plutot que de le recouvrir -- la largeur change,
- * mais le mot reste entier.
- */
 .puce-savoir--actif {
   border-color: var(--hope-violet);
   background-color: var(--hope-violet);
@@ -139,10 +111,6 @@
   }
 }
 
-/* ------------------------------------------------------------
-   Les disponibilites
-   ------------------------------------------------------------ */
-
 .dispo-parcours {
   display: flex;
   flex-direction: column;
@@ -163,7 +131,6 @@
   animation-delay: calc(var(--rang, 0) * 45ms);
 }
 
-/* Un jour ou l'on est libre se voit d'un coup d'oeil dans la colonne. */
 .dispo-parcours__jour--pris {
   border-color: var(--hope-violet);
   background-color: #f7f5fe;
@@ -195,8 +162,6 @@
     color 0.16s ease-out, transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
-/* Le survol ne touche pas un creneau deja choisi : sa teinte violette
-   sur fond violet ne se lirait plus. */
 .dispo-parcours__moment:hover:not(:disabled):not(.dispo-parcours__moment--actif) {
   border-color: var(--hope-violet);
   color: var(--hope-violet-lisible);
@@ -214,8 +179,6 @@
   transform: scale(0.97);
 }
 
-/* Sur un telephone, le nom du jour passe au-dessus de ses creneaux :
-   quatre boutons lisibles valent mieux qu'une colonne ecrasee. */
 @media (max-width: 560px) {
   .dispo-parcours__jour {
     grid-template-columns: minmax(0, 1fr);
@@ -228,10 +191,6 @@
   }
 }
 
-/* ------------------------------------------------------------
-   Une note de bas d'etape
-   ------------------------------------------------------------ */
-
 .parcours__note {
   margin-top: 2px;
   padding-left: 13px;
@@ -241,21 +200,12 @@
   color: var(--admin-texte-faible);
 }
 
-/* ------------------------------------------------------------
-   L'attente de la validation
-   ------------------------------------------------------------ */
-
 .attente-benevole {
   margin-top: 36px;
   text-align: center;
   animation: attente-entree 0.6s cubic-bezier(0.22, 0.8, 0.3, 1) both;
 }
 
-/*
- * Un sablier plutot qu'une coche : la fiche est bien partie, mais rien
- * n'est encore ouvert. L'anneau respire lentement -- l'attente est
- * calme, elle n'appelle aucune action.
- */
 .attente-benevole__sceau {
   position: relative;
   display: grid;
@@ -304,7 +254,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* Ce qui va se passer, dans l'ordre : l'attente devient un chemin. */
 .attente-benevole__suite {
   display: flex;
   flex-direction: column;
@@ -370,10 +319,6 @@
     opacity: 0.08;
   }
 }
-
-/* ------------------------------------------------------------
-   Moins de mouvement
-   ------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
   .savoirs__famille,

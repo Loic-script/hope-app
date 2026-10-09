@@ -1,10 +1,3 @@
-/**
- * Le compte d'un utilisateur connecte (donateur, benevole, bailleur) :
- * changer son mot de passe, supprimer son compte.
- *
- * Les deux actions demandent le mot de passe actuel : une session
- * laissee ouverte sur un poste partage ne suffit pas a les faire.
- */
 import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
 
@@ -15,7 +8,6 @@ import { fermerSessionsUtilisateur } from './session.service.js';
 
 const LONGUEUR_MOT_DE_PASSE = 8;
 
-/** Le compte avec son hash : ne sort jamais de ce module. */
 async function compteAvecHash(utilisateurId, client = null) {
   const { rows } = await query(
     `SELECT id, email, statut, mot_de_passe FROM utilisateur WHERE id = $1 FOR UPDATE`,
@@ -33,13 +25,6 @@ async function verifierActuel(compte, actuel, champ = 'actuel') {
   }
 }
 
-/**
- * Changer son mot de passe. Les sessions ouvertes ailleurs sont fermees ;
- * le controleur rouvre celle en cours avec un jeton neuf.
- *
- * @param {string} utilisateurId
- * @param {{ actuel?: string, nouveau?: string, confirmation?: string }} corps
- */
 export async function changerMotDePasse(utilisateurId, corps = {}) {
   const nouveau = typeof corps.nouveau === 'string' ? corps.nouveau : '';
   const details = {};
@@ -63,18 +48,6 @@ export async function changerMotDePasse(utilisateurId, corps = {}) {
   return { message: 'Votre mot de passe est changé. Vos autres sessions sont fermées.' };
 }
 
-/**
- * Supprimer son compte.
- *
- * Le compte est ferme et ses donnees personnelles effacees : nom,
- * telephone, adresse, date de naissance, photo ; l'adresse electronique
- * est remplacee par une adresse inutilisable, ce qui la libere pour une
- * nouvelle inscription. Les dons deja faits restent dans la comptabilite
- * de l'association, comme la loi l'impose (politique de confidentialite).
- *
- * @param {string} utilisateurId
- * @param {{ motDePasse?: string, confirmation?: string }} corps
- */
 export async function supprimerSonCompte(utilisateurId, corps = {}) {
   if (String(corps.confirmation ?? '').trim().toUpperCase() !== 'SUPPRIMER') {
     throw new ErreurValidation('Écrivez SUPPRIMER pour confirmer.', { confirmation: 'Écrivez SUPPRIMER' });
@@ -82,7 +55,6 @@ export async function supprimerSonCompte(utilisateurId, corps = {}) {
   await transaction(async (client) => {
     const compte = await compteAvecHash(utilisateurId, client);
     await verifierActuel(compte, corps.motDePasse, 'motDePasse');
-    // Un mot de passe que personne ne connait : le compte ne rouvre plus.
     const inutilisable = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), config.admin.saltRounds);
     await query(
       `UPDATE utilisateur

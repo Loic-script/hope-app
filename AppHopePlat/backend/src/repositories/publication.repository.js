@@ -1,20 +1,6 @@
-/**
- * Acces aux publications -- actualites et appels a financement lus par
- * les bailleurs, actualites seules lues par les benevoles -- et aux
- * interets qu'elles recoivent.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/**
- * Le projet lie et son financement.
- *
- * Le financement est la "somme investie" de la fiche projet, du rapport
- * et de la page Projets du bailleur : dons recus et investissements de
- * HOPE. Un appel dit donc le meme chiffre que tout le reste.
- *
- * "pu" designe la publication.
- */
 export const PROJET_ET_FINANCEMENT = `
   LEFT JOIN projects p ON p.id = pu.projet_id
   LEFT JOIN LATERAL (
@@ -25,12 +11,6 @@ export const PROJET_ET_FINANCEMENT = `
   ) finance ON TRUE
 `;
 
-/**
- * Ce que toute lecture d'une publication rend.
- *
- * media_url est la photo affichee : la sienne, sinon celle du projet --
- * si le media du projet est bien une photo.
- */
 export const COLONNES_PUBLICATION = `
   pu.id, pu.type, pu.titre, pu.corps, pu.projet_id, pu.publie_le,
   pu.media_url                                         AS photo_propre,
@@ -45,7 +25,6 @@ export const COLONNES_PUBLICATION = `
   finance.montant   AS montant_finance
 `;
 
-/** Toutes les publications, avec les interets recus par chacune. */
 export async function lister(client = null) {
   const resultat = await query(
     `SELECT ${COLONNES_PUBLICATION},
@@ -83,19 +62,6 @@ export async function lister(client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Le fil de l'espace benevole : les actualites, jamais les appels a
- * financement.
- *
- * Un benevole ne voit aucun montant. La requete ne lit donc ni budget,
- * ni somme investie, ni interets : pas de PROJET_ET_FINANCEMENT ici, et
- * rien a oublier de retirer ensuite.
- *
- * La photo suit la meme regle que chez le bailleur : la sienne, sinon
- * celle du projet. Le projet lie, lui, n'est rendu que s'il est visible
- * dans l'espace -- non archive --, pour que son lien mene a une page qui
- * existe.
- */
 export async function listerPourBenevole(client = null) {
   const resultat = await query(
     `SELECT pu.id, pu.titre, pu.corps, pu.publie_le,
@@ -114,7 +80,6 @@ export async function listerPourBenevole(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Une publication, pour la modifier ou la supprimer. */
 export async function trouver(id, client = null) {
   const resultat = await query(
     `SELECT pu.id, pu.type, pu.titre, pu.projet_id, pu.media_url,
@@ -146,7 +111,6 @@ export async function creer(donnees, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Remplace le contenu d'une publication. La date de publication ne bouge pas. */
 export async function modifier(id, donnees, client = null) {
   const resultat = await query(
     `UPDATE publication
@@ -168,7 +132,6 @@ export async function supprimer(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Change l'etat du suivi d'un interet : contacte, converti, classe. */
 export async function changerStatutInteret(id, statut, client = null) {
   const resultat = await query(
     `UPDATE manifestation_interet SET statut = $2 WHERE id = $1 RETURNING id, statut`,
@@ -178,14 +141,6 @@ export async function changerStatutInteret(id, statut, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Le fichier sert-il encore ailleurs ?
- *
- * Tous les medias televerses partagent le meme dossier. Avant d'effacer
- * la photo d'une publication, on s'assure qu'aucune autre ligne ne pointe
- * dessus -- une adresse recopiee depuis un projet ou un profil ferait
- * sinon disparaitre leur image avec elle.
- */
 export async function mediaEncoreUtilise(adresse, client = null) {
   const resultat = await query(
     `SELECT EXISTS (SELECT 1 FROM publication       WHERE media_url = $1)

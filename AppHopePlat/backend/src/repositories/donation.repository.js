@@ -1,9 +1,3 @@
-/**
- * Repository des dons.
- *
- *   allocation = 'PROJECT' : don affecte, il finance directement un projet
- *   allocation = 'HOPE'    : don non affecte, il alimente le fonds HOPE
- */
 import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
@@ -26,11 +20,6 @@ const JOINTURES = `
   LEFT JOIN projects p ON p.id = d.project_id
 `;
 
-/**
- * @param {{ allocation?: string, frequence?: string, statut?: string,
- *           origine?: string, projectId?: number, donorId?: number,
- *           recherche?: string, limite?: number, decalage?: number }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -128,10 +117,6 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
-/**
- * Le don d'une session de paiement en ligne, avec le compte qui l'a
- * ouverte : c'est lui, et lui seul, qui a le droit d'en lire l'etat.
- */
 export async function parSessionFournisseur(sessionId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES}, d.payment_provider, d.provider_session_id,
@@ -144,15 +129,6 @@ export async function parSessionFournisseur(sessionId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Passe un don a "recu" apres un paiement en ligne abouti.
- *
- * La condition sur le statut fait tout le travail : Stripe annonce un
- * paiement deux fois -- la page de retour et le webhook, parfois dans le
- * desordre --, et seule la premiere annonce a l'arriver change la ligne.
- * Rend le don si c'est bien cette fois-ci, null sinon : l'equipe n'est
- * alors prevenue qu'une fois.
- */
 export async function confirmerPaiementEnLigne(id, donnees, client = null) {
   const resultat = await query(
     `UPDATE donations
@@ -170,7 +146,6 @@ export async function confirmerPaiementEnLigne(id, donnees, client = null) {
   return resultat.rows.length > 0 ? trouverParId(id, client) : null;
 }
 
-/** Ou en est le paiement en ligne, quand il n'aboutit pas (encore). */
 export async function noterEtatFournisseur(id, donnees, client = null) {
   await query(
     `UPDATE donations
@@ -184,7 +159,6 @@ export async function noterEtatFournisseur(id, donnees, client = null) {
   return trouverParId(id, client);
 }
 
-/** Une reference de transaction deja declaree pour un don ? */
 export async function referencePaiementPrise(reference, client) {
   const { rows } = await query(
     'SELECT 1 FROM donations WHERE UPPER(payment_reference) = UPPER($1) LIMIT 1',
@@ -194,15 +168,8 @@ export async function referencePaiementPrise(reference, client) {
   return rows.length > 0;
 }
 
-/** Genere une reference lisible : DON-2026-0007. */
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
-  /*
-   * Le plus grand numero de l'annee, plus un -- pas le nombre de dons :
-   * un don supprime ferait retomber le compte sur une reference deja
-   * prise. Dans une transaction, un verrou (libere a la fin de celle-ci)
-   * empeche deux dons simultanes de tirer le meme numero.
-   */
   if (client) await query("SELECT pg_advisory_xact_lock(hashtext('donations.reference'))", [], client);
   const resultat = await query(
     `SELECT COALESCE(MAX(SUBSTRING(reference FROM '[0-9]+$')::int), 0) AS dernier
@@ -213,14 +180,6 @@ export async function genererReference(client = null) {
   return `DON-${annee}-${String(resultat.rows[0].dernier + 1).padStart(4, '0')}`;
 }
 
-/**
- * Etat du fonds : ce qui a ete recu, ce qui est deja engage.
- *
- *   dons_affectes   : dons flechees vers un projet
- *   dons_hope       : dons non affectes, le fonds libre de HOPE
- *   deja_investi    : part du fonds HOPE deja engagee sur des projets
- *   disponible_hope : ce qu'il reste a investir
- */
 export async function etatDuFonds(client = null) {
   const resultat = await query(
     `SELECT
@@ -240,21 +199,6 @@ export async function etatDuFonds(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * La derniere occurrence de chaque don mensuel encore attendu ce mois-ci.
- *
- * Un don mensuel n'est pas une ligne unique qui se repete : c'est une
- * occurrence par mois. La recurrence est donc identifiee par le triplet
- * (donateur, affectation, projet), et la derniere occurrence sert de
- * modele a la suivante.
- *
- * Seules remontent les recurrences dont la derniere occurrence est
- * anterieure au mois courant : celles deja generees sont ignorees, ce qui
- * rend la generation rejouable sans creer de doublon.
- *
- * Un don affecte a un projet qui n'est plus en cours est ecarte : la
- * regle PROJET_FERME le refuserait de toute facon.
- */
 export async function echeancesMensuellesAGenerer(client = null) {
   const resultat = await query(
     `SELECT DISTINCT ON (d.donor_id, d.allocation, COALESCE(d.project_id, 0))
@@ -279,11 +223,6 @@ export async function echeancesMensuellesAGenerer(client = null) {
   );
 }
 
-/**
- * Verrouille l'ensemble des dons HOPE le temps de decider d'un
- * investissement : deux investissements simultanes ne peuvent pas vider
- * le fonds deux fois.
- */
 export async function verrouillerFondsHope(client) {
   await query(
     "SELECT id FROM donations WHERE allocation = 'HOPE' AND status = 'RECEIVED' FOR UPDATE",

@@ -1,25 +1,9 @@
-/**
- * L'envoi des courriels de la plateforme (SMTP).
- *
- * Le serveur d'envoi se configure dans .env : SMTP_HOST, SMTP_PORT,
- * SMTP_USER, SMTP_PASSWORD, SMTP_FROM (et SMTP_SECURE pour le port 465).
- * N'importe quel fournisseur convient -- Brevo, Mailjet, Resend, Gmail
- * professionnel...
- *
- * Sans configuration :
- *   - en developpement, le courriel est ecrit dans le journal du serveur,
- *     lien compris : on peut suivre le parcours sans boite de reception ;
- *   - en production, rien n'est ecrit du contenu (un lien de
- *     reinitialisation est un secret) ; un avertissement dit que l'envoi
- *     n'est pas configure.
- */
 import nodemailer from 'nodemailer';
 
 import { config } from '../config/env.js';
 
 let transport = null;
 
-/** Le transport SMTP, cree au premier envoi. null si rien n'est configure. */
 function transporteur() {
   if (!config.smtp.host) return null;
   transport ??= nodemailer.createTransport({
@@ -31,12 +15,10 @@ function transporteur() {
   return transport;
 }
 
-/** L'envoi est-il configure ? */
 export function envoiConfigure() {
   return Boolean(config.smtp.host);
 }
 
-/** Echappe un texte pour l'inserer dans le HTML d'un courriel. */
 function echapper(texte) {
   return String(texte ?? '')
     .replace(/&/g, '&amp;')
@@ -45,10 +27,6 @@ function echapper(texte) {
     .replace(/"/g, '&quot;');
 }
 
-/**
- * La mise en page commune : sobre, lisible sur telephone, aux couleurs de
- * HOPE. Un bouton si le courriel mene quelque part.
- */
 function miseEnPage({ titre, paragraphes, bouton = null, note = '' }) {
   const corps = paragraphes.map((p) => `<p style="margin:0 0 14px;line-height:1.55">${echapper(p)}</p>`).join('');
   const action = bouton
@@ -65,25 +43,11 @@ ${note ? `<p style="margin:18px 0 0;font-size:13px;color:#6b6880;line-height:1.5
 </div></body></html>`;
 }
 
-/**
- * Envoie un courriel. Ne leve jamais : un envoi rate ne doit pas faire
- * echouer ce qui l'a declenche (une inscription, une demande...). Rend
- * true si le courriel est parti.
- *
- * @param {{ a: string, sujet: string, titre: string, paragraphes: string[],
- *           bouton?: { texte: string, lien: string }, note?: string }} courriel
- */
 export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, note = '' }) {
   const texte = [titre, '', ...paragraphes, bouton ? `${bouton.texte} : ${bouton.lien}` : '', note]
     .filter((ligne) => ligne !== undefined)
     .join('\n');
 
-  /*
-   * Les domaines reserves (RFC 2606 : .test, .example, .invalid,
-   * .localhost) n'existent pas : les comptes de demonstration et
-   * d'essai les utilisent. Un envoi reel ne ferait que revenir en echec
-   * dans la boite de l'expediteur ; le courriel s'ecrit dans le journal.
-   */
   if (/\.(test|example|invalid|localhost)$/i.test(String(a ?? '').trim())) {
     if (!config.enProduction) console.log(`[HOPE] Courriel (domaine reserve, non envoye) a ${a} — ${sujet}\n${texte}\n`);
     return false;
@@ -102,8 +66,6 @@ export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, not
   try {
     await smtp.sendMail({
       from: config.smtp.from,
-      // Une reponse de l'utilisateur arrive a l'adresse de HOPE (EQUIPE_EMAIL),
-      // quel que soit le compte qui envoie.
       ...(config.equipe.email ? { replyTo: config.equipe.email } : {}),
       to: a,
       subject: sujet,
@@ -112,7 +74,6 @@ export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, not
     });
     return true;
   } catch (erreur) {
-    // Le destinataire et le sujet suffisent au diagnostic ; jamais le contenu.
     console.error(`[HOPE] Echec d'envoi du courriel "${sujet}" :`, erreur.message);
     return false;
   }

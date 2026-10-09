@@ -1,33 +1,12 @@
-/* ============================================================
-   Site vitrine : la page "S'engager" (pages/vitrine/SEngager.jsx)
-   Le bandeau des mains reunies, les trois voies en cartes a encoche,
-   coiffees de leur soleil, qui chevauchent le bas du bandeau, puis
-   l'appel a contribuer sur la photo. Les mouvements d'entree
-   (hero-zoom, hero-monte, realisations-soleil) viennent de
-   vitrine-accueil.css et vitrine-realisations.css.
-   ============================================================ */
-
-/*
- * Ce que les cartes mangent du bas du bandeau : le quart de leur largeur,
- * comme sur la maquette. Leur soleil deborde encore de 0,365 largeur
- * au-dessus : le bandeau garde la place de l'un et de l'autre.
- */
 .engager-hero,
 .engager-cartes {
   --chevauchement: clamp(56px, 4.6vw, 64px);
 }
 
-/*
- * Les maquettes du bandeau et de l'appel sont a la meme echelle : a 1366 px
- * de large, --u vaut 10 px et toutes leurs mesures s'y rapportent. En
- * dessous, tout retrecit ensemble, jusqu'a 6 px l'unite.
- */
 .engager-hero,
 .engager-appel {
   --u: clamp(6px, 0.732vw, 10px);
 }
-
-/* ------------------------------- Le bandeau ------------------------------- */
 
 .engager-hero {
   position: relative;
@@ -53,8 +32,6 @@
   animation: hero-zoom 14s cubic-bezier(0.2, 0.6, 0.3, 1) both;
 }
 
-/* La photo garde ses couleurs chaudes, assombrie par un voile
-   neutre, comme sur la maquette ; ses bords sont deja sombres. */
 .engager-hero__voile {
   position: absolute;
   inset: 0;
@@ -76,7 +53,6 @@
   max-width: 100%;
 }
 
-/* "Ensemble," en extra-gras, puis la phrase en demi-gras, sur une ligne. */
 .engager-hero__titre {
   margin: 0;
   font-family: var(--vitrine-titre);
@@ -103,8 +79,6 @@
   animation-delay: 380ms;
 }
 
-/* Le soleil renverse deborde a gauche du titre ; le filet va de sa droite
-   au bout du titre. */
 .engager-hero__trait {
   position: relative;
   height: calc(var(--u) * 0.84);
@@ -138,8 +112,6 @@
   animation: engager-soleil-renverse 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 700ms both;
 }
 
-/* Le texte en retrait du soleil, justifie, les trois publics en gras. Il
-   ne compte pas dans la largeur du bloc : c'est le titre qui la donne. */
 .engager-hero__texte {
   contain: inline-size;
   margin: calc(var(--u) * 3.6) calc(var(--u) * 2.85) 0 calc(var(--u) * 5.84);
@@ -155,10 +127,6 @@
   font-weight: 700;
 }
 
-/* ------------------------------ Les trois voies ------------------------------ */
-
-/* flow-root : la marge negative des cartes ne remonte pas la section
-   (et son fond blanc) sur le bandeau ; seules les cartes le chevauchent. */
 .engager-voies {
   position: relative;
   z-index: 1;
@@ -177,11 +145,6 @@
   list-style: none;
 }
 
-/*
- * La carte est son propre conteneur : son soleil, son encoche, ses coins
- * et ses marges se mesurent en largeur de carte (cqi), dans les
- * proportions de la maquette (une carte de 244 unites de large).
- */
 .engager-carte {
   position: relative;
   display: flex;
@@ -193,8 +156,6 @@
   container-type: inline-size;
 }
 
-/* Chaque voie a sa couleur ; ses barres prennent celle d'a cote, son
-   icone la sienne, son texte le blanc ou le violet de la maquette. */
 .engager-carte--organismes {
   --fond: var(--hope-violet);
   --barres: var(--hope-bleu);
@@ -216,12 +177,6 @@
   --texte: #ffffff;
 }
 
-/*
- * Le fond : la couleur de la voie, les coins arrondis (20 unites sur
- * 244), et l'encoche, un demi-disque de 48,3 unites centre sur le bord
- * haut, sous l'anneau, qui laisse voir ce qui est derriere. L'ombre est
- * portee par le parent : elle suit l'encoche.
- */
 .engager-carte__fond {
   position: absolute;
   inset: 0;
@@ -240,8 +195,6 @@
   mask: radial-gradient(circle at 50% 0, transparent 19.8cqi, #000 calc(19.8cqi + 0.75px));
 }
 
-/* Le soleil, de toute la largeur de la carte : le bord haut de la carte
-   passe a 89 unites sur 124, il deborde d'autant au-dessus. */
 .engager-soleil {
   position: absolute;
   top: 0;
@@ -271,8 +224,6 @@
   fill: var(--icone);
 }
 
-/* Les vides de l'icone ; le trait qui detache la personne de devant
-   (IconeGroupe) garde son epaisseur, les fenetres n'en ont pas. */
 .engager-soleil__creux {
   fill: #ffffff;
   stroke: #ffffff;
@@ -283,8 +234,6 @@ rect.engager-soleil__creux {
   stroke: none;
 }
 
-/* A l'apparition : l'anneau se pose, les rayons poussent depuis lui, un
-   par un, et les barres s'allongent vers l'exterieur. */
 .engager-soleil__coeur,
 .engager-soleil__rayon,
 .engager-soleil__barre {
@@ -358,7 +307,6 @@ rect.engager-soleil__creux {
   }
 }
 
-/* Le titre sous l'encoche, en deux lignes comme sur la maquette. */
 .engager-carte__titre {
   margin: 27cqi 6cqi 0;
   font-family: var(--vitrine-titre);
@@ -397,10 +345,6 @@ rect.engager-soleil__creux {
   }
 }
 
-/* --------------------------- L'appel a contribuer --------------------------- */
-
-/* Releve sur la maquette, en unites --u (titre de 46 px, soleil de 63 px,
-   filet de 68 a 762 px du bord du titre...). */
 .engager-appel {
   position: relative;
   display: flex;
@@ -423,8 +367,6 @@ rect.engager-soleil__creux {
   object-position: 100% 22%;
 }
 
-/* La photo garde ses couleurs : un voile sombre et neutre, a gauche
-   seulement, sous le texte. */
 .engager-appel__voile {
   position: absolute;
   inset: 0;
@@ -444,7 +386,6 @@ rect.engager-soleil__creux {
   padding-left: calc(32px + var(--u) * 3);
 }
 
-/* Le titre : demi-gras, "aider une vie" en extra-gras. */
 .engager-appel__titre {
   margin: 0;
   font-family: var(--vitrine-titre);
@@ -464,8 +405,6 @@ rect.engager-soleil__creux {
   font-weight: 800;
 }
 
-/* Le soleil renverse, un peu a gauche du titre, puis le filet bleu qui
-   part a sa droite ; le soleil deborde sous le filet, a cote du texte. */
 .engager-appel__trait {
   position: relative;
   height: calc(var(--u) * 0.85);
@@ -525,7 +464,6 @@ rect.engager-soleil__creux {
   }
 }
 
-/* Le texte, en retrait du soleil, justifie. */
 .engager-appel__texte {
   max-width: calc(var(--u) * 63.8);
   margin: calc(var(--u) * 1.8) 0 0 calc(var(--u) * 7.4);
@@ -536,7 +474,6 @@ rect.engager-soleil__creux {
   text-shadow: 0 2px 12px color-mix(in srgb, var(--hope-texte) 75%, transparent);
 }
 
-/* Le nom de l'association, plus petit, comme sur la maquette. */
 .engager-appel__marque {
   font-size: 0.8em;
   font-weight: 700;
@@ -554,10 +491,7 @@ rect.engager-soleil__creux {
   padding: 0 28px;
 }
 
-/* ------------------------------ Petits ecrans ------------------------------ */
-
 @media (max-width: 900px) {
-  /* La largeur d'une carte ; le chevauchement et le soleil en decoulent. */
   .engager-hero,
   .engager-cartes {
     --carte: calc(min(480px, 100vw) - 40px);
@@ -575,7 +509,6 @@ rect.engager-soleil__creux {
     padding: 0 20px;
   }
 
-  /* Etroit, le texte justifie se troue : on le cale a gauche. */
   .engager-carte__texte {
     text-align: left;
   }
@@ -590,8 +523,6 @@ rect.engager-soleil__creux {
     text-align: left;
   }
 
-  /* Etroit : la photo en haut, les visages degages, et le texte dessous,
-     sur le fondu sombre ; texte et boutons reprennent toute la largeur. */
   .engager-appel {
     min-height: 0;
   }

@@ -1,10 +1,3 @@
-/**
- * Controleurs de l'espace administrateur.
- *
- * Lecture de la requete, appel du service, formatage de la reponse : aucune
- * regle metier ici. Ils sont regroupes par module dans un seul fichier,
- * chaque handler tenant en une ligne grace a l'enveloppe gerer().
- */
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -34,8 +27,6 @@ import * as teamService from '../services/team.service.js';
 import * as funderAccountService from '../services/funderAccount.service.js';
 import * as volunteerService from '../services/volunteer.service.js';
 import * as utilisateursService from '../services/utilisateurs.service.js';
-// La consultation d'un espace reutilise la mecanique de jeton de
-// l'authentification : c'est la meme session, emise autrement.
 import * as authService from '../services/auth.service.js';
 
 import { DOSSIER_PREUVES, supprimerFichier } from '../middleware/upload.middleware.js';
@@ -48,10 +39,6 @@ import * as backofficeService from '../services/backoffice.service.js';
 import * as compteParEquipeService from '../services/compteParEquipe.service.js';
 import { poserSession } from '../shared/session.js';
 import * as adminAuthService from '../services/adminAuth.service.js';
-
-/* ================================================================
-   Accueil, references, statistiques
-   ================================================================ */
 
 export const dashboard = {
   recuperer: gerer(() => dashboardService.recupererAccueil()),
@@ -67,10 +54,6 @@ export const statistics = {
   recuperer: gerer(() => statisticsService.recuperer()),
 };
 
-/* ================================================================
-   Projets
-   ================================================================ */
-
 export const projects = {
   lister: gerer((req) => projectService.lister(req.query)),
   recuperer: gerer((req) => projectService.recupererParId(req.params.id)),
@@ -80,11 +63,6 @@ export const projects = {
   terminer: gerer((req) => projectService.terminer(req.params.id, req.body, req.admin)),
   rouvrir: gerer((req) => projectService.rouvrir(req.params.id)),
   archiver: gerer((req) => projectService.archiver(req.params.id)),
-  /*
-   * "force=1" : la suppression malgre les ecritures. Reservee au role
-   * ADMIN par la route, confirmee deux fois a l ecran, et deposee au
-   * journal par le service -- on ne retrouvera rien apres.
-   */
   supprimer: gerer((req) =>
     projectService.supprimer(req.params.id, {
       force: req.query.force === '1',
@@ -93,13 +71,8 @@ export const projects = {
   ),
   listerTermines: gerer(() => projectService.listerTermines()),
 
-  /** Televersement de la photo ou de la video qui illustre un projet. */
   televerserMedia: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
 };
-
-/* ================================================================
-   Onglet Rapport de la fiche projet
-   ================================================================ */
 
 export const projectReports = {
   recuperer: gerer((req) => projectReportService.recuperer(req.params.id)),
@@ -110,7 +83,6 @@ export const projectReports = {
     statut: 201,
   }),
 
-
   pdf: gerer(async (req, res) => {
     const { contenu, nomFichier } = await projectReportService.pdf(req.params.id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -119,20 +91,12 @@ export const projectReports = {
     res.send(contenu);
   }),
 };
-// 
-/* ================================================================
-   Budget : etat du fonds et investissements
-   ================================================================ */
 
 export const fund = {
   etat: gerer(() => fundService.etat()),
   listerInvestissements: gerer((req) => fundService.listerInvestissements(req.query)),
   investir: gerer((req) => fundService.investir(req.body, req.admin), { statut: 201 }),
 };
-
-/* ================================================================
-   Dons et donateurs
-   ================================================================ */
 
 export const donations = {
   lister: gerer((req) => donationService.lister(req.query)),
@@ -154,10 +118,6 @@ export const donors = {
   listerComptes: gerer(() => donorService.listerComptes()),
 };
 
-/* ================================================================
-   Depenses et justificatifs
-   ================================================================ */
-
 export const expenses = {
   lister: gerer((req) => expenseService.lister(req.query)),
   recuperer: gerer((req) => expenseService.recupererParId(req.params.id)),
@@ -175,7 +135,6 @@ export const documents = {
   }),
   supprimer: gerer((req) => documentService.supprimer(req.params.id)),
 
-
   telecharger: gerer(async (req, res) => {
     const { document, cheminAbsolu } = await documentService.preparerTelechargement(req.params.id);
 
@@ -192,7 +151,6 @@ export const documents = {
   }),
 };
 
-
 export const team = {
   lister: gerer(() => teamService.lister()),
   creer: gerer((req) => teamService.creer(req.body, req.admin), { statut: 201 }),
@@ -202,35 +160,14 @@ export const team = {
   ),
   changerSonMotDePasse: gerer(async (req, res) => {
     const resultat = await teamService.changerSonMotDePasse(req.admin, req.body);
-    // Les autres sessions sont fermees ; celle-ci repart avec un jeton neuf.
     poserSession(res, 'admin', await adminAuthService.jetonNeuf(req.admin.id));
     return resultat;
   }),
   changerSaPhoto: gerer((req) => teamService.changerSaPhoto(req.admin.id, req.body)),
-  // Le meme service que les medias de projet : un fichier ecrit par
-  // multer, une adresse rendue.
   televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
   journal: gerer((req) => teamService.journal(req.query)),
   audit: gerer((req) => auditService.lister(req.query)),
 };
-
-/* ================================================================
-   Benevoles
-
-   Ils s'inscrivent eux-memes, mais n'entrent pas seuls : leur compte
-   reste "en_attente" jusqu'a ce qu'un administrateur l'active.
-   ================================================================ */
-
-/**
- * Comptes bailleurs.
- *
- * Meme geste que pour les benevoles : ils s'inscrivent seuls, mais
- * l'acces s'ouvre ici. Activer un bailleur fait aussi passer son
- * organisation de "prospect" a "actif".
- */
-/* ================================================================
-   Actualites de l'espace bailleur
-   ================================================================ */
 
 export const publications = {
   lister: gerer(() => publicationService.lister()),
@@ -244,13 +181,6 @@ export const publications = {
   ),
 };
 
-/**
- * La photo d'un beneficiaire, par adresse signee.
- *
- * Aucune session ici : une balise <img> n'en porte pas. La signature dit
- * quel administrateur l'a recue ; son compte doit toujours etre actif.
- * Toute adresse fausse, expiree ou d'un compte suspendu repond 404.
- */
 export const photosBeneficiaires = {
   lire: gerer(async (req, res) => {
     const adminId = photoBeneficiaireService.verifierSignature(req.params.fichier, req.query);
@@ -269,9 +199,7 @@ export const photosBeneficiaires = {
             'Content-Type': 'image/jpeg',
             'Content-Disposition': 'inline; filename="beneficiaire.jpg"',
             'X-Content-Type-Options': 'nosniff',
-            // Prive : ni proxy ni cache partage ne doit garder ce visage.
             'Cache-Control': 'private, max-age=3600',
-            // L'adresse porte sa signature : elle ne doit pas fuir en Referer.
             'Referrer-Policy': 'no-referrer',
           },
         },
@@ -289,10 +217,6 @@ export const funders = {
   ),
 };
 
-/*
- * L'ecran "Utilisateurs" : donateurs, benevoles et bailleurs, leurs
- * profils, et ce que l'equipe peut y changer.
- */
 export const utilisateurs = {
   lister: gerer((req) => utilisateursService.lister(req.params.onglet, req.query)),
   creerCompte: gerer((req) => compteParEquipeService.creer(req.body, req.admin), { statut: 201 }),
@@ -300,11 +224,6 @@ export const utilisateurs = {
   profilFiche: gerer((req) => utilisateursService.profilFiche(req.params.id)),
   modifierCompte: gerer((req) => utilisateursService.modifierCompte(req.params.id, req.body)),
   supprimerCompte: gerer((req) => utilisateursService.supprimerCompte(req.params.id, req.admin)),
-  /*
-   * La fiche a des dons :
-   *   ?forcer=1     efface son identite, garde les dons ;
-   *   ?avecDons=1   supprime tout, dons compris (les totaux des projets baissent).
-   */
   supprimerFiche: gerer((req) =>
     utilisateursService.supprimerFiche(req.params.id, {
       forcer: req.query.forcer === '1',
@@ -321,34 +240,14 @@ export const volunteers = {
   ),
 };
 
-/* ================================================================
-   Preuves terrain
-
-   Le pendant des justificatifs : ceux-ci prouvent une depense, celles-la
-   prouvent une action. Meme traitement du fichier, servi derriere le
-   jeton et jamais en acces libre.
-   ================================================================ */
-
-/**
- * Consultation de l'espace d'un utilisateur depuis l'espace admin.
- *
- * Rend un jeton de courte duree pour l'espace du compte designe, et
- * depose la trace de l'operation dans le journal : consulter l'espace
- * de quelqu'un n'est pas un acte anodin, il doit rester lisible apres
- * coup.
- */
 export const consultation = {
   ouvrir: gerer(async (req, res) => {
     const session = await authService.consulterEspace(req.params.id, req.admin);
-    // La session de consultation part en cookie, comme une connexion :
-    // un cookie de session, oublie a la fermeture du navigateur.
     poserSession(res, session.type, session.token, { persistant: false });
 
     await activityLogRepository.deposer(req.admin, {
       action: 'CONSULT',
       entityType: 'UTILISATEUR',
-      // entity_id est un entier ; l'identifiant d'un utilisateur est un
-      // UUID. Il vit donc dans le libelle, qui le porte en clair.
       entityId: null,
       label: `a consulté l’espace ${session.type} de « ${
         `${session.utilisateur.prenom} ${session.utilisateur.nom}`.trim() || session.utilisateur.email
@@ -360,8 +259,6 @@ export const consultation = {
 };
 
 export const fieldProofs = {
-  // Deux chemins mènent ici : /field-proofs?projectId=1 et
-  // /projects/1/field-proofs. Le parametre d'URL prime sur la requete.
   lister: gerer((req) =>
     fieldProofService.lister({
       ...req.query,
@@ -370,21 +267,11 @@ export const fieldProofs = {
   ),
   recuperer: gerer((req) => fieldProofService.recupererParId(req.params.id)),
 
-  /*
-   * req.admin vient de authenticateAdmin : c'est l'auteur de la preuve.
-   *
-   * multer a deja ecrit le fichier quand le service se prononce : un
-   * refus -- projet archive, date future, format incoherent -- laisserait
-   * sinon un fichier orphelin sur le disque, que plus rien ne
-   * reference.
-   */
   creer: gerer(
     async (req) => {
       try {
         return await fieldProofService.creer(req.body, req.admin, req.files ?? []);
       } catch (erreur) {
-        // Tout le lot part : un refus ne doit pas laisser la moitie des
-        // images sur le disque, sans rien pour les referencer.
         for (const fichier of req.files ?? []) {
           await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(fichier.filename)));
         }
@@ -396,22 +283,15 @@ export const fieldProofs = {
 
   supprimer: gerer(async (req) => {
     const resultat = await fieldProofService.supprimer(req.params.id);
-    // Les lignes sont parties, en cascade : les fichiers peuvent suivre.
     for (const chemin of resultat.filePaths) {
       await supprimerFichier(path.join(DOSSIER_PREUVES, path.basename(chemin)));
     }
     return { id: resultat.id, deleted: true };
   }),
 
-  /** Sert le fichier lui-meme ; repond directement, sans passer par gerer(). */
-  /**
-   * Sert un fichier de la preuve. Le fichier est designe par son
-   * identifiant, la preuve en portant desormais plusieurs.
-   */
   telecharger: gerer(async (req, res) => {
     const fichier = await fieldProofService.recupererFichier(req.params.id, req.params.fileId);
 
-    // basename() neutralise toute tentative de remontee de repertoire.
     const cheminAbsolu = path.join(DOSSIER_PREUVES, path.basename(fichier.filePath));
     if (!fs.existsSync(cheminAbsolu)) {
       throw new ErreurIntrouvable('Le fichier de la preuve', req.params.fileId);
@@ -425,10 +305,6 @@ export const fieldProofs = {
     res.sendFile(cheminAbsolu);
   }),
 };
-
-/* ================================================================
-   Beneficiaires et impacts
-   ================================================================ */
 
 export const beneficiaries = {
   lister: gerer((req) => beneficiaryService.lister(req.query, req.admin)),
@@ -448,16 +324,8 @@ export const beneficiaries = {
   ),
 };
 
-/**
- * Les taches d'un projet, cote equipe.
- *
- * L'administrateur les cree et les retire ; ce sont les benevoles qui
- * les prennent, depuis leur espace. Aucune route ici ne les attribue :
- * une tache imposee n'est pas du benevolat.
- */
 export const tasks = {
   listerParProjet: gerer((req) => taskService.listerParProjet(req.params.projectId)),
-  // La page Taches : toutes, et la fenetre de chacune.
   listerTout: gerer((req) => taskService.listerPourAdmin(req.query)),
   recuperer: gerer((req) => taskService.recupererPourAdmin(req.params.id)),
   benevoles: gerer(() => taskService.benevolesAffectables()),
@@ -470,20 +338,12 @@ export const tasks = {
     statut: 201,
   }),
   supprimer: gerer((req) => taskService.supprimer(req.params.id)),
-  // La preuve jointe par le benevole, pour valider la livraison.
   fichier: gerer(async (req, res) => {
     const fichier = await taskService.fichierDeLivraison(req.params.id, req.params.fileId);
     envoyerFichierLivraison(res, fichier);
   }),
 };
 
-/**
- * Les messages venus des espaces benevole et bailleur.
- *
- * Table differente de "messages", qui porte le courrier du site public
- * rattache aux comptes donateurs : ni les memes cles, ni les memes
- * destinataires. Deux boites, donc, et deux listes.
- */
 export const messagesEspaces = {
   lister: gerer(() => espaceService.listerTousLesFils().then((items) => ({ items }))),
   repondre: gerer(
@@ -502,10 +362,6 @@ export const impacts = {
   supprimer: gerer((req) => impactService.supprimer(req.params.id)),
 };
 
-/* ================================================================
-   Notifications et messages
-   ================================================================ */
-
 export const notifications = {
   lister: gerer((req) => notificationService.lister(req.query)),
   marquerLue: gerer((req) => notificationService.marquerLue(req.params.id)),
@@ -521,9 +377,6 @@ export const messages = {
   repondre: gerer((req) => messageService.repondre(req.params.id, req.body)),
 };
 
-/* ================================================================
-   Back office : comptes crees par l'administrateur principal
-   ================================================================ */
 export const backoffice = {
   lister: gerer(() => backofficeService.lister()),
   creer: gerer((req) => backofficeService.creer(req.body), { statut: 201 }),

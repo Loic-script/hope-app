@@ -1,13 +1,11 @@
 import * as fmt from '../../utils/format.js';
 
-/** Libelles des trois natures de soutien. */
 export const TYPES_SOUTIEN = {
   financier: 'Financement',
   competences: 'Mécénat de compétences',
   materiel: 'Don matériel',
 };
 
-/** Statuts d'un engagement. */
 export const STATUTS_ENGAGEMENT = {
   en_cours: 'En cours',
   finalise: 'Finalisé',
@@ -15,7 +13,6 @@ export const STATUTS_ENGAGEMENT = {
   annule: 'Annulé',
 };
 
-/** Statuts d'un versement. */
 export const STATUTS_VERSEMENT = {
   attendu: 'Attendu',
   recu: 'Reçu',
@@ -23,7 +20,6 @@ export const STATUTS_VERSEMENT = {
   annule: 'Annulé',
 };
 
-/** Teinte de la pastille d'un statut de versement. */
 export const TEINTES_VERSEMENT = {
   recu: 'vert',
   attendu: 'bleu',
@@ -31,7 +27,6 @@ export const TEINTES_VERSEMENT = {
   annule: 'gris',
 };
 
-/** Libelles des types de document. */
 export const TYPES_DOCUMENT = {
   rapport_impact: 'Rapport d’impact',
   justificatif_financier: 'Justificatif financier',
@@ -39,26 +34,10 @@ export const TYPES_DOCUMENT = {
   convention: 'Convention',
 };
 
-/** Une pastille de statut. */
 export function Pastille({ children, teinte = 'gris' }) {
   return <span className={`jeton jeton--${teinte}`}>{children}</span>;
 }
 
-/**
- * La chaine d'un engagement : promis, recu, affecte.
- *
- * C'est l'element signature de cet espace, et il repond a la seule
- * confusion qui compte ici. Trois notions se ressemblent et ne veulent
- * pas dire la meme chose :
- *
- *   promis   ce que la convention engage      -> le rail entier
- *   recu     ce qui est arrive en banque      -> le remplissage
- *   affecte  ce qui est attribue a des projets -> le repere sous le rail
- *
- * Les poser sur un seul axe rend l'ecart lisible d'un coup d'oeil :
- * un rail a moitie rempli mais entierement repere signifie que HOPE a
- * deja tout attribue et attend l'argent.
- */
 export function ChaineEngagement({ promis, recu, affecte, devise = 'MGA', compact = false }) {
   const total = Number(promis) || 0;
   const partRecue = total > 0 ? Math.min(100, (Number(recu) || 0) * 100 / total) : 0;
@@ -101,7 +80,6 @@ export function ChaineEngagement({ promis, recu, affecte, devise = 'MGA', compac
   );
 }
 
-/** Une des trois mesures de la chaine. */
 function Mesure({ libelle, valeur, teinte }) {
   return (
     <div className={`triade__mesure triade__mesure--${teinte}`}>
@@ -111,13 +89,6 @@ function Mesure({ libelle, valeur, teinte }) {
   );
 }
 
-/**
- * Barre de repartition : une part par segment.
- *
- * Sert la repartition par domaine et l'origine des fonds. Les couleurs
- * tournent sur une suite fixe : deux relectures de la meme page doivent
- * donner les memes teintes.
- */
 export function BarreRepartition({ lignes, cleLibelle = 'domaine', clePart = 'part' }) {
   if (!lignes || lignes.length === 0) {
     return <p className="vide-bailleur">Aucune affectation pour l’instant.</p>;
@@ -145,8 +116,6 @@ export function BarreRepartition({ lignes, cleLibelle = 'domaine', clePart = 'pa
             {ligne.montant !== undefined && (
               <span className="repartition__montant">{fmt.montant(ligne.montant)}</span>
             )}
-            {/* Une repartition ne porte pas toujours un montant : les
-                beneficiaires se comptent en personnes. */}
             {ligne.nombre !== undefined && (
               <span className="repartition__montant repartition__montant--nombre">
                 {fmt.nombre(ligne.nombre)}
@@ -159,7 +128,6 @@ export function BarreRepartition({ lignes, cleLibelle = 'domaine', clePart = 'pa
   );
 }
 
-/** En-tete d'une page de l'espace. */
 export function EntetePage({ titre, accroche, actions }) {
   return (
     <header className="page-bailleur__entete">
@@ -172,7 +140,6 @@ export function EntetePage({ titre, accroche, actions }) {
   );
 }
 
-/** Un panneau de contenu. */
 export function Panneau({ titre, sousTitre, actions, children }) {
   return (
     <section className="panneau-bailleur">

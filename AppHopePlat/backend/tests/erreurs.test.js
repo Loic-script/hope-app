@@ -1,7 +1,3 @@
-/*
- * Le gestionnaire d'erreurs : chaque erreur devient le bon code HTTP,
- * au meme format, sans jamais laisser fuir un detail interne.
- */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -13,7 +9,6 @@ import {
   ErreurValidation,
 } from '../src/shared/errors.js';
 
-/** Fait passer une erreur dans le gestionnaire ; rend { statut, corps }. */
 function traduire(erreur) {
   const rendu = {};
   const res = {

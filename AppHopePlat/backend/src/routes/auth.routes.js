@@ -1,14 +1,3 @@
-/**
- * Routes d'authentification des utilisateurs, montees sous /api/auth,
- * et l'amorce de l'espace donateur sous /api/donateur.
- *
- * L'administrateur n'est pas concerne : il garde /api/admin/login, son
- * compte n'etant pas cree par inscription.
- *
- * Les routes publiques sont limitees en frequence : sans cela
- * l'inscription servirait a creer des comptes en masse, et la connexion
- * a essayer des mots de passe l'un apres l'autre.
- */
 import { Router } from 'express';
 
 import * as auth from '../controllers/auth.controllers.js';
@@ -16,8 +5,6 @@ import { authenticateDonor } from '../middleware/donorAuth.middleware.js';
 import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 
 const router = Router();
-
-/* ------------------------------- Public -------------------------------- */
 
 router.get('/auth/types', auth.types);
 
@@ -27,8 +14,6 @@ router.post(
   auth.inscription
 );
 
-// Le mot de passe oublie : demander un lien, puis le nouveau mot de passe.
-// Limites serrees : la demande envoie un courriel, la seconde essaie un jeton.
 router.post(
   '/auth/mot-de-passe-oublie',
   limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 5 }),
@@ -40,7 +25,6 @@ router.post(
   auth.reinitialiserMotDePasse
 );
 
-// Le lien de confirmation de l'adresse, recu par courriel.
 router.post(
   '/auth/verifier-courriel',
   limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }),
@@ -53,12 +37,6 @@ router.post(
   auth.login
 );
 
-/* -------------------------- Espace donateur ---------------------------- */
-
-/**
- * L'espace donateur n'est pas construit : une page de bienvenue, et le
- * profil du compte connecte pour l'alimenter. Le reste viendra.
- */
 router.get('/donateur/me', authenticateDonor, (req, res) => {
   res.status(200).json({ authenticated: true, donateur: req.donateur });
 });

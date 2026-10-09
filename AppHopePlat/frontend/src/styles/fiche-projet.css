@@ -1,13 +1,3 @@
-/* ============================================================
-   HOPE - Fiche d'un projet hors administration
-
-   Commune aux espaces bailleur et donateur (FicheProjet.jsx). La mise en
-   page est celle de la fiche projet benevole (classes "projet-benevole") ;
-   ne s'ajoute ici que ce qui lui est propre : pastilles et action de
-   tete, avancement, part de la personne, chiffres du financement.
-   ============================================================ */
-
-/* Sous l'accroche : statut, "Vous financez", reference -- et le rapport. */
 .fiche-projet__tete-bas {
   display: flex;
   flex-wrap: wrap;
@@ -30,7 +20,6 @@
   white-space: nowrap;
 }
 
-/* L'avancement des actions : trois nombres cote a cote. */
 .fiche-projet__avancement {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -54,7 +43,6 @@
   color: var(--admin-texte);
 }
 
-/* Les dernieres actions realisees, cochees. */
 .fiche-projet__realisees {
   display: flex;
   flex-direction: column;
@@ -83,7 +71,6 @@
   transform: rotate(-45deg);
 }
 
-/* Ce que le partenaire a affecte : sa part, mise en avant. */
 .fiche-projet__votre-part {
   border-left: 4px solid var(--hope-violet);
   background-color: #f6f4fc;
@@ -128,11 +115,6 @@
   }
 }
 
-/*
- * Les chiffres du financement et de l'impact : le libelle, puis le
- * montant sur sa propre ligne, puis la precision. Pose a droite du
- * libelle, un grand montant se coupait en deux ("6 000 000 / Ar").
- */
 .fiche-projet .carte-chiffre {
   display: grid;
   grid-template-areas:
@@ -162,8 +144,6 @@
 }
 
 @media (max-width: 560px) {
-  /* Deux par deux plutot qu'un par ligne : le financement tient sur un
-     ecran. */
   .fiche-projet .cartes-chiffres {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -186,8 +166,6 @@
   }
 }
 
-/* "Financement" est plus long que "Taches" : sur un petit telephone, les
-   trois onglets se resserrent pour tenir sans deborder. */
 @media (max-width: 400px) {
   .fiche-projet .onglets__bouton {
     padding: 11px 4px;

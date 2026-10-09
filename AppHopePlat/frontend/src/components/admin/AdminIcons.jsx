@@ -1,16 +1,3 @@
-/**
- * Jeu d'icones des espaces connectes.
- *
- * Ne sert plus au seul administrateur : le benevole et le bailleur
- * partagent desormais la meme coque, donc le meme trace.
- *
- * Toutes les icones partagent le meme trace : contour de 1,7 px, coins
- * arrondis, viewBox 24x24, couleur heritee via currentColor. L'interface
- * en utilise peu, conformement au parti pris "logiciel de gestion" :
- * essentiellement la navigation et quelques actions.
- */
-
-/** Fabrique une icone a partir de son contenu SVG. */
 function creerIcone(nom, contenu, { rempli = false } = {}) {
   function Icone({ className = '' }) {
     return (
@@ -31,8 +18,6 @@ function creerIcone(nom, contenu, { rempli = false } = {}) {
   Icone.displayName = nom;
   return Icone;
 }
-
-// --- Navigation ------------------------------------------------------
 
 export const IconeAccueil = creerIcone(
   'IconeAccueil',
@@ -149,8 +134,6 @@ export const IconeDeconnexion = creerIcone(
   </>
 );
 
-// --- Actions et decor -------------------------------------------------
-
 export const IconeRecherche = creerIcone(
   'IconeRecherche',
   <>
@@ -242,9 +225,6 @@ export const IconeGraphique = creerIcone(
   </>
 );
 
-// --- Propres aux espaces benevole et bailleur -------------------------
-
-/** Une seule silhouette : le compte de celui qui regarde, et non un groupe. */
 export const IconePersonne = creerIcone(
   'IconePersonne',
   <>
@@ -253,7 +233,6 @@ export const IconePersonne = creerIcone(
   </>
 );
 
-/** Une liste cochee : ce qu'il reste a faire. */
 export const IconeTaches = creerIcone(
   'IconeTaches',
   <>
@@ -263,7 +242,6 @@ export const IconeTaches = creerIcone(
   </>
 );
 
-/** Une horloge : les heures que le benevole consigne. */
 export const IconeJournal = creerIcone(
   'IconeJournal',
   <>
@@ -272,7 +250,6 @@ export const IconeJournal = creerIcone(
   </>
 );
 
-/** Un batiment : l'organisation, par opposition a la personne. */
 export const IconeOrganisation = creerIcone(
   'IconeOrganisation',
   <>
@@ -283,7 +260,6 @@ export const IconeOrganisation = creerIcone(
   </>
 );
 
-/** Un porte-voix : les nouvelles que HOPE adresse a ses partenaires. */
 export const IconeActualites = creerIcone(
   'IconeActualites',
   <>
@@ -293,7 +269,6 @@ export const IconeActualites = creerIcone(
   </>
 );
 
-/** Un calendrier : une echeance, une date. */
 export const IconeCalendrier = creerIcone(
   'IconeCalendrier',
   <>
@@ -302,7 +277,6 @@ export const IconeCalendrier = creerIcone(
   </>
 );
 
-/** Un reperage sur une carte : le lieu d'un projet. */
 export const IconeLieu = creerIcone(
   'IconeLieu',
   <>
@@ -311,10 +285,6 @@ export const IconeLieu = creerIcone(
   </>
 );
 
-/**
- * La poignee d'une carte qu'on peut deplacer : six points, le signe
- * usuel du "prenez-moi et bougez-moi".
- */
 export const IconePoignee = creerIcone(
   'IconePoignee',
   <>
@@ -328,7 +298,6 @@ export const IconePoignee = creerIcone(
   { rempli: true }
 );
 
-/** Remettre une carte deplacee a sa place : une cible, un centre. */
 export const IconeRecentrer = creerIcone(
   'IconeRecentrer',
   <>

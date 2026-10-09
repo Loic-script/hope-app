@@ -1,11 +1,3 @@
-/**
- * Repository de l'annuaire des benevoles, vu depuis l'espace benevole.
- *
- * Seules sortent d'ici les colonnes qu'un benevole peut lire d'un autre :
- * son nom, sa photo, son metier, ses competences, ses langues, ses
- * disponibilites et ce qu'il a livre. Ni courriel, ni telephone, ni
- * adresse, ni date de naissance, ni contact d'urgence, ni notes internes.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
@@ -21,7 +13,6 @@ const COLONNES = `
     WHERE tb.benevole_id = b.id) AS projets
 `;
 
-/** Les benevoles dont le compte est actif, sauf celui qui regarde. */
 export async function lister(utilisateurId) {
   const resultat = await query(
     `SELECT ${COLONNES}
@@ -36,7 +27,6 @@ export async function lister(utilisateurId) {
   return versListe(resultat.rows);
 }
 
-/** Un benevole actif, par son compte utilisateur. */
 export async function trouver(utilisateurId) {
   const resultat = await query(
     `SELECT ${COLONNES}, b.disponibilites
@@ -48,7 +38,6 @@ export async function trouver(utilisateurId) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Les projets sur lesquels il a une tache, les plus recents d'abord. */
 export async function projetsDe(benevoleId) {
   const resultat = await query(
     `SELECT p.id, p.name AS nom,

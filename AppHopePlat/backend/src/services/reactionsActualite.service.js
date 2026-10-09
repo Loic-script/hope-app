@@ -1,14 +1,3 @@
-/**
- * Les reactions aux actualites de HOPE, dans les accueils des espaces
- * (donateur, benevole, bailleur) : « J'aime » et « Commenter ».
- *
- *   - un J'aime par personne et par publication, qu'on peut retirer ; le
- *     nombre se voit de tous ;
- *   - un commentaire n'est lu que par l'equipe HOPE (page Actualites de
- *     l'administration) : ni les autres utilisateurs, ni son auteur ne le
- *     revoient dans le fil. C'est un mot adresse a l'association, pas un
- *     debat public.
- */
 import { query } from '../config/database.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { versListe } from '../shared/mapping.js';
@@ -28,12 +17,6 @@ async function exigerPublication(id) {
   if (!rows[0]) throw new ErreurIntrouvable('La publication', id);
 }
 
-/**
- * L'etat des reactions de plusieurs publications : leur nombre de J'aime,
- * et si la personne connectee a aime.
- * @param {string} utilisateurId
- * @param {string} ids liste separee par des virgules
- */
 export async function etat(utilisateurId, ids) {
   const liste = String(ids ?? '')
     .split(',')
@@ -51,7 +34,6 @@ export async function etat(utilisateurId, ids) {
   return { items: Object.fromEntries(rows.map((r) => [r.id, { jaimes: r.jaimes, jaime: r.jaime }])) };
 }
 
-/** Aimer, ou ne plus aimer. */
 export async function basculerJaime(utilisateurId, id) {
   const publicationId = idPublication(id);
   await exigerPublication(publicationId);
@@ -71,7 +53,6 @@ export async function basculerJaime(utilisateurId, id) {
   return { jaime: retire.rowCount === 0, jaimes: rows[0].n };
 }
 
-/** Un commentaire, pour l'equipe seulement. */
 export async function commenter(utilisateurId, audience, id, corps = {}) {
   const publicationId = idPublication(id);
   const texte = texteRequis(corps.texte, 'texte', { max: 1000 });
@@ -83,9 +64,6 @@ export async function commenter(utilisateurId, audience, id, corps = {}) {
   return { message: 'Merci ! Votre commentaire a été transmis à l’équipe HOPE.' };
 }
 
-/* ---------------------------- Cote equipe ---------------------------- */
-
-/** Les chiffres de chaque publication, pour la liste de l'administration. */
 export async function chiffresParPublication() {
   const { rows } = await query(
     `SELECT p.id,
@@ -97,7 +75,6 @@ export async function chiffresParPublication() {
   return new Map(rows.map((r) => [r.id, { jaimes: r.jaimes, commentaires: r.commentaires, commentairesNonLus: r.non_lus }]));
 }
 
-/** Les commentaires d'une publication ; les lire les marque comme lus. */
 export async function commentaires(id) {
   const publicationId = idPublication(id);
   await exigerPublication(publicationId);

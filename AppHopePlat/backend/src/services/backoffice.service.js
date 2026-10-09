@@ -1,21 +1,3 @@
-/**
- * Les comptes « back office » : des membres de l'equipe crees par
- * l'administrateur principal, depuis l'onglet Back office des
- * utilisateurs.
- *
- * Deux roles :
- *   - GESTIONNAIRE (« Admin ») : gere les comptes des utilisateurs
- *     (donateurs, benevoles, bailleurs) et travaille comme l'equipe, sans
- *     acces aux comptes back office ;
- *   - MANAGER (« Manager ») : consulte, et ne peut que creer ou modifier
- *     un projet ; il ne voit pas les utilisateurs.
- *
- * A la creation, un mot de passe est genere et part par courriel avec un
- * lien direct vers la connexion. L'identifiant de connexion est
- * l'adresse electronique. Le mot de passe ne s'affiche jamais -- sauf si
- * le courriel n'a pas pu partir : l'administrateur le voit alors une
- * fois, pour le transmettre lui-meme.
- */
 import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
 
@@ -26,17 +8,11 @@ import { identifiantRequis, texteRequis, valeurParmi } from '../shared/validatio
 import * as courriel from './courriel.service.js';
 import { fermerSessionsAdmin } from './session.service.js';
 
-/** Le choix du formulaire, et le role enregistre. */
 export const ROLES_BACKOFFICE = { admin: 'GESTIONNAIRE', manager: 'MANAGER' };
 export const LIBELLES_BACKOFFICE = { GESTIONNAIRE: 'Admin', MANAGER: 'Manager' };
 
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Un mot de passe lisible et solide : 14 caracteres, sans les signes
- * qu'on confond (0/O, 1/l/I), avec majuscules, minuscules, chiffres et
- * un signe.
- */
 export function motDePasseGenere() {
   const lettres = 'abcdefghijkmnpqrstuvwxyz';
   const majuscules = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -46,7 +22,6 @@ export function motDePasseGenere() {
   const tirer = (alphabet) => alphabet[crypto.randomInt(alphabet.length)];
   const caracteres = [tirer(lettres), tirer(majuscules), tirer(chiffres), tirer(signes)];
   while (caracteres.length < 14) caracteres.push(tirer(tous));
-  // Melange de Fisher-Yates : les quatre garanties ne restent pas en tete.
   for (let i = caracteres.length - 1; i > 0; i -= 1) {
     const j = crypto.randomInt(i + 1);
     [caracteres[i], caracteres[j]] = [caracteres[j], caracteres[i]];
@@ -70,12 +45,10 @@ function versCompte(ligne) {
 
 const COLONNES = 'id, admin_log, email, full_name, role, status, last_login_at, created_at';
 
-/** L'adresse de connexion, identifiant prerempli. */
 function lienDeConnexion(email) {
   return `${config.siteUrl.replace(/\/$/, '')}/admin/login?identifiant=${encodeURIComponent(email)}`;
 }
 
-/** Envoie les acces ; rend true si le courriel est parti. */
 async function envoyerAcces(compte, motDePasse, { renouvellement = false } = {}) {
   const role = LIBELLES_BACKOFFICE[compte.role] ?? compte.role;
   return courriel.envoyer({
@@ -106,7 +79,6 @@ export async function lister() {
   return { items: rows.map(versCompte), roles: LIBELLES_BACKOFFICE };
 }
 
-/** Cree un compte, genere son mot de passe et lui envoie ses acces. */
 export async function creer(corps = {}) {
   const fullName = texteRequis(corps.fullName, 'fullName', { max: 160 });
   const email = String(corps.email ?? '').trim().toLowerCase();
@@ -135,7 +107,6 @@ export async function creer(corps = {}) {
   return {
     compte,
     courrielEnvoye: envoye,
-    // Seulement si le courriel n'est pas parti : a transmettre en personne.
     ...(envoye ? {} : { motDePasseProvisoire: motDePasse }),
     message: envoye
       ? `Le compte est créé : ses accès viennent de partir à ${email}.`
@@ -153,7 +124,6 @@ async function trouver(id) {
   return versCompte(rows[0]);
 }
 
-/** Change le role (admin / manager) ou le statut (actif / suspendu). */
 export async function modifier(id, corps = {}) {
   const compte = await trouver(id);
   const role =
@@ -167,12 +137,10 @@ export async function modifier(id, corps = {}) {
     `UPDATE admins SET role = COALESCE($2, role), status = COALESCE($3, status) WHERE id = $1 RETURNING ${COLONNES}`,
     [compte.id, role, status]
   );
-  // Un changement de droits vaut pour la session en cours : on la ferme.
   if ((role && role !== compte.role) || status === 'SUSPENDED') await fermerSessionsAdmin(compte.id);
   return versCompte(rows[0]);
 }
 
-/** Un nouveau mot de passe, envoye par courriel ; l'ancien et les sessions tombent. */
 export async function renouvelerAcces(id) {
   const compte = await trouver(id);
   const motDePasse = motDePasseGenere();

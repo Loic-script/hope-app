@@ -1,13 +1,3 @@
-/* ==================================================================
-   Mes taches (pages/benevole/MesTaches.jsx)
-
-   Un tableau en trois colonnes, dans l'ordre ou une tache les
-   traverse : a prendre (bleu), en cours (violet), livree (vert). Une
-   carte ne dit que l'essentiel -- le nom, la priorite, les boutons --
-   et s'ouvre sur tout le reste. Une bande a gauche dit la priorite
-   avant qu'on lise le mot. Charge apres benevole-espace.css.
-   ================================================================== */
-
 .colonnes-taches {
   --mt-anime: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -17,7 +7,6 @@
   gap: 16px;
 }
 
-/* ---------- Les colonnes ---------- */
 .colonnes-taches .colonne-taches {
   --col: #2b6484;
   --col-pale: #e7f1fa;
@@ -51,7 +40,6 @@
   }
 }
 
-/* Un filet de couleur en tete : la colonne se reconnait de loin. */
 .colonnes-taches .colonne-taches::before {
   content: '';
   position: absolute;
@@ -158,7 +146,6 @@
   stroke-linejoin: round;
 }
 
-/* Le chargement : deux cartes grisees qui respirent. */
 .colonne-taches__squelettes {
   display: flex;
   flex-direction: column;
@@ -179,7 +166,6 @@
   }
 }
 
-/* ---------- Les cartes ---------- */
 .colonnes-taches .carte-tache {
   --prio: #4a8bc2;
 
@@ -196,7 +182,6 @@
     box-shadow 0.2s;
 }
 
-/* La bande de priorite, a gauche. */
 .colonnes-taches .carte-tache::before {
   content: '';
   position: absolute;
@@ -226,7 +211,6 @@
   box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--col) 35%, transparent);
 }
 
-/* La carte dont la fenetre est ouverte. */
 .colonnes-taches .carte-tache--choisie {
   border-color: var(--col);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--col) 22%, transparent);
@@ -276,7 +260,6 @@
   display: none;
 }
 
-/* "Details" : ce qui signale que la carte s'ouvre. */
 .carte-tache__detail {
   display: inline-flex;
   flex: none;
@@ -308,14 +291,12 @@
   transform: translateX(3px);
 }
 
-/* L'etat d'une demande, dans les boutons : discret, sur une ligne. */
 .colonnes-taches .etat-demande {
   flex-basis: 100%;
   font-size: 12px;
   line-height: 1.4;
 }
 
-/* ---------- Les onglets du telephone ---------- */
 .onglets-taches {
   display: none;
 }
@@ -388,7 +369,6 @@
     display: none;
   }
 
-  /* Une seule colonne : son en-tete dit deja ce que dit l'onglet. */
   .colonnes-taches .colonne-taches__titre {
     display: none;
   }
@@ -416,10 +396,6 @@
     transition-duration: 0.01ms !important;
   }
 }
-
-/* ============================================================
-   La livraison, depliee en bas de la fenetre de la tache
-   ============================================================ */
 
 .detail-livraison {
   margin-top: 22px;
@@ -477,7 +453,6 @@
   }
 }
 
-/* Le commentaire de livraison, au-dessus du depot des photos. */
 .livraison__commentaire {
   position: relative;
   display: grid;

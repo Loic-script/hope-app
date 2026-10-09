@@ -1,23 +1,3 @@
-/**
- * Jeu de donnees de demonstration de l'espace administrateur.
- *
- *   npm run db:seed-demo             installe les donnees si la base est vide
- *   npm run db:seed-demo -- --force  efface les donnees metier et recommence
- *
- * Le script rejoue le parcours reel de l'argent chez HOPE :
- *
- *   donateurs (avec et sans compte, locaux et internationaux)
- *     -> dons affectes  -> directement sur un projet
- *     -> dons non affectes -> fonds HOPE -> investissements justifies
- *        -> depenses -> justificatifs
- *        -> beneficiaires -> impacts mesures
- *
- * Les cinq projets restent en cours et leurs taux de financement vont de
- * 18 % a 100 %, de quoi remplir le flux de publications de l'accueil.
- *
- * Il passe par les services : les memes regles metier que l'API
- * s'appliquent, controles de solde compris.
- */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -41,14 +21,12 @@ import * as messageService from '../services/message.service.js';
 
 const FORCER = process.argv.includes('--force');
 
-/** Date au format AAAA-MM-JJ, decalee de n jours. */
 function jour(decalage = 0) {
   const date = new Date();
   date.setDate(date.getDate() + decalage);
   return date.toISOString().slice(0, 10);
 }
 
-/** Tables metier videes par --force, dans l'ordre des dependances. */
 const TABLES_METIER = [
   'notifications',
   'messages',
@@ -68,7 +46,6 @@ async function viderDonneesMetier() {
   console.log('[HOPE] --force : suppression des donnees de demonstration existantes...');
   await query(`TRUNCATE ${TABLES_METIER.join(', ')} RESTART IDENTITY CASCADE`);
 
-  // Les fichiers poses par un seed precedent n'ont plus de ligne en base.
   for (const [dossier, prefixe] of [
     [DOSSIER_JUSTIFICATIFS, 'justificatif-'],
     [DOSSIER_MEDIAS, 'projet-'],
@@ -86,7 +63,6 @@ async function viderDonneesMetier() {
   }
 }
 
-/** PDF minimal mais valide, pour que le telechargement soit testable. */
 function construirePdfDemo(titre) {
   const contenu = `BT /F1 16 Tf 60 760 Td (${titre}) Tj ET`;
   const objets = [
@@ -115,8 +91,6 @@ function construirePdfDemo(titre) {
   return Buffer.from(pdf, 'latin1');
 }
 
-
-/** Ecrit le PDF puis enregistre le justificatif correspondant. */
 async function ajouterJustificatif(expenseId, { titre, nomAffiche, type, reference }) {
   await fs.mkdir(DOSSIER_JUSTIFICATIFS, { recursive: true });
 
@@ -124,7 +98,6 @@ async function ajouterJustificatif(expenseId, { titre, nomAffiche, type, referen
   const contenu = construirePdfDemo(titre);
   await fs.writeFile(path.join(DOSSIER_JUSTIFICATIFS, nomDisque), contenu);
 
-  // On imite ce que multer aurait produit apres un televersement reel.
   return documentService.creer(
     expenseId,
     {
@@ -141,9 +114,6 @@ async function ajouterJustificatif(expenseId, { titre, nomAffiche, type, referen
 async function installerDonneesDemo(categoriesParNom) {
   const categorie = (nom) => categoriesParNom.get(nom).id;
 
-  // ---------------------------------------------------------------
-  // 1. Projets
-  // ---------------------------------------------------------------
   const scolaire = await projectService.creer({
     name: 'Soutien scolaire Antananarivo',
     description:
@@ -212,16 +182,7 @@ async function installerDonneesDemo(categoriesParNom) {
     ...(await poserMedia('eau-potable.webm')),
   });
 
-  // ---------------------------------------------------------------
-  // 2. Donateurs : locaux et internationaux, avec et sans compte
-  //
-  // Quinze profils decrits en table plutot qu'un bloc par personne :
-  // la liste se lit d'un coup d'oeil et reste simple a etendre.
-  // L'origine se deduit du pays, et c'est elle qui commande les moyens
-  // de paiement acceptes pour chaque don.
-  // ---------------------------------------------------------------
   const PROFILS = [
-    // --- Madagascar ---
     { cle: 'jean', firstName: 'Jean', lastName: 'Rakotoarisoa',
       email: 'jean.rakoto@example.mg', phone: '+261 34 12 345 67',
       country: 'Madagascar', city: 'Antananarivo' },
@@ -244,7 +205,6 @@ async function installerDonneesDemo(categoriesParNom) {
     { cle: 'anonyme', firstName: 'Donateur', lastName: 'anonyme',
       country: 'Madagascar', city: 'Antananarivo' },
 
-    // --- Etranger ---
     { cle: 'fondation', organizationName: 'Fondation Solidarité Océan Indien',
       email: 'contact@fsoi.example', country: 'France', city: 'Paris' },
     { cle: 'sophie', firstName: 'Sophie', lastName: 'Bernard',
@@ -264,8 +224,6 @@ async function installerDonneesDemo(categoriesParNom) {
     donateurs.set(cle, await donorService.creer(profil));
   }
 
-  // Quatre donateurs reguliers ouvrent un compte : ce sont eux qui peuvent
-  // ecrire a l'association depuis leur espace.
   const comptes = new Map();
   for (const cle of ['jean', 'sophie', 'marc', 'tafita']) {
     const donateur = donateurs.get(cle);
@@ -276,19 +234,7 @@ async function installerDonneesDemo(categoriesParNom) {
     comptes.set(cle, ouverture.account);
   }
 
-  // ---------------------------------------------------------------
-  // 3. Dons
-  //
-  // Un don affecte (projet renseigne) va directement au projet choisi.
-  // Un don non affecte alimente le fonds HOPE, que l'administrateur
-  // investit ensuite en justifiant son choix.
-  //
-  // Les taux de financement obtenus s'echelonnent de 18 % a 100 % :
-  // l'accueil montre ainsi aussi bien un projet entierement couvert
-  // qu'un projet qui manque encore de presque tout.
-  // ---------------------------------------------------------------
   const DONS = [
-    // --- Soutien scolaire : 3 800 000 sur 5 000 000 ---
     { donateur: 'jean', projet: scolaire, amount: '1000000', frequency: 'ONE_TIME',
       paymentMethod: 'Mvola', paymentReference: 'MVOLA-884213', receivedAt: jour(-40),
       message: 'Pour que ces enfants puissent aller à l’école.' },
@@ -300,7 +246,6 @@ async function installerDonneesDemo(categoriesParNom) {
       paymentMethod: 'Virement international', paymentReference: 'VIR-2026-0912',
       receivedAt: jour(-21), message: 'De la part des Malagasy de Montréal.' },
 
-    // --- Sante pour tous : 4 160 000 sur 8 000 000 ---
     { donateur: 'noro', projet: sante, amount: '160000', frequency: 'ONE_TIME',
       paymentMethod: 'Orange Money', receivedAt: jour(-26) },
     { donateur: 'anna', projet: sante, amount: '700000', frequency: 'ONE_TIME',
@@ -309,7 +254,6 @@ async function installerDonneesDemo(categoriesParNom) {
       paymentMethod: 'Virement bancaire local', paymentReference: 'VBL-2026-0077',
       receivedAt: jour(-11), message: 'Notre contribution annuelle à la santé publique.' },
 
-    // --- Meres celibataires : 1 080 000 sur 6 000 000 ---
     { donateur: 'sophie', projet: meres, amount: '600000', frequency: 'MONTHLY',
       paymentMethod: 'Carte bancaire', paymentReference: 'CB-2026-7741', receivedAt: jour(-30) },
     { donateur: 'vero', projet: meres, amount: '180000', frequency: 'ONE_TIME',
@@ -317,18 +261,15 @@ async function installerDonneesDemo(categoriesParNom) {
     { donateur: 'luca', projet: meres, amount: '300000', frequency: 'MONTHLY',
       paymentMethod: 'Carte bancaire', receivedAt: jour(-7) },
 
-    // --- Cantines scolaires : 1 360 000 sur 4 000 000 ---
     { donateur: 'miora', projet: alimentation, amount: '400000', frequency: 'ONE_TIME',
       paymentMethod: 'Orange Money', receivedAt: jour(-12) },
     { donateur: 'lanto', projet: alimentation, amount: '160000', frequency: 'ONE_TIME',
       paymentMethod: 'Airtel Money', receivedAt: jour(-9) },
 
-    // --- Puits : le budget est entierement couvert ---
     { donateur: 'jean', projet: puits, amount: '2000000', frequency: 'ONE_TIME',
       paymentMethod: 'Virement bancaire local', paymentReference: 'VBL-2025-0410',
       receivedAt: jour(-60) },
 
-    // --- Fonds HOPE : dons laisses au libre emploi de l'association ---
     { donateur: 'fondation', amount: '4500000', frequency: 'ONE_TIME',
       paymentMethod: 'Virement international', paymentReference: 'VIR-2026-0451',
       receivedAt: jour(-25), message: 'Utilisez ce don là où le besoin est le plus urgent.' },
@@ -354,10 +295,6 @@ async function installerDonneesDemo(categoriesParNom) {
     });
   }
 
-
-  // ---------------------------------------------------------------
-  // 5. Investissements du fonds HOPE
-  // ---------------------------------------------------------------
   await fundService.investir({
     projectId: sante.id,
     amount: '2500000',
@@ -380,11 +317,7 @@ async function installerDonneesDemo(categoriesParNom) {
     justification: 'Démarrage des jardins potagers avant la saison des pluies.',
     investedAt: jour(-10),
   });
-  // Il reste volontairement du disponible dans le fonds HOPE.
 
-  // ---------------------------------------------------------------
-  // 6. Depenses et justificatifs
-  // ---------------------------------------------------------------
   const fournitures = await expenseService.creer({
     projectId: scolaire.id,
     amount: '300000',
@@ -439,7 +372,6 @@ async function installerDonneesDemo(categoriesParNom) {
     expenseDate: jour(-4),
   });
 
-  // Le projet du puits est mene a son terme.
   const forage = await expenseService.creer({
     projectId: puits.id,
     amount: '1600000',
@@ -464,9 +396,6 @@ async function installerDonneesDemo(categoriesParNom) {
     expenseDate: jour(-100),
   });
 
-  // ---------------------------------------------------------------
-  // 7. Beneficiaires
-  // ---------------------------------------------------------------
   const beneficiaires = [
     { firstName: 'Soa', lastName: 'Rabe', beneficiaryType: 'ORPHAN', gender: 'F', birthDate: '2015-04-12', city: 'Antananarivo', projet: scolaire.id },
     { firstName: 'Tojo', lastName: 'Randria', beneficiaryType: 'ORPHAN', gender: 'M', birthDate: '2014-09-03', city: 'Antananarivo', projet: scolaire.id },
@@ -486,13 +415,6 @@ async function installerDonneesDemo(categoriesParNom) {
     await beneficiaryService.creer({ ...donnees, projectId: projet, country: 'Madagascar' });
   }
 
-  // ---------------------------------------------------------------
-  // 8. Impacts mesures
-  //
-  // Les cinq projets restent en cours : l'accueil doit pouvoir montrer
-  // cinq publications. Le puits, entierement finance, est le plus
-  // avance et porte deja ses premiers releves.
-  // ---------------------------------------------------------------
   await impactService.creer({
     projectId: puits.id,
     title: "Habitants desservis en eau potable",
@@ -512,7 +434,6 @@ async function installerDonneesDemo(categoriesParNom) {
     measuredAt: jour(-28),
   });
 
-  // Impacts intermediaires sur les projets en cours.
   await impactService.creer({
     projectId: scolaire.id,
     title: 'Enfants ayant reçu un kit scolaire complet',
@@ -531,9 +452,6 @@ async function installerDonneesDemo(categoriesParNom) {
     measuredAt: jour(-3),
   });
 
-  // ---------------------------------------------------------------
-  // 9. Messages des donateurs disposant d'un compte
-  // ---------------------------------------------------------------
   await messageService.creer({
     donorAccountId: comptes.get('jean').id,
     subject: 'Nouvelles du soutien scolaire',

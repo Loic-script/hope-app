@@ -1,29 +1,14 @@
-/* ============================================================
-   HOPE - Espace administrateur
-
-   Composants communs a toutes les pages : en-tete, boutons, panneaux,
-   tableaux, badges, formulaires, modales. L'ossature et la barre de
-   navigation vivent dans admin-entete.css.
-
-   Peu d'icones, peu de couleur, des tableaux lisibles : l'ecran doit
-   ressembler a un logiciel de gestion, pas a une page marketing.
-   ============================================================ */
-
 :root {
-  /* Surfaces */
   --admin-fond: #f2f6fb;
   --admin-surface: #ffffff;
   --admin-surface-douce: #f7f9fd;
   --admin-bordure: #e5eaf3;
   --admin-bordure-forte: #d5dced;
 
-  /* Texte */
   --admin-texte: #2b3244;
-  /* Contraste AA (4,5:1) garanti sur les fonds de l'espace. */
   --admin-texte-doux: #5f6678;
   --admin-texte-faible: #646b7e;
 
-  /* Etats */
   --etat-vert: #2c8f63;
   --etat-vert-fond: #e6f5ed;
   --etat-bleu: #2668b8;
@@ -42,15 +27,8 @@
   --admin-rayon: 12px;
 }
 
-/* ============================================================
-   1. En-tete de page
-   ============================================================ */
-
 .page-entete {
   display: flex;
-  /* Le titre et ses actions passent a la ligne plutot que de forcer la
-     page a s'elargir : un debordement horizontal ferait defiler tout le
-     document de cote, et emporterait avec lui le menu en position fixe. */
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
@@ -60,8 +38,6 @@
 
 .page-entete__fil {
   display: flex;
-  /* Sur un ecran etroit, le trait decoratif passe a la ligne plutot que
-     de sortir de l'ecran. */
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 10px;
@@ -71,15 +47,6 @@
   color: var(--admin-texte-doux);
 }
 
-/*
- * La barre et son soleil sont une balise, .trait-hope, posee par
- * EntetePage. Elle ferme la ligne plutot que de l'ouvrir : le nom de la
- * page vient en premier, et le motif le prolonge.
- *
- * En bleu ici, et non en orange : l'orange est la couleur de l'action
- * dans cet espace -- boutons, montants manquants -- et un surtitre
- * n'appelle a rien.
- */
 .page-entete__fil .trait-hope {
   --trait-couleur: var(--hope-bleu);
 }
@@ -110,17 +77,10 @@
 
 .page-entete__actions {
   display: flex;
-  /* Les boutons s'empilent quand la largeur manque. flex-shrink reste a 1
-     -- avec flex: none, le bloc gardait sa largeur maximale et le retour
-     a la ligne ne se declenchait jamais. */
   flex-wrap: wrap;
   gap: 10px;
   min-width: 0;
 }
-
-/* ============================================================
-   2. Boutons
-   ============================================================ */
 
 .btn {
   display: inline-flex;
@@ -194,7 +154,6 @@
   border-radius: 7px;
 }
 
-/* Action discrete dans une cellule de tableau. */
 .lien-action {
   padding: 0;
   border: 0;
@@ -223,20 +182,14 @@
   cursor: progress;
 }
 
-/* ---------------- Profil d'un utilisateur ---------------- */
-
-/* Les chiffres d'un profil, sous son en-tete. */
 .profil__chiffres {
   margin: 0 0 18px;
 }
 
-/* Une adresse electronique longue passe a la ligne plutot que de
-   deborder de sa colonne. */
 .fiche__valeur {
   overflow-wrap: anywhere;
 }
 
-/* Sous le nom : son role, son statut, et une precision. */
 .profil__accroche {
   display: inline-flex;
   flex-wrap: wrap;
@@ -244,14 +197,12 @@
   gap: 8px;
 }
 
-/* Des mots en pastilles : competences, langues. */
 .pastilles {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-/* Les notes reservees a l'equipe, a part du reste de la fiche. */
 .profil__notes {
   margin-top: 18px;
   padding: 14px 16px;
@@ -276,14 +227,9 @@
   white-space: nowrap;
 }
 
-/* Dans un tableau centre, les actions se centrent avec le reste. */
 .cellule-actions--centre {
   justify-content: center;
 }
-
-/* ============================================================
-   3. Panneaux
-   ============================================================ */
 
 .panneau {
   border: 1px solid var(--admin-bordure);
@@ -298,8 +244,6 @@
 
 .panneau__entete {
   display: flex;
-  /* Meme raison que pour l'entete de page : sur un ecran etroit, le titre
-     et son action passent a la ligne au lieu d'elargir le document. */
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
@@ -308,20 +252,14 @@
   border-bottom: 1px solid var(--admin-bordure);
 }
 
-/* Sans min-width: 0, ce bloc refuse de descendre sous la largeur de son
-   titre et pousse l'action hors de la page. */
 .panneau__intitule {
   min-width: 0;
 }
-
-/* --- Fleche de retour de l'en-tete de page --- */
 
 .page-entete__gauche {
   display: flex;
   align-items: center;
   gap: 14px;
-  /* Comme pour le panneau : sans cela le titre pousserait les actions
-     hors de la page sur un ecran etroit. */
   min-width: 0;
 }
 
@@ -374,10 +312,6 @@
   padding: 0;
 }
 
-/* ============================================================
-   4. Tableaux
-   ============================================================ */
-
 .table-enveloppe {
   width: 100%;
   overflow-x: auto;
@@ -422,7 +356,6 @@
   white-space: nowrap;
 }
 
-/* Une ligne de total, sous les autres : elle se lit comme un pied de tableau. */
 .table tbody tr.ligne--total td,
 .table tbody tr.ligne--total:hover td {
   border-top: 2px solid var(--admin-bordure-forte);
@@ -430,7 +363,6 @@
   font-weight: 700;
 }
 
-/* "th" pose deja un alignement a gauche : il faut le viser aussi. */
 .table th.table__centre,
 .table td.table__centre {
   text-align: center;
@@ -458,10 +390,6 @@
   text-decoration: underline;
 }
 
-/* ============================================================
-   5. Badges de statut
-   ============================================================ */
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -472,17 +400,12 @@
   white-space: nowrap;
 }
 
-/* Le texte des pastilles, plus fonce que leur teinte : contraste AA. */
 .badge--vert   { color: #1d6b48; background-color: var(--etat-vert-fond); }
 .badge--bleu   { color: #1f5aa0; background-color: var(--etat-bleu-fond); }
 .badge--ambre  { color: #7f5210; background-color: var(--etat-ambre-fond); }
 .badge--rouge  { color: #9c3024; background-color: var(--etat-rouge-fond); }
 .badge--gris   { color: #545b6e; background-color: var(--etat-gris-fond); }
 .badge--violet { color: #4a4479; background-color: var(--etat-violet-fond); }
-
-/* ============================================================
-   6. Barre de progression
-   ============================================================ */
 
 .progression {
   min-width: 116px;
@@ -513,10 +436,6 @@
 .progression__barre--bleu  { background-color: #2d80e6; }
 .progression__barre--ambre { background-color: #f0b542; }
 .progression__barre--rouge { background-color: #d4584a; }
-
-/* ============================================================
-   7. Barre d'outils (recherche + filtres)
-   ============================================================ */
 
 .outils {
   display: flex;
@@ -561,8 +480,6 @@
   box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
 }
 
-/* Une liste deroulante dans la barre : meme hauteur et meme trait que la
-   recherche, pour que les deux se lisent comme une seule rangee. */
 .outils__selection {
   height: 36px;
   padding: 0 32px 0 12px;
@@ -580,16 +497,11 @@
   box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
 }
 
-/* L'etiquette d'un projet, sous son nom. Toujours sur sa propre ligne :
-   posee a cote, elle passait a la ligne des qu'un nom etait long, avec
-   un retrait qui ne s'alignait sur rien. display: table la garde a la
-   largeur de son texte. */
 .table__etiquette {
   display: table;
   margin: 5px 0 3px;
 }
 
-/* Filtres par onglets : Tous | Actifs | Termines | Archives */
 .filtres {
   display: flex;
   gap: 4px;
@@ -632,10 +544,6 @@
   color: var(--admin-texte-doux);
   white-space: nowrap;
 }
-
-/* ============================================================
-   8. Etats vides, chargement, erreurs
-   ============================================================ */
 
 .etat-vide {
   padding: 46px 24px;
@@ -719,10 +627,6 @@
   margin-top: 14px;
 }
 
-/* ============================================================
-   9. Formulaires
-   ============================================================ */
-
 .formulaire-grille {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -758,11 +662,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* --- Choix du type de projet ---
-   Deux cartes cliquables. Le bouton radio reste dans le document -- le
-   clavier et les lecteurs d'ecran le trouvent -- mais la carte entiere
-   en tient lieu a l'ecran. */
-
 .choix-type {
   grid-column: 1 / -1;
   min-width: 0;
@@ -794,7 +693,6 @@
   border-color: color-mix(in srgb, var(--hope-violet) 45%, var(--admin-bordure-forte));
 }
 
-/* Le rond, dessine : celui du navigateur ne suit pas la charte. */
 .choix-type__option::before {
   content: '';
   position: absolute;
@@ -893,13 +791,6 @@
   border-color: #dda49d;
 }
 
-/* ------------------------------------------------------------------
-   Liste de champs repetables
-
-   Les objectifs specifiques d'un projet : une saisie par ligne, une
-   croix pour retirer la ligne, un bouton pour en ajouter une.
-   ------------------------------------------------------------------ */
-
 .liste-champs {
   display: flex;
   flex-direction: column;
@@ -915,8 +806,6 @@
   gap: 8px;
 }
 
-/* La saisie prend toute la place laissee par la croix. min-width: 0 lui
-   permet de se replier sous sa largeur naturelle dans le flex. */
 .liste-champs__ligne input {
   flex: 1;
   min-width: 0;
@@ -947,15 +836,6 @@
   height: 15px;
 }
 
-/* ------------------------------------------------------------------
-   Devis d'un projet
-
-   Une ligne par poste : intitule, categorie, montant, et la croix qui
-   retire la ligne. Les trois saisies se partagent la largeur dans des
-   proportions fixes -- l'intitule est ce qu'on lit, le montant ce qu'on
-   verifie.
-   ------------------------------------------------------------------ */
-
 .devis {
   display: flex;
   flex-direction: column;
@@ -971,16 +851,11 @@
   gap: 8px;
 }
 
-/* min-width: 0 sur chaque saisie : sans lui, aucune ne se replie sous sa
-   largeur naturelle et la ligne deborde du panneau. */
 .devis__ligne input,
 .devis__ligne select {
   min-width: 0;
 }
 
-/* Deux champs par poste depuis que l'intitule libre a disparu : la
-   categorie le nomme. Elle prend donc la largeur que l'intitule avait,
-   le montant gardant la sienne. */
 .devis__categorie {
   flex: 3;
 }
@@ -990,25 +865,15 @@
   text-align: right;
 }
 
-/* Une categorie depensee sans avoir ete budgetee : le tiret se distingue
-   d'un montant, sans crier. */
 .budget__hors {
   color: var(--admin-texte-faible);
 }
 
-/* Depassement : la couleur d'alerte de l'espace, celle des montants
-   manquants. */
 .budget__depasse {
   font-weight: 700;
   color: var(--hope-erreur);
 }
 
-/*
- * Les trois totaux du budget, en pied de panneau.
- *
- * Cote a cote et non empiles : ils se lisent ensemble -- ce qu'il faut,
- * ce qui est sorti, ce qui reste -- et la soustraction doit se voir.
- */
 .budget__totaux {
   display: flex;
   flex-wrap: wrap;
@@ -1041,7 +906,6 @@
   color: var(--hope-erreur);
 }
 
-/* Ce qui manque encore a un projet, et un budget deja atteint. */
 .budget__manque {
   color: var(--hope-orange-lisible);
 }
@@ -1066,8 +930,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* Le total sous le tableau de la fiche projet : hors du tableau, pour
-   ne pas se confondre avec une ligne de devis. */
 .devis__recapitulatif {
   display: flex;
   align-items: baseline;
@@ -1089,8 +951,6 @@
   color: var(--admin-texte);
 }
 
-/* Le budget calcule : gris comme un champ desactive, mais selectionnable
-   -- on doit pouvoir copier le montant. */
 .champ-admin input[readonly] {
   background-color: var(--admin-surface-douce);
   color: var(--admin-texte-doux);
@@ -1112,15 +972,9 @@
   border-top: 1px solid var(--admin-bordure);
 }
 
-/* Supprimer se tient a gauche, loin d'Enregistrer : on ne le touche pas
-   par megarde en validant. */
 .formulaire-actions__gauche {
   margin-right: auto;
 }
-
-/* ============================================================
-   10. Modales
-   ============================================================ */
 
 .modale-fond {
   position: fixed;
@@ -1218,10 +1072,6 @@
   to   { opacity: 1; transform: none; }
 }
 
-/* ============================================================
-   11. Accueil : bandeau, cartes de chiffres, activites
-   ============================================================ */
-
 .accueil__bandeau {
   position: relative;
   margin-bottom: 20px;
@@ -1233,7 +1083,6 @@
   box-shadow: var(--admin-ombre);
 }
 
-/* Photo en filigrane a droite, comme sur la maquette. */
 .accueil__bandeau::after {
   content: '';
   position: absolute;
@@ -1278,8 +1127,6 @@
   margin-bottom: 20px;
 }
 
-/* Une precision posee sous un panneau : ni alerte, ni titre, juste une
-   phrase qui dit ou faire ce qu'on ne peut pas faire ici. */
 .mention-page {
   margin-top: 14px;
   font-size: 13.5px;
@@ -1298,11 +1145,6 @@
   box-shadow: var(--admin-ombre);
 }
 
-/*
- * Le libelle prend la place qui reste et passe a la ligne ; le chiffre
- * garde la sienne. Sans cela, "Delai moyen de publication" poussait
- * "0,8 j" hors de la carte, qui le rognait.
- */
 .carte-chiffre__libelle {
   flex: 1 1 auto;
   min-width: 0;
@@ -1366,7 +1208,6 @@
   gap: 18px;
 }
 
-/* Fil d'activite */
 .activites {
   display: flex;
   flex-direction: column;
@@ -1418,7 +1259,6 @@
   white-space: nowrap;
 }
 
-/* Actions rapides */
 .actions-rapides {
   display: flex;
   flex-direction: column;
@@ -1461,7 +1301,6 @@
   color: var(--admin-texte-faible);
 }
 
-/* Carte mission */
 .carte-mission {
   position: relative;
   padding: 22px;
@@ -1508,10 +1347,6 @@
   pointer-events: none;
 }
 
-/* ============================================================
-   12. Page projet : resume, onglets, listes de definitions
-   ============================================================ */
-
 .onglets {
   display: flex;
   gap: 2px;
@@ -1553,7 +1388,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* Bandeau de chiffres du projet */
 .resume-financier {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1592,7 +1426,6 @@
   color: var(--admin-texte-faible);
 }
 
-/* Liste de definitions (fiche d'identite d'un projet) */
 .fiche {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -1622,7 +1455,6 @@
   white-space: pre-wrap;
 }
 
-/* L'impact general du projet : un texte, une phrase par impact. */
 .impact-texte {
   display: flex;
   flex-direction: column;
@@ -1649,8 +1481,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* Le nom d'une mesure se clique pour la modifier : il reste du texte,
-   et ne se revele lien qu'au survol ou au clavier. */
 .nom-mesure {
   display: inline;
   padding: 0;
@@ -1679,9 +1509,6 @@
   border-radius: 3px;
 }
 
-/* Le titre de la description : il annonce le paragraphe qui suit, et se
-   tient donc au-dessus de lui sans faire concurrence au nom du projet,
-   qui est plus haut et plus gros. */
 .bloc-texte__titre {
   margin-bottom: 8px;
   font-size: 16.5px;
@@ -1689,10 +1516,6 @@
   line-height: 1.35;
   color: var(--hope-violet-lisible);
 }
-
-/* ============================================================
-   13. Adaptation aux petits ecrans
-   ============================================================ */
 
 @media (max-width: 1240px) {
   .cartes-chiffres {
@@ -1725,12 +1548,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /*
-   * En colonne, l'en-tete ne passe plus a la ligne : un conteneur flex
-   * "wrap" donne a sa colonne la largeur de son element le plus large, et
-   * non celle de l'ecran -- le titre, les boutons et le fil d'Ariane
-   * debordaient alors a droite sur un petit telephone.
-   */
   .page-entete {
     flex-direction: column;
     flex-wrap: nowrap;
@@ -1739,12 +1556,6 @@
 }
 
 @media (max-width: 720px) {
-  /*
-   * Certains ecrans ont six filtres : sur un telephone, la rangee passe a
-   * la ligne. Elle defilait lateralement, barre de defilement masquee :
-   * le dernier filtre paraissait coupe, et rien ne disait qu'il suffisait
-   * de glisser pour le trouver.
-   */
   .filtres {
     flex-wrap: wrap;
     max-width: 100%;
@@ -1767,7 +1578,6 @@
   }
 }
 
-/* Une ligne visee par son ancre -- depuis la messagerie -- se signale. */
 tr.ligne--visee > td {
   background-color: color-mix(in srgb, var(--hope-jaune) 35%, var(--admin-surface));
   transition: background-color 0.3s ease;
@@ -1777,13 +1587,6 @@ tr[id^='compte-'] {
   scroll-margin-top: calc(var(--admin-entete-hauteur, 70px) + 20px);
 }
 
-/*
- * Les fenetres sur telephone : elles montent du bas de l'ecran, sur toute
- * sa largeur, comme une feuille posee sur la page. Posees au milieu avec
- * 24 px de marge, elles laissaient trop peu de place a leur contenu --
- * et les deux boutons du pied, qui ne passent pas a la ligne, les
- * faisaient deborder de l'ecran.
- */
 @media (max-width: 560px) {
   .modale-fond {
     align-items: flex-end;
@@ -1815,15 +1618,6 @@ tr[id^='compte-'] {
   }
 }
 
-/*
- * L'en-tete d'une page sur telephone.
- *
- * Un nom long et d'un seul tenant ("Randriamanana") ne tenait pas a cote
- * de la fleche de retour et du visage : il poussait la page hors de
- * l'ecran, qui defilait alors de cote. Il passe a la ligne, au besoin au
- * milieu du mot ; sur les plus petits ecrans, le titre et le visage
- * raccourcissent un peu.
- */
 @media (max-width: 560px) {
   .page-entete__titre {
     overflow-wrap: anywhere;
@@ -1849,12 +1643,6 @@ tr[id^='compte-'] {
   }
 }
 
-/*
- * Un tableau "empilable" (Tableau empilable) dans un panneau serre : sur
- * telephone, ses lignes deviennent des fiches (regles communes dans
- * benevole-espace.css) ; ici, elles gardent la marge du panneau, et la
- * description sous le titre reste en gris, en texte courant.
- */
 @media (max-width: 640px) {
   .panneau__corps--serre .table--empilable tbody tr {
     padding: 14px 20px;
@@ -1870,14 +1658,10 @@ tr[id^='compte-'] {
   }
 }
 
-/* Une date ne se coupe pas en deux : la colonne lui laisse sa ligne. */
 .table__centre .table__principal {
   white-space: nowrap;
 }
 
-/* ------------------------------------------------------------------
-   Champ « liste ou saisie libre » (ChampCombo)
-   ------------------------------------------------------------------ */
 .champ-combo {
   position: relative;
 }
@@ -1997,12 +1781,6 @@ tr[id^='compte-'] {
   .champ-combo__bascule svg { transition: none; }
 }
 
-/*
- * Une carte d'impact : en colonne. Le chiffre s'accompagne d'une unite
- * parfois longue (« 340 consultations ») ; cote a cote avec le libelle,
- * elle l'ecrasait lettre par lettre. Le libelle en haut, le chiffre en
- * grand et son unite plus petite, puis le nombre de mesures.
- */
 .carte-chiffre--impact {
   flex-direction: column;
   justify-content: flex-start;

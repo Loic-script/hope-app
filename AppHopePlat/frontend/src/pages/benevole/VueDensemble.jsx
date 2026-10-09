@@ -9,12 +9,6 @@ import {
   IconePoignee,
   IconeRecentrer,
 } from '../../components/admin/AdminIcons.jsx';
-/*
- * Les carres de couleur portent des icones pleines, comme le menu : a
- * cette taille et sur un fond teinte, un contour de 1,7 px ne pese rien.
- * Les reperes de la tache -- echeance, prise en charge -- restent au
- * trait : ils accompagnent du texte gris, et ne doivent pas le dominer.
- */
 import { PleineJournal, PleineProjets, PleineTaches } from '../../components/IconesPleines.jsx';
 import ActionsActualite, { idsActualites, useReactionsActualites } from '../../components/ActionsActualite.jsx';
 import { elementsDuFil, FiltresFil } from '../../components/admin/FilActualite.jsx';
@@ -27,22 +21,16 @@ import { useDecompte } from '../../hooks/useDecompte.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Du plus urgent au moins urgent ; une tache sans echeance passe en dernier. */
 function parEcheance(a, b) {
   if (!a.echeance) return 1;
   if (!b.echeance) return -1;
   return new Date(a.echeance) - new Date(b.echeance);
 }
 
-/** "1 tâche", "3 tâches" : le pluriel suit le nombre. */
 function pluriel(nombre, singulier, plurielForme = `${singulier}s`) {
   return `${nombre} ${nombre > 1 ? plurielForme : singulier}`;
 }
 
-/**
- * Ce qu'un projet propose a un benevole, a la place du financement :
- * les taches qui attendent quelqu'un, et combien il en compte en tout.
- */
 function TachesDuProjet({ projet }) {
   const libres = Number(projet.tachesLibres) || 0;
   const total = Number(projet.tachesTotal) || 0;
@@ -59,38 +47,16 @@ function TachesDuProjet({ projet }) {
   );
 }
 
-/**
- * Actualites : la page d'entree de l'espace benevole.
- *
- * Elle reunit l'ancien accueil et l'ancienne page Actualites. La page ne
- * liste pas : elle met en avant. Au centre, le fil d'actualite -- les
- * projets et les nouvelles de HOPE ensemble, que trois filtres separent ;
- * a droite, la carte de ses trois chiffres, la tache qu'il pourrait
- * prendre et son journal, dans une colonne qui suit l'ecran. Des elements, pas des listes : le reste
- * de l'espace a ses propres ecrans, et chaque bloc y renvoie. Sa
- * prochaine tache a rendre se lit dans le premier chiffre, et ses taches
- * dans "Mes taches".
- *
- * Les trois chiffres parlent de lui d'abord : ce qu'il a en cours, ce
- * qu'il a deja livre, et seulement ensuite ce qui attend quelqu'un. La
- * carte ne porte rien d'autre -- ni photo, ni titre, ni bouton.
- */
 export default function VueDensemble() {
   const { benevole } = useOutletContext();
   const colonne = useColonneCollante();
-  // La carte des reperes : la personne la place ou elle veut, et son
-  // navigateur s'en souvient.
   const carte = useCarteDeplacable('hope.benevole.reperes');
 
   const { donnees: chiffres } = useChargement(() => service.apercu(), []);
   const { donnees: taches } = useChargement(() => service.mesTaches(), []);
   const { donnees: libres } = useChargement(() => service.tachesLibres(), []);
   const { donnees: journal } = useChargement(() => service.journal(), []);
-  // Les projets, en fil de publications -- comme l'accueil de l'equipe,
-  // sans l'argent : un benevole y lit ce qu'il y a a faire.
   const { donnees: projets } = useChargement(() => service.listerProjets(), []);
-  // Les nouvelles publiees par l'equipe : les actualites seules, sans
-  // aucun chiffre -- l'API ne rend ni appel a financement ni montant.
   const { donnees: actualites } = useChargement(() => service.actualites(), []);
   const [filtre, setFiltre] = useState('tout');
   const fil = elementsDuFil(projets ?? [], actualites ?? [], filtre);
@@ -126,15 +92,7 @@ export default function VueDensemble() {
         </Link>
       </header>
 
-      {/*
-        Deux colonnes, comme l'accueil de l'administrateur : le fil
-        d'actualite, et a droite ce qui regarde le benevole -- ses
-        chiffres, la tache a prendre, son journal. La colonne de droite
-        suit l'ecran (useColonneCollante). Sur une seule colonne, elle
-        passe avant le fil.
-      */}
       <div className="accueil__colonnes accueil__colonnes--benevole">
-        {/* ---------- Le fil d'actualite : projets et nouvelles ---------- */}
         <div className="accueil__pile">
           {(projets ?? []).length + (actualites ?? []).length > 0 && (
             <section className="fil-accueil" aria-labelledby="fil-benevole-titre">
@@ -202,14 +160,7 @@ export default function VueDensemble() {
           )}
         </div>
 
-        {/* ---------- Ses chiffres, la tache a prendre, son journal ---------- */}
         <aside className="accueil__pile" ref={colonne} aria-label="Mes tâches">
-          {/*
-            La carte des trois reperes se deplace et se replie : chacun la
-            met ou il veut, ou la range quand il travaille dans le fil. Son
-            enveloppe porte le deplacement ; la carte garde son animation
-            d'entree.
-          */}
           <div {...carte.enveloppe}>
           <section className="invitation" aria-labelledby="invitation-titre">
             <div className="invitation__barre">
@@ -227,8 +178,6 @@ export default function VueDensemble() {
                 Vos tâches
               </h2>
 
-              {/* Repliee, la carte garde ses trois nombres : elle se reduit
-                  sans rien perdre de ce qu'elle disait. */}
               {carte.reduite && (
                 <ul className="invitation__resume">
                   <Pastille teinte="jaune" valeur={taches ? enCours.length : null} quoi="en cours" />
@@ -264,11 +213,6 @@ export default function VueDensemble() {
 
             <div className="invitation__pliage" id="invitation-corps">
             <div className="invitation__corps">
-              {/*
-                Les trois chiffres du benevole, du plus personnel au plus
-                ouvert : ce qu'il a en cours, ce qu'il a livre, ce qui attend
-                quelqu'un. Chacun mene a l'ecran qui le detaille.
-              */}
               <ul className="invitation__chiffres">
                 <ChiffreInvitation
                   rang={0}
@@ -407,18 +351,9 @@ export default function VueDensemble() {
   );
 }
 
-/** Delai d'entree d'un chiffre, apres la carte : ils arrivent l'un apres l'autre. */
 const DELAI_CHIFFRE = 260;
 const ECART_CHIFFRE = 110;
 
-/**
- * Un nombre de la carte repliee.
- *
- * Reduire ne doit pas effacer : la barre garde les trois nombres, aux
- * couleurs de leurs tuiles. Le chiffre seul ne dit rien a qui n'a pas la
- * couleur sous les yeux, d'ou la phrase complete pour les lecteurs
- * d'ecran.
- */
 function Pastille({ teinte, valeur, quoi }) {
   return (
     <li className={`invitation__pastille invitation__pastille--${teinte}`}>
@@ -430,16 +365,6 @@ function Pastille({ teinte, valeur, quoi }) {
   );
 }
 
-/**
- * Un chiffre de l'invitation : un nombre, ce qu'il compte, une precision,
- * et le lien vers l'ecran qui le detaille.
- *
- * La precision n'est pas un ornement : "2 taches en cours" ne dit pas
- * laquelle presse, et c'est justement ce qu'on vient verifier.
- *
- * Le nombre anime est cache aux lecteurs d'ecran : ils lisent la phrase
- * entiere, avec la valeur finale, et non chaque etape du compteur.
- */
 function ChiffreInvitation({ rang, to, valeur, libelles, detail, Icone, teinte }) {
   const delai = DELAI_CHIFFRE + rang * ECART_CHIFFRE;
   const affiche = useDecompte(valeur, delai);

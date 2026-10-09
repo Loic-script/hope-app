@@ -3,17 +3,6 @@ import { Link } from 'react-router-dom';
 import mainCoeur from '../../assets/vitrine/icones/main-coeur.png';
 import { IconeFleche } from '../../components/HopeIcons.jsx';
 
-/**
- * L'introduction du don sans compte (pages/don/DonSansCompte.jsx) : avant
- * de demander quoi que ce soit, dire en un ecran a quoi sert le geste,
- * comment il se passe en trois etapes, et ce qui le rend sur.
- *
- * Tout entre en scene l'un apres l'autre ; les rayons du soleil tournent
- * lentement autour de la main qui tend un coeur (visuel fourni par
- * HOPE). Le visiteur qui a demande moins de mouvement voit tout en place,
- * d'un coup (don-invite.css, prefers-reduced-motion).
- */
-
 const ETAPES = [
   { numero: 1, titre: 'Vous vous présentez', texte: 'Votre nom et votre courriel, pour le reçu.' },
   { numero: 2, titre: 'Vous choisissez', texte: 'Un projet précis, ou le fonds HOPE.' },
@@ -23,7 +12,6 @@ const ETAPES = [
 export default function IntroductionDon({ onCommencer }) {
   return (
     <section className="don-intro" aria-labelledby="don-intro-titre">
-      {/* Le soleil : la couronne de rayons tourne autour du disque. */}
       <div className="don-intro__soleil" style={{ '--rang': 0 }} aria-hidden="true">
         <span className="don-intro__halo" />
         <svg className="don-intro__couronne" viewBox="-64 -64 128 128">

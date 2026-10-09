@@ -1,26 +1,6 @@
-/**
- * Le journal d'audit : qui a fait quoi, quand, sur quoi.
- *
- * Le journal d'activite (activity_log) raconte la vie des projets en
- * phrases choisies, et seulement pour certaines actions. Celui-ci est
- * exhaustif et factuel :
- *
- *   - toute requete de l'equipe qui modifie quelque chose est consignee
- *     automatiquement (intergiciel monte sur /api/admin), reussie ou
- *     refusee faute de droit -- une route ajoutee demain l'est d'office ;
- *   - les evenements de securite des comptes le sont aussi : connexions
- *     de l'equipe (reussies ou non), changement de mot de passe,
- *     suppression d'un compte par son titulaire.
- *
- * Rien de secret n'y entre : ni mot de passe, ni contenu de formulaire ;
- * seulement quelques champs de decision (un statut, un role).
- * Le journal se lit (role ADMIN) ; personne ne l'ecrit ni ne l'efface
- * depuis l'application.
- */
 import { query } from '../config/database.js';
 import { versListe } from '../shared/mapping.js';
 
-/** Les actions sans portee de decision : lire un message, une photo en attente... */
 const IGNOREES = [
   /\/lu$/,
   /\/read(-all)?$/,
@@ -30,10 +10,8 @@ const IGNOREES = [
   /^\/projects\/media$/,
 ];
 
-/** Les champs du corps qui disent la decision prise (jamais un secret). */
 const CHAMPS_DE_DECISION = ['status', 'statut', 'role', 'action', 'decision'];
 
-/** Des libelles lisibles pour les actions les plus parlantes. */
 const LIBELLES = {
   'POST /me/password': 'a changé son mot de passe',
   'POST /categories': 'a créé une catégorie de projet',
@@ -96,15 +74,10 @@ const LIBELLES = {
   'PATCH /project-beneficiaries/:id': 'a modifié le rattachement d’un bénéficiaire',
 };
 
-/** L'adresse IP du client (derriere le proxy de l'hebergeur si trust proxy). */
 function adresseIp(req) {
   return String(req.ip ?? req.socket?.remoteAddress ?? '').slice(0, 64) || null;
 }
 
-/**
- * Consigne un evenement. Ne leve jamais : un journal indisponible ne
- * doit pas faire echouer l'action elle-meme ; l'echec part dans les logs.
- */
 export async function consigner({
   acteurType,
   acteurId = null,
@@ -138,17 +111,10 @@ export async function consigner({
   }
 }
 
-/** Consigne un evenement lie a une requete (l'IP en plus). */
 export function consignerRequete(req, evenement) {
   return consigner({ ...evenement, ip: adresseIp(req) });
 }
 
-/**
- * L'intergiciel de l'espace administrateur : chaque requete qui modifie
- * est consignee une fois la reponse partie, avec son resultat. Les
- * refus faute de droit (401, 403) le sont aussi : ils disent qui a
- * essaye quoi.
- */
 export function journaliserAdmin(req, res, suite) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return suite();
   res.on('finish', () => {
@@ -177,11 +143,6 @@ export function journaliserAdmin(req, res, suite) {
   return suite();
 }
 
-/**
- * Lit le journal, du plus recent au plus ancien, page par page.
- *
- * @param {{ page?: string, acteur?: string, type?: string, recherche?: string }} requete
- */
 export async function lister(requete = {}) {
   const parPage = 50;
   const page = Math.max(1, Number.parseInt(requete.page ?? '1', 10) || 1);

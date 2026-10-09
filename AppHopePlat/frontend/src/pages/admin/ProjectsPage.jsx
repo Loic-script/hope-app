@@ -27,7 +27,6 @@ import { messageErreur } from '../../services/api.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Le filtre par type, a cote de celui des statuts. */
 const TYPES = [
   { valeur: 'TOUS', label: 'Tous les types' },
   { valeur: 'HOPE', label: 'Projets HOPE' },
@@ -41,13 +40,6 @@ const FILTRES = [
   { valeur: 'ARCHIVED', label: 'Archivés' },
 ];
 
-/**
- * Les actions d'un projet, au pied de sa carte.
- *
- * Voir, toujours. Modifier, Terminer et Supprimer tant qu'il est en
- * cours ; Archiver une fois termine. Chaque bouton nomme le projet pour
- * les lecteurs d'ecran : une page de dix cartes compte dix "Voir".
- */
 function ActionsProjet({ projet, onDemander }) {
   return (
     <>
@@ -88,11 +80,6 @@ function ActionsProjet({ projet, onDemander }) {
           </button>
         </>
       )}
-      {/*
-        Termine, un projet s'archive -- on garde son histoire -- ou se
-        supprime, s'il n'a rien porte. Le serveur tranche : un projet
-        qui a recu un don ou paye une depense ne s'efface pas.
-      */}
       {projet.status === 'COMPLETED' && (
         <>
           <button
@@ -119,15 +106,6 @@ function ActionsProjet({ projet, onDemander }) {
   );
 }
 
-/**
- * Liste des projets, en cartes.
- *
- * Chaque projet se presente comme sur l'accueil : sa photo, sa categorie
- * et son lieu, son nom, ce qu'il a recu et ce qui manque, puis ses
- * chiffres. Le statut se lit en face du surtitre, et les actions -- Voir,
- * Modifier, Terminer, Supprimer, ou Archiver un projet termine -- au pied
- * de la carte.
- */
 export default function ProjectsPage() {
   const [parametres, setParametres] = useSearchParams();
 
@@ -170,8 +148,6 @@ export default function ProjectsPage() {
   const libellesType = catalogue?.labels?.projectType ?? {};
 
   const { envoi, erreur: erreurAction, setErreur, soumettre } = useSoumission();
-  // Les ecritures qui ont retenu la suppression : le second
-  // avertissement les nomme.
   const [retenu, setRetenu] = useState(null);
 
   function demander(nom, projet) {
@@ -186,11 +162,6 @@ export default function ProjectsPage() {
       fermer();
       recharger();
     } catch (echec) {
-      /*
-       * Refus pour cause d'ecritures : on ne s'arrete pas la. Le
-       * message dit ce qui retient, et le second avertissement propose
-       * la suppression forcee -- avec ce qu'elle detruit, en clair.
-       */
       const donnees = echec?.response?.data;
       if (donnees?.code === 'PROJET_AVEC_ECRITURES') {
         setRetenu(donnees.details ?? {});
@@ -293,13 +264,9 @@ export default function ProjectsPage() {
             <PublicationProjet
               key={projet.id}
               projet={projet}
-              // Les premieres cartes se remplissent l'une apres l'autre ; au-dela,
-              // attendre ne dirait plus rien.
               rang={Math.min(rang, 5)}
               etiquettes={
                 <>
-                  {/* Seul le projet interne porte l'etiquette : les projets
-                      HOPE sont la regle, les marquer tous ferait du bruit. */}
                   {projet.projectType === 'INTERNAL' && (
                     <span className="badge badge--violet">
                       {libellesType.INTERNAL ?? 'Projet interne'}

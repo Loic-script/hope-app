@@ -1,26 +1,6 @@
-/**
- * Repository du journal d'activite.
- *
- * Le journal repond a "qui a fait quoi", la ou le fil de l'accueil,
- * reconstruit par lecture des tables metier, ne repond qu'a "que s'est-il
- * passe". Les deux coexistent : le fil couvre l'historique anterieur au
- * journal, le journal porte l'auteur.
- *
- * Une ligne ecrite n'est jamais modifiee ni supprimee : c'est une trace.
- */
 import { query } from '../config/database.js';
 import { versListe } from '../shared/mapping.js';
 
-/**
- * Depose une entree.
- *
- * Le nom de l'auteur est recopie dans author_label plutot que d'etre lu
- * par jointure : si le compte est renomme ou supprime, le journal doit
- * continuer de dire qui a agi, avec le nom porte ce jour-la.
- *
- * @param {{ id: number, fullName?: string, adminLog?: string }|null} admin
- * @param {{ action: string, entityType: string, entityId?: number|null, label: string }} evenement
- */
 export async function deposer(admin, evenement, client = null) {
   await query(
     `INSERT INTO activity_log (admin_id, author_label, action, entity_type, entity_id, label)
@@ -37,9 +17,6 @@ export async function deposer(admin, evenement, client = null) {
   );
 }
 
-/**
- * @param {{ adminId?: number, entityType?: string, limite?: number }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];

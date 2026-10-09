@@ -1,9 +1,3 @@
-/**
- * Repository des beneficiaires et de leur rattachement aux projets.
- *
- * Rappel confidentialite : ces donnees personnelles ne sortent jamais de
- * l'espace administrateur (routes protegees par authenticateAdmin).
- */
 import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
@@ -33,9 +27,6 @@ const AGREGATS = `
   ) depense ON TRUE
 `;
 
-/**
- * @param {{ statut?: string, type?: string, projectId?: number, recherche?: string }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -105,7 +96,6 @@ export async function creer(donnees, client = null) {
   return trouverParId(resultat.rows[0].id, client);
 }
 
-/** La photo est-elle deja celle d'un autre beneficiaire ? */
 export async function photoDejaPrise(fichier, saufId = null, client = null) {
   const resultat = await query(
     `SELECT EXISTS (SELECT 1 FROM beneficiaries
@@ -123,11 +113,6 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
-// ------------------------------------------------------------------
-// Rattachement projet <-> beneficiaire
-// ------------------------------------------------------------------
-
-/** Beneficiaires rattaches a un projet (onglet Beneficiaires). */
 export async function listerParProjet(projectId, client = null) {
   const resultat = await query(
     `SELECT pb.id, pb.project_id, pb.beneficiary_id, pb.joined_at, pb.left_at,
@@ -145,7 +130,6 @@ export async function listerParProjet(projectId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Projets auxquels un beneficiaire participe. */
 export async function listerProjetsDuBeneficiaire(beneficiaryId, client = null) {
   const resultat = await query(
     `SELECT pb.id, pb.project_id, pb.joined_at, pb.left_at, pb.status, pb.notes,

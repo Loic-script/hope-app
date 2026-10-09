@@ -27,8 +27,6 @@ import * as fmt from '../../utils/format.js';
 import { libelleFuseau } from '../../utils/fuseaux.js';
 import { nomDuPays } from '../../utils/pays.js';
 
-/* ---------------- Libelles ---------------- */
-
 const LIBELLES_ROLE = { donateur: 'Donateur', benevole: 'Bénévole', bailleur: 'Bailleur' };
 
 const TYPES_ORGANISATION = {
@@ -69,20 +67,16 @@ const STATUTS_INSCRIPTION = {
 const FORMATS_MISSION = { presentiel: 'Présentiel', terrain: 'Terrain', distance: 'À distance' };
 const ORIGINES = { LOCAL: 'Madagascar', INTERNATIONAL: 'Étranger' };
 
-/** "Oui" / "Non", ou un tiret si l'on ne sait pas. */
 const ouiNon = (valeur) => (valeur === true ? 'Oui' : valeur === false ? 'Non' : null);
 
-/** Des montants par devise, joints : "900 000 Ar + 1 200 EUR". */
 function montants(lignes, champ) {
   const utiles = (lignes ?? []).filter((ligne) => Number(ligne[champ]) > 0);
   if (utiles.length === 0) return fmt.montant(0);
   return utiles.map((ligne) => fmt.montant(ligne[champ], ligne.devise)).join(' + ');
 }
 
-/** Les moments de la journee, tels que la fiche les enregistre. */
 const MOMENTS = { matin: 'matin', 'apres-midi': 'après-midi', soir: 'soir', journee: 'journée' };
 
-/** Les disponibilites d'un benevole, en une phrase : "Samedi : journée · Mercredi : matin". */
 function disponibilites(valeur) {
   const jours = Object.entries(valeur ?? {}).filter(([, moments]) => moments?.length);
   if (jours.length === 0) return null;
@@ -94,7 +88,6 @@ function disponibilites(valeur) {
     .join(' · ');
 }
 
-/** Une liste de mots en pastilles. */
 function Pastilles({ valeurs }) {
   if (!valeurs?.length) return null;
   return (
@@ -108,7 +101,6 @@ function Pastilles({ valeurs }) {
   );
 }
 
-/** Un bloc du bandeau de chiffres. */
 function Chiffre({ libelle, valeur, detail }) {
   return (
     <div className="resume-financier__bloc">
@@ -119,11 +111,6 @@ function Chiffre({ libelle, valeur, detail }) {
   );
 }
 
-/* ================================================================
-   Donateur : ses dons
-   ================================================================ */
-
-/** Somme donnee, dons, projets soutenus, dons mensuels : les chiffres d'un donateur. */
 function ChiffresDons({ dons }) {
   const nombreRecus = (dons.totaux ?? []).reduce((somme, ligne) => somme + ligne.nombre, 0);
   return (
@@ -160,7 +147,6 @@ function ChiffresDons({ dons }) {
   );
 }
 
-/** Les projets soutenus et chaque don. */
 function DonsDuDonateur({ dons, libelles, depuisUneAdresse }) {
   return (
     <>
@@ -272,11 +258,6 @@ function DonsDuDonateur({ dons, libelles, depuisUneAdresse }) {
   );
 }
 
-/* ================================================================
-   Benevole : competences, taches, projets
-   ================================================================ */
-
-/** Taches, projets, missions : les chiffres d'un benevole. */
 function ChiffresBenevole({ benevole }) {
   const { fiche, taches, missions, projets } = benevole;
   const enCours = taches.filter((t) => t.statut === 'en_cours').length;
@@ -352,7 +333,6 @@ function ProfilBenevole({ benevole }) {
       </Panneau>
 
       <Panneau titre="Tâches" sousTitre="Ce qu’il a pris en charge, et le projet de chaque tâche" serre>
-        {/* Six colonnes : sur un telephone, chaque tache se lit en fiche. */}
         <Tableau
           empilable
           lignes={taches}
@@ -436,11 +416,6 @@ function ProfilBenevole({ benevole }) {
   );
 }
 
-/* ================================================================
-   Bailleur : organisation, projets finances, engagements
-   ================================================================ */
-
-/** Engage, recu, affecte, projets finances : les chiffres d'un bailleur. */
 function ChiffresBailleur({ bailleur }) {
   const { engagements, projets, totaux } = bailleur;
   return (
@@ -457,7 +432,6 @@ function ChiffresBailleur({ bailleur }) {
   );
 }
 
-/** L'organisation d'un bailleur, notes internes comprises. */
 function OrganisationBailleur({ organisation }) {
   return (
     <Panneau titre="Organisation">
@@ -634,23 +608,6 @@ function ProfilBailleur({ bailleur }) {
   );
 }
 
-/* ================================================================
-   La page
-   ================================================================ */
-
-/**
- * Le profil d'un utilisateur : tout ce que HOPE sait de lui, et ce qu'il
- * a apporte.
- *
- * Un donateur : ses coordonnees, son parcours d'accueil, ses dons, la
- * somme donnee et les projets soutenus. Un benevole : sa fiche, ses
- * competences, ses taches et leurs projets. Un bailleur : son
- * organisation, les projets qu'il finance et ce qu'il leur a affecte, ses
- * engagements et ses versements.
- *
- * Les memes actions que dans la liste -- modifier, supprimer, activer ou
- * desactiver -- et deux de plus : lui ecrire, et consulter son espace.
- */
 export default function ProfilUtilisateurPage() {
   const { genre, id } = useParams();
   const [parametres] = useSearchParams();
@@ -664,8 +621,6 @@ export default function ProfilUtilisateurPage() {
   const libelles = catalogue?.labels ?? {};
   const { soumettre, envoi, erreur: erreurConsultation, setErreur } = useSoumission();
 
-  // Le role que l'on regarde : celui de l'onglet d'ou l'on vient, sinon
-  // le premier que porte le compte.
   const roles = profil?.roles ?? [];
   const depuis = parametres.get('depuis');
   const role =
@@ -722,8 +677,6 @@ export default function ProfilUtilisateurPage() {
           { label: nom || 'Profil' },
         ]}
         titre={nom || 'Nom à renseigner'}
-        // La photo que la personne a mise dans son espace, qu'un clic
-        // agrandit : c'est elle qui dit qui l'on a en face.
         visuel={
           <Visage
             src={compte?.photoUrl ?? null}
@@ -799,16 +752,12 @@ export default function ProfilUtilisateurPage() {
 
       {(gestion.erreur || erreurConsultation) && <Alerte>{gestion.erreur || erreurConsultation}</Alerte>}
 
-      {/* ---------------- Les chiffres, d'abord ---------------- */}
       {role === 'donateur' && <ChiffresDons dons={genre === 'fiche' ? profil : profil.donateur} />}
       {role === 'benevole' && profil.benevole && <ChiffresBenevole benevole={profil.benevole} />}
       {role === 'bailleur' && profil.bailleur && <ChiffresBailleur bailleur={profil.bailleur} />}
 
-      {/* Un bailleur est d'abord une organisation : elle passe avant
-          la personne qui la represente. */}
       {role === 'bailleur' && organisation && <OrganisationBailleur organisation={organisation} />}
 
-      {/* ---------------- Coordonnees ---------------- */}
       {genre === 'fiche' ? (
         <Panneau titre="Coordonnées">
           <dl className="fiche">
@@ -871,7 +820,6 @@ export default function ProfilUtilisateurPage() {
         </Panneau>
       )}
 
-      {/* ---------------- Donateur ---------------- */}
       {role === 'donateur' && genre === 'compte' && parcours && (
         <>
           <Panneau titre="Profil donateur" sousTitre="Ce qu’il a indiqué dans son parcours d’accueil">
@@ -916,10 +864,8 @@ export default function ProfilUtilisateurPage() {
         />
       )}
 
-      {/* ---------------- Benevole ---------------- */}
       {role === 'benevole' && profil.benevole && <ProfilBenevole benevole={profil.benevole} />}
 
-      {/* ---------------- Bailleur ---------------- */}
       {role === 'bailleur' && profil.bailleur && <ProfilBailleur bailleur={profil.bailleur} />}
 
       {gestion.fenetres}

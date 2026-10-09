@@ -16,7 +16,6 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as teamService from '../../services/team.service.js';
 import * as fmt from '../../utils/format.js';
 
-/** Libelles des trois roles, alignes sur team.service.js cote backend. */
 const ROLES = {
   ADMIN: 'Administrateur',
   COORDINATOR: 'Coordinateur',
@@ -27,9 +26,6 @@ const STATUTS = { ACTIVE: 'Actif', SUSPENDED: 'Suspendu' };
 
 const COMPTE_VIDE = { adminLog: '', fullName: '', role: 'COORDINATOR', password: '' };
 
-/**
- * Parametres : le compte administrateur et les donnees de reference.
- */
 export default function SettingsPage() {
   const { admin, rafraichirAdmin } = useOutletContext();
   const [modaleOuverte, setModaleOuverte] = useState(false);
@@ -43,21 +39,12 @@ export default function SettingsPage() {
 
   const { envoi, erreur: erreurAction, setErreur, soumettre } = useSoumission();
 
-  /**
-   * La photo du compte.
-   *
-   * Elle s'enregistre seule, sans bouton : le champ ne fait rien d'autre
-   * ici, et un "Enregistrer" pour un seul reglage aurait ete un pas de
-   * plus pour rien. Elle apparait ensuite partout ou l'equipe prend la
-   * parole -- le bandeau, et les conversations.
-   */
   async function poserPhoto(url) {
     await soumettre(() => teamService.changerSaPhoto(url), {
       onSucces: () => rafraichirAdmin?.(),
     });
   }
 
-  // --- Equipe et journal ---------------------------------------------
   const estAdministrateur = admin?.role === 'ADMIN';
 
   const [modaleCompte, setModaleCompte] = useState(false);
@@ -65,13 +52,10 @@ export default function SettingsPage() {
   const [compte, setCompte] = useState(COMPTE_VIDE);
   const [motsDePasse, setMotsDePasse] = useState({ currentPassword: '', newPassword: '' });
 
-  // Un non-administrateur recevrait 403 : on ne tente meme pas l'appel.
   const {
     donnees: equipe,
     chargement: chargementEquipe,
     recharger: rechargerEquipe,
-  // Promise.resolve et non null : useChargement enchaine un .then() sur ce
-  // que rend le chargeur.
   } = useChargement(
     () => (estAdministrateur ? teamService.lister() : Promise.resolve(null)),
     [estAdministrateur]
@@ -183,8 +167,6 @@ export default function SettingsPage() {
         </p>
       </Panneau>
 
-      {/* La gestion des comptes n'existe que pour un administrateur : le
-          backend renvoie 403 aux deux autres rôles. */}
       {estAdministrateur && (
         <Panneau
           titre="Équipe HOPE"

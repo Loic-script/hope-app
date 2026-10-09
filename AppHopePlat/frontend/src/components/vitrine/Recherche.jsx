@@ -1,10 +1,5 @@
 import { useId } from 'react';
 
-/**
- * Le champ de recherche des listes du site : un champ et son bouton
- * orange, d'un seul tenant. La liste se filtre au fil de la frappe
- * (recherche.js) ; le bouton ne fait que valider.
- */
 export default function Recherche({ valeur, onChange, libelle = 'Rechercher' }) {
   const id = useId();
   return (

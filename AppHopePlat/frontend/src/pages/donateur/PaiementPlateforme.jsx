@@ -17,18 +17,6 @@ import Copier from '../../components/paiement/Copier.jsx';
 import { montantInitial, montantSaisi, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Les services de transfert qui versent vers Madagascar, et ou l'argent
- * y arrive : sur un portefeuille mobile (MVola, Orange Money), en
- * especes au guichet, ou sur un compte bancaire.
- *
- * Chaque service garde son logo et sa palette : le fond du bandeau est
- * celui du logo, l'accent est la couleur de la marque.
- *
- * Verifie sur les sites des services et la liste des partenaires
- * internationaux de MVola (septembre 2026). Ces offres changent : a
- * relire de temps en temps.
- */
 const PLATEFORMES = [
   { cle: 'taptap_send', logo: logoTaptapSend, fond: '#ffffff', accent: '#0b6b2e', nom: 'Taptap Send', arrivees: ['mobile'], mobiles: ['mvola', 'orange'], depuis: 'Europe, Royaume-Uni, États-Unis, Canada', note: 'Envoi sans frais' },
   { cle: 'remitly', logo: logoRemitly, fond: '#ffffff', accent: '#1f2a5c', nom: 'Remitly', arrivees: ['mobile'], mobiles: ['mvola', 'orange'] },
@@ -52,7 +40,6 @@ const ARRIVEES = {
 
 const FILTRES = [['tous', 'Tous'], ...Object.entries(ARRIVEES)];
 
-/** Le petit dessin de chaque arrivee. */
 function IconeArrivee({ type }) {
   const traits = {
     mobile: <path d="M8 3h8a1 1 0 011 1v16a1 1 0 01-1 1H8a1 1 0 01-1-1V4a1 1 0 011-1zM11 18h2" />,
@@ -71,15 +58,6 @@ function IconeArrivee({ type }) {
   );
 }
 
-/**
- * Les plateformes de transfert, pour donner depuis l'etranger.
- *
- * L'objet de reference : le guichet de change qui compare ses services.
- * On filtre par la facon dont l'argent arrive, on choisit un service ;
- * la page dit alors a qui l'envoyer -- le numero MVola ou Orange Money
- * de HOPE, la personne qui retire au guichet, ou le compte bancaire --
- * et le donateur note le numero de son transfert.
- */
 export default function PaiementPlateforme() {
   const {
     profil,
@@ -112,7 +90,6 @@ export default function PaiementPlateforme() {
     const preferee = devisePrevue || personne.devise;
     if (['EUR', 'USD', 'MGA'].includes(preferee)) setDevise(preferee);
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue, preferee));
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
@@ -120,8 +97,6 @@ export default function PaiementPlateforme() {
     if (profil) titre.current?.focus();
   }, [choix, don, profil]);
 
-  // Ce que HOPE sait recevoir : chaque arrivee n'est ouverte que si ses
-  // coordonnees sont renseignees.
   const ouvertes = useMemo(() => {
     const p = coordonnees?.plateformes;
     return {
@@ -199,7 +174,6 @@ export default function PaiementPlateforme() {
           </p>
         )}
 
-        {/* ---------- 1. Le choix ---------- */}
         {profil && !choix && (
           <section className="plt__temps" key="choix">
             <h1 className="plt__titre" ref={titre} tabIndex={-1}>
@@ -254,7 +228,6 @@ export default function PaiementPlateforme() {
               })}
             </ul>
 
-            {/* La remarque : ce qu'on cherche souvent, et qui ne marche pas. */}
             <aside className="plt__remarque">
               <strong>Bon à savoir</strong>
               <p>
@@ -270,7 +243,6 @@ export default function PaiementPlateforme() {
           </section>
         )}
 
-        {/* ---------- 2. L'envoi ---------- */}
         {profil && choix && !don && (
           <section
             className="plt__temps plt__temps--marque"
@@ -388,7 +360,6 @@ export default function PaiementPlateforme() {
           </section>
         )}
 
-        {/* ---------- 3. Merci ---------- */}
         {profil && don && (
           <section className="plt__temps plt__temps--fin" key="merci">
             <div className="plt__coche" aria-hidden="true">
@@ -413,7 +384,6 @@ export default function PaiementPlateforme() {
   );
 }
 
-/** Une destination possible : ce qu'il faut saisir dans le service. */
 function Destination({ type, titre, lignes }) {
   return (
     <section className="plt__destination">

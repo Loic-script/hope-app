@@ -1,22 +1,6 @@
-/**
- * Repository des notifications et des messages des espaces utilisateurs.
- *
- * Les deux tables ne connaissent que "utilisateur" : elles servent le
- * benevole, le bailleur, et le donateur le jour ou son espace existera.
- * C'est le jeton qui dit de quel espace vient la demande, pas la table.
- *
- * Aucune requete ne se passe de l'identifiant de l'utilisateur : c'est
- * ce parametre, et non un filtre ajoute plus haut, qui garantit qu'on ne
- * lit jamais le courrier d'un autre.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/* ================================================================
-   Notifications
-   ================================================================ */
-
-/** Les notifications d'un utilisateur, les plus recentes en tete. */
 export async function listerNotifications(utilisateurId, { limite = 40 } = {}, client = null) {
   const resultat = await query(
     `SELECT id, type, titre, corps, lien, lu, cree_le
@@ -30,12 +14,6 @@ export async function listerNotifications(utilisateurId, { limite = 40 } = {}, c
   return versListe(resultat.rows);
 }
 
-/**
- * Marque une notification comme lue.
- *
- * La condition porte aussi sur l'utilisateur : sans elle, un
- * identifiant devine suffirait a toucher la notification d'un autre.
- */
 export async function marquerLue(utilisateurId, id, client = null) {
   const resultat = await query(
     `UPDATE notification_utilisateur
@@ -48,7 +26,6 @@ export async function marquerLue(utilisateurId, id, client = null) {
   return resultat.rowCount > 0;
 }
 
-/** Marque tout le fil comme lu. */
 export async function marquerToutLu(utilisateurId, client = null) {
   const resultat = await query(
     `UPDATE notification_utilisateur
@@ -60,7 +37,6 @@ export async function marquerToutLu(utilisateurId, client = null) {
   return resultat.rowCount;
 }
 
-/** Depose une notification. Appelee par les services, jamais par une route. */
 export async function creerNotification(
   { utilisateurId, type, titre, corps = null, lien = null },
   client = null
@@ -75,13 +51,6 @@ export async function creerNotification(
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Depose la meme notification chez chaque contact bailleur qui peut
- * ouvrir son espace : compte actif, contact actif et autorise a
- * consulter. Les autres ne verraient jamais la cloche.
- *
- * @returns {Promise<number>} le nombre de notifications deposees
- */
 export async function notifierBailleurs({ type, titre, corps = null, lien = null }, client = null) {
   const resultat = await query(
     `INSERT INTO notification_utilisateur (utilisateur_id, type, titre, corps, lien)
@@ -95,16 +64,6 @@ export async function notifierBailleurs({ type, titre, corps = null, lien = null
   return resultat.rowCount;
 }
 
-/* ================================================================
-   Messages
-
-   Un fil porte un sujet ; les paroles vivent dans message_entree, une
-   ligne par prise de parole. Le statut du fil suit celui qui a parle en
-   dernier : "envoye" quand c'est l'utilisateur -- l'equipe lui doit une
-   reponse -- "repondu" quand c'est HOPE.
-   ================================================================ */
-
-/** Les entrees d'un fil, agregees en une colonne JSON. */
 const ENTREES = `
   COALESCE((
     SELECT json_agg(
@@ -120,7 +79,6 @@ const ENTREES = `
   ), '[]'::json) AS entrees
 `;
 
-/** Les fils d'un utilisateur, le plus recemment anime en tete. */
 export async function listerMessages(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT m.id, m.sujet, m.statut, m.cree_le, m.updated_at,
@@ -136,12 +94,6 @@ export async function listerMessages(utilisateurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Tous les fils, cote equipe.
- *
- * Le nom et le role viennent avec : la messagerie de l'administration
- * doit dire qui ecrit, et a quel titre.
- */
 export async function listerTousLesFils(client = null) {
   const resultat = await query(
     `SELECT m.id, m.sujet, m.statut, m.cree_le, m.updated_at,
@@ -163,7 +115,6 @@ export async function listerTousLesFils(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Un fil, sans ses entrees : de quoi verifier a qui il appartient. */
 export async function trouverFil(id, client = null) {
   const resultat = await query(
     `SELECT id, utilisateur_id, sujet, statut FROM message_utilisateur WHERE id = $1`,
@@ -173,7 +124,6 @@ export async function trouverFil(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Ouvre un fil et y depose la premiere parole. */
 export async function creerFil({ utilisateurId, sujet, corps }, client = null) {
   const fil = await query(
     `INSERT INTO message_utilisateur (utilisateur_id, sujet, statut)
@@ -187,14 +137,6 @@ export async function creerFil({ utilisateurId, sujet, corps }, client = null) {
   return versObjet({ id, sujet, statut: 'envoye' });
 }
 
-/**
- * Ajoute une parole au fil, et remonte celui-ci.
- *
- * Le statut suit l'auteur : une parole de l'utilisateur remet le fil en
- * attente, une parole de HOPE le declare repondu. Sans cette mise a
- * jour, un fil relance resterait marque "repondu" et se perdrait au bas
- * de la liste de l'equipe.
- */
 export async function ajouterEntree({ filId, auteur, corps, adminId = null }, client = null) {
   const resultat = await query(
     `INSERT INTO message_entree (fil_id, auteur, corps, admin_id)
@@ -215,7 +157,6 @@ export async function ajouterEntree({ filId, auteur, corps, adminId = null }, cl
   return versObjet(resultat.rows[0]);
 }
 
-/** Marque comme lues les paroles de HOPE adressees a cet utilisateur. */
 export async function marquerReponsesLues(utilisateurId, client = null) {
   const resultat = await query(
     `UPDATE message_entree e
@@ -231,7 +172,6 @@ export async function marquerReponsesLues(utilisateurId, client = null) {
   return resultat.rowCount;
 }
 
-/** Marque comme lues les paroles de l'utilisateur dans un fil, cote equipe. */
 export async function marquerFilLuParHope(filId, client = null) {
   const resultat = await query(
     `UPDATE message_entree
@@ -243,17 +183,6 @@ export async function marquerFilLuParHope(filId, client = null) {
   return resultat.rowCount;
 }
 
-/* ================================================================
-   Pastilles
-   ================================================================ */
-
-/**
- * Les deux compteurs du menu, en une requete.
- *
- * Deux sous-requetes plutot que deux allers-retours : le menu les
- * recharge a chaque changement de page, et c'est la requete la plus
- * frequente de l'espace.
- */
 export async function compteurs(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT

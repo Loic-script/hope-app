@@ -12,21 +12,10 @@ const DEVISES = [
   { code: 'USD', rapides: [20, 50, 100, 250] },
 ];
 
-/** "MG4600000000..." -> "MG46 0000 0000 ..." */
 function parQuatre(texte) {
   return String(texte ?? '').replace(/(.{4})/g, '$1 ').trim();
 }
 
-/**
- * Le virement international, depuis une banque hors de Madagascar.
- *
- * L'objet de reference : l'enveloppe "par avion", bordee de chevrons
- * rouges et bleus. Dedans, les coordonnees SWIFT de HOPE -- IBAN groupe
- * par quatre, BIC, banque, titulaire -- et le motif. Sous l'enveloppe,
- * le trajet de l'argent : la banque du donateur, une banque
- * correspondante, la banque de HOPE a Antananarivo. Le point voyage le
- * long du trajet a mesure que le don avance.
- */
 export default function PaiementInternational() {
   const {
     profil,
@@ -57,11 +46,9 @@ export default function PaiementInternational() {
 
   useEffect(() => {
     if (!profil) return;
-    // La devise du don prepare, sinon celle du profil ; l'euro par defaut.
     const choisie = ['EUR', 'USD'].includes(devisePrevue) ? devisePrevue : personne.devise === 'USD' ? 'USD' : 'EUR';
     setDevise(choisie);
     setMontant((m) => m || montantInitial(montantPrevu, devisePrevue, choisie));
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
@@ -107,7 +94,6 @@ export default function PaiementInternational() {
   }
 
   const pret = profil && banque?.internationalDisponible;
-  // Ou en est le don sur le trajet : 0 depart, 1 envoye, 2 arrive.
   const avancee = etape === 2 && signale ? 1 : 0;
 
   return (
@@ -156,7 +142,6 @@ export default function PaiementInternational() {
               <small>By air mail</small>
             </span>
 
-            {/* ---------- 1. Le montant ---------- */}
             {etape === 0 && (
               <section className="int__temps" key="montant">
                 <h1 className="int__titre" ref={titre} tabIndex={-1}>
@@ -228,7 +213,6 @@ export default function PaiementInternational() {
               </section>
             )}
 
-            {/* ---------- 2. Les coordonnees ---------- */}
             {etape === 1 && don && (
               <section className="int__temps" key="coordonnees">
                 <h1 className="int__titre" ref={titre} tabIndex={-1}>
@@ -274,7 +258,6 @@ export default function PaiementInternational() {
               </section>
             )}
 
-            {/* ---------- 3. Le suivi ---------- */}
             {etape === 2 && don && (
               <section className="int__temps" key="suivi">
                 <h1 className="int__titre" ref={titre} tabIndex={-1}>
@@ -293,7 +276,6 @@ export default function PaiementInternational() {
           </div>
         )}
 
-        {/* Le trajet de l'argent, sous l'enveloppe. */}
         {pret && (
           <figure className="trajet" aria-label="Le trajet d’un virement international">
             <svg viewBox="0 0 320 70" aria-hidden="true">
@@ -321,7 +303,6 @@ export default function PaiementInternational() {
   );
 }
 
-/** Une coordonnee bancaire, et son bouton "Copier". */
 function Coord({ libelle, valeur, brut, chiffres = false, fort = false }) {
   return (
     <div className={`int__coord-ligne${fort ? ' int__coord-ligne--fort' : ''}`}>

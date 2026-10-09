@@ -30,7 +30,6 @@ import * as fmt from '../../utils/format.js';
 
 const ONGLETS = ['donateurs', 'benevoles', 'bailleurs'];
 
-/** Ce qui change d'un onglet a l'autre : les mots. */
 const TEXTES = {
   donateurs: {
     colonne: 'Nom ou entreprise',
@@ -55,21 +54,8 @@ const TEXTES = {
   },
 };
 
-/**
- * Ecran "Utilisateurs" : donateurs, benevoles et bailleurs, un onglet
- * chacun, un meme tableau -- le nom (ou celui de l'entreprise), le
- * statut, le profil, les actions.
- *
- * Modifier et supprimer valent pour tous. Activer et desactiver un
- * compte, pour les benevoles et les bailleurs : leur acces s'ouvre sur
- * decision de l'equipe. Un donateur, lui, entre des son inscription.
- *
- * Les donateurs reunissent deux origines : les comptes inscrits en
- * ligne, et les fiches que l'equipe enregistre pour rattacher des dons.
- */
 export default function UtilisateursPage() {
   const [parametres, setParametres] = useSearchParams();
-  // L'onglet Back office n'existe que pour l'administrateur principal.
   const { admin } = useOutletContext();
   const principal = admin?.role === 'ADMIN';
   const demande = parametres.get('onglet');
@@ -80,7 +66,6 @@ export default function UtilisateursPage() {
   const [recherche, setRecherche] = useState('');
   const [rechercheAppliquee, setRechercheAppliquee] = useState('');
   const [fenetre, setFenetre] = useState(null);
-  // Le resultat de la creation d'un benevole ou d'un bailleur (accès envoyés).
   const [cree, setCree] = useState(null);
 
   useEffect(() => {
@@ -94,8 +79,6 @@ export default function UtilisateursPage() {
     setParametres({ onglet: cle }, { replace: true });
   }
 
-  // Les trois listes, pour les compteurs des onglets ; la recherche ne
-  // porte que sur celle qui est affichee.
   const { donnees, chargement, erreur, recharger } = useChargement(
     () =>
       Promise.all(
@@ -114,8 +97,6 @@ export default function UtilisateursPage() {
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
   const libelles = catalogue?.labels ?? {};
 
-  // Effacer l'identite d'un donateur laisse sa fiche dans la liste : sans
-  // un mot, on croirait que rien ne s'est passe.
   const [succes, setSucces] = useState('');
   const gestion = useGestionUtilisateur({
     onModifie: recharger,
@@ -127,8 +108,6 @@ export default function UtilisateursPage() {
     libelles,
   });
 
-  // Enregistrer un don depuis l'onglet des donateurs : la fenetre a
-  // besoin des fiches et des projets ouverts.
   const { donnees: fiches } = useChargement(
     () => (fenetre === 'don' ? donorService.lister({}) : Promise.resolve(null)),
     [fenetre]
@@ -140,8 +119,6 @@ export default function UtilisateursPage() {
 
   const enAttente = (cle) => listes[cle].filter((ligne) => ligne.statut === 'en_attente').length;
 
-  // Quatre colonnes centrees, a largeur fixe : l'en-tete se tient au-dessus
-  // de son contenu, et les colonnes ne bougent pas d'un onglet a l'autre.
   const colonnes = [
     {
       cle: 'nom',
@@ -198,7 +175,6 @@ export default function UtilisateursPage() {
       rendu: (ligne) => {
         const cible = { genre: ligne.genre, id: ligne.id, nom: ligne.nom, onglet };
         const nom = ligne.nom ?? 'cet utilisateur';
-        // Activer, desactiver : l'acces des benevoles et des bailleurs.
         const gereLAcces = onglet !== 'donateurs';
         return (
           <div className="cellule-actions cellule-actions--centre">
@@ -317,7 +293,6 @@ export default function UtilisateursPage() {
           chargement={chargement && !donnees}
           lignes={lignes}
           cleLigne={(ligne) => ligne.cle}
-          // L'ancre que visent les anciens liens (#compte-xxx).
           idLigne={(ligne) => ligne.cle}
           colonnes={colonnes}
           vide={

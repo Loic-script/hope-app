@@ -1,17 +1,3 @@
-/* ============================================================
-   HOPE - Espace donateur
-
-   L'espace le plus visible de la plateforme : il accueille, invite a
-   donner, et montre ce que chaque don rend possible. Les animations y
-   servent le sens -- ce qui arrive monte, ce qui se remplit se remplit,
-   ce qui se confirme se coche -- et toutes s'effacent quand l'appareil
-   demande moins de mouvement (fin de fichier).
-
-   Couleurs de la charte. Le texte blanc ne se pose que sur le violet :
-   sur l'orange, il ne se lirait pas assez (contraste 2,6:1). Le jaune
-   porte le bouton du bandeau violet, l'orange reste un accent.
-   ============================================================ */
-
 .espace-donateur {
   --don-violet: var(--hope-violet);
   --don-violet-fonce: var(--hope-violet-fonce);
@@ -25,10 +11,6 @@
   flex-direction: column;
   gap: 22px;
 }
-
-/* ============================================================
-   1. Les boutons et les liens
-   ============================================================ */
 
 .don-cta {
   position: relative;
@@ -61,7 +43,6 @@
   flex: none;
 }
 
-/* Le reflet qui traverse le bouton au survol. */
 .don-cta::after {
   content: '';
   position: absolute;
@@ -82,7 +63,6 @@
     animation: don-brille 850ms ease-out;
   }
 
-  /* Le coeur bat quand on s'approche du don. */
   .don-cta:hover svg:first-child {
     animation: don-battement 900ms ease-in-out;
   }
@@ -98,7 +78,6 @@
   transform: none;
 }
 
-/* Sur fond blanc : le violet, texte blanc. */
 .don-cta--plein {
   background: linear-gradient(135deg, #6d67a0 0%, var(--hope-violet-fonce) 100%);
   box-shadow: 0 12px 26px -14px rgba(74, 68, 121, 0.8);
@@ -109,7 +88,6 @@
   color: var(--hope-jaune);
 }
 
-/* Sur le bandeau violet : le bouton secondaire, en creux. */
 .don-cta--clair {
   border: 1.5px solid rgba(255, 255, 255, 0.45);
   background-color: rgba(255, 255, 255, 0.06);
@@ -172,10 +150,6 @@
   text-decoration-color: currentColor;
 }
 
-/* ============================================================
-   2. Le bandeau d'accueil
-   ============================================================ */
-
 .don-hero {
   position: relative;
   isolation: isolate;
@@ -194,7 +168,6 @@
   animation: don-monte 650ms var(--don-pose) both;
 }
 
-/* Deux halos qui flottent lentement : le bandeau respire. */
 .don-hero__halo {
   position: absolute;
   z-index: -1;
@@ -221,7 +194,6 @@
   animation: don-flotte 18s ease-in-out infinite reverse;
 }
 
-/* Le soleil de HOPE, en filigrane, qui tourne tres lentement. */
 .don-hero__soleil {
   position: absolute;
   z-index: -1;
@@ -269,7 +241,6 @@
   list-style: none;
 }
 
-/* Trois chiffres de verre, qui arrivent l'un apres l'autre. */
 .don-hero__chiffre {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -337,10 +308,6 @@
   outline-color: var(--hope-jaune);
 }
 
-/* ============================================================
-   3. Le fil et la colonne de droite
-   ============================================================ */
-
 .don-fil__chiffres {
   align-items: center;
 }
@@ -398,7 +365,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* "Un projet a besoin de vous" */
 .don-besoin__image {
   margin: 0 -22px 14px;
   aspect-ratio: 16 / 9;
@@ -445,15 +411,12 @@
   margin-top: 16px;
 }
 
-/* La colonne est etroite : la legende de la jauge s'y empile plutot que
-   de couper "18 %" en deux. */
 .don-besoin .jauge__legende {
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
 }
 
-/* Les derniers dons */
 .don-mini {
   display: flex;
   flex-direction: column;
@@ -492,7 +455,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* Ce que HOPE fait de votre don */
 .don-transparence {
   background: linear-gradient(160deg, #ffffff 0%, var(--don-violet-clair) 100%);
 }
@@ -527,7 +489,6 @@
   color: #ffffff;
 }
 
-/* Les pastilles de statut d'un don */
 .don-statut {
   display: inline-flex;
   align-items: center;
@@ -553,7 +514,6 @@
 .don-statut--neutre  { background-color: #eef1f6; color: #5b6275; }
 .don-statut--violet  { background-color: #eceafa; color: var(--hope-violet-fonce); }
 
-/* Une promesse en attente respire doucement : elle attend un retour. */
 .don-statut--attente::before {
   animation: don-respire 2.4s ease-in-out infinite;
 }
@@ -600,10 +560,6 @@
   animation: don-secousse 380ms ease-out;
 }
 
-/* ============================================================
-   4. Les en-tetes de page
-   ============================================================ */
-
 .don-entete {
   animation: don-monte 500ms var(--don-pose) both;
 }
@@ -630,11 +586,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* ============================================================
-   5. Faire un don
-   ============================================================ */
-
-/* La progression : quatre pas relies par une ligne qui se remplit. */
 .don-pas {
   position: relative;
   display: grid;
@@ -644,8 +595,6 @@
   list-style: none;
 }
 
-/* La ligne va du centre du premier rond a celui du dernier : une
-   demi-colonne de marge de chaque cote. --avance dit la part franchie. */
 .don-pas::before,
 .don-pas::after {
   content: '';
@@ -721,7 +670,6 @@
   color: var(--hope-violet);
 }
 
-/* Le projet que soutient le don, quand il vient d'une publication. */
 .don-projet-tete {
   display: flex;
   flex-wrap: wrap;
@@ -794,7 +742,6 @@
   color: #8a5c12;
 }
 
-/* L'etape et le recapitulatif qui la suit. */
 .don-disposition {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
@@ -831,7 +778,6 @@
   font-weight: 700;
 }
 
-/* Deux grands choix. */
 .don-choix-duo {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -915,7 +861,6 @@
   transform: scale(1.08) rotate(-6deg);
 }
 
-/* Les projets a choisir. */
 .don-projets {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1041,7 +986,6 @@
   animation: don-remplit 1s 200ms var(--don-pose) both;
 }
 
-/* Le montant. */
 .don-devises {
   display: inline-flex;
   flex-wrap: wrap;
@@ -1200,7 +1144,6 @@
   gap: 12px;
 }
 
-/* Les modes de paiement. */
 .don-modes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
@@ -1243,8 +1186,6 @@
   height: 52px;
 }
 
-/* Le cadre fixe la taille : l'illustration le remplit sans deborder
-   (un max-height en pourcentage ne tient pas dans une grille). */
 .don-mode__visuel img,
 .don-mode__visuel svg {
   display: block;
@@ -1268,7 +1209,6 @@
   height: 38px;
 }
 
-/* Le recapitulatif. */
 .don-recap__montant {
   margin-bottom: 18px;
   font-size: clamp(34px, 5vw, 46px);
@@ -1337,7 +1277,6 @@
   margin-top: 18px;
 }
 
-/* Le resume qui suit la saisie, sur grand ecran. */
 .don-resume {
   position: sticky;
   top: calc(var(--admin-entete-hauteur) + 18px);
@@ -1368,7 +1307,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Avec des pages de paiement, le montant se dit a l'etape suivante. */
 .don-resume__montant--suite {
   font-size: 17px;
   font-weight: 700;
@@ -1419,7 +1357,6 @@
   height: 16px;
 }
 
-/* Le merci. */
 .don-merci {
   position: relative;
   display: flex;
@@ -1564,10 +1501,6 @@
   animation: don-monte 450ms 1150ms var(--don-pose) both;
 }
 
-/* ============================================================
-   6. Mes dons
-   ============================================================ */
-
 .don-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1646,7 +1579,6 @@
   color: var(--admin-texte-doux);
 }
 
-/* La frise des dons. */
 .don-frise {
   position: relative;
   display: flex;
@@ -1797,10 +1729,6 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-
-/* ============================================================
-   7. Projets
-   ============================================================ */
 
 .don-recherche {
   display: flex;
@@ -1993,10 +1921,6 @@
   color: #1f6b48;
 }
 
-/* ============================================================
-   8. Mon profil
-   ============================================================ */
-
 .don-identite {
   position: relative;
   isolation: isolate;
@@ -2034,7 +1958,6 @@
   gap: 8px;
 }
 
-/* L'avatar : un clic pour changer la photo ; un anneau de couleur l'entoure. */
 .don-avatar {
   position: relative;
   display: grid;
@@ -2098,7 +2021,6 @@
   opacity: 1;
 }
 
-/* Pendant l'envoi, l'anneau tourne. */
 .don-avatar--envoi {
   animation: don-tourne 1.4s linear infinite;
 }
@@ -2300,16 +2222,11 @@
   height: 18px;
 }
 
-/* ============================================================
-   9. Petits ecrans
-   ============================================================ */
-
 @media (max-width: 1100px) {
   .don-disposition {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Le recapitulatif de la derniere etape suffit : le resume s'efface. */
   .don-resume {
     display: none;
   }
@@ -2418,8 +2335,6 @@
   }
 }
 
-/* Petit telephone : les quatre chiffres restent deux par deux, resserres,
-   pour que l'historique arrive vite. */
 @media (max-width: 480px) {
   .don-stats {
     gap: 10px;
@@ -2448,10 +2363,6 @@
     font-size: 12px;
   }
 }
-
-/* ============================================================
-   10. Les animations
-   ============================================================ */
 
 @keyframes don-monte {
   from {
@@ -2596,8 +2507,6 @@
   }
 }
 
-/* Quand l'appareil demande moins de mouvement : tout est la d'emblee,
-   rien ne bouge, rien ne boucle. */
 @media (prefers-reduced-motion: reduce) {
   .espace-donateur *,
   .espace-donateur *::before,
@@ -2617,8 +2526,6 @@
   }
 }
 
-/* L'etiquette d'un choix de destination ("Don affecte", "Don non
-   affecte" chez le bailleur), en haut a droite de la carte. */
 .don-choix__etiquette {
   position: absolute;
   top: 14px;

@@ -1,13 +1,5 @@
 import SoleilHope from './SoleilHope.jsx';
 
-/**
- * Le pied de page du site vitrine : le soleil de HOPE, ses reseaux, le
- * numero a appeler, le copyright et l'auteur du site, centres sur le
- * violet de la charte.
- *
- * Les adresses des pages de HOPE sur les reseaux sont a renseigner ici ;
- * en attendant, chaque icone mene a la page d'accueil du reseau.
- */
 const RESEAUX = [
   {
     nom: 'Facebook',

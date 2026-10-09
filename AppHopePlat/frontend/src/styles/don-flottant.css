@@ -1,13 +1,3 @@
-/* ============================================================
-   "Faire un don", bouton flottant de l'espace bailleur
-   (components/DonFlottant.jsx)
-
-   Une pilule orange posee en bas a droite : elle entre en rebondissant,
-   un reflet la traverse toutes les quelques secondes, le coeur bat dans
-   un halo. La poignee a gauche la deplace (useCarteDeplacable) ; tout le
-   reste mene au don.
-   ============================================================ */
-
 .don-flottant {
   position: fixed;
   right: 24px;
@@ -40,7 +30,6 @@
     box-shadow 0.2s ease;
 }
 
-/* Saisi : il se souleve, son ombre s'allonge. */
 .carte-mobile--saisie .don-flottant__pilule {
   box-shadow:
     0 26px 48px -12px rgba(201, 130, 42, 0.7),
@@ -196,7 +185,6 @@
   }
 }
 
-/* Telephone : plus compact, au-dessus du bord et de la barre du systeme. */
 @media (max-width: 560px) {
   .don-flottant {
     right: 14px;

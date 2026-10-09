@@ -6,12 +6,6 @@ import { IconeBatiment, IconeGroupe, IconeReseau } from '../../components/vitrin
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 
-/**
- * "S'engager" : le bandeau des mains reunies, les trois voies pour
- * rejoindre HOPE en cartes a medaillon, puis l'appel a contribuer.
- */
-
-/** Devenir partenaire : l'inscription d'un bailleur, validee ensuite par HOPE. */
 const LIEN_PARTENAIRE = '/authentification?type=bailleur';
 
 const VOIES = [
@@ -37,25 +31,12 @@ const VOIES = [
   },
 ];
 
-/*
- * Les rayons du soleil des cartes, releves sur la maquette (une carte de
- * 244 unites de large, l'anneau centre en 122 ; 82,5). Les rayons des
- * cotes ne sont pas dans l'axe du centre : poses a 48 degres, ils ne
- * penchent que de 37, ce qui leur donne leur allure de la maquette.
- */
 const RAYONS = [
   { cle: 'gauche', x: 70.6, y: 37.1, angle: -36.8 },
   { cle: 'milieu', x: 122, y: 16.5, angle: 0 },
   { cle: 'droite', x: 173.4, y: 37.1, angle: 36.8 },
 ];
 
-/**
- * Le soleil en tete d'une carte, de toute la largeur de la carte : trois
- * rayons orange, deux barres a la couleur de la voie, un peu au-dessus
- * du centre, et l'anneau jaune sur son disque blanc, qui porte l'icone.
- * La carte, elle, est creusee d'une encoche sous l'anneau (le fond de
- * la carte, vitrine-engager.css). Decoratif : le titre dit tout.
- */
 function SoleilCarte({ children }) {
   return (
     <svg className="engager-soleil" viewBox="0 0 244 124" aria-hidden="true">
@@ -88,13 +69,11 @@ export default function SEngager() {
         <img className="engager-hero__photo" src={couverture} alt="" fetchPriority="high" />
         <div className="engager-hero__voile" aria-hidden="true" />
         <div className="v-conteneur engager-hero__contenu">
-          {/* Le bloc prend la largeur du titre : le filet et le texte s'y alignent. */}
           <div className="engager-hero__bloc">
             <h1 className="engager-hero__titre" id="engager-hero-titre">
               <span className="engager-hero__ligne">Ensemble,</span>
               <span className="engager-hero__ligne">écrivons une plus belle histoire.</span>
             </h1>
-            {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
             <div className="engager-hero__trait" aria-hidden="true" />
             <p className="engager-hero__texte">
               Que vous soyez <strong>une institution</strong>, <strong>une entreprise</strong> engagée ou{' '}
@@ -105,7 +84,6 @@ export default function SEngager() {
         </div>
       </section>
 
-      {/* Les trois voies chevauchent le bas du bandeau, leur soleil en tete. */}
       <section ref={refVoies} className={`engager-voies${voiesVues ? ' v-apparu' : ''}`} aria-label="Trois façons de s’engager">
         <ul className="engager-cartes">
           {VOIES.map((voie, rang) => (
@@ -133,7 +111,6 @@ export default function SEngager() {
               <strong>aider une vie</strong> dès aujourd’hui{' '}?
             </span>
           </h2>
-          {/* Le soleil de la charte, renverse, puis le filet bleu sous le titre. */}
           <div className="engager-appel__trait v-entree" aria-hidden="true" style={{ '--rang': 1 }} />
           <p className="engager-appel__texte v-entree" style={{ '--rang': 2 }}>
             L’espoir commence par une intention, mais il se réalise par l’action. Rejoignez{' '}

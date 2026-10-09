@@ -1,9 +1,5 @@
-/**
- * Service frontend des notifications.
- */
 import { api } from './api.js';
 
-/** @param {{ type?: string, unread?: boolean }} filtres */
 export async function lister(filtres = {}) {
   const { data } = await api.get('/admin/notifications', { params: filtres });
   return data;

@@ -1,16 +1,3 @@
-/**
- * Service d'authentification de l'espace bailleur.
- *
- * Meme chaine que les deux autres espaces, avec une particularite :
- * s'inscrire ne cree pas seulement un compte, mais aussi
- * l'organisation et sa fiche de contact principal. Un bailleur sans
- * organisation ne menerait a rien, et une organisation sans contact ne
- * pourrait pas se connecter.
- *
- * L'audience du jeton est "hope-bailleur" : un jeton d'administrateur
- * ou de benevole est donc rejete ici, et reciproquement, meme si le
- * secret de signature est le meme.
- */
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -29,18 +16,15 @@ import {
 
 const AUDIENCE = 'hope-bailleur';
 
-/** Types d'organisation acceptes, comme dans la contrainte SQL. */
 export const TYPES_ORGANISATION = [
   'fondation_privee',
   'entreprise',
   'agence_publique',
   'ong',
   'ambassade',
-  // Pose a l'inscription, en attendant que le bailleur precise.
   'autre',
 ];
 
-/** Libelles affichables des types d'organisation. */
 export const LIBELLES_TYPE = {
   autre: 'À préciser',
   fondation_privee: 'Fondation privée',
@@ -50,17 +34,11 @@ export const LIBELLES_TYPE = {
   ambassade: 'Ambassade',
 };
 
-/**
- * Hash factice compare lorsque le courriel est inconnu : le refus coute
- * alors le meme temps qu'un mot de passe errone, et ne revele pas
- * quels comptes existent.
- */
 const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', 10);
 
 const LONGUEUR_MOT_DE_PASSE = 8;
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** Retire de la fiche ce qui ne doit pas sortir vers le bailleur. */
 function versBailleurPublic(fiche) {
   return {
     utilisateurId: fiche.utilisateurId ?? null,
@@ -77,7 +55,6 @@ function versBailleurPublic(fiche) {
     partenaireDepuis: fiche.partenaireDepuis,
     statut: fiche.statut,
     niveau: fiche.niveau,
-    // Le contact connecte.
     contactId: fiche.contactId,
     nom: fiche.nom,
     prenom: fiche.prenom,
@@ -88,7 +65,6 @@ function versBailleurPublic(fiche) {
     contactPrincipal: fiche.contactPrincipal,
     peutConsulter: fiche.peutConsulter,
     peutTelecharger: fiche.peutTelecharger,
-    // notes_internes n'est volontairement pas reprise.
   };
 }
 
@@ -101,13 +77,6 @@ function signerJeton(utilisateurId, email) {
   });
 }
 
-/**
- * Inscription d'un bailleur.
- *
- * Cree le compte en statut "en_attente" et l'organisation en statut
- * "prospect" : l'un et l'autre existent, mais rien n'est ouvert avant
- * qu'un administrateur ne valide.
- */
 export async function inscrire(corps = {}) {
   const texte = (valeur) => (typeof valeur === 'string' ? valeur.trim() : '');
 
@@ -153,8 +122,6 @@ export async function inscrire(corps = {}) {
 
   try {
     const resultat = await transaction(async (client) => {
-      // Le compte porte le role bailleur, pas benevole : aucune fiche de
-      // terrain n'est creee.
       const compte = await volunteerRepository.creer(
         { nom, prenom, email, motDePasse: hash, conditionsVersion: VERSION_CONDITIONS },
         ['bailleur'],
@@ -174,8 +141,6 @@ export async function inscrire(corps = {}) {
         client
       );
 
-      // Meme cloche que pour l'inscription commune : l'equipe voit passer
-      // tous les comptes, d'ou qu'ils viennent.
       await signalerNouveauCompte(
         {
           utilisateurId: compte.id,
@@ -194,17 +159,9 @@ export async function inscrire(corps = {}) {
         compteStatut: compte.statut,
       };
     });
-    // Le lien de confirmation de l'adresse (un echec d'envoi n'annule rien).
     await verificationCourriel.envoyerLien({ id: resultat.utilisateurId, email, prenom });
     return resultat;
   } catch (erreur) {
-    /*
-     * Deux inscriptions envoyees dans la meme seconde passent toutes
-     * les deux le controle d'unicite plus haut : la seconde bute alors
-     * sur l'index de l'adresse. Elle merite le meme message que la
-     * premiere, pas une erreur interne -- le compte existe, il n'y a
-     * plus qu'a se connecter.
-     */
     if (estViolationUnicite(erreur, 'utilisateur_email_key')) {
       throw new ErreurValidation('Cette adresse est déjà utilisée.', {
         email: 'Adresse déjà inscrite',
@@ -214,7 +171,6 @@ export async function inscrire(corps = {}) {
   }
 }
 
-/** Connexion d'un contact de bailleur. */
 export async function connecter({ email, motDePasse } = {}) {
   const adresse = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const secret = typeof motDePasse === 'string' ? motDePasse : '';
@@ -235,8 +191,6 @@ export async function connecter({ email, motDePasse } = {}) {
     throw new ErreurAuthentification('Identifiants incorrects');
   }
 
-  // Les controles de statut viennent APRES la verification du mot de
-  // passe : les faire avant revelerait qu'un compte existe.
   if (compte.statut === 'en_attente') {
     throw new ErreurAuthentification(
       'Votre compte attend la validation de l’équipe HOPE. Vous recevrez l’accès dès qu’il sera activé.',
@@ -283,7 +237,6 @@ export async function connecter({ email, motDePasse } = {}) {
   };
 }
 
-/** Verifie un JWT de l'espace bailleur. */
 export function verifierJeton(token) {
   try {
     return jwt.verify(token, config.jwt.secret, {
@@ -301,25 +254,6 @@ export function verifierJeton(token) {
   }
 }
 
-/**
- * Recharge le contact et son organisation depuis la base.
- *
- * On ne se fie pas au seul jeton : le compte a pu etre suspendu, ou son
- * acces a l'organisation retire, depuis son emission.
- */
-/**
- * L'organisation d'un compte bailleur, creee si elle manque.
- *
- * L'inscription ne demande que l'etat civil : l'organisation est donc
- * posee ici, avec un nom provisoire, et le bailleur la precise depuis
- * "Mon organisation". Aucun formulaire ne barre l'entree de l'espace.
- *
- * Le meme geste rattrape les comptes plus anciens, crees du temps ou le
- * formulaire etait obligatoire et parfois laisse de cote.
- *
- * @param {string} utilisateurId
- * @param {{ nom?: string, prenom?: string }} compte
- */
 export async function garantirOrganisation(utilisateurId, compte = {}, client = null) {
   const existante = await funderRepository.trouverParUtilisateur(utilisateurId, client);
   if (existante) return existante;
@@ -327,10 +261,6 @@ export async function garantirOrganisation(utilisateurId, compte = {}, client = 
   const personne = `${compte.prenom ?? ''} ${compte.nom ?? ''}`.trim();
   await funderRepository.creerAvecContact(
     {
-      // Sans nom -- l'inscription n'en demande plus -- l'organisation
-      // se dit a preciser : "Mon organisation" se lisait bien dans
-      // l'espace du bailleur, mais faisait dans la liste de l'equipe une
-      // colonne de libelles identiques.
       raisonSociale: (personne ? `Organisation de ${personne}` : 'Organisation à préciser').slice(0, 200),
       typeOrganisation: 'autre',
       pays: 'Madagascar',
@@ -351,8 +281,6 @@ export async function recupererBailleurAuthentifie(utilisateurId) {
     throw new ErreurAuthentification('Ce compte n’est plus actif.', 'COMPTE_INACTIF');
   }
 
-  // Creee avec le compte ; garantie ici pour les comptes plus anciens,
-  // qui pouvaient rester sans organisation.
   const fiche = await garantirOrganisation(utilisateurId, compte);
 
   if (!fiche.contactActif) {

@@ -6,14 +6,6 @@ import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import { EntetePage, Pastille } from './composants.jsx';
 
-/**
- * Paiements effectues : ce que le bailleur a paye a HOPE.
- *
- * Deux sources dans une meme liste : les dons faits depuis l'espace
- * ("Faire un don") et les versements des conventions de l'organisation.
- * Les totaux se lisent par devise ; un paiement en attente (don promis,
- * tranche prevue) se compte a part, jamais dans le paye.
- */
 const FILTRES = [
   { cle: 'recu', libelle: 'Effectués' },
   { cle: 'en_attente', libelle: 'En attente' },

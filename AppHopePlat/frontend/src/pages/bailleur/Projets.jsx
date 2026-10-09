@@ -8,22 +8,16 @@ import * as fmt from '../../utils/format.js';
 import { EntetePage, Pastille } from './composants.jsx';
 import FenetreRapportProjet from './RapportProjet.jsx';
 
-/** Statuts d'un projet, et la teinte de leur pastille. */
 export const STATUTS_PROJET = {
   IN_PROGRESS: { libelle: 'En cours', teinte: 'bleu' },
   COMPLETED: { libelle: 'Terminé', teinte: 'vert' },
   ARCHIVED: { libelle: 'Archivé', teinte: 'gris' },
 };
 
-/**
- * Un projet qu'on peut encore financer : en cours, et dont le budget
- * n'est pas couvert. Sert au bouton "Financer", ici et sur la fiche.
- */
 export function ouvertAuFinancement(projet) {
   return projet?.status === 'IN_PROGRESS' && Number(projet.tauxFinancement ?? 0) < 100;
 }
 
-/** Les filtres du haut de page. */
 const FILTRES = [
   { cle: 'tous', label: 'Tous', garde: () => true },
   { cle: 'en_cours', label: 'En cours', garde: (p) => p.status === 'IN_PROGRESS' },
@@ -31,14 +25,6 @@ const FILTRES = [
   { cle: 'finances', label: 'Que vous financez', garde: (p) => p.financeParMoi },
 ];
 
-/**
- * Les projets de HOPE, vus par un partenaire.
- *
- * Tous les projets HOPE en cours et termines, et ceux qu'il finance
- * quels qu'ils soient. Chaque carte dit ou en est le financement du
- * projet, ce que le partenaire y a mis, et ouvre la fiche du projet ou
- * son rapport a jour.
- */
 export default function Projets() {
   const { donnees, chargement, erreur } = useChargement(() => service.projets(), []);
   const [filtre, setFiltre] = useState('tous');
@@ -96,7 +82,6 @@ export default function Projets() {
   );
 }
 
-/** Un projet : ce qu'il fait, ou en est son financement, et son rapport. */
 function CarteProjet({ projet, onRapport }) {
   const statut = STATUTS_PROJET[projet.status] ?? STATUTS_PROJET.IN_PROGRESS;
   const devise = projet.currency ?? 'MGA';
@@ -137,13 +122,6 @@ function CarteProjet({ projet, onRapport }) {
         </div>
       )}
 
-      {/*
-        La "somme investie" de la fiche projet et du rapport : dons recus
-        et fonds de HOPE. Les affectations des partenaires n'y entrent pas
-        -- le rapport les montre a part -- et le libelle le dit, sans quoi
-        un partenaire lirait 3,8 millions finances sous ses 9 millions
-        affectes.
-      */}
       <div className="collecte">
         <div className="collecte__chiffres">
           <strong>{fmt.montant(projet.montantFinance, devise)}</strong>
@@ -189,9 +167,6 @@ function CarteProjet({ projet, onRapport }) {
       </dl>
 
       <div className="projet-bailleur__actions">
-        {/* Financer, c'est promettre un don a ce projet : le meme parcours
-            que depuis le fil d'actualite. Un projet termine, archive ou
-            deja finance ne le propose pas. */}
         {ouvertAuFinancement(projet) && (
           <Link className="bouton-bailleur" to={`/bailleur/faire-un-don?projet=${projet.id}`}>
             Financer

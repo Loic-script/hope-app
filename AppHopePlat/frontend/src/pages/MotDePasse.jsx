@@ -9,14 +9,6 @@ import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconeUtilisateur 
 import { messageErreur } from '../services/api.js';
 import * as utilisateurService from '../services/utilisateur.service.js';
 
-/**
- * Le mot de passe oublie, en deux pages, dans l'habit de
- * l'authentification : l'illustration a gauche, la carte a droite.
- *
- *   /mot-de-passe-oublie          : on donne son adresse ;
- *   /reinitialiser-mot-de-passe   : le lien du courriel y mene, on choisit
- *                                   le nouveau mot de passe.
- */
 function CadreMotDePasse({
   titre,
   accroche,
@@ -67,7 +59,6 @@ function CadreMotDePasse({
   );
 }
 
-/** Etape 1 : l'adresse du compte. */
 export function MotDePasseOublie() {
   const [email, setEmail] = useState('');
   const [envoi, setEnvoi] = useState(false);
@@ -154,7 +145,6 @@ export function MotDePasseOublie() {
   );
 }
 
-/** Etape 2 : le nouveau mot de passe, avec le jeton du lien. */
 export function ReinitialiserMotDePasse() {
   const navigate = useNavigate();
   const [parametres] = useSearchParams();
@@ -296,10 +286,6 @@ export function ReinitialiserMotDePasse() {
   );
 }
 
-/**
- * /verifier-courriel : le lien du courriel d'inscription. La page
- * confirme l'adresse des son ouverture.
- */
 export function VerifierCourriel() {
   const [parametres] = useSearchParams();
   const jeton = parametres.get('jeton') ?? '';
@@ -307,10 +293,6 @@ export function VerifierCourriel() {
   const [etat, setEtat] = useState(lienValide ? 'envoi' : 'invalide');
   const [message, setMessage] = useState('');
 
-  /*
-   * Le jeton ne sert qu'une fois : l'appel part une seule fois par jeton,
-   * meme si l'effet est rejoue (mode strict de React en developpement).
-   */
   const appel = useRef({ jeton: null, promesse: null });
 
   useEffect(() => {

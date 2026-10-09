@@ -1,16 +1,3 @@
-/**
- * Test de bout en bout du parcours d'authentification (API seule).
- *
- *   npm run test:api            (le serveur doit tourner : npm run dev)
- *
- * Rejoue les cas du cahier des charges :
- *   1. bons identifiants          -> 200 + jeton
- *   2. mauvais mot de passe       -> 401 message generique
- *   3. login inconnu              -> 401 meme message
- *   4. /me sans jeton             -> 401
- *   5. /me avec jeton valide      -> authenticated: true
- *   6. /me avec jeton altere      -> 401
- */
 import { config } from '../config/env.js';
 
 const BASE = `http://localhost:${config.port}/api`;
@@ -55,11 +42,9 @@ function postJson(donnees, jeton) {
 async function executer() {
   console.log(`\n[HOPE] Tests du parcours d'authentification sur ${BASE}\n`);
 
-  // --- Sonde de sante -------------------------------------------------
   const sante = await appeler('/health');
   verifier('GET /api/health repond 200', sante.statut === 200, `statut ${sante.statut}`);
 
-  // --- CAS 1 : identifiants corrects ----------------------------------
   console.log('\nCAS 1 : AdminHope + bon mot de passe');
   const bon = await appeler('/admin/login', postJson({ adminLog: LOGIN, password: MOT_DE_PASSE }));
   verifier('statut 200', bon.statut === 200, `statut ${bon.statut}`);
@@ -73,13 +58,11 @@ async function executer() {
 
   const jeton = bon.corps?.token;
 
-  // --- CAS 2 : mauvais mot de passe ------------------------------------
   console.log('\nCAS 2 : AdminHope + mauvais mot de passe');
   const mauvais = await appeler('/admin/login', postJson({ adminLog: LOGIN, password: 'mauvaismotdepasse' }));
   verifier('statut 401', mauvais.statut === 401, `statut ${mauvais.statut}`);
   verifier('message generique "Identifiants incorrects"', mauvais.corps?.message === 'Identifiants incorrects');
 
-  // --- CAS 3 : login inconnu -------------------------------------------
   console.log('\nCAS 3 : login inconnu');
   const inconnu = await appeler('/admin/login', postJson({ adminLog: 'FantomeHope', password: MOT_DE_PASSE }));
   verifier('statut 401', inconnu.statut === 401, `statut ${inconnu.statut}`);
@@ -88,29 +71,24 @@ async function executer() {
     inconnu.corps?.message === mauvais.corps?.message
   );
 
-  // --- Champs manquants -------------------------------------------------
   console.log('\nCAS 3 bis : champs manquants');
   const vide = await appeler('/admin/login', postJson({ adminLog: '', password: '' }));
   verifier('statut 400', vide.statut === 400, `statut ${vide.statut}`);
 
-  // --- CAS 4 : /me sans jeton -------------------------------------------
   console.log('\nCAS 4 : GET /api/admin/me sans jeton');
   const sansJeton = await appeler('/admin/me');
   verifier('statut 401', sansJeton.statut === 401, `statut ${sansJeton.statut}`);
 
-  // --- CAS 5 : /me avec jeton valide ------------------------------------
   console.log('\nCAS 5 : GET /api/admin/me avec un jeton valide');
   const avecJeton = await appeler('/admin/me', { headers: { Authorization: `Bearer ${jeton}` } });
   verifier('statut 200', avecJeton.statut === 200, `statut ${avecJeton.statut}`);
   verifier('authenticated = true', avecJeton.corps?.authenticated === true);
   verifier('admin.adminLog = ' + LOGIN, avecJeton.corps?.admin?.adminLog === LOGIN);
 
-  // --- CAS 6 : jeton altere ----------------------------------------------
   console.log('\nCAS 6 : GET /api/admin/me avec un jeton altere');
   const altere = await appeler('/admin/me', { headers: { Authorization: `Bearer ${jeton}modifie` } });
   verifier('statut 401', altere.statut === 401, `statut ${altere.statut}`);
 
-  // --- Deconnexion --------------------------------------------------------
   console.log('\nCAS 7 : POST /api/admin/logout');
   const deconnexion = await appeler('/admin/logout', postJson({}, jeton));
   verifier('statut 200', deconnexion.statut === 200, `statut ${deconnexion.statut}`);

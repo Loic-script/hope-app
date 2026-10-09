@@ -1,48 +1,22 @@
-/**
- * Controleurs de l'authentification unifiee.
- *
- * Lecture de la requete, appel du service, formatage : aucune regle
- * metier ici.
- */
 import * as authService from '../services/auth.service.js';
 import * as motDePasseService from '../services/motDePasse.service.js';
 import { LIBELLES_TYPE, TYPES_UTILISATEUR } from '../shared/audiences.js';
 import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 import * as verificationCourriel from '../services/verificationCourriel.service.js';
 
-/**
- * GET /api/auth/types
- *
- * Les trois types proposes dans la liste du formulaire. Servis par
- * l'API plutot qu'ecrits en dur dans le frontend : un type ajoute ne
- * doit pas demander deux modifications.
- */
 export async function types(_req, res) {
   res.status(200).json({
     items: TYPES_UTILISATEUR.map((cle) => ({
       cle,
       libelle: LIBELLES_TYPE[cle],
-      // Le formulaire previent avant l'envoi que l'acces attendra.
       validationRequise: cle !== 'donateur',
     })),
   });
 }
 
-/**
- * POST /api/auth/inscription
- *
- * Repond 201. Un donateur peut se connecter aussitot ; un bailleur
- * attend la validation de HOPE, et c'est l'ecran de connexion qui prend
- * la suite.
- *
- * Un benevole, lui, enchaine sur sa fiche : la reponse porte alors un
- * jeton limite a ce seul formulaire, et l'adresse ou aller. Son compte
- * attend toujours la validation -- la fiche sert justement a decider.
- */
 export async function inscription(req, res, next) {
   try {
     const resultat = await authService.inscrire(req.body ?? {});
-    // Le benevole enchaine sur sa fiche : son jeton limite part en cookie.
     if (resultat.jetonCompletion) poserSession(res, 'benevole', resultat.jetonCompletion, { persistant: false });
 
     res.status(201).json({
@@ -63,17 +37,10 @@ export async function inscription(req, res, next) {
   }
 }
 
-/**
- * POST /api/auth/login
- *
- * La reponse porte de quoi router : l'espace du type, et s'il reste un
- * formulaire de completion a remplir.
- */
 export async function login(req, res, next) {
   try {
     const { email, motDePasse, typeUtilisateur } = req.body ?? {};
     const resultat = await authService.connecter({ email, motDePasse, typeUtilisateur });
-    // Une seule session d'utilisateur a la fois : les autres sont effacees.
     effacerSessionsUtilisateur(res);
     poserSession(res, resultat.type, resultat.token, { persistant: req.body?.seSouvenir !== false });
 
@@ -93,7 +60,6 @@ export async function login(req, res, next) {
   }
 }
 
-/** POST /api/auth/mot-de-passe-oublie : toujours la meme reponse. */
 export async function motDePasseOublie(req, res, next) {
   try {
     res.status(200).json(await motDePasseService.demander(req.body));
@@ -102,7 +68,6 @@ export async function motDePasseOublie(req, res, next) {
   }
 }
 
-/** POST /api/auth/reinitialiser-mot-de-passe : le jeton du lien, et le nouveau mot de passe. */
 export async function reinitialiserMotDePasse(req, res, next) {
   try {
     res.status(200).json(await motDePasseService.reinitialiser(req.body));
@@ -111,16 +76,11 @@ export async function reinitialiserMotDePasse(req, res, next) {
   }
 }
 
-/**
- * POST /api/auth/logout : efface la session d'utilisateur, quelle
- * qu'elle soit. Public : un cookie expire doit pouvoir s'effacer aussi.
- */
 export function logout(_req, res) {
   effacerSessionsUtilisateur(res);
   res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
 }
 
-/** POST /api/auth/verifier-courriel : le jeton du lien. */
 export async function verifierCourriel(req, res, next) {
   try {
     res.status(200).json(await verificationCourriel.verifier(req.body ?? {}));

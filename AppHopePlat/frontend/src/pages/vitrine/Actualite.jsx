@@ -5,13 +5,6 @@ import { MessageFiche, Paragraphes } from '../../components/vitrine/fiche.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { urlMedia } from '../../services/api.js';
 
-/**
- * Une actualite de HOPE en entier (GET /api/public/actualites/:id) : sa
- * photo, sa date, son titre, son texte, et le projet qu'elle raconte
- * quand il est presente sur le site. La page reprend la mise en forme
- * de la fiche d'un projet (vitrine-realisations.css).
- */
-
 const FORMAT_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
 export default function Actualite() {

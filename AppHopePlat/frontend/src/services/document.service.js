@@ -1,9 +1,3 @@
-/**
- * Service frontend des justificatifs.
- *
- * Le televersement passe par un FormData : on laisse Axios choisir lui-meme
- * l'en-tete multipart et sa frontiere, d'ou le Content-Type mis a undefined.
- */
 import { api, URL_API } from './api.js';
 
 export async function lister(filtres = {}) {
@@ -16,10 +10,6 @@ export async function listerParDepense(expenseId) {
   return data;
 }
 
-/**
- * @param {number} expenseId depense justifiee
- * @param {{ file: File, documentType?: string, reference?: string, issuedAt?: string }} champs
- */
 export async function televerser(expenseId, champs) {
   const formulaire = new FormData();
   formulaire.append('file', champs.file);
@@ -38,13 +28,6 @@ export async function supprimer(id) {
   return data;
 }
 
-/**
- * Ouvre un justificatif dans un nouvel onglet.
- *
- * La route de telechargement est protegee par la session : un simple lien ne
- * suffit pas, le navigateur n'enverrait pas l'en-tete Authorization. On
- * telecharge donc le fichier puis on l'affiche depuis une URL locale.
- */
 export async function ouvrir(document) {
   const reponse = await fetch(`${URL_API}/admin/documents/${document.id}/download`, { credentials: 'same-origin' });
 
@@ -56,6 +39,5 @@ export async function ouvrir(document) {
   const url = URL.createObjectURL(contenu);
   window.open(url, '_blank', 'noopener');
 
-  // L'onglet a le temps de charger le blob avant qu'on libere l'URL.
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

@@ -1,9 +1,3 @@
-/**
- * Service des impacts mesures.
- *
- * Un impact relie un projet (et parfois un beneficiaire precis) a un
- * indicateur chiffre : "children_enrolled = 100 enfants".
- */
 import * as impactRepository from '../repositories/impact.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as beneficiaryRepository from '../repositories/beneficiary.repository.js';
@@ -18,7 +12,6 @@ import {
   texteRequis,
 } from '../shared/validation.js';
 
-/** Indicateurs proposes par defaut dans le formulaire. */
 export const INDICATEURS_SUGGERES = [
   { code: 'children_enrolled', label: 'Enfants scolarises', unit: 'enfants' },
   { code: 'children_supported', label: 'Enfants accompagnes', unit: 'enfants' },
@@ -56,16 +49,6 @@ export async function recupererParId(id) {
   return impact;
 }
 
-/** Valide les references vers le projet et le beneficiaire. */
-/**
- * Verifie qu'un objectif appartient bien au projet mesure.
- *
- * Sans cette verification, une mesure pourrait se rattacher a l'objectif
- * d'un autre projet : le tableau la rangerait sous un intitule qui n'a
- * rien a voir avec elle.
- *
- * @returns {Promise<{id: number, label: string}|null>} l'objectif retenu
- */
 async function objectifDuProjet(projectId, valeur) {
   const objectiveId = identifiantFacultatif(valeur, 'objectiveId');
   if (objectiveId === null) return null;
@@ -80,16 +63,6 @@ async function objectifDuProjet(projectId, valeur) {
   return objectif;
 }
 
-/**
- * L'indicateur d'une mesure.
- *
- * Mesurer un objectif ne demande plus de code d'indicateur : l'objectif
- * dit deja ce qu'on compte, et le saisir une seconde fois n'apportait
- * rien. On reprend donc son intitule, tronque a la longueur de la
- * colonne. Une mesure generale, elle, garde son indicateur propre --
- * c'est lui qui la range dans les totaux du projet.
- */
-/** Le titre d'une mesure : celui qui est donne, sinon ce qu'elle mesure. */
 function titreDeLaMesure(corps, objectif, indicateur) {
   const donne = texteFacultatif(corps.title, 'title', { max: 200 });
   if (donne) return donne;
@@ -109,8 +82,6 @@ function indicateurDeLaMesure(corps, objectif) {
 async function verifierReferences(projectId, beneficiaryId) {
   const projet = await projectRepository.trouverParId(projectId);
   if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
-  // Un impact se mesure souvent APRES la cloture du projet : c'est meme le
-  // cas normal. Seul l'archivage fige definitivement le dossier.
   if (projet.status === 'ARCHIVED') {
     throw new ErreurRegleMetier(
       'Ce projet est archivé : ses impacts ne sont plus modifiables.',
@@ -138,8 +109,6 @@ export async function creer(corps = {}) {
     projectId,
     objectiveId: objectif?.id ?? null,
     beneficiaryId,
-    // Le titre ne se saisit plus : il se deduit de ce qu'on mesure --
-    // l'objectif, sinon le nom de l'indicateur (ou son code).
     title: titreDeLaMesure(corps, objectif, indicateur),
     description: texteFacultatif(corps.description, 'description', { max: 5000 }),
     indicator: indicateur,
@@ -155,7 +124,6 @@ export async function mettreAJour(id, corps = {}) {
   if (!existant) throw new ErreurIntrouvable("L'impact", impactId);
 
   const colonnes = {};
-  // Un titre vide garde l'ancien : le formulaire ne le saisit plus.
   if (corps.title !== undefined && String(corps.title ?? '').trim() !== '') {
     colonnes.title = texteRequis(corps.title, 'title', { max: 200 });
   }
@@ -164,7 +132,6 @@ export async function mettreAJour(id, corps = {}) {
   }
   if (corps.indicator !== undefined) {
     colonnes.indicator = texteRequis(corps.indicator, 'indicator', { max: 120 });
-    // Sans titre donne, il suit le nouvel indicateur.
     if (colonnes.title === undefined && colonnes.indicator !== existant.indicator) {
       colonnes.title = titreDeLaMesure({}, null, colonnes.indicator);
     }
@@ -177,8 +144,6 @@ export async function mettreAJour(id, corps = {}) {
   if (corps.objectiveId !== undefined) {
     const objectif = await objectifDuProjet(existant.projectId, corps.objectiveId);
     colonnes.objective_id = objectif?.id ?? null;
-    // Changer d'objectif change ce qu'on compte : l'intitule suit, sauf
-    // si la mesure porte son propre indicateur.
     if (objectif && corps.indicator === undefined) {
       colonnes.indicator = objectif.label.slice(0, 120);
     }
@@ -195,11 +160,6 @@ export async function mettreAJour(id, corps = {}) {
   return impactRepository.mettreAJour(impactId, colonnes);
 }
 
-/**
- * Supprime un impact.
- * Contrairement aux ecritures financieres, un indicateur mal saisi peut
- * etre retire : il ne fait pas partie de la piste d'audit comptable.
- */
 export async function supprimer(id) {
   const impactId = identifiantRequis(id, 'id');
   const supprime = await impactRepository.supprimer(impactId);

@@ -1,23 +1,3 @@
-/**
- * La verification de l'adresse electronique.
- *
- * A l'inscription, un lien part a l'adresse donnee : il prouve que la
- * personne recoit bien ce courrier. Tant qu'elle n'a pas clique :
- *
- *   - le compte fonctionne (un donateur peut donner tout de suite), mais
- *     son espace rappelle de confirmer l'adresse, avec un bouton pour
- *     renvoyer le lien ;
- *   - l'equipe le voit sur la fiche du compte, avant de valider un
- *     benevole ou un bailleur.
- *
- * Quelqu'un qui s'inscrit avec l'adresse d'un autre ne recoit donc
- * rien : c'est le vrai proprietaire qui recoit le lien (avec « ce n'est
- * pas vous ? ignorez ce message »), et il peut reprendre le compte par
- * « mot de passe oublie », qui confirme aussi l'adresse.
- *
- * Meme mecanique que le mot de passe oublie : jeton aleatoire, seule
- * son empreinte en base, valable 48 heures et une fois.
- */
 import crypto from 'node:crypto';
 
 import { config } from '../config/env.js';
@@ -31,12 +11,6 @@ function empreinte(jeton) {
   return crypto.createHash('sha256').update(String(jeton)).digest('hex');
 }
 
-/**
- * Cree un lien et l'envoie. Ne leve pas : un courriel rate ne doit pas
- * faire echouer l'inscription (le lien se renvoie depuis l'espace).
- *
- * @param {{ id: string, email: string, prenom?: string }} compte
- */
 export async function envoyerLien(compte) {
   try {
     const jeton = crypto.randomBytes(32).toString('hex');
@@ -70,7 +44,6 @@ export async function envoyerLien(compte) {
   }
 }
 
-/** Le lien du courriel : confirme l'adresse. */
 export async function verifier(corps = {}) {
   const jeton = String(corps.jeton ?? '').trim();
   const invalide = () =>
@@ -94,20 +67,17 @@ export async function verifier(corps = {}) {
   return { message: 'Votre adresse est confirmée. Merci !' };
 }
 
-/** L'etat de l'adresse, pour le rappel de l'espace. */
 export async function etat(utilisateurId) {
   const { rows } = await query('SELECT email, email_verifie_le FROM utilisateur WHERE id = $1', [utilisateurId]);
   return { email: rows[0]?.email ?? null, emailVerifie: Boolean(rows[0]?.email_verifie_le) };
 }
 
-/** Renvoyer le lien depuis l'espace. */
 export async function renvoyer(utilisateurId) {
   const { rows } = await query('SELECT id, email, prenom, email_verifie_le FROM utilisateur WHERE id = $1', [utilisateurId]);
   const compte = rows[0];
   if (!compte) throw new ErreurValidation('Compte introuvable.');
   if (compte.email_verifie_le) return { message: 'Votre adresse est déjà confirmée.', emailVerifie: true };
   const parti = await envoyerLien(compte);
-  // Ne jamais annoncer un courriel qui n'est pas parti (SMTP absent ou en panne).
   if (!parti) {
     return {
       message: 'Le lien n’a pas pu être envoyé : l’envoi des courriels n’est pas encore en service. Réessayez plus tard ou contactez l’équipe HOPE.',

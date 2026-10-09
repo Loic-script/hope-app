@@ -1,13 +1,3 @@
-/*
- * La securite vue de l'exterieur, par de vraies requetes HTTP sur
- * l'application (sans base de donnees : rien ici ne va jusqu'a elle).
- *
- *   - les en-tetes de securite sont poses sur chaque reponse ;
- *   - TOUTES les routes /api/admin/* exigent la session AdminHope : la
- *     liste est lue dans le routeur lui-meme, une route ajoutee demain est
- *     donc verifiee sans toucher a ce fichier ;
- *   - un jeton forge ou d'un autre espace ne passe pas.
- */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import jwt from 'jsonwebtoken';
@@ -31,7 +21,6 @@ after(async () => {
   await fermerPool();
 });
 
-/** Les routes declarees dans le routeur admin : [methode, chemin]. */
 function routesAdmin() {
   const routes = [];
   for (const couche of adminRoutes.stack) {
@@ -39,7 +28,6 @@ function routesAdmin() {
     const chemins = Array.isArray(couche.route.path) ? couche.route.path : [couche.route.path];
     for (const chemin of chemins) {
       for (const methode of Object.keys(couche.route.methods)) {
-        // Les parametres (:id...) recoivent une valeur quelconque.
         routes.push([methode.toUpperCase(), `/admin${chemin.replace(/:[A-Za-z_]+/g, '1')}`]);
       }
     }

@@ -17,21 +17,11 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as fieldProofService from '../../services/fieldProof.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Lecture d'une preuve terrain.
- *
- * Une preuve est rarement une seule image : la remise de fournitures,
- * c'est le carton ouvert, les enfants, la signature du registre. L'ecran
- * les montre en mosaique, et le carrousel les ouvre en grand. Ce qui
- * decrit la preuve vient dessous, et les autres preuves du meme projet
- * attendent dans la colonne de droite.
- */
 export default function ProofDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [aSupprimer, setASupprimer] = useState(false);
 
-  /** Rang ouvert dans le carrousel ; null quand il est ferme. */
   const [rangOuvert, setRangOuvert] = useState(null);
 
   const { donnees: preuve, chargement, erreur } = useChargement(
@@ -40,7 +30,6 @@ export default function ProofDetailPage() {
   );
   const { donnees: catalogue } = useChargement(() => catalogService.recuperer(), []);
 
-  // Les voisines n'arrivent qu'une fois le projet connu.
   const { donnees: voisines } = useChargement(
     () => (preuve ? fieldProofService.listerParProjet(preuve.projectId) : Promise.resolve(null)),
     [preuve?.projectId]
@@ -95,8 +84,6 @@ export default function ProofDetailPage() {
             onOuvrir={setRangOuvert}
           />
 
-          {/* Ce qui decrit la preuve vient sous les images, comme sous
-              une video : le titre d'abord, la fiche technique ensuite. */}
           <div className="lecture__entete">
             <Badge valeur={preuve.proofType} libelles={libelles} />
             <p className="lecture__description">{preuve.description}</p>
@@ -123,7 +110,6 @@ export default function ProofDetailPage() {
             <div>
               <dt>Auteur</dt>
               <dd>
-                {/* Un benevole : son profil est a un clic. */}
                 {preuve.authorVolunteerAccount ? (
                   <Link
                     className="table__lien"
@@ -148,7 +134,6 @@ export default function ProofDetailPage() {
           </dl>
         </div>
 
-        {/* La colonne de droite : les autres preuves du meme projet. */}
         <Panneau titre="Autres preuves du projet" sousTitre={`${autres.length} preuve(s)`}>
           {autres.length === 0 ? (
             <EtatVide
@@ -161,7 +146,6 @@ export default function ProofDetailPage() {
                 <li className="suggestion" key={voisine.id}>
                   <VignettePreuve preuve={voisine} />
                   <div className="suggestion__corps">
-                    {/* Le lien s'etire sur toute la ligne via son ::after. */}
                     <Link className="suggestion__lien" to={`/admin/proofs/${voisine.id}`}>
                       {fmt.tronquer(voisine.description, 70)}
                     </Link>

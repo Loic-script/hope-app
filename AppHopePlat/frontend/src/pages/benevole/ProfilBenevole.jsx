@@ -8,13 +8,6 @@ import * as fmt from '../../utils/format.js';
 import { nomDuPays } from '../../utils/pays.js';
 import { Avatar, IconeEnveloppe } from './Benevoles.jsx';
 
-/**
- * Le profil public d'un benevole, lu par un autre.
- *
- * Ce qui aide a travailler ensemble : metier, competences, langues,
- * disponibilites, projets suivis et taches livrees. Ni courriel, ni
- * telephone : le bouton ouvre une conversation dans la messagerie.
- */
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const MOMENTS = { matin: 'Matin', 'apres-midi': 'Après-midi', soir: 'Soir', journee: 'Journée' };
 

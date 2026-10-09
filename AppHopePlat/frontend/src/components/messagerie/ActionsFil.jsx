@@ -6,28 +6,14 @@ import Avatar from './Avatar.jsx';
 import Dialogue from './Dialogue.jsx';
 import { correspond } from './outils.js';
 
-/** Nombre de destinations d'un transfert. */
 const MAX_CIBLES = 10;
 
 const Contexte = createContext(null);
 
-/** Les actions d'un fil, pour une bulle. */
 export function useActionsFil() {
   return useContext(Contexte);
 }
 
-/**
- * Les actions sur les messages d'un fil, et leurs fenetres.
- *
- * Une seule fenetre "Supprimer" et une seule "Transferer" par fil,
- * pilotees d'ici : posees dans le menu d'une bulle, elles disparaitraient
- * avec lui des qu'il se referme.
- *
- * @param {{ api: object, racine: string, filId: number,
- *           onRemplacer: (message: object) => void,
- *           onOuvrirFil: (id: number) => void,
- *           onActivite: () => void, children: React.ReactNode }} props
- */
 export default function ActionsFil({ api, racine, filId, onRemplacer, onOuvrirFil, onActivite, children }) {
   const [aSupprimer, setASupprimer] = useState(null);
   const [aTransferer, setATransferer] = useState(null);
@@ -46,14 +32,12 @@ export default function ActionsFil({ api, racine, filId, onRemplacer, onOuvrirFi
       demanderSuppression: setASupprimer,
       demanderTransfert: setATransferer,
       annoncer,
-      /** Enregistre une modification ; la bulle attend la fin pour se refermer. */
       async modifier(message, corps) {
         const modifie = await service.modifier(api, racine, filId, message.id, corps);
         onRemplacer(modifie);
         onActivite?.();
         return modifie;
       },
-      /** Copie le texte, avec un repli pour les navigateurs sans presse-papiers asynchrone. */
       async copier(texte) {
         try {
           await navigator.clipboard.writeText(texte);
@@ -115,10 +99,6 @@ export default function ActionsFil({ api, racine, filId, onRemplacer, onOuvrirFi
   );
 }
 
-/* ================================================================
-   Supprimer
-   ================================================================ */
-
 function SuppressionDialogue({ api, racine, filId, message, onFermer, onSupprime }) {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -173,10 +153,6 @@ function SuppressionDialogue({ api, racine, filId, message, onFermer, onSupprime
   );
 }
 
-/* ================================================================
-   Transferer
-   ================================================================ */
-
 function TransfertDialogue({ api, racine, filId, message, onFermer, onTransfere }) {
   const [fils, setFils] = useState(null);
   const [personnes, setPersonnes] = useState(null);
@@ -185,7 +161,6 @@ function TransfertDialogue({ api, racine, filId, message, onFermer, onTransfere 
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
 
-  // A chaque ouverture, une selection vide et des listes fraiches.
   useEffect(() => {
     if (!message) return undefined;
     setRecherche('');
@@ -199,7 +174,6 @@ function TransfertDialogue({ api, racine, filId, message, onFermer, onTransfere 
       .then(([liste, annuaire]) => {
         if (annule) return;
         setFils(liste.items);
-        // "Autres personnes" : celles avec qui aucun fil a deux n'existe.
         setPersonnes(annuaire.filter((personne) => !personne.filId));
       })
       .catch((echec) => {
@@ -370,7 +344,6 @@ function TransfertDialogue({ api, racine, filId, message, onFermer, onTransfere 
   );
 }
 
-/** Une section de la liste a cocher, partagee avec les fenetres de groupe. */
 export function Section({ titre, elements, estChoisi, plein, onBasculer, desactive }) {
   if (elements.length === 0) return null;
   return (

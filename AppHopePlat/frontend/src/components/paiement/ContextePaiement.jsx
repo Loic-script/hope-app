@@ -6,17 +6,10 @@ import * as donateurService from '../../services/donateur.service.js';
 import * as donInviteService from '../../services/donInvite.service.js';
 import * as benevoleService from '../../services/espaceBenevole.service.js';
 
-/** Le parcours d'accueil du donateur. */
 const PARCOURS = '/donateur/completer-profil';
 
-/** Le don sans compte, depuis le site vitrine (pages/don/DonSansCompte.jsx). */
 const DON_INVITE = '/faire-un-don';
 
-/*
- * Le jeton du don sans compte, remis par le serveur avec le don : il
- * survit au detour par la banque (le retour de Stripe recharge la page)
- * dans le stockage de session de l'onglet, et nulle part ailleurs.
- */
 const CLE_JETON_INVITE = 'hope.don-invite.jeton';
 
 function lireJetonInvite() {
@@ -31,39 +24,17 @@ function retenirJetonInvite(jeton) {
   try {
     if (jeton) sessionStorage.setItem(CLE_JETON_INVITE, jeton);
   } catch {
-    // Stockage indisponible (navigation privee stricte) : le jeton ne
-    // vivra que le temps de la page.
   }
 }
 
 const Contexte = createContext(null);
 
-/**
- * D'ou l'on paie : le contexte que lisent les pages de paiement.
- *
- * Une meme page -- MVola, carte, virement... -- sert cinq chemins :
- *
- *   * parcours : le donateur vient de s'inscrire ; le moyen et
- *     l'affectation sont ceux de son profil, et la page rend la main a
- *     l'etape 5 ;
- *   * donateur, bailleur, benevole : "Faire un don" dans un espace. Le
- *     don se prepare dans ParcoursDon (destination, montant, moyen),
- *     qui l'apporte ici en brouillon ; la page le fait payer, puis
- *     revient a l'espace ;
- *   * invite : "Faire un don" du site vitrine, sans compte. Le brouillon
- *     porte aussi qui donne (personne) ; le serveur remet un jeton avec
- *     le don, qui sert ensuite a signaler le paiement.
- *
- * Ce contexte cache la difference : qui paie, quel don, quels services
- * appeler, ou aller en quittant.
- */
 export function useContextePaiement() {
   const contexte = useContext(Contexte);
   if (!contexte) throw new Error('Une page de paiement doit etre dans un ContextePaiement.');
   return contexte;
 }
 
-/** Les espaces : leurs services, et ou menent les sorties. */
 const ESPACES = {
   donateur: {
     service: donateurService,
@@ -85,7 +56,6 @@ const ESPACES = {
   },
 };
 
-/** La personne connectee, telle que les pages de paiement la lisent. */
 function personneDe(source = {}) {
   return {
     prenom: source.prenom ?? '',
@@ -104,26 +74,15 @@ export default function ContextePaiement({ espace, children }) {
   const emplacement = useLocation();
   const exterieur = useOutletContext() ?? {};
   const brouillon = emplacement.state?.brouillon ?? null;
-  /*
-   * Le retour de Stripe : la banque a pu demander une confirmation au
-   * donateur, et le ramener ici par une adresse -- sans l'etat de la
-   * page, donc sans brouillon. La session suffit alors : le don est
-   * deja enregistre, il ne reste qu'a en montrer le recu.
-   */
   const sessionPayee = new URLSearchParams(emplacement.search).get('session');
 
   const valeur = useMemo(() => {
-    // ----- Le parcours d'accueil -----
     if (espace === 'parcours') {
       return {
         espace,
         libelleSuite: 'Continuer mon inscription',
         libellePlusTard: 'Payer plus tard',
         rafraichir: exterieur.rafraichir,
-        /**
-         * Le moyen doit etre celui choisi a l'etape 4, et l'etape 4
-         * franchie : sinon, retour au parcours.
-         */
         async charger(mode) {
           const [profil, liste] = await Promise.all([
             donateurService.recupererProfil(),
@@ -146,7 +105,6 @@ export default function ContextePaiement({ espace, children }) {
             affectation: profil.don?.affectation || 'HOPE',
             projetId: profil.don?.affectation === 'PROJECT' ? profil.don.projetId : undefined,
             beneficiaire: projet?.nom ?? (profil.don?.affectation === 'PROJECT' ? 'Le projet choisi' : 'Les projets de HOPE'),
-            // Le premier don ; la frequence se choisit a l'etape suivante.
             frequence: 'ONE_TIME',
             montant: null,
             devise: null,
@@ -167,7 +125,6 @@ export default function ContextePaiement({ espace, children }) {
       };
     }
 
-    // ----- Le don sans compte, depuis le site vitrine -----
     if (espace === 'invite') {
       const prepare = brouillon ?? {};
       const donateur = prepare.personne ?? null;
@@ -177,10 +134,6 @@ export default function ContextePaiement({ espace, children }) {
         libellePlusTard: 'Revenir au site',
         rafraichir: undefined,
         async charger(mode) {
-          // Sans brouillon -- une adresse tapee, une page rechargee --, ou
-          // pour un autre moyen : le don se prepare d'abord. Sauf au
-          // retour d'un paiement par carte : le don est fait, on montre
-          // son recu.
           if ((!brouillon || brouillon.mode !== mode) && !sessionPayee) {
             navigate(DON_INVITE, { replace: true });
             return null;
@@ -191,7 +144,6 @@ export default function ContextePaiement({ espace, children }) {
             projetId: prepare.affectation === 'PROJECT' ? prepare.projetId : undefined,
             beneficiaire:
               prepare.projetNom || (prepare.affectation === 'PROJECT' ? 'Le projet choisi' : 'Les projets de HOPE'),
-            // Un don sans compte est ponctuel : le mensuel suppose un espace.
             frequence: 'ONE_TIME',
             message: prepare.message,
             montant: prepare.montant ?? null,
@@ -217,7 +169,6 @@ export default function ContextePaiement({ espace, children }) {
         sessionPayee,
         quitter(etape) {
           if (etape) {
-            // Revenir au choix du moyen : le formulaire reprend la ou il etait.
             navigate(DON_INVITE, { replace: true, state: prepare.reprise ? { reprise: prepare.reprise } : undefined });
             return;
           }
@@ -226,7 +177,6 @@ export default function ContextePaiement({ espace, children }) {
       };
     }
 
-    // ----- Un espace : le don prepare dans ParcoursDon -----
     const reglage = ESPACES[espace];
     return {
       espace,
@@ -234,9 +184,6 @@ export default function ContextePaiement({ espace, children }) {
       libellePlusTard: 'Revenir plus tard',
       rafraichir: exterieur.rafraichirCompteurs ?? exterieur.rafraichir,
       async charger(mode) {
-        // Sans brouillon -- une adresse tapee, une page rechargee --, ou
-        // pour un autre moyen : le don se prepare d'abord. Sauf au
-        // retour d'un paiement : le don est fait, on montre son recu.
         if ((!brouillon || brouillon.mode !== mode) && !sessionPayee) {
           navigate(reglage.faireUnDon, { replace: true });
           return null;
@@ -270,7 +217,6 @@ export default function ContextePaiement({ espace, children }) {
       sessionPayee,
       quitter(etape) {
         if (etape) {
-          // Revenir au choix du moyen : le don se reprend la ou il etait.
           const projet = brouillon?.projetId ? `?projet=${brouillon.projetId}` : '';
           navigate(`${reglage.faireUnDon}${projet}`, { replace: true });
           return;

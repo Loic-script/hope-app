@@ -1,6 +1,3 @@
-/**
- * Service frontend des beneficiaires.
- */
 import { api } from './api.js';
 
 export async function lister(filtres = {}) {
@@ -23,13 +20,6 @@ export async function mettreAJour(id, modifications) {
   return data;
 }
 
-/**
- * POST /api/admin/beneficiaries/photo
- *
- * Televerse la photo et rend { fichier, url } : le nom a rattacher a la
- * fiche, et une adresse signee pour l'apercu. Le Content-Type a
- * undefined laisse le navigateur ecrire la frontiere du multipart.
- */
 export async function televerserPhoto(fichier) {
   const formulaire = new FormData();
   formulaire.append('photo', fichier);

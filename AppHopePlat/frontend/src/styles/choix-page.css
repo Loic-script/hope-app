@@ -1,19 +1,3 @@
-/* ============================================================
-   Un choix sur une page a lui (components/ChoixSurPage.jsx)
-
-   Sur telephone, les longues listes du formulaire -- pays, indicatif,
-   langue, fuseau horaire -- s'ouvrent sur une page entiere, rangee comme
-   celles des applications de telephone :
-     - l'en-tete : le retour, le titre, la recherche ;
-     - la liste en sections (suggestions, puis A, B, C...), chaque
-       en-tete de section accroche en haut tant qu'on la parcourt ;
-     - l'index A-Z sur le bord droit ;
-     - des lignes egales : drapeau, nom et precision, detail, coche,
-       separees d'un trait fin.
-   Rattachee au document, la page porte ses propres couleurs.
-   ============================================================ */
-
-/* Le champ ferme : il se lit comme la liste native qu'il remplace. */
 .choix-page__declencheur {
   display: flex;
   align-items: center;
@@ -32,8 +16,6 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
-/* ---------------- La page ---------------- */
 
 .choix-page {
   --choix-encre: #2a2839;
@@ -60,8 +42,6 @@
   outline: none;
 }
 
-/* ---------------- En haut : retour, titre, recherche ---------------- */
-
 .choix-page__entete {
   flex: none;
   position: relative;
@@ -72,7 +52,6 @@
   transition: box-shadow 0.2s ease;
 }
 
-/* La liste passe dessous : une ombre detache l'en-tete. */
 .choix-page--defile .choix-page__entete {
   box-shadow:
     0 1px 0 var(--choix-trait),
@@ -163,7 +142,6 @@
   color: var(--hope-violet);
 }
 
-/* 16 px : en dessous, iOS agrandit la page au focus. */
 .choix-page__saisie {
   flex: 1;
   min-width: 0;
@@ -201,8 +179,6 @@
   height: 16px;
 }
 
-/* ---------------- La liste ---------------- */
-
 .choix-page__corps {
   position: relative;
   flex: 1;
@@ -210,7 +186,6 @@
   display: flex;
 }
 
-/* Positionnee : les sections y mesurent leur place (offsetTop). */
 .choix-page__liste {
   position: relative;
   flex: 1;
@@ -221,7 +196,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* L'en-tete d'une section reste en haut tant qu'on parcourt ses lignes. */
 .choix-page__groupe {
   position: sticky;
   top: 0;
@@ -243,7 +217,6 @@
   border-top-color: transparent;
 }
 
-/* Une lettre : plus grande, a la couleur de HOPE. */
 .choix-page__groupe--lettre {
   padding-top: 6px;
   padding-bottom: 6px;
@@ -252,7 +225,6 @@
   color: var(--hope-violet);
 }
 
-/* "3 resultats" : une simple mention au-dessus des lignes trouvees. */
 .choix-page__groupe--resultats {
   position: static;
   border: none;
@@ -265,10 +237,6 @@
   text-transform: none;
 }
 
-/*
- * Une ligne : 60 px, a la mesure du doigt. Le trait qui la separe de la
- * suivante commence sous le texte, comme sur un telephone.
- */
 .choix-page__option {
   --retrait: var(--choix-marge);
 
@@ -308,7 +276,6 @@
   color: var(--hope-violet);
 }
 
-/* Le drapeau du pays, dessine par le telephone. */
 .choix-page__drapeau {
   flex: none;
   width: 40px;
@@ -318,7 +285,6 @@
   text-align: center;
 }
 
-/* Sans drapeau dessine, ou pour une langue : une pastille ("MG", "ES"). */
 .choix-page__pastille {
   flex: none;
   display: grid;
@@ -373,7 +339,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* La place de la coche est gardee sur chaque ligne : les details restent alignes. */
 .choix-page__marque {
   flex: none;
   display: grid;
@@ -396,9 +361,6 @@
   color: var(--choix-doux);
 }
 
-/* ---------------- L'index A-Z ---------------- */
-
-/* Les lignes laissent la place de l'index. */
 .choix-page--index .choix-page__option,
 .choix-page--index .choix-page__groupe {
   padding-right: 36px;
@@ -436,7 +398,6 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* La lettre touchee, en grand au milieu : on sait ou l'on arrive. */
 .choix-page__bulle {
   position: absolute;
   z-index: 4;

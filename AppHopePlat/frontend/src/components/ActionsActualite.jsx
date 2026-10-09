@@ -5,26 +5,12 @@ import { apiBailleur } from '../services/apiBailleur.js';
 import { apiBenevole } from '../services/apiBenevole.js';
 import { apiDonateur } from '../services/apiDonateur.js';
 
-/**
- * « J'aime » et « Commenter », au pied d'une actualite de HOPE dans les
- * accueils des espaces.
- *
- * Le nombre de J'aime se voit de tous. Un commentaire part a l'equipe
- * HOPE seule : il n'apparait pas dans le fil -- la zone le dit avant
- * l'envoi.
- */
 const CLIENTS = { donateur: apiDonateur, benevole: apiBenevole, bailleur: apiBailleur };
 
-/** Les identifiants des actualites d'un fil. */
 export function idsActualites(actualites) {
   return (actualites ?? []).map((a) => a.id).filter(Boolean);
 }
 
-/**
- * L'etat des reactions de toutes les actualites d'un fil, en une requete.
- * @param {'donateur'|'benevole'|'bailleur'} espace
- * @param {string[]} ids les identifiants des actualites affichees
- */
 export function useReactionsActualites(espace, ids) {
   const client = CLIENTS[espace];
   const [etats, setEtats] = useState({});
@@ -44,7 +30,6 @@ export function useReactionsActualites(espace, ids) {
 
   const basculer = useCallback(
     async (id) => {
-      // Reponse immediate a l'ecran, corrigee par le serveur.
       setEtats((e) => {
         const actuel = e[id] ?? { jaimes: 0, jaime: false };
         return { ...e, [id]: { jaime: !actuel.jaime, jaimes: Math.max(0, actuel.jaimes + (actuel.jaime ? -1 : 1)) } };
@@ -86,11 +71,6 @@ function Bulle() {
   );
 }
 
-/**
- * Les deux boutons, et la zone de commentaire qui se deplie dessous.
- * @param {{ publication: object, etat?: { jaimes: number, jaime: boolean },
- *           onJaime: (id: string) => void, onCommenter: (id: string, texte: string) => Promise<{message: string}> }} props
- */
 export default function ActionsActualite({ publication, etat, onJaime, onCommenter }) {
   const [ouvert, setOuvert] = useState(false);
   const [texte, setTexte] = useState('');

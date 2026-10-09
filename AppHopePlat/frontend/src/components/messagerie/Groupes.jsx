@@ -6,17 +6,10 @@ import { Section } from './ActionsFil.jsx';
 import Dialogue from './Dialogue.jsx';
 import { correspond, initiales } from './outils.js';
 
-/** Participants d'un groupe, createur compris. */
 const MAX_PARTICIPANTS = 50;
 const NOM_MAX = 80;
 const PHOTO_MAX = 8 * 1024 * 1024;
 
-/**
- * La liste des personnes a cocher, avec sa recherche et ses etiquettes.
- *
- * @param {{ personnes: object[]|null, choisis: object[], onChange: (choisis: object[]) => void,
- *           maximum: number, desactive: boolean }} props
- */
 function ChoixPersonnes({ personnes, choisis, onChange, maximum, desactive }) {
   const [recherche, setRecherche] = useState('');
 
@@ -95,11 +88,6 @@ function ChoixPersonnes({ personnes, choisis, onChange, maximum, desactive }) {
   );
 }
 
-/**
- * Creer un groupe : un nom, une photo facultative, des participants.
- *
- * @param {{ api: object, racine: string, onCree: (id: number) => void }} props
- */
 export function BoutonCreerGroupe({ api, racine, onCree }) {
   const [ouvert, setOuvert] = useState(false);
   const [nom, setNom] = useState('');
@@ -121,7 +109,6 @@ export function BoutonCreerGroupe({ api, racine, onCree }) {
     let annule = false;
     service
       .joignables(api, racine)
-      // L'equipe en bloc n'est pas une personne : elle ne se met pas dans un groupe.
       .then((items) => !annule && setPersonnes(items.filter((p) => p.type !== 'equipe')))
       .catch((echec) => !annule && setErreur(messageErreur(echec, 'La liste des personnes n’a pas pu être chargée.')));
     return () => {
@@ -129,7 +116,6 @@ export function BoutonCreerGroupe({ api, racine, onCree }) {
     };
   }, [ouvert, api, racine]);
 
-  // L'apercu de la photo, libere quand il change.
   useEffect(() => {
     if (!photo) {
       setApercu(null);
@@ -257,13 +243,6 @@ export function BoutonCreerGroupe({ api, racine, onCree }) {
   );
 }
 
-/**
- * Les actions d'un groupe, dans le panneau : ajouter des participants,
- * quitter le groupe.
- *
- * @param {{ api: object, racine: string, conversation: object,
- *           onAjoutes: () => void, onQuitte: (nom: string) => void }} props
- */
 export function ActionsGroupe({ api, racine, conversation, onAjoutes, onQuitte }) {
   const [ajout, setAjout] = useState(false);
   const [depart, setDepart] = useState(false);
@@ -283,7 +262,6 @@ export function ActionsGroupe({ api, racine, conversation, onAjoutes, onQuitte }
     const presents = new Set(conversation.participants.map((p) => `${p.type}:${p.id}`));
     service
       .joignables(api, racine)
-      // Seulement ceux qui ne sont pas deja dans le groupe.
       .then((items) => !annule && setPersonnes(items.filter((p) => p.type !== 'equipe' && !presents.has(`${p.type}:${p.id}`))))
       .catch((echec) => !annule && setErreur(messageErreur(echec, 'La liste des personnes n’a pas pu être chargée.')));
     return () => {

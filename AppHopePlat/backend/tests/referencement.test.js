@@ -1,7 +1,3 @@
-/*
- * Le referencement : les moteurs lisent les pages publiques, jamais les
- * espaces ; le plan du site donne des adresses absolues.
- */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 

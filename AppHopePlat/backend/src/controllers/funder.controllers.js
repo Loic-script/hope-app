@@ -1,10 +1,3 @@
-/**
- * Controleurs de l'espace bailleur.
- *
- * Lecture de la requete, appel du service, formatage : aucune regle
- * metier ici. req.bailleur est pose par authenticateFunder et porte
- * l'organisation resolue depuis le compte connecte.
- */
 import * as funderAuthService from '../services/funderAuth.service.js';
 import * as funderService from '../services/funder.service.js';
 import * as mediaService from '../services/media.service.js';
@@ -14,14 +7,6 @@ import * as promesseDonService from '../services/promesseDon.service.js';
 import { gerer } from './handler.js';
 import { effacerSessionsUtilisateur, poserSession } from '../shared/session.js';
 
-/* ---------------------------- Authentification ------------------------- */
-
-/**
- * POST /api/bailleur/inscription
- *
- * Repond 201 sans jeton : le compte et l'organisation existent, mais
- * l'acces attend la validation de l'equipe HOPE.
- */
 export async function inscription(req, res, next) {
   try {
     const bailleur = await funderAuthService.inscrire(req.body ?? {});
@@ -37,7 +22,6 @@ export async function inscription(req, res, next) {
   }
 }
 
-/** POST /api/bailleur/login */
 export async function login(req, res, next) {
   try {
     const { email, motDePasse } = req.body ?? {};
@@ -57,7 +41,6 @@ export async function login(req, res, next) {
   }
 }
 
-/** GET /api/bailleur/me  (protege) */
 export async function me(req, res, next) {
   try {
     res.status(200).json({ authenticated: true, bailleur: req.bailleur });
@@ -66,13 +49,11 @@ export async function me(req, res, next) {
   }
 }
 
-/** POST /api/bailleur/logout  (protege) */
 export async function logout(_req, res) {
   effacerSessionsUtilisateur(res);
   res.status(200).json({ success: true, message: 'Déconnexion effectuée.' });
 }
 
-/** Les types d'organisation, pour la liste du formulaire de completion. */
 export async function typesOrganisation(_req, res) {
   res.status(200).json({
     items: funderAuthService.TYPES_ORGANISATION.map((cle) => ({
@@ -81,8 +62,6 @@ export async function typesOrganisation(_req, res) {
     })),
   });
 }
-
-/* ------------------------------- L'espace ------------------------------ */
 
 export const espace = {
   mettreAJourOrganisation: gerer((req) =>
@@ -94,8 +73,6 @@ export const espace = {
   paiements: gerer((req) => funderService.paiements(req.bailleur)),
   projets: gerer((req) => funderService.projets(req.bailleur.bailleurId)),
   projet: gerer((req) => funderService.projet(req.bailleur.bailleurId, req.params.id)),
-  // Faire un don a un projet : une promesse, ponctuelle -- le bailleur
-  // choisit son mode de paiement ; l'equipe confirme a reception.
   optionsDon: gerer(() => promesseDonService.options()),
   faireUnDon: gerer(
     (req) =>
@@ -105,7 +82,6 @@ export const espace = {
     { statut: 201 }
   ),
   coordonneesPaiement: gerer(async () => donorSpaceService.coordonneesDePaiement()),
-  // Le compte qui paie : celui de la personne connectee, pas l'organisation.
   declarerPaiement: gerer((req) =>
     donorSpaceService.declarerPaiement(
       {
@@ -153,6 +129,5 @@ export const espace = {
   mettreAJourContact: gerer((req) =>
     funderService.mettreAJourContact(req.bailleur.contactId, req.body)
   ),
-  // Le fichier seul : c'est la mise a jour de la fiche qui le rattache.
   televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
 };

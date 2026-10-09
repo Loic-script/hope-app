@@ -7,34 +7,9 @@ import herilanja from '../../assets/vitrine/equipe/herilanja.jpg';
 import { useApparition } from '../../hooks/useApparition.js';
 import { urlMedia } from '../../services/api.js';
 
-/**
- * L'equipe de HOPE, sur la page "Nous decouvrir" : qui elle est, les
- * membres du bureau, les benevoles, et le mot de la presidente.
- *
- * Les portraits du bureau et de la presidente sont ceux fournis par
- * HOPE, decoupes au disque interieur de leur anneau
- * (assets/vitrine/equipe) ; les personnes y figurent avec leur accord.
- * Les benevoles, eux, viennent de la plateforme (GET
- * /api/public/benevoles) : les benevoles actifs, avec leur prenom et leur
- * photo, sauf ceux qui ont demande depuis leur profil a ne pas y paraitre.
- */
-
-/* ----------------------------- Le portrait ----------------------------- */
-
-/**
- * Un portrait en medaillon, releve sur les maquettes, l'anneau exterieur
- * (R = 40) pris pour unite : anneau de 0,077 R, cinq rayons de 1,10 a
- * 1,42 R tous les 30 degres, et une barre de chaque cote de la meme
- * longueur, a la couleur de la section (violet au bureau, bleu chez les
- * benevoles). La photo est rognee au disque interieur de l'anneau.
- *
- * Sans photo (un benevole qui n'en a pas mise), le disque porte son
- * initiale. Decoratif : le nom est ecrit sous le portrait.
- */
 function Portrait({ src, initiale = '', barres = 'violet' }) {
   const id = useId();
   return (
-    // Le boitier s'arrete juste sous l'anneau (y = 44) : le nom vient tout pres.
     <svg className={`v-portrait v-portrait--${barres}`} viewBox="-60 -60 120 104" aria-hidden="true">
       <defs>
         <clipPath id={id}>
@@ -77,19 +52,6 @@ function Portrait({ src, initiale = '', barres = 'violet' }) {
   );
 }
 
-/**
- * Le portrait de la presidente, en calques empiles (boitier de 128
- * unites, centre au milieu : la photo en occupe 63 %) :
- *   - derriere la carte : un halo jaune, la couronne de douze rayons
- *     (de 51,5 a 63) qui tourne lentement, et une orbite en pointilles
- *     (R = 48,4) avec son satellite, qui tourne a contresens ;
- *   - devant la carte : la photo (R = 40,2) dans son anneau jaune de 5,2
- *     d'epaisseur (R = 42,6), qui se trace a l'apparition.
- * La carte passe entre les deux : les rayons se couchent derriere elle.
- *
- * Les rotations portent sur les calques entiers (transform seul) et ne
- * tournent que lorsque la section est a l'ecran (.v-direction--en-vue).
- */
 function MedaillonDirection({ src }) {
   const id = useId();
   return (
@@ -122,7 +84,6 @@ function MedaillonDirection({ src }) {
             <circle r="40.2" />
           </clipPath>
         </defs>
-        {/* Le rognage reste fixe ; la photo, elle, se pose en reculant. */}
         <g clipPath={`url(#${id})`}>
           <image
             className="v-direction__photo"
@@ -134,14 +95,11 @@ function MedaillonDirection({ src }) {
             preserveAspectRatio="xMidYMid slice"
           />
         </g>
-        {/* Tourne d'un quart : le trace de l'anneau part du sommet. */}
         <circle className="v-portrait__anneau v-direction__anneau" r="42.6" pathLength="100" transform="rotate(-90)" />
       </svg>
     </div>
   );
 }
-
-/* ------------------------------ Notre equipe ------------------------------ */
 
 function NotreEquipe() {
   const [ref, vu] = useApparition({ seuil: 0.3 });
@@ -167,8 +125,6 @@ function NotreEquipe() {
     </section>
   );
 }
-
-/* --------------------------- Les membres du bureau --------------------------- */
 
 const BUREAU = [
   { cle: 'ando', nom: 'Ando Lalaina Ratovomanana', role: 'Présidente et fondatrice', photo: ando },
@@ -198,9 +154,6 @@ function MembresDuBureau() {
   );
 }
 
-/* ------------------------------ Les benevoles ------------------------------ */
-
-/** Devenir benevole : l'inscription a l'espace benevole. */
 const LIEN_BENEVOLE = '/authentification?type=benevole';
 
 function IconeChevron({ sens }) {
@@ -211,12 +164,6 @@ function IconeChevron({ sens }) {
   );
 }
 
-/**
- * Le carrousel des benevoles de la plateforme : trois portraits a
- * l'ecran, un sur telephone ; les fleches font glisser d'un portrait,
- * les points disent ou l'on est et y menent. Sans benevole a montrer, la
- * rubrique invite a rejoindre l'equipe.
- */
 function LesBenevoles() {
   const [ref, vu] = useApparition({ seuil: 0.2 });
   const piste = useRef(null);
@@ -282,7 +229,6 @@ function LesBenevoles() {
               >
                 <IconeChevron sens="gauche" />
               </button>
-              {/* La piste defile : on la rend atteignable au clavier (fleches du clavier). */}
               <ul
                 className="v-benevoles__piste"
                 ref={piste}
@@ -331,11 +277,8 @@ function LesBenevoles() {
   );
 }
 
-/* --------------------------- Le mot de la direction --------------------------- */
-
 function MotDeLaDirection() {
   const [ref, vu] = useApparition({ seuil: 0.25 });
-  // Le soleil ne tourne que lorsque la section est a l'ecran.
   const [enVue, setEnVue] = useState(() => typeof IntersectionObserver === 'undefined');
 
   useEffect(() => {

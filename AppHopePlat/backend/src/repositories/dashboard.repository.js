@@ -1,13 +1,6 @@
-/**
- * Repository de la page d'accueil administrateur.
- *
- * Rassemble en quelques requetes les chiffres du haut de page et le
- * fil d'activite.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/** Compteurs affiches dans les cartes du haut. */
 export async function chiffresCles(client = null) {
   const resultat = await query(
     `SELECT
@@ -40,7 +33,6 @@ export async function chiffresCles(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Variations sur 30 jours, affichees sous chaque chiffre cle. */
 export async function variationsDuMois(client = null) {
   const resultat = await query(
     `SELECT
@@ -61,7 +53,6 @@ export async function variationsDuMois(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Fil d'activite : les dernieres ecritures, toutes sources confondues. */
 export async function activitesRecentes(limite = 8, client = null) {
   const resultat = await query(
     `(SELECT 'DONATION' AS kind, d.id, d.created_at AS happened_at,

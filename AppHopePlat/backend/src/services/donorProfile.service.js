@@ -1,23 +1,9 @@
-/**
- * Le parcours d'accueil du donateur.
- *
- * Cinq etapes s'ouvrent des l'inscription : informations personnelles,
- * profil du donateur, affectation du don, mode de paiement, frequence.
- * Ce fichier porte la premiere ; les suivantes s'y ajouteront.
- */
 import { transaction } from '../config/database.js';
 import * as donorProfileRepository from '../repositories/donorProfile.repository.js';
 import { ErreurValidation } from '../shared/errors.js';
 import { DEVISES_ACCEPTEES } from '../shared/money.js';
 import { lister as listerProjets } from './project.service.js';
 
-/**
- * Comment on a connu HOPE.
- *
- * La liste vit ici, et la contrainte de la table la recopie : le
- * formulaire la recoit du serveur, et ne peut donc pas proposer un choix
- * que la base refuserait.
- */
 export const SOURCES_CONNAISSANCE = [
   { cle: 'reseaux_sociaux', libelle: 'Réseaux sociaux (Facebook, Instagram…)' },
   { cle: 'bouche_a_oreille', libelle: 'Un proche, le bouche-à-oreille' },
@@ -29,10 +15,6 @@ export const SOURCES_CONNAISSANCE = [
   { cle: 'autre', libelle: 'Autre' },
 ];
 
-/**
- * Les types de donateur. "structure" dit ceux qui donnent au nom d'une
- * organisation : leur raison sociale est alors exigee, pour les recus.
- */
 export const TYPES_DONATEUR = [
   {
     cle: 'particulier',
@@ -72,21 +54,12 @@ export const TYPES_DONATEUR = [
   },
 ];
 
-/** Les devises proposees : celles qu'un don peut effectivement porter. */
 const LIBELLES_DEVISE = { MGA: 'Ariary', EUR: 'Euro', USD: 'Dollar américain' };
 export const DEVISES = DEVISES_ACCEPTEES.map((code) => ({
   code,
   libelle: LIBELLES_DEVISE[code] ?? code,
 }));
 
-/**
- * Les langues du monde : codes ISO 639-1 des langues vivantes.
- *
- * Les langues anciennes, liturgiques ou construites pour l'etude (latin,
- * sanskrit, avestique, volapuk...) n'y sont pas : on choisit ici la
- * langue dans laquelle on veut etre ecrit. Le norvegien figure une fois,
- * sous "no", plutot qu'en trois variantes.
- */
 const CODES_LANGUES = [
   'aa', 'ab', 'af', 'ak', 'am', 'an', 'ar', 'as', 'av', 'ay', 'az', 'ba', 'be', 'bg', 'bi',
   'bm', 'bn', 'bo', 'br', 'bs', 'ca', 'ce', 'ch', 'co', 'cr', 'cs', 'cv', 'cy', 'da', 'de',
@@ -102,12 +75,10 @@ const CODES_LANGUES = [
   'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu',
 ];
 
-/** Les langues dans lesquelles HOPE ecrit deja : proposees en tete. */
 const LANGUES_COURANTES = ['fr', 'mg', 'en'];
 
 const nomsFrancais = new Intl.DisplayNames(['fr'], { type: 'language', fallback: 'none' });
 
-/** Le nom d'une langue dans cette langue-la ("español"), si le moteur le connait. */
 function nomPropre(code) {
   try {
     if (Intl.DisplayNames.supportedLocalesOf([code]).length === 0) return null;
@@ -117,11 +88,6 @@ function nomPropre(code) {
   }
 }
 
-/**
- * "Espagnol (español)", "Malgache (Malagasy)", "Français" : le nom
- * francais, pour la page qui est en francais, et le nom que la langue se
- * donne, pour qu'on reconnaisse la sienne au premier coup d'oeil.
- */
 function libelleLangue(code) {
   const francais = nomsFrancais.of(code) ?? code;
   const libelle = francais.charAt(0).toLocaleUpperCase('fr') + francais.slice(1);
@@ -129,7 +95,6 @@ function libelleLangue(code) {
   return propre && propre.toLowerCase() !== francais.toLowerCase() ? `${libelle} (${propre})` : libelle;
 }
 
-/** Toutes les langues : les courantes d'abord, puis les autres par ordre alphabetique. */
 export const LANGUES = (() => {
   const liste = CODES_LANGUES.map((cle) => ({
     cle,
@@ -143,14 +108,6 @@ export const LANGUES = (() => {
   return [...courantes, ...autres];
 })();
 
-/**
- * Les modes de paiement, dans l'ordre du modele : ceux qu'on utilise a
- * Madagascar, puis ceux qui viennent de l'etranger. "zone" permet au
- * formulaire de mettre en tete ceux du pays du donateur.
- *
- * Les phrases disent ce qu'est le moyen, pas ce qui se passera ensuite :
- * le paiement lui-meme n'est pas encore en ligne.
- */
 export const MODES_PAIEMENT = [
   {
     cle: 'mvola',
@@ -202,7 +159,6 @@ export const MODES_PAIEMENT = [
   },
 ];
 
-/** Les deux frequences : le vocabulaire de donations.frequency. */
 export const FREQUENCES = [
   {
     cle: 'ONE_TIME',
@@ -218,10 +174,8 @@ export const FREQUENCES = [
   },
 ];
 
-/** Le numero au format international : "+261341234567". */
 const TELEPHONE_E164 = /^\+[1-9]\d{6,14}$/;
 
-/** La fiche, et ce qu'il faut au formulaire pour l'afficher. */
 export async function recuperer(utilisateurId) {
   await donorProfileRepository.garantir(utilisateurId);
   const fiche = await donorProfileRepository.trouver(utilisateurId);
@@ -238,8 +192,6 @@ export async function recuperer(utilisateurId) {
       profession: fiche.profession ?? '',
       source: fiche.sourceConnaissance ?? '',
     },
-    // Vide tant que l'etape 2 n'a pas ete enregistree : le formulaire
-    // propose alors ses valeurs, deduites du pays.
     profil: {
       type: fiche.typeDonateur ?? '',
       nomStructure: fiche.nomStructure ?? '',
@@ -248,16 +200,12 @@ export async function recuperer(utilisateurId) {
       langue: fiche.langue ?? '',
       fuseau: fiche.fuseauHoraire ?? '',
     },
-    // Vide tant que l'etape 3 n'a pas ete enregistree.
     don: {
       affectation: fiche.affectation ?? '',
       projetId: fiche.projetId ?? null,
     },
-    // Vide tant que l'etape 4 n'a pas ete enregistree.
     paiement: { mode: fiche.modePaiement ?? '' },
-    // Vide tant que l'etape 5 n'a pas ete enregistree.
     frequence: { valeur: fiche.frequence ?? '' },
-    // Le compte lui-meme : son adresse, sa photo, depuis quand il donne.
     compte: {
       email: fiche.email ?? '',
       photoUrl: fiche.photoUrl ?? null,
@@ -274,7 +222,6 @@ export async function recuperer(utilisateurId) {
   };
 }
 
-/** Un texte obligatoire, borne. L'erreur va dans details. */
 function requis(valeur, champ, max, details) {
   const propre = String(valeur ?? '').trim();
   if (propre === '') details[champ] = 'Champ obligatoire';
@@ -282,12 +229,6 @@ function requis(valeur, champ, max, details) {
   return propre;
 }
 
-/**
- * Enregistre l'etape 1.
- *
- * Obligatoires : nom, prenom, adresse, ville, pays, telephone.
- * Facultatifs : profession, et la facon dont on a connu HOPE.
- */
 export async function enregistrerEtape1(utilisateurId, corps = {}) {
   const details = {};
 
@@ -300,7 +241,6 @@ export async function enregistrerEtape1(utilisateurId, corps = {}) {
   if (pays === '') details.pays = 'Champ obligatoire';
   else if (!/^[A-Z]{2}$/.test(pays)) details.pays = 'Pays inconnu';
 
-  // Le formulaire envoie le numero deja mis au format international.
   const telephone = String(corps.telephone ?? '').replace(/[\s.-]/g, '');
   if (telephone === '') details.telephone = 'Champ obligatoire';
   else if (!TELEPHONE_E164.test(telephone)) details.telephone = 'Numéro invalide';
@@ -336,8 +276,6 @@ export async function enregistrerEtape1(utilisateurId, corps = {}) {
       );
     });
   } catch (erreur) {
-    // Le telephone est UNIQUE sur le compte : un numero deja porte par
-    // un autre revient comme une erreur de champ, pas une erreur interne.
     if (erreur?.code === '23505' && String(erreur.constraint ?? '').includes('telephone')) {
       throw new ErreurValidation('Ce numéro est déjà utilisé par un autre compte.', {
         telephone: 'Numéro déjà utilisé',
@@ -349,13 +287,6 @@ export async function enregistrerEtape1(utilisateurId, corps = {}) {
   return recuperer(utilisateurId);
 }
 
-/**
- * Une adresse de site, completee et controlee.
- *
- * "hope.mg" devient "https://hope.mg" : personne ne tape le protocole, et
- * un lien sans lui ne mene nulle part. Seuls http et https sont admis,
- * avec un nom de domaine qui en est un.
- */
 function siteValide(valeur, details) {
   const texte = String(valeur ?? '').trim();
   if (texte === '') return null;
@@ -378,7 +309,6 @@ function siteValide(valeur, details) {
   return complet;
 }
 
-/** Un fuseau IANA que le moteur sait appliquer. */
 function fuseauValide(valeur) {
   const texte = String(valeur ?? '').trim();
   if (texte === '' || texte.length > 64 || !/^[A-Za-z]+(\/[A-Za-z0-9_+-]+)+$/.test(texte)) {
@@ -392,13 +322,6 @@ function fuseauValide(valeur) {
   }
 }
 
-/**
- * Enregistre l'etape 2.
- *
- * Obligatoires : le type, la devise, la langue, le fuseau -- et la
- * raison sociale pour une structure. Le site web reste facultatif ; il
- * n'est garde que pour une structure, comme la raison sociale.
- */
 export async function enregistrerEtape2(utilisateurId, corps = {}) {
   const details = {};
 
@@ -441,11 +364,6 @@ export async function enregistrerEtape2(utilisateurId, corps = {}) {
   return recuperer(utilisateurId);
 }
 
-/* ================================================================
-   Etape 3 : l'affectation du don
-   ================================================================ */
-
-/** Une accroche de projet : son titre de description, ou son debut. */
 function accroche(projet) {
   const titre = String(projet.descriptionTitre ?? '').trim();
   if (titre) return titre;
@@ -455,19 +373,6 @@ function accroche(projet) {
   return `${coupe.slice(0, coupe.lastIndexOf(' ') > 90 ? coupe.lastIndexOf(' ') : 150)}…`;
 }
 
-/**
- * Les projets que l'on peut soutenir.
- *
- * Les projets HOPE en cours -- ni termines, ni archives, ni internes : un
- * projet interne fait evoluer HOPE elle-meme, et ne se presente pas aux
- * donateurs. Les chiffres sont ceux de la fiche projet de l'equipe.
- *
- * Seule leur face publique sort d'ici : nom, lieu, categorie, image,
- * accroche, et les totaux. Rien sur les beneficiaires ni les donateurs.
- *
- * Ceux qui ont le plus besoin de soutien viennent d'abord ; un projet
- * deja finance vient en dernier, marque comme tel.
- */
 export async function projetsProposes() {
   const { items } = await listerProjets({ status: 'IN_PROGRESS', projectType: 'HOPE', pageSize: 200 });
   return items
@@ -476,8 +381,6 @@ export async function projetsProposes() {
       reference: projet.reference ?? null,
       nom: projet.name,
       accroche: accroche(projet),
-      // Le texte entier, et la date de lancement : l'espace donateur
-      // presente ces projets en fil de publications.
       description: projet.description ?? '',
       debut: projet.startDate ?? projet.createdAt ?? null,
       lieu: projet.location ?? '',
@@ -494,12 +397,6 @@ export async function projetsProposes() {
     .sort((a, b) => Number(a.atteint) - Number(b.atteint) || Number(a.taux) - Number(b.taux));
 }
 
-/**
- * Enregistre l'etape 3.
- *
- * PROJECT exige un projet, et un projet que l'on peut encore soutenir :
- * en cours, et dont l'objectif n'est pas atteint. HOPE n'en prend aucun.
- */
 export async function enregistrerEtape3(utilisateurId, corps = {}) {
   const affectation = String(corps.affectation ?? '').trim().toUpperCase();
   if (!['PROJECT', 'HOPE'].includes(affectation)) {
@@ -533,11 +430,6 @@ export async function enregistrerEtape3(utilisateurId, corps = {}) {
   return recuperer(utilisateurId);
 }
 
-/* ================================================================
-   Etape 4 : le mode de paiement
-   ================================================================ */
-
-/** Enregistre l'etape 4 : un mode de paiement de la liste. */
 export async function enregistrerEtape4(utilisateurId, corps = {}) {
   const mode = String(corps.mode ?? '').trim();
   if (!MODES_PAIEMENT.some((m) => m.cle === mode)) {
@@ -554,11 +446,6 @@ export async function enregistrerEtape4(utilisateurId, corps = {}) {
   return recuperer(utilisateurId);
 }
 
-/* ================================================================
-   Etape 5 : la frequence, et la fin du parcours
-   ================================================================ */
-
-/** Enregistre l'etape 5 et clot le parcours. */
 export async function enregistrerEtape5(utilisateurId, corps = {}) {
   const frequence = String(corps.frequence ?? '').trim().toUpperCase();
   if (!FREQUENCES.some((f) => f.cle === frequence)) {

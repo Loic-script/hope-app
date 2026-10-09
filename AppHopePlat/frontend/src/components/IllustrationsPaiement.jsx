@@ -1,14 +1,3 @@
-/**
- * Illustrations des moyens de paiement sans logo de marque.
- *
- * Le trait violet de la charte, comme dans le modele de l'etape 4 ; une
- * touche de couleur la ou elle porte un sens -- le vert d'un billet, le
- * bleu d'une application. Les moyens qui ont une marque (MVola, Orange
- * Money, les cartes) gardent leur logo : on les reconnait par lui.
- *
- * Toutes decoratives : le nom du moyen est ecrit sous l'image.
- */
-
 const TRAIT = {
   fill: 'none',
   stroke: 'currentColor',
@@ -17,7 +6,6 @@ const TRAIT = {
   strokeLinejoin: 'round',
 };
 
-/** Une banque, dessinee a partir de x : fronton, colonnes, socle. */
 function Banque({ x }) {
   return (
     <g {...TRAIT}>
@@ -28,7 +16,6 @@ function Banque({ x }) {
   );
 }
 
-/** Deux banques et l'echange entre elles : le virement bancaire. */
 export function IllustrationVirement({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 120 72" aria-hidden="true">
@@ -42,7 +29,6 @@ export function IllustrationVirement({ className = '' }) {
   );
 }
 
-/** La fente d'un distributeur et un billet qu'on y glisse : le depot. */
 export function IllustrationDepot({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 120 72" aria-hidden="true">
@@ -57,7 +43,6 @@ export function IllustrationDepot({ className = '' }) {
   );
 }
 
-/** Un globe entre deux fleches : le virement international. */
 export function IllustrationInternational({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 120 72" aria-hidden="true">
@@ -74,7 +59,6 @@ export function IllustrationInternational({ className = '' }) {
   );
 }
 
-/** Un portefeuille et des applications : les plateformes de paiement. */
 export function IllustrationPlateformes({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 120 72" aria-hidden="true">

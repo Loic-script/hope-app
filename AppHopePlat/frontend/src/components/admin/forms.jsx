@@ -1,24 +1,9 @@
-/**
- * Champs de formulaire et modale de l'espace administrateur.
- *
- * Les regles de saisie restent volontairement legeres cote navigateur : le
- * backend reste la source de verite. Ces composants servent surtout a
- * afficher les messages qu'il renvoie.
- */
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconeCroix } from './AdminIcons.jsx';
 import { Alerte } from './ui.jsx';
 
-/* ------------------------------------------------------------------
-   Champs
-   ------------------------------------------------------------------ */
-
-/**
- * @param {{ label: string, id: string, obligatoire?: boolean, aide?: string,
- *           erreur?: string, pleineLargeur?: boolean, children: React.ReactNode }} props
- */
 export function Champ({ label, id, obligatoire, aide, erreur, pleineLargeur, children }) {
   return (
     <div
@@ -39,7 +24,6 @@ export function Champ({ label, id, obligatoire, aide, erreur, pleineLargeur, chi
   );
 }
 
-/** Champ texte, nombre ou date. */
 export function ChampTexte({ label, id, obligatoire, aide, erreur, pleineLargeur, ...reste }) {
   return (
     <Champ
@@ -55,7 +39,6 @@ export function ChampTexte({ label, id, obligatoire, aide, erreur, pleineLargeur
   );
 }
 
-/** Zone de texte multiligne. */
 export function ChampTexteLong({ label, id, obligatoire, aide, erreur, ...reste }) {
   return (
     <Champ label={label} id={id} obligatoire={obligatoire} aide={aide} erreur={erreur} pleineLargeur>
@@ -64,17 +47,10 @@ export function ChampTexteLong({ label, id, obligatoire, aide, erreur, ...reste 
   );
 }
 
-/**
- * Liste deroulante.
- * @param {{ options: {valeur: string|number, label: string}[], vide?: string }} props
- */
 export function ChampSelection({
   label,
   id,
   options = [],
-  // Des options rangees par famille : [{ libelle, options }]. Le
-  // navigateur les presente en sections, dans la liste comme dans la
-  // roue d un telephone.
   groupes = null,
   vide,
   obligatoire,
@@ -114,7 +90,6 @@ export function ChampSelection({
   );
 }
 
-/** Champ de montant : saisie libre, controle final cote backend. */
 export function ChampMontant({ label, id, devise = 'Ar', ...reste }) {
   return (
     <ChampTexte
@@ -129,32 +104,16 @@ export function ChampMontant({ label, id, devise = 'Ar', ...reste }) {
   );
 }
 
-/** Transforme un dictionnaire de libelles en options de <select>. */
 export function optionsDepuisLibelles(libelles = {}, cles = null) {
   const source = cles ?? Object.keys(libelles);
   return source.map((cle) => ({ valeur: cle, label: libelles[cle] ?? cle }));
 }
 
-/* ------------------------------------------------------------------
-   Modale
-   ------------------------------------------------------------------ */
-
-/**
- * Fenetre modale. Le rendu passe par un portail pour ne pas etre limite
- * par le defilement ou le rognage de la zone de contenu.
- *
- * @param {{ ouverte: boolean, titre: string, sousTitre?: string,
- *           onFermer: Function, pied?: React.ReactNode, large?: boolean,
- *           erreur?: string, children: React.ReactNode }} props
- */
 export function Modale({ ouverte, titre, sousTitre, onFermer, pied, large, erreur, children }) {
-  // Fermeture au clavier et blocage du defilement de la page derriere.
   useEffect(() => {
     if (!ouverte) return undefined;
 
     const surTouche = (evenement) => {
-      // Un champ qui a deja traite Echap (une liste deroulante qui se
-      // referme) le signale : la fenetre, elle, reste ouverte.
       if (evenement.key === 'Escape' && !evenement.defaultPrevented) onFermer();
     };
     document.addEventListener('keydown', surTouche);
@@ -175,7 +134,6 @@ export function Modale({ ouverte, titre, sousTitre, onFermer, pied, large, erreu
       className="modale-fond"
       role="presentation"
       onMouseDown={(evenement) => {
-        // Un clic sur le fond ferme ; un clic dans la carte ne ferme pas.
         if (evenement.target === evenement.currentTarget) onFermer();
       }}
     >
@@ -207,11 +165,6 @@ export function Modale({ ouverte, titre, sousTitre, onFermer, pied, large, erreu
   );
 }
 
-/**
- * Modale portant un formulaire : gere la soumission et les boutons.
- *
- * @param {{ onSoumettre: Function, envoi?: boolean, libelleValider?: string }} props
- */
 export function ModaleFormulaire({
   ouverte,
   titre,
@@ -222,8 +175,6 @@ export function ModaleFormulaire({
   erreur,
   libelleValider = 'Enregistrer',
   large,
-  // Une action a gauche du pied, a l'ecart des deux autres : "Supprimer",
-  // quand la fenetre modifie un element existant.
   actionGauche = null,
   children,
 }) {
@@ -259,11 +210,6 @@ export function ModaleFormulaire({
   );
 }
 
-/**
- * Modale de confirmation pour une action courte (archiver, annuler,
- * supprimer). Conforme a la section 46 du cahier des charges : petites
- * actions en modale, actions complexes sur une page dediee.
- */
 export function ModaleConfirmation({
   ouverte,
   titre,
@@ -274,8 +220,6 @@ export function ModaleConfirmation({
   erreur,
   libelleConfirmer = 'Confirmer',
   danger = false,
-  // Une seconde issue, posee avant l'action principale : la plus lourde
-  // des deux (tout supprimer) n'est jamais celle qu'on touche d'abord.
   actionSecondaire = null,
 }) {
   return (

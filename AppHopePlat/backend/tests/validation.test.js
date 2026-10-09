@@ -1,7 +1,3 @@
-/*
- * Les validations partagees par les services, et celles du mot de passe
- * oublie qui tombent avant toute requete en base.
- */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 

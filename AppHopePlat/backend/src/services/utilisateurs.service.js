@@ -1,21 +1,3 @@
-/**
- * Service de l'ecran "Utilisateurs" de l'administration.
- *
- * Un seul ecran pour les trois publics de HOPE -- donateurs, benevoles,
- * bailleurs --, avec pour chacun la meme liste (nom, statut, profil,
- * actions) et un profil complet :
- *   - un donateur : ses coordonnees, son parcours d'accueil, ses dons, la
- *     somme donnee et les projets soutenus ;
- *   - un benevole : sa fiche de terrain, ses competences, ses taches et
- *     les projets auxquels elles appartiennent, ses missions ;
- *   - un bailleur : son organisation, ses engagements, les projets qu'il
- *     finance et ce qu'il leur a affecte, ses versements.
- *
- * Supprimer un compte ne l'efface pas : il passe au statut "supprime",
- * ne peut plus se connecter et quitte les listes. Ses dons, ses taches
- * ou ses engagements, eux, restent dans l'historique des projets. Une
- * fiche donateur ne se supprime que si aucun don ne s'y rattache.
- */
 import { transaction } from '../config/database.js';
 import * as funderRepository from '../repositories/funder.repository.js';
 import * as taskRepository from '../repositories/task.repository.js';
@@ -31,35 +13,26 @@ import {
   TYPES_DONATEUR,
 } from './donorProfile.service.js';
 
-/** Les trois onglets de l'ecran, et le role de compte que chacun liste. */
 const ROLES = { donateurs: 'donateur', benevoles: 'benevole', bailleurs: 'bailleur' };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** Un identifiant de compte : un UUID, sinon le compte n'existe pas. */
 function idCompte(id) {
   const texte = String(id ?? '').trim();
   if (!UUID.test(texte)) throw new ErreurIntrouvable('Le compte', id);
   return texte;
 }
 
-/** "Prenom Nom", ou rien. */
 function nomComplet(prenom, nom) {
   return `${prenom ?? ''} ${nom ?? ''}`.replace(/\s+/g, ' ').trim();
 }
 
-/** Le libelle d'un code dans une liste { cle, libelle }. */
 function libelleDe(liste, cle) {
   if (!cle) return null;
   return liste.find((element) => element.cle === cle)?.libelle ?? cle;
 }
 
-/* ================================================================
-   Listes
-   ================================================================ */
-
-/** Une ligne de compte, telle que la liste l'affiche. */
 function ligneCompte(compte, role) {
   const personne = nomComplet(compte.prenom, compte.nom);
   let nom = personne;
@@ -68,7 +41,6 @@ function ligneCompte(compte, role) {
   if (role === 'donateur' && compte.nomStructure) nom = compte.nomStructure;
   if (role === 'bailleur') {
     nom = compte.raisonSociale || personne;
-    // Le nom de l'entreprise en titre, la personne qui la represente dessous.
     sousTitre = [personne, compte.email].filter(Boolean).join(' · ');
   }
 
@@ -81,12 +53,10 @@ function ligneCompte(compte, role) {
     statut: compte.statut,
     creeLe: compte.creeLe,
     derniereConnexion: compte.derniereConnexion,
-    // Un donateur inscrit qui n'a pas fini son parcours d'accueil.
     parcoursInacheve: role === 'donateur' ? (compte.etapeSuivante ?? 1) <= 5 : undefined,
   };
 }
 
-/** Une ligne de fiche donateur. */
 function ligneFiche(fiche) {
   return {
     cle: `fiche-${fiche.id}`,
@@ -105,16 +75,6 @@ function ligneFiche(fiche) {
   };
 }
 
-/**
- * La liste d'un onglet.
- *
- * Les donateurs reunissent les comptes inscrits en ligne et les fiches
- * saisies par l'equipe, par ordre alphabetique : c'est par son nom qu'on
- * cherche quelqu'un.
- *
- * @param {'donateurs'|'benevoles'|'bailleurs'} onglet
- * @param {{ recherche?: string }} requete
- */
 export async function lister(onglet, requete = {}) {
   const role = ROLES[onglet];
   if (!role) throw new ErreurIntrouvable('La liste', onglet);
@@ -130,11 +90,6 @@ export async function lister(onglet, requete = {}) {
   return { items };
 }
 
-/* ================================================================
-   Profils
-   ================================================================ */
-
-/** Les dons de plusieurs fiches, et ce qu'ils representent. */
 async function dons(ficheIds) {
   const [liste, synthese] = await Promise.all([
     depot.donsDesFiches(ficheIds),
@@ -149,7 +104,6 @@ async function dons(ficheIds) {
   };
 }
 
-/** Le parcours d'accueil d'un donateur inscrit, codes traduits. */
 function parcoursLisible(parcours) {
   if (!parcours) return null;
   return {
@@ -169,10 +123,6 @@ function parcoursLisible(parcours) {
   };
 }
 
-/**
- * Les projets d'un benevole : ceux de ses taches et de ses missions,
- * chacun une seule fois, avec ce qu'il y fait.
- */
 function projetsDuBenevole(taches, missions) {
   const projets = new Map();
   const noter = (id, nom, cle) => {
@@ -186,11 +136,6 @@ function projetsDuBenevole(taches, missions) {
   return [...projets.values()].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 }
 
-/**
- * Le profil complet d'un compte.
- *
- * Un compte peut porter plusieurs roles ; chacun apporte sa partie.
- */
 export async function profilCompte(id) {
   const compte = await depot.trouverCompte(idCompte(id));
   if (!compte || compte.statut === 'supprime') throw new ErreurIntrouvable('Le compte', id);
@@ -210,7 +155,6 @@ export async function profilCompte(id) {
     const fiche = await depot.ficheBenevole(compte.id);
     const [taches, missions] = fiche
       ? await Promise.all([
-          // Les taches dont il fait partie de l'equipe.
           taskRepository.lister({ membre: fiche.id }),
           depot.missionsDuBenevole(fiche.id),
         ])
@@ -241,7 +185,6 @@ export async function profilCompte(id) {
   return profil;
 }
 
-/** Le profil d'une fiche donateur saisie par l'equipe. */
 export async function profilFiche(id) {
   const ficheId = identifiantRequis(id, 'id');
   const fiche = await depot.trouverFiche(ficheId);
@@ -249,11 +192,6 @@ export async function profilFiche(id) {
   return { genre: 'fiche', fiche, ...(await dons([ficheId])) };
 }
 
-/* ================================================================
-   Modifier, supprimer
-   ================================================================ */
-
-/** Un texte court : vide devient '', la longueur est bornee. */
 function texteCourt(valeur, champ, max) {
   const texte = String(valeur ?? '').trim();
   if (texte.length > max) {
@@ -264,11 +202,6 @@ function texteCourt(valeur, champ, max) {
   return texte;
 }
 
-/**
- * Modifie les coordonnees d'un compte : prenom, nom, adresse
- * electronique, telephone ; et, selon le role, le nom de structure d'un
- * donateur ou la raison sociale de l'organisation d'un bailleur.
- */
 export async function modifierCompte(id, corps = {}) {
   const compte = await depot.trouverCompte(idCompte(id));
   if (!compte || compte.statut === 'supprime') throw new ErreurIntrouvable('Le compte', id);
@@ -280,7 +213,6 @@ export async function modifierCompte(id, corps = {}) {
   const email = texteCourt(corps.email, 'email', 160).toLowerCase();
   const telephone = texteCourt(corps.telephone, 'telephone', 20) || null;
 
-  // L'adresse sert a se connecter : elle reste obligatoire.
   if (email === '') details.email = 'Champ obligatoire';
   else if (!COURRIEL.test(email)) details.email = 'Adresse électronique invalide';
 
@@ -310,7 +242,6 @@ export async function modifierCompte(id, corps = {}) {
       }
     });
   } catch (erreur) {
-    // Adresse ou telephone deja portes par un autre compte.
     if (erreur?.code === '23505') {
       const contrainte = String(erreur.constraint ?? '');
       const champ = contrainte.includes('telephone') ? 'telephone' : 'email';
@@ -327,10 +258,6 @@ export async function modifierCompte(id, corps = {}) {
   return profilCompte(compte.id);
 }
 
-/**
- * Supprime un compte : il ne peut plus se connecter et quitte les
- * listes. Ce qu'il a fait -- dons, taches, engagements -- reste inscrit.
- */
 export async function supprimerCompte(id, admin = null) {
   const compte = await depot.trouverCompte(idCompte(id));
   if (!compte || compte.statut === 'supprime') throw new ErreurIntrouvable('Le compte', id);
@@ -338,26 +265,6 @@ export async function supprimerCompte(id, admin = null) {
   return { supprime: true };
 }
 
-/**
- * Supprime une fiche donateur.
- *
- * Sans don rattache, la fiche part entierement. Avec des dons, la
- * supprimer effacerait des sommes recues par les projets : la base le
- * refuse d'ailleurs (donations.donor_id en ON DELETE RESTRICT). On efface
- * alors l'identite de la personne et on garde la ligne, comme le fait le
- * donateur qui supprime son propre compte (compte.service.js) : les dons
- * restent dans la comptabilite de l'association, la loi l'impose.
- *
- * Avec `avecDons`, la fiche part pour de bon, ses dons compris : les
- * sommes recues par les projets qu'elle a soutenus diminuent d'autant.
- * C'est fait pour le menage (une fiche d'essai), jamais pour un vrai
- * donateur -- l'ecran le dit avant.
- *
- * @param {number|string} id
- * @param {{ forcer?: boolean, avecDons?: boolean }} [options]
- *   forcer : effacer l'identite plutot que refuser, quand des dons sont
- *   rattaches ; avecDons : tout supprimer, dons compris.
- */
 export async function supprimerFiche(id, options = {}) {
   const ficheId = identifiantRequis(id, 'id');
   const fiche = await depot.trouverFiche(ficheId);
@@ -371,7 +278,6 @@ export async function supprimerFiche(id, options = {}) {
 
   const dons = `${nombre} don${nombre > 1 ? 's' : ''} enregistré${nombre > 1 ? 's' : ''}`;
 
-  // Tout supprimer : les dons d'abord, la fiche ensuite, d'un seul tenant.
   if (options.avecDons) {
     await transaction(async (client) => {
       await depot.supprimerDonsDeFiche(ficheId, client);

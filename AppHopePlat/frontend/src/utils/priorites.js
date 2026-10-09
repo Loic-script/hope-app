@@ -1,14 +1,3 @@
-/**
- * La priorite d'une tache.
- *
- * Quatre degres, du plus pressant au moins pressant. L'equipe le choisit
- * a la creation ; la date de fin vient ensuite le rehausser -- une tache
- * "moyenne" a rendre demain presse plus qu'une "haute" a rendre dans
- * deux mois. C'est le serveur qui calcule cette urgence et ordonne les
- * listes ; ici, de quoi la nommer et la colorer.
- */
-
-/** Du plus pressant au moins pressant : c'est aussi l'ordre des boutons. */
 export const PRIORITES = [
   {
     cle: 'urgente',
@@ -44,14 +33,6 @@ export const TEINTES_PRIORITE = Object.fromEntries(
   PRIORITES.map(({ cle, teinte }) => [cle, teinte])
 );
 
-/**
- * Ce que la date de fin ajoute, en clair.
- *
- * Le serveur en tient compte pour l'ordre ; l'ecran doit le dire, sans
- * quoi une tache "simple" en tete de liste passe pour une erreur.
- *
- * @returns {{ texte: string, pressant: boolean }|null}
- */
 export function delaiRestant(dateFin, statut = null) {
   if (!dateFin || statut === 'livree') return null;
 

@@ -1,6 +1,3 @@
-/**
- * Repository des impacts mesures.
- */
 import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
@@ -19,9 +16,6 @@ const JOINTURES = `
   LEFT JOIN beneficiaries b ON b.id = i.beneficiary_id
 `;
 
-/**
- * @param {{ projectId?: number, indicateur?: string, recherche?: string }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -52,14 +46,6 @@ export async function lister(filtres = {}, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Les mesures d'un projet, telles que l'espace benevole les montre.
- *
- * Une selection a part, et non COLONNES : une mesure peut nommer le
- * beneficiaire qu'elle concerne, et ces fiches restent dans l'espace
- * administrateur. Le benevole sait seulement si la mesure est
- * collective.
- */
 export async function listerPourBenevole(projectId, client = null) {
   const resultat = await query(
     `SELECT i.id, i.objective_id, i.title, i.description, i.indicator, i.value, i.unit,
@@ -118,12 +104,6 @@ export async function supprimer(id, client = null) {
   return resultat.rowCount > 0;
 }
 
-/**
- * Cumul par indicateur pour un projet (25 enfants scolarises...).
- *
- * C'est l'impact general du projet : il repond a ce que la description
- * annonce, tous objectifs confondus.
- */
 export async function syntheseParProjet(projectId, client = null) {
   const resultat = await query(
     `SELECT indicator, unit,

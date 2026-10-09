@@ -1,17 +1,3 @@
-/**
- * Le mot de passe oublie, pour les comptes des espaces (donateur,
- * benevole, bailleur).
- *
- * 1. La personne donne son adresse. La reponse est toujours la meme --
- *    que l'adresse existe ou non : la page ne doit pas servir a verifier
- *    qui a un compte.
- * 2. Si le compte existe, un jeton aleatoire part par courriel, dans un
- *    lien valable une heure et une seule fois. La base n'en garde que
- *    l'empreinte (SHA-256) : une fuite de la table ne donne aucun lien
- *    utilisable.
- * 3. Le lien ouvre la page du nouveau mot de passe ; le jeton est
- *    verifie, consomme, et les autres liens encore ouverts sont annules.
- */
 import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
 
@@ -21,24 +7,17 @@ import { ErreurValidation } from '../shared/errors.js';
 import * as courriel from './courriel.service.js';
 import { fermerSessionsUtilisateur } from './session.service.js';
 
-/** La duree de vie d'un lien : une heure. */
 const DUREE_MS = 60 * 60 * 1000;
 const LONGUEUR_MOT_DE_PASSE = 8;
 
-/** L'empreinte d'un jeton : c'est elle, et elle seule, qui dort en base. */
 function empreinte(jeton) {
   return crypto.createHash('sha256').update(String(jeton)).digest('hex');
 }
 
-/** Le message rendu dans tous les cas, pour ne rien reveler. */
 export const REPONSE_DEMANDE =
   'Si un compte existe pour cette adresse, un lien pour choisir un nouveau mot de passe vient d’y être envoyé. ' +
   'Il reste valable une heure.';
 
-/**
- * Etape 1 : demander un lien.
- * @returns {Promise<{ message: string }>}
- */
 export async function demander(corps = {}) {
   const email = String(corps.email ?? '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -50,12 +29,10 @@ export async function demander(corps = {}) {
     [email]
   );
   const compte = rows[0];
-  // Un compte absent ou ferme : meme reponse, rien d'envoye.
   if (!compte || ['suspendu', 'supprime'].includes(compte.statut)) return { message: REPONSE_DEMANDE };
 
   const jeton = crypto.randomBytes(32).toString('hex');
   await transaction(async (client) => {
-    // Un nouveau lien annule les precedents encore ouverts.
     await query(
       `UPDATE reinitialisation_mot_de_passe SET utilise_le = NOW()
         WHERE utilisateur_id = $1 AND utilise_le IS NULL`,
@@ -86,10 +63,6 @@ export async function demander(corps = {}) {
   return { message: REPONSE_DEMANDE };
 }
 
-/**
- * Etape 2 : le nouveau mot de passe, avec le jeton du lien.
- * @returns {Promise<{ message: string }>}
- */
 export async function reinitialiser(corps = {}) {
   const jeton = String(corps.jeton ?? '').trim();
   const motDePasse = typeof corps.motDePasse === 'string' ? corps.motDePasse : '';
@@ -113,15 +86,12 @@ export async function reinitialiser(corps = {}) {
     const demande = rows[0];
     if (!demande) throw lienInvalide();
 
-    // Le lien est arrive dans la boite : l'adresse est confirmee du meme coup.
     await query(
       'UPDATE utilisateur SET mot_de_passe = $2, email_verifie_le = COALESCE(email_verifie_le, NOW()) WHERE id = $1',
       [demande.utilisateur_id, hash],
       client
     );
-    // Quelqu'un avait peut-etre le mot de passe : ses sessions tombent.
     await fermerSessionsUtilisateur(demande.utilisateur_id, client);
-    // Ce lien, et tout autre encore ouvert pour ce compte, est consomme.
     await query(
       `UPDATE reinitialisation_mot_de_passe SET utilise_le = NOW()
         WHERE utilisateur_id = $1 AND utilise_le IS NULL`,

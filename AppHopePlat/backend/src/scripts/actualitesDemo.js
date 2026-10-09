@@ -1,13 +1,3 @@
-/**
- * Les actualites de demonstration de HOPE.
- *
- * Partagees par le jeu de donnees des bailleurs (seedFunderData.js), qui
- * les publie, et par le jeu de reference (database/data.sql), qui les
- * reprend a l'identique. Chacune raconte un moment d'un des projets de
- * demonstration ; sans visuel propre, elle prend la photo du projet.
- *
- * `joursAvant` : la date de publication, en jours avant aujourd'hui.
- */
 export const ACTUALITES_DEMO = [
   {
     titre: 'Rentrée scolaire : 100 enfants accompagnés à Antananarivo',

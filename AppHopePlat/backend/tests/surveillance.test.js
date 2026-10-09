@@ -1,7 +1,3 @@
-/*
- * La surveillance : le journal des requetes n'ecrit jamais la partie
- * requete d'une adresse (un lien de reinitialisation y porte son jeton).
- */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';

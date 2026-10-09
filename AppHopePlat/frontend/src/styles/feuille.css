@@ -1,21 +1,3 @@
-/* ============================================================
-   La feuille : un rapport mis en page comme le document imprime
-
-   Partagee par l'apercu du partenaire et par l'onglet Rapport de la
-   fiche projet. Les jetons --admin-* viennent d'admin.css, charge
-   partout.
-   ============================================================ */
-
-/*
- * La feuille, dans une fenetre.
- *
- * Elle reprend la mise en page du document imprime -- bandeau de la
- * charte, titre, periode, sections -- pour que le partenaire reconnaisse
- * ce qu'il telechargera ensuite.
- *
- * Une hauteur relative a la fenetre : sur un portable, 720 px feraient
- * sortir les boutons de l'ecran, et c'est par eux qu'on ferme.
- */
 .feuille {
   max-height: min(68vh, 720px);
   overflow-y: auto;
@@ -63,7 +45,6 @@
   color: var(--admin-texte-faible);
 }
 
-/* Les intertitres, du violet de la charte comme dans le document. */
 .feuille__section {
   margin: 26px 0 10px;
   font-size: 14px;
@@ -87,7 +68,6 @@
   color: var(--admin-texte);
 }
 
-/* Les chiffres cles : le libelle a gauche, la valeur alignee a droite. */
 .feuille__chiffres {
   margin: 0 0 10px;
 }
@@ -117,7 +97,6 @@
   color: var(--admin-texte);
 }
 
-/* Le rappel du projet et de l'engagement, en bas de la feuille. */
 .feuille__pied {
   margin: 26px 0 0;
   padding-top: 14px;
@@ -138,7 +117,6 @@
   color: var(--hope-erreur);
 }
 
-/* Sur un telephone, la feuille respire moins. */
 @media (max-width: 560px) {
   .feuille__bandeau {
     padding: 12px 18px;
@@ -162,11 +140,6 @@
   }
 }
 
-/*
- * La feuille en pleine page, dans l'onglet Rapport : elle prend sa
- * hauteur naturelle, et sa largeur reste celle d'une page lisible --
- * etiree sur un grand ecran, une ligne de 150 caracteres ne se lit plus.
- */
 .feuille--pleine {
   max-width: 860px;
   max-height: none;
@@ -174,10 +147,6 @@
   overflow: visible;
 }
 
-/*
- * Au-dessus de la feuille, dans l'onglet Rapport : a qui le rapport
- * partira. On le lit avant d'envoyer, pas apres.
- */
 .rapport-destinataires {
   max-width: 860px;
   margin: 0 auto 16px;

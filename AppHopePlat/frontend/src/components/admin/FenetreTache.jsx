@@ -16,22 +16,6 @@ export const COULEURS_TACHE = { a_faire: 'ambre', en_cours: 'violet', livree: 'v
 
 const nomDe = (personne) => `${personne.prenom ?? ''} ${personne.nom ?? ''}`.trim() || personne.email;
 
-/**
- * La fenetre d'une tache, cote administration.
- *
- * Tout ce que l'equipe a besoin de savoir et de faire sur une tache, au
- * meme endroit : ce qu'elle demande, qui y travaille, qui a demande a la
- * prendre ou a la rejoindre, et la preuve une fois livree.
- *
- * Elle se charge elle-meme a l'ouverture : la ligne qui l'ouvre peut
- * dater, une demande a pu arriver depuis. Chaque geste rend la tache a
- * jour, et previent le parent pour qu'il rafraichisse sa liste.
- *
- * @param {{ tacheId: string, onFermer: () => void, onChange?: () => void,
- *           lienProjet?: boolean }} props
- *   lienProjet : propose d'ouvrir la fiche du projet (inutile depuis
- *   l'onglet du projet lui-meme).
- */
 export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet = false }) {
   const [tache, setTache] = useState(null);
   const [erreur, setErreur] = useState('');
@@ -54,7 +38,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
     };
   }, [tacheId]);
 
-  /** Un geste sur la tache : la reponse est la tache a jour. */
   async function agir(action, { apres } = {}) {
     setEnvoi(true);
     setErreur('');
@@ -166,7 +149,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
           !erreur && <p className="fenetre-tache__attente">Chargement de la tâche…</p>
         ) : (
           <div className="fenetre-tache">
-            {/* ---------- L'essentiel ---------- */}
             <div className="fenetre-tache__faits">
               <Badge valeur={tache.statut} libelles={STATUTS_TACHE} couleur={COULEURS_TACHE[tache.statut]} />
               <span className={enRetard ? 'fenetre-tache__retard' : ''}>
@@ -192,8 +174,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
               </p>
             )}
 
-            {/* Ce que la tache demande de savoir faire : les memes
-                intitules que les fiches des benevoles. */}
             {(tache.competencesRequises ?? []).length > 0 && (
               <p className="tache-competences">
                 <span className="tache-competences__intitule">Expérience requise</span>
@@ -205,7 +185,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
               </p>
             )}
 
-            {/* ---------- Les demandes, d'abord : elles attendent ---------- */}
             {tache.demandes.length > 0 && (
               <section className="fenetre-tache__bloc fenetre-tache__bloc--demandes">
                 <h3 className="fenetre-tache__titre">
@@ -250,7 +229,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
               </section>
             )}
 
-            {/* ---------- L'equipe ---------- */}
             <section className="fenetre-tache__bloc">
               <h3 className="fenetre-tache__titre">
                 Équipe
@@ -314,7 +292,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
                 ))}
             </section>
 
-            {/* ---------- Le mot du benevole a la livraison ---------- */}
             {livree && tache.commentaireLivraison && (
               <section className="fenetre-tache__bloc">
                 <h3 className="fenetre-tache__titre">Commentaire de livraison</h3>
@@ -325,7 +302,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
               </section>
             )}
 
-            {/* ---------- La preuve ---------- */}
             {tache.files.length > 0 && (
               <section className="fenetre-tache__bloc">
                 <h3 className="fenetre-tache__titre">Preuve de livraison</h3>
@@ -352,7 +328,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
         />
       )}
 
-      {/* Le meme formulaire qu'a la creation, rempli de la tache. */}
       {tache && (
         <TacheModale
           ouverte={enModification}
@@ -369,10 +344,6 @@ export default function FenetreTache({ tacheId, onFermer, onChange, lienProjet =
   );
 }
 
-/**
- * Le choix des benevoles a affecter : une liste a cocher, avec une
- * recherche -- l'equipe peut compter des dizaines de benevoles.
- */
 function ChoixBenevoles({ exclus, envoi, onAnnuler, onValider }) {
   const [tous, setTous] = useState(null);
   const [erreur, setErreur] = useState('');

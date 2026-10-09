@@ -1,10 +1,3 @@
-/* ============================================================
-   HOPE - Page de connexion administrateur (/admin/login)
-
-   Mise en page reprenant la maquette : un panneau d'illustration a
-   gauche (55 %) et le formulaire sur fond bleu tres clair a droite (45 %).
-   ============================================================ */
-
 .connexion {
   display: grid;
   grid-template-columns: 55fr 45fr;
@@ -13,10 +6,6 @@
   background-color: var(--hope-fond-panneau);
 }
 
-/* ------------------------------------------------------------
-   Panneau gauche : photo, degrade violet et messages HOPE
-   ------------------------------------------------------------ */
-
 .connexion__illustration {
   position: relative;
   display: flex;
@@ -24,29 +13,14 @@
   padding: 72px 62px 56px;
   overflow: hidden;
   color: var(--hope-blanc);
-  /* Le violet ne sert plus que de secours, le temps que la photo charge. */
   background-color: var(--hope-violet);
   background-image: var(--photo-hope);
-  /* La photo couvre tout le panneau, quelle que soit sa proportion. Le
-     cadrage est centre : sur un ecran haut c'est la largeur qui est rognee,
-     sur un ecran large c'est la hauteur, et le sujet reste au milieu. */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   isolation: isolate;
 }
 
-/*
- * Voile violet, translucide de haut en bas : il ne masque jamais la photo.
- * Il s'epaissit vers le bas, la ou le titre et la signature ont besoin de
- * contraste. L'ancienne version devenait opaque des 82 % : c'est elle qui
- * produisait la bande violette unie sous la photo.
- *
- * Contraste du texte blanc mesure sur le rendu : 8,0:1 sur le titre, le
- * sous-titre et la signature -- au-dessus du seuil AA (4,5:1) et meme de
- * AAA (7:1). Le surtitre, en haut, est le moins couvert par le voile :
- * c'est lui qu'il faudra remesurer si le degrade change.
- */
 .connexion__illustration::before {
   content: '';
   position: absolute;
@@ -62,14 +36,6 @@
   );
 }
 
-/*
- * Le surtitre : le nom de l'espace, au-dessus de la phrase.
- *
- * C'est lui qui portait le titre jusqu'ici -- "Rejoindre HOPE" en tres
- * gros, la phrase releguee en haut du panneau. L'ordre s'inverse : la
- * phrase prend la vedette, le nom de l'espace passe en tete, petit et
- * espace, comme les surtitres de la charte.
- */
 .illustration__surtitre {
   margin-bottom: 14px;
   font-size: 15px;
@@ -80,15 +46,11 @@
   text-shadow: 0 2px 10px rgba(53, 51, 67, 0.35);
 }
 
-/* Bloc principal, en tete du panneau. */
 .illustration__principal {
   max-width: 520px;
 }
 
 .illustration__titre {
-  /* Plus mesure qu'avant : le titre est maintenant une phrase de deux
-     lignes, et non deux mots. A 56 px elle prendrait la moitie du
-     panneau. */
   font-size: clamp(30px, 2.9vw, 42px);
   font-weight: 700;
   line-height: 1.16;
@@ -96,13 +58,6 @@
   text-shadow: 0 3px 18px rgba(53, 51, 67, 0.28);
 }
 
-/*
- * La barre sous le titre, et son soleil.
- *
- * Le motif commun, a l'echelle du bandeau : une barre de 124 px sur 6 et
- * un soleil de 54, contre 26 sur 3 et 17 ailleurs. La couleur est le
- * bleu de la charte -- #90c7f3 en tenait lieu, sans en etre.
- */
 .illustration__barre {
   margin: 22px 0 26px;
   --trait-largeur: 124px;
@@ -119,8 +74,6 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
-/* La devise tient le fond du panneau : "auto" pousse au-dessus d'elle
-   tout l'espace disponible, quelle que soit la hauteur de l'ecran. */
 .illustration__pied {
   display: flex;
   align-items: center;
@@ -144,7 +97,6 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
-/* Trait orange trace a la main sous la devise. */
 .illustration__devise::after {
   content: '';
   position: absolute;
@@ -161,10 +113,6 @@
   );
 }
 
-/* ------------------------------------------------------------
-   Panneau droit : fond bleu tres clair et motif de soleils
-   ------------------------------------------------------------ */
-
 .connexion__panneau {
   position: relative;
   display: flex;
@@ -176,14 +124,6 @@
   background-color: var(--hope-fond-panneau);
 }
 
-/*
- * Trois couches empilees, comme la maquette d'origine. En CSS la premiere
- * couche listee est celle du dessus : on lit donc la pile a l'envers, du
- * voile bleu jusqu'au motif.
- *
- * Pas d'opacite sur le pseudo-element : elle affaiblirait aussi les voiles,
- * or ce sont eux qui doivent rester pleins pour delaver le motif.
- */
 .connexion__panneau::before {
   content: '';
   position: absolute;
@@ -195,10 +135,6 @@
   background-size: auto, auto, var(--motif-soleils-taille) auto;
   pointer-events: none;
 }
-
-/* ------------------------------------------------------------
-   Carte du formulaire
-   ------------------------------------------------------------ */
 
 .carte-connexion {
   position: relative;
@@ -229,10 +165,6 @@
   line-height: 1.5;
   color: var(--hope-texte-doux);
 }
-
-/* ------------------------------------------------------------
-   Formulaire
-   ------------------------------------------------------------ */
 
 .formulaire {
   margin-top: 34px;
@@ -333,7 +265,6 @@
   height: 21px;
 }
 
-/* Ligne "Se souvenir de moi" / "Mot de passe oublie ?" */
 .formulaire__options {
   display: flex;
   align-items: center;
@@ -407,7 +338,6 @@
   padding: 0;
 }
 
-/* Message d'erreur generique sous le formulaire. */
 .formulaire__erreur {
   display: flex;
   align-items: center;
@@ -441,10 +371,6 @@
   }
 }
 
-/* ------------------------------------------------------------
-   Boutons
-   ------------------------------------------------------------ */
-
 .bouton {
   display: flex;
   align-items: center;
@@ -468,7 +394,6 @@
 .bouton--principal {
   height: 56px;
   margin-top: 26px;
-  /* Texte fonce sur l'orange : 6,5:1 (le blanc n'atteignait que 2,4:1). */
   color: #2b2112;
   background-color: var(--hope-orange);
   box-shadow: 0 8px 20px rgba(224, 151, 53, 0.28);
@@ -502,7 +427,6 @@
   border-color: var(--hope-bleu);
 }
 
-/* Petit indicateur de chargement du bouton principal. */
 .bouton__chargement {
   width: 19px;
   height: 19px;
@@ -517,10 +441,6 @@
     transform: rotate(360deg);
   }
 }
-
-/* ------------------------------------------------------------
-   Pied de carte : bandeau de reassurance
-   ------------------------------------------------------------ */
 
 .carte-connexion__pied {
   display: flex;
@@ -561,7 +481,6 @@
   color: var(--hope-texte-doux);
 }
 
-/* Signature sous la carte. */
 .connexion__signature {
   position: relative;
   text-align: center;
@@ -572,20 +491,6 @@
   color: var(--hope-violet-2);
 }
 
-/* La barre sous la signature est devenue .trait-hope--centre, posee
-   dans la page : elle porte aussi le soleil. */
-
-/* ------------------------------------------------------------
-   Adaptations mobiles et tablettes
-   ------------------------------------------------------------ */
-
-/*
- * Pages d'authentification (utilisateurs et admin) : l'illustration
- * reste en place, seul le panneau du formulaire defile -- un long formulaire d'inscription ne fait pas
- * glisser la photo hors de l'ecran. Sur grand ecran seulement : en
- * dessous de 860px, l'illustration devient une banniere et la page
- * defile d'un seul tenant.
- */
 @media (min-width: 861px) {
   .connexion--defile {
     height: 100vh;
@@ -602,13 +507,10 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    /* Centre tant que tout tient ; colle en haut des que ca deborde. */
     justify-content: flex-start;
     justify-content: safe center;
     scrollbar-width: thin;
     scrollbar-color: var(--defilement-pouce, #c6cee1) transparent;
-    /* Le motif passe du pseudo-element au fond du panneau : "local", il
-       couvre toute la hauteur qui defile, pas seulement la premiere vue. */
     background-image:
       linear-gradient(var(--voile-bleu), var(--voile-bleu)),
       linear-gradient(var(--voile-blanc), var(--voile-blanc)),
@@ -660,16 +562,12 @@
 
 @media (max-width: 860px) {
   .connexion {
-    /* minmax(0, ...) : la colonne ne s'elargit pas a la mesure de son
-       contenu -- a 320px, elle debordait de 50px. */
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* L'illustration devient une banniere d'en-tete. */
   .connexion__illustration {
     min-height: 330px;
     padding: 40px 30px 34px;
-    /* En banniere, on recadre la photo pour qu'elle remplisse la hauteur. */
     background-size: cover;
     background-position: 50% 28%;
   }
@@ -729,9 +627,6 @@
   }
 }
 
-/* ------------------------------------------------------------
-   Mot de passe oublie : la confirmation d'envoi
-   ------------------------------------------------------------ */
 .mot-de-passe__envoye {
   display: flex;
   flex-direction: column;

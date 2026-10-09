@@ -13,25 +13,6 @@ import { ouvertAuFinancement, STATUTS_PROJET } from './Projets.jsx';
 
 const ONGLETS = ['general', 'financement', 'depenses', 'beneficiaires', 'impact', 'rapport'];
 
-/**
- * Un projet, tel qu'un partenaire le consulte.
- *
- * La page a la forme de la fiche projet de l'administration -- la photo
- * en couverture, le nom, le bandeau des quatre chiffres, puis les
- * onglets -- mais elle ne donne aucune prise sur le projet : rien ne s'y
- * modifie, rien ne s'y ajoute. C'est un apercu.
- *
- * Six onglets, et non sept : les taches sont le travail interne de
- * l'equipe et des benevoles, elles ne regardent pas le partenaire. Leur
- * avancement se lit en revanche dans la vue generale, en nombres.
- *
- * Ce que le partenaire ne voit jamais : le nom d'un donateur, celui d'un
- * autre partenaire, l'identite d'un beneficiaire, le detail ligne a
- * ligne des depenses et les preuves terrain. Le serveur ne les envoie
- * pas (ficheProjet.service).
- *
- * L'onglet ouvert se lit dans l'adresse (?onglet=depenses).
- */
 export default function ProjetDetail() {
   const { id } = useParams();
   const [parametres, setParametres] = useSearchParams();
@@ -65,8 +46,6 @@ export default function ProjetDetail() {
         <Link to="/bailleur/projets">← Tous les projets</Link>
       </p>
 
-      {/* La photo du projet, en couverture : on le reconnait avant d'en
-          lire le nom, et elle reste en vue quel que soit l'onglet. */}
       {projet.mediaUrl && (
         <div
           className={`couverture-projet${
@@ -116,7 +95,6 @@ export default function ProjetDetail() {
         )}
       </header>
 
-      {/* ---------- Les quatre chiffres, comme dans l'administration ---------- */}
       <div className="resume-financier">
         <div className="resume-financier__bloc">
           <p className="resume-financier__libelle">Budget nécessaire</p>
@@ -191,11 +169,6 @@ export default function ProjetDetail() {
   );
 }
 
-/* ==================================================================
-   Vue generale
-   ================================================================== */
-
-/** Ce qu'est le projet, ce qu'il vise, et ou en sont ses actions. */
 function OngletGeneral({ projet, avancement }) {
   const total = avancement.realisees + avancement.enCours + avancement.aVenir;
 
@@ -246,8 +219,6 @@ function OngletGeneral({ projet, avancement }) {
         )}
       </section>
 
-      {/* Les taches ne sont pas un onglet ici -- c'est le travail interne
-          de l'equipe --, mais leur avancement se lit en nombres. */}
       <section className="bloc">
         <div className="bloc__entete">
           <h2 className="bloc__titre">Avancement des actions</h2>
@@ -291,18 +262,6 @@ function OngletGeneral({ projet, avancement }) {
   );
 }
 
-/* ==================================================================
-   Financement
-   ================================================================== */
-
-/**
- * D'ou vient l'argent du projet.
- *
- * Des totaux par origine, jamais un nom. La "somme investie" ne compte
- * que les dons et les fonds de HOPE : les affectations des partenaires
- * sont a part, sans quoi un partenaire lirait son propre apport absent
- * du total.
- */
 function OngletFinancement({ projet, finance, devise }) {
   return (
     <>
@@ -354,17 +313,6 @@ function OngletFinancement({ projet, finance, devise }) {
   );
 }
 
-/* ==================================================================
-   Depenses
-   ================================================================== */
-
-/**
- * Les depenses du projet, par poste.
- *
- * Pas de detail ligne a ligne : le libelle d'une depense et son
- * fournisseur sont saisis en texte libre et peuvent nommer quelqu'un.
- * C'est deja la regle du rapport envoye aux partenaires.
- */
 function OngletDepenses({ depenses, finance, devise }) {
   const total = depenses.reduce((somme, poste) => somme + Number(poste.total), 0);
   const part = (poste) => (total > 0 ? Math.round((Number(poste.total) * 1000) / total) / 10 : 0);
@@ -434,21 +382,6 @@ function OngletDepenses({ depenses, finance, devise }) {
   );
 }
 
-/* ==================================================================
-   Beneficiaires
-   ================================================================== */
-
-/**
- * Les beneficiaires du projet, en comptes seulement.
- *
- * Aucune identite : ni nom, ni date de naissance, ni note de suivi. Le
- * partenaire lit combien de personnes sont accompagnees et comment elles
- * se repartissent -- type, genre, age, lieu.
- */
-/**
- * Une repartition dont tout le monde tombe dans la case "non
- * renseigne" n'apprend rien : on ne l'affiche pas.
- */
 function toutInconnu(lignes) {
   const inconnus = ['Non précisé', 'Âge non renseigné', 'Lieu non précisé'];
   return lignes.every((ligne) => inconnus.includes(ligne.libelle));
@@ -522,15 +455,6 @@ function OngletBeneficiaires({ projet, resume }) {
   );
 }
 
-/* ==================================================================
-   Rapport
-   ================================================================== */
-
-/**
- * Le rapport a jour du projet, dans l'onglet plutot que dans une
- * fenetre : il est compose par le serveur avec les donnees du jour, et
- * se lit ici tel qu'il s'imprime. Le PDF se telecharge a part.
- */
 function OngletRapport({ projet }) {
   const { donnees: rapport, chargement, erreur } = useChargement(
     () => service.rapportProjet(projet.id),
@@ -560,7 +484,6 @@ function OngletRapport({ projet }) {
   );
 }
 
-/** Un chiffre, et ce qu'il represente. */
 function CarteChiffre({ libelle, valeur, note }) {
   return (
     <div className="carte-chiffre">

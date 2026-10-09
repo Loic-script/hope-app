@@ -3,22 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useContextePaiement } from '../components/paiement/ContextePaiement.jsx';
 import { messageErreur } from '../services/api.js';
 
-/**
- * La mecanique commune des pages de paiement : charger qui paie et quel
- * don, enregistrer la PROMESSE (le don part en attente), laisser le
- * payeur signaler son paiement avec la reference de sa banque, et
- * rendre la main.
- *
- * D'ou l'on paie -- le parcours d'accueil, ou "Faire un don" dans un
- * espace donateur, bailleur, benevole -- c'est le ContextePaiement qui
- * le sait ; ce hook ne fait que s'en servir.
- *
- * @param {string} mode  la cle du moyen ("virement_bancaire", "especes"...)
- */
 export function usePromesseDon(mode) {
   const contexte = useContextePaiement();
-  // Le contexte change quand l'espace se rafraichit ; le chargement, lui,
-  // ne se fait qu'une fois par page.
   const ref = useRef(contexte);
   ref.current = contexte;
 
@@ -47,10 +33,6 @@ export function usePromesseDon(mode) {
 
   const personne = profil?.personne ?? {};
 
-  /**
-   * Enregistre la promesse. Rend le don, ou null si le serveur refuse
-   * (le motif est alors dans refus).
-   */
   async function promettre({ montant, devise = 'MGA', ...extras }) {
     setRefus('');
     setEnvoi(true);
@@ -76,7 +58,6 @@ export function usePromesseDon(mode) {
     }
   }
 
-  /** Le payeur signale son paiement : rend true si c'est enregistre. */
   async function declarer(referencePaiement) {
     setRefus('');
     setEnvoi(true);
@@ -100,7 +81,6 @@ export function usePromesseDon(mode) {
     beneficiaire: profil?.beneficiaire ?? '',
     nom: [personne.prenom, personne.nom].filter(Boolean).join(' '),
     email: personne.email ?? '',
-    // Ce que le don prepare apporte deja : montant et devise.
     montantPrevu: profil?.montant ?? null,
     devisePrevue: profil?.devise ?? null,
     don,
@@ -115,7 +95,6 @@ export function usePromesseDon(mode) {
   };
 }
 
-/** Un montant saisi "25 000" -> 25000 ; "12,50" -> 12.5 ; sinon null. */
 export function montantSaisi(texte) {
   const propre = String(texte ?? '')
     .replace(/[\s\u202f\u00a0]/g, '')
@@ -125,13 +104,8 @@ export function montantSaisi(texte) {
   return valeur > 0 ? valeur : null;
 }
 
-/** Une reference de paiement : lettres, chiffres, points, tirets, espaces. */
 export const REFERENCE_PAIEMENT = /^[A-Za-z0-9][A-Za-z0-9./ -]{3,39}$/;
 
-/**
- * Le montant prevu, pour pre-remplir un champ -- s'il est dans la devise
- * que la page encaisse. "25 000" pour 25000 en ariary.
- */
 export function montantInitial(montantPrevu, devisePrevue, deviseDeLaPage = 'MGA') {
   if (!montantPrevu || (devisePrevue && devisePrevue !== deviseDeLaPage)) return '';
   const valeur = Number(montantPrevu);

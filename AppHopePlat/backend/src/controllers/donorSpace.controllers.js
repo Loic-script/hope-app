@@ -1,6 +1,3 @@
-/**
- * Espace donateur. req.donateur est pose par authenticateDonor.
- */
 import * as donorProfileService from '../services/donorProfile.service.js';
 import * as donorSpaceService from '../services/donorSpace.service.js';
 import * as mediaService from '../services/media.service.js';
@@ -25,12 +22,10 @@ export const profil = {
   ),
   projets: gerer(async () => ({ items: await donorProfileService.projetsProposes() })),
   projet: gerer((req) => donorSpaceService.projet(req.donateur.id, req.params.id)),
-  // La photo : televersee ici, rattachee par PATCH /profil/photo.
   televerserPhoto: gerer((req) => mediaService.enregistrer(req.file), { statut: 201 }),
   changerPhoto: gerer((req) => donorSpaceService.changerPhoto(req.donateur.id, req.body)),
 };
 
-/** Ses dons, et un nouveau don -- une promesse, confirmee a reception. */
 export const dons = {
   lister: gerer((req) => donorSpaceService.mesDons(req.donateur.id)),
   faire: gerer((req) => donorSpaceService.faireUnDon(req.donateur, req.body), { statut: 201 }),
@@ -40,7 +35,6 @@ export const dons = {
   declarer: gerer((req) => donorSpaceService.declarerPaiement(req.donateur, req.params.id, req.body)),
 };
 
-/** Les nouvelles de HOPE. */
 export const actualites = {
   lister: gerer(() => donorSpaceService.actualites()),
 };

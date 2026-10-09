@@ -9,13 +9,8 @@ import * as fmt from '../../utils/format.js';
 const RAPIDES = [25000, 50000, 100000, 250000];
 const MINIMUM = 1000;
 
-/** Les trois temps, tels que les onglets les nomment. */
 const ETAPES = ['Montant', 'Coordonnées', 'Confirmation'];
 
-/**
- * Les lignes du guilloche : des sinusoides dephasees, comme le fond de
- * securite d'un cheque ou d'un RIB. Calculees une fois.
- */
 const GUILLOCHE = Array.from({ length: 14 }, (_, k) => {
   const points = [];
   for (let x = 0; x <= 420; x += 6) {
@@ -25,7 +20,6 @@ const GUILLOCHE = Array.from({ length: 14 }, (_, k) => {
   return `M${points.join(' L')}`;
 });
 
-/** Le RIB malgache en ses quatre cases : banque, guichet, compte, cle. */
 function casesDuRib(rib) {
   return [
     { nom: 'Banque', valeur: rib.slice(0, 5) },
@@ -35,22 +29,10 @@ function casesDuRib(rib) {
   ];
 }
 
-/** "MG4600000000..." -> "MG46 0000 0000 ..." */
 function ibanLisible(iban) {
   return String(iban ?? '').replace(/(.{4})/g, '$1 ').trim();
 }
 
-/**
- * Le virement bancaire depuis une banque a Madagascar.
- *
- * Trois temps : le montant ; les coordonnees -- le RIB de HOPE, tel
- * qu'on le tient d'une banque, et le motif a recopier ; puis le
- * donateur signale son virement, ou le fera plus tard.
- *
- * La promesse s'enregistre des le premier temps : sa reference
- * (DON-2026-0036) est le motif du virement, c'est elle qui permet a
- * l'equipe de retrouver le don sur son releve.
- */
 export default function PaiementVirement() {
   const {
     profil,
@@ -77,11 +59,8 @@ export default function PaiementVirement() {
   const [signale, setSignale] = useState(false);
   const titre = useRef(null);
 
-  // Le montant du don prepare dans l'espace, s'il est en ariary.
   useEffect(() => {
     if (profil) setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
-    // Seulement au chargement.
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
@@ -107,7 +86,6 @@ export default function PaiementVirement() {
     evenement.preventDefault();
     setSoumis(true);
     if (erreurMontant) return;
-    // Revenu en arriere apres coup : la promesse existe deja.
     if (don || (await promettre({ montant: somme }))) aller(1);
   }
 
@@ -182,7 +160,6 @@ export default function PaiementVirement() {
           />
         )}
 
-        {/* ---------- 1. Le montant ---------- */}
         {pret && etape === 0 && (
           <section className="vir__temps" key="montant">
             <h1 className="vir__titre" ref={titre} tabIndex={-1}>
@@ -241,7 +218,6 @@ export default function PaiementVirement() {
           </section>
         )}
 
-        {/* ---------- 2. Les coordonnees ---------- */}
         {pret && etape === 1 && don && (
           <section className="vir__temps" key="coordonnees">
             <h1 className="vir__titre" ref={titre} tabIndex={-1}>
@@ -315,7 +291,6 @@ export default function PaiementVirement() {
           </section>
         )}
 
-        {/* ---------- 3. Confirmation ---------- */}
         {pret && etape === 2 && don && (
           <section className="vir__temps vir__temps--fin" key="fin">
             <div className="vir__sceau" aria-hidden="true">

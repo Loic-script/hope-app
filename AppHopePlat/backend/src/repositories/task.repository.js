@@ -1,30 +1,6 @@
-/**
- * Repository des taches de projet.
- *
- * Une tache se confie a une equipe : un ou plusieurs benevoles, affectes
- * par HOPE ou admis a leur demande (table tache_benevole). Son statut suit
- * l'equipe -- a faire tant qu'elle est vide, en cours des qu'un benevole
- * y est affecte -- jusqu'a ce que l'un d'eux la declare livree.
- *
- * Deux lectures d'une meme tache :
- *
- *   * celle de l'equipe HOPE, qui voit l'equipe entiere -- noms et
- *     photos -- et les demandes en attente ;
- *   * celle d'un benevole, qui voit sa propre place (affecte, demande en
- *     attente, refuse) et seulement le prenom de ceux qui y travaillent :
- *     les photos des benevoles ne sont montrees qu'a l'equipe HOPE.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/*
- * Ce qui presse.
- *
- * La priorite pose la base ; la date de fin la rehausse. Une tache
- * "moyenne" a rendre demain doit passer devant une "haute" a rendre
- * dans deux mois -- sans quoi l'equipe classe des etiquettes au lieu de
- * traiter ce qui brule.
- */
 const URGENCE = `
   CASE t.priorite
     WHEN 'urgente' THEN 300 WHEN 'haute' THEN 200 WHEN 'moyenne' THEN 100 ELSE 0
@@ -38,7 +14,6 @@ const URGENCE = `
     END
 `;
 
-/** Ce que toute lecture rend. */
 const COLONNES = `
   t.id, t.projet_id, t.titre, t.description, t.echeance, t.statut,
   t.competences_requises, t.priorite, t.benevoles_min, t.benevoles_max,
@@ -61,7 +36,6 @@ const COLONNES = `
   ), '[]'::json) AS files
 `;
 
-/** Les membres d'une equipe ou les demandeurs, en entier : pour HOPE seulement. */
 function personnes(statut, champDate) {
   return `COALESCE((
     SELECT json_agg(
@@ -94,10 +68,6 @@ const JOINTURES_ADMIN = `
   LEFT JOIN utilisateur lu ON lu.id = lb.utilisateur_id
 `;
 
-/**
- * Ce qu'un benevole voit de l'equipe : des prenoms, et sa propre place.
- * $1 est l'identifiant de sa fiche benevole.
- */
 const VUE_BENEVOLE = `
   COALESCE((
     SELECT json_agg(u.prenom ORDER BY tb.affectee_le, u.prenom)
@@ -111,7 +81,6 @@ const VUE_BENEVOLE = `
   (t.livree_par = $1) AS livree_par_moi
 `;
 
-/** Ce qui est en cours d'abord, puis a faire, puis livre ; l'echeance proche devant. */
 const ORDRE = `
   ${URGENCE} DESC,
   CASE t.statut WHEN 'en_cours' THEN 0 WHEN 'a_faire' THEN 1 ELSE 2 END,
@@ -119,17 +88,6 @@ const ORDRE = `
   t.cree_le DESC
 `;
 
-/**
- * Liste les taches.
- *
- * @param {{ statut?: string, projetId?: number, membre?: string,
- *           aPrendrePour?: string, avecDemandes?: boolean }} filtres
- *   membre : les taches dont ce benevole fait partie de l'equipe ;
- *   aPrendrePour : celles qu'il peut demander -- non livrees, et dont il
- *   ne fait pas deja partie.
- * @param {{ vue?: 'admin'|'benevole', benevoleId?: string }} options
- *   La vue benevole exige benevoleId : c'est sa place qu'elle calcule.
- */
 export async function lister(filtres = {}, options = {}, client = null) {
   const benevole = options.vue === 'benevole';
   const valeurs = benevole ? [options.benevoleId] : [];
@@ -175,7 +133,6 @@ export async function lister(filtres = {}, options = {}, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Une tache, vue par HOPE : equipe et demandes comprises. */
 export async function trouverParId(id, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES}, ${VUE_ADMIN}
@@ -189,7 +146,6 @@ export async function trouverParId(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Une tache, vue par un benevole. */
 export async function trouverPourBenevole(id, benevoleId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES}, ${VUE_BENEVOLE}
@@ -202,7 +158,6 @@ export async function trouverPourBenevole(id, benevoleId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Cree une tache : elle nait a faire, sans equipe. */
 export async function creer(
   {
     projetId,
@@ -237,13 +192,6 @@ export async function creer(
   return trouverParId(resultat.rows[0].id, client);
 }
 
-/**
- * Met a jour ce que l'equipe a saisi : l'intitule, la consigne, la date
- * de fin, la priorite, la taille voulue, l'experience requise.
- *
- * Ni le projet ni l'equipe ne passent par ici : l'un tient a l'histoire
- * de la tache, l'autre a ses propres gestes (affecter, retirer).
- */
 export async function mettreAJour(
   id,
   { titre, description, echeance, competencesRequises, priorite, benevolesMin, benevolesMax },
@@ -267,10 +215,6 @@ export async function supprimer(id, client = null) {
   return resultat.rowCount > 0;
 }
 
-/**
- * Verrouille une tache avant de toucher a son equipe : deux decisions
- * simultanees ne doivent pas laisser un statut qui contredit l'equipe.
- */
 export async function verrouiller(id, client) {
   const resultat = await query(
     `SELECT t.id, t.titre, t.statut, t.projet_id, t.benevoles_min, t.benevoles_max,
@@ -287,11 +231,6 @@ export async function verrouiller(id, client) {
   return versObjet(resultat.rows[0]);
 }
 
-/* ================================================================
-   L'equipe
-   ================================================================ */
-
-/** La place d'un benevole sur une tache, s'il en a une. */
 export async function place(tacheId, benevoleId, client = null) {
   const resultat = await query(
     `SELECT tb.statut, tb.origine, b.utilisateur_id
@@ -304,10 +243,6 @@ export async function place(tacheId, benevoleId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Affecte un benevole. Une demande en attente devient une affectation --
- * son origine reste "benevole" : c'est lui qui l'a voulue.
- */
 export async function affecter(tacheId, benevoleId, adminId, client = null) {
   await query(
     `INSERT INTO tache_benevole
@@ -321,10 +256,6 @@ export async function affecter(tacheId, benevoleId, adminId, client = null) {
   );
 }
 
-/**
- * Un benevole demande la tache. Apres un refus, il peut redemander :
- * la ligne repart en attente.
- */
 export async function demander(tacheId, benevoleId, client = null) {
   await query(
     `INSERT INTO tache_benevole (tache_id, benevole_id, statut, origine, demandee_le)
@@ -348,7 +279,6 @@ export async function refuser(tacheId, benevoleId, adminId, client = null) {
   );
 }
 
-/** Retire une ligne : quitter, etre retire, ou annuler sa demande. */
 export async function retirer(tacheId, benevoleId, client = null) {
   const resultat = await query(
     `DELETE FROM tache_benevole WHERE tache_id = $1 AND benevole_id = $2 RETURNING statut`,
@@ -358,10 +288,6 @@ export async function retirer(tacheId, benevoleId, client = null) {
   return resultat.rows[0]?.statut ?? null;
 }
 
-/**
- * Aligne le statut sur l'equipe : en cours des qu'un benevole y est, a
- * faire quand elle se vide. Une tache livree ne bouge plus.
- */
 export async function alignerStatut(tacheId, client = null) {
   await query(
     `UPDATE tache t
@@ -375,7 +301,6 @@ export async function alignerStatut(tacheId, client = null) {
   );
 }
 
-/** Un membre de l'equipe declare la tache livree. */
 export async function livrer(id, benevoleId, commentaire = null, client = null) {
   await query(
     `UPDATE tache
@@ -386,12 +311,6 @@ export async function livrer(id, benevoleId, commentaire = null, client = null) 
   );
 }
 
-/**
- * Joint les fichiers de la livraison a la tache.
- *
- * Appelee dans la meme transaction que la livraison : une preuve ne doit
- * pas rester sans tache. Les fichiers sont facultatifs.
- */
 export async function ajouterFichiers(tacheId, fichiers, client = null) {
   for (const [rang, fichier] of fichiers.entries()) {
     await query(
@@ -403,7 +322,6 @@ export async function ajouterFichiers(tacheId, fichiers, client = null) {
   }
 }
 
-/** Un fichier de livraison, et l'equipe qui peut le lire. */
 export async function trouverFichier(tacheId, fichierId, client = null) {
   const resultat = await query(
     `SELECT f.id, f.tache_id, f.nom_fichier AS file_name, f.chemin AS file_path,
@@ -419,11 +337,6 @@ export async function trouverFichier(tacheId, fichierId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/* ================================================================
-   Compteurs
-   ================================================================ */
-
-/** Compteurs des colonnes de "Mes taches" : les taches ou il est affecte. */
 export async function compterParStatut(benevoleId, client = null) {
   const resultat = await query(
     `SELECT t.statut, COUNT(*)::int AS nombre
@@ -442,7 +355,6 @@ export async function compterParStatut(benevoleId, client = null) {
   return compteurs;
 }
 
-/** Les compteurs de la page Taches de l'administration. */
 export async function compterPourAdmin(client = null) {
   const resultat = await query(
     `SELECT COUNT(*)::int                                          AS toutes,
@@ -459,7 +371,6 @@ export async function compterPourAdmin(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Les demandes a valider, pour la pastille du menu. */
 export async function compterDemandesEnAttente(client = null) {
   const resultat = await query(
     `SELECT COUNT(*)::int AS total FROM tache_benevole WHERE statut = 'demandee'`,
@@ -469,11 +380,6 @@ export async function compterDemandesEnAttente(client = null) {
   return resultat.rows[0].total;
 }
 
-/**
- * Les chiffres de la vue d'ensemble benevole : ce qui attend quelqu'un,
- * ce qui avance, ce qui a abouti ce mois-ci, et combien de benevoles y
- * prennent part.
- */
 export async function apercu(client = null) {
   const resultat = await query(
     `SELECT COUNT(*) FILTER (WHERE t.statut = 'a_faire')::int                     AS taches_libres,
@@ -492,10 +398,6 @@ export async function apercu(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Les benevoles que l'equipe peut affecter : ceux dont le compte est
- * actif. Leur photo aide a les reconnaitre dans la liste.
- */
 export async function benevolesAffectables(client = null) {
   const resultat = await query(
     `SELECT b.id AS benevole_id, u.id AS utilisateur_id, u.prenom, u.nom, u.email, u.photo_url,
@@ -510,7 +412,6 @@ export async function benevolesAffectables(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Les comptes des benevoles, pour les prevenir d'une decision. */
 export async function comptesDes(benevoleIds, client = null) {
   if (benevoleIds.length === 0) return [];
   const resultat = await query(

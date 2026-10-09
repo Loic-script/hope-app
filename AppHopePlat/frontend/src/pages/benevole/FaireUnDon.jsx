@@ -3,15 +3,6 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import ParcoursDon from '../../components/don/ParcoursDon.jsx';
 import * as service from '../../services/espaceBenevole.service.js';
 
-/**
- * Faire un don a un projet, depuis l'espace benevole : le parcours commun
- * (ParcoursDon), pour le projet de la publication (?projet=12).
- *
- * Pas de don mensuel ; le benevole choisit son montant et son mode de
- * paiement. Il ne voit rien de l'argent du projet -- ni jauge, ni ce qu'il
- * manque : avecFinances est coupe, et l'API ne lui en envoie d'ailleurs
- * aucun chiffre.
- */
 export default function FaireUnDon() {
   const { benevole, rafraichirCompteurs } = useOutletContext();
   const [parametres] = useSearchParams();

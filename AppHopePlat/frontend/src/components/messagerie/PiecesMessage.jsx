@@ -4,19 +4,6 @@ import { urlMedia } from '../../services/api.js';
 import { VisionneuseImage } from '../VisionneuseImage.jsx';
 import { poids } from './outils.js';
 
-/**
- * Les pieces jointes d'un message.
- *
- * - images : une grille de vignettes, qui s'ouvrent en grand ;
- * - video : lue sur place, sans la telecharger d'avance (preload
- *   "metadata" : la duree et la premiere image, rien de plus) ;
- * - PDF : une carte qui s'ouvre dans un onglet, et un bouton pour
- *   l'enregistrer.
- *
- * De simples <img> et <video> : un optimiseur d'images mettrait les
- * fichiers en cache sous une adresse publique, et ce sont des pieces
- * privees.
- */
 export default function PiecesMessage({ pieces }) {
   const [agrandie, setAgrandie] = useState(null);
 

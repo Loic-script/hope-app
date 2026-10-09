@@ -1,27 +1,8 @@
-/**
- * Repository des preuves terrain (field_proofs).
- *
- * Une preuve montre qu'une action a eu lieu : "les fournitures ont ete
- * remises ce matin". Elle ne prouve pas une depense -- c'est le role des
- * justificatifs, dans document.repository.js.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/**
- * Nombre de jours de silence au-dela duquel un projet est signale.
- *
- * Quinze jours : c'est le seuil des maquettes, et il correspond a peu
- * pres au rythme ou un donateur revient voir ou en est son don.
- */
 export const SEUIL_SILENCE_JOURS = 15;
 
-/*
- * Les fichiers arrivent agreges en JSON plutot que par une seconde
- * requete : une preuve en porte plusieurs, et lister vingt preuves ferait
- * autant d'allers-retours. COALESCE ramene un tableau vide -- et non
- * NULL -- pour un temoignage, qui n'a pas de fichier.
- */
 const COLONNES = `
   f.id, f.project_id, f.admin_id, f.benevole_id, f.proof_type, f.description,
   f.occurred_on, f.created_at, f.updated_at,
@@ -56,10 +37,6 @@ const JOINTURES = `
   ) fichiers ON TRUE
 `;
 
-/**
- * @param {{ projectId?: number, type?: string, recherche?: string,
- *           limite?: number }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -101,13 +78,6 @@ export async function trouverParId(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Cree une preuve et ses fichiers.
- *
- * @param {{ files?: object[] }} donnees les fichiers sont ranges dans
- *        l'ordre ou ils ont ete televerses : le premier represente la
- *        preuve dans les listes.
- */
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO field_proofs
@@ -130,7 +100,6 @@ export async function creer(donnees, client = null) {
   return trouverParId(preuveId, client);
 }
 
-/** Attache des fichiers a une preuve, dans l'ordre recu. */
 export async function ajouterFichiers(preuveId, fichiers, client = null) {
   for (const [rang, fichier] of fichiers.entries()) {
     await query(
@@ -150,18 +119,6 @@ export async function ajouterFichiers(preuveId, fichiers, client = null) {
   }
 }
 
-/** Un fichier precis, pour le servir ou l'effacer. */
-/**
- * Les preuves d'un projet, pour l'espace benevole.
- *
- * Ce que voit un donateur : la preuve et ses fichiers, sans le chemin sur
- * le disque ni l'administrateur qui l'a deposee. Pour une preuve deposee
- * par un benevole, son prenom -- comme les equipes des taches -- et, pour
- * le benevole qui lit, si c'est la sienne : il peut la retirer.
- *
- * @param {number} projectId
- * @param {string|null} utilisateurId le compte du benevole qui lit
- */
 export async function listerPourBenevole(projectId, utilisateurId = null, client = null) {
   const resultat = await query(
     `SELECT f.id, f.proof_type, f.description, f.occurred_on::text AS occurred_on,
@@ -189,7 +146,6 @@ export async function listerPourBenevole(projectId, utilisateurId = null, client
   return versListe(resultat.rows);
 }
 
-/** Un fichier de preuve, s'il appartient bien a une preuve de ce projet. */
 export async function trouverFichierDuProjet(projectId, preuveId, fichierId, client = null) {
   const resultat = await query(
     `SELECT x.id, x.file_name, x.file_path, x.mime_type
@@ -212,12 +168,6 @@ export async function trouverFichier(preuveId, fichierId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Supprime une preuve et rend les chemins de ses fichiers.
- *
- * La suppression en base cascade sur field_proof_files ; le disque, lui,
- * ne cascade pas : l'appelant a besoin de la liste pour l'effacer.
- */
 export async function supprimer(id, client = null) {
   const fichiers = await query(
     'SELECT file_path FROM field_proof_files WHERE proof_id = $1',
@@ -228,14 +178,6 @@ export async function supprimer(id, client = null) {
   return fichiers.rows.map((ligne) => ligne.file_path);
 }
 
-/**
- * Les quatre chiffres du haut de l'ecran.
- *
- * "projetsSansPreuve" ne compte que les projets EN COURS : un projet
- * termine n'a plus a produire de nouvelles, et un projet archive est
- * fige. Un projet en cours qui n'a jamais eu de preuve compte aussi --
- * c'est meme le cas le plus important a faire remonter.
- */
 export async function statistiques(client = null) {
   const resultat = await query(
     `SELECT
@@ -261,13 +203,6 @@ export async function statistiques(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Les projets en cours dont on n'a plus de nouvelles.
- *
- * Seuls les projets EN COURS sont concernes : un projet termine n'a plus
- * a produire de nouvelles, un projet archive est fige. Le tri met en tete
- * le plus silencieux -- c'est celui par lequel commencer.
- */
 export async function projetsSilencieux(client = null) {
   const resultat = await query(
     `SELECT p.id, p.reference, p.name, p.status,
@@ -287,12 +222,6 @@ export async function projetsSilencieux(client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Date de la derniere preuve de chaque projet.
- * Alimente la colonne "Derniere preuve" du tableau des projets.
- *
- * @returns {Promise<Map<number, string>>} projectId -> date ISO
- */
 export async function dernierePreuveParProjet(client = null) {
   const resultat = await query(
     `SELECT project_id, MAX(created_at) AS derniere

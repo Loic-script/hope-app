@@ -16,29 +16,10 @@ import * as catalogService from '../../services/catalog.service.js';
 import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Nombre d'objectifs specifiques acceptes, comme cote serveur.
- *
- * Dix : au-dela, ce ne sont plus des objectifs mais un plan d'action, et
- * la liste cesse de se relire d'un coup d'oeil.
- */
 const MAX_OBJECTIFS = 10;
 
-/** Nombre de postes acceptes dans un devis, comme cote serveur. */
 const MAX_POSTES_DEVIS = 30;
 
-/**
- * Somme des postes du devis, en centimes.
- *
- * On travaille en centimes entiers et non en nombres a virgule : 0,1 +
- * 0,2 ne fait pas 0,3 en flottant, et un total de budget ne doit pas
- * deriver d'un centime. La saisie francaise est toleree -- espaces de
- * milliers, virgule decimale -- comme cote serveur.
- *
- * @returns {number|null} null si un poste porte un montant illisible :
- *          le total n'a alors pas de sens, et c'est le serveur qui dira
- *          lequel est en cause.
- */
 function totalDevisEnCentimes(postes) {
   let total = 0;
   for (const poste of postes) {
@@ -51,12 +32,6 @@ function totalDevisEnCentimes(postes) {
   return total;
 }
 
-/**
- * Les deux types de projet, avec ce qu'ils recouvrent.
- *
- * La phrase compte autant que le nom : "interne" seul ne dit pas si l'on
- * parle d'un projet de l'equipe ou d'un projet discret.
- */
 const TYPES_PROJET = [
   {
     valeur: 'HOPE',
@@ -71,21 +46,15 @@ const TYPES_PROJET = [
 ];
 
 const FORMULAIRE_VIDE = {
-  // Projet HOPE par defaut : c'est le cas le plus courant, et celui de
-  // tous les projets crees avant que le choix n'existe.
   projectType: 'HOPE',
   name: '',
   descriptionTitre: '',
   description: '',
-  // Une ligne vide au depart : le champ doit se voir sans qu'il faille
-  // deviner qu'un bouton l'ouvre.
   objectives: [''],
   categoryName: '',
   location: '',
   managerName: '',
   requiredBudget: '',
-  // Vide au depart : le devis est facultatif, et le budget se saisit
-  // directement tant qu'aucun poste n'est ouvert.
   quoteItems: [],
   currency: 'MGA',
   beneficiaryProfile: '',
@@ -94,13 +63,6 @@ const FORMULAIRE_VIDE = {
   mediaType: 'PHOTO',
 };
 
-/**
- * Creation et modification d'un projet.
- *
- * Action complexe : elle occupe une page dediee plutot qu'une modale. Le
- * statut n'est pas saisissable — un projet nait toujours en cours et se
- * termine depuis sa fiche, avec son resultat.
- */
 export default function ProjectFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -132,9 +94,6 @@ export default function ProjectFormPage() {
       managerName: projet.managerName ?? '',
       requiredBudget: projet.requiredBudget ?? '',
       quoteItems: (projet.quoteItems ?? []).map((poste) => ({
-        // L'intitule n'a plus de champ, mais il est renvoye tel quel :
-        // un devis saisi avant garde le sien plutot que de le perdre a
-        // la premiere modification du projet.
         label: poste.label ?? '',
         category: poste.category ?? '',
         amount: poste.amount ?? '',
@@ -153,8 +112,6 @@ export default function ProjectFormPage() {
     setFormulaire((actuel) => ({ ...actuel, [champ]: valeur }));
   }
 
-  /* ---------- Les objectifs specifiques, ligne a ligne ---------- */
-
   function modifierObjectif(rang, valeur) {
     setFormulaire((actuel) => ({
       ...actuel,
@@ -170,16 +127,12 @@ export default function ProjectFormPage() {
     );
   }
 
-  /** Retirer la derniere ligne la vide au lieu de la supprimer : le champ
-      ne doit jamais disparaitre completement. */
   function retirerObjectif(rang) {
     setFormulaire((actuel) => {
       const restant = actuel.objectives.filter((_, index) => index !== rang);
       return { ...actuel, objectives: restant.length > 0 ? restant : [''] };
     });
   }
-
-  /* ---------- Le devis, poste a poste ---------- */
 
   function modifierPoste(rang, champ, valeur) {
     setFormulaire((actuel) => ({
@@ -198,8 +151,6 @@ export default function ProjectFormPage() {
     );
   }
 
-  /* Retirer le dernier poste rend la main a la saisie directe : le
-     budget redevient modifiable, avec la derniere valeur calculee. */
   function retirerPoste(rang) {
     setFormulaire((actuel) => ({
       ...actuel,
@@ -207,17 +158,8 @@ export default function ProjectFormPage() {
     }));
   }
 
-  /*
-   * Des qu'un poste existe, le budget n'est plus saisi mais calcule.
-   * C'est le meme arbitrage que cote serveur, et le champ passe en
-   * lecture seule pour qu'aucun des deux chiffres ne puisse contredire
-   * l'autre.
-   */
   const devisOuvert = formulaire.quoteItems.length > 0;
   const totalDevis = devisOuvert ? totalDevisEnCentimes(formulaire.quoteItems) : null;
-  /* En lecture seule, le montant est mis en forme comme le total juste
-     au-dessus : c'est un affichage, plus une saisie. Modifiable, il
-     reste la chaine brute que l'on tape. */
   const budgetAffiche = devisOuvert
     ? (totalDevis === null ? '' : fmt.montant((totalDevis / 100).toFixed(2), formulaire.currency))
     : formulaire.requiredBudget;
@@ -227,7 +169,6 @@ export default function ProjectFormPage() {
 
     const charge = {
       ...formulaire,
-      // Un nom tape librement : le serveur retrouve ou cree la categorie.
       categoryName: formulaire.categoryName.trim() || null,
       descriptionTitre: formulaire.descriptionTitre || null,
       description: formulaire.description || null,
@@ -237,11 +178,7 @@ export default function ProjectFormPage() {
       beneficiaryTarget: formulaire.beneficiaryTarget === '' ? null : Number(formulaire.beneficiaryTarget),
       mediaUrl: formulaire.mediaUrl || null,
       mediaType: formulaire.mediaUrl ? formulaire.mediaType : null,
-      // Le serveur ecarte lui aussi les lignes vides ; on les retire ici
-      // pour ne pas envoyer du vide qu'il devra nettoyer.
       objectives: formulaire.objectives.map((o) => o.trim()).filter(Boolean),
-      // Le serveur recalcule le total a partir des postes : le montant
-      // envoye ci-dessus ne sert que lorsqu'il n'y en a aucun.
       quoteItems: formulaire.quoteItems,
     };
 
@@ -274,11 +211,6 @@ export default function ProjectFormPage() {
           {erreur && <Alerte>{erreur}</Alerte>}
 
           <div className="formulaire-grille" style={{ marginTop: erreur ? '18px' : 0 }}>
-            {/*
-              Le type d'abord : il dit a quoi sert le projet, avant meme
-              son nom. Deux cartes plutot qu'une liste : le choix se lit
-              d'un coup d'oeil, avec ce que chaque type recouvre.
-            */}
             <fieldset className="choix-type" disabled={envoi}>
               <legend className="champ-admin__label">Type de projet</legend>
               <div className="choix-type__options">
@@ -317,11 +249,6 @@ export default function ProjectFormPage() {
               pleineLargeur
             />
 
-            {/*
-              Le titre de la description, et non un second nom de projet :
-              le nom designe, ce titre annonce ce que le paragraphe
-              raconte. Facultatif -- une fiche sans lui reste lisible.
-            */}
             <ChampTexte
               label="Titre de la description"
               id="descriptionTitre"
@@ -343,15 +270,6 @@ export default function ProjectFormPage() {
               disabled={envoi}
             />
 
-            {/*
-              Les objectifs specifiques : ce que le projet doit avoir
-              accompli. "Ouvrir une cantine" est le projet ; "servir un
-              repas chaud a 200 eleves" en est un objectif.
-
-              Une ligne par objectif plutot qu'un texte libre : on les
-              relit point par point, et chacun pourra plus tard porter
-              son indicateur.
-            */}
             <Champ
               label="Objectifs spécifiques"
               id="objective-0"
@@ -360,9 +278,6 @@ export default function ProjectFormPage() {
             >
               <ul className="liste-champs">
                 {formulaire.objectives.map((libelle, rang) => (
-                  // L'index sert de cle faute de mieux : ces lignes n'ont
-                  // pas d'identite tant qu'elles ne sont pas enregistrees,
-                  // et elles ne se reordonnent pas.
                   <li className="liste-champs__ligne" key={rang}>
                     <input
                       id={`objective-${rang}`}
@@ -432,16 +347,6 @@ export default function ProjectFormPage() {
               disabled={envoi}
             />
 
-            {/*
-              Le devis : d'ou vient le budget necessaire.
-
-              Il est facultatif. Sans poste, le montant se saisit
-              directement -- celui qui le connait deja n'a pas a le
-              detailler. Des qu'un poste existe, c'est la somme qui fait
-              foi, et le champ du dessous passe en lecture seule : deux
-              chiffres modifiables pour la meme chose finiraient par se
-              contredire.
-            */}
             <Champ
               label="Devis"
               id="poste-0-label"
@@ -455,8 +360,6 @@ export default function ProjectFormPage() {
               {devisOuvert && (
                 <ul className="devis">
                   {formulaire.quoteItems.map((poste, rang) => (
-                    // L'index sert de cle faute de mieux : ces lignes n'ont
-                    // pas d'identite tant qu'elles ne sont pas enregistrees.
                     <li className="devis__ligne" key={rang}>
                       <select
                         className="devis__categorie"

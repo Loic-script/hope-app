@@ -9,18 +9,6 @@ import * as service from '../../services/bailleur.service.js';
 import * as fmt from '../../utils/format.js';
 import { EntetePage, Panneau, Pastille } from './composants.jsx';
 
-/**
- * Mon organisation.
- *
- * C'est ici, dans ses parametres, que le bailleur renseigne sa fiche :
- * raison sociale, type, adresse, numero fiscal. Rien ne lui est demande
- * a l'inscription -- son organisation est creee avec le compte, sous un
- * nom provisoire, et il la precise quand il veut.
- *
- * Ce qui releve de HOPE reste en lecture : la date d'entree en
- * partenariat, le niveau, les distinctions, et la liste des personnes
- * ayant acces.
- */
 export default function Organisation() {
   const { bailleur, rafraichirBailleur } = useOutletContext();
   const { donnees, chargement, erreur, recharger } = useChargement(() => service.profil(), []);
@@ -28,14 +16,11 @@ export default function Organisation() {
 
   const [fonction, setFonction] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
-  // Le nom de la personne : l'inscription ne le demande plus, il se
-  // renseigne ici.
   const [identite, setIdentite] = useState({ prenom: '', nom: '', telephone: '' });
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
   const [succes, setSucces] = useState('');
 
-  // La fiche de l'organisation, editable.
   const [fiche, setFiche] = useState({
     raisonSociale: '',
     typeOrganisation: '',
@@ -71,7 +56,6 @@ export default function Organisation() {
       siteWeb: bailleur.siteWeb ?? '',
       nif: bailleur.nif ?? '',
     });
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bailleur?.bailleurId, bailleur?.raisonSociale, bailleur?.typeOrganisation]);
 
@@ -89,7 +73,6 @@ export default function Organisation() {
     try {
       await service.mettreAJourOrganisation(fiche);
       setSuccesFiche('La fiche de votre organisation est à jour.');
-      // Le bandeau de l'espace porte la raison sociale et le type.
       rafraichirBailleur?.();
     } catch (echec) {
       setErreursChamps(echec?.response?.data?.details ?? {});
@@ -105,15 +88,6 @@ export default function Organisation() {
     setRefus('');
     setSucces('');
     try {
-      // La photo part avec le reste : televersee, elle n'est rattachee
-      // au compte qu'ici. Sans ce champ, elle disparaitrait au
-      // rechargement.
-      /*
-       * Un nom encore jamais donne et laisse vide ne part pas : on peut
-       * enregistrer sa fonction sans etre force de se nommer. Un nom
-       * deja donne, lui, part toujours -- l'effacer est refuse par le
-       * serveur, qui le dit.
-       */
       const sansNom = (champ) => identite[champ].trim() === '' && !bailleur?.[champ];
       await service.mettreAJourContact({
         fonction,
@@ -123,7 +97,6 @@ export default function Organisation() {
         telephone: identite.telephone,
       });
       setSucces('Votre fiche est à jour.');
-      // Le bandeau porte la photo : il doit relire la fiche.
       rafraichirBailleur?.();
       recharger();
     } catch (echec) {
@@ -135,7 +108,6 @@ export default function Organisation() {
 
   const contacts = donnees?.contacts ?? [];
   const distinctions = donnees?.distinctions ?? [];
-  // Le type pose a l'inscription, en attendant que le bailleur precise.
   const aPreciser = bailleur?.typeOrganisation === 'autre';
 
   return (
@@ -269,8 +241,6 @@ export default function Organisation() {
 
         <Panneau titre="Ma fiche de contact">
           <form className="formulaire-bailleur" onSubmit={enregistrer}>
-            {/* La photo se voit partout ou ce contact prend la parole :
-                l'en-tete de l'espace, et ses messages. */}
             <ChampPhotoProfil
               valeur={photoUrl}
               nom={`${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim() || bailleur?.email}
@@ -373,7 +343,6 @@ export default function Organisation() {
   );
 }
 
-/** Un champ texte de la fiche. */
 function ChampFiche({ id, libelle, valeur, onChange, erreur, aide, ...reste }) {
   return (
     <div className="champ-bailleur">
@@ -396,7 +365,6 @@ function ChampFiche({ id, libelle, valeur, onChange, erreur, aide, ...reste }) {
   );
 }
 
-/** Une ligne de fiche en lecture. */
 function Ligne({ terme, valeur, lien = false }) {
   return (
     <div className="fiche-part__ligne">

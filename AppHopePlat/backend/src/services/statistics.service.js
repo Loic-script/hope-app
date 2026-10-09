@@ -1,17 +1,9 @@
-/**
- * Service de l'ecran Statistiques.
- *
- * Trois familles, comme demande : le budget, les projets, les donateurs.
- * Les series sont accompagnees de leur maximum pour que le frontend dessine
- * ses barres sans avoir a recalculer une echelle.
- */
 import * as statisticsRepository from '../repositories/statistics.repository.js';
 import * as donationRepository from '../repositories/donation.repository.js';
 import * as expenseRepository from '../repositories/expense.repository.js';
 
 import { centimesVersTexte, depuisBase, pourcentage } from '../shared/money.js';
 
-/** Plus grande valeur d'une serie, utilisee comme echelle des barres. */
 function maximum(lignes, champ) {
   return lignes.reduce((plusGrand, ligne) => Math.max(plusGrand, depuisBase(ligne[champ])), 0);
 }

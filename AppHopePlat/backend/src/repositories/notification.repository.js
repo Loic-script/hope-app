@@ -1,10 +1,3 @@
-/**
- * Repository des notifications de l'administrateur.
- *
- * Chaque evenement marquant depose une ligne ici : un don recu, un message
- * d'un donateur, un projet termine, un investissement du fonds HOPE, et
- * l'ouverture d'un compte -- donateur, benevole ou bailleur.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
@@ -47,7 +40,6 @@ const JOINTURES = `
   ) r ON TRUE
 `;
 
-/** @param {{ type?: string, nonLues?: boolean, limite?: number }} filtres */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -71,10 +63,6 @@ export async function lister(filtres = {}, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Depose une notification.
- * Appele par les services au moment ou l'evenement se produit.
- */
 export async function creer(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO notifications

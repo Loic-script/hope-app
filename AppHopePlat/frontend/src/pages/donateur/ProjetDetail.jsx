@@ -12,7 +12,6 @@ const STATUTS_PROJET = {
   ARCHIVED: { libelle: 'Archivé', teinte: 'neutre' },
 };
 
-/** "25 000 Ar" ou "25 000 Ar et 40 €" : un total par devise. */
 function totaux(lignes, cle) {
   return lignes
     .filter((l) => Number(l[cle]) > 0)
@@ -20,12 +19,6 @@ function totaux(lignes, cle) {
     .join(' et ');
 }
 
-/**
- * Un projet, tel qu'un donateur le consulte : la fiche commune
- * (FicheProjet) -- ce qu'il est, son financement, son impact --, avec ce
- * qui regarde le donateur : ses dons a ce projet, et le bouton pour y
- * donner tant qu'il est ouvert.
- */
 export default function ProjetDetail() {
   const { id } = useParams();
   const { donnees, chargement, erreur } = useChargement(() => service.projet(id), [id]);

@@ -48,17 +48,11 @@ const COULEURS_INTERET = { nouvelle: 'ambre', contactee: 'bleu', convertie: 'ver
 
 const VIDE = { type: 'actualite', titre: '', corps: '', projetId: '', mediaUrl: '' };
 
-/**
- * Ou se lit une publication, selon sa nature : l'actualite chez les
- * bailleurs et les benevoles, l'appel a financement chez les bailleurs
- * seuls.
- */
 const ESPACES = {
   actualite: 'des espaces bailleur et bénévole',
   appel_financement: 'de l’espace bailleur',
 };
 
-/** Ce qu'une recherche parcourt dans une publication. */
 function texteCherchable(publication) {
   return [
     publication.titre,
@@ -72,28 +66,10 @@ function texteCherchable(publication) {
     .toLowerCase();
 }
 
-/**
- * Actualites des espaces bailleur et benevole.
- *
- * Ce que l'equipe publie ici, chaque bailleur le lit dans sa page
- * Actualites, et sa cloche l'en previent. Deux natures : l'actualite,
- * qui informe, et l'appel a financement, dont la jauge suit le budget du
- * projet lie et qui porte le bouton "Financer ce projet".
- *
- * Les benevoles lisent aussi les actualites, dans leur propre page
- * Actualites -- jamais les appels a financement, qui parlent d'argent.
- *
- * Sous chaque appel, les bailleurs qui ont clique ce bouton : c'est ici
- * que l'equipe les retrouve pour les recontacter.
- *
- * La page se lit comme celle des projets : la meme barre d'outils --
- * recherche, filtres, compteur -- puis les memes cartes, visuel a gauche
- * et contenu a droite.
- */
 export default function PublicationsPage() {
   const [filtre, setFiltre] = useState('tous');
   const [recherche, setRecherche] = useState('');
-  const [edition, setEdition] = useState(null); // null, { publication: null } ou { publication }
+  const [edition, setEdition] = useState(null);
   const [aSupprimer, setASupprimer] = useState(null);
   const [succes, setSucces] = useState('');
 
@@ -113,7 +89,6 @@ export default function PublicationsPage() {
       (!cherche || texteCherchable(p).includes(cherche))
   );
 
-  // Le nombre accompagne chaque filtre, comme les onglets le faisaient.
   const filtres = [
     { valeur: 'tous', label: `Toutes (${compteurs.tous ?? publications.length})` },
     { valeur: 'actualite', label: `Actualités (${compteurs.actualite ?? 0})` },
@@ -201,8 +176,6 @@ export default function PublicationsPage() {
             <CarteActualite
               key={publication.id}
               publication={publication}
-              // Les premieres cartes se remplissent l'une apres l'autre ; au-dela,
-              // attendre ne dirait plus rien.
               rang={Math.min(rang, 5)}
               envoi={envoi}
               onModifier={() => setEdition({ publication })}
@@ -251,19 +224,6 @@ export default function PublicationsPage() {
   );
 }
 
-/* ==================================================================
-   Une publication
-   ================================================================== */
-
-/**
- * Une publication, dans la carte des projets : le visuel a gauche, ce
- * qu'il faut savoir pour decider a droite.
- *
- * Le surtitre porte le projet lie, l'etiquette la nature de la
- * publication, et le pied les memes mesures qu'un projet -- la date,
- * l'auteur, et pour un appel le nombre de bailleurs interesses. La jauge
- * horizon d'un appel est celle du projet : la part deja financee.
- */
 function CarteActualite({
   publication,
   rang = 0,
@@ -293,7 +253,6 @@ function CarteActualite({
             legende={publication.titre}
           />
         ) : (
-          // Sans photo, le cadre reste habite : le logo, et ce qui manque.
           <span className="publication__sans-visuel publication__sans-visuel--fige">
             <HopeLogo compact />
             <span>Sans photo</span>
@@ -337,8 +296,6 @@ function CarteActualite({
 
         {appel && publication.avancement !== null && (
           <>
-            {/* Le financement en clair, sans jauge : la barre du projet se
-                lit sur sa carte, dans la page Projets. */}
             <p className="publication__financement">
               <strong>{fmt.montant(publication.montantFinance, publication.devise)}</strong> reçus
               sur {fmt.montant(publication.budgetProjet, publication.devise)}
@@ -368,8 +325,6 @@ function CarteActualite({
             {publication.publieParNom && (
               <Mesure Icone={IconePersonne} libelle="a publié" valeur={publication.publieParNom} />
             )}
-            {/* Le nombre de bailleurs interesses n'est pas repris ici : il
-                se lit dans la section qui les liste, juste en dessous. */}
           </div>
 
           <div className="publication__actions">
@@ -425,11 +380,6 @@ function CarteActualite({
 
 const ESPACES_AUTEUR = { donateur: 'Donateur', benevole: 'Bénévole', bailleur: 'Bailleur' };
 
-/**
- * Les J'aime et les commentaires d'une publication. Les commentaires ne
- * se lisent qu'ici : dans les espaces, personne d'autre ne les voit. Les
- * ouvrir les marque comme lus.
- */
 function Reactions({ publication }) {
   const [ouvert, setOuvert] = useState(false);
   const [liste, setListe] = useState(null);
@@ -510,12 +460,9 @@ function Reactions({ publication }) {
   );
 }
 
-/** Un bailleur qui s'est manifeste, et le suivi de son interet. */
 function Interet({ interet, envoi, onStatut, onErreur }) {
   const contact = [interet.contactNom, interet.contactFonction].filter(Boolean).join(' · ');
 
-  // Le contact lui-meme s'il a un compte joignable ; sinon l'organisation,
-  // dont le serveur trouve le contact principal.
   const cible =
     interet.contactUtilisateurId && interet.contactJoignable
       ? { personne: { type: 'utilisateur', id: interet.contactUtilisateurId } }
@@ -567,10 +514,6 @@ function Interet({ interet, envoi, onStatut, onErreur }) {
   );
 }
 
-/* ==================================================================
-   Creer ou modifier
-   ================================================================== */
-
 function ModaleActualite({ publication, onFermer, onEnregistre }) {
   const creation = !publication;
   const [formulaire, setFormulaire] = useState(() =>
@@ -595,8 +538,6 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
   const appel = formulaire.type === 'appel_financement';
   const projet = projets.find((p) => String(p.id) === formulaire.projetId) ?? null;
 
-  // Changer de projet ramene la photo a celle du nouveau projet : une
-  // photo propre choisie pour l'ancien n'a plus de raison d'etre gardee.
   function changerProjet(valeur) {
     setFormulaire((actuel) => ({
       ...actuel,
@@ -605,11 +546,6 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
     }));
   }
 
-  /*
-   * Un appel ne vise qu'un projet en cours. Le projet deja rattache reste
-   * propose meme s'il s'est termine depuis : sans cela, modifier le titre
-   * d'un ancien appel viderait son projet.
-   */
   const options = useMemo(() => {
     const liste = projets
       .filter((p) => !appel || p.status === 'IN_PROGRESS' || (publication && p.id === publication.projetId))
@@ -621,8 +557,6 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
       publication?.projetId &&
       !liste.some((o) => o.valeur === String(publication.projetId))
     ) {
-      // Pendant le chargement, le projet est absent de la liste sans etre
-      // archive : on ne le qualifie qu'une fois la liste connue.
       liste.push({
         valeur: String(publication.projetId),
         label: `${publication.projetNom}${projetsCharges ? ' (archivé)' : ''}`,
@@ -632,7 +566,6 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
   }, [projets, projetsCharges, appel, publication]);
 
   useEffect(() => {
-    // Passer en appel avec un projet termine le deselectionne.
     if (appel && formulaire.projetId && !options.some((o) => o.valeur === formulaire.projetId)) {
       setFormulaire((actuel) => ({ ...actuel, projetId: '', mediaUrl: '' }));
     }
@@ -646,7 +579,6 @@ function ModaleActualite({ publication, onFermer, onEnregistre }) {
       ? publication.photoProjet
       : null;
 
-  // Une actualite se lit aussi chez les benevoles ; un appel, non.
   const actualite = formulaire.type === 'actualite';
 
   function enregistrer() {

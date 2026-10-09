@@ -4,7 +4,6 @@ import { createPortal, flushSync } from 'react-dom';
 import { IconeCroix } from './admin/AdminIcons.jsx';
 import { IconeCoche, IconeFlecheGauche, IconeRecherche } from './HopeIcons.jsx';
 
-/** "Réunion" et "reunion", "ESPAÑOL" et "espanol" se valent. */
 export function normaliser(texte) {
   return String(texte ?? '')
     .normalize('NFD')
@@ -12,12 +11,6 @@ export function normaliser(texte) {
     .toLowerCase();
 }
 
-/**
- * Des options rangees par lettre : une section "A", une section "B"...
- * La lettre est celle du texte que rend `cle` (le libelle par defaut),
- * accents oublies : "Égypte" se range sous E, "Îles Salomon" sous I.
- * L'ordre des options dans chaque section est garde.
- */
 export function parLettre(options, cle = (option) => option.libelle) {
   const sections = new Map();
   for (const option of options) {
@@ -30,19 +23,11 @@ export function parLettre(options, cle = (option) => option.libelle) {
     .map(([lettre, liste]) => ({ libelle: lettre, lettre, options: liste }));
 }
 
-/** Les mots d'un texte : "Côte d’Ivoire (+225)" -> cote, d, ivoire, +225. */
 function mots(texte) {
   const bruts = texte.split(/[\s,()/·.’']+/).filter(Boolean);
   return [...new Set([...bruts, ...bruts.flatMap((mot) => mot.split('-'))])].filter(Boolean);
 }
 
-/**
- * Les options qui repondent a la recherche, les meilleures d'abord.
- *
- * Chaque terme doit se trouver quelque part. Un mot entier ("33" pour la
- * France) passe devant un debut de mot ("fra"), qui passe devant un
- * morceau ("233" pour le Ghana) ; a egalite, l'ordre de la liste.
- */
 function rechercher(options, requete) {
   const termes = normaliser(requete).split(/\s+/).filter(Boolean);
   if (termes.length === 0) return null;
@@ -60,13 +45,10 @@ function rechercher(options, requete) {
   return trouves.sort((a, b) => a.score - b.score || a.rang - b.rang).map(({ option }) => option);
 }
 
-/** Le texte, le morceau cherche mis en evidence. */
 function surligner(texte, requete) {
   const terme = normaliser(requete).split(/\s+/).filter(Boolean)[0];
   if (!terme || !texte) return texte;
   const plat = normaliser(texte);
-  // Une lettre qui change de longueur en perdant son accent decalerait
-  // tout : on renonce alors a surligner.
   if (plat.length !== texte.length) return texte;
   const debut = plat.indexOf(terme);
   if (debut < 0) return texte;
@@ -79,9 +61,6 @@ function surligner(texte, requete) {
   );
 }
 
-/* ---------------- Drapeaux ---------------- */
-
-/** "MG" -> le drapeau malgache, en emoji. */
 function drapeauEmoji(code) {
   return String.fromCodePoint(
     ...code
@@ -93,12 +72,6 @@ function drapeauEmoji(code) {
 
 let drapeauxEnCouleur = null;
 
-/**
- * Le systeme dessine-t-il les drapeaux ? Android et iOS, oui ; Windows
- * ecrit "FR" en deux lettres grises. On le verifie une fois, en dessinant
- * un drapeau : s'il sort sans couleur, le code du pays s'affiche dans une
- * pastille a la place.
- */
 function drapeauxDessines() {
   if (drapeauxEnCouleur !== null) return drapeauxEnCouleur;
   drapeauxEnCouleur = false;
@@ -119,12 +92,10 @@ function drapeauxDessines() {
       }
     }
   } catch {
-    // Pas de dessin possible : la pastille.
   }
   return drapeauxEnCouleur;
 }
 
-/** Ce qui ouvre la ligne : le drapeau du pays, ou une pastille ("ES"). */
 function Visuel({ option }) {
   if (option.drapeau && drapeauxDessines()) {
     return (
@@ -142,44 +113,11 @@ function Visuel({ option }) {
   );
 }
 
-/** L'element de l'index (A, B, C...) sous le doigt. */
 function lettreSous(evenement) {
   const cible = document.elementFromPoint(evenement.clientX, evenement.clientY);
   return cible?.closest?.('[data-index-lettre]')?.dataset.indexLettre ?? null;
 }
 
-/**
- * Un choix parmi une longue liste, sur une page a lui -- pour le telephone.
- *
- * Sur un telephone, la liste native de deux cents pays ou de quatre cents
- * fuseaux se parcourt au doigt, ligne a ligne, dans une roue etroite. Ici,
- * toucher le champ ouvre une page entiere, rangee comme celles des
- * applications de telephone :
- *   - en haut, le retour, le titre, et la recherche ;
- *   - dessous, la liste en sections : les suggestions d'abord, puis une
- *     section par lettre, chacune sous son en-tete qui reste accroche en
- *     haut pendant qu'on la parcourt ;
- *   - a droite, l'index A-Z : toucher ou glisser sur une lettre y mene ;
- *   - chaque ligne : le drapeau (ou une pastille), le nom, une precision
- *     dessous, un detail a droite ("+261", "UTC+3"), la coche du choix.
- *
- * Le clavier ne s'ouvre qu'en touchant la recherche : a l'ouverture, on
- * voit la liste entiere. "fra", "Germany", "+33", "español" ou "UTC+3"
- * menent au bon endroit, accents et majuscules indifferents ; faire
- * defiler la liste range le clavier.
- *
- * Le bouton "retour" d'Android referme la page sans quitter le formulaire
- * -- ce qui ferait perdre l'etape en cours. Sur ordinateur, le formulaire
- * garde ses listes natives : ce composant ne sert que sur un petit ecran.
- *
- * `groupes` : [{ libelle?, lettre?, options: [{ valeur, libelle,
- * sousTitre?, detail?, drapeau?, pastille?, motsCles?, affichage? }] }].
- * `lettre` range la section dans l'index (voir parLettre) ; `drapeau` est
- * un code pays ("MG"), `pastille` un court texte ("ES") ; `motsCles` se
- * cherchent sans s'afficher ; `affichage` est le texte du champ ferme,
- * s'il differe du libelle. Une option peut paraitre dans deux sections
- * (Madagascar en suggestion et sous M).
- */
 export default function ChoixSurPage({
   id,
   className = '',
@@ -199,9 +137,7 @@ export default function ChoixSurPage({
 
   const [ouvert, setOuvert] = useState(false);
   const [recherche, setRecherche] = useState('');
-  // La liste a defile sous l'en-tete : une ombre l'en detache.
   const [defile, setDefile] = useState(false);
-  // La lettre que l'on vient de toucher dans l'index, montree en grand.
   const [lettreVue, setLettreVue] = useState(null);
   const declencheur = useRef(null);
   const page = useRef(null);
@@ -210,7 +146,6 @@ export default function ChoixSurPage({
   const ouvertMaintenant = useRef(false);
   const minuterieLettre = useRef(0);
 
-  /* Chaque section, et chaque option avec le texte ou on la cherche. */
   const sections = useMemo(
     () =>
       (groupes ?? [])
@@ -231,7 +166,6 @@ export default function ChoixSurPage({
     [groupes]
   );
 
-  /* Toutes les options, une fois chacune : on y cherche, on y trouve le choix. */
   const toutes = useMemo(() => {
     const vues = new Set();
     const uniques = [];
@@ -265,8 +199,6 @@ export default function ChoixSurPage({
   }
   const avecIndex = !trouves && lettres.length >= 8;
 
-  /* ---------------- Ouvrir, refermer, choisir ---------------- */
-
   function ouvrir() {
     if (disabled || ouvertMaintenant.current) return;
     ouvertMaintenant.current = true;
@@ -276,8 +208,6 @@ export default function ChoixSurPage({
       setLettreVue(null);
       setOuvert(true);
     });
-    // La page elle-meme, et non la recherche : le clavier ne monte pas
-    // et la liste se voit en entier. Les lecteurs d'ecran lisent le titre.
     page.current?.focus({ preventScroll: true });
   }
 
@@ -294,7 +224,6 @@ export default function ChoixSurPage({
     fermer();
   }
 
-  /** Amene la section d'une lettre en haut de la liste. */
   function allerA(lettre) {
     const cadre = liste.current;
     const section = cadre?.querySelector(`[data-lettre="${lettre}"]`);
@@ -305,13 +234,9 @@ export default function ChoixSurPage({
     minuterieLettre.current = window.setTimeout(() => setLettreVue(null), 700);
   }
 
-  // Les ecouteurs poses sur la fenetre appellent la version du dernier rendu.
   const fermerMaintenant = useRef(fermer);
   fermerMaintenant.current = fermer;
 
-  /* ---------------- Effets ---------------- */
-
-  // A l'ouverture, le choix en cours est deja sous les yeux.
   useLayoutEffect(() => {
     if (!ouvert || recherche) return;
     const cadre = liste.current;
@@ -321,13 +246,10 @@ export default function ChoixSurPage({
     }
   }, [ouvert, recherche]);
 
-  // Une nouvelle recherche repart du haut de la liste.
   useLayoutEffect(() => {
     if (ouvert && recherche && liste.current) liste.current.scrollTop = 0;
   }, [ouvert, recherche]);
 
-  // La page prend la hauteur que laisse le clavier ; la page du
-  // formulaire, dessous, ne defile plus.
   useLayoutEffect(() => {
     if (!ouvert) return undefined;
     const zone = window.visualViewport;
@@ -350,9 +272,6 @@ export default function ChoixSurPage({
     };
   }, [ouvert]);
 
-  // Le bouton "retour" d'Android referme la page, et non le formulaire :
-  // une entree d'historique est ajoutee a l'ouverture, et retiree si
-  // l'on referme autrement.
   useEffect(() => {
     if (!ouvert) return undefined;
     let parRetour = false;
@@ -375,8 +294,6 @@ export default function ChoixSurPage({
 
   useEffect(() => () => window.clearTimeout(minuterieLettre.current), []);
 
-  /* ---------------- Rendu ---------------- */
-
   const nombre = trouves?.length ?? toutes.length;
 
   const pageChoix = (
@@ -388,7 +305,6 @@ export default function ChoixSurPage({
       aria-labelledby={idTitre}
       tabIndex={-1}
     >
-      {/* ---------- En haut : retour, titre, recherche ---------- */}
       <div className="choix-page__entete">
         <header className="choix-page__tete">
           <button
@@ -421,7 +337,6 @@ export default function ChoixSurPage({
             value={recherche}
             onChange={(evenement) => setRecherche(evenement.target.value)}
             onKeyDown={(evenement) => {
-              // Entree choisit le premier resultat.
               if (evenement.key === 'Enter' && trouves?.length) {
                 evenement.preventDefault();
                 choisir(trouves[0]);
@@ -444,7 +359,6 @@ export default function ChoixSurPage({
         </div>
       </div>
 
-      {/* ---------- La liste, et l'index des lettres ---------- */}
       <div className="choix-page__corps">
         <div
           ref={liste}
@@ -453,7 +367,6 @@ export default function ChoixSurPage({
           aria-label={nom}
           onScroll={(evenement) => setDefile(evenement.currentTarget.scrollTop > 2)}
           onTouchMove={() => {
-            // Faire defiler la liste range le clavier : on voit plus de lignes.
             if (document.activeElement === champRecherche.current) champRecherche.current.blur();
           }}
         >
@@ -521,8 +434,6 @@ export default function ChoixSurPage({
           )}
         </div>
 
-        {/* Toucher une lettre y mene ; glisser le doigt le long de l'index
-            parcourt l'alphabet. */}
         {avecIndex && (
           <div
             className="choix-page__index"

@@ -1,22 +1,3 @@
-/**
- * Remise a zero des donnees metier.
- *
- *   npm run db:reset           affiche ce qui serait supprime (aucune ecriture)
- *   npm run db:reset -- --force supprime reellement
- *
- * CE QUI EST SUPPRIME : projets, donateurs et leurs comptes, dons,
- * investissements, depenses, justificatifs (lignes et fichiers),
- * beneficiaires, impacts, messages, notifications.
- *
- * CE QUI EST CONSERVE :
- *   * la table "admins" — le compte AdminHope et son mot de passe hashe ;
- *   * les categories de projet — ce sont des donnees de reference, pas des
- *     exemples ; elles alimentent le formulaire de creation de projet et
- *     restent modifiables depuis l'ecran Parametres.
- *
- * Les sequences sont remises a 1 : les references repartent de
- * PRJ-2026-0001, DON-2026-0001, INV-2026-0001.
- */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -27,10 +8,6 @@ import * as catalogService from '../services/catalog.service.js';
 
 const FORCER = process.argv.includes('--force');
 
-/**
- * Tables videes, dans l'ordre des dependances.
- * "admins" et "project_categories" n'y figurent volontairement pas.
- */
 const TABLES_METIER = [
   'notifications',
   'messages',
@@ -46,7 +23,6 @@ const TABLES_METIER = [
   'projects',
 ];
 
-/** Compte les lignes de chaque table metier. */
 async function inventaire() {
   const lignes = await Promise.all(
     TABLES_METIER.map(async (table) => {
@@ -57,7 +33,6 @@ async function inventaire() {
   return lignes;
 }
 
-/** Supprime les justificatifs televerses sur le disque. */
 async function viderFichiers() {
   try {
     const fichiers = await fs.readdir(DOSSIER_JUSTIFICATIFS);
@@ -96,12 +71,9 @@ async function executer() {
     return;
   }
 
-  // TRUNCATE ... RESTART IDENTITY remet aussi les sequences a 1, pour que
-  // les references repartent de PRJ-2026-0001.
   await query(`TRUNCATE ${TABLES_METIER.join(', ')} RESTART IDENTITY CASCADE`);
   const fichiersSupprimes = await viderFichiers();
 
-  // Les categories de reference sont recreees si elles avaient disparu.
   const installees = await catalogService.installerCategoriesParDefaut();
 
   const apres = await inventaire();

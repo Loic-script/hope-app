@@ -1,28 +1,12 @@
-/*
- * Accessibilite (WCAG 2.1 AA) : aucune violation grave ou critique
- * relevee par axe-core sur les pages principales.
- */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 import { ADMIN, actualitePubliquePrete, adresseUnique, connecter, donateurPret, projetPublicPret } from './outils.js';
 
-// Sans animation : axe mesure les couleurs au repos, pas pendant un fondu.
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
 const REGLES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
-/*
- * Des elements dont le contraste est connu et accepte : les couleurs pures
- * de la palette HOPE sur le site vitrine, retenues a la demande de HOPE
- * (28 et 29/09/2026) -- texte blanc sur les boutons orange et bleus, bleu
- * clair des titres d'actualite et du lien actif, orange du bouton
- * "Toutes nos...", carte Soins (blanc sur orange), titre Alimentation (bleu
- * sur jaune), texte violet fonce de la carte Scolarite. Seule la regle de
- * contraste leur est epargnee : toutes les autres s'y appliquent.
- */
-// Le bouton d'acces de la barre (.vitrine-acces) : texte blanc sur l'orange
-// de la charte, retenu tel quel a la demande de HOPE, comme l'ancien bouton.
 const CONTRASTE_ACCEPTE = {
   '/': [
     '.vitrine-nav__lien--actif',

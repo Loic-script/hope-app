@@ -1,19 +1,6 @@
-/**
- * Acces aux donnees de l'onglet Rapport d'un projet.
- *
- * Le contenu du rapport se construit a partir de la vue complete du
- * projet (project.service) ; ce fichier ne porte que ce qu'elle ignore :
- * les partenaires qui financent le projet, et les rapports deja publies.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/**
- * Les bailleurs dont un engagement est affecte au projet.
- *
- * Un meme bailleur peut y affecter plusieurs engagements : on les
- * additionne, il ne recevra qu'un rapport.
- */
 export async function bailleursDuProjet(projetId, client = null) {
   const resultat = await query(
     `SELECT b.id, b.raison_sociale,
@@ -31,7 +18,6 @@ export async function bailleursDuProjet(projetId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Les rapports d'impact deja publies sur ce projet, du plus recent au plus ancien. */
 export async function rapportsPublies(projetId, client = null) {
   const resultat = await query(
     `SELECT d.id, d.titre, d.type, d.publie_le, d.nb_pages,
@@ -49,7 +35,6 @@ export async function rapportsPublies(projetId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Le contenu d'un rapport publie, cherche AVEC le projet. */
 export async function contenuPublie(projetId, documentId, client = null) {
   const resultat = await query(
     `SELECT d.id, d.titre, d.publie_le, d.contenu, b.raison_sociale AS bailleur
@@ -62,7 +47,6 @@ export async function contenuPublie(projetId, documentId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Depose le rapport chez un bailleur. */
 export async function publier(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO document_bailleur

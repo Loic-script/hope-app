@@ -1,7 +1,3 @@
-/*
- * Ce que voit un visiteur sans compte : l'authentification, les textes
- * legaux, et les portes fermees.
- */
 import { expect, test } from '@playwright/test';
 
 import { ADMIN, actualitePubliquePrete, benevoleVisiblePret, projetPublicPret, sansDebordement } from './outils.js';
@@ -19,7 +15,6 @@ test('la politique de confidentialite : sommaire, articles, contact', async ({ p
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Politique de confidentialité');
   await expect(page.locator('.legal__article')).toHaveCount(10);
   await expect(page.locator('#droits')).toContainText('CMIL');
-  // L'adresse publiee par le serveur (EQUIPE_EMAIL).
   await expect(page.locator('a[href="mailto:contact@hope.test"]').first()).toBeVisible();
   await sansDebordement(page);
 
@@ -57,7 +52,6 @@ test('l API refuse proprement : route inconnue, session absente, origine etrange
 });
 
 test('nos realisations : les projets de la plateforme, la recherche, la fiche', async ({ page, request }, testInfo) => {
-  // Un projet seme par l'administration : le site le montre aussitot.
   const projet = await projetPublicPret(request, testInfo);
   const { items } = await (await request.get('/api/public/projets?limite=60')).json();
   expect(items.some((p) => p.id === projet.id)).toBe(true);
@@ -67,8 +61,6 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
   await sansDebordement(page);
 
-  // La recherche ne garde que lui, sans accents ni majuscules ; rien ne
-  // correspond a du bruit, et tout revient d'un clic.
   const champ = page.getByRole('searchbox', { name: 'Rechercher un projet' });
   await champ.fill(projet.name.toUpperCase());
   await expect(page.locator('.realisations-carte')).toHaveCount(1);
@@ -78,7 +70,6 @@ test('nos realisations : les projets de la plateforme, la recherche, la fiche', 
   await page.getByRole('button', { name: 'Voir tous les projets' }).click();
   await expect(page.locator('.realisations-carte')).toHaveCount(items.length);
 
-  // Sa fiche : le nom, le sous-titre, les deux paragraphes, le lieu.
   await champ.fill(projet.name);
   await page.locator('.realisations-carte__lien').first().click();
   await expect(page).toHaveURL(new RegExp(`/nos-projets/${projet.id}$`));
@@ -97,7 +88,6 @@ test('actualites : celles publiees par l administration, a la une, la recherche,
   const { items } = await (await request.get('/api/public/actualites?limite=60')).json();
   expect(items.some((a) => a.id === actualite.id)).toBe(true);
 
-  // Le bandeau met la plus recente a la une ; toutes sont en cartes.
   await page.goto('/actualites');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(items[0].titre);
   await expect(page.locator('.actualites-carte')).toHaveCount(items.length);
@@ -111,7 +101,6 @@ test('actualites : celles publiees par l administration, a la une, la recherche,
   await page.getByRole('button', { name: 'Voir toutes les actualités' }).click();
   await expect(page.locator('.actualites-carte')).toHaveCount(items.length);
 
-  // L'article : le titre, les deux paragraphes, la date.
   await champ.fill(actualite.titre);
   await page.locator('.actualites-carte .v-actualite__lien').first().click();
   await expect(page).toHaveURL(new RegExp(`/actualites/${actualite.id}$`));
@@ -138,7 +127,6 @@ test('s engager : les trois voies, puis l appel au don et au partenariat', async
   await expect(page.locator('#typeConnexion')).toHaveValue('bailleur');
 });
 
-/** Coche un bouton radio dont la carte entre encore en scene : on insiste jusqu'a ce qu'il le soit. */
 async function cocher(radio) {
   await expect(async () => {
     await radio.check({ force: true });
@@ -149,7 +137,6 @@ async function cocher(radio) {
 test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, puis MVola', async ({ page }) => {
   await page.goto('/');
   const droite = page.locator('.vitrine-entete__droite');
-  // Le bouton d'acces : son mot alterne, sa fleche ouvre les deux portes en clair.
   await expect(droite.locator('.vitrine-acces__principal')).toContainText('Faire un don');
   await droite.getByRole('button', { name: /faire un don ou se connecter/i }).click();
   const menu = droite.getByRole('menu');
@@ -163,7 +150,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
     await page.locator('.vitrine-entete__menu').click();
   }
 
-  // L'introduction : a quoi sert le geste, les trois etapes, les chiffres.
   await droite.getByRole('button', { name: /faire un don ou se connecter/i }).click();
   await droite.getByRole('menuitem', { name: 'Faire un don' }).click();
   await expect(page).toHaveURL(/\/faire-un-don$/);
@@ -172,7 +158,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await sansDebordement(page);
   await page.getByRole('button', { name: 'Commencer mon don' }).click();
 
-  // Etape 1 : qui donne, avec son courriel ; sans adresse postale.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Faisons connaissance');
   await expect(page.locator('.parcours__pas')).toHaveCount(3);
   await expect(page.locator('#donateur-adresse')).toHaveCount(0);
@@ -185,7 +170,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await page.fill('#donateur-prenom', 'Essai');
   await page.fill('#donateur-courriel', courriel);
   if (page.viewportSize().width < 900) {
-    // Sur telephone, le pays se choisit sur une page a part.
     await page.locator('#donateur-pays').click();
     await page.locator('.choix-page__saisie').fill('Madagascar');
     await page.locator('.choix-page__option', { hasText: 'Madagascar' }).first().click();
@@ -195,7 +179,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await page.fill('#donateur-telephone', '0341234567');
   await page.locator('.parcours__continuer').click();
 
-  // Etape 2 : le fonds HOPE ; etape 3 : MVola.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Affectation de votre don');
   await cocher(page.locator('input[name="affectation"][value="HOPE"]'));
   await page.locator('.parcours__continuer').click();
@@ -203,8 +186,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await cocher(page.locator('input[name="paiement"][value="mvola"]'));
   await page.locator('.parcours__continuer').click();
 
-  // La page MVola : le numero saisi a l'etape 1 est deja la ; le montant,
-  // la reference, et le don part en attente de confirmation.
   await expect(page).toHaveURL(/\/faire-un-don\/mvola$/);
   await expect(page.locator('#mvola-numero')).toHaveValue('341234567');
   await page.fill('#mvola-montant', '10000');
@@ -216,7 +197,6 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await expect(page.locator('body')).toContainText('En attente de confirmation');
   await sansDebordement(page);
 
-  // La sortie ramene au site.
   await page.getByRole('button', { name: 'Revenir au site HOPE' }).click();
   await expect(page).toHaveURL(/\/$/);
 });
@@ -227,7 +207,6 @@ test('contact : le formulaire ecrit a l equipe, qui le voit dans sa cloche', asy
   await expect(page.locator('.contact-sujet')).toHaveCount(5);
   await sansDebordement(page);
 
-  // Vide : les champs se plaignent, rien ne part.
   await page.getByRole('button', { name: 'Envoyer mon message' }).click();
   await expect(page.locator('.parcours__recap')).toContainText('demandent votre attention');
 
@@ -240,7 +219,6 @@ test('contact : le formulaire ecrit a l equipe, qui le voit dans sa cloche', asy
   await expect(page.locator('.contact-merci__titre')).toContainText('Merci Essai');
   await sansDebordement(page);
 
-  // Cote equipe : la cloche porte le message.
   const connexion = await request.post('/api/admin/login', { data: ADMIN });
   expect(connexion.status(), 'connexion administrateur').toBe(200);
   const entetes = { Authorization: `Bearer ${(await connexion.json()).token}` };
@@ -250,7 +228,6 @@ test('contact : le formulaire ecrit a l equipe, qui le voit dans sa cloche', asy
   const liste = Array.isArray(corps) ? corps : (corps.items ?? corps.notifications ?? []);
   expect(liste.some((n) => n.type === 'CONTACT' && String(n.label).includes(nom)), 'la notification du message').toBe(true);
 
-  // Un autre message : le formulaire revient vide.
   await page.getByRole('button', { name: 'Envoyer un autre message' }).click();
   await expect(page.locator('#contact-nom')).toHaveValue('');
 });
@@ -258,11 +235,9 @@ test('contact : le formulaire ecrit a l equipe, qui le voit dans sa cloche', asy
 test('l accueil : les realisations et les actualites sont celles de la plateforme', async ({ page, request }, testInfo) => {
   const projet = await projetPublicPret(request, testInfo, { nom: 'Accueil' });
   const actualite = await actualitePubliquePrete(request, testInfo, { titre: 'Accueil' });
-  // Trois cartes au plus : autant que la plateforme a de projets.
   const { items } = await (await request.get('/api/public/projets?limite=3')).json();
   await page.goto('/');
   await expect(page.locator('.v-realisation')).toHaveCount(items.length);
-  // Le projet seme est le plus recent : il ouvre la liste.
   await expect(page.locator('.v-realisation__titre').first()).toHaveText(projet.name);
   await expect(page.locator('.v-realisation__lien').first()).toHaveAttribute('href', `/nos-projets/${projet.id}`);
   await expect(page.locator('.v-actualite__titre').first()).toHaveText(actualite.titre);
@@ -274,7 +249,6 @@ test('nous decouvrir : les benevoles de la plateforme, par leur prenom', async (
   await page.goto('/nous-decouvrir');
   await page.locator('.v-benevoles').scrollIntoViewIfNeeded();
   await expect(page.locator('.v-benevole__nom', { hasText: benevole.prenom })).toHaveCount(1);
-  // Ni nom de famille, ni adresse : seulement le prenom.
   await expect(page.locator('.v-benevoles')).not.toContainText('Rakoto');
   await sansDebordement(page);
 });

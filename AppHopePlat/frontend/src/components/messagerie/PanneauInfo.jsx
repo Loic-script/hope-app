@@ -8,21 +8,6 @@ import { heureRelative, normaliser, poids } from './outils.js';
 import { lienEntreprise, lienProfil } from './profil.js';
 import { Surlignage } from './TexteMessage.jsx';
 
-/**
- * Le panneau d'information d'un fil : lateral sur ordinateur, plein ecran
- * sur telephone.
- *
- * - l'identite et les coordonnees de la personne -- ou de l'equipe ;
- * - pour un groupe, ses participants ;
- * - la recherche dans la conversation ;
- * - les fichiers partages.
- *
- * @param {{ api: object, racine: string, conversation: object,
- *           messages: object[], equipe: object|null, espace: string,
- *           pleinEcran: boolean, onFermer: () => void,
- *           onAllerAuMessage: (id: number) => void,
- *           actionsGroupe?: React.ReactNode }} props
- */
 export default function PanneauInfo({
   api, racine, conversation, messages, equipe, espace, pleinEcran, onFermer, onAllerAuMessage, actionsGroupe,
 }) {
@@ -30,12 +15,10 @@ export default function PanneauInfo({
   const [fichiers, setFichiers] = useState(null);
   const titre = useRef(null);
 
-  // Le focus entre dans le panneau a l'ouverture.
   useEffect(() => {
     titre.current?.focus();
   }, []);
 
-  // Echap referme.
   useEffect(() => {
     const surTouche = (evenement) => {
       if (evenement.key === 'Escape' && !document.querySelector('dialog[open]')) onFermer();
@@ -44,7 +27,6 @@ export default function PanneauInfo({
     return () => document.removeEventListener('keydown', surTouche);
   }, [onFermer]);
 
-  // Les fichiers partages : relus a chaque ouverture, et quand le fil change.
   useEffect(() => {
     let annule = false;
     service
@@ -61,10 +43,6 @@ export default function PanneauInfo({
     ? conversation.participants.find((p) => p.type === conversation.interlocuteur?.type && p.id === conversation.interlocuteur?.id)
     : null;
 
-  /*
-   * Recherche dans la conversation : sur le texte, l'auteur et les noms de
-   * fichiers, sans accents. Un message supprime n'a plus rien a trouver.
-   */
   const resultats = useMemo(() => {
     const terme = normaliser(recherche);
     if (terme === '') return [];
@@ -95,7 +73,6 @@ export default function PanneauInfo({
       </header>
 
       <div className="msg-panneau__defilement">
-        {/* --- Identite --- */}
         <section className="msg-panneau__identite">
           <Avatar
             nom={conversation.nom}
@@ -108,11 +85,9 @@ export default function PanneauInfo({
           {conversation.sousTitre && <p className="msg-panneau__fonction">{conversation.sousTitre}</p>}
         </section>
 
-        {/* --- Coordonnees --- */}
         {personne && <Coordonnees personne={personne} espace={espace} />}
         {conversation.equipe && equipe && <CoordonneesEquipe equipe={equipe} />}
 
-        {/* --- Participants d'un groupe --- */}
         {groupe && (
           <section className="msg-panneau__section">
             <h3 className="msg-panneau__intertitre">
@@ -152,7 +127,6 @@ export default function PanneauInfo({
           </section>
         )}
 
-        {/* --- Recherche dans la conversation --- */}
         <section className="msg-panneau__section">
           <h3 className="msg-panneau__intertitre">Rechercher dans la conversation</h3>
           <label className="msg-recherche">
@@ -206,7 +180,6 @@ export default function PanneauInfo({
           )}
         </section>
 
-        {/* --- Fichiers partages --- */}
         <section className="msg-panneau__section">
           <h3 className="msg-panneau__intertitre">Fichiers partagés</h3>
           {fichiers === null ? (
@@ -244,7 +217,6 @@ export default function PanneauInfo({
   );
 }
 
-/** Les coordonnees d'une personne. */
 function Coordonnees({ personne, espace }) {
   const profil = lienProfil(personne, espace);
   const entreprise = lienEntreprise(personne, espace);
@@ -301,7 +273,6 @@ function Coordonnees({ personne, espace }) {
   );
 }
 
-/** Les coordonnees de l'equipe, dans un fil d'assistance. */
 function CoordonneesEquipe({ equipe }) {
   const site = equipe.siteWeb ? (/^https?:\/\//i.test(equipe.siteWeb) ? equipe.siteWeb : `https://${equipe.siteWeb}`) : null;
   const lignes = [
@@ -329,7 +300,6 @@ function CoordonneesEquipe({ equipe }) {
   );
 }
 
-/** Un extrait centre sur le terme, pour un long message. */
 function extrait(texte, terme, largeur = 90) {
   const propre = String(texte).replace(/\s+/g, ' ');
   if (propre.length <= largeur * 2) return propre;

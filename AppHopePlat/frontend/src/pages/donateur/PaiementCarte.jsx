@@ -14,14 +14,12 @@ import { montantInitial, usePromesseDon } from '../../hooks/usePromesseDon.js';
 import { messageErreur } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 
-/** Les devises d'un don, et les montants proposes dans chacune. */
 const DEVISES = [
   { code: 'MGA', symbole: 'Ar', rapides: [10000, 25000, 50000, 100000], minimum: 1000 },
   { code: 'EUR', symbole: '€', rapides: [10, 25, 50, 100], minimum: 1 },
   { code: 'USD', symbole: '$', rapides: [10, 25, 50, 100], minimum: 1 },
 ];
 
-/** Un montant saisi "25 000" -> 25000 ; "12,50" -> 12.5. */
 function montantSaisi(texte) {
   const propre = String(texte ?? '')
     .replace(/[\s  ]/g, '')
@@ -31,7 +29,6 @@ function montantSaisi(texte) {
   return valeur > 0 ? valeur : null;
 }
 
-/** Les couleurs de HOPE, portees dans le cadre de Stripe. */
 const APPARENCE = {
   theme: 'stripe',
   variables: {
@@ -45,28 +42,6 @@ const APPARENCE = {
   },
 };
 
-/**
- * Le don par carte bancaire, encaisse par Stripe.
- *
- * La mise en page des caisses en ligne qu'on connait : a gauche, sur
- * fond sombre, ce que l'on paie -- le montant en grand, la devise, le
- * detail ; a droite, le paiement en deux temps :
- *
- *   1. le montant, et la devise ;
- *   2. la carte, saisie DANS le cadre de Stripe -- numero, date,
- *      cryptogramme, adresse de facturation. Ce cadre appartient a
- *      Stripe : le numero part chez lui, directement, sans passer par le
- *      serveur de HOPE ni dormir dans sa base. C'est ce qui evite a
- *      l'association toute la charge de la norme PCI-DSS, et au donateur
- *      de confier son numero a plus petit que Stripe ;
- *   3. le recu, une fois le paiement abouti.
- *
- * Si la banque demande une confirmation (3-D Secure), elle emmene le
- * donateur puis le ramene sur cette page avec "?session=..." : on lit
- * alors l'etat du paiement aupres du serveur, qui le tient de Stripe.
- *
- * Sans cles Stripe, la page le dit et propose un autre moyen.
- */
 export default function PaiementCarte() {
   const {
     profil,
@@ -81,8 +56,6 @@ export default function PaiementCarte() {
     libellePlusTard,
   } = usePromesseDon('carte_bancaire');
   const contexte = useContextePaiement();
-  // Le contexte se reconstruit a chaque rafraichissement de l'espace ;
-  // les chargements, eux, ne se font qu'une fois par page.
   const ref = useRef(contexte);
   ref.current = contexte;
   const emplacement = useLocation();
@@ -91,9 +64,7 @@ export default function PaiementCarte() {
   const [montant, setMontant] = useState('');
   const [details, setDetails] = useState(false);
   const [soumis, setSoumis] = useState(false);
-  // Ce que le serveur dit de la carte : acceptee ici, et avec quelle cle.
   const [reglages, setReglages] = useState(null);
-  // La session de paiement ouverte chez Stripe, et le don qu'elle regle.
   const [paiement, setPaiement] = useState(null);
   const [don, setDon] = useState(null);
   const [envoi, setEnvoi] = useState(false);
@@ -102,19 +73,14 @@ export default function PaiementCarte() {
 
   const sessionPayee = contexte.sessionPayee;
 
-  // Une fois charge : la devise et le montant du don prepare, sinon la
-  // devise du profil.
   useEffect(() => {
     if (!profil) return;
     const choisie = [devisePrevue, personne.devise].find((d) => DEVISES.some((x) => x.code === d)) ?? 'MGA';
     setDevise(choisie);
     setMontant(montantInitial(montantPrevu, devisePrevue, choisie));
-    // Seulement au chargement.
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
-  // La carte est-elle acceptee sur cette installation ?
   useEffect(() => {
     let annule = false;
     ref.current.carte
@@ -130,10 +96,6 @@ export default function PaiementCarte() {
     };
   }, []);
 
-  /*
-   * Le retour de la banque : Stripe ramene le donateur avec la session
-   * dans l'adresse. Le serveur, lui, va chercher la verite chez Stripe.
-   */
   useEffect(() => {
     if (!sessionPayee) return undefined;
     let annule = false;
@@ -179,7 +141,6 @@ export default function PaiementCarte() {
     setMontant('');
   }
 
-  /** Enregistre le don, et ouvre la session de paiement chez Stripe. */
   async function ouvrirLePaiement(evenement) {
     evenement.preventDefault();
     setSoumis(true);
@@ -188,7 +149,6 @@ export default function PaiementCarte() {
       requestAnimationFrame(() => document.querySelector('#carte-montant')?.focus());
       return;
     }
-    // Le meme montant deux fois : la session ouverte sert encore.
     if (paiement && paiement.montant === somme && paiement.devise === devise) return;
 
     setEnvoi(true);
@@ -200,7 +160,6 @@ export default function PaiementCarte() {
         devise,
         frequence: profil.frequence || 'ONE_TIME',
         message: profil.message || undefined,
-        // Ou Stripe ramene le donateur apres une verification 3-D Secure.
         retour: emplacement.pathname,
       });
       setPaiement({ ...ouverte, montant: somme, devise });
@@ -211,7 +170,6 @@ export default function PaiementCarte() {
     }
   }
 
-  /** Le paiement est passe : le serveur en donne le don confirme. */
   async function paiementAbouti() {
     setEnvoi(true);
     try {
@@ -219,7 +177,6 @@ export default function PaiementCarte() {
       setDon(etat.don ?? paiement.don);
       await ref.current.rafraichir?.();
     } catch {
-      // Stripe a encaisse : le don est fait, meme si la relecture echoue.
       setDon(paiement.don);
     } finally {
       setEnvoi(false);
@@ -232,7 +189,6 @@ export default function PaiementCarte() {
 
   return (
     <div className="carte">
-      {/* ---------- Ce que l'on paie ---------- */}
       <aside className="carte__resume" aria-label="Récapitulatif du don">
         <div className="carte__resume-dedans">
           <header className="carte__marque">
@@ -332,7 +288,6 @@ export default function PaiementCarte() {
         </div>
       </aside>
 
-      {/* ---------- Le paiement ---------- */}
       <main className="carte__paiement">
         <div className="carte__paiement-dedans">
           {erreurChargement && (
@@ -355,7 +310,6 @@ export default function PaiementCarte() {
             />
           )}
 
-          {/* ---------- 1. Le montant ---------- */}
           {profil && !don && !carteIndisponible && !enPaiement && (
             <form className="carte__formulaire" onSubmit={ouvrirLePaiement} noValidate aria-label="Montant du don">
               <h1 className="sr-only">Don par carte bancaire</h1>
@@ -439,7 +393,6 @@ export default function PaiementCarte() {
             </form>
           )}
 
-          {/* ---------- 2. La carte, chez Stripe ---------- */}
           {profil && enPaiement && stripe && (
             <CheckoutElementsProvider
               stripe={stripe}
@@ -465,7 +418,6 @@ export default function PaiementCarte() {
             </CheckoutElementsProvider>
           )}
 
-          {/* ---------- 3. Merci ---------- */}
           {profil && don && (
             <section className="carte__merci">
               <div className="carte__merci-sceau" aria-hidden="true">
@@ -509,7 +461,6 @@ export default function PaiementCarte() {
             </section>
           )}
 
-          {/* Le retour de la banque, avant que l'etat ne soit lu. */}
           {profil && sessionPayee && !don && !refus && (
             <p className="carte__attente" role="status">
               <span className="carte__rotation" aria-hidden="true" />
@@ -532,15 +483,6 @@ export default function PaiementCarte() {
   );
 }
 
-/**
- * Le cadre de Stripe : la carte, et le bouton qui paie.
- *
- * Tout ce qui touche au numero vit ici, dans des cadres qui
- * appartiennent a Stripe -- cette page ne peut ni les lire ni les
- * recopier. "confirm" demande le paiement ; si la banque veut une
- * confirmation du porteur, elle emmene le donateur et le ramene a
- * "retour".
- */
 function FormulaireStripe({ somme, devise, reference, retour, onModifier, onPaye, libellePlusTard, quitter }) {
   const etat = useCheckoutElements();
   const [envoi, setEnvoi] = useState(false);

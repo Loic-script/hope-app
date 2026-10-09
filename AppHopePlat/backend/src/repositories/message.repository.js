@@ -1,9 +1,3 @@
-/**
- * Repository de la messagerie.
- *
- * Seuls les donateurs disposant d'un compte peuvent ecrire a HOPE :
- * la table est donc rattachee a donor_accounts, pas a donors.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
@@ -28,7 +22,6 @@ const JOINTURES = `
   ) don ON TRUE
 `;
 
-/** @param {{ statut?: string, recherche?: string }} filtres */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];

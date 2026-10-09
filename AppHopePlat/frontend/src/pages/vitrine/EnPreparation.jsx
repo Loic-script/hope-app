@@ -3,11 +3,6 @@ import { Link } from 'react-router-dom';
 import SoleilHope from '../../components/vitrine/SoleilHope.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
 
-/**
- * Une page du site vitrine dont le contenu n'est pas encore ecrit : son
- * titre, et de quoi continuer -- revenir a l'accueil ou faire un don.
- * Elle sera remplacee page par page.
- */
 export default function EnPreparation({ titre }) {
   return (
     <section className="vitrine-preparation">

@@ -2,21 +2,6 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { Champ } from './forms.jsx';
 
-/**
- * Un champ ou l'on choisit dans une liste, ou l'on tape sa propre valeur.
- *
- * La liste propose les valeurs connues (les categories de depense, par
- * exemple) et se filtre pendant la frappe ; une valeur qui n'y est pas
- * s'ajoute telle quelle (« Utiliser « Loyer » »). Le serveur accepte
- * toute valeur courte : la liste n'est qu'une aide.
- *
- * Accessible au clavier (motif « combobox » de l'ARIA) : fleches pour
- * parcourir, Entree pour choisir, Echap pour refermer.
- *
- * @param {{ label: string, id: string, value: string, onChange: (valeur: string) => void,
- *           options: string[], placeholder?: string, max?: number, disabled?: boolean,
- *           aide?: string, obligatoire?: boolean, pleineLargeur?: boolean }} props
- */
 export default function ChampCombo({
   label,
   id,
@@ -43,8 +28,6 @@ export default function ChampCombo({
       .toLowerCase()
       .trim();
 
-  // Les propositions : celles qui contiennent ce qu'on tape, puis, si la
-  // saisie est nouvelle, de quoi l'utiliser telle quelle.
   const propositions = useMemo(() => {
     const saisie = plier(value);
     const filtrees = saisie ? options.filter((o) => plier(o).includes(saisie)) : options;
@@ -53,7 +36,6 @@ export default function ChampCombo({
     return [...filtrees.map((o) => ({ nouvelle: false, valeur: o })), ...nouvelle];
   }, [value, options]);
 
-  // Un clic hors du champ referme la liste.
   useEffect(() => {
     if (!ouvert) return undefined;
     const fermer = (evenement) => {
@@ -63,7 +45,6 @@ export default function ChampCombo({
     return () => document.removeEventListener('pointerdown', fermer);
   }, [ouvert]);
 
-  // L'option active reste visible quand on parcourt au clavier.
   useEffect(() => {
     if (actif < 0) return;
     liste.current?.children[actif]?.scrollIntoView({ block: 'nearest' });
@@ -87,7 +68,6 @@ export default function ChampCombo({
       evenement.preventDefault();
       choisir(propositions[actif].valeur);
     } else if (evenement.key === 'Escape' && ouvert) {
-      // Echap referme la liste sans fermer la fenetre qui la contient.
       evenement.preventDefault();
       evenement.stopPropagation();
       setOuvert(false);

@@ -1,11 +1,4 @@
-/* ============================================================
-   HOPE - Fondations : palette, typographie, remise a zero.
-   Toutes les couleurs de la charte sont declarees ici en variables
-   afin qu'aucune valeur ne soit dupliquee dans les feuilles de page.
-   ============================================================ */
-
 :root {
-  /* --- Palette officielle HOPE --- */
   --hope-violet: #5d5696;
   --hope-violet-2: #6d67a0;
   --hope-violet-fonce: #4a4479;
@@ -17,22 +10,11 @@
   --hope-blanc: #ffffff;
   --hope-texte: #353343;
 
-  /*
-   * Les quatre couleurs, assombries juste assez pour se lire sur du
-   * blanc.
-   *
-   * La charte est claire : posee sur du blanc, elle ne tient pas. Le
-   * jaune y plafonne a 1,29 de contraste, le bleu a 2,1, l'orange a
-   * 2,43 -- il en faut 4,5 pour du texte, 3 pour un trait. Ces
-   * quatre-ci tiennent entre 5,17 et 8,77, et restent reconnaissables :
-   * c'est la meme teinte, plus sombre.
-   */
   --hope-violet-lisible: #4a4479;
   --hope-bleu-lisible: #2b6484;
   --hope-orange-lisible: #8a5c12;
   --hope-jaune-lisible: #7f6c19;
 
-  /* --- Nuances derivees --- */
   --hope-texte-doux: #6b6880;
   --hope-fond-panneau: #e9f1fe;
   --hope-bordure: #dfe4f1;
@@ -41,12 +23,10 @@
   --hope-erreur: #c0392b;
   --hope-erreur-fond: #fdeceb;
 
-  /* --- Rythme et rayons --- */
   --rayon-champ: 11px;
   --rayon-carte: 20px;
   --ombre-carte: 0 24px 60px rgba(53, 51, 67, 0.1), 0 4px 14px rgba(53, 51, 67, 0.05);
 
-  /* --- Familles typographiques --- */
   --police-titre: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --police-manuscrite: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
 
@@ -98,21 +78,12 @@ a {
   color: var(--hope-lien);
 }
 
-/* Contour de focus homogene et toujours visible au clavier. */
 :where(a, button, input, [tabindex]):focus-visible {
   outline: 3px solid rgba(134, 185, 222, 0.85);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/*
- * Sur un petit ecran, aucun champ de saisie sous 16 px.
- *
- * En dessous, Safari sur iPhone agrandit toute la page des qu'on touche
- * le champ, et ne la rend pas : le formulaire deborde, et il faut
- * pincer pour revenir. :is() donne a la regle le poids de son selecteur
- * le plus precis, assez pour passer devant les classes des champs.
- */
 @media (max-width: 640px) {
   :is(
       input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
@@ -123,7 +94,6 @@ a {
   }
 }
 
-/* Reserve aux lecteurs d'ecran. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -146,60 +116,13 @@ a {
   }
 }
 
-/*
- * Motif de soleils de la charte HOPE.
- *
- * C'est le visuel officiel (assets/background.png), pas une imitation : des
- * demi-disques pleins en #5d5696 sur fond transparent, alternant soleil
- * levant et soleil couchant, relies par des traits.
- *
- * Le fichier source mesure 4090x2694 et contient 2,13 motifs en largeur : le
- * repeter tel quel laisserait une couture. On tuile donc motif-soleils.png,
- * qui en est la decoupe exacte sur une periode (1921x298), verifiee sans
- * raccord visible. Le fond etant transparent, le motif se pose sur n'importe
- * quelle couleur ; c'est l'opacite du calque qui regle sa presence.
- */
 :root {
   --motif-soleils: url('../assets/motif-soleils.png');
-  /* Largeur d'affichage d'un carreau ; la hauteur suit le rapport 1921/298. */
   --motif-soleils-taille: 640px;
 
-  /*
-   * Les deux voiles poses par-dessus le motif, dans cet ordre :
-   *
-   *   1. le motif, a pleine force ;
-   *   2. le voile BLANC, qui le delave -- c'est lui qui evite des soleils
-   *      detoures : sans ce voile, les demi-disques restent nets et le fond
-   *      passe devant le contenu ;
-   *   3. le voile BLEU (--hope-bleu), qui ramene l'ensemble dans la charte.
-   *
-   * C'est le voile BLANC qui commande la discretion du motif : le monter
-   * l'efface, le baisser le fait ressortir. Le voile bleu, lui, ne joue que
-   * sur la teinte du fond.
-   */
   --voile-blanc: rgba(255, 255, 255, 0.945);
   --voile-bleu: rgba(134, 185, 222, 0.26);
 }
-
-/* ============================================================
-   Barres de defilement
-
-   Celle du navigateur est grise, large et etrangere a la charte.
-   On la ramene dans la palette : un pouce arrondi de la teinte des
-   bordures, qui passe au violet HOPE au survol, sur un rail
-   transparent.
-
-   Deux syntaxes existent, et il ne faut surtout pas les cumuler.
-   Chrome comprend les deux, mais des qu'il voit "scrollbar-color"
-   il bascule sur sa barre native et ignore les pseudo-elements --
-   barre qui, sous Linux, rajoute une fleche a chaque extremite.
-   On lui laisse donc les pseudo-elements, qui donnent le controle
-   complet, et on reserve la propriete standard a Firefox, seul a
-   ne pas connaitre ::-webkit-scrollbar.
-
-   Les teintes passent par des variables afin qu'une surface sombre
-   n'ait qu'a les redefinir -- voir le rail du menu.
-   ============================================================ */
 
 :root {
   --defilement-largeur: 10px;
@@ -217,11 +140,6 @@ a {
   background-color: var(--defilement-rail);
 }
 
-/*
- * La bordure transparente amincit le pouce sans toucher a la largeur de
- * la barre : elle laisse 2 px de vide de chaque cote, ce que
- * "background-clip: padding-box" rend visible.
- */
 ::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
@@ -234,26 +152,14 @@ a {
   background-clip: padding-box;
 }
 
-/* Les fleches des extremites : une barre se traine, elle ne se clique
-   pas fleche par fleche. */
 ::-webkit-scrollbar-button {
   display: none;
 }
 
-/* L'angle entre deux barres : sans cela le navigateur y pose un carre gris. */
 ::-webkit-scrollbar-corner {
   background-color: transparent;
 }
 
-/*
- * Firefox. La condition ecarte Chrome, qui comprend "scrollbar-width"
- * mais aussi ::-webkit-scrollbar : sans elle il prendrait cette branche
- * et perdrait tout ce qui precede.
- *
- * "scrollbar-width" ne s'herite pas -- pose sur :root il ne toucherait
- * que la barre de la page, pas celles du rail ni des tableaux larges --
- * d'ou l'etoile. "scrollbar-color", lui, s'herite.
- */
 @supports (scrollbar-width: thin) and (not selector(::-webkit-scrollbar)) {
   * {
     scrollbar-width: thin;
@@ -264,31 +170,8 @@ a {
   }
 }
 
-/* ============================================================
-   Le trait de la charte
-
-   Une barre courte, et le soleil du logo a sa droite. Le motif ouvre les
-   surtitres, les fils d'Ariane et les cartes : partout ou une ligne en
-   petites capitales annonce ce qui suit.
-
-   Deux pseudo-elements plutot qu'une image unique : la barre reste une
-   couleur CSS -- orange par defaut, jaune ou autre par
-   --trait-couleur -- tandis que le soleil garde les siennes, qui sont
-   celles du logo et ne se declinent pas.
-   ============================================================ */
-
 .trait-hope {
   display: inline-flex;
-  /*
-   * Cale en haut, et non au milieu.
-   *
-   * Le fichier reserve au-dessus de sa coupole la place des rayons :
-   * centrer la barre sur la boite entiere la posait trop haut, a hauteur
-   * des rayons plutot que du disque. Elle est ramenee sur l'axe du
-   * disque, qui occupe les 46 derniers pour cent de la hauteur -- d'ou
-   * le 0,526, qui vaut 0,683 (le rapport du fichier) fois 0,77 (le
-   * milieu du disque, compte depuis le haut).
-   */
   align-items: flex-start;
   flex: none;
   gap: var(--trait-ecart, 7px);
@@ -303,12 +186,6 @@ a {
   background-color: var(--trait-couleur, var(--hope-orange));
 }
 
-/*
- * Le soleil, a l'echelle de la barre. Sa hauteur est calculee et non
- * choisie : le fichier fait 34,85 sur 23,81, soit un rapport de 0,683.
- * L'ecrire a la main donnerait un soleil ecrase des qu'on change sa
- * largeur.
- */
 .trait-hope::after {
   content: '';
   width: var(--trait-soleil, 17px);
@@ -316,18 +193,6 @@ a {
   background: url('../assets/soleil.svg') center / contain no-repeat;
 }
 
-/*
- * L'ordre inverse : le soleil ouvre, la barre suit.
- *
- * Et le soleil est retourne avec -- coupole en haut, rayons vers le bas.
- * Les deux vont ensemble : le motif se lit du soleil vers la barre, et
- * la coupole doit rester du cote ou le regard entre.
- *
- * Le calage de la barre suit le meme retournement. La coupole occupe
- * desormais le haut du cadre, d'ou le 0,157 au lieu du 0,526 : c'est
- * 0,683 (le rapport du fichier) fois 0,23 (le milieu de la coupole,
- * compte depuis le haut).
- */
 .trait-hope--renverse {
   flex-direction: row-reverse;
 }
@@ -340,21 +205,11 @@ a {
   margin-top: calc(var(--trait-soleil, 17px) * 0.157 - var(--trait-epaisseur, 3px) / 2);
 }
 
-/* Centre sous un texte, et non en tete de ligne : la barre et le soleil
-   se serrent alors autour de l'axe. */
 .trait-hope--centre {
   display: flex;
   justify-content: center;
   margin: 12px auto 0;
 }
-
-
-/* ============================================================
-   La visionneuse d'image
-
-   Une photo en grand, par-dessus la page. Partagee par tous les
-   espaces : elle vit donc ici et non dans une feuille d'ecran.
-   ============================================================ */
 
 .visionneuse {
   position: fixed;
@@ -365,8 +220,6 @@ a {
   justify-content: center;
   padding: 40px 24px;
   background-color: rgba(28, 25, 46, 0.86);
-  /* Le fond se pose franchement plutot que d'apparaitre : une image
-     qu'on ouvre doit etre la tout de suite. */
   animation: visionneuse-apparait 0.16s ease-out;
 }
 
@@ -425,12 +278,6 @@ a {
   height: 20px;
 }
 
-/* --- Le declencheur : l'image elle-meme --- */
-
-/*
- * Le bouton epouse l'image : c'est elle qu'on clique. "display: contents"
- * serait tentant, mais il empecherait de poser l'indice au survol.
- */
 .photo-voir {
   position: relative;
   display: block;
@@ -450,8 +297,6 @@ a {
   object-fit: cover;
 }
 
-/* L'intitule n'apparait qu'au survol ou au focus : une photo n'a pas a
-   porter une etiquette en permanence. */
 .photo-voir__indice {
   position: absolute;
   left: 50%;
@@ -475,9 +320,6 @@ a {
   transform: translate(-50%, 0);
 }
 
-/* Sur une pastille de 30 ou 40 pixels, l'etiquette deborderait de tous
-   les cotes : le curseur et le libelle accessible suffisent a dire que
-   la photo s'ouvre. */
 .photo-voir--pastille .photo-voir__indice {
   display: none;
 }
@@ -490,9 +332,6 @@ a {
   }
 }
 
-/* ------------------------------------------------------------
-   L'attente d'une page chargee a la demande (ChargementPage)
-   ------------------------------------------------------------ */
 .chargement-page {
   display: grid;
   place-items: center;
@@ -506,7 +345,6 @@ a {
   border-top-color: var(--hope-violet);
   border-radius: 50%;
   animation: chargement-page-tourne 0.8s linear infinite;
-  /* Invisible si la page arrive vite : pas de clignotement. */
   opacity: 0;
   animation-name: chargement-page-tourne, chargement-page-parait;
   animation-duration: 0.8s, 0.2s;

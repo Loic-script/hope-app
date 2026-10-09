@@ -1,6 +1,3 @@
-/**
- * Le formulaire de contact du site vitrine (contact.service).
- */
 import * as contactService from '../services/contact.service.js';
 import { gerer } from './handler.js';
 

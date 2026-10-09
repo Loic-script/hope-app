@@ -7,14 +7,6 @@ import { useChargement, useSoumission } from '../../hooks/useChargement.js';
 import { api, messageErreur } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * L'onglet Back office des utilisateurs : les comptes de l'equipe crees
- * par l'administrateur principal, en deux roles.
- *
- * A la creation, le mot de passe est genere par le serveur et part par
- * courriel avec un lien direct vers la connexion. Il ne s'affiche ici
- * que si le courriel n'a pas pu partir.
- */
 const ROLES = [
   {
     cle: 'ADMIN',
@@ -29,7 +21,6 @@ const ROLES = [
 ];
 const CLE_DU_ROLE = { GESTIONNAIRE: 'ADMIN', MANAGER: 'MANAGER' };
 
-/** Le mot de passe a transmettre en personne, quand le courriel n'est pas parti. */
 export function MotDePasseATransmettre({ resultat, onFermer }) {
   const [copie, setCopie] = useState(false);
   if (!resultat) return null;

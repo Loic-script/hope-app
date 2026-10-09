@@ -1,35 +1,3 @@
-/**
- * Fabrication d'un rapport en PDF.
- *
- * Partage par le jeu de demonstration de l'espace bailleur et par
- * l'onglet Rapport de la fiche projet : un rapport publie depuis
- * l'administration doit avoir exactement la forme de ceux que le
- * partenaire connait deja.
- *
- * Le document se decrit par blocs -- le meme vocabulaire que la colonne
- * document_bailleur.contenu, que l'espace met en page sans ouvrir le
- * fichier :
- *
- *   { t: 'h2', texte }   intertitre
- *   { t: 'p', texte }    paragraphe
- *   { t: 'puce', texte } element de liste
- *   { t: 'kv', lignes: [libelle, valeur][] }  chiffres en deux colonnes
- */
-
-/* ================================================================
-   Fabrication du PDF
-
-   Ecrit a la main, comme le certificat du service : quelques pages de
-   texte ne justifient pas une dependance. Deux ajouts par rapport a lui :
-   l'encodage WinAnsi, pour que les accents s'affichent, et la mise en
-   page sur plusieurs pages.
-   ================================================================ */
-
-/**
- * Caracteres typographiques hors latin-1, mais presents en WinAnsi.
- * Sans cette table, l'apostrophe courbe et le tiret cadratin sortiraient
- * en points d'interrogation.
- */
 const WINANSI = new Map([
   ['’', '\x92'], ['‘', '\x91'], ['“', '\x93'], ['”', '\x94'],
   ['–', '\x96'], ['—', '\x97'], ['…', '\x85'], ['€', '\x80'],
@@ -42,20 +10,12 @@ function versWinAnsi(texte) {
     .join('');
 }
 
-/** Les parentheses et les antislashs sont des delimiteurs PDF. */
 function echapper(texte) {
   return texte.replace(/([\\()])/g, '\\$1');
 }
 
 const PAGE = { largeur: 595, hauteur: 842, marge: 64, haut: 742, bas: 78 };
 
-/**
- * Coupe un paragraphe en lignes.
- *
- * La largeur d'Helvetica varie selon la lettre ; une moyenne a 0,5 fois
- * le corps suffit pour un rapport de demonstration, et reste en deca de
- * la marge sur les textes francais.
- */
 function couper(texte, taille, largeur) {
   const parLigne = Math.floor(largeur / (taille * 0.5));
   const lignes = [];
@@ -72,14 +32,6 @@ function couper(texte, taille, largeur) {
   return lignes;
 }
 
-/**
- * Construit un PDF de plusieurs pages.
- *
- * @param {{ titre: string, sousTitre: string, blocs: Array }} document
- *   blocs : { t: 'h2', texte } | { t: 'p', texte } | { t: 'puce', texte }
- *         | { t: 'kv', lignes: [libelle, valeur][] }
- * @returns {{ contenu: Buffer, pages: number }}
- */
 export function construirePdf({ titre, sousTitre, blocs }) {
   const pages = [[]];
   let y = PAGE.haut;
@@ -97,7 +49,6 @@ export function construirePdf({ titre, sousTitre, blocs }) {
     }
   };
 
-  // ---- En-tete du document ----
   for (const ligne of couper(titre, 20, largeurTexte)) {
     texte('F2', 20, PAGE.marge, ligne);
     y -= 26;
@@ -142,7 +93,6 @@ export function construirePdf({ titre, sousTitre, blocs }) {
   ];
 
   pages.forEach((operations, index) => {
-    // Bandeau violet de la charte, et pied de page numerote.
     const decor = [
       '0.36 0.32 0.56 rg 0 792 595 50 re f',
       `1 1 1 rg BT /F2 13 Tf ${PAGE.marge} 811 Td (HOPE) Tj ET`,
@@ -156,7 +106,6 @@ export function construirePdf({ titre, sousTitre, blocs }) {
       '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] ' +
         `/Contents ${6 + index * 2} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`
     );
-    // Un caractere, un octet : la longueur de la chaine est celle du flux.
     objets.push(`<< /Length ${flux.length} >>\nstream\n${flux}\nendstream`);
   });
 

@@ -1,9 +1,3 @@
-/**
- * Service frontend des donnees de reference (categories, libelles, devises).
- *
- * Le catalogue change rarement : il est mis en cache pour la duree de la
- * session afin d'eviter un appel reseau a chaque changement de page.
- */
 import { api } from './api.js';
 
 let cache = null;

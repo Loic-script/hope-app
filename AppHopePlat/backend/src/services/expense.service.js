@@ -1,14 +1,3 @@
-/**
- * Service des depenses (utilisation des fonds d'un projet).
- *
- * Regle centrale du module :
- *
- *   depenses d'un projet <= fonds reellement recus par ce projet
- *                           (dons affectes + investissements du fonds HOPE)
- *
- * On ne depense donc jamais un argent qui n'est pas arrive. Le controle et
- * l'ecriture se font dans une meme transaction, le projet verrouille.
- */
 import { query, transaction } from '../config/database.js';
 import * as expenseRepository from '../repositories/expense.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
@@ -27,7 +16,6 @@ import {
 
 export const STATUTS = ['RECORDED', 'CANCELLED'];
 
-/** Categories proposees pour classer une utilisation des fonds. */
 export const CATEGORIES = [
   'Matériel',
   'Fournitures',
@@ -41,12 +29,6 @@ export const CATEGORIES = [
   'Autre',
 ];
 
-/**
- * Verifie que le projet a recu de quoi payer.
- *
- * @param {{ saufDepenseId?: number|null }} options exclut la depense modifiee
- * @throws {ErreurRegleMetier} si le montant depasse les fonds disponibles
- */
 async function verifierFondsDisponibles(client, projet, montant, { saufDepenseId = null } = {}) {
   const finance = depuisBase(projet.designatedTotal) + depuisBase(projet.investedHopeTotal);
   const dejaDepense = depuisBase(
@@ -92,19 +74,10 @@ export async function recupererParId(id) {
   return depense;
 }
 
-/** Enregistre une utilisation des fonds d'un projet. */
 export async function creer(corps = {}) {
   return transaction((client) => enregistrer(client, corps));
 }
 
-/**
- * La creation d'une depense, dans une transaction deja ouverte : la
- * fiche d'un beneficiaire cree avec sa premiere depense passe par ici,
- * et tout reussit ou rien ne s'enregistre.
- *
- * Une depense peut etre faite pour un beneficiaire (beneficiaryId,
- * facultatif) : il doit alors etre rattache au projet qui paie.
- */
 export async function enregistrer(client, corps = {}) {
   const projectId = identifiantRequis(corps.projectId, 'projectId');
   const montant = enCentimes(corps.amount, 'amount');
@@ -156,7 +129,6 @@ export async function enregistrer(client, corps = {}) {
   }
 }
 
-/** Modifie une depense ; tout changement de montant repasse le controle. */
 export async function mettreAJour(id, corps = {}) {
   const expenseId = identifiantRequis(id, 'id');
 
@@ -199,10 +171,6 @@ export async function mettreAJour(id, corps = {}) {
   });
 }
 
-/**
- * Annule une depense : son montant retourne aux fonds disponibles du projet.
- * Aucune suppression physique, l'historique reste consultable.
- */
 export async function annuler(id) {
   const expenseId = identifiantRequis(id, 'id');
   const depense = await expenseRepository.trouverParId(expenseId);

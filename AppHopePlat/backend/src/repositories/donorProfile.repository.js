@@ -1,14 +1,6 @@
-/**
- * Acces aux donnees de la fiche donateur.
- *
- * Deux tables pour une personne : "utilisateur" porte l'identite (nom,
- * prenom, adresse, telephone), "donateur" le reste. Les lectures les
- * reunissent ; les ecritures touchent les deux dans une transaction.
- */
 import { query } from '../config/database.js';
 import { versObjet } from '../shared/mapping.js';
 
-/** La fiche d'un compte, creee vide si elle n'existe pas encore. */
 export async function garantir(utilisateurId, client = null) {
   await query(
     `INSERT INTO donateur (utilisateur_id) VALUES ($1)
@@ -18,7 +10,6 @@ export async function garantir(utilisateurId, client = null) {
   );
 }
 
-/** L'identite et la fiche, reunies. */
 export async function trouver(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT u.nom, u.prenom, u.adresse, u.telephone, u.email, u.photo_url, u.cree_le,
@@ -36,12 +27,6 @@ export async function trouver(utilisateurId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * L'etape 1 : informations personnelles.
- *
- * L'etape suivante ne recule jamais : revenir corriger son nom ne doit
- * pas faire repasser par les etapes deja franchies.
- */
 export async function enregistrerEtape1(utilisateurId, donnees, client = null) {
   await query(
     `UPDATE utilisateur
@@ -61,7 +46,6 @@ export async function enregistrerEtape1(utilisateurId, donnees, client = null) {
   );
 }
 
-/** L'etape 2 : profil et preferences. L'etape suivante ne recule pas. */
 export async function enregistrerEtape2(utilisateurId, donnees, client = null) {
   await query(
     `UPDATE donateur
@@ -83,7 +67,6 @@ export async function enregistrerEtape2(utilisateurId, donnees, client = null) {
   );
 }
 
-/** L'etape 3 : l'affectation du don. L'etape suivante ne recule pas. */
 export async function enregistrerEtape3(utilisateurId, donnees, client = null) {
   await query(
     `UPDATE donateur
@@ -96,7 +79,6 @@ export async function enregistrerEtape3(utilisateurId, donnees, client = null) {
   );
 }
 
-/** L'etape 4 : le mode de paiement. L'etape suivante ne recule pas. */
 export async function enregistrerEtape4(utilisateurId, modePaiement, client = null) {
   await query(
     `UPDATE donateur
@@ -109,10 +91,6 @@ export async function enregistrerEtape4(utilisateurId, modePaiement, client = nu
   );
 }
 
-/**
- * L'etape 5 : la frequence. C'est la derniere : le parcours se clot, et
- * le compte est marque complet dans la meme transaction.
- */
 export async function enregistrerEtape5(utilisateurId, frequence, client = null) {
   await query(
     `UPDATE donateur

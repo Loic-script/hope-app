@@ -1,12 +1,3 @@
-/**
- * Ce que l'equipe peut faire d'un utilisateur, depuis la liste comme
- * depuis son profil : le modifier, le supprimer, activer ou desactiver
- * son compte.
- *
- * Les deux ecrans partagent les memes fenetres et les memes appels :
- * useGestionUtilisateur les porte, l'ecran n'a qu'a demander l'action et
- * a placer les fenetres.
- */
 import { useEffect, useState } from 'react';
 
 import { useSoumission } from '../../hooks/useChargement.js';
@@ -17,12 +8,10 @@ import * as volunteerService from '../../services/volunteer.service.js';
 import { ChampTexte, ModaleConfirmation, ModaleFormulaire } from './forms.jsx';
 import { DonateurModale } from './modales.jsx';
 
-/** Le statut d'une ligne, tel qu'il s'affiche, et sa teinte. */
 export const STATUTS_UTILISATEUR = {
   en_attente: { libelle: 'En attente', couleur: 'ambre' },
   actif: { libelle: 'Actif', couleur: 'vert' },
   suspendu: { libelle: 'Désactivé', couleur: 'rouge' },
-  // Les fiches donateurs, saisies par l'equipe.
   fiche: { libelle: 'Sans compte', couleur: 'gris' },
   fiche_compte: { libelle: 'Compte donateur', couleur: 'bleu' },
   fiche_suspendue: { libelle: 'Compte suspendu', couleur: 'rouge' },
@@ -32,13 +21,10 @@ export const LIBELLES_STATUT = Object.fromEntries(
   Object.entries(STATUTS_UTILISATEUR).map(([cle, { libelle }]) => [cle, libelle])
 );
 
-/** Le role de compte que liste chaque onglet. */
 export const ROLE_DE_L_ONGLET = { donateurs: 'donateur', benevoles: 'benevole', bailleurs: 'bailleur' };
 
-/** L'onglet d'un role : le chemin inverse. */
 export const ONGLET_DU_ROLE = { donateur: 'donateurs', benevole: 'benevoles', bailleur: 'bailleurs' };
 
-/** L'adresse du profil d'une ligne. */
 export function lienProfil(ligne, onglet) {
   const suite = onglet ? `?depuis=${onglet}` : '';
   return `/admin/utilisateurs/${ligne.genre}/${ligne.id}${suite}`;
@@ -53,11 +39,6 @@ const COMPTE_VIDE = {
   raisonSociale: '',
 };
 
-/**
- * Modifier un compte : ses coordonnees, et selon son role le nom de sa
- * structure (donateur) ou la raison sociale de son organisation
- * (bailleur).
- */
 function ModifierCompteModale({ ouverte, profil, onFermer, onEnregistre }) {
   const [formulaire, setFormulaire] = useState(COMPTE_VIDE);
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
@@ -175,21 +156,11 @@ function ModifierCompteModale({ ouverte, profil, onFermer, onEnregistre }) {
   );
 }
 
-/**
- * Les actions sur un utilisateur, et les fenetres qu'elles ouvrent.
- *
- * @param {{ onModifie?: () => void, onSupprime?: () => void,
- *           onStatut?: () => void, libelles?: object }} rappels
- * @returns {{ demander: (action: string, cible: object) => void,
- *             envoi: boolean, erreur: string, fenetres: JSX.Element }}
- */
 export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelles = {} } = {}) {
-  // cible : { genre, id, nom, onglet, profil? }
   const [demande, setDemande] = useState({ action: null, cible: null, profil: null });
   const { envoi, erreur, setErreur, soumettre } = useSoumission();
   const [erreurFenetre, setErreurFenetre] = useState('');
   const [enCours, setEnCours] = useState(false);
-  // Vrai quand le serveur a refuse : la fiche porte des dons.
   const [donsRattaches, setDonsRattaches] = useState(false);
 
   const fermer = () => {
@@ -198,10 +169,6 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
     setDonsRattaches(false);
   };
 
-  /**
-   * Demande une action. Modifier a besoin du profil complet : il est
-   * charge s'il n'est pas deja la.
-   */
   async function demander(action, cible) {
     setErreur('');
     setErreurFenetre('');
@@ -228,11 +195,6 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
     setDemande({ action, cible, profil: cible.profil ?? null });
   }
 
-  /**
-   * @param {{ forcer?: boolean, avecDons?: boolean }} [options] pour une
-   *   fiche donateur qui porte des dons : `forcer` efface son identite et
-   *   garde les dons, `avecDons` supprime tout.
-   */
   async function confirmer(options = {}) {
     const { action, cible } = demande;
     setErreurFenetre('');
@@ -254,8 +216,6 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
         onStatut?.();
       }
     } catch (echec) {
-      // Des dons rattaches : on propose d'effacer l'identite plutot que
-      // de renvoyer l'administrateur sans solution.
       if (echec?.response?.data?.code === 'DONATEUR_AVEC_DONS') setDonsRattaches(true);
       setErreurFenetre(messageErreur(echec, 'L’action n’a pas abouti.'));
     } finally {
@@ -278,7 +238,6 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
         }}
       />
 
-      {/* Une fiche donateur se modifie dans la fenetre de toujours. */}
       <DonateurModale
         ouverte={action === 'modifier' && cible?.genre === 'fiche'}
         donateur={profil?.fiche ?? null}

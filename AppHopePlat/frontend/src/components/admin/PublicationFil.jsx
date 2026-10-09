@@ -8,15 +8,8 @@ import { urlMedia } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 import { JaugeHorizon } from './PublicationProjet.jsx';
 
-/** Au-dela, la description se replie sur trois lignes et s'ouvre a la demande. */
 export const LONGUEUR_REPLIEE = 180;
 
-/**
- * "3 j", "2 sem", "4 mois" : la date courte d'une publication.
- * La date entiere reste lisible au survol.
- *
- * Exportee pour les actualites du fil, qui se datent de la meme facon.
- */
 export function depuisCourt(valeur) {
   if (!valeur) return '';
   const date = new Date(valeur);
@@ -34,22 +27,10 @@ export function depuisCourt(valeur) {
   return `${Math.floor(mois / 12)} an${mois >= 24 ? 's' : ''}`;
 }
 
-/**
- * Le visuel en pleine largeur.
- *
- * Une photo garde ses proportions : les bords libres se remplissent de
- * la meme photo, floutee, plutot que de bandes grises. Un clic l'agrandit.
- * Une video se regarde sur place.
- *
- * Exporte pour les actualites du fil : "projet" n'y demande que mediaUrl,
- * mediaType et name.
- */
 export function MediaPublication({ projet, lienAjoutVisuel }) {
   const adresse = urlMedia(projet.mediaUrl);
 
   if (!adresse) {
-    // Sans visuel : l'equipe est invitee a en poser un ; ailleurs, le
-    // logo tient la place, sans promettre un geste impossible.
     return lienAjoutVisuel ? (
       <Link className="fil-post__sans-media" to={lienAjoutVisuel}>
         <HopeLogo compact />
@@ -79,26 +60,6 @@ export function MediaPublication({ projet, lienAjoutVisuel }) {
   );
 }
 
-/**
- * Un projet en cours, presente comme une publication de reseau social :
- * qui, quand, ou ; ce qu'il fait ; sa photo en grand ; ou en est son
- * financement ; et une seule action, voir le projet.
- *
- * Pas de "J'aime", ni de commentaire, ni de partage : l'accueil se lit
- * comme un fil, mais on n'y reagit pas -- on y va voir.
- *
- * Ecrite pour l'accueil de l'administration, elle sert aussi les espaces
- * benevole et bailleur : "lien" mene a la fiche du projet dans l'espace
- * qui l'affiche, et "compteurs" remplace le financement -- un benevole
- * n'a pas a voir l'argent d'un projet, il y lit les taches a prendre.
- *
- * "lienDon" ajoute "Faire un don" a cote de "Voir le projet" : dans les
- * espaces donateur, bailleur et benevole, chaque projet ouvert se soutient
- * depuis le fil.
- *
- * @param {{ projet: object, rang?: number, lien?: string, lienDon?: string|null,
- *           compteurs?: React.ReactNode, lienAjoutVisuel?: string|null }} proprietes
- */
 export default function PublicationFil({
   projet,
   rang = 0,
@@ -121,7 +82,6 @@ export default function PublicationFil({
 
   return (
     <article className="fil-post" style={{ '--rang': rang }} aria-labelledby={idTitre}>
-      {/* ---------- Qui, quand, ou ---------- */}
       <header className="fil-post__entete">
         <span className="fil-post__avatar" aria-hidden="true">
           <IconeSoleil />
@@ -158,7 +118,6 @@ export default function PublicationFil({
         <span className="fil-post__reference">{projet.reference}</span>
       </header>
 
-      {/* ---------- Ce qu'il fait ---------- */}
       {(projet.descriptionTitre || description) && (
         <div className="fil-post__texte">
           {projet.descriptionTitre && <p className="fil-post__accroche">{projet.descriptionTitre}</p>}
@@ -180,10 +139,8 @@ export default function PublicationFil({
         </div>
       )}
 
-      {/* ---------- Sa photo ---------- */}
       <MediaPublication projet={projet} lienAjoutVisuel={lienAjoutVisuel} />
 
-      {/* ---------- Ou en est son financement ---------- */}
       {compteurs !== undefined ? (
         <div className="fil-post__compteurs">{compteurs}</div>
       ) : (
@@ -212,7 +169,6 @@ export default function PublicationFil({
         </div>
       )}
 
-      {/* ---------- Une seule action ---------- */}
       <div className={`fil-post__actions${lienDon ? ' fil-post__actions--double' : ''}`}>
         <Link
           className="fil-post__action"

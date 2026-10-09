@@ -21,11 +21,6 @@ import {
   totalPrincipal,
 } from './commun.jsx';
 
-/**
- * Ce qu'un projet dit a un donateur, sous sa photo : son financement. Le
- * bouton "Faire un don" est dans la barre d'actions, a cote de "Voir le
- * projet".
- */
 function FinancementDuProjet({ projet }) {
   return (
     <>
@@ -40,16 +35,6 @@ function FinancementDuProjet({ projet }) {
   );
 }
 
-/**
- * Actualites : la page d'entree de l'espace donateur.
- *
- * En tete, un bandeau qui accueille et invite a donner, avec ce que le
- * donateur a deja fait -- ses chiffres montent a l'arrivee. Puis, comme
- * chez le benevole et le bailleur, le fil d'actualite -- les projets et
- * les nouvelles de HOPE, que trois filtres separent -- et, a droite, une
- * colonne qui suit l'ecran : le projet qui a le plus besoin de soutien,
- * ses derniers dons, et ce que HOPE fait de l'argent.
- */
 export default function Actualites() {
   const { donateur } = useOutletContext();
   const parcoursTermine = Boolean(useLocation().state?.parcoursTermine);
@@ -69,7 +54,6 @@ export default function Actualites() {
 
   return (
     <div className="espace-donateur">
-      {/* ---------- Le bandeau : accueillir, et inviter a donner ---------- */}
       <section className="don-hero" aria-labelledby="don-hero-titre">
         <span className="don-hero__halo don-hero__halo--un" aria-hidden="true" />
         <span className="don-hero__halo don-hero__halo--deux" aria-hidden="true" />
@@ -101,7 +85,6 @@ export default function Actualites() {
           </div>
         </div>
 
-        {/* Ce que le donateur a deja fait : trois chiffres de verre. */}
         <ul className="don-hero__chiffres">
           <li className="don-hero__chiffre" style={{ '--rang': 0 }}>
             <span className="don-hero__icone" aria-hidden="true">
@@ -140,7 +123,6 @@ export default function Actualites() {
       )}
 
       <div className="accueil__colonnes accueil__colonnes--donateur">
-        {/* ---------- Le fil d'actualite : projets et nouvelles ---------- */}
         <div className="accueil__pile">
           <section className="fil-accueil" aria-labelledby="fil-donateur-titre">
             <div className="fil-accueil__entete">
@@ -206,7 +188,6 @@ export default function Actualites() {
           </section>
         </div>
 
-        {/* ---------- La colonne qui suit l'ecran ---------- */}
         <aside className="accueil__pile" ref={colonne} aria-label="Pour vous">
           {aSoutenir && (
             <section className="don-carte don-besoin">

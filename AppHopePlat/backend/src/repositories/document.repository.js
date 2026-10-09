@@ -1,6 +1,3 @@
-/**
- * Repository des justificatifs (supporting_documents).
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
@@ -23,9 +20,6 @@ const JOINTURES = `
   LEFT JOIN admins a ON a.id = s.admin_id
 `;
 
-/**
- * @param {{ projectId?: number, expenseId?: number, type?: string, recherche?: string }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -97,11 +91,6 @@ export async function creer(donnees, client = null) {
   return trouverParId(resultat.rows[0].id, client);
 }
 
-/**
- * Supprime la ligne et renvoie le chemin du fichier a effacer du disque.
- * Un justificatif n'est pas une donnee financiere : sa suppression est
- * autorisee (par exemple un mauvais fichier televerse).
- */
 export async function supprimer(id, client = null) {
   const resultat = await query(
     'DELETE FROM supporting_documents WHERE id = $1 RETURNING file_path',

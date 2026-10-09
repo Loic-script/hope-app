@@ -11,13 +11,8 @@ import * as fmt from '../../utils/format.js';
 import { tousLesFuseaux } from '../../utils/fuseaux.js';
 import { PAYS } from '../../utils/pays.js';
 
-/** Au-dela, la photo est refusee avant meme l'envoi. */
 const TAILLE_MAX = 8 * 1024 * 1024;
 
-/**
- * Un bloc du profil : son titre, ses champs, son bouton, et ce qui s'est
- * passe au dernier enregistrement -- l'erreur, ou la coche qui confirme.
- */
 function Bloc({ titre, accroche, rang, envoi, succes, refus, onEnregistrer, children }) {
   return (
     <form
@@ -56,7 +51,6 @@ function Bloc({ titre, accroche, rang, envoi, succes, refus, onEnregistrer, chil
   );
 }
 
-/** Un champ de saisie, son libelle au-dessus, son erreur dessous. */
 function Champ({ id, libelle, erreur, large = false, children }) {
   return (
     <label className={`don-champ${large ? ' don-champ--large' : ''}${erreur ? ' don-champ--erreur' : ''}`} htmlFor={id}>
@@ -67,7 +61,6 @@ function Champ({ id, libelle, erreur, large = false, children }) {
   );
 }
 
-/** L'etat d'un bloc : envoi, succes, refus et erreurs par champ. */
 function useEnvoi() {
   const [etat, setEtat] = useState({ envoi: false, succes: '', refus: '', details: {} });
   async function envoyer(action, succes) {
@@ -87,17 +80,6 @@ function useEnvoi() {
   return [etat, envoyer];
 }
 
-/**
- * Mon profil : la photo, les informations, le profil de donateur et les
- * preferences de don.
- *
- * Les trois blocs reprennent le parcours d'accueil : memes champs, memes
- * controles cote serveur (etapes 1 a 5). Chaque bloc s'enregistre seul,
- * et confirme d'une coche.
- *
- * La photo se televerse d'un clic sur l'avatar ; elle apparait aussitot
- * dans le bandeau de l'espace et dans la messagerie.
- */
 export default function Profil() {
   const { donateur, rafraichirDonateur } = useOutletContext();
   const { donnees: profil, recharger } = useChargement(() => service.recupererProfil(), []);
@@ -115,7 +97,6 @@ export default function Profil() {
   const fichier = useRef(null);
   const [photo, setPhoto] = useState({ envoi: false, refus: '' });
 
-  // Les champs partent de la fiche, une fois arrivee.
   useEffect(() => {
     if (!profil || info) return;
     setInfo({ ...profil.informations });
@@ -175,7 +156,6 @@ export default function Profil() {
 
   return (
     <div className="espace-donateur don-profil">
-      {/* ---------- La carte d'identite ---------- */}
       <section className="don-identite">
         <span className="don-identite__halo" aria-hidden="true" />
         <div className="don-identite__avatar-zone">
@@ -243,7 +223,6 @@ export default function Profil() {
       </section>
 
       <div className="don-profil__blocs">
-        {/* ---------- Informations ---------- */}
         <Bloc
           titre="Mes informations"
           accroche="Pour vous écrire, et pour vos reçus."
@@ -292,7 +271,6 @@ export default function Profil() {
           </Champ>
         </Bloc>
 
-        {/* ---------- Profil de donateur ---------- */}
         <Bloc
           titre="Mon profil de donateur"
           accroche="Qui donne, et comment HOPE vous écrit."
@@ -356,7 +334,6 @@ export default function Profil() {
           </Champ>
         </Bloc>
 
-        {/* ---------- Preferences de don ---------- */}
         <Bloc
           titre="Mes préférences de don"
           accroche="Elles pré-remplissent « Faire un don » ; vous pouvez toujours les changer au moment de donner."

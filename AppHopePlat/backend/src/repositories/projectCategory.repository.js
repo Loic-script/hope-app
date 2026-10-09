@@ -1,10 +1,6 @@
-/**
- * Repository des categories de projet.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/** Liste les categories, avec le nombre de projets rattaches. */
 export async function lister(client = null) {
   const resultat = await query(
     `SELECT c.id, c.name, c.description, c.created_at, c.updated_at,
@@ -35,7 +31,6 @@ export async function creer({ name, description }, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Cree la categorie si son nom n'existe pas encore (utilise par le seed). */
 export async function creerSiAbsente({ name, description }, client = null) {
   const resultat = await query(
     `INSERT INTO project_categories (name, description)
@@ -51,11 +46,6 @@ export async function creerSiAbsente({ name, description }, client = null) {
   return versObjet(existante.rows[0]);
 }
 
-/**
- * La categorie d'un nom tape librement : celle qui porte deja ce nom
- * (sans tenir compte des majuscules ni des espaces en trop), sinon une
- * nouvelle. Deux saisies « Santé » et « santé » menent a la meme.
- */
 export async function trouverOuCreerParNom(nom, client = null) {
   const propre = String(nom).trim().replace(/\s+/g, ' ');
   const existante = await query(

@@ -1,22 +1,3 @@
-/**
- * Rapports et justificatifs de demonstration de l'espace bailleur.
- *
- * Deux usages :
- *   * seedFunderData.js l'appelle en fin d'installation ;
- *   * seedRapportsBailleur.js le rejoue seul, sans toucher aux comptes.
- *
- * Chaque ligne de document_bailleur pointe vers un vrai PDF, ecrit dans
- * le dossier des medias : "Telecharger" ouvre un fichier lisible, et non
- * une page d'erreur. Le nombre de pages annonce est celui du fichier.
- *
- * Les montants et les dates suivent les engagements et les versements
- * du seed bailleur : un justificatif de tranche porte le montant de la
- * tranche reellement recue, a la date ou elle l'a ete.
- *
- * Aucun nom de beneficiaire n'apparait dans les rapports : un temoignage
- * est attribue a un role ("une enseignante d'Ankadifotsy"), jamais a une
- * personne.
- */
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -24,14 +5,12 @@ import path from 'node:path';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { construirePdf } from '../shared/pdfRapport.js';
 
-/** Date nue AAAA-MM-JJ, decalee de n jours. */
 export function jour(decalage = 0) {
   const date = new Date();
   date.setDate(date.getDate() + decalage);
   return date.toISOString().slice(0, 10);
 }
 
-/** Horodatage decale de n jours, en milieu de matinee. */
 function instant(decalage) {
   const date = new Date();
   date.setDate(date.getDate() + decalage);
@@ -39,20 +18,14 @@ function instant(decalage) {
   return date.toISOString();
 }
 
-/** "9 000 000 Ar" -- espaces simples : l'espace fine n'existe pas en WinAnsi. */
 function ariary(montant) {
   return `${Number(montant).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ')} Ar`;
 }
 
-/** "12/05/2026" */
 function dateFr(iso) {
   const [annee, mois, jourDuMois] = iso.slice(0, 10).split('-');
   return `${jourDuMois}/${mois}/${annee}`;
 }
-
-/* ================================================================
-   Contenus, par nature de document
-   ================================================================ */
 
 function rapportImpact(d) {
   return [
@@ -143,24 +116,11 @@ function certificat(d) {
   ];
 }
 
-/* ================================================================
-   Le catalogue des documents
-   ================================================================ */
-
-/**
- * Les documents de demonstration.
- *
- * `publie` et `lu` sont des decalages en jours ; `lectures` est le
- * nombre de telechargements deja enregistres. Les plus recents ne sont
- * pas encore ouverts : c'est le cas normal d'un rapport qui vient de
- * sortir, et l'ecran doit le montrer.
- */
 function catalogue({ fondation, telma }) {
   const AOI = 'Fondation Avenir Océan Indien';
   const TLM = 'Telma Entreprise Citoyenne';
 
   return [
-    /* ------------------------- Fondation Avenir ------------------------- */
     {
       bailleur: fondation.id, engagement: fondation.education, projet: 'Soutien scolaire Antananarivo',
       type: 'rapport_impact', titre: 'Rapport d’impact — Éducation, 3e trimestre 2026',
@@ -468,7 +428,6 @@ function catalogue({ fondation, telma }) {
       }),
     },
 
-    /* ------------------------------ Telma ------------------------------ */
     {
       bailleur: telma.id, engagement: telma.eau, projet: "Puits d'eau potable Mahajanga",
       type: 'rapport_impact', titre: 'Rapport d’impact — Accès à l’eau potable, bilan final',
@@ -600,22 +559,6 @@ function catalogue({ fondation, telma }) {
   ];
 }
 
-/* ================================================================
-   Installation
-   ================================================================ */
-
-/**
- * Ecrit les PDF et enregistre les documents.
- *
- * Les fichiers sont ecrits d'abord, puis les lignes. En cas d'echec des
- * lignes, l'appelant efface les fichiers rendus dans `ecrits`.
- *
- * @param {(sql: string, valeurs: unknown[]) => Promise} executer
- * @param {{ fondation: object, telma: object, projet: (nom: string) => number,
- *           adminId: number|null }} contexte
- * @param {string[]} ecrits recoit les chemins ecrits sur le disque
- * @returns {Promise<number>} nombre de documents installes
- */
 export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
   await fs.mkdir(DOSSIER_MEDIAS, { recursive: true });
   const documents = catalogue(contexte);
@@ -626,7 +569,6 @@ export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
       `Publié le ${dateFr(jour(d.publie))}`;
     const { contenu, pages } = construirePdf({ titre: d.titre, sousTitre, blocs: d.corps });
 
-    // Nom genere, comme pour tout fichier servi par HOPE.
     const nom = `document-${d.type}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}.pdf`;
     const chemin = path.join(DOSSIER_MEDIAS, nom);
     await fs.writeFile(chemin, contenu);
@@ -650,11 +592,9 @@ export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
         pages,
         d.genereAuto ?? false,
         instant(d.publie),
-        // Un certificat est edite par le systeme, pas par un membre.
         d.genereAuto ? null : contexte.adminId,
         d.lectures > 0 ? instant(d.lu) : null,
         d.lectures,
-        // Le meme texte que le PDF, lisible sans ouvrir de fichier.
         JSON.stringify({ sousTitre, blocs: d.corps }),
       ]
     );
@@ -662,13 +602,6 @@ export async function installerDocumentsDemo(executer, contexte, ecrits = []) {
   return documents.length;
 }
 
-/**
- * Les fichiers des documents d'un ensemble de bailleurs.
- *
- * Seuls les fichiers poses par ce module sont concernes -- ceux dont le
- * nom commence par "document-" ou "certificat-" dans le dossier des
- * medias. Un document depose autrement n'est jamais efface.
- */
 export async function fichiersDesDocuments(executer, bailleurIds) {
   const resultat = await executer(
     'SELECT fichier_url FROM document_bailleur WHERE bailleur_id = ANY($1::UUID[])',

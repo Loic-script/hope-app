@@ -4,27 +4,11 @@ import { IconeChevronBas, IconePlus, IconePoignee, IconeRecentrer } from './Admi
 import { useCarteDeplacable } from '../../hooks/useCarteDeplacable.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Le budget de HOPE, toujours sous les yeux sur l'ecran Budget.
- *
- * Une carte flottante, posee en haut a droite sous la barre, que l'on
- * deplace comme la carte des taches de l'espace benevole : par sa
- * poignee (souris, doigt, ou fleches du clavier ; Origine la remet en
- * place), et que l'on replie en une pastille. Le navigateur retient ou
- * elle a ete posee et si elle est repliee.
- *
- * Elle dit le fonds HOPE -- les dons non affectes, que l'equipe
- * repartit : ce qui est reste disponible, en grand ; ce qui a ete recu
- * et deja investi, autour d'un anneau qui montre la part engagee.
- */
 const RAYON = 30;
 const CIRCONFERENCE = 2 * Math.PI * RAYON;
 
 export default function FondsFlottant({ resume, onInvestir, peutInvestir }) {
-  // Sur un petit ecran, la carte commence repliee : elle ne masque pas la page.
   const [petit] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 700px)').matches);
-  // Tout entiere a l'ecran, jamais sous la barre du haut : ses boutons
-  // restent toujours atteignables.
   const carte = useCarteDeplacable('hope.admin.budget-flottant', {
     reduiteParDefaut: petit,
     entiere: true,

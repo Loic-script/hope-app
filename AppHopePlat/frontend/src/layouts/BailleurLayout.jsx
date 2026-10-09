@@ -17,31 +17,14 @@ import CoqueEspace from './CoqueEspace.jsx';
 import BandeauVerification from '../components/compte/BandeauVerification.jsx';
 import DonFlottant from '../components/DonFlottant.jsx';
 
-/**
- * Les ecrans de l'espace, dans l'ordre de la lecture : les actualites --
- * les projets en cours et les nouvelles de HOPE dans un meme fil, et ce
- * que l'argent a produit --, ce qui a ete promis, les pieces, les
- * projets, puis l'organisation.
- *
- * Les preuves terrain n'y figurent plus : ce sont souvent des photos de
- * beneficiaires, et l'equipe les garde dans son back-office.
- *
- * Regroupes comme ailleurs : l'entree d'accueil seule en tete, puis ce
- * qui lie le bailleur a HOPE, ce qui se passe sur le terrain, et ce qui
- * releve de sa propre maison.
- */
 const GROUPES = [
   {
     titre: null,
-    // "Accueil" : une seule page, ou les projets et les publications
-    // de l'equipe se suivent dans un meme fil. Meme entree chez le
-    // benevole et chez le donateur.
     entrees: [{ to: '/bailleur', label: 'Accueil', Icone: PleineAccueil, exact: true }],
   },
   {
     titre: 'Notre partenariat',
     entrees: [
-      // Ce que l'organisation a paye : dons en ligne et versements.
       { to: '/bailleur/paiements', label: 'Paiements effectués', Icone: PleineBudget },
       { to: '/bailleur/rapports', label: 'Rapports', Icone: PleineGraphique },
     ],
@@ -61,34 +44,19 @@ const GROUPES = [
   },
 ];
 
-/** Libelle du niveau de partenariat, affiche sous le nom dans le bandeau. */
 const NIVEAUX = { bronze: 'Partenaire Bronze', argent: 'Partenaire Argent', or: 'Partenaire Or' };
 
-/**
- * Ossature de l'espace bailleur.
- *
- * Elle avait son propre rail, aux libelles en clair. La coque commune
- * les garde -- son rail est deploye par defaut, et un bailleur qui vient
- * deux fois par an n'aura rien a memoriser.
- *
- * Monte a l'interieur de RequireBailleur : l'organisation verifiee par
- * GET /api/bailleur/me arrive par le contexte.
- */
 export default function BailleurLayout() {
   const { bailleur, rafraichir } = useOutletContext();
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  // Vide tant que le serveur n'a pas repondu : un zero de depart
-  // ferait sonner la cloche au premier chargement.
   const [compteurs, setCompteurs] = useState({});
 
-  /** Recharge les pastilles : a chaque changement de page, et sur demande. */
   const rafraichirCompteurs = useCallback(async () => {
     try {
       setCompteurs(await espaceService.badges(apiBailleur));
     } catch {
-      // Un echec de compteur ne doit jamais bloquer la navigation.
     }
   }, []);
 
@@ -101,15 +69,8 @@ export default function BailleurLayout() {
     navigate('/bailleur/login', { replace: true });
   }
 
-  /*
-   * Dans le bandeau, c'est l'organisation qui compte, pas la personne :
-   * un bailleur se presente au nom de sa maison. Le niveau de
-   * partenariat tient la ligne du dessous, la ou l'administrateur a son
-   * role.
-   */
   const nom = bailleur?.raisonSociale || `${bailleur?.prenom ?? ''} ${bailleur?.nom ?? ''}`.trim();
 
-  // "Faire un don" flotte sur tout l'espace, sauf la ou l'on donne deja.
   const surLeDon = /^\/bailleur\/(faire-un-don|payer)/.test(emplacement.pathname);
 
   return (
@@ -121,29 +82,21 @@ export default function BailleurLayout() {
       identite={{
         nom: nom || 'Organisation',
         role: NIVEAUX[bailleur?.niveau] ?? bailleur?.typeLibelle ?? 'Partenaire',
-        // La photo est celle de la personne connectee, pas un logo :
-        // c'est elle qui ecrit dans la messagerie.
         photoUrl: bailleur?.photoUrl,
       }}
       onDeconnexion={seDeconnecter}
       compteurs={compteurs}
       notifications={{ to: '/bailleur/notifications', cle: 'notifications' }}
     >
-      {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
       <BandeauVerification espace="bailleur" />
       <Suspense fallback={<ChargementPage />}>
         <Outlet
           context={{
             bailleur,
-            // La fiche de contact s'en sert apres avoir change la photo :
-            // le bandeau la relit du serveur plutot que de la deviner.
             rafraichirBailleur: rafraichir,
             api: apiBailleur,
             rafraichirCompteurs,
             racineConversations: '/espace',
-            // Le chemin de la messagerie dans CET espace : l'ecran est
-            // partage par les trois, et c'est lui qui construit le lien
-            // vers une conversation.
             cheminMessages: '/bailleur/messages',
             titreMessagerie: 'Messages',
           }}

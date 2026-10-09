@@ -9,27 +9,6 @@ import * as fmt from '../../utils/format.js';
 import { delaiRestant, LIBELLES_PRIORITE } from '../../utils/priorites.js';
 import { ActionDemande, EquipeTache } from './composants.jsx';
 
-/**
- * Les deux fenetres de "Mes taches" : lire une tache avant de la prendre,
- * et la livrer preuve a l'appui.
- */
-
-/* ================================================================
-   Le detail d'une tache et de son projet
-   ================================================================ */
-
-/**
- * Ce qu'on prend, et pour quoi.
- *
- * Une carte ne dit que le titre de la tache et le nom du projet : de quoi
- * la reperer, pas de quoi decider. La fenetre ajoute le projet entier --
- * sa photo, ce qu'il annonce, ses objectifs -- pour qu'on sache a quoi
- * sert ce qu'on s'apprete a faire.
- *
- * Le projet est charge a l'ouverture : la liste des taches ne le porte
- * pas, et le charger pour chaque carte serait payer pour des fenetres
- * que personne n'ouvre.
- */
 export function DetailTacheModale({
   tache,
   onFermer,
@@ -37,12 +16,10 @@ export function DetailTacheModale({
   onAnnuler,
   envoi = false,
   actions = null,
-  // La livraison, ouverte en bas de la fenetre par « Marquer livree ».
   livraison = null,
 }) {
   const [projet, setProjet] = useState(null);
   const blocLivraison = useRef(null);
-
 
   const [chargement, setChargement] = useState(false);
   const [refus, setRefus] = useState('');
@@ -72,11 +49,6 @@ export function DetailTacheModale({
     };
   }, [tache]);
 
-  /*
-   * La livraison s'ouvre en bas : on y descend, et le depot prend le
-   * focus. Une fois a l'ouverture, puis encore quand le projet a fini de
-   * charger -- sa photo et son texte repoussent la section vers le bas.
-   */
   const livraisonOuverte = Boolean(livraison);
   useEffect(() => {
     if (!livraisonOuverte) return undefined;
@@ -109,8 +81,6 @@ export function DetailTacheModale({
           <button type="button" className="btn btn--neutre" onClick={onFermer} disabled={envoi}>
             Fermer
           </button>
-          {/* Les actions de la colonne d'ou l'on vient (en cours, livree),
-              ou, pour une tache a prendre, la demande. */}
           {actions}
           {!actions && onDemander && (
             <ActionDemande
@@ -125,11 +95,6 @@ export function DetailTacheModale({
         </>
       }
     >
-      {/*
-        La tache d'abord : c'est elle qu'on vient lire, et c'est sur elle
-        qu'on decide. Quatre reperes, avant le texte : ce qui presse, pour
-        quand, ce qu'il faut savoir faire, et a combien.
-      */}
       <section className="detail-tache">
         <dl className="reperes-tache">
           <Repere intitule="Priorité">
@@ -190,7 +155,6 @@ export function DetailTacheModale({
         <EquipeTache tache={tache} className="detail-tache__equipe" />
       </section>
 
-      {/* Puis le projet qu'elle sert. */}
       <section className="detail-projet" aria-busy={chargement}>
         <p className="detail-projet__surtitre">
           <span className="trait-hope surtitre__trait" aria-hidden="true" />
@@ -254,23 +218,10 @@ export function DetailTacheModale({
   );
 }
 
-/* ================================================================
-   La livraison, preuve a l'appui
-   ================================================================ */
-
-/** Plafonds, alignes sur ceux du serveur. */
 const MAX_FICHIERS = 6;
 const MAX_PHOTO = 10 * 1024 * 1024;
 const MAX_VIDEO = 50 * 1024 * 1024;
 
-/**
- * Verifie un fichier avant l'envoi.
- *
- * Le serveur refuserait de toute facon ; le dire ici evite de televerser
- * cinquante megaoctets pour apprendre que le format ne convenait pas.
- *
- * @returns {string|null} la raison du refus, ou null
- */
 function refusDuFichier(fichier) {
   const estVideo = fichier.type.startsWith('video/');
   if (!fichier.type.startsWith('image/') && !estVideo) {
@@ -283,13 +234,6 @@ function refusDuFichier(fichier) {
   return null;
 }
 
-/**
- * Livrer une tache : joindre ce qui montre qu'elle est faite.
- *
- * Au moins une photo ou une video, six au plus. Chaque fichier choisi
- * s'affiche avant l'envoi -- on verifie ce qu'on envoie, et on retire ce
- * qui n'aurait pas du partir.
- */
 export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () => {} }) {
   const [fichiers, setFichiers] = useState([]);
   const [commentaire, setCommentaire] = useState('');
@@ -298,7 +242,6 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
   const [survol, setSurvol] = useState(false);
   const champ = useRef(null);
 
-  // Les apercus vivent en memoire : on les rend quand ils ne servent plus.
   const apercus = useRef(new Map());
   useEffect(() => {
     const enCours = apercus.current;
@@ -366,7 +309,6 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
         HOPE à valider la livraison, mais n’est pas obligatoire.
       </p>
 
-      {/* Le commentaire, d'abord : c'est lui qui raconte la livraison. */}
       <div className="livraison__commentaire">
         <label className="livraison__libelle" htmlFor="livraison-commentaire">
           Commentaire <span className="livraison__facultatif">facultatif</span>
@@ -385,7 +327,6 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
         </span>
       </div>
 
-      {/* La zone de depot est aussi un bouton : on clique, ou on glisse. */}
       <label
         className={`livraison__depot${survol ? ' livraison__depot--survol' : ''}${
           fichiers.length >= MAX_FICHIERS ? ' livraison__depot--plein' : ''
@@ -409,7 +350,6 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
           disabled={envoi || fichiers.length >= MAX_FICHIERS}
           onChange={(evenement) => {
             ajouter([...(evenement.target.files ?? [])]);
-            // Sans cela, rechoisir le meme fichier n'emettrait rien.
             evenement.target.value = '';
           }}
         />
@@ -479,7 +419,6 @@ export function FormulaireLivraison({ tache, onAnnuler, onLivree, onEnvoi = () =
   );
 }
 
-/** Un repere de la tache : son intitule, et ce qu'il vaut. */
 function Repere({ intitule, large = false, children }) {
   return (
     <div className={`reperes-tache__ligne${large ? ' reperes-tache__ligne--large' : ''}`}>
@@ -489,7 +428,6 @@ function Repere({ intitule, large = false, children }) {
   );
 }
 
-/** "2 à 4", "au moins 2" : le monde que la tache demande. */
 function tailleVoulue({ benevolesMin, benevolesMax }) {
   if (benevolesMin && benevolesMax) {
     return benevolesMin === benevolesMax ? `${benevolesMin} bénévole(s)` : `${benevolesMin} à ${benevolesMax}`;

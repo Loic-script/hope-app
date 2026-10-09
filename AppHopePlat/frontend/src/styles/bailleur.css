@@ -1,33 +1,3 @@
-/* ============================================================
-   HOPE - Espace bailleur
-
-   Troisieme espace, troisieme forme de navigation, et ce n'est pas
-   gratuit : l'administrateur a un rail d'icones qu'il finit par
-   connaitre par coeur, le benevole des onglets qu'il traverse depuis
-   son telephone, le bailleur un rail permanent avec les libelles en
-   clair -- il vient quelques fois par an et n'a rien memorise.
-
-   Le registre est plus institutionnel que les deux autres : moins de
-   couleur, plus de blanc, des chiffres qui portent. Le violet de la
-   marque tient le role principal, l'orange reste reserve a l'action.
-   ============================================================ */
-
-/* ============================================================
-   1. La coque
-
-   Le rail de cet espace a disparu : l'ossature vient desormais de
-   CoqueEspace, la meme que l'administrateur, et ses regles vivent dans
-   admin-entete.css. Ne restent ici que les ecrans.
-
-   Ce qui disait le partenaire -- raison sociale, niveau, fonction, date
-   d'entree -- tenait dans le rail. Le bandeau en garde l'essentiel : la
-   raison sociale et le niveau. Le reste se lit sur Mon organisation.
-   ============================================================ */
-
-/* ============================================================
-   2. En-tete de page et panneaux
-   ============================================================ */
-
 .page-bailleur__entete {
   display: flex;
   flex-wrap: wrap;
@@ -93,10 +63,6 @@
   margin-bottom: 0;
 }
 
-/* ============================================================
-   3. Chiffres cles
-   ============================================================ */
-
 .kpi {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -139,14 +105,6 @@
 .kpi__carte--bleu   .kpi__valeur { color: #2d80e6; }
 .kpi__carte--vert   .kpi__valeur { color: #2c8f63; }
 
-/* ============================================================
-   4. La chaine promis / recu / affecte -- element signature
-
-   Trois notions se ressemblent et ne veulent pas dire la meme chose.
-   Les poser sur un seul axe rend l'ecart lisible : le rail est le
-   promis, le remplissage le recu, le repere l'affecte.
-   ============================================================ */
-
 .triade__legende {
   display: flex;
   flex-wrap: wrap;
@@ -183,7 +141,6 @@
   position: relative;
   height: 12px;
   border-radius: 999px;
-  /* Le rail entier est le montant promis : un liseré, pas un plein. */
   background-color: #eef1f7;
   box-shadow: inset 0 0 0 1px var(--admin-bordure);
 }
@@ -198,9 +155,6 @@
   transition: width 0.7s cubic-bezier(0.22, 0.75, 0.3, 1);
 }
 
-/* Le repere de l'affecte : un trait vertical qui traverse le rail,
-   volontairement different du remplissage pour qu'on ne confonde pas
-   « recu » et « attribue ». */
 .triade__repere {
   position: absolute;
   top: -5px;
@@ -224,10 +178,6 @@
 .triade--compacte .triade__rail {
   height: 8px;
 }
-
-/* ============================================================
-   5. Repartition
-   ============================================================ */
 
 .repartition__barre {
   display: flex;
@@ -273,8 +223,6 @@
   border-radius: 3px;
 }
 
-/* Un libelle long -- "Âge non renseigné", un nom de ville -- se coupe
-   plutot que de passer sous le chiffre, qui est cale a droite. */
 .repartition__nom {
   flex: 1;
   min-width: 0;
@@ -294,15 +242,9 @@
   color: var(--admin-texte-faible);
 }
 
-/* Un nombre de personnes tient en deux caracteres : lui reserver la
-   largeur d'un montant ecraserait le libelle sur un telephone. */
 .repartition__montant--nombre {
   min-width: 42px;
 }
-
-/* ============================================================
-   6. Tableaux et listes
-   ============================================================ */
 
 .table-bailleur {
   overflow-x: auto;
@@ -396,10 +338,6 @@
   white-space: nowrap;
 }
 
-/* ============================================================
-   7. Jetons, distinctions, boutons, messages
-   ============================================================ */
-
 .jeton {
   display: inline-block;
   padding: 3px 10px;
@@ -452,8 +390,6 @@
   opacity: 0.75;
 }
 
-/* Aussi porte par un lien -- "Toutes les preuves" -- d'ou le
-   soulignement retire et l'alignement du texte. */
 .bouton-bailleur {
   display: inline-block;
   padding: 11px 20px;
@@ -519,7 +455,6 @@
   color: #1f6b48;
 }
 
-/* Compte en attente : ni le rouge, ni le ton d'une erreur. */
 .attente-bailleur {
   margin: 12px 0;
   padding: 11px 14px;
@@ -546,10 +481,6 @@
   line-height: 1.6;
   color: var(--admin-texte-doux);
 }
-
-/* ============================================================
-   8. Partenariat
-   ============================================================ */
 
 .groupe {
   margin-bottom: 28px;
@@ -637,8 +568,6 @@
   color: var(--admin-texte-faible);
 }
 
-/* --- Soutien non financier : une quantite, pas un montant --- */
-
 .quantite__chiffres {
   display: flex;
   align-items: baseline;
@@ -677,10 +606,6 @@
   font-size: 12.5px;
   color: var(--admin-texte-faible);
 }
-
-/* ============================================================
-   9. Onglets, documents, preuves
-   ============================================================ */
 
 .onglets-bailleur {
   display: flex;
@@ -768,7 +693,6 @@
   color: var(--admin-texte-faible);
 }
 
-/* Savoir si le rapport est lu compte autant que le publier. */
 .document__lecture {
   margin-top: 5px;
   font-size: 12.5px;
@@ -808,15 +732,6 @@
   font-size: 12px;
   color: var(--admin-texte-faible);
 }
-
-/* ============================================================
-   10. Appels a financement
-
-   Le fil d'actualite vit desormais dans la page d'entree (Accueil.jsx,
-   classes fil-post). Restent ici le message d'un interet deja exprime,
-   la collecte -- aussi lue sur les cartes de la page Projets -- et le
-   formulaire d'interet.
-   ============================================================ */
 
 .actu__deja {
   margin-top: 14px;
@@ -894,7 +809,6 @@
   resize: vertical;
 }
 
-/* Le point qui doit etre lu avant de cliquer : rien n'est debite. */
 .interet__avertissement {
   margin-top: 10px;
   padding: 10px 13px;
@@ -915,10 +829,6 @@
 .interet__actions .bouton-bailleur {
   margin-top: 0;
 }
-
-/* ============================================================
-   11. Fiches et formulaires
-   ============================================================ */
 
 .fiche-part {
   margin: 0;
@@ -1016,14 +926,6 @@
   align-self: flex-start;
 }
 
-/* ============================================================
-   12. Petits ecrans
-
-   L'espace est concu pour le bureau, mais il doit rester consultable
-   sur un ecran etroit. Le menu, lui, se debrouille seul : la coque le
-   range dans un tiroir sous 561 px.
-   ============================================================ */
-
 @media (max-width: 1080px) {
   .deux-colonnes {
     grid-template-columns: minmax(0, 1fr);
@@ -1047,7 +949,6 @@
   .triade__legende {
     gap: 16px;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1061,18 +962,12 @@
   }
 }
 
-/* ============================================================
-   Apercu d'un document, et fiche de l'organisation
-   ============================================================ */
-
-/* Les deux actions d'une ligne de document restent ensemble. */
 .document__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-/* L'invitation a preciser une organisation encore provisoire. */
 .note-fiche {
   margin-bottom: 14px;
   padding: 11px 14px;
@@ -1084,7 +979,6 @@
   color: #8a5c12;
 }
 
-/* Le champ d'adresse est le seul sur plusieurs lignes. */
 .champ-bailleur textarea {
   width: 100%;
   padding: 10px 13px;
@@ -1103,14 +997,6 @@
   border-color: var(--hope-bleu);
   box-shadow: 0 0 0 3px rgba(134, 185, 222, 0.22);
 }
-
-/* ============================================================
-   Projets : une carte par projet HOPE
-
-   Meme gabarit que les cartes du fil -- bordure, rayon, visuel --
-   pour que le partenaire reconnaisse la famille. Un projet qu'il
-   finance porte un liseré violet, la couleur de "Vous financez".
-   ============================================================ */
 
 .projets-bailleur {
   display: grid;
@@ -1134,8 +1020,6 @@
   border-left: 3px solid var(--hope-violet);
 }
 
-/* Meme reserve de hauteur que le visuel du fil : la grille ne saute pas
-   quand l'image arrive. */
 .projet-bailleur__visuel {
   margin-bottom: 14px;
   overflow: hidden;
@@ -1225,7 +1109,6 @@
   color: var(--admin-texte);
 }
 
-/* Voir le projet, puis lire son rapport. */
 .projet-bailleur__actions {
   display: flex;
   flex-wrap: wrap;
@@ -1233,7 +1116,6 @@
   margin-top: 16px;
 }
 
-/* Le nom du projet mene a sa fiche. */
 .projet-bailleur__titre a {
   color: inherit;
   text-decoration: none;
@@ -1243,8 +1125,6 @@
   text-decoration: underline;
 }
 
-/* Page Rapports : les documents recus viennent apres les rapports des
-   projets, sous leur propre intitule. */
 .rapports-bailleur__recus {
   margin-top: 28px;
 }
@@ -1259,24 +1139,16 @@
   }
 }
 
-/* ============================================================
-   Accueil : le fil des projets, et la colonne du partenaire
-   ============================================================ */
-
-/* Dans les piles, l'ecart vient de la pile : pas de marge en plus. */
 .accueil__colonnes--bailleur .panneau-bailleur {
   margin-bottom: 0;
 }
 
-/* Ce que le partenaire a affecte au projet : sa part, mise en avant. */
 .fil-post__votre-part,
 .fil-post__votre-part strong {
   font-weight: 600;
   color: var(--hope-violet);
 }
 
-/* Telephone : les quatre chiffres deux par deux, pour que les projets
-   arrivent vite sous le pouce au lieu d'attendre quatre cartes. */
 @media (max-width: 620px) {
   .kpi {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1293,7 +1165,6 @@
     letter-spacing: 0.05em;
   }
 
-  /* Un montant comme "6 000 000 Ar" tient sur sa ligne jusqu'a 320 px. */
   .kpi__valeur {
     margin-top: 6px;
     font-size: clamp(15px, 5vw, 19px);
@@ -1303,21 +1174,10 @@
     font-size: 11.5px;
   }
 
-  /* Trois chiffres : le dernier prend la rangee entiere plutot que de
-     rester seul sur une demi-largeur. */
   .kpi__carte:last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
 }
-
-/* ============================================================
-   La fiche d'un projet, cote partenaire
-
-   Elle a la forme de celle de l'administration -- la photo en
-   couverture, le bandeau des quatre chiffres, les onglets -- sans
-   aucune prise sur le projet. Ces quelques regles ne posent que ce
-   qui lui est propre.
-   ============================================================ */
 
 .fiche-projet-bailleur .couverture-projet {
   margin-bottom: 18px;
@@ -1328,7 +1188,6 @@
   margin-bottom: 18px;
 }
 
-/* Le statut, "Vous financez", et le lieu du projet sur la meme ligne. */
 .fiche-projet-bailleur__jetons {
   display: flex;
   flex-wrap: wrap;
@@ -1346,8 +1205,6 @@
   margin-bottom: 18px;
 }
 
-/* Ce que HOPE ne communique pas, et pourquoi : au pied de l'onglet, en
-   retrait, pour que la limite se lise sans couper la lecture. */
 .fiche-projet-bailleur__note {
   margin-top: 14px;
   padding-left: 12px;
@@ -1356,13 +1213,6 @@
   line-height: 1.55;
   color: var(--admin-texte-faible);
 }
-
-/* ============================================================
-   Paiements effectues (pages/bailleur/Paiements.jsx)
-
-   Trois chiffres qui entrent l'un apres l'autre, trois filtres en
-   pastilles, puis la liste : chaque paiement glisse a son tour.
-   ============================================================ */
 
 .paiements__carte {
   animation: paiements-entree 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1584,7 +1434,6 @@
   }
 }
 
-/* Sur telephone, les trois filtres tiennent sur une ligne, a parts egales. */
 @media (max-width: 560px) {
   .paiements__filtres {
     display: grid;
@@ -1607,8 +1456,6 @@
     white-space: nowrap;
   }
 
-  /* Le montant a gauche, la pastille et la date a droite, qui passent a
-     la ligne plutot que de toucher le bord. */
   .paiement__date {
     flex-wrap: wrap;
     justify-content: flex-end;

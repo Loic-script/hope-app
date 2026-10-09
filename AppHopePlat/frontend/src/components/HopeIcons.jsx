@@ -1,9 +1,3 @@
-/**
- * Petites icones SVG utilisees par l'espace administrateur HOPE.
- * Elles heritent de la couleur du texte via currentColor.
- */
-
-/** Icone utilisateur, placee dans le champ Login. */
 export function IconeUtilisateur({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -19,7 +13,6 @@ export function IconeUtilisateur({ className = '' }) {
   );
 }
 
-/** Icone cadenas, placee dans le champ Mot de passe. */
 export function IconeCadenas({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -30,7 +23,6 @@ export function IconeCadenas({ className = '' }) {
   );
 }
 
-/** Oeil ouvert : le mot de passe est masque, un clic l'affiche. */
 export function IconeOeil({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -45,7 +37,6 @@ export function IconeOeil({ className = '' }) {
   );
 }
 
-/** Oeil barre : le mot de passe est visible, un clic le masque. */
 export function IconeOeilBarre({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -62,7 +53,6 @@ export function IconeOeilBarre({ className = '' }) {
   );
 }
 
-/** Bouclier du bandeau "Acces reserve a l'equipe HOPE". */
 export function IconeBouclier({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
@@ -78,7 +68,6 @@ export function IconeBouclier({ className = '' }) {
   );
 }
 
-/** Fleche du bouton "Se connecter". */
 export function IconeFleche({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -87,7 +76,6 @@ export function IconeFleche({ className = '' }) {
   );
 }
 
-/** Triangle d'alerte du message d'erreur. */
 export function IconeAlerte({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -103,7 +91,6 @@ export function IconeAlerte({ className = '' }) {
   );
 }
 
-/** Petit soleil manuscrit du panneau de gauche. */
 export function IconeSoleil({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -122,12 +109,6 @@ export function IconeSoleil({ className = '' }) {
   );
 }
 
-/* ------------------------------------------------------------------
-   Parcours d'accueil du donateur
-   Meme trait que les icones ci-dessus : 1,8 d'epaisseur, bouts ronds.
-   ------------------------------------------------------------------ */
-
-/** Un repere de carte : l'adresse. */
 export function IconeRepere({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -142,7 +123,6 @@ export function IconeRepere({ className = '' }) {
   );
 }
 
-/** Un immeuble : la ville. */
 export function IconeImmeuble({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -163,7 +143,6 @@ export function IconeImmeuble({ className = '' }) {
   );
 }
 
-/** Un globe : le pays. */
 export function IconeGlobe({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -178,7 +157,6 @@ export function IconeGlobe({ className = '' }) {
   );
 }
 
-/** Un combine : le telephone. */
 export function IconeTelephone({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -192,7 +170,6 @@ export function IconeTelephone({ className = '' }) {
   );
 }
 
-/** Un cercle barre d'un tiret : "aucun". */
 export function IconeNeutre({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -202,7 +179,6 @@ export function IconeNeutre({ className = '' }) {
   );
 }
 
-/** Une enveloppe : le courriel. */
 export function IconeEnveloppe({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -212,7 +188,6 @@ export function IconeEnveloppe({ className = '' }) {
   );
 }
 
-/** Une mallette : la profession. */
 export function IconeMallette({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -227,7 +202,6 @@ export function IconeMallette({ className = '' }) {
   );
 }
 
-/** Un porte-voix : comment on a connu HOPE. */
 export function IconeMegaphone({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -243,7 +217,6 @@ export function IconeMegaphone({ className = '' }) {
   );
 }
 
-/** Un chevron vers le bas : l'ouverture d'une liste. */
 export function IconeChevronBas({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -258,7 +231,6 @@ export function IconeChevronBas({ className = '' }) {
   );
 }
 
-/** Un coeur : la fondation. */
 export function IconeCoeur({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -272,7 +244,6 @@ export function IconeCoeur({ className = '' }) {
   );
 }
 
-/** Trois personnes : l'organisation. */
 export function IconeGroupe({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -289,7 +260,6 @@ export function IconeGroupe({ className = '' }) {
   );
 }
 
-/** Une poignee de main : le partenaire. */
 export function IconePoigneeMain({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -304,7 +274,6 @@ export function IconePoigneeMain({ className = '' }) {
   );
 }
 
-/** Deux maillons : le site web. */
 export function IconeLien({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -319,7 +288,6 @@ export function IconeLien({ className = '' }) {
   );
 }
 
-/** Des pieces empilees : la devise. */
 export function IconePieces({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -335,7 +303,6 @@ export function IconePieces({ className = '' }) {
   );
 }
 
-/** Un signe de traduction : la langue. */
 export function IconeLangue({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -350,7 +317,6 @@ export function IconeLangue({ className = '' }) {
   );
 }
 
-/** Une horloge : le fuseau horaire. */
 export function IconeHorloge({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -360,7 +326,6 @@ export function IconeHorloge({ className = '' }) {
   );
 }
 
-/** Une fleche vers la gauche : revenir a l'etape precedente. */
 export function IconeFlecheGauche({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -375,7 +340,6 @@ export function IconeFlecheGauche({ className = '' }) {
   );
 }
 
-/** Une coche : le choix retenu. */
 export function IconeCoche({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -390,7 +354,6 @@ export function IconeCoche({ className = '' }) {
   );
 }
 
-/** Deux mains qui portent un coeur : le don affecte. */
 export function IconeMainsCoeur({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -425,7 +388,6 @@ export function IconeMainsCoeur({ className = '' }) {
   );
 }
 
-/** Une loupe : rechercher. */
 export function IconeRecherche({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -435,7 +397,6 @@ export function IconeRecherche({ className = '' }) {
   );
 }
 
-/** Un triangle de lecture : une video. */
 export function IconeLecture({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -445,7 +406,6 @@ export function IconeLecture({ className = '' }) {
   );
 }
 
-/** Un recu coche : le don ponctuel, regle une fois. */
 export function IconeRecuCoche({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -469,7 +429,6 @@ export function IconeRecuCoche({ className = '' }) {
   );
 }
 
-/** Un calendrier et deux fleches qui tournent : le don mensuel. */
 export function IconeCalendrierRenouvele({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -493,7 +452,6 @@ export function IconeCalendrierRenouvele({ className = '' }) {
   );
 }
 
-/** Un i dans un cercle : une information. */
 export function IconeInfo({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">

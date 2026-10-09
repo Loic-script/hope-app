@@ -1,9 +1,3 @@
-/* ============================================================
-   HOPE - Page d'entree
-
-   Son titre, et les deux portes : l'administration et le benevolat.
-   ============================================================ */
-
 .redirection {
   display: flex;
   flex-direction: column;
@@ -53,7 +47,6 @@
   outline-offset: 3px;
 }
 
-/* Les deux autres portes : meme forme, teintes de la marque. */
 .redirection__lien--benevole {
   background-color: var(--hope-violet);
 }
@@ -62,8 +55,6 @@
   background-color: var(--hope-violet-fonce);
 }
 
-/* Le bailleur est un partenaire institutionnel : le bleu de la charte,
-   avec un texte sombre, le bleu clair ne portant pas le blanc. */
 .redirection__lien--bailleur {
   background-color: var(--hope-bleu);
   color: var(--hope-texte);

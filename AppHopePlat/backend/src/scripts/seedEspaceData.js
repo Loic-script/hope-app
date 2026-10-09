@@ -1,31 +1,13 @@
-/**
- * Notifications et messages de demonstration des espaces utilisateurs.
- *
- *   npm run db:seed-espace             installe si les fils sont vides
- *   npm run db:seed-espace -- --force  efface et recommence
- *
- * Les deux tables ne connaissent que "utilisateur" : ce script sert donc
- * les benevoles comme les bailleurs. Il se cale sur les comptes de
- * demonstration deja en base, et ne cree personne.
- */
 import { fermerPool, query } from '../config/database.js';
 
 const FORCER = process.argv.includes('--force');
 
-/** Horodatage decale de n heures. */
 function ilYA(heures) {
   const date = new Date();
   date.setHours(date.getHours() - heures, 0, 0, 0);
   return date.toISOString();
 }
 
-/**
- * Ce que chaque role recoit.
- *
- * Les libelles sont ecrits du point de vue de celui qui lit, et
- * pointent vers l'ecran concerne : une notification qui ne mene nulle
- * part ne sert qu'a inquieter.
- */
 const NOTIFICATIONS = {
   benevole: [
     { type: 'tache', titre: 'Votre livraison a été validée',
@@ -60,7 +42,6 @@ const NOTIFICATIONS = {
   ],
 };
 
-/** Les fils de discussion avec l'equipe. */
 const MESSAGES = {
   benevole: [
     {
@@ -114,23 +95,8 @@ const MESSAGES = {
 
 async function vider() {
   console.log('[HOPE] --force : suppression des notifications et des messages...');
-  // message_entree pointe sur message_utilisateur : un TRUNCATE qui
-  // laisserait la table enfant de cote serait refuse. Les trois partent
-  // donc dans le meme ordre, ce que PostgreSQL accepte.
   await query('TRUNCATE notification_utilisateur, message_utilisateur, message_entree');
 
-  // Les conversations des espaces s'en vont avec les fils dont elles
-  // sont le miroir. Deux cas, et deux seulement :
-  //
-  //   * celles qui n'ont plus aucun participant utilisateur : le compte
-  //     a ete supprime par un reseed precedent, et plus personne ne
-  //     peut les ouvrir ;
-  //   * celles des benevoles et bailleurs que ce script ressert juste
-  //     apres -- sans quoi leurs conversations s'empileraient a chaque
-  //     passage.
-  //
-  // Les conversations ouvertes entre administrateurs ne sont pas
-  // touchees : elles n'appartiennent pas au jeu de demonstration.
   const efface = await query(
     `DELETE FROM conversation c
       WHERE NOT EXISTS (
@@ -146,9 +112,6 @@ async function vider() {
 }
 
 async function installer() {
-  // Les comptes de demonstration, par role. On passe par utilisateur_role
-  // plutot que par la presence d'une fiche : c'est le role qui decide de
-  // ce qu'on recoit.
   const comptes = await query(
     `SELECT u.id, u.email, r.role
        FROM utilisateur u
@@ -182,10 +145,6 @@ async function installer() {
     }
 
     for (const m of MESSAGES[compte.role] ?? []) {
-      // Un fil porte le sujet ; les paroles vivent dans message_entree,
-      // une ligne chacune. Le statut suit celui qui a parle en dernier,
-      // et updated_at porte l'ordre de la liste : sans lui, un fil
-      // anime hier remonterait apres un fil mort depuis un mois.
       const envoiLe = ilYA(m.heures);
       const reponseLe = m.reponse ? ilYA(m.reponseHeures) : null;
 
@@ -204,9 +163,6 @@ async function installer() {
       );
       const filId = fil.rows[0].id;
 
-      // La parole de l'utilisateur. Sans reponse, elle reste non lue :
-      // c'est elle qui allume la pastille de la messagerie de l'equipe,
-      // et un message en attente doit se voir.
       await query(
         `INSERT INTO message_entree (fil_id, auteur, corps, lu, cree_le)
          VALUES ($1, 'utilisateur', $2, $3, $4)`,
@@ -214,8 +170,6 @@ async function installer() {
       );
 
       if (m.reponse) {
-        // Celle de HOPE. "lu" dit si l'utilisateur l'a ouverte : c'est
-        // ce drapeau qui alimente la pastille de son propre menu.
         await query(
           `INSERT INTO message_entree
              (fil_id, auteur, corps, admin_id, lu, cree_le)
@@ -224,17 +178,6 @@ async function installer() {
         );
       }
 
-      // ---- La meme discussion, dans le modele "conversation" ----
-      //
-      // Les deux modeles cohabitent : le fil, adresse a l'equipe, et la
-      // conversation, ouverte avec n'importe qui de la plateforme. Le
-      // schema sait recopier les fils en conversations, mais une seule
-      // fois -- au premier passage ou la table est vide. Un reseed des
-      // espaces refait donc les fils sans refaire les conversations, et
-      // l'ecran Messages se retrouve vide.
-      //
-      // Le seed ecrit donc les deux. C'est un peu plus long ici, et
-      // l'ecran montre ce qu'il doit montrer a chaque passage.
       const conversation = await query(
         `INSERT INTO conversation (sujet, cree_le, maj_le)
          VALUES ($1, $2, $3) RETURNING id`,
@@ -242,8 +185,6 @@ async function installer() {
       );
       const conversationId = conversation.rows[0].id;
 
-      // L'utilisateur a lu jusqu'a sa propre parole : la reponse de
-      // HOPE reste donc non lue quand elle ne l'est pas.
       await query(
         `INSERT INTO conversation_participant
            (conversation_id, utilisateur_id, lu_jusqu_a)

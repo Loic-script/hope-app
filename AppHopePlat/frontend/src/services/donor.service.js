@@ -1,9 +1,5 @@
-/**
- * Service frontend des donateurs et de leurs comptes.
- */
 import { api } from './api.js';
 
-/** @param {{ account?: 'AVEC'|'SANS', origin?: string, search?: string }} filtres */
 export async function lister(filtres = {}) {
   const { data } = await api.get('/admin/donors', { params: filtres });
   return data;
@@ -24,7 +20,6 @@ export async function mettreAJour(id, modifications) {
   return data;
 }
 
-/** Ouvre un compte : le donateur devient un donateur regulier. */
 export async function ouvrirCompte(id, identifiants) {
   const { data } = await api.post(`/admin/donors/${id}/account`, identifiants);
   return data;

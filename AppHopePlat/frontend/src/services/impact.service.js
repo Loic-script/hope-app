@@ -1,6 +1,3 @@
-/**
- * Service frontend des impacts.
- */
 import { api } from './api.js';
 
 export async function lister(filtres = {}) {

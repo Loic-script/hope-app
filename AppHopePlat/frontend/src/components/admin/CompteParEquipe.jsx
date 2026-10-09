@@ -4,13 +4,6 @@ import { ChampSelection, ChampTexte, ModaleFormulaire } from './forms.jsx';
 import { useSoumission } from '../../hooks/useChargement.js';
 import { api } from '../../services/api.js';
 
-/**
- * Creer un benevole ou un bailleur depuis l'administration.
- *
- * Le compte est ouvert d'emblee ; un mot de passe est genere et part par
- * courriel avec un lien vers la connexion. Le bailleur arrive avec son
- * organisation ; le benevole remplira sa fiche a sa premiere connexion.
- */
 const VIDE = { prenom: '', nom: '', email: '', telephone: '', organisation: '', typeOrganisation: '', fonction: '' };
 
 export default function CompteParEquipeModale({ type, ouverte, onFermer, onCree }) {

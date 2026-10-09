@@ -9,17 +9,6 @@ import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition } from '../../hooks/useApparition.js';
 import EquipeHope from './EquipeHope.jsx';
 
-/**
- * "Nous decouvrir" : qui est HOPE, sa raison d'etre, sa vision, sa
- * mission, son approche et ce qui la distingue.
- *
- * Chaque section entre en scene quand elle arrive a l'ecran
- * (useApparition) ; tout s'arrete si le visiteur a demande moins de
- * mouvement.
- */
-
-/* ============================ Qui sommes-nous ============================ */
-
 function QuiSommesNous() {
   return (
     <section className="decouvrir-hero" aria-labelledby="decouvrir-hero-titre">
@@ -44,10 +33,6 @@ function QuiSommesNous() {
   );
 }
 
-/* ======================= Raison d'etre et vision ======================= */
-
-/* Les deux textes se suivent dans une seule carte violette, coiffee de
-   l'ampoule ; la section tient sur un ecran (vitrine-decouvrir.css). */
 const BLOCS = [
   {
     cle: 'raison',
@@ -77,8 +62,6 @@ function RaisonEtVision() {
         <div className="decouvrir-carte__corps">
           {BLOCS.map((bloc, rang) => (
             <div key={bloc.cle} className="decouvrir-carte__bloc">
-              {/* Seul le premier titre est le grand titre de la carte ; le
-                  suivant est un intertitre, a la taille du texte. */}
               {rang === 0 ? (
                 <h2 className="decouvrir-carte__titre">{bloc.titre}</h2>
               ) : (
@@ -96,8 +79,6 @@ function RaisonEtVision() {
     </section>
   );
 }
-
-/* ============================ Notre mission ============================ */
 
 const MISSION = [
   {
@@ -135,8 +116,6 @@ function NotreMission() {
           Éclairer, former et accompagner les orphelins et mères célibataires de Madagascar vers une autonomie
           durable. Nous concrétisons cet engagement en garantissant un accès direct à :
         </p>
-        {/* La ligne violette court d'un bord a l'autre derriere les trois
-            medaillons, qui l'interrompent de leur disque blanc. */}
         <ul className="decouvrir-mission__liste">
           {MISSION.map((etape, rang) => (
             <li key={etape.cle} className={`decouvrir-etape decouvrir-etape--${etape.cle}`} style={{ '--rang': rang }}>
@@ -152,8 +131,6 @@ function NotreMission() {
     </section>
   );
 }
-
-/* ============================ Notre approche ============================ */
 
 function NotreApproche() {
   const [ref, vu] = useApparition({ seuil: 0.2 });
@@ -178,8 +155,6 @@ function NotreApproche() {
     </section>
   );
 }
-
-/* =========================== Notre difference =========================== */
 
 const PILIERS = [
   {

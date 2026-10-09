@@ -1,8 +1,3 @@
-/*
- * Les sessions en cookie httpOnly : lecture du jeton, fermeture des
- * sessions apres un changement de mot de passe, refus des requetes
- * venues d'un autre site.
- */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 

@@ -7,23 +7,7 @@ import * as projectService from '../../services/project.service.js';
 import * as fmt from '../../utils/format.js';
 import { PhotoAgrandissable } from '../VisionneuseImage.jsx';
 
-/**
- * Choix de la photo ou de la video qui illustre un projet.
- *
- * Deux façons d'importer, presentees comme deux onglets :
- *   * depuis votre PC — le fichier est televerse et stocke par HOPE ;
- *   * depuis une URL  — l'adresse d'un media deja en ligne.
- *
- * Dans les deux cas, le parent ne recoit qu'une adresse et une nature
- * (PHOTO ou VIDEO), et un apercu s'affiche des que le media est connu.
- *
- * @param {{ valeur: string, type: 'PHOTO'|'VIDEO',
- *           onChange: (adresse: string, type: string) => void,
- *           desactive?: boolean }} props
- */
 export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive = false }) {
-  // L'import depuis le poste est le cas courant : c'est le mode par defaut.
-  // On ne bascule sur URL que si le projet porte deja une adresse externe.
   const [mode, setMode] = useState(() =>
     /^(https?:)?\/\//.test(valeur ?? '') ? 'URL' : 'FICHIER'
   );
@@ -47,7 +31,6 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
       onChange(media.url, media.type);
     } catch (echec) {
       setErreur(messageErreur(echec, "L'import du fichier a échoué."));
-      // Le champ est vide : on peut reselectionner le meme fichier.
       if (champFichier.current) champFichier.current.value = '';
     } finally {
       setEnvoi(false);
@@ -58,8 +41,6 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
     if (nouveauMode === mode) return;
     setMode(nouveauMode);
     setErreur('');
-    // Passer d'un mode a l'autre repart d'un media vide, pour eviter de
-    // laisser une adresse qui ne correspond plus au mode affiche.
     retirer();
   }
 
@@ -79,7 +60,6 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
       </span>
 
       <div className="media-import">
-        {/* --- Les deux façons d'importer --- */}
         <div className="filtres media-import__modes" role="group" aria-label="Mode d’import">
           <button
             type="button"
@@ -101,7 +81,6 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
           </button>
         </div>
 
-        {/* --- Import d'un fichier --- */}
         {mode === 'FICHIER' && (
           <div className="media-import__zone">
             <input
@@ -126,7 +105,6 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
           </div>
         )}
 
-        {/* --- Adresse d'un media deja en ligne --- */}
         {mode === 'URL' && (
           <>
             <ChampTexte
@@ -159,7 +137,6 @@ export default function ChampMedia({ valeur, type = 'PHOTO', onChange, desactive
 
         {erreur && <p className="champ-admin__message">{erreur}</p>}
 
-        {/* --- Apercu --- */}
         {apercu && (
           <figure className="media-import__apercu">
             {type === 'VIDEO' ? (

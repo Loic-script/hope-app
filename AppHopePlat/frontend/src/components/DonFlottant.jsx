@@ -3,19 +3,6 @@ import { Link } from 'react-router-dom';
 import { IconePoignee } from './admin/AdminIcons.jsx';
 import { useCarteDeplacable } from '../hooks/useCarteDeplacable.js';
 
-/**
- * "Faire un don", en bouton flottant dans tout l'espace bailleur.
- *
- * Pose en bas a droite, au-dessus de la page, il se deplace ou l'on veut
- * par sa poignee -- souris, doigt, ou fleches du clavier ; Origine le
- * remet en place (useCarteDeplacable, comme la carte des taches du
- * benevole). Le navigateur retient ou il a ete pose.
- *
- * Deux cibles distinctes : la poignee deplace, le reste du bouton mene
- * au don. Un glisser ne declenche donc jamais la navigation.
- *
- * @param {{ to: string, cle: string }} props  cle : ou retenir la position
- */
 export default function DonFlottant({ to, cle }) {
   const bouton = useCarteDeplacable(cle, {
     entiere: true,

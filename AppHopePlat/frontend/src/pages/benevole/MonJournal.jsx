@@ -10,18 +10,6 @@ import { useChargement } from '../../hooks/useChargement.js';
 import * as service from '../../services/espaceBenevole.service.js';
 import * as fmt from '../../utils/format.js';
 
-/**
- * Mon journal.
- *
- * Le compte de ce que le benevole a livre a HOPE : ses taches terminees,
- * et les projets qu'elles ont servis. Une tache ne porte pas de duree ;
- * le journal compte donc ce qui a ete fait, et non des heures qu'il
- * faudrait inventer.
- *
- * L'ecran ne se contente pas d'afficher des totaux : il dit d'ou ils
- * viennent -- depuis quand, la derniere fois, ce qu'il manque pour le
- * palier suivant. Un nombre seul ne recompense personne.
- */
 export default function MonJournal() {
   const { donnees, chargement, erreur } = useChargement(() => service.journal(), []);
 
@@ -36,7 +24,6 @@ export default function MonJournal() {
   const obtenus = badges.filter((b) => b.obtenu);
   const enAttente = lignes.filter((l) => !l.validee).length;
 
-  // Le premier palier non atteint : c'est lui qui donne un cap.
   const prochain = badges.find((b) => !b.obtenu);
 
   const mois = moisDepuis(donnees?.benevoleDepuis);
@@ -104,7 +91,6 @@ export default function MonJournal() {
         />
       </div>
 
-      {/* ---------- Les paliers ---------- */}
       <section className="bloc">
         <div className="bloc__entete">
           <h2 className="bloc__titre">Paliers de reconnaissance</h2>
@@ -120,7 +106,6 @@ export default function MonJournal() {
         </ul>
       </section>
 
-      {/* ---------- Le detail ---------- */}
       <section className="bloc">
         <div className="bloc__entete">
           <h2 className="bloc__titre">Tâches livrées</h2>
@@ -167,9 +152,6 @@ export default function MonJournal() {
                     <td data-libelle="Prise le">{fmt.date(ligne.priseLe)}</td>
                     <td data-libelle="Livrée le">{fmt.date(ligne.livreeLe)}</td>
                     <td data-libelle="Validation">
-                      {/* Une livraison n'est reconnue qu'une fois relue par
-                          l'equipe : l'ecran le dit, plutot que de laisser
-                          croire que tout est acquis. */}
                       <span className={`pastille pastille--${ligne.validee ? 'valide' : 'orange'}`}>
                         {ligne.validee ? 'Validée' : 'En attente'}
                       </span>
@@ -177,8 +159,6 @@ export default function MonJournal() {
                   </tr>
                 ))}
               </tbody>
-              {/* Le total au pied : c'est le chiffre que le benevole vient
-                  verifier, et il ne doit pas etre a recompter de tete. */}
               <tfoot>
                 <tr>
                   <td colSpan={4}>Total</td>
@@ -195,12 +175,6 @@ export default function MonJournal() {
   );
 }
 
-/**
- * Un palier, atteint ou non.
- *
- * Non atteint, il dit ce qui manque plutot que de rester ferme : c'est
- * la seule chose qui en fasse un objectif et non un reproche.
- */
 function Palier({ badge, taches, projets }) {
   const manques = [];
   if (badge.taches && taches < badge.taches) {
@@ -212,8 +186,6 @@ function Palier({ badge, taches, projets }) {
     manques.push(`${reste} projet${reste > 1 ? 's' : ''}`);
   }
 
-  // L'avancement du palier : la plus basse des deux conditions, car
-  // c'est elle qui retient le badge.
   const parts = [];
   if (badge.taches) parts.push(Math.min(1, taches / badge.taches));
   if (badge.projets) parts.push(Math.min(1, projets / badge.projets));
@@ -239,7 +211,6 @@ function Palier({ badge, taches, projets }) {
   );
 }
 
-/** La coche des paliers atteints. */
 function Coche() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6"
@@ -249,7 +220,6 @@ function Coche() {
   );
 }
 
-/** Un repere du haut : un nombre, ce qu'il compte, et une precision. */
 function Repere({ valeur, libelle, detail, Icone, teinte }) {
   return (
     <article className={`repere repere--${teinte}`}>
@@ -267,12 +237,6 @@ function Repere({ valeur, libelle, detail, Icone, teinte }) {
   );
 }
 
-/**
- * Nombre de mois entiers ecoules depuis une date.
- *
- * Un quantieme plus petit que celui du depart signifie que le mois n'est
- * pas termine : on en retire un.
- */
 function moisDepuis(valeur) {
   if (!valeur) return null;
   const depart = new Date(valeur);

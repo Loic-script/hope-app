@@ -1,19 +1,3 @@
-/**
- * Un compte benevole ou bailleur cree par l'equipe, depuis l'onglet
- * Benevoles ou Bailleurs des utilisateurs.
- *
- * Contrairement a l'inscription :
- *   - le compte est ouvert tout de suite (l'equipe le cree : pas de
- *     validation a attendre) ;
- *   - l'adresse est tenue pour confirmee -- la personne l'a donnee a
- *     l'equipe elle-meme ;
- *   - le mot de passe est genere, et part par courriel avec un lien vers
- *     la connexion. Il ne s'affiche que si le courriel n'a pas pu partir.
- *
- * Le benevole remplira sa fiche (competences, disponibilites) a sa
- * premiere connexion ; le bailleur arrive dans son espace, son
- * organisation deja creee.
- */
 import bcrypt from 'bcrypt';
 
 import { config } from '../config/env.js';
@@ -34,12 +18,6 @@ function lienDeConnexion(email, type) {
   return `${site}/authentification?email=${encodeURIComponent(email)}&type=${type}`;
 }
 
-/**
- * @param {{ type: 'benevole'|'bailleur', prenom: string, nom: string, email: string,
- *           telephone?: string, organisation?: string, typeOrganisation?: string,
- *           fonction?: string }} corps
- * @param {{ id: number }} admin l'auteur
- */
 export async function creer(corps = {}, admin = null) {
   const type = valeurParmi(corps.type, 'type', ['BENEVOLE', 'BAILLEUR']).toLowerCase();
   const prenom = texteRequis(corps.prenom, 'prenom', { max: 80 });
@@ -113,7 +91,6 @@ export async function creer(corps = {}, admin = null) {
   };
 }
 
-/** Les types d'organisation, pour le formulaire du bailleur. */
 export function typesOrganisation() {
   return TYPES_ORGANISATION.map((cle) => ({ cle, libelle: LIBELLES_TYPE[cle] }));
 }

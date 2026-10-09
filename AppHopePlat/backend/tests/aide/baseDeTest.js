@@ -1,18 +1,3 @@
-/*
- * Une base PostgreSQL jetable pour les tests d'integration.
- *
- * Chaque fichier de test qui en a besoin cree sa propre base
- * (hope_test_<pid>), y joue les scripts du projet -- initialisation,
- * schema, compte administrateur, categories -- puis la supprime a la fin.
- * La base de developpement n'est jamais touchee.
- *
- * Le serveur PostgreSQL est celui de DATABASE_URL (la CI) ou, a defaut,
- * celui des variables DB_* du fichier backend/.env (un poste de
- * developpement). Il faut le droit de creer une base.
- *
- * A appeler AVANT d'importer l'application : la configuration lit
- * DATABASE_URL a son premier chargement.
- */
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,7 +10,6 @@ dotenv.config({ path: path.join(BACKEND, '.env'), quiet: true });
 
 export const ADMIN_TEST = { adminLog: 'AdminTest', password: 'mot-de-passe-de-test-2026' };
 
-/** L'adresse d'une base du serveur de test. */
 function adresse(base, origine) {
   if (origine) {
     const url = new URL(origine);
@@ -36,7 +20,6 @@ function adresse(base, origine) {
   return `postgres://${e(process.env.DB_USER ?? '')}:${e(process.env.DB_PASSWORD ?? '')}@${process.env.DB_HOST ?? 'localhost'}:${process.env.DB_PORT ?? 5432}/${base}`;
 }
 
-/** Joue un script du projet contre la base de test. */
 function jouer(script, env) {
   execFileSync(process.execPath, [path.join(BACKEND, 'src', 'scripts', script)], {
     cwd: BACKEND,
@@ -45,11 +28,6 @@ function jouer(script, env) {
   });
 }
 
-/**
- * Cree la base, la prepare, et bascule DATABASE_URL dessus.
- * @param {{ prefixe?: string }} options le debut du nom de la base
- * @returns {Promise<{ url: string, sql: (texte: string, valeurs?: unknown[]) => Promise<object[]>, detruire: () => Promise<void> }>}
- */
 export async function preparerBaseDeTest({ prefixe = 'hope_test' } = {}) {
   const origine = process.env.DATABASE_URL || null;
   const nom = `${prefixe}_${process.pid}_${Date.now().toString(36)}`;
@@ -71,11 +49,8 @@ export async function preparerBaseDeTest({ prefixe = 'hope_test' } = {}) {
 
   process.env.DATABASE_URL = url;
   process.env.DB_SSL = '';
-  // Jamais de vrai courriel depuis un test, meme si le .env du poste
-  // configure un serveur d'envoi : les courriels s'ecrivent dans le journal.
   process.env.SMTP_HOST = '';
   process.env.EQUIPE_EMAIL = '';
-  // Les tests verifient aussi la limitation des tentatives : jamais desactivee ici.
   delete process.env.DESACTIVER_LIMITEUR;
 
   const client = new pg.Client({ connectionString: url });
@@ -94,17 +69,11 @@ export async function preparerBaseDeTest({ prefixe = 'hope_test' } = {}) {
   };
 }
 
-/**
- * Supprime les bases de test laissees par un arret brutal (un processus
- * tue sous Windows ne passe pas par son nettoyage).
- * @param {string} prefixe
- */
 export async function nettoyerBasesOrphelines(prefixe) {
   const origine = process.env.DATABASE_URL || null;
   const m = new pg.Client({ connectionString: adresse('postgres', origine) });
   await m.connect();
   try {
-    // Le _ est un joker pour LIKE : il est echappe, le prefixe est pris a la lettre.
     const motif = `${prefixe.replace(/_/g, '!_')}!_%`;
     const { rows } = await m.query("SELECT datname FROM pg_database WHERE datname LIKE $1 ESCAPE '!'", [motif]);
     for (const { datname } of rows) await m.query(`DROP DATABASE IF EXISTS "${datname}" WITH (FORCE)`);

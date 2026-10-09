@@ -4,18 +4,6 @@ import { IconeTelechargement } from './AdminIcons.jsx';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as publicationService from '../../services/publication.service.js';
 
-/**
- * La photo d'une actualite, rattachee a son projet.
- *
- * Par defaut, l'actualite montre la photo du projet lie -- et la suit :
- * si l'equipe change la photo du projet, l'actualite change avec elle.
- * On peut la remplacer par une photo propre, puis revenir a celle du
- * projet.
- *
- * @param {{ photoPropre: string, photoProjet: string|null, nomProjet?: string,
- *           onChange: (adresse: string) => void, desactive?: boolean }} props
- *   photoPropre : l'adresse televersee, '' si l'actualite suit le projet
- */
 export default function ChampPhotoActualite({
   photoPropre,
   photoProjet,
@@ -40,7 +28,6 @@ export default function ChampPhotoActualite({
       setErreur(messageErreur(echec, 'L’import de la photo a échoué.'));
     } finally {
       setEnvoi(false);
-      // Le meme fichier doit pouvoir etre choisi a nouveau.
       if (champ.current) champ.current.value = '';
     }
   }

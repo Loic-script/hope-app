@@ -16,14 +16,6 @@ import ChargementPage from '../components/ChargementPage.jsx';
 import CoqueEspace from './CoqueEspace.jsx';
 import BandeauVerification from '../components/compte/BandeauVerification.jsx';
 
-/**
- * Les ecrans de l'espace donateur, dans l'ordre de la lecture : ce qui se
- * passe chez HOPE, donner, suivre ses dons, les projets ; puis ce qui lui
- * appartient en propre.
- *
- * Meme decoupage que les autres espaces : l'entree d'accueil seule en
- * tete, puis des familles nommees.
- */
 const GROUPES = [
   {
     titre: null,
@@ -40,38 +32,23 @@ const GROUPES = [
   {
     titre: 'Mon compte',
     entrees: [
-      // La messagerie commune aux espaces : meme nom, meme icone.
       { to: '/donateur/messages', label: 'Messages', Icone: PleineMessages, compteur: 'messages' },
       { to: '/donateur/profil', label: 'Mon profil', Icone: PleinePersonne },
     ],
   },
 ];
 
-/**
- * Ossature de l'espace donateur, sur la coque commune.
- *
- * Montee a l'interieur de RequireDonateur : le compte verifie par
- * GET /api/donateur/me arrive par le contexte, avec de quoi le relire
- * (la photo change depuis "Mon profil").
- *
- * Un compte dont le parcours d'accueil n'est pas termine y retourne :
- * l'espace a besoin de sa devise, de ses preferences de don.
- */
 export default function DonateurLayout() {
   const { donateur, rafraichir } = useOutletContext();
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  // Vide tant que le serveur n'a pas repondu : un zero de depart
-  // ferait sonner la cloche au premier chargement.
   const [compteurs, setCompteurs] = useState({});
 
-  /** Recharge les pastilles : a chaque changement de page, et sur demande. */
   const rafraichirCompteurs = useCallback(async () => {
     try {
       setCompteurs(await espaceService.badges(apiDonateur));
     } catch {
-      // Un echec de compteur ne doit jamais bloquer la navigation.
     }
   }, []);
 
@@ -101,7 +78,6 @@ export default function DonateurLayout() {
       compteurs={compteurs}
       notifications={{ to: '/donateur/notifications', cle: 'notifications' }}
     >
-      {/* La page se charge a la demande : l'espace reste affiche pendant ce temps. */}
       <BandeauVerification espace="donateur" />
       <Suspense fallback={<ChargementPage />}>
         <Outlet
@@ -111,9 +87,6 @@ export default function DonateurLayout() {
             api: apiDonateur,
             rafraichirCompteurs,
             racineConversations: '/espace',
-            // Le chemin de la messagerie dans CET espace : l'ecran est
-            // partage, et c'est lui qui construit le lien vers une
-            // conversation.
             cheminMessages: '/donateur/messages',
             titreMessagerie: 'Messages',
           }}

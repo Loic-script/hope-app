@@ -1,7 +1,3 @@
-/*
- * Le controle du code du backend (npm run lint) : les regles
- * recommandees de JavaScript, dans Node.
- */
 import js from '@eslint/js';
 import globals from 'globals';
 

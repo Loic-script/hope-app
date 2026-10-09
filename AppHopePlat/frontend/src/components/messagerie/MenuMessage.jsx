@@ -1,22 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-/** Marge gardee entre le menu et les bords de la fenetre. */
 const MARGE = 8;
 
-/**
- * Le bouton ⋯ d'une bulle, et son menu.
- *
- * Le menu est en position fixe, calcule a l'ouverture : sous le bouton
- * s'il y a la place, au-dessus sinon, et cale a gauche ou a droite pour
- * ne jamais sortir de la fenetre. Il se referme au clic exterieur, avec
- * Echap, au defilement et au redimensionnement -- une position calculee
- * ne suit pas un fil qui bouge.
- *
- * @param {{ actions: {cle: string, libelle: string, danger?: boolean,
- *                     onChoisir: () => void}[],
- *           cote: 'gauche'|'droite' }} props
- *        cote : le cote de la bulle, pour aligner le menu sur elle
- */
 export default function MenuMessage({ actions, cote }) {
   const [ouvert, setOuvert] = useState(false);
   const [position, setPosition] = useState(null);
@@ -29,7 +14,6 @@ export default function MenuMessage({ actions, cote }) {
     if (rendreLeFocus) bouton.current?.focus();
   }
 
-  // La position se calcule une fois le menu rendu : il faut sa taille.
   useLayoutEffect(() => {
     if (!ouvert || !bouton.current || !menu.current) return;
     const ancre = bouton.current.getBoundingClientRect();
@@ -46,8 +30,6 @@ export default function MenuMessage({ actions, cote }) {
     setPosition({ top, left });
   }, [ouvert, cote]);
 
-  // Le focus entre dans le menu une fois celui-ci visible : un element
-  // encore masque, le temps de la mesure, ne le prendrait pas.
   useEffect(() => {
     if (ouvert && position) menu.current?.querySelector('[role="menuitem"]')?.focus();
   }, [ouvert, position]);
@@ -64,7 +46,6 @@ export default function MenuMessage({ actions, cote }) {
 
     document.addEventListener('mousedown', clicExterieur);
     document.addEventListener('touchstart', clicExterieur);
-    // capture : le fil defile dans son propre conteneur, pas la fenetre.
     window.addEventListener('scroll', defilement, true);
     window.addEventListener('resize', redimensionnement);
     return () => {
@@ -127,7 +108,6 @@ export default function MenuMessage({ actions, cote }) {
           role="menu"
           aria-label="Actions sur le message"
           onKeyDown={surTouche}
-          // Invisible le temps de mesurer, pour ne pas clignoter au mauvais endroit.
           style={position ? { top: position.top, left: position.left } : { top: 0, left: 0, visibility: 'hidden' }}
         >
           {actions.map((action) => (

@@ -1,6 +1,3 @@
-/**
- * Service frontend des depenses (utilisation des fonds d'un projet).
- */
 import { api } from './api.js';
 
 export async function lister(filtres = {}) {

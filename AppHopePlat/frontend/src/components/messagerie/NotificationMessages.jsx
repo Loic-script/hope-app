@@ -4,16 +4,6 @@ import { Link } from 'react-router-dom';
 import { PleineMessages } from '../IconesPleines.jsx';
 import * as service from '../../services/messagerie.service.js';
 
-/**
- * La notification "N messages non lus".
- *
- * Elle n'est pas stockee : elle se calcule a l'affichage, et disparait
- * d'elle-meme une fois les messages lus. Elle mene droit au fil du
- * message non lu le plus recent -- pas a la liste, ou il faudrait encore
- * le chercher.
- *
- * @param {{ api: object, racine: string, cheminMessages: string }} props
- */
 export default function NotificationMessages({ api, racine, cheminMessages }) {
   const [etat, setEtat] = useState(null);
 
@@ -25,7 +15,6 @@ export default function NotificationMessages({ api, racine, cheminMessages }) {
         if (!annule) setEtat(resultat);
       })
       .catch(() => {
-        // Sans compteur, pas de notification : rien a signaler de plus.
       });
     return () => {
       annule = true;

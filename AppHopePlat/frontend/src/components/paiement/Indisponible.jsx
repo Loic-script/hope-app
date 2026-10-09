@@ -1,9 +1,3 @@
-/**
- * Un moyen de paiement que HOPE n'a pas encore configure (compte
- * bancaire, bureau...) : on le dit, et on propose la suite.
- *
- * prefixe : le bloc CSS de la page qui l'accueille ("vir", "dep"...).
- */
 export default function Indisponible({ texte, quitter, prefixe }) {
   return (
     <section className={`${prefixe}__temps`}>

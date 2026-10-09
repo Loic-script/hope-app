@@ -1,116 +1,7 @@
--- ============================================================
--- HOPE - Jeu de donnees de reference
---
--- Ce fichier remet une base HOPE dans l'etat exact que produisent
--- les scripts de peuplement du depot. Deux developpeurs qui le
--- jouent voient la meme plateforme : memes projets, memes
--- missions, memes engagements, memes conversations.
---
--- A jouer APRES le schema, sur une base ou les 42 tables et le
--- compte administrateur existent deja :
---
---     npm run db:init
---     npm run db:migrate
---     npm run db:seed
---     psql -U postgres -d hope_db -f src/database/data.sql
---
--- Le fichier vide les tables metier avant de les remplir : il est
--- rejouable sans creer de doublon. Tout passe dans une transaction
--- unique -- en cas d'erreur, la base reste dans son etat initial.
---
--- ------------------------------------------------------------
--- CE QUI N'EST PAS DANS CE FICHIER
---
--- La table "admins" est exclue. Elle porte le mot de passe
--- administrateur hache : il reste celui de votre base, et aucun
--- fichier du depot ne le transporte. Les lignes ci-dessous qui
--- designent un administrateur pointent sur l'identifiant 1, celui
--- que cree "npm run db:seed".
---
--- Les visuels des projets ne sont pas ici non plus : ce sont des
--- fichiers, copies dans backend/uploads/medias par
--- "npm run db:seed-demo". Sans eux les images manqueront, tout le
--- reste fonctionnera normalement.
---
--- Les objectifs et les devis de projet (project_objectives,
--- project_quote_items) restent vides : les scripts de peuplement
--- n'en creent pas encore.
---
--- ------------------------------------------------------------
--- LES COMPTES DE DEMONSTRATION
---
--- Leurs mots de passe sont haches en bcrypt, jamais en clair. Ce
--- ne sont pas des secrets -- les scripts de peuplement les
--- affichent a l'ecran -- et les voici :
---
---     tokiana@benevole.hope.example
---     faniry@benevole.hope.example
---     miora@benevole.hope.example
---     hery@benevole.hope.example
---     anjara@benevole.hope.example
---     lalaina@benevole.hope.example
---       -> benevole2026
---     claire.lefebvre@bailleur.hope.example
---     solofo.rakotonirina@bailleur.hope.example
---       -> bailleur2026
---
--- Ces comptes sont fictifs. Ils n'ont pas leur place sur une base
--- de production.
---
--- ------------------------------------------------------------
--- CE QUE CONTIENT CE FICHIER
---
---       7  categories de projet
---       5  projets, finances de 18 a 100 pour cent
---      15  donateurs
---      19  dons
---       3  investissements du fonds HOPE
---       6  depenses
---       4  justificatifs
---      12  beneficiaires
---       4  impacts mesures
---       4  messages de donateurs
---      26  notifications de l administrateur
---       8  comptes des espaces (benevoles et bailleurs)
---       6  fiches benevoles
---      17  missions
---      33  inscriptions aux missions
---      15  taches
---       7  avis de mission
---       2  bailleurs
---       5  engagements
---       6  versements
---       5  affectations aux projets
---       8  documents remis aux bailleurs
---       4  distinctions
---       3  publications
---      38  notifications des espaces
---      22  fils de messages
---      36  prises de parole dans les fils
---      22  conversations avec l equipe
---      36  messages de conversation
---       8  ecritures du journal d activite
---
--- Tous les montants sont en NUMERIC, jamais en flottant.
--- ============================================================
-
--- Ce fichier est en UTF-8 et contient des accents. Sous Windows,
--- psql ouvre par defaut en WIN1252 et rejette alors "Recu fiscal"
--- des la premiere ligne accentuee. On le declare donc ici : le
--- fichier se suffit a lui-meme, sans variable d'environnement a
--- positionner avant de le jouer.
 SET client_encoding = 'UTF8';
 
 BEGIN;
 
--- ------------------------------------------------------------
--- Remise a zero des tables metier
---
--- CASCADE suit les cles etrangeres, RESTART IDENTITY remet les
--- sequences a un pour que les identifiants ecrits plus bas
--- retombent exactement sur ceux d'origine. La table "admins"
--- n'est pas citee : elle n'est pas touchee.
--- ------------------------------------------------------------
 TRUNCATE
   activity_log, affectation, avis_mission, bailleur, bailleur_contact,
   bailleur_distinction, beneficiaries, benevole, conversation,
@@ -125,7 +16,6 @@ TRUNCATE
   utilisateur_role, versement
   RESTART IDENTITY CASCADE;
 
--- ---------- activity_log ----------
 INSERT INTO public.activity_log (id, admin_id, author_label, action, entity_type, entity_id, label, created_at) VALUES (1, NULL, 'Système', 'CREATE', 'PROJECT', 1, 'a créé le projet « Soutien scolaire Antananarivo »', '2026-09-16 12:22:04.623893+03');
 INSERT INTO public.activity_log (id, admin_id, author_label, action, entity_type, entity_id, label, created_at) VALUES (2, NULL, 'Système', 'CREATE', 'PROJECT', 2, 'a créé le projet « Santé pour tous »', '2026-09-16 12:22:04.653267+03');
 INSERT INTO public.activity_log (id, admin_id, author_label, action, entity_type, entity_id, label, created_at) VALUES (3, NULL, 'Système', 'CREATE', 'PROJECT', 3, 'a créé le projet « Autonomisation des mères célibataires »', '2026-09-16 12:22:04.671566+03');
@@ -135,18 +25,15 @@ INSERT INTO public.activity_log (id, admin_id, author_label, action, entity_type
 INSERT INTO public.activity_log (id, admin_id, author_label, action, entity_type, entity_id, label, created_at) VALUES (7, NULL, 'Système', 'INVEST', 'PROJECT', 1, 'a investi 1200000.00 MGA du fonds HOPE dans « Soutien scolaire Antananarivo »', '2026-09-16 12:22:07.194642+03');
 INSERT INTO public.activity_log (id, admin_id, author_label, action, entity_type, entity_id, label, created_at) VALUES (8, NULL, 'Système', 'INVEST', 'PROJECT', 4, 'a investi 800000.00 MGA du fonds HOPE dans « Cantines scolaires de Fianarantsoa »', '2026-09-16 12:22:07.208831+03');
 
--- ---------- bailleur ----------
 INSERT INTO public.bailleur (id, raison_sociale, type_organisation, secteur, pays, adresse, site_web, logo_url, nif, partenaire_depuis, statut, niveau, notes_internes, cree_le) VALUES ('9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'Fondation Avenir Océan Indien', 'fondation_privee', 'Éducation et santé', 'France', '18 rue de la Solidarité, 75011 Paris', 'https://avenir-oi.example', NULL, 'FR-4471902', '2024-07-08', 'actif', 'or', NULL, '2026-09-16 12:22:13.603046+03');
 INSERT INTO public.bailleur (id, raison_sociale, type_organisation, secteur, pays, adresse, site_web, logo_url, nif, partenaire_depuis, statut, niveau, notes_internes, cree_le) VALUES ('98a6077e-d60f-41af-aa67-428a75978e3f', 'Telma Entreprise Citoyenne', 'entreprise', 'Télécommunications', 'Madagascar', 'Zone Galaxy Andraharo, Antananarivo', 'https://telma-citoyen.example.mg', NULL, 'MG-2019-88410', '2025-11-20', 'actif', 'argent', NULL, '2026-09-16 12:22:14.160774+03');
 
--- ---------- engagement ----------
 INSERT INTO public.engagement (id, bailleur_id, intitule, type_soutien, montant_engage, devise, unite, quantite_engagee, quantite_realisee, valorisation, date_signature, date_debut, date_fin, reference_convention, convention_url, affectation_libre, statut, cree_le) VALUES ('e4fc154b-6386-49ac-964c-cabc56bb8eaa', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'Financement — Éducation 2026', 'financier', 15000000.00, 'MGA', NULL, NULL, 0.00, NULL, '2025-12-30', '2026-01-09', '2027-01-09', 'CONV-AOI-2026-01', NULL, false, 'en_cours', '2026-09-16 12:22:14.176129+03');
 INSERT INTO public.engagement (id, bailleur_id, intitule, type_soutien, montant_engage, devise, unite, quantite_engagee, quantite_realisee, valorisation, date_signature, date_debut, date_fin, reference_convention, convention_url, affectation_libre, statut, cree_le) VALUES ('ebffe653-f97b-4e32-9dca-b14306f19625', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'Financement — Santé communautaire', 'financier', 9000000.00, 'MGA', NULL, NULL, 0.00, NULL, '2026-04-19', '2026-04-29', '2027-04-29', 'CONV-AOI-2026-02', NULL, true, 'en_cours', '2026-09-16 12:22:14.218442+03');
 INSERT INTO public.engagement (id, bailleur_id, intitule, type_soutien, montant_engage, devise, unite, quantite_engagee, quantite_realisee, valorisation, date_signature, date_debut, date_fin, reference_convention, convention_url, affectation_libre, statut, cree_le) VALUES ('1d0ab483-1192-43ce-a99a-585c191906cd', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'Mécénat de compétences — formation des équipes', 'competences', NULL, 'MGA', 'session', 12.00, 7.00, 3600000.00, '2026-02-28', '2026-03-10', '2027-03-05', 'CONV-AOI-2026-03', NULL, false, 'en_cours', '2026-09-16 12:22:14.227236+03');
 INSERT INTO public.engagement (id, bailleur_id, intitule, type_soutien, montant_engage, devise, unite, quantite_engagee, quantite_realisee, valorisation, date_signature, date_debut, date_fin, reference_convention, convention_url, affectation_libre, statut, cree_le) VALUES ('944f119a-8c48-4614-bad7-e6b21d7d35db', '98a6077e-d60f-41af-aa67-428a75978e3f', 'Financement — Accès à l’eau potable', 'financier', 6000000.00, 'MGA', NULL, NULL, 0.00, NULL, '2025-12-10', '2025-12-20', '2026-08-17', 'RSE-TLM-2025-14', NULL, false, 'finalise', '2026-09-16 12:22:14.229151+03');
 INSERT INTO public.engagement (id, bailleur_id, intitule, type_soutien, montant_engage, devise, unite, quantite_engagee, quantite_realisee, valorisation, date_signature, date_debut, date_fin, reference_convention, convention_url, affectation_libre, statut, cree_le) VALUES ('7325932f-a67f-4a50-8de3-23d0bb790112', '98a6077e-d60f-41af-aa67-428a75978e3f', 'Don matériel — équipement informatique', 'materiel', NULL, 'MGA', 'kit', 25.00, 25.00, 5000000.00, '2026-05-19', '2026-05-29', NULL, 'RSE-TLM-2026-03', NULL, false, 'finalise', '2026-09-16 12:22:14.237402+03');
 
--- ---------- project_categories ----------
 INSERT INTO public.project_categories (id, name, description, created_at, updated_at) VALUES (1, 'Scolarité', 'Frais de scolarité, fournitures et soutien scolaire', '2026-09-16 12:22:03.064034+03', '2026-09-16 12:22:03.064034+03');
 INSERT INTO public.project_categories (id, name, description, created_at, updated_at) VALUES (2, 'Soins', 'Consultations, médicaments et suivi médical', '2026-09-16 12:22:03.090133+03', '2026-09-16 12:22:03.090133+03');
 INSERT INTO public.project_categories (id, name, description, created_at, updated_at) VALUES (3, 'Alimentation', 'Repas, distributions alimentaires et nutrition', '2026-09-16 12:22:03.093809+03', '2026-09-16 12:22:03.093809+03');
@@ -155,21 +42,18 @@ INSERT INTO public.project_categories (id, name, description, created_at, update
 INSERT INTO public.project_categories (id, name, description, created_at, updated_at) VALUES (6, 'Soutien social', 'Accompagnement des familles et aide sociale', '2026-09-16 12:22:03.100786+03', '2026-09-16 12:22:03.100786+03');
 INSERT INTO public.project_categories (id, name, description, created_at, updated_at) VALUES (7, 'Urgence', 'Réponse aux situations d''urgence et aux catastrophes', '2026-09-16 12:22:03.102585+03', '2026-09-16 12:22:03.102585+03');
 
--- ---------- projects ----------
 INSERT INTO public.projects (id, reference, category_id, name, description_titre, description, location, manager_name, start_date, required_budget, currency, beneficiary_profile, beneficiary_target, status, media_url, media_type, outcome, completed_at, archived_at, created_at, updated_at) VALUES (1, 'PRJ-2026-0001', 1, 'Soutien scolaire Antananarivo', NULL, 'Prise en charge des frais de scolarité, des fournitures et du transport pour 100 enfants orphelins d''Antananarivo, sur toute l''année scolaire.', 'Antananarivo', 'Hanta Rasoanaivo', '2026-09-16', 5000000.00, 'MGA', 'Enfants orphelins de 6 à 14 ans', 100, 'IN_PROGRESS', '/media/projet-1789550524551-e73778ffe802aaba3d35b4f6b246c2f0.jpg', 'PHOTO', NULL, NULL, NULL, '2026-09-16 12:22:04.56455+03', '2026-09-16 12:22:04.56455+03');
 INSERT INTO public.projects (id, reference, category_id, name, description_titre, description, location, manager_name, start_date, required_budget, currency, beneficiary_profile, beneficiary_target, status, media_url, media_type, outcome, completed_at, archived_at, created_at, updated_at) VALUES (2, 'PRJ-2026-0002', 2, 'Santé pour tous', NULL, 'Consultations médicales gratuites et distribution de médicaments essentiels dans la région de Toamasina.', 'Toamasina', 'Dr Naina Andriamahefa', '2026-09-16', 8000000.00, 'MGA', 'Familles vulnérables du littoral est', 350, 'IN_PROGRESS', '/media/projet-1789550524632-92c4a2e9136edc5aa8c5fc9a8911fac7.jpg', 'PHOTO', NULL, NULL, NULL, '2026-09-16 12:22:04.639208+03', '2026-09-16 12:22:04.639208+03');
 INSERT INTO public.projects (id, reference, category_id, name, description_titre, description, location, manager_name, start_date, required_budget, currency, beneficiary_profile, beneficiary_target, status, media_url, media_type, outcome, completed_at, archived_at, created_at, updated_at) VALUES (3, 'PRJ-2026-0003', 5, 'Autonomisation des mères célibataires', NULL, 'Formation à la couture et à la gestion de micro-activités, suivie d''un accompagnement à l''installation.', 'Antsirabe', 'Voahangy Ratsimba', '2026-09-16', 6000000.00, 'MGA', 'Mères célibataires sans revenu stable', 25, 'IN_PROGRESS', '/media/projet-1789550524653-fc9791826940c01f359623100c0f0372.jpg', 'PHOTO', NULL, NULL, NULL, '2026-09-16 12:22:04.659741+03', '2026-09-16 12:22:04.659741+03');
 INSERT INTO public.projects (id, reference, category_id, name, description_titre, description, location, manager_name, start_date, required_budget, currency, beneficiary_profile, beneficiary_target, status, media_url, media_type, outcome, completed_at, archived_at, created_at, updated_at) VALUES (4, 'PRJ-2026-0004', 3, 'Cantines scolaires de Fianarantsoa', NULL, 'Un repas chaud par jour et jardins potagers communautaires dans quatre écoles.', 'Fianarantsoa', 'Tiana Rakotomalala', '2026-09-16', 4000000.00, 'MGA', 'Élèves des écoles primaires publiques', 200, 'IN_PROGRESS', '/media/projet-1789550524672-f1c73c2d4dff831849634d8f939293f7.jpg', 'PHOTO', NULL, NULL, NULL, '2026-09-16 12:22:04.679233+03', '2026-09-16 12:22:04.679233+03');
 INSERT INTO public.projects (id, reference, category_id, name, description_titre, description, location, manager_name, start_date, required_budget, currency, beneficiary_profile, beneficiary_target, status, media_url, media_type, outcome, completed_at, archived_at, created_at, updated_at) VALUES (5, 'PRJ-2026-0005', 7, 'Puits d''eau potable Mahajanga', NULL, 'Forage et mise en service d''un puits pour le quartier d''Amborovy.', 'Mahajanga', 'Fara Andrianina', '2026-09-16', 2000000.00, 'MGA', 'Habitants du quartier Amborovy', 400, 'IN_PROGRESS', '/media/projet-1789550524693-d537f929d4fd27312cdf54a655e33ae1.webm', 'VIDEO', NULL, NULL, NULL, '2026-09-16 12:22:04.70191+03', '2026-09-16 12:22:04.70191+03');
 
--- ---------- affectation ----------
 INSERT INTO public.affectation (id, engagement_id, projet_id, montant, date_affectation, commentaire) VALUES ('af9d53ab-c087-4b79-99fc-b71126acf277', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', 1, 9000000.00, '2026-05-19', 'Écolages et fournitures');
 INSERT INTO public.affectation (id, engagement_id, projet_id, montant, date_affectation, commentaire) VALUES ('5250b168-c2cf-4d72-b629-e29c6ba207ba', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', 4, 5500000.00, '2026-05-19', 'Repas et jardins');
 INSERT INTO public.affectation (id, engagement_id, projet_id, montant, date_affectation, commentaire) VALUES ('034ec531-eb66-49dd-8a7e-b2fd6ad58281', 'ebffe653-f97b-4e32-9dca-b14306f19625', 2, 6000000.00, '2026-05-19', 'Médicaments et consultations');
 INSERT INTO public.affectation (id, engagement_id, projet_id, montant, date_affectation, commentaire) VALUES ('7052cc29-9cbf-404f-b54a-1adb37544687', '944f119a-8c48-4614-bad7-e6b21d7d35db', 5, 2000000.00, '2026-05-19', 'Forage et pompe');
 INSERT INTO public.affectation (id, engagement_id, projet_id, montant, date_affectation, commentaire) VALUES ('c460eb26-dd37-4095-b909-17a2ad34954e', '944f119a-8c48-4614-bad7-e6b21d7d35db', 3, 4000000.00, '2026-05-19', 'Ateliers et machines');
 
--- ---------- utilisateur ----------
 INSERT INTO public.utilisateur (id, nom, prenom, telephone, email, mot_de_passe, photo_url, adresse, date_de_naissance, statut, telephone_verifie, cree_le, derniere_connexion, profil_complete, active_le, active_par) VALUES ('e928bd96-148f-416d-9325-2d1f695e75f0', 'Randriamanana', 'Tokiana', NULL, 'tokiana@benevole.hope.example', '$2b$12$7Xxmr29I9x8HaTNYtdb0deWo8QxvbOJ5dXn3BAVVrC6qaAvWXjlGa', NULL, NULL, NULL, 'actif', false, '2026-09-16 12:22:09.429896+03', NULL, true, NULL, NULL);
 INSERT INTO public.utilisateur (id, nom, prenom, telephone, email, mot_de_passe, photo_url, adresse, date_de_naissance, statut, telephone_verifie, cree_le, derniere_connexion, profil_complete, active_le, active_par) VALUES ('33ba81fe-28e2-4e84-a79e-342fcaee9e6f', 'Andrianjaka', 'Faniry', NULL, 'faniry@benevole.hope.example', '$2b$12$tAShZBzclQ43toNhToQpd.SGjXw38wVfSJNjwf2ZImeSEmfxWTWSK', NULL, NULL, NULL, 'actif', false, '2026-09-16 12:22:09.887736+03', NULL, true, NULL, NULL);
 INSERT INTO public.utilisateur (id, nom, prenom, telephone, email, mot_de_passe, photo_url, adresse, date_de_naissance, statut, telephone_verifie, cree_le, derniere_connexion, profil_complete, active_le, active_par) VALUES ('052f522e-e3c4-472e-8495-e18a5a29e0c0', 'Rakotoarisoa', 'Miora', NULL, 'miora@benevole.hope.example', '$2b$12$6EfUEp6yGr2WN4yCvlt8L.owxf191vXqUlw8/niwrHVOeOkEym2J2', NULL, NULL, NULL, 'actif', false, '2026-09-16 12:22:10.338638+03', NULL, true, NULL, NULL);
@@ -179,7 +63,6 @@ INSERT INTO public.utilisateur (id, nom, prenom, telephone, email, mot_de_passe,
 INSERT INTO public.utilisateur (id, nom, prenom, telephone, email, mot_de_passe, photo_url, adresse, date_de_naissance, statut, telephone_verifie, cree_le, derniere_connexion, profil_complete, active_le, active_par) VALUES ('6c9bc571-b64a-427c-860c-e34cd932c561', 'Lefebvre', 'Claire', NULL, 'claire.lefebvre@bailleur.hope.example', '$2b$12$VVESq3d6S/BWzDYRc2WtTeFwgeiURXCSrmrNnDTVIXpmyBaoCTivq', NULL, NULL, NULL, 'actif', false, '2026-09-16 12:22:13.603046+03', NULL, false, NULL, NULL);
 INSERT INTO public.utilisateur (id, nom, prenom, telephone, email, mot_de_passe, photo_url, adresse, date_de_naissance, statut, telephone_verifie, cree_le, derniere_connexion, profil_complete, active_le, active_par) VALUES ('8690906a-68ba-4a25-b067-bb0668aae3a5', 'Rakotonirina', 'Solofo', NULL, 'solofo.rakotonirina@bailleur.hope.example', '$2b$12$rUIfDgwYM0xphMZqSMsGGuCOFBaRJGwqv/uKJt8Y53W5QnbX8h/7O', NULL, NULL, NULL, 'actif', false, '2026-09-16 12:22:14.160774+03', NULL, false, NULL, NULL);
 
--- ---------- benevole ----------
 INSERT INTO public.benevole (id, utilisateur_id, profession, competences, langues, disponibilites, rayon_km, accepte_terrain, accepte_distance, contact_urgence_nom, contact_urgence_tel, valide_par_hope, valide_le, valide_par, benevole_depuis, notes_internes, cree_le) VALUES ('2bd48e6a-4600-4cb0-8c6f-a839e963f27c', 'e928bd96-148f-416d-9325-2d1f695e75f0', 'Enseignante', '{"soutien scolaire",traduction,malgache}', '{malgache,francais}', '{"samedi": ["journee"], "mercredi": ["matin"]}', 15, true, true, 'Rasoa Randriamanana', '+261 34 55 112 20', true, '2026-09-16 12:22:09.461133+03', 1, '2025-07-23', NULL, '2026-09-16 12:22:09.429896+03');
 INSERT INTO public.benevole (id, utilisateur_id, profession, competences, langues, disponibilites, rayon_km, accepte_terrain, accepte_distance, contact_urgence_nom, contact_urgence_tel, valide_par_hope, valide_le, valide_par, benevole_depuis, notes_internes, cree_le) VALUES ('c8de6103-e666-4239-93a3-3157beef93e7', '33ba81fe-28e2-4e84-a79e-342fcaee9e6f', 'Développeur', '{informatique,"saisie de donnees",tableur}', '{malgache,francais,anglais}', '{"jeudi": ["soir"], "mardi": ["soir"], "samedi": ["matin"]}', 8, true, true, 'Naina Andrianjaka', '+261 32 78 445 91', true, '2026-09-16 12:22:09.897607+03', 1, '2026-01-19', NULL, '2026-09-16 12:22:09.887736+03');
 INSERT INTO public.benevole (id, utilisateur_id, profession, competences, langues, disponibilites, rayon_km, accepte_terrain, accepte_distance, contact_urgence_nom, contact_urgence_tel, valide_par_hope, valide_le, valide_par, benevole_depuis, notes_internes, cree_le) VALUES ('b892e155-f57f-4140-84df-517a666b340c', '052f522e-e3c4-472e-8495-e18a5a29e0c0', 'Infirmière', '{soins,"premiers secours",sensibilisation}', '{malgache,francais}', '{"lundi": ["matin"], "vendredi": ["journee"]}', 40, true, true, 'Zo Rakotoarisoa', '+261 33 12 908 44', true, '2026-09-16 12:22:10.349069+03', 1, '2025-11-10', NULL, '2026-09-16 12:22:10.338638+03');
@@ -187,7 +70,6 @@ INSERT INTO public.benevole (id, utilisateur_id, profession, competences, langue
 INSERT INTO public.benevole (id, utilisateur_id, profession, competences, langues, disponibilites, rayon_km, accepte_terrain, accepte_distance, contact_urgence_nom, contact_urgence_tel, valide_par_hope, valide_le, valide_par, benevole_depuis, notes_internes, cree_le) VALUES ('6fd73ccb-be19-40ce-9395-0af1a55e2bcf', 'b7fc62e1-ab80-474d-b8d4-a86ce4e45174', 'Étudiante en droit', '{redaction,photographie,accueil}', '{malgache,francais,anglais}', '{"samedi": ["journee"], "dimanche": ["matin"], "mercredi": ["apres-midi"]}', 20, true, true, 'Hanta Ravelomanana', '+261 32 04 663 17', true, '2026-09-16 12:22:11.212666+03', 1, '2026-06-13', NULL, '2026-09-16 12:22:11.19942+03');
 INSERT INTO public.benevole (id, utilisateur_id, profession, competences, langues, disponibilites, rayon_km, accepte_terrain, accepte_distance, contact_urgence_nom, contact_urgence_tel, valide_par_hope, valide_le, valide_par, benevole_depuis, notes_internes, cree_le) VALUES ('9f05003a-8add-47bf-9683-e08009e768f9', '7e051d7b-9731-4969-bf6d-a80a88970183', 'Comptable', '{comptabilite,"saisie de donnees"}', '{malgache,francais}', '{"lundi": ["soir"], "mercredi": ["soir"]}', 5, true, true, 'Fara Razafindrakoto', '+261 34 88 501 62', false, NULL, NULL, '2026-09-10', NULL, '2026-09-16 12:22:11.704219+03');
 
--- ---------- mission ----------
 INSERT INTO public.mission (id, projet_id, titre, description, lieu_nom, latitude, longitude, format, date_debut, date_fin, recurrence, places_total, encadreur_id, besoins_a_apporter, statut, cree_le) VALUES ('79409460-fc4e-4906-8883-85b7d9fa445d', 1, 'Distribution des kits de rentrée', 'Remise des fournitures aux cent enfants suivis, école par école, avec émargement des familles.', 'Ankadifotsy, Antananarivo', -18.902500, 47.526100, 'terrain', '2026-06-13 08:00:00+03', '2026-06-13 15:00:00+03', NULL, 8, 1, '{chapeau,"bouteille d’eau"}', 'terminee', '2026-05-23 08:00:00+03');
 INSERT INTO public.mission (id, projet_id, titre, description, lieu_nom, latitude, longitude, format, date_debut, date_fin, recurrence, places_total, encadreur_id, besoins_a_apporter, statut, cree_le) VALUES ('a1e0690a-9711-4c7e-9a4f-0ae4d856e0c8', 2, 'Appui au dépistage à Toamasina', 'Accueil, orientation et prise des constantes lors de la campagne de dépistage du diabète.', 'Toamasina, dispensaire d’Ambodimanga', NULL, NULL, 'terrain', '2026-07-16 07:00:00+03', '2026-07-16 16:00:00+03', NULL, 6, 1, '{blouse,"pièce d’identité"}', 'terminee', '2026-06-25 07:00:00+03');
 INSERT INTO public.mission (id, projet_id, titre, description, lieu_nom, latitude, longitude, format, date_debut, date_fin, recurrence, places_total, encadreur_id, besoins_a_apporter, statut, cree_le) VALUES ('8469a33f-a5fa-49d1-8992-ac4a21e392d4', 4, 'Inventaire des stocks de riz', 'Comptage contradictoire des sacs dans les quatre écoles, et relevé des écarts avec le registre.', 'Fianarantsoa centre', NULL, NULL, 'presentiel', '2026-08-07 09:00:00+03', '2026-08-07 13:00:00+03', NULL, 4, 1, '{}', 'terminee', '2026-07-17 09:00:00+03');
@@ -206,7 +88,6 @@ INSERT INTO public.mission (id, projet_id, titre, description, lieu_nom, latitud
 INSERT INTO public.mission (id, projet_id, titre, description, lieu_nom, latitude, longitude, format, date_debut, date_fin, recurrence, places_total, encadreur_id, besoins_a_apporter, statut, cree_le) VALUES ('759f006d-5d11-44c1-a2d7-58335c9702a3', 1, 'Collecte de livres d’occasion', 'Démarcher librairies et écoles privées d’Antananarivo pour réunir trois cents livres de lecture.', NULL, NULL, NULL, 'distance', '2026-10-11 08:00:00+03', '2026-11-10 18:00:00+03', NULL, 4, 1, '{}', 'ouverte', '2026-09-20 08:00:00+03');
 INSERT INTO public.mission (id, projet_id, titre, description, lieu_nom, latitude, longitude, format, date_debut, date_fin, recurrence, places_total, encadreur_id, besoins_a_apporter, statut, cree_le) VALUES ('71035efd-e874-492c-807e-b60221389249', 5, 'Visite de contrôle du forage', 'Relevé du débit et état de la margelle, six mois après la mise en service.', 'Amborovy, Mahajanga', NULL, NULL, 'terrain', '2026-10-05 08:00:00+03', '2026-10-05 15:00:00+03', NULL, 3, 1, '{}', 'annulee', '2026-09-14 08:00:00+03');
 
--- ---------- avis_mission ----------
 INSERT INTO public.avis_mission (id, mission_id, benevole_id, note, commentaire, publie, cree_le) VALUES ('cbcd4aa7-b741-4d75-828d-45ee5b28fe50', '5f6c1c4d-3fac-481e-ab2e-787005031a72', '2bd48e6a-4600-4cb0-8c6f-a839e963f27c', 5, 'Accueil du comité de quartier remarquable. Les habitants avaient de vraies questions sur l’entretien de la pompe.', true, '2026-09-16 12:22:11.858582+03');
 INSERT INTO public.avis_mission (id, mission_id, benevole_id, note, commentaire, publie, cree_le) VALUES ('2a19c4ce-42c8-46dd-805c-74c833e642dc', 'a1e0690a-9711-4c7e-9a4f-0ae4d856e0c8', 'b892e155-f57f-4140-84df-517a666b340c', 5, 'Organisation impeccable et matériel prêt à l’heure. Nous avons vu deux fois plus de monde que prévu.', true, '2026-09-16 12:22:11.865648+03');
 INSERT INTO public.avis_mission (id, mission_id, benevole_id, note, commentaire, publie, cree_le) VALUES ('4fc43212-d1ed-47d0-bae1-22b650c6be9f', '2637eb69-6073-41d3-8529-ef30baa21a77', 'c8de6103-e666-4239-93a3-3157beef93e7', 4, 'Travail répétitif mais utile. Les dossiers scannés étaient parfois illisibles : à revoir avant la prochaine campagne.', true, '2026-09-16 12:22:11.86713+03');
@@ -215,24 +96,20 @@ INSERT INTO public.avis_mission (id, mission_id, benevole_id, note, commentaire,
 INSERT INTO public.avis_mission (id, mission_id, benevole_id, note, commentaire, publie, cree_le) VALUES ('3d7074f9-837e-4f74-ae69-a614b68d5ce3', '79409460-fc4e-4906-8883-85b7d9fa445d', '6fd73ccb-be19-40ce-9395-0af1a55e2bcf', 4, 'Longue journée, très bien encadrée. Prévoir plus d’ombre pour l’émargement.', true, '2026-09-16 12:22:11.872287+03');
 INSERT INTO public.avis_mission (id, mission_id, benevole_id, note, commentaire, publie, cree_le) VALUES ('c3ef2be3-f569-4092-a5f0-28e0decdaf79', '8469a33f-a5fa-49d1-8992-ac4a21e392d4', '4a3d8e0a-4e16-4e32-91b1-91627fa3fb26', 3, 'Le registre n’était pas à jour, nous avons perdu une heure à recompter. Rien d’insurmontable, mais à corriger.', true, '2026-09-16 12:22:11.87434+03');
 
--- ---------- bailleur_contact ----------
 INSERT INTO public.bailleur_contact (id, bailleur_id, utilisateur_id, fonction, contact_principal, peut_consulter, peut_telecharger, actif, cree_le) VALUES ('a7f1e343-edec-4b94-9b3b-a063e90db4d7', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', '6c9bc571-b64a-427c-860c-e34cd932c561', 'Responsable partenariats', true, true, true, true, '2026-09-16 12:22:13.603046+03');
 INSERT INTO public.bailleur_contact (id, bailleur_id, utilisateur_id, fonction, contact_principal, peut_consulter, peut_telecharger, actif, cree_le) VALUES ('2f033374-3a4d-4a49-8c27-66f5f98c6945', '98a6077e-d60f-41af-aa67-428a75978e3f', '8690906a-68ba-4a25-b067-bb0668aae3a5', 'Directeur RSE', true, true, true, true, '2026-09-16 12:22:14.160774+03');
 
--- ---------- distinction ----------
 INSERT INTO public.distinction (code, libelle, regle) VALUES ('partenaire_or', 'Partenaire Or', 'Plus de 20 000 000 Ar engages, tous engagements confondus.');
 INSERT INTO public.distinction (code, libelle, regle) VALUES ('multi_domaines', 'Multi-domaines', 'Finance des projets dans au moins trois domaines.');
 INSERT INTO public.distinction (code, libelle, regle) VALUES ('renouvele_2x', 'Renouvele deux fois', 'Au moins trois engagements signes avec HOPE.');
 INSERT INTO public.distinction (code, libelle, regle) VALUES ('premier_partenaire', 'Premier partenaire', 'Partenaire de HOPE depuis plus de deux ans.');
 
--- ---------- bailleur_distinction ----------
 INSERT INTO public.bailleur_distinction (bailleur_id, distinction_code, obtenue_le) VALUES ('9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'partenaire_or', '2026-02-28');
 INSERT INTO public.bailleur_distinction (bailleur_id, distinction_code, obtenue_le) VALUES ('9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'multi_domaines', '2026-02-28');
 INSERT INTO public.bailleur_distinction (bailleur_id, distinction_code, obtenue_le) VALUES ('9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'renouvele_2x', '2026-02-28');
 INSERT INTO public.bailleur_distinction (bailleur_id, distinction_code, obtenue_le) VALUES ('9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'premier_partenaire', '2026-02-28');
 INSERT INTO public.bailleur_distinction (bailleur_id, distinction_code, obtenue_le) VALUES ('98a6077e-d60f-41af-aa67-428a75978e3f', 'multi_domaines', '2026-02-28');
 
--- ---------- beneficiaries ----------
 INSERT INTO public.beneficiaries (id, first_name, last_name, beneficiary_type, gender, birth_date, country, city, status, notes, created_at, updated_at) VALUES (1, 'Soa', 'Rabe', 'ORPHAN', 'F', '2015-04-12', 'Madagascar', 'Antananarivo', 'ACTIVE', NULL, '2026-09-16 12:22:07.340726+03', '2026-09-16 12:22:07.340726+03');
 INSERT INTO public.beneficiaries (id, first_name, last_name, beneficiary_type, gender, birth_date, country, city, status, notes, created_at, updated_at) VALUES (2, 'Tojo', 'Randria', 'ORPHAN', 'M', '2014-09-03', 'Madagascar', 'Antananarivo', 'ACTIVE', NULL, '2026-09-16 12:22:07.373701+03', '2026-09-16 12:22:07.373701+03');
 INSERT INTO public.beneficiaries (id, first_name, last_name, beneficiary_type, gender, birth_date, country, city, status, notes, created_at, updated_at) VALUES (3, 'Fanja', 'Raso', 'ORPHAN', 'F', '2016-01-25', 'Madagascar', 'Antananarivo', 'ACTIVE', NULL, '2026-09-16 12:22:07.395438+03', '2026-09-16 12:22:07.395438+03');
@@ -246,7 +123,6 @@ INSERT INTO public.beneficiaries (id, first_name, last_name, beneficiary_type, g
 INSERT INTO public.beneficiaries (id, first_name, last_name, beneficiary_type, gender, birth_date, country, city, status, notes, created_at, updated_at) VALUES (11, 'Famille', 'Ravelonarivo', 'FAMILY', NULL, NULL, 'Madagascar', 'Mahajanga', 'ACTIVE', NULL, '2026-09-16 12:22:07.579731+03', '2026-09-16 12:22:07.579731+03');
 INSERT INTO public.beneficiaries (id, first_name, last_name, beneficiary_type, gender, birth_date, country, city, status, notes, created_at, updated_at) VALUES (12, 'Famille', 'Bemananjara', 'FAMILY', NULL, NULL, 'Madagascar', 'Mahajanga', 'ACTIVE', NULL, '2026-09-16 12:22:07.604358+03', '2026-09-16 12:22:07.604358+03');
 
--- ---------- conversation ----------
 INSERT INTO public.conversation (id, sujet, cree_le, maj_le) VALUES (2, 'Détail de l’affectation du deuxième versement', '2026-09-15 10:00:00+03', '2026-09-15 14:00:00+03');
 INSERT INTO public.conversation (id, sujet, cree_le, maj_le) VALUES (3, 'Visite de terrain en décembre', '2026-09-12 08:00:00+03', '2026-09-12 08:00:00+03');
 INSERT INTO public.conversation (id, sujet, cree_le, maj_le) VALUES (4, 'Détail de l’affectation du deuxième versement', '2026-09-15 10:00:00+03', '2026-09-15 14:00:00+03');
@@ -270,7 +146,6 @@ INSERT INTO public.conversation (id, sujet, cree_le, maj_le) VALUES (21, 'Dispon
 INSERT INTO public.conversation (id, sujet, cree_le, maj_le) VALUES (22, 'Attestation de bénévolat', '2026-09-02 08:00:00+03', '2026-09-02 12:00:00+03');
 INSERT INTO public.conversation (id, sujet, cree_le, maj_le) VALUES (23, 'Matériel pour l’atelier couture', '2026-09-16 10:00:00+03', '2026-09-16 10:00:00+03');
 
--- ---------- conversation_message ----------
 INSERT INTO public.conversation_message (id, conversation_id, utilisateur_id, admin_id, corps, cree_le) VALUES (1, 2, '6c9bc571-b64a-427c-860c-e34cd932c561', NULL, 'Bonjour, pourriez-vous préciser la répartition du versement de septembre entre les quatre projets soutenus ? Notre conseil d’administration le demande.', '2026-09-15 10:00:00+03');
 INSERT INTO public.conversation_message (id, conversation_id, utilisateur_id, admin_id, corps, cree_le) VALUES (2, 2, NULL, 1, 'Bonjour, la répartition figure désormais dans votre rapport trimestriel, section « Emploi des fonds ». En résumé : 43,9 % scolarité, 29,3 % soins, 26,8 % alimentation.', '2026-09-15 14:00:00+03');
 INSERT INTO public.conversation_message (id, conversation_id, utilisateur_id, admin_id, corps, cree_le) VALUES (3, 3, '6c9bc571-b64a-427c-860c-e34cd932c561', NULL, 'Nous souhaiterions visiter deux sites début décembre avec une délégation de trois personnes. Est-ce envisageable ?', '2026-09-12 08:00:00+03');
@@ -308,7 +183,6 @@ INSERT INTO public.conversation_message (id, conversation_id, utilisateur_id, ad
 INSERT INTO public.conversation_message (id, conversation_id, utilisateur_id, admin_id, corps, cree_le) VALUES (35, 22, NULL, 1, 'C’est fait, l’attestation part par courriel aujourd’hui. Elle reprend les heures validées de votre journal, arrêtées à hier.', '2026-09-02 12:00:00+03');
 INSERT INTO public.conversation_message (id, conversation_id, utilisateur_id, admin_id, corps, cree_le) VALUES (36, 23, '7e051d7b-9731-4969-bf6d-a80a88970183', NULL, 'Faut-il apporter sa propre machine pour l’atelier du mois prochain, ou HOPE en fournit ?', '2026-09-16 10:00:00+03');
 
--- ---------- conversation_participant ----------
 INSERT INTO public.conversation_participant (id, conversation_id, utilisateur_id, admin_id, lu_jusqu_a, rejoint_le) VALUES (1, 2, '6c9bc571-b64a-427c-860c-e34cd932c561', NULL, '2026-09-15 10:00:00+03', '2026-09-16 12:22:15.189486+03');
 INSERT INTO public.conversation_participant (id, conversation_id, utilisateur_id, admin_id, lu_jusqu_a, rejoint_le) VALUES (2, 2, NULL, 1, '2026-09-15 14:00:00+03', '2026-09-16 12:22:15.198143+03');
 INSERT INTO public.conversation_participant (id, conversation_id, utilisateur_id, admin_id, lu_jusqu_a, rejoint_le) VALUES (3, 3, '6c9bc571-b64a-427c-860c-e34cd932c561', NULL, '2026-09-12 08:00:00+03', '2026-09-16 12:22:15.231336+03');
@@ -354,7 +228,6 @@ INSERT INTO public.conversation_participant (id, conversation_id, utilisateur_id
 INSERT INTO public.conversation_participant (id, conversation_id, utilisateur_id, admin_id, lu_jusqu_a, rejoint_le) VALUES (43, 23, '7e051d7b-9731-4969-bf6d-a80a88970183', NULL, '2026-09-16 10:00:00+03', '2026-09-16 12:22:16.580909+03');
 INSERT INTO public.conversation_participant (id, conversation_id, utilisateur_id, admin_id, lu_jusqu_a, rejoint_le) VALUES (44, 23, NULL, 1, '2026-09-16 10:00:00+03', '2026-09-16 12:22:16.587197+03');
 
--- ---------- document_bailleur ----------
 INSERT INTO public.document_bailleur (id, bailleur_id, engagement_id, projet_id, type, titre, periode_debut, periode_fin, fichier_url, nb_pages, genere_auto, publie_le, publie_par, telecharge_le, nb_telechargements) VALUES ('476271fc-91c6-422a-b137-799e234b0c90', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', NULL, 'rapport_impact', 'Rapport d’impact — Éducation, 1er semestre 2026', '2026-03-20', '2026-06-18', '/media/document-rapport_impact-516db12f.pdf', 14, false, '2026-08-17 00:00:00+03', 1, NULL, 0);
 INSERT INTO public.document_bailleur (id, bailleur_id, engagement_id, projet_id, type, titre, periode_debut, periode_fin, fichier_url, nb_pages, genere_auto, publie_le, publie_par, telecharge_le, nb_telechargements) VALUES ('205646ea-f825-4935-835c-1a91031855b8', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', NULL, 'justificatif_financier', 'Justificatif financier — tranche 1', '2026-01-09', '2026-02-28', '/media/document-justificatif_financier-f03b9794.pdf', 6, false, '2026-08-17 00:00:00+03', 1, NULL, 0);
 INSERT INTO public.document_bailleur (id, bailleur_id, engagement_id, projet_id, type, titre, periode_debut, periode_fin, fichier_url, nb_pages, genere_auto, publie_le, publie_par, telecharge_le, nb_telechargements) VALUES ('0a739d94-6d1f-47dc-8991-0530289071c6', '9fd67474-a75e-4a8c-a5dd-e9597dd6d920', 'ebffe653-f97b-4e32-9dca-b14306f19625', NULL, 'justificatif_financier', 'Justificatif financier — Santé, tranche 1', '2026-04-29', '2026-06-08', '/media/document-justificatif_financier-8c99065b.pdf', 5, false, '2026-08-17 00:00:00+03', 1, NULL, 0);
@@ -364,7 +237,6 @@ INSERT INTO public.document_bailleur (id, bailleur_id, engagement_id, projet_id,
 INSERT INTO public.document_bailleur (id, bailleur_id, engagement_id, projet_id, type, titre, periode_debut, periode_fin, fichier_url, nb_pages, genere_auto, publie_le, publie_par, telecharge_le, nb_telechargements) VALUES ('eedd38c1-95d6-4c86-894d-1beec6e1da8e', '98a6077e-d60f-41af-aa67-428a75978e3f', '944f119a-8c48-4614-bad7-e6b21d7d35db', NULL, 'justificatif_financier', 'Justificatif financier — versement unique', '2025-12-20', '2025-12-30', '/media/document-justificatif_financier-d2ef326c.pdf', 4, false, '2026-08-17 00:00:00+03', 1, NULL, 0);
 INSERT INTO public.document_bailleur (id, bailleur_id, engagement_id, projet_id, type, titre, periode_debut, periode_fin, fichier_url, nb_pages, genere_auto, publie_le, publie_par, telecharge_le, nb_telechargements) VALUES ('bc1efed8-30f4-46d6-b395-369093b26382', '98a6077e-d60f-41af-aa67-428a75978e3f', '7325932f-a67f-4a50-8de3-23d0bb790112', NULL, 'convention', 'Convention de don matériel RSE-TLM-2026-03', NULL, NULL, '/media/document-convention-bb462efc.pdf', 7, false, '2026-08-17 00:00:00+03', 1, NULL, 0);
 
--- ---------- donors ----------
 INSERT INTO public.donors (id, first_name, last_name, organization_name, email, phone, country, city, origin, created_at, updated_at) VALUES (1, 'Jean', 'Rakotoarisoa', NULL, 'jean.rakoto@example.mg', '+261 34 12 345 67', 'Madagascar', 'Antananarivo', 'LOCAL', '2026-09-16 12:22:04.717591+03', '2026-09-16 12:22:04.717591+03');
 INSERT INTO public.donors (id, first_name, last_name, organization_name, email, phone, country, city, origin, created_at, updated_at) VALUES (2, 'Miora', 'Randrianasolo', NULL, 'miora.r@example.mg', NULL, 'Madagascar', 'Toamasina', 'LOCAL', '2026-09-16 12:22:04.731151+03', '2026-09-16 12:22:04.731151+03');
 INSERT INTO public.donors (id, first_name, last_name, organization_name, email, phone, country, city, origin, created_at, updated_at) VALUES (3, 'Hery', 'Andrianarison', NULL, 'hery.andria@example.mg', '+261 32 45 678 90', 'Madagascar', 'Antsirabe', 'LOCAL', '2026-09-16 12:22:04.736054+03', '2026-09-16 12:22:04.736054+03');
@@ -381,13 +253,11 @@ INSERT INTO public.donors (id, first_name, last_name, organization_name, email, 
 INSERT INTO public.donors (id, first_name, last_name, organization_name, email, phone, country, city, origin, created_at, updated_at) VALUES (14, 'Luca', 'Moretti', NULL, 'luca.moretti@example.it', NULL, 'Italie', 'Milan', 'INTERNATIONAL', '2026-09-16 12:22:04.790829+03', '2026-09-16 12:22:04.790829+03');
 INSERT INTO public.donors (id, first_name, last_name, organization_name, email, phone, country, city, origin, created_at, updated_at) VALUES (15, NULL, NULL, 'Association Diaspora Malagasy', 'bureau@diaspora-mg.example', NULL, 'Canada', 'Montréal', 'INTERNATIONAL', '2026-09-16 12:22:04.795987+03', '2026-09-16 12:22:04.795987+03');
 
--- ---------- donor_accounts ----------
 INSERT INTO public.donor_accounts (id, donor_id, email, password_hash, status, last_login_at, created_at, updated_at) VALUES (1, 1, 'jean.rakoto@example.mg', '$2b$12$X0KG3J1BdTZxcAfNHaYBq.KXwFtHiHlhkdIREItxjVetfVmIzDV8a', 'ACTIVE', NULL, '2026-09-16 12:22:05.235231+03', '2026-09-16 12:22:05.235231+03');
 INSERT INTO public.donor_accounts (id, donor_id, email, password_hash, status, last_login_at, created_at, updated_at) VALUES (2, 11, 'sophie.bernard@example.fr', '$2b$12$5PHyoAwZ5kzEwUeOCwb6IeaqQ0LuPCXM2jjWYl/oFwo2QT7SgcUPi', 'ACTIVE', NULL, '2026-09-16 12:22:05.686866+03', '2026-09-16 12:22:05.686866+03');
 INSERT INTO public.donor_accounts (id, donor_id, email, password_hash, status, last_login_at, created_at, updated_at) VALUES (3, 12, 'marc.delaunay@example.fr', '$2b$12$PRPCdWt3efkuzoT1GBCmIeevhUqkYgfbp2QuhuCuIjUJCaHBqjH52', 'ACTIVE', NULL, '2026-09-16 12:22:06.222964+03', '2026-09-16 12:22:06.222964+03');
 INSERT INTO public.donor_accounts (id, donor_id, email, password_hash, status, last_login_at, created_at, updated_at) VALUES (4, 8, 'don@tafitamada.example.mg', '$2b$12$6VxQKXMkVe3Sqxeh7daJROTvP7CtmF4PW2TKcF.a055y9.nk1mjuC', 'ACTIVE', NULL, '2026-09-16 12:22:06.665694+03', '2026-09-16 12:22:06.665694+03');
 
--- ---------- donations ----------
 INSERT INTO public.donations (id, reference, donor_id, donor_account_id, amount, currency, allocation, project_id, frequency, payment_method, payment_reference, status, received_at, message, created_at, updated_at) VALUES (1, 'DON-2026-0001', 1, 1, 1000000.00, 'MGA', 'PROJECT', 1, 'ONE_TIME', 'Mvola', 'MVOLA-884213', 'RECEIVED', '2026-08-07 00:00:00+03', 'Pour que ces enfants puissent aller à l’école.', '2026-09-16 12:22:06.672245+03', '2026-09-16 12:22:06.672245+03');
 INSERT INTO public.donations (id, reference, donor_id, donor_account_id, amount, currency, allocation, project_id, frequency, payment_method, payment_reference, status, received_at, message, created_at, updated_at) VALUES (2, 'DON-2026-0002', 3, NULL, 250000.00, 'MGA', 'PROJECT', 1, 'ONE_TIME', 'Mvola', NULL, 'RECEIVED', '2026-08-12 00:00:00+03', NULL, '2026-09-16 12:22:06.877195+03', '2026-09-16 12:22:06.877195+03');
 INSERT INTO public.donations (id, reference, donor_id, donor_account_id, amount, currency, allocation, project_id, frequency, payment_method, payment_reference, status, received_at, message, created_at, updated_at) VALUES (3, 'DON-2026-0003', 12, 3, 450000.00, 'MGA', 'PROJECT', 1, 'MONTHLY', 'Carte bancaire', 'CB-2026-3318', 'RECEIVED', '2026-08-19 00:00:00+03', NULL, '2026-09-16 12:22:06.899834+03', '2026-09-16 12:22:06.899834+03');
@@ -408,7 +278,6 @@ INSERT INTO public.donations (id, reference, donor_id, donor_account_id, amount,
 INSERT INTO public.donations (id, reference, donor_id, donor_account_id, amount, currency, allocation, project_id, frequency, payment_method, payment_reference, status, received_at, message, created_at, updated_at) VALUES (18, 'DON-2026-0018', 15, NULL, 1200000.00, 'MGA', 'HOPE', NULL, 'ONE_TIME', 'Virement international', NULL, 'RECEIVED', '2026-09-11 00:00:00+03', NULL, '2026-09-16 12:22:07.157574+03', '2026-09-16 12:22:07.157574+03');
 INSERT INTO public.donations (id, reference, donor_id, donor_account_id, amount, currency, allocation, project_id, frequency, payment_method, payment_reference, status, received_at, message, created_at, updated_at) VALUES (19, 'DON-2026-0019', 13, NULL, 200000.00, 'MGA', 'HOPE', NULL, 'MONTHLY', 'PayPal', NULL, 'RECEIVED', '2026-09-14 00:00:00+03', NULL, '2026-09-16 12:22:07.16684+03', '2026-09-16 12:22:07.16684+03');
 
--- ---------- expenses ----------
 INSERT INTO public.expenses (id, project_id, amount, currency, description, category, supplier, expense_date, status, created_at, updated_at) VALUES (1, 1, 300000.00, 'MGA', 'Achat de fournitures scolaires pour 25 enfants', 'Fournitures', 'Librairie Ambatonakanga', '2026-09-01', 'RECORDED', '2026-09-16 12:22:07.223074+03', '2026-09-16 12:22:07.223074+03');
 INSERT INTO public.expenses (id, project_id, amount, currency, description, category, supplier, expense_date, status, created_at, updated_at) VALUES (2, 1, 750000.00, 'MGA', 'Écolages du premier trimestre', 'Formation', 'EPP Andohalo', '2026-09-06', 'RECORDED', '2026-09-16 12:22:07.264554+03', '2026-09-16 12:22:07.264554+03');
 INSERT INTO public.expenses (id, project_id, amount, currency, description, category, supplier, expense_date, status, created_at, updated_at) VALUES (3, 2, 1200000.00, 'MGA', 'Commande de médicaments essentiels', 'Santé', 'Pharmacie Centrale de Toamasina', '2026-09-10', 'RECORDED', '2026-09-16 12:22:07.282359+03', '2026-09-16 12:22:07.282359+03');
@@ -416,13 +285,11 @@ INSERT INTO public.expenses (id, project_id, amount, currency, description, cate
 INSERT INTO public.expenses (id, project_id, amount, currency, description, category, supplier, expense_date, status, created_at, updated_at) VALUES (5, 5, 1600000.00, 'MGA', 'Forage du puits et pose de la pompe manuelle', 'Matériel', 'Entreprise Hydro Boeny', '2026-05-19', 'RECORDED', '2026-09-16 12:22:07.310733+03', '2026-09-16 12:22:07.310733+03');
 INSERT INTO public.expenses (id, project_id, amount, currency, description, category, supplier, expense_date, status, created_at, updated_at) VALUES (6, 5, 250000.00, 'MGA', 'Analyse de potabilité de l''eau et formation du comité de gestion', 'Formation', 'Laboratoire régional Mahajanga', '2026-06-08', 'RECORDED', '2026-09-16 12:22:07.329435+03', '2026-09-16 12:22:07.329435+03');
 
--- ---------- impacts ----------
 INSERT INTO public.impacts (id, project_id, objective_id, beneficiary_id, title, description, indicator, value, unit, measured_at, created_at, updated_at) VALUES (1, 5, NULL, NULL, 'Habitants desservis en eau potable', 'Relevé effectué avec le comité de quartier après la mise en service.', 'people_with_water_access', 400.00, 'personnes', '2026-08-17', '2026-09-16 12:22:07.635731+03', '2026-09-16 12:22:07.635731+03');
 INSERT INTO public.impacts (id, project_id, objective_id, beneficiary_id, title, description, indicator, value, unit, measured_at, created_at, updated_at) VALUES (2, 5, NULL, NULL, 'Comité de gestion formé', NULL, 'people_trained', 6.00, 'personnes', '2026-08-19', '2026-09-16 12:22:07.654935+03', '2026-09-16 12:22:07.654935+03');
 INSERT INTO public.impacts (id, project_id, objective_id, beneficiary_id, title, description, indicator, value, unit, measured_at, created_at, updated_at) VALUES (3, 1, NULL, NULL, 'Enfants ayant reçu un kit scolaire complet', NULL, 'kits_distributed', 25.00, 'kits', '2026-09-02', '2026-09-16 12:22:07.667442+03', '2026-09-16 12:22:07.667442+03');
 INSERT INTO public.impacts (id, project_id, objective_id, beneficiary_id, title, description, indicator, value, unit, measured_at, created_at, updated_at) VALUES (4, 2, NULL, NULL, 'Consultations médicales gratuites réalisées', NULL, 'medical_consultations', 340.00, 'consultations', '2026-09-13', '2026-09-16 12:22:07.682135+03', '2026-09-16 12:22:07.682135+03');
 
--- ---------- inscription_mission ----------
 INSERT INTO public.inscription_mission (id, mission_id, benevole_id, statut, inscrit_le, annule_le, motif_annulation, heures_validees, valide_par) VALUES ('4870b0a6-62ed-46d9-bf6c-ec194f9cba78', '79409460-fc4e-4906-8883-85b7d9fa445d', '2bd48e6a-4600-4cb0-8c6f-a839e963f27c', 'present', '2026-06-03 08:00:00+03', NULL, NULL, 6.0, 1);
 INSERT INTO public.inscription_mission (id, mission_id, benevole_id, statut, inscrit_le, annule_le, motif_annulation, heures_validees, valide_par) VALUES ('55c9bc20-1c06-476b-b84b-bcd9d61a612b', '79409460-fc4e-4906-8883-85b7d9fa445d', '6fd73ccb-be19-40ce-9395-0af1a55e2bcf', 'present', '2026-06-03 08:00:00+03', NULL, NULL, 5.5, 1);
 INSERT INTO public.inscription_mission (id, mission_id, benevole_id, statut, inscrit_le, annule_le, motif_annulation, heures_validees, valide_par) VALUES ('ce97f047-075b-477f-9e36-136e220575f9', '79409460-fc4e-4906-8883-85b7d9fa445d', '4a3d8e0a-4e16-4e32-91b1-91627fa3fb26', 'present', '2026-06-03 08:00:00+03', NULL, NULL, 7.0, 1);
@@ -457,12 +324,10 @@ INSERT INTO public.inscription_mission (id, mission_id, benevole_id, statut, ins
 INSERT INTO public.inscription_mission (id, mission_id, benevole_id, statut, inscrit_le, annule_le, motif_annulation, heures_validees, valide_par) VALUES ('23ea0948-b24f-49a2-8a46-a0d53143dd96', '759f006d-5d11-44c1-a2d7-58335c9702a3', '9f05003a-8add-47bf-9683-e08009e768f9', 'inscrit', '2026-09-16 12:22:11.846664+03', NULL, NULL, NULL, NULL);
 INSERT INTO public.inscription_mission (id, mission_id, benevole_id, statut, inscrit_le, annule_le, motif_annulation, heures_validees, valide_par) VALUES ('e59a1e0b-b06b-4afc-ba96-59018fbd72fa', '71035efd-e874-492c-807e-b60221389249', '2bd48e6a-4600-4cb0-8c6f-a839e963f27c', 'annule', '2026-09-16 12:22:11.848828+03', '2026-09-16 12:22:11.848828+03', 'Mission annulée par HOPE : piste impraticable après les pluies.', NULL, NULL);
 
--- ---------- investments ----------
 INSERT INTO public.investments (id, reference, project_id, amount, currency, justification, invested_at, created_at, updated_at) VALUES (1, 'INV-2026-0001', 2, 2500000.00, 'MGA', 'Achat des médicaments essentiels de la campagne de consultations. Aucun don affecté ne couvre ce projet à ce jour.', '2026-08-27', '2026-09-16 12:22:07.177466+03', '2026-09-16 12:22:07.177466+03');
 INSERT INTO public.investments (id, reference, project_id, amount, currency, justification, invested_at, created_at, updated_at) VALUES (2, 'INV-2026-0002', 1, 1200000.00, 'MGA', 'Complément pour couvrir le transport scolaire, non financé par les dons affectés reçus.', '2026-08-29', '2026-09-16 12:22:07.194642+03', '2026-09-16 12:22:07.194642+03');
 INSERT INTO public.investments (id, reference, project_id, amount, currency, justification, invested_at, created_at, updated_at) VALUES (3, 'INV-2026-0003', 4, 800000.00, 'MGA', 'Démarrage des jardins potagers avant la saison des pluies.', '2026-09-06', '2026-09-16 12:22:07.208831+03', '2026-09-16 12:22:07.208831+03');
 
--- ---------- publication ----------
 INSERT INTO public.publication (id, type, titre, corps, projet_id, media_url, cibles, montant_cible, publie_le, publie_par) VALUES ('31f265b1-eeb5-4b90-b998-0a677036552c', 'actualite', 'Rentrée scolaire : 100 enfants accompagnés à Antananarivo', 'Les écolages du premier trimestre sont réglés et les kits distribués. Les 100 enfants du programme ont fait leur rentrée.', 1, '/media/publication-1789550534268-91fc1cda2d5f580f8a0468e4a43fbe1d.jpg', '{bailleurs,donateurs}', NULL, '2026-09-04 00:00:00+03', 1);
 INSERT INTO public.publication (id, type, titre, corps, projet_id, media_url, cibles, montant_cible, publie_le, publie_par) VALUES ('cfa71fe3-a40d-5403-a43f-a04c01365f4b', 'actualite', 'Dix mères célibataires diplômées de l’atelier couture d’Antsirabe', 'Après six mois de formation, dix mères célibataires ont reçu leur attestation à Antsirabe. Chacune repart avec une machine à coudre et un premier carnet de commandes : uniformes scolaires, linge de maison, retouches.
 
@@ -482,7 +347,6 @@ Chaque ariary est suivi dans la plateforme : les donateurs retrouvent dans leur 
 INSERT INTO public.publication (id, type, titre, corps, projet_id, media_url, cibles, montant_cible, publie_le, publie_par) VALUES ('12f4b2ca-aead-4f53-82c0-a098e03f7c85', 'appel_financement', 'Appel à financement : cantines de Fianarantsoa', 'Il manque 2 640 000 Ar pour assurer un repas chaud par jour jusqu’à la fin de l’année scolaire dans quatre écoles.', 4, '/media/projet-1789550524672-f1c73c2d4dff831849634d8f939293f7.jpg', '{bailleurs,donateurs}', 4000000.00, '2026-09-10 00:00:00+03', 1);
 INSERT INTO public.publication (id, type, titre, corps, projet_id, media_url, cibles, montant_cible, publie_le, publie_par) VALUES ('38804208-1cdf-488b-9de7-c4f9c7303689', 'appel_financement', 'Appel à financement : autonomisation des mères célibataires', 'Le programme de formation à la couture cherche un partenaire pour couvrir les 4 920 000 Ar restants.', 3, '/media/projet-1789550524653-fc9791826940c01f359623100c0f0372.jpg', '{bailleurs,donateurs}', 6000000.00, '2026-09-13 00:00:00+03', 1);
 
--- ---------- message_utilisateur ----------
 INSERT INTO public.message_utilisateur (id, utilisateur_id, sujet, statut, cree_le, updated_at) VALUES (1, '6c9bc571-b64a-427c-860c-e34cd932c561', 'Détail de l’affectation du deuxième versement', 'repondu', '2026-09-15 10:00:00+03', '2026-09-15 14:00:00+03');
 INSERT INTO public.message_utilisateur (id, utilisateur_id, sujet, statut, cree_le, updated_at) VALUES (2, '6c9bc571-b64a-427c-860c-e34cd932c561', 'Visite de terrain en décembre', 'envoye', '2026-09-12 08:00:00+03', '2026-09-12 08:00:00+03');
 INSERT INTO public.message_utilisateur (id, utilisateur_id, sujet, statut, cree_le, updated_at) VALUES (3, '8690906a-68ba-4a25-b067-bb0668aae3a5', 'Détail de l’affectation du deuxième versement', 'repondu', '2026-09-15 10:00:00+03', '2026-09-15 14:00:00+03');
@@ -506,7 +370,6 @@ INSERT INTO public.message_utilisateur (id, utilisateur_id, sujet, statut, cree_
 INSERT INTO public.message_utilisateur (id, utilisateur_id, sujet, statut, cree_le, updated_at) VALUES (21, '7e051d7b-9731-4969-bf6d-a80a88970183', 'Attestation de bénévolat', 'repondu', '2026-09-02 08:00:00+03', '2026-09-02 12:00:00+03');
 INSERT INTO public.message_utilisateur (id, utilisateur_id, sujet, statut, cree_le, updated_at) VALUES (22, '7e051d7b-9731-4969-bf6d-a80a88970183', 'Matériel pour l’atelier couture', 'envoye', '2026-09-16 10:00:00+03', '2026-09-16 10:00:00+03');
 
--- ---------- message_entree ----------
 INSERT INTO public.message_entree (id, fil_id, auteur, corps, admin_id, lu, cree_le) VALUES (1, 1, 'utilisateur', 'Bonjour, pourriez-vous préciser la répartition du versement de septembre entre les quatre projets soutenus ? Notre conseil d’administration le demande.', NULL, true, '2026-09-15 10:00:00+03');
 INSERT INTO public.message_entree (id, fil_id, auteur, corps, admin_id, lu, cree_le) VALUES (2, 1, 'hope', 'Bonjour, la répartition figure désormais dans votre rapport trimestriel, section « Emploi des fonds ». En résumé : 43,9 % scolarité, 29,3 % soins, 26,8 % alimentation.', 1, false, '2026-09-15 14:00:00+03');
 INSERT INTO public.message_entree (id, fil_id, auteur, corps, admin_id, lu, cree_le) VALUES (3, 2, 'utilisateur', 'Nous souhaiterions visiter deux sites début décembre avec une délégation de trois personnes. Est-ce envisageable ?', NULL, false, '2026-09-12 08:00:00+03');
@@ -544,7 +407,6 @@ INSERT INTO public.message_entree (id, fil_id, auteur, corps, admin_id, lu, cree
 INSERT INTO public.message_entree (id, fil_id, auteur, corps, admin_id, lu, cree_le) VALUES (35, 21, 'hope', 'C’est fait, l’attestation part par courriel aujourd’hui. Elle reprend les heures validées de votre journal, arrêtées à hier.', 1, true, '2026-09-02 12:00:00+03');
 INSERT INTO public.message_entree (id, fil_id, auteur, corps, admin_id, lu, cree_le) VALUES (36, 22, 'utilisateur', 'Faut-il apporter sa propre machine pour l’atelier du mois prochain, ou HOPE en fournit ?', NULL, false, '2026-09-16 10:00:00+03');
 
--- ---------- messages ----------
 INSERT INTO public.messages (id, donor_account_id, subject, body, status, reply, replied_at, created_at, updated_at) VALUES (1, 1, 'Nouvelles du soutien scolaire', 'Bonjour,
 
 Pourrais-je recevoir des nouvelles des enfants du projet de soutien scolaire que je finance ? J''aimerais savoir combien ont pu faire leur rentrée.
@@ -568,7 +430,6 @@ Notre direction souhaite formaliser un partenariat sur trois ans avec HOPE. Pour
 Bien cordialement,
 Entreprise Tafita Mada', 'NEW', NULL, NULL, '2026-09-16 12:22:07.714416+03', '2026-09-16 12:22:07.714416+03');
 
--- ---------- notification_utilisateur ----------
 INSERT INTO public.notification_utilisateur (id, utilisateur_id, type, titre, corps, lien, lu, cree_le) VALUES (1, '6c9bc571-b64a-427c-860c-e34cd932c561', 'preuve', 'Trois preuves terrain publiées', 'Cantines scolaires de Fianarantsoa — photos du service de midi.', '/bailleur/preuves', false, '2026-09-16 07:00:00+03');
 INSERT INTO public.notification_utilisateur (id, utilisateur_id, type, titre, corps, lien, lu, cree_le) VALUES (2, '6c9bc571-b64a-427c-860c-e34cd932c561', 'rapport', 'Votre rapport trimestriel est disponible', 'Emploi des fonds au 30 septembre, avec le détail par projet.', '/bailleur/rapports', false, '2026-09-15 06:00:00+03');
 INSERT INTO public.notification_utilisateur (id, utilisateur_id, type, titre, corps, lien, lu, cree_le) VALUES (3, '6c9bc571-b64a-427c-860c-e34cd932c561', 'versement', 'Versement enregistré', 'La tranche de 5 000 000 Ar a été rapprochée de votre engagement.', '/bailleur/partenariat', true, '2026-09-13 10:00:00+03');
@@ -608,7 +469,6 @@ INSERT INTO public.notification_utilisateur (id, utilisateur_id, type, titre, co
 INSERT INTO public.notification_utilisateur (id, utilisateur_id, type, titre, corps, lien, lu, cree_le) VALUES (37, '7e051d7b-9731-4969-bf6d-a80a88970183', 'mission', 'Nouvelle mission près de chez vous', 'Création du jardin potager de l’école, à Fianarantsoa, dans seize jours.', '/benevole/missions', true, '2026-09-12 12:00:00+03');
 INSERT INTO public.notification_utilisateur (id, utilisateur_id, type, titre, corps, lien, lu, cree_le) VALUES (38, '7e051d7b-9731-4969-bf6d-a80a88970183', 'profil', 'Profil validé par HOPE', 'Vous avez désormais accès aux missions de terrain.', '/benevole/profil', true, '2026-09-06 12:00:00+03');
 
--- ---------- notifications ----------
 INSERT INTO public.notifications (id, type, label, donation_id, message_id, project_id, donor_id, is_read, created_at) VALUES (1, 'DONATION', 'Jean Rakotoarisoa a fait un don ponctuel de 1 000 000 MGA pour le projet « Soutien scolaire Antananarivo »', 1, NULL, 1, 1, false, '2026-09-16 12:22:06.672245+03');
 INSERT INTO public.notifications (id, type, label, donation_id, message_id, project_id, donor_id, is_read, created_at) VALUES (2, 'DONATION', 'Hery Andrianarison a fait un don ponctuel de 250 000 MGA pour le projet « Soutien scolaire Antananarivo »', 2, NULL, 1, 3, false, '2026-09-16 12:22:06.877195+03');
 INSERT INTO public.notifications (id, type, label, donation_id, message_id, project_id, donor_id, is_read, created_at) VALUES (3, 'DONATION', 'Marc Delaunay a fait un don mensuel de 450 000 MGA pour le projet « Soutien scolaire Antananarivo »', 3, NULL, 1, 12, false, '2026-09-16 12:22:06.899834+03');
@@ -636,7 +496,6 @@ INSERT INTO public.notifications (id, type, label, donation_id, message_id, proj
 INSERT INTO public.notifications (id, type, label, donation_id, message_id, project_id, donor_id, is_read, created_at) VALUES (25, 'MESSAGE', 'Marc Delaunay a envoyé un message : « Passer mon don mensuel à 600 000 Ar »', NULL, 3, NULL, 12, false, '2026-09-16 12:22:07.707737+03');
 INSERT INTO public.notifications (id, type, label, donation_id, message_id, project_id, donor_id, is_read, created_at) VALUES (26, 'MESSAGE', 'Entreprise Tafita Mada a envoyé un message : « Convention de mécénat 2027 »', NULL, 4, NULL, 8, false, '2026-09-16 12:22:07.714416+03');
 
--- ---------- project_beneficiaries ----------
 INSERT INTO public.project_beneficiaries (id, project_id, beneficiary_id, joined_at, left_at, status, notes, created_at, updated_at) VALUES (1, 1, 1, '2026-09-16', NULL, 'ACTIVE', NULL, '2026-09-16 12:22:07.363208+03', '2026-09-16 12:22:07.363208+03');
 INSERT INTO public.project_beneficiaries (id, project_id, beneficiary_id, joined_at, left_at, status, notes, created_at, updated_at) VALUES (2, 1, 2, '2026-09-16', NULL, 'ACTIVE', NULL, '2026-09-16 12:22:07.388678+03', '2026-09-16 12:22:07.388678+03');
 INSERT INTO public.project_beneficiaries (id, project_id, beneficiary_id, joined_at, left_at, status, notes, created_at, updated_at) VALUES (3, 1, 3, '2026-09-16', NULL, 'ACTIVE', NULL, '2026-09-16 12:22:07.413342+03', '2026-09-16 12:22:07.413342+03');
@@ -650,13 +509,11 @@ INSERT INTO public.project_beneficiaries (id, project_id, beneficiary_id, joined
 INSERT INTO public.project_beneficiaries (id, project_id, beneficiary_id, joined_at, left_at, status, notes, created_at, updated_at) VALUES (11, 5, 11, '2026-09-16', NULL, 'ACTIVE', NULL, '2026-09-16 12:22:07.597546+03', '2026-09-16 12:22:07.597546+03');
 INSERT INTO public.project_beneficiaries (id, project_id, beneficiary_id, joined_at, left_at, status, notes, created_at, updated_at) VALUES (12, 5, 12, '2026-09-16', NULL, 'ACTIVE', NULL, '2026-09-16 12:22:07.619585+03', '2026-09-16 12:22:07.619585+03');
 
--- ---------- supporting_documents ----------
 INSERT INTO public.supporting_documents (id, expense_id, admin_id, document_type, file_name, file_path, mime_type, file_size, reference, issued_at, created_at, updated_at) VALUES (1, 1, NULL, 'INVOICE', 'facture_fournitures.pdf', 'justificatif-1789550527242-9da4a24e98.pdf', 'application/pdf', 611, 'FAC-2026-118', '2026-09-06', '2026-09-16 12:22:07.250448+03', '2026-09-16 12:22:07.250448+03');
 INSERT INTO public.supporting_documents (id, expense_id, admin_id, document_type, file_name, file_path, mime_type, file_size, reference, issued_at, created_at, updated_at) VALUES (2, 2, NULL, 'RECEIPT', 'recu_ecolages_T1.pdf', 'justificatif-1789550527273-f6a9eda7b7.pdf', 'application/pdf', 613, 'REC-2026-042', '2026-09-06', '2026-09-16 12:22:07.278177+03', '2026-09-16 12:22:07.278177+03');
 INSERT INTO public.supporting_documents (id, expense_id, admin_id, document_type, file_name, file_path, mime_type, file_size, reference, issued_at, created_at, updated_at) VALUES (3, 3, NULL, 'INVOICE', 'facture_medicaments.pdf', 'justificatif-1789550527291-3a9272a33e.pdf', 'application/pdf', 601, 'BC-2026-77', '2026-09-06', '2026-09-16 12:22:07.296284+03', '2026-09-16 12:22:07.296284+03');
 INSERT INTO public.supporting_documents (id, expense_id, admin_id, document_type, file_name, file_path, mime_type, file_size, reference, issued_at, created_at, updated_at) VALUES (4, 5, NULL, 'INVOICE', 'facture_forage_puits.pdf', 'justificatif-1789550527320-94e348b1b1.pdf', 'application/pdf', 605, 'HB-2026-009', '2026-09-06', '2026-09-16 12:22:07.324965+03', '2026-09-16 12:22:07.324965+03');
 
--- ---------- tache ----------
 INSERT INTO public.tache (id, projet_id, titre, description, echeance, statut, benevole_id, prise_le, livree_le, validee_par, cree_le) VALUES ('590ce36c-0d06-4149-90ce-5fbcb8f85e8b', 1, 'Préparer 30 kits de fournitures', 'Composer les kits : cahiers, stylos, ardoise, règle. Liste fournie par la coordinatrice.', '2026-09-25', 'en_cours', '2bd48e6a-4600-4cb0-8c6f-a839e963f27c', '2026-09-16 12:22:11.876759+03', NULL, NULL, '2026-09-16 12:22:11.876759+03');
 INSERT INTO public.tache (id, projet_id, titre, description, echeance, statut, benevole_id, prise_le, livree_le, validee_par, cree_le) VALUES ('22aeee43-b1a9-4947-94cf-61dd35f4e035', 2, 'Vérifier les fiches de consultation saisies', 'Relire les 120 premières fiches saisies et signaler les écarts avec le papier.', '2026-09-30', 'en_cours', 'c8de6103-e666-4239-93a3-3157beef93e7', '2026-09-16 12:22:11.88462+03', NULL, NULL, '2026-09-16 12:22:11.88462+03');
 INSERT INTO public.tache (id, projet_id, titre, description, echeance, statut, benevole_id, prise_le, livree_le, validee_par, cree_le) VALUES ('327f0bbe-d969-45ef-ac22-5078492c2794', 4, 'Consolider le tableur des repas du trimestre', 'Réunir les quatre fichiers d’école en un seul, avec un total par mois et par site.', '2026-09-21', 'en_cours', 'c8de6103-e666-4239-93a3-3157beef93e7', '2026-09-16 12:22:11.887026+03', NULL, NULL, '2026-09-16 12:22:11.887026+03');
@@ -673,7 +530,6 @@ INSERT INTO public.tache (id, projet_id, titre, description, echeance, statut, b
 INSERT INTO public.tache (id, projet_id, titre, description, echeance, statut, benevole_id, prise_le, livree_le, validee_par, cree_le) VALUES ('cd967b0c-6356-4039-bdfe-d0b457109a5e', 3, 'Préparer le questionnaire de satisfaction', 'Dix questions maximum, en malgache, lisibles par une personne peu scolarisée.', '2026-10-12', 'a_faire', NULL, NULL, NULL, NULL, '2026-09-16 12:22:11.907104+03');
 INSERT INTO public.tache (id, projet_id, titre, description, echeance, statut, benevole_id, prise_le, livree_le, validee_par, cree_le) VALUES ('bc4446fe-cef0-4bc7-aac9-bd11255914e8', 1, 'Inventorier la bibliothèque de l’école', 'Compter les livres par niveau et signaler ceux qui sont hors d’usage.', '2026-10-16', 'a_faire', NULL, NULL, NULL, NULL, '2026-09-16 12:22:11.908454+03');
 
--- ---------- utilisateur_role ----------
 INSERT INTO public.utilisateur_role (utilisateur_id, role, attribue_le) VALUES ('e928bd96-148f-416d-9325-2d1f695e75f0', 'benevole', '2026-09-16 12:22:09.429896+03');
 INSERT INTO public.utilisateur_role (utilisateur_id, role, attribue_le) VALUES ('33ba81fe-28e2-4e84-a79e-342fcaee9e6f', 'benevole', '2026-09-16 12:22:09.887736+03');
 INSERT INTO public.utilisateur_role (utilisateur_id, role, attribue_le) VALUES ('052f522e-e3c4-472e-8495-e18a5a29e0c0', 'benevole', '2026-09-16 12:22:10.338638+03');
@@ -683,7 +539,6 @@ INSERT INTO public.utilisateur_role (utilisateur_id, role, attribue_le) VALUES (
 INSERT INTO public.utilisateur_role (utilisateur_id, role, attribue_le) VALUES ('6c9bc571-b64a-427c-860c-e34cd932c561', 'bailleur', '2026-09-16 12:22:13.603046+03');
 INSERT INTO public.utilisateur_role (utilisateur_id, role, attribue_le) VALUES ('8690906a-68ba-4a25-b067-bb0668aae3a5', 'bailleur', '2026-09-16 12:22:14.160774+03');
 
--- ---------- versement ----------
 INSERT INTO public.versement (id, engagement_id, numero_tranche, montant, devise, date_prevue, date_recue, moyen, reference_bancaire, justificatif_url, saisi_par, statut, cree_le) VALUES ('21bbf08b-0500-42a8-b659-977a64b8aeed', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', 1, 8000000.00, 'MGA', '2026-01-09', '2026-01-11', 'virement', 'VIR-AOI-88120', NULL, 1, 'recu', '2026-09-16 12:22:14.182991+03');
 INSERT INTO public.versement (id, engagement_id, numero_tranche, montant, devise, date_prevue, date_recue, moyen, reference_bancaire, justificatif_url, saisi_par, statut, cree_le) VALUES ('a19fdf8e-444d-40ee-ae05-5baed5ea9d21', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', 2, 6500000.00, 'MGA', '2026-06-18', '2026-06-20', 'virement', 'VIR-AOI-90455', NULL, 1, 'recu', '2026-09-16 12:22:14.199416+03');
 INSERT INTO public.versement (id, engagement_id, numero_tranche, montant, devise, date_prevue, date_recue, moyen, reference_bancaire, justificatif_url, saisi_par, statut, cree_le) VALUES ('ea4015ce-2292-4e43-98d4-3f3278a1d240', 'e4fc154b-6386-49ac-964c-cabc56bb8eaa', 3, 500000.00, 'MGA', '2026-10-26', NULL, NULL, NULL, NULL, 1, 'attendu', '2026-09-16 12:22:14.201669+03');
@@ -691,17 +546,6 @@ INSERT INTO public.versement (id, engagement_id, numero_tranche, montant, devise
 INSERT INTO public.versement (id, engagement_id, numero_tranche, montant, devise, date_prevue, date_recue, moyen, reference_bancaire, justificatif_url, saisi_par, statut, cree_le) VALUES ('eaab8a5d-cdd0-4618-88ed-8842ec1f32f9', 'ebffe653-f97b-4e32-9dca-b14306f19625', 2, 4500000.00, 'MGA', '2026-09-06', NULL, NULL, NULL, NULL, 1, 'en_retard', '2026-09-16 12:22:14.223023+03');
 INSERT INTO public.versement (id, engagement_id, numero_tranche, montant, devise, date_prevue, date_recue, moyen, reference_bancaire, justificatif_url, saisi_par, statut, cree_le) VALUES ('415dc296-ae4c-4688-8410-75aa3c6765bf', '944f119a-8c48-4614-bad7-e6b21d7d35db', 1, 6000000.00, 'MGA', '2025-12-20', '2025-12-25', 'virement', 'VIR-TLM-55210', NULL, 1, 'recu', '2026-09-16 12:22:14.230958+03');
 
--- ------------------------------------------------------------
--- Sequences
---
--- Les identifiants ci-dessus sont ecrits en clair. Sans ces
--- appels, la prochaine insertion faite par l'application
--- repartirait de un et heurterait une cle primaire deja prise.
---
--- PERFORM plutot que SELECT : setval renvoie une ligne, et
--- vingt-cinq tableaux de resultat noieraient la seule sortie qui
--- compte -- celle qui signale une erreur.
--- ------------------------------------------------------------
 DO $$
 BEGIN
   PERFORM pg_catalog.setval('public.activity_log_id_seq', 8, true);

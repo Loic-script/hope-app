@@ -5,7 +5,6 @@ import logoMvola from '../../assets/paiement/mvola.webp';
 import { MONTANTS_RAPIDES, numeroLisible, usePaiementMobile } from '../../hooks/usePaiementMobile.js';
 import * as fmt from '../../utils/format.js';
 
-/** MVola : un numero Yas (ex-Telma), 034 ou 038. */
 const MVOLA = {
   mode: 'mvola',
   numeroValide: /^3[48]\d{7}$/,
@@ -13,25 +12,6 @@ const MVOLA = {
   cleCompte: 'mvola',
 };
 
-/**
- * Le paiement par MVola, ouvert depuis l'etape 4 du parcours d'accueil.
- *
- * Trois temps, comme dans l'application MVola que le donateur a dans la
- * poche -- jaune, noir, des pastilles rondes :
- *
- *   1. le montant, et le numero MVola qui paiera ;
- *   2. l'envoi : le numero de HOPE a composer depuis #111#, puis la
- *      reference que MVola renvoie par SMS ;
- *   3. le merci, et la suite du parcours.
- *
- * Ce que la page ne fait PAS : debiter le telephone. L'API marchande de
- * MVola n'est pas encore branchee ; le donateur envoie lui-meme, et
- * l'equipe rapproche la reference de son releve avant de confirmer. La
- * page le dit sans detour : rien ne passe pour paye qui ne l'est pas.
- *
- * Aucun code secret n'est jamais demande ici : il ne se tape que dans
- * MVola.
- */
 export default function PaiementMvola() {
   const {
     profil,
@@ -65,7 +45,6 @@ export default function PaiementMvola() {
       <div className="mvola__halo" aria-hidden="true" />
 
       <main className="mvola__cadre">
-        {/* Sur ordinateur seulement : la colonne jaune qui resume le don. */}
         {profil && compte?.disponible && (
           <Resume
             indice={indice}
@@ -101,7 +80,6 @@ export default function PaiementMvola() {
           </span>
         </header>
 
-        {/* Ou l'on en est : la pilule noire avance, comme "A ne pas manquer". */}
         <ol className="mvola__pas" aria-label="Étapes du paiement">
           {['Montant', 'Envoi', 'Merci'].map((nom, i) => (
             <li
@@ -146,7 +124,6 @@ export default function PaiementMvola() {
           </section>
         )}
 
-        {/* ---------- 1. Le montant ---------- */}
         {profil && compte?.disponible && temps === 'montant' && (
           <section className="mvola__temps" key="montant">
             <h1 className="mvola__titre" ref={titre} tabIndex={-1}>
@@ -248,7 +225,6 @@ export default function PaiementMvola() {
           </section>
         )}
 
-        {/* ---------- 2. L'envoi ---------- */}
         {profil && compte?.disponible && temps === 'envoi' && (
           <section className="mvola__temps" key="envoi">
             <h1 className="mvola__titre" ref={titre} tabIndex={-1}>
@@ -256,7 +232,6 @@ export default function PaiementMvola() {
             </h1>
             <p className="mvola__texte">
               Depuis le <strong>{numeroLisible(`0${numero}`)}</strong>, en trois gestes.
-              {/* Le pied de page le redit : le telephone s'en passe ici. */}
               <span className="mvola__hors-telephone">
                 {' '}
                 Votre code secret ne se tape que dans MVola : HOPE ne vous le demandera jamais.
@@ -364,7 +339,6 @@ export default function PaiementMvola() {
           </section>
         )}
 
-        {/* ---------- 3. Merci ---------- */}
         {profil && temps === 'merci' && don && (
           <section className="mvola__temps mvola__temps--merci" key="merci">
             <div className="mvola__sceau" aria-hidden="true">
@@ -434,18 +408,12 @@ export default function PaiementMvola() {
   );
 }
 
-/** Les trois temps, tels que la colonne du resume les raconte. */
 const ETAPES = [
   { nom: 'Montant', texte: 'Ce que vous donnez, et depuis quel numéro.' },
   { nom: 'Envoi', texte: 'Depuis #111#, vers le numéro de HOPE.' },
   { nom: 'Merci', texte: 'L’équipe confirme dès réception.' },
 ];
 
-/**
- * La colonne jaune de l'ordinateur : les deux marques, les trois temps,
- * et le don tel qu'il se precise. Le telephone ne l'affiche pas -- il
- * a la pilule et la carte "solde", et pas de place a perdre.
- */
 function Resume({ indice, montant, beneficiaire, titulaire, numero }) {
   return (
     <aside className="mvola__cote" aria-label="Récapitulatif du don">
@@ -518,12 +486,6 @@ function Resume({ indice, montant, beneficiaire, titulaire, numero }) {
   );
 }
 
-/**
- * Une valeur a recopier dans MVola, et son bouton "Copier".
- *
- * Le presse-papiers peut etre refuse (page non securisee, navigateur
- * ancien) : le texte reste alors selectionnable a la main.
- */
 function Copiable({ libelle, valeur, affiche }) {
   const [copie, setCopie] = useState(false);
 
@@ -538,7 +500,6 @@ function Copiable({ libelle, valeur, affiche }) {
       await navigator.clipboard.writeText(valeur);
       setCopie(true);
     } catch {
-      /* le texte reste lisible et selectionnable */
     }
   }
 

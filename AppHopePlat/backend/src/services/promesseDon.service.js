@@ -1,20 +1,3 @@
-/**
- * La promesse de don, commune aux espaces donateur, bailleur et benevole.
- *
- * Un don fait depuis un espace est une PROMESSE : il part en statut
- * PENDING, l'equipe est prevenue dans sa cloche, et le passe a RECEIVED
- * quand l'argent arrive -- par le circuit deja en place cote
- * administration.
- *
- * Le don porte une fiche "donors", rattachee au compte par
- * utilisateur_id et creee au premier don. Chaque espace dit qui donne :
- * un donateur (sa fiche du parcours d'accueil), une organisation
- * partenaire (sa raison sociale), un benevole (son nom).
- *
- * Seul le donateur peut promettre un don mensuel : le bailleur finance
- * un projet, le benevole donne une fois -- tous deux choisissent leur
- * mode de paiement.
- */
 import { transaction } from '../config/database.js';
 import * as donationRepository from '../repositories/donation.repository.js';
 import * as donorSpaceRepository from '../repositories/donorSpace.repository.js';
@@ -25,10 +8,6 @@ import { identifiantRequis, texteFacultatif, valeurParmi } from '../shared/valid
 import { DEVISES, FREQUENCES, MODES_PAIEMENT, projetsProposes } from './donorProfile.service.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
-/**
- * La fiche "donors" de qui donne : celle de son compte, creee au premier
- * don ; ou celle que l'identite fournit elle-meme (don sans compte).
- */
 async function ficheDuDonateur(identite, client) {
   if (identite.ficheId) return identite.ficheId(client);
   const existante = await donorSpaceRepository.ficheDuCompte(identite.utilisateurId, client);
@@ -40,13 +19,11 @@ async function ficheDuDonateur(identite, client) {
   return creee.id;
 }
 
-/** Le don relu comme son auteur le lira : par son compte, ou par sa fiche. */
 function relireLeDon(identite, donId) {
   if (identite.relire) return identite.relire(donId);
   return donorSpaceRepository.unDeMesDons(identite.utilisateurId ?? identite.id, donId);
 }
 
-/** Les statuts d'un don, tels que les espaces les lisent. */
 export const STATUTS_DON = {
   PENDING: 'En attente',
   RECEIVED: 'Reçu',
@@ -54,15 +31,12 @@ export const STATUTS_DON = {
   REFUNDED: 'Remboursé',
 };
 
-/** Un don tel que les espaces le lisent. */
 export function presenter(don) {
   return { ...don, statutLibelle: STATUTS_DON[don.statut] ?? don.statut };
 }
 
-/** Le nom d'un pays, en francais, depuis son code ISO ("FR" -> "France"). */
 const NOMS_DE_PAYS = new Intl.DisplayNames(['fr'], { type: 'region' });
 
-/** Un pays en clair : un code ISO se traduit, un nom se garde. */
 export function nomDuPays(valeur) {
   const texte = String(valeur ?? '').trim();
   if (!texte) return 'Madagascar';
@@ -74,37 +48,15 @@ export function nomDuPays(valeur) {
   }
 }
 
-/** LOCAL a Madagascar, INTERNATIONAL ailleurs : la colonne donors.origin. */
 export function origineDuPays(valeur) {
   const texte = String(valeur ?? '').trim().toLowerCase();
   return !texte || texte === 'mg' || texte === 'madagascar' ? 'LOCAL' : 'INTERNATIONAL';
 }
 
-/** Ce que le formulaire propose : les modes de paiement et les devises. */
 export function options() {
   return { modesPaiement: MODES_PAIEMENT, devises: DEVISES };
 }
 
-/**
- * Promettre un don.
- *
- * Affecte a un projet que l'on peut encore soutenir -- en cours, et dont
- * l'objectif n'est pas atteint --, ou laisse a HOPE.
- *
- * @param {{ utilisateurId: string|null, qui: string, origine: string,
- *           nouvelleFiche?: (client) => Promise<object>,
- *           ficheId?: (client) => Promise<number>,
- *           relire?: (donId) => Promise<object> }} identite
- *   qui donne : son compte, son nom tel que l'equipe le lira, l'espace
- *   d'ou il donne ("bailleur Telma"), et de quoi creer sa fiche de don.
- *   Sans compte (le don depuis le site, donInvite.service), l'identite
- *   fournit elle-meme sa fiche (ficheId) et la relecture du don (relire).
- * @param {{ affectation, projetId?, montant, devise?, mode, frequence?, message? }} corps
- * @param {{ mensuelPermis?: boolean, enLigne?: boolean }} [reglages]
- *   enLigne : le don part se payer tout de suite par carte, chez Stripe.
- *   La promesse est la meme ; seule la cloche de l'equipe change -- rien
- *   n'est a rapprocher a la main, la confirmation viendra du paiement.
- */
 export async function promettreUnDon(
   identite,
   corps = {},
@@ -145,7 +97,6 @@ export async function promettreUnDon(
   const don = await transaction(async (client) => {
     const donorId = await ficheDuDonateur(identite, client);
 
-    // Une reference de transaction ne justifie qu'un seul don.
     if (paiement.reference && (await donationRepository.referencePaiementPrise(paiement.reference, client))) {
       throw new ErreurValidation('Cette référence de transaction a déjà été déclarée pour un autre don.', {
         referencePaiement: 'Référence déjà utilisée',
@@ -172,14 +123,6 @@ export async function promettreUnDon(
       client
     );
 
-    /*
-     * L'equipe l'apprend dans sa cloche : c'est elle qui confirme la
-     * reception, et la personne attend ce retour.
-     *
-     * Un paiement en ligne ne previent qu'une fois abouti (voir
-     * paiementCarte.service) : une carte abandonnee en chemin ne doit
-     * pas laisser dans la cloche une ligne a traiter.
-     */
     if (!enLigne) {
       await notificationRepository.creer(
         {
@@ -203,7 +146,6 @@ export async function promettreUnDon(
     return cree;
   });
 
-  // Le donateur recoit sa reference ; l'equipe, de quoi confirmer.
   if (!enLigne) {
     void courrielsAuto.promesseEnregistree(don.id);
     void courrielsAuto.promesseAConfirmer(don.id);
@@ -219,18 +161,11 @@ export async function promettreUnDon(
   };
 }
 
-/** Les numeros de chaque paiement mobile, sans le 0 : "341234567". */
 const OPERATEURS_MOBILES = {
   mvola: { numero: /^3[48]\d{7}$/, aide: 'Un numéro Yas (ex-Telma) : 034 ou 038' },
   orange_money: { numero: /^3[27]\d{7}$/, aide: 'Un numéro Orange : 032 ou 037' },
 };
 
-/**
- * Ce que le donateur declare de son paiement, quand il l'a deja fait :
- * la reference de la transaction (le SMS de l'operateur) et le numero qui a
- * paye. L'equipe les rapproche de son releve avant de confirmer -- ils
- * ne valent pas preuve a eux seuls.
- */
 function justificatif(corps, mode) {
   const reference = texteFacultatif(corps.referencePaiement, 'referencePaiement', { max: 40 });
   if (reference && !/^[A-Za-z0-9][A-Za-z0-9.-]{3,39}$/.test(reference)) {
@@ -255,7 +190,6 @@ function justificatif(corps, mode) {
   return { reference: reference ? reference.toUpperCase() : null, numero };
 }
 
-/** Les plateformes de transfert qu'un donateur peut nommer. */
 export const PLATEFORMES = {
   taptap_send: 'Taptap Send',
   remitly: 'Remitly',
@@ -271,15 +205,6 @@ export const PLATEFORMES = {
   revolut: 'Revolut',
 };
 
-/**
- * Ce que certains moyens precisent, pour l'equipe :
- *
- *   * plateforme : laquelle (PayPal, Western Union...) ;
- *   * especes : ou et quand le don sera remis -- au bureau, ou chez le
- *     donateur, a la date et au moment de la journee qu'il propose.
- *
- * Rend la phrase de la notification, ou null.
- */
 function precisionDuMoyen(corps, mode) {
   if (mode.cle === 'plateforme' && corps.plateforme !== undefined) {
     const nom = PLATEFORMES[corps.plateforme];
@@ -318,11 +243,6 @@ function precisionDuMoyen(corps, mode) {
   return null;
 }
 
-/**
- * Le donateur signale avoir paye une promesse : la reference de sa
- * banque (ou du bordereau, ou du transfert) s'ajoute au don, et
- * l'equipe l'apprend dans sa cloche. Une reference ne vaut qu'une fois.
- */
 export async function declarerJustificatif(compte, don, corps = {}) {
   const reference = texteFacultatif(corps.referencePaiement, 'referencePaiement', { max: 40 });
   if (!reference || !/^[A-Za-z0-9][A-Za-z0-9./ -]{3,39}$/.test(reference)) {
@@ -356,7 +276,6 @@ export async function declarerJustificatif(compte, don, corps = {}) {
   return { don: presenter(lu), message: 'Merci ! L’équipe HOPE rapproche votre paiement de son relevé.' };
 }
 
-/** Les reseaux de carte que la page reconnait. */
 const RESEAUX_CARTE = {
   visa: 'Visa',
   mastercard: 'Mastercard',
@@ -365,32 +284,14 @@ const RESEAUX_CARTE = {
   autre: 'bancaire',
 };
 
-/**
- * Le don par carte : ce qu'il faut a l'equipe pour envoyer un lien de
- * paiement securise -- l'adresse e-mail, le titulaire, l'adresse de
- * facturation.
- *
- * JAMAIS le numero de carte, la date d'expiration ni le cryptogramme :
- * la page les fait saisir, mais ils restent dans le navigateur, destines
- * au prestataire de paiement. Ici n'arrivent que le reseau et les quatre
- * derniers chiffres -- ce qu'imprime un recu --, et un numero complet est
- * refuse. Une carte ne transite pas par ce serveur, et n'est pas
- * conservee dans cette base.
- *
- * Rend la phrase que la notification de l'equipe portera, ou null.
- */
 function facturation(corps, mode, identite) {
   if (mode.cle !== 'carte_bancaire' || !corps.facturation) return null;
   const f = corps.facturation;
 
-  // Garde-fou : un numero de carte complet (13 a 19 chiffres) n'a rien a
-  // faire ici. On refuse, sans rien enregistrer ni recopier.
   if (/\d{13,19}/.test(JSON.stringify(f).replace(/[\s.-]/g, ''))) {
     throw new ErreurValidation('Un numéro de carte ne s’envoie jamais à HOPE.', { carte: 'Numéro refusé' });
   }
 
-  // Ce que la page transmet de la carte : son reseau et ses 4 derniers
-  // chiffres, comme un recu. Rien d'autre.
   let carte = '';
   if (f.carte) {
     const reseau = RESEAUX_CARTE[f.carte.marque];
@@ -420,7 +321,6 @@ function facturation(corps, mode, identite) {
   );
 }
 
-/** Qui donne, depuis l'espace bailleur : l'organisation, par son contact. */
 export function identiteBailleur(bailleur) {
   const contact = [bailleur.prenom, bailleur.nom].filter(Boolean).join(' ');
   return {
@@ -441,7 +341,6 @@ export function identiteBailleur(bailleur) {
   };
 }
 
-/** Qui donne, depuis l'espace benevole. */
 export function identiteBenevole(benevole) {
   return {
     utilisateurId: benevole.id,

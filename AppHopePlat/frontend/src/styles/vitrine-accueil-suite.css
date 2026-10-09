@@ -1,16 +1,9 @@
-/* ============================================================
-   Site vitrine, suite de l'accueil : realisations, actualites,
-   partenaires, contribuer (pages/vitrine/SectionsAccueil.jsx)
-   ============================================================ */
-
 .v-conteneur {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 32px;
 }
 
-/* Les elements d'une section entrent l'un apres l'autre quand elle
-   arrive a l'ecran (.v-apparu, pose par useApparition). */
 .v-entree {
   opacity: 0;
   transform: translateY(28px);
@@ -40,7 +33,6 @@
   text-align: left;
 }
 
-/* "Toutes nos ..." : contour et texte orange ; plein au survol, texte blanc. */
 .v-bouton-contour {
   display: inline-flex;
   align-items: center;
@@ -90,11 +82,6 @@
   stroke-linejoin: round;
 }
 
-/* ---------------------------- Nos realisations ---------------------------- */
-
-/* Le fond de la page d'authentification, a l'identique : le motif
-   officiel de soleils (theme.css), delave par le voile blanc et teinte
-   par le voile bleu, sur le bleu des panneaux. */
 .v-realisations {
   padding: clamp(56px, 7vw, 88px) 0 clamp(64px, 8vw, 96px);
   background-color: var(--hope-fond-panneau);
@@ -185,8 +172,6 @@
     transform: scale(1.07);
   }
 }
-
-/* ------------------------------ Les actualites ------------------------------ */
 
 .v-actualites {
   padding: clamp(56px, 7vw, 88px) 0;
@@ -308,7 +293,6 @@
   transform: translateY(-2px);
 }
 
-/* Les fleches, posees a cheval sur le bord des cartes, a mi-hauteur. */
 .v-carrousel__fleche {
   position: absolute;
   top: 50%;
@@ -358,13 +342,6 @@
   pointer-events: none;
 }
 
-/* -------------------------- Un ecran par section -------------------------- */
-
-/* Sur ordinateur, "Nos projets" et "Actualites" occupent chacune un
-   ecran (voir vitrine-accueil.css) : les marges se resserrent en vh et
-   la photo des cartes se limite en hauteur, pour que les trois cartes
-   restent entieres. Les pages de liste, qui reprennent .v-realisations,
-   ne sont pas concernees (.v-realisations--accueil). */
 @media (min-width: 1101px) {
   .v-realisations--accueil,
   .v-actualites {
@@ -376,8 +353,6 @@
     padding-block: clamp(32px, 5vh, 88px);
   }
 
-  /* En colonne flex, le conteneur centre par ses marges automatiques
-     garde sa pleine largeur. */
   .v-realisations--accueil > .v-conteneur,
   .v-actualites > .v-conteneur {
     width: 100%;
@@ -399,7 +374,6 @@
     max-height: clamp(110px, 21vh, 243px);
   }
 
-  /* Le corps des cartes respire un peu moins sur les ecrans bas. */
   .v-actualites .v-carrousel__piste {
     padding-bottom: clamp(10px, 2.7vh, 18px);
   }
@@ -413,8 +387,6 @@
   }
 }
 
-/* Fenetre vraiment basse (moins de 640 px) : l'extrait des actualites
-   tient en deux lignes et le bouton se tasse un peu. */
 @media (min-width: 1101px) and (max-height: 640px) {
   .v-actualites .v-actualite__texte {
     -webkit-line-clamp: 2;
@@ -425,8 +397,6 @@
   }
 }
 
-/* ----------------------------- Nos partenaires ----------------------------- */
-
 .v-partenaires {
   padding: clamp(48px, 6vw, 72px) 24px;
   background: #fff;
@@ -436,8 +406,6 @@
   font-size: clamp(24px, 3vw, 32px);
 }
 
-/* Quatre logos centres sur une ligne : chaque case a la meme largeur,
-   assez large pour le logo CanCham, le plus etendu. */
 .v-partenaires__liste {
   display: flex;
   flex-wrap: wrap;
@@ -456,7 +424,6 @@
   height: 84px;
 }
 
-/* La hauteur de chaque logo egalise leur surface (voir PARTENAIRES). */
 .v-partenaire img {
   display: block;
   width: auto;
@@ -471,8 +438,6 @@
     transform: scale(1.08);
   }
 }
-
-/* ------------------------------- Contribuer ------------------------------- */
 
 .v-contribuer {
   position: relative;
@@ -532,8 +497,6 @@
   font-weight: 800;
 }
 
-/* Le motif de la charte, comme sur la page d'authentification : le soleil
-   ouvre (coupole en haut), la barre bleue s'etire jusqu'au bout. */
 .v-contribuer__contenu {
   --soleil-contribuer: clamp(42px, 4vw, 54px);
 }
@@ -606,9 +569,6 @@
   background: var(--hope-violet-fonce);
 }
 
-/* ------------------------------ Petits ecrans ------------------------------ */
-
-/* Sur grand ecran, chaque ligne du titre tient sur une ligne. */
 @media (min-width: 1001px) {
   .v-contribuer__titre > span {
     white-space: nowrap;

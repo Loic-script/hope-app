@@ -10,24 +10,12 @@ import { EntetePage, Panneau, Pastille, TYPES_DOCUMENT } from './composants.jsx'
 import { STATUTS_PROJET } from './Projets.jsx';
 import FenetreRapportProjet from './RapportProjet.jsx';
 
-/** Les trois onglets demandes, sur le champ "type". */
 const ONGLETS = [
   { cle: 'rapport_impact', label: 'Rapports d’impact' },
   { cle: 'justificatif_financier', label: 'Justificatifs financiers' },
   { cle: 'tous', label: 'Tous' },
 ];
 
-/**
- * Rapports et justificatifs.
- *
- * Deux parties. En tete, le rapport a jour de chaque projet visible :
- * compose avec les donnees du jour, il existe sans que l'equipe ait eu
- * a l'envoyer. Dessous, les documents que HOPE a adresses au bailleur.
- *
- * Chaque telechargement d'un document recu est enregistre : HOPE sait
- * ainsi si ses rapports sont reellement lus. Le compteur affiche sur
- * chaque ligne est celui du bailleur, pas un total global.
- */
 export default function Rapports() {
   const [onglet, setOnglet] = useState('rapport_impact');
   const projets = useChargement(() => service.projets(), []);
@@ -41,19 +29,11 @@ export default function Rapports() {
   const [refus, setRefus] = useState('');
   const [message, setMessage] = useState('');
 
-  // Le document dont on regarde l'apercu. Le lire ne compte pas comme un
-  // telechargement : on vient justement voir avant de decider.
   const [apercu, setApercu] = useState(null);
 
   const items = donnees?.items ?? [];
   const compteurs = donnees?.counts ?? {};
 
-  /**
-   * Enregistre le telechargement puis ouvre le fichier.
-   *
-   * L'ordre compte : on n'ouvre qu'une fois le compteur incremente,
-   * sinon un refus cote serveur laisserait croire au succes.
-   */
   async function telecharger(document) {
     setEnvoi(true);
     setRefus('');
@@ -70,7 +50,6 @@ export default function Rapports() {
     }
   }
 
-  /** Le PDF du rapport a jour d'un projet, sans ouvrir la fenetre. */
   async function telechargerRapportProjet(projet) {
     setEnvoi(true);
     setRefus('');
@@ -239,9 +218,6 @@ export default function Rapports() {
                 </div>
 
                 <div className="document__actions">
-                  {/* Voir avant de telecharger : un rapport d'impact se
-                      parcourt d'abord, et le partenaire sait alors ce
-                      qu'il enregistre. */}
                   <button
                     type="button"
                     className="bouton-bailleur bouton-bailleur--discret"
@@ -264,12 +240,6 @@ export default function Rapports() {
         )}
       </Panneau>
 
-      {/*
-        * L'apercu montre le rapport lui-meme, sans ouvrir son PDF.
-        * Le compteur de lecture ne bouge qu'au telechargement : il sert a
-        * HOPE pour savoir si ses rapports sont vraiment lus, et un coup
-        * d'oeil n'est pas une lecture.
-        */}
       <Modale
         ouverte={Boolean(apercu)}
         titre={apercu?.titre ?? ''}
@@ -308,7 +278,6 @@ export default function Rapports() {
   );
 }
 
-/** Ce que rappelle l'apercu sous le titre : la nature et la periode. */
 function sousTitreApercu(document) {
   const morceaux = [TYPES_DOCUMENT[document.type] ?? document.type];
   if (document.periodeDebut && document.periodeFin) {

@@ -1,7 +1,3 @@
-/*
- * S'inscrire : le consentement exige, la session en cookie httpOnly,
- * l'adresse confirmee par le lien du courriel.
- */
 import { expect, test } from '@playwright/test';
 
 import { aucunJetonLisible, adresseUnique, dernierLien, inscrire, sansDebordement } from './outils.js';
@@ -10,12 +6,10 @@ test('inscription d un donateur, de la case de consentement a l adresse confirme
   const email = adresseUnique(testInfo, 'inscription');
   const motDePasse = 'inscription-2026';
 
-  // Sans la case : rien ne part.
   await inscrire(page, { email, motDePasse, consentement: false });
   await expect(page.locator('#erreur-consentement')).toBeVisible();
   await sansDebordement(page);
 
-  // Les textes s'ouvrent dans un nouvel onglet, sans perdre la saisie.
   const [onglet] = await Promise.all([
     context.waitForEvent('page'),
     page.locator('.consentement a', { hasText: 'politique de confidentialité' }).click(),
@@ -27,14 +21,12 @@ test('inscription d un donateur, de la case de consentement a l adresse confirme
   await page.locator('label.case-a-cocher--texte').click({ position: { x: 10, y: 10 } });
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
 
-  // Le donateur entre dans son parcours d'accueil.
   await expect(page).toHaveURL(/\/donateur\/completer-profil/, { timeout: 20_000 });
   const cookie = (await context.cookies()).find((c) => c.name === 'hope_donateur');
   expect(cookie?.httpOnly).toBe(true);
   expect(cookie?.sameSite).toBe('Strict');
   await aucunJetonLisible(page);
 
-  // Le lien du courriel confirme l'adresse, une seule fois.
   const jeton = await dernierLien(email, 'verifier-courriel');
   await page.goto(`/verifier-courriel?jeton=${jeton}`);
   await expect(page.locator('.note-acces--ok')).toContainText('confirmée');

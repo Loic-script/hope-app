@@ -1,57 +1,23 @@
-/**
- * Service de la messagerie.
- *
- * Il ne raisonne que sur un "acteur" -- { type: 'utilisateur' | 'admin',
- * id } -- etabli par le verrou de l'espace d'ou vient la demande, jamais
- * par le corps de la requete.
- *
- * Une regle domine toutes les autres : la participation seule donne
- * acces a un fil, a ses messages et a ses pieces. Un fil auquel on ne
- * participe pas repond "introuvable", et non "interdit" -- repondre
- * "interdit" confirmerait qu'il existe.
- */
 import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
 import * as pieceJointe from './pieceJointe.service.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 
-/** Longueur maximale d'un message. */
 export const CORPS_MAX = 4000;
 
-/** Libelles des roles de l'equipe, comme ailleurs dans l'administration. */
 const ROLES_EQUIPE = { ADMIN: 'Administrateur', COORDINATOR: 'Coordinateur', VIEWER: 'Lecture seule' };
 
-/** Libelles des roles d'utilisateur. */
 const ROLES = { bailleur: 'Bailleur', benevole: 'Bénévole', donateur: 'Donateur' };
 
-/** Le nom sous lequel l'equipe apparait a un utilisateur. */
 export const NOM_EQUIPE = 'Équipe HOPE';
 
-/* ================================================================
-   Outils
-   ================================================================ */
-
-/** Deux acteurs designent-ils la meme personne ? */
 export function memeActeur(a, b) {
   return Boolean(a && b) && a.type === b.type && String(a.id) === String(b.id);
 }
 
-/**
- * Un identifiant de base rendu en nombre.
- *
- * Les colonnes BIGSERIAL arrivent de pg sous forme de texte ("27") : le
- * client, qui les compare a Number(?t=), ne retrouverait jamais le fil.
- * Nos volumes restent tres loin de la limite des entiers surs.
- */
 const nombre = (valeur) => (valeur === null || valeur === undefined ? null : Number(valeur));
 
-/**
- * Les pieces d'un message, telles qu'un acteur les recoit.
- *
- * Chacune porte son adresse de lecture, signee pour cet acteur : une
- * adresse copiee et ouverte par quelqu'un d'autre ne mene nulle part.
- */
 const pieces = (liste, acteur) =>
   (liste ?? []).map((piece) => ({
     id: nombre(piece.id),
@@ -62,21 +28,14 @@ const pieces = (liste, acteur) =>
     url: acteur ? pieceJointe.adresseSignee('piece', piece.id, acteur) : null,
   }));
 
-/** Un identifiant de fil ou de message : entier positif, sinon introuvable. */
 function identifiant(valeur, quoi) {
   const nombre = Number(valeur);
   if (!Number.isSafeInteger(nombre) || nombre <= 0) throw new ErreurIntrouvable(quoi, valeur);
   return nombre;
 }
 
-/** Un UUID bien forme -- sans quoi PostgreSQL leverait une erreur de syntaxe. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Lit la designation d'une personne venue du client.
- *
- * @returns {{type: string, id: string|number}}
- */
 export function acteurValide(valeur, champ = 'cible') {
   const type = String(valeur?.type ?? '').trim();
   const id = String(valeur?.id ?? '').trim();
@@ -88,7 +47,6 @@ export function acteurValide(valeur, champ = 'cible') {
   throw new ErreurValidation('Destinataire invalide.', { [champ]: 'Valeur non acceptée' });
 }
 
-/** Verifie un texte de message. Vide accepte : les pieces peuvent suffire. */
 export function corpsValide(valeur) {
   const corps = String(valeur ?? '').replace(/\r\n/g, '\n').trim();
   if (corps.length > CORPS_MAX) {
@@ -99,7 +57,6 @@ export function corpsValide(valeur) {
   return corps;
 }
 
-/** Le sous-titre d'une personne : organisation · fonction, ou son role. */
 export function sousTitre(personne) {
   if (!personne) return '';
   if (personne.role === 'equipe') {
@@ -115,7 +72,6 @@ export function sousTitre(personne) {
   return ROLES[personne.role] ?? 'Membre';
 }
 
-/** Ce qu'une personne montre d'elle dans une liste. */
 function resume(personne) {
   return {
     type: personne.type,
@@ -130,13 +86,6 @@ function resume(personne) {
   };
 }
 
-/**
- * Comment un fil se presente a celui qui le regarde.
- *
- * - individuel : chacun voit l'autre personne ;
- * - assistance : l'utilisateur voit l'equipe, l'equipe voit l'utilisateur ;
- * - groupe : son nom et le nombre de participants.
- */
 export function presenter(fil, acteur) {
   const participants = fil.participants ?? [];
   const autres = participants.filter((p) => !memeActeur(p, acteur));
@@ -146,7 +95,6 @@ export function presenter(fil, acteur) {
       nom: fil.nom,
       sousTitre: `${participants.length} participant${participants.length > 1 ? 's' : ''}`,
       photoUrl: null,
-      // Une photo privee, comme les pieces : son adresse est signee.
       photoSrc: fil.photoFichier ? pieceJointe.adresseSignee('groupe', fil.id, acteur) : null,
       interlocuteur: null,
     };
@@ -170,7 +118,6 @@ export function presenter(fil, acteur) {
 
   const autre = autres[0];
   if (!autre) {
-    // L'autre personne a quitte ou son compte a disparu.
     return { nom: 'Compte supprimé', sousTitre: '', photoUrl: null, interlocuteur: null };
   }
   return {
@@ -181,7 +128,6 @@ export function presenter(fil, acteur) {
   };
 }
 
-/** Un message, tel que le client le recoit. */
 export function presenterMessage(message, acteur) {
   const supprime = Boolean(message.supprimeLe);
   return {
@@ -202,32 +148,17 @@ export function presenterMessage(message, acteur) {
   };
 }
 
-/** Les personnes que l'acteur peut joindre, en cles "type:id". */
 async function clesJoignables(acteur, client = null) {
   const personnes = await conversationRepository.joignables(acteur, client);
   return new Set(personnes.map((p) => `${p.type}:${p.id}`));
 }
 
-/**
- * Un fil a deux qui ne respecte plus les regles de l'espace : ouvert
- * avant elles, avec quelqu'un que cet espace ne joint pas (un donateur
- * face a un autre donateur, un bailleur face a un benevole...). Il
- * disparait de la liste et ne s'ouvre plus. L'assistance et les groupes
- * ne sont pas concernes ; l'equipe voit tout.
- */
 function horsRegle(acteur, fil, cles) {
   if (acteur.type !== 'utilisateur' || fil.type !== 'individuel' || fil.assistance) return false;
   const autre = (fil.participants ?? []).find((p) => !memeActeur(p, acteur));
   return Boolean(autre) && !cles.has(`${autre.type}:${autre.id}`);
 }
 
-/**
- * Charge un fil et verifie que l'acteur y participe, et que le fil
- * respecte les regles de son espace (horsRegle).
- *
- * La seule porte d'entree : toutes les actions sur un fil passent par
- * ici avant de toucher a quoi que ce soit.
- */
 export async function filAccessible(acteur, id, client = null) {
   const conversationId = identifiant(id, 'La conversation');
   const participe = await conversationRepository.estParticipant(acteur, conversationId, client);
@@ -241,20 +172,12 @@ export async function filAccessible(acteur, id, client = null) {
   return fil;
 }
 
-/** Le nom qu'un acteur signe : copie dans chaque message qu'il ecrit. */
 export async function nomDe(acteur, client = null) {
   const personne = await conversationRepository.personne(acteur, client);
   return personne?.nom ?? 'Compte supprimé';
 }
 
-/* ================================================================
-   Lecture
-   ================================================================ */
-
-/** Les fils de l'acteur, et le total de ses non-lus. */
 export async function lister(acteur) {
-  // L'equipe voit tous les fils d'assistance : elle y est inscrite ici si
-  // un compte d'administrateur a ete cree depuis.
   if (acteur.type === 'admin') await conversationRepository.rattacherEquipeAuxAssistances();
 
   const cles = acteur.type === 'utilisateur' ? await clesJoignables(acteur) : null;
@@ -281,13 +204,6 @@ export async function lister(acteur) {
   return { items, nonLus: items.reduce((total, fil) => total + fil.nonLus, 0) };
 }
 
-/**
- * Un fil et ses messages.
- *
- * L'ouvrir ne le marque PAS lu : c'est le navigateur qui le dit, une
- * fois le fil affiche. Un prechargement, ou un telephone qui choisit un
- * fil par defaut sans le montrer, ne doit rien marquer.
- */
 export async function recuperer(acteur, id) {
   const fil = await filAccessible(acteur, id);
   const [liste, luLe] = await Promise.all([
@@ -314,8 +230,6 @@ export async function recuperer(acteur, id) {
       })),
     },
     messages: liste.map((message) => presenterMessage(message, acteur)),
-    // Dans un fil d'assistance, l'utilisateur voit l'equipe : ses
-    // coordonnees sont celles de la configuration, si elle en donne.
     equipe:
       fil.assistance && acteur.type === 'utilisateur'
         ? {
@@ -328,12 +242,6 @@ export async function recuperer(acteur, id) {
   };
 }
 
-/**
- * Les fichiers partages d'un fil, du plus recent au plus ancien.
- *
- * Les pieces d'un message supprime n'existent plus : la table ne les
- * rend pas. Chaque piece porte son adresse signee pour cet acteur.
- */
 export async function fichiersPartages(acteur, id) {
   const fil = await filAccessible(acteur, id);
   const liste = await conversationRepository.piecesDuFil(fil.id);
@@ -351,12 +259,6 @@ export async function fichiersPartages(acteur, id) {
   };
 }
 
-/**
- * Marque un fil lu, jusqu'au dernier message affiche.
- *
- * Le message designe doit appartenir au fil : le depot l'impose, et un
- * identifiant etranger revient a "maintenant".
- */
 export async function marquerLu(acteur, id, corps = {}) {
   const fil = await filAccessible(acteur, id);
 
@@ -373,13 +275,11 @@ export async function marquerLu(acteur, id, corps = {}) {
   return { id: nombre(fil.id), total: reste.total, dernierFil: nombre(reste.dernierFil) };
 }
 
-/** Le total des non-lus et le fil du plus recent : la pastille et la notification. */
 export async function nonLus(acteur) {
   const { total, dernierFil } = await conversationRepository.nonLus(acteur, null, await filsHorsRegle(acteur));
   return { total, dernierFil: nombre(dernierFil) };
 }
 
-/** Les fils de l'acteur que son espace ne montre plus (horsRegle). */
 export async function filsHorsRegle(acteur) {
   if (acteur.type !== 'utilisateur') return [];
   const cles = await clesJoignables(acteur);
@@ -387,27 +287,17 @@ export async function filsHorsRegle(acteur) {
   return fils.filter((fil) => horsRegle(acteur, fil, cles)).map((fil) => fil.id);
 }
 
-/**
- * Les personnes joignables.
- *
- * Chacune dit si un echange individuel existe deja avec elle : la
- * recherche ne propose sous "Nouvelle conversation" que celles avec qui
- * rien n'existe encore.
- */
 export async function joignables(acteur) {
   const [personnes, fils] = await Promise.all([
     conversationRepository.joignables(acteur),
     conversationRepository.lister(acteur),
   ]);
 
-  // Qui a deja un fil a deux avec moi : l'autre d'un individuel, ou
-  // l'utilisateur d'un fil d'assistance vu depuis l'equipe.
   const dejaJoints = new Map();
   let filEquipe = null;
   for (const fil of fils) {
     if (fil.type !== 'individuel') continue;
     if (fil.assistance && acteur.type === 'utilisateur') {
-      // La liste est triee par activite : le premier est le plus recent.
       filEquipe ??= fil.id;
       continue;
     }
@@ -440,28 +330,11 @@ export async function joignables(acteur) {
   return { items };
 }
 
-/* ================================================================
-   Retrouver ou creer
-   ================================================================ */
-
-/**
- * Le fil avec une personne : retrouve, ou cree.
- *
- * - un utilisateur qui vise l'equipe, ou l'equipe qui vise un
- *   utilisateur : le fil d'assistance de cet utilisateur ;
- * - deux utilisateurs, ou deux membres de l'equipe : un fil individuel.
- *
- * Un verrou par paire met en file deux demandes simultanees : la seconde
- * trouve ce que la premiere a cree, au lieu d'en creer un double.
- *
- * @returns {Promise<{id: number, cree: boolean}>}
- */
 export async function filAvec(acteur, cible, client) {
   if (memeActeur(acteur, cible)) {
     throw new ErreurValidation('On ne s’écrit pas à soi-même.', { cible: 'Choisissez quelqu’un d’autre' });
   }
 
-  // L'assistance : un utilisateur face a l'equipe.
   const utilisateurDAssistance =
     acteur.type === 'utilisateur' && cible.type === 'equipe'
       ? acteur
@@ -484,13 +357,10 @@ export async function filAvec(acteur, cible, client) {
     const id = await conversationRepository.creerFil({ assistance: true }, client);
     const equipe = await conversationRepository.equipeActive(client);
     await conversationRepository.ajouterParticipants(id, [utilisateurDAssistance, ...equipe], null, client);
-    // Celui qui ouvre le fil depuis l'equipe y figure, meme s'il n'est pas
-    // compte parmi les actifs au moment precis de la creation.
     if (acteur.type === 'admin') await conversationRepository.ajouterParticipants(id, [acteur], null, client);
     return { id: nombre(id), cree: true };
   }
 
-  // Deux personnes du meme cote : un fil individuel.
   const cle = [`${acteur.type}:${acteur.id}`, `${cible.type}:${cible.id}`].sort().join('|');
   await conversationRepository.verrouiller(`individuel:${cle}`, client);
 
@@ -502,12 +372,6 @@ export async function filAvec(acteur, cible, client) {
   return { id: nombre(id), cree: true };
 }
 
-/**
- * La cible est-elle joignable par cet acteur ?
- *
- * Proposer une personne dans l'annuaire ne suffit pas : la requete peut
- * viser n'importe quel identifiant. On revérifie donc ici.
- */
 export async function verifierJoignable(acteur, cible, client = null) {
   if (cible.type === 'equipe') {
     if (acteur.type !== 'utilisateur') {
@@ -521,7 +385,6 @@ export async function verifierJoignable(acteur, cible, client = null) {
   if (!trouve) throw new ErreurIntrouvable('La personne', cible.id);
 }
 
-/** Ouvre le fil avec une personne, ou retrouve celui qui existe. */
 export async function ouvrir(acteur, corps = {}) {
   const cible = acteurValide(corps.cible);
   await verifierJoignable(acteur, cible);
@@ -529,24 +392,6 @@ export async function ouvrir(acteur, corps = {}) {
   return transaction((client) => filAvec(acteur, cible, client));
 }
 
-/* ================================================================
-   Ecriture
-   ================================================================ */
-
-/**
- * Envoie un message dans un fil dont on fait partie, pieces comprises.
- *
- * L'ordre compte :
- * 1. l'acces et le texte sont verifies ;
- * 2. toutes les pieces sont analysees et preparees, sans rien ecrire ;
- * 3. les fichiers sont ecrits ;
- * 4. le message et ses pieces entrent en base, d'un seul tenant.
- * Un refus aux etapes 1 et 2 ne laisse aucune trace ; un echec a l'etape
- * 4 efface les fichiers de l'etape 3.
- *
- * Ecrire vaut lecture : ce qu'on vient de dire, et tout ce qui precedait,
- * est lu par son auteur.
- */
 export async function envoyer(acteur, id, corps = {}, fichiers = []) {
   const fil = await filAccessible(acteur, id);
   const texte = corpsValide(corps.corps);
@@ -577,12 +422,6 @@ export async function envoyer(acteur, id, corps = {}, fichiers = []) {
   return presenterMessage(complet, acteur);
 }
 
-/**
- * Une piece jointe, pour la servir a un acteur.
- *
- * Tout refus -- piece inconnue, message supprime, acteur absent du fil --
- * repond "introuvable" : la reponse ne doit pas dire si le fichier existe.
- */
 export async function pieceLisible(acteur, pieceId) {
   const numero = Number(pieceId);
   if (!Number.isSafeInteger(numero) || numero <= 0) throw new ErreurIntrouvable('Le fichier', pieceId);
@@ -599,19 +438,8 @@ export async function pieceLisible(acteur, pieceId) {
   return piece;
 }
 
-/* ================================================================
-   Modifier, supprimer, transferer
-   ================================================================ */
-
-/** Nombre de destinations d'un transfert. */
 export const MAX_CIBLES_TRANSFERT = 10;
 
-/**
- * Charge un message d'un fil dont on fait partie.
- *
- * Le message doit appartenir au fil de l'adresse : sans ce controle, un
- * identifiant de message pris ailleurs passerait par un fil ou l'on est.
- */
 async function messageAccessible(acteur, filId, messageId) {
   const fil = await filAccessible(acteur, filId);
   const numero = Number(messageId);
@@ -624,22 +452,12 @@ async function messageAccessible(acteur, filId, messageId) {
   return { fil, message };
 }
 
-/** Seul l'auteur modifie ou supprime son message. */
 function exigerAuteur(acteur, message) {
   if (!memeActeur({ type: message.auteurType, id: message.auteurId }, acteur)) {
     throw new ErreurRegleMetier('Seul l’auteur peut modifier ou supprimer ce message.', 'PAS_AUTEUR');
   }
 }
 
-/**
- * Modifie le texte d'un message.
- *
- * - auteur seulement, et jamais un message supprime ;
- * - un message sans piece jointe ne peut pas etre vide : c'est une
- *   suppression, qui a son propre geste ;
- * - un texte inchange n'enregistre rien -- sans quoi "modifie"
- *   s'afficherait sur un message que personne n'a change.
- */
 export async function modifier(acteur, filId, messageId, corps = {}) {
   const { message } = await messageAccessible(acteur, filId, messageId);
   exigerAuteur(acteur, message);
@@ -661,14 +479,6 @@ export async function modifier(acteur, filId, messageId, corps = {}) {
   return presenterMessage(complet, acteur);
 }
 
-/**
- * Supprime un message, pour tous les participants.
- *
- * Suppression logique dans une transaction -- texte vide, date posee,
- * lignes de pieces retirees -- puis effacement des fichiers, une fois la
- * base a jour : un echec en cours de route ne laisse jamais une ligne
- * pointer vers un fichier deja efface.
- */
 export async function supprimer(acteur, filId, messageId) {
   const { message } = await messageAccessible(acteur, filId, messageId);
   exigerAuteur(acteur, message);
@@ -684,14 +494,6 @@ export async function supprimer(acteur, filId, messageId) {
   return presenterMessage(complet, acteur);
 }
 
-/**
- * Lit la liste des destinations d'un transfert.
- *
- * Deux formes : { type: 'fil', id } pour un fil existant, ou une personne
- * -- { type: 'utilisateur' | 'admin' | 'equipe', id }. Les doublons sont
- * retires ici ; ceux qui ne se revelent qu'une fois les fils resolus --
- * une personne et le fil qu'on a deja avec elle -- le seront plus loin.
- */
 function ciblesValides(valeur) {
   if (!Array.isArray(valeur) || valeur.length === 0) {
     throw new ErreurValidation('Choisissez au moins une destination.', { cibles: 'Au moins une' });
@@ -719,19 +521,6 @@ function ciblesValides(valeur) {
   return cibles;
 }
 
-/**
- * Transfere un message vers des fils ou des personnes.
- *
- * Tout est reverifie : la participation au fil source, un message non
- * supprime, la participation a chaque fil vise, et que chaque personne
- * visee soit joignable -- son fil individuel est retrouve, ou cree.
- *
- * Le message est recopie sous le nom de celui qui transfere, marque
- * "transfere", et ses pieces sont dupliquees sur le disque : supprimer
- * l'original ne doit pas vider la copie.
- *
- * @returns {Promise<{fils: number[]}>} les fils ou le message est arrive
- */
 export async function transferer(acteur, filId, messageId, corps = {}) {
   const { message } = await messageAccessible(acteur, filId, messageId);
   if (message.supprimeLe) {
@@ -739,7 +528,6 @@ export async function transferer(acteur, filId, messageId, corps = {}) {
   }
   const cibles = ciblesValides(corps.cibles);
 
-  // Verifications prealables, hors transaction : un refus ne cree rien.
   for (const cible of cibles) {
     if (cible.type === 'fil') {
       await filAccessible(acteur, cible.id);
@@ -754,7 +542,6 @@ export async function transferer(acteur, filId, messageId, corps = {}) {
 
   try {
     const fils = await transaction(async (client) => {
-      // Les fils de destination, dedoublonnes une fois resolus.
       const destinations = [];
       for (const cible of cibles) {
         const id = cible.type === 'fil' ? cible.id : (await filAvec(acteur, cible, client)).id;
@@ -779,7 +566,6 @@ export async function transferer(acteur, filId, messageId, corps = {}) {
           copiesEcrites.push(...dupliquees.map((piece) => piece.fichier));
           await conversationRepository.ajouterPieces(copie.id, dupliquees, client);
         }
-        // Transferer vaut lecture, pour celui qui transfere.
         await conversationRepository.marquerLu(acteur, destination, copie.id, client);
       }
       return destinations;
@@ -791,23 +577,10 @@ export async function transferer(acteur, filId, messageId, corps = {}) {
   }
 }
 
-/* ================================================================
-   Groupes
-   ================================================================ */
-
-/** Longueur maximale du nom d'un groupe. */
 export const NOM_GROUPE_MAX = 80;
 
-/** Nombre de participants d'un groupe, createur compris. */
 export const MAX_PARTICIPANTS = 50;
 
-/**
- * Lit une liste de participants venue du client.
- *
- * Elle arrive en JSON dans un formulaire multipart -- la photo voyage avec
- * elle --, ou directement en tableau. L'equipe en bloc n'est pas une
- * personne : elle ne se met pas dans un groupe.
- */
 function participantsValides(valeur) {
   let liste = valeur;
   if (typeof valeur === 'string') {
@@ -837,7 +610,6 @@ function participantsValides(valeur) {
   return acteurs;
 }
 
-/** Chaque personne doit etre joignable par l'acteur. */
 async function verifierTousJoignables(acteur, personnes) {
   const joignables = await conversationRepository.joignables(acteur);
   const cles = new Set(joignables.map((p) => `${p.type}:${p.id}`));
@@ -846,15 +618,6 @@ async function verifierTousJoignables(acteur, personnes) {
   }
 }
 
-/**
- * Cree un groupe.
- *
- * Un nom (80 caracteres au plus), une photo facultative, au moins une autre
- * personne et 50 participants au plus, createur compris. Le createur y
- * arrive a jour : son propre groupe n'a rien de non lu pour lui.
- *
- * @returns {Promise<{id: number}>}
- */
 export async function creerGroupe(acteur, corps = {}, photo = null) {
   const nom = String(corps.nom ?? '').replace(/\s+/g, ' ').trim();
   if (nom === '') throw new ErreurValidation('Donnez un nom au groupe.', { nom: 'Champ obligatoire' });
@@ -871,7 +634,6 @@ export async function creerGroupe(acteur, corps = {}, photo = null) {
   }
   await verifierTousJoignables(acteur, autres);
 
-  // La photo est preparee avant toute ecriture ; un refus ne cree rien.
   const photoPrete = photo ? await pieceJointe.preparerPhotoGroupe(photo) : null;
   const [photoEcrite] = photoPrete
     ? await pieceJointe.ecrire([{ nomOrigine: 'photo.jpg', type: 'image', typeMime: 'image/jpeg', extension: '.jpg', contenu: photoPrete.contenu }])
@@ -894,7 +656,6 @@ export async function creerGroupe(acteur, corps = {}, photo = null) {
   }
 }
 
-/** Charge un groupe dont l'acteur fait partie. */
 async function groupeAccessible(acteur, id) {
   const fil = await filAccessible(acteur, id);
   if (fil.type !== 'groupe') {
@@ -903,14 +664,6 @@ async function groupeAccessible(acteur, id) {
   return fil;
 }
 
-/**
- * Ajoute des participants a un groupe.
- *
- * Reserve aux participants du groupe. Ceux qui y sont deja sont ignores ;
- * le plafond compte ceux qui restent a ajouter.
- *
- * @returns {Promise<{ajoutes: number}>}
- */
 export async function ajouterAuGroupe(acteur, id, corps = {}) {
   const fil = await groupeAccessible(acteur, id);
   const presents = new Set((fil.participants ?? []).map((p) => `${p.type}:${p.id}`));
@@ -931,15 +684,6 @@ export async function ajouterAuGroupe(acteur, id, corps = {}) {
   return { ajoutes };
 }
 
-/**
- * Quitte un groupe.
- *
- * Les messages de la personne restent : ce qu'elle a dit fait partie de
- * la conversation des autres. Si plus personne ne participe, le groupe
- * disparait, avec ses messages et ses fichiers.
- *
- * @returns {Promise<{supprime: boolean}>}
- */
 export async function quitterGroupe(acteur, id) {
   const fil = await groupeAccessible(acteur, id);
 
@@ -953,31 +697,12 @@ export async function quitterGroupe(acteur, id) {
   return { supprime: reste === 0 };
 }
 
-/** La photo d'un groupe, pour un acteur qui y participe. */
 export async function photoDeGroupe(acteur, id) {
   const fil = await filAccessible(acteur, id);
   if (fil.type !== 'groupe' || !fil.photoFichier) throw new ErreurIntrouvable('La photo', id);
   return fil.photoFichier;
 }
 
-/* ================================================================
-   Depuis une fiche
-   ================================================================ */
-
-/**
- * Ouvre le fil avec une personne ou une organisation, depuis sa fiche.
- *
- * - une personne : son fil, retrouve ou cree ;
- * - une organisation : on cherche d'abord un fil existant avec l'une de
- *   ses personnes -- ecrire a la fondation doit reprendre la conversation
- *   deja en cours avec l'un de ses contacts --, et a defaut on le cree
- *   avec son contact principal.
- *
- * Tout se passe sous un verrou : deux clics rapides sur le bouton, meme
- * partis ensemble, ne creent qu'un fil.
- *
- * @returns {Promise<{id: number, cree: boolean}>}
- */
 export async function depuisFiche(acteur, corps = {}) {
   if (corps.personne) {
     const cible = acteurValide(corps.personne, 'personne');
@@ -1009,7 +734,6 @@ export async function depuisFiche(acteur, corps = {}) {
       }
     }
 
-    // Les contacts sont tries, le principal en tete.
     return filAvec(acteur, contacts[0].acteur, client);
   });
 }

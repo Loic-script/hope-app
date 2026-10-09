@@ -1,23 +1,3 @@
-/**
- * Le medaillon des sections du site : un anneau jaune sur un disque
- * blanc, l'icone au centre, et le soleil autour. Deux variantes,
- * relevees sur les maquettes, l'anneau exterieur (R = 28,5) pris pour
- * unite :
- *   - `couronne` (raison d'etre, vision) : anneau de 0,155 R, huit traits
- *     tous les 30 degres de 1,26 a 1,67 R, le quart bas-droit libre du
- *     cote de la carte ;
- *   - `rayons` (mission) : anneau de 0,126 R, trois rayons de 1,2 a 2 R
- *     larges de 0,3 R, le boitier grandi vers le haut pour les contenir.
- *
- * Le disque blanc va jusqu'au depart des traits (1,26 R) : pose sur une
- * carte, il en creuse le coin ; pose sur la ligne de la mission, il
- * l'interrompt.
- *
- * L'icone est soit un dessin (children, reduit par `echelle`), soit un
- * fichier fourni par HOPE (`image` : { src, largeur, hauteur }).
- *
- * Les styles (.v-medaillon) sont dans vitrine-decouvrir.css.
- */
 export default function Medaillon({ children, image = null, variante = 'couronne', echelle = 1, className = '' }) {
   const rayons = variante === 'rayons';
   return (

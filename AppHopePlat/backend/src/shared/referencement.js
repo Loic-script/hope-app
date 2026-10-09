@@ -1,15 +1,3 @@
-/**
- * Le referencement du site vitrine : robots.txt et sitemap.xml.
- *
- * Les moteurs de recherche ne doivent lire que les pages publiques : le
- * site vitrine et les textes legaux. Les espaces (administration,
- * donateur, benevole, bailleur) et l'API leur sont fermes.
- *
- * Les adresses du plan du site doivent etre absolues : elles partent de
- * HOPE_SITE_URL, l'adresse publique du site.
- */
-
-/** Les pages publiques, dans l'ordre d'importance. */
 export const PAGES_PUBLIQUES = [
   { chemin: '/', priorite: '1.0', frequence: 'weekly' },
   { chemin: '/nous-decouvrir', priorite: '0.8', frequence: 'monthly' },
@@ -21,15 +9,12 @@ export const PAGES_PUBLIQUES = [
   { chemin: '/conditions-utilisation', priorite: '0.3', frequence: 'yearly' },
 ];
 
-/** Ce qui n'a rien a faire dans un moteur de recherche. */
 const FERMES = ['/api/', '/media/', '/admin', '/donateur', '/benevole', '/bailleur', '/espaces', '/authentification'];
 
-/** L'adresse du site, sans barre finale. */
 function base(siteUrl) {
   return String(siteUrl ?? '').replace(/\/+$/, '');
 }
 
-/** robots.txt : les pages publiques ouvertes, les espaces fermes, le plan du site. */
 export function robotsTxt(siteUrl) {
   return [
     'User-agent: *',
@@ -41,7 +26,6 @@ export function robotsTxt(siteUrl) {
   ].join('\n');
 }
 
-/** La page de chaque projet du site, datee de sa derniere mise a jour. */
 export function pagesDesProjets(projets = []) {
   return projets.map((projet) => ({
     chemin: `/nos-projets/${projet.id}`,
@@ -51,7 +35,6 @@ export function pagesDesProjets(projets = []) {
   }));
 }
 
-/** La page de chaque actualite du site, datee de sa publication. */
 export function pagesDesActualites(actualites = []) {
   return actualites.map((actualite) => ({
     chemin: `/actualites/${actualite.id}`,
@@ -61,7 +44,6 @@ export function pagesDesActualites(actualites = []) {
   }));
 }
 
-/** sitemap.xml : les pages publiques, puis celles fournies (projets, actualites), en adresses absolues. */
 export function sitemapXml(siteUrl, pagesEnPlus = []) {
   const racine = base(siteUrl);
   const entrees = [...PAGES_PUBLIQUES, ...pagesEnPlus].map(

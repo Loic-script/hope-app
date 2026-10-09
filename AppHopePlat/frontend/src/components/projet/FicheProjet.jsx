@@ -9,32 +9,6 @@ import * as fmt from '../../utils/format.js';
 
 const ONGLETS = ['general', 'financement', 'impact'];
 
-/**
- * La fiche d'un projet hors de l'administration, commune aux espaces
- * bailleur et donateur.
- *
- * La tete du projet -- sa photo, son nom, son lieu -- puis trois onglets :
- *   - Vue generale : ce qu'il est, ce qu'il vise, pour qui, qui le mene,
- *     et ou en sont ses actions ;
- *   - Financement : le budget, ce qui est investi, depense, disponible,
- *     d'ou vient l'argent -- en totaux, jamais un nom -- et, a part, ce
- *     que la personne y a mis ("votrePart") ;
- *   - Impact : les totaux mesures, l'impact general et les mesures par
- *     objectif, comme dans la fiche du projet de l'administration.
- *
- * Chaque espace y pose ses pastilles (statut, "Vous financez") et son
- * action (lire le rapport, faire un don).
- *
- * La page reprend la mise en page de la fiche projet de l'espace
- * benevole (classes "projet-benevole") : tous les espaces lisent un
- * projet de la meme facon, chacun avec ce qui le regarde.
- *
- * L'onglet ouvert se lit dans l'adresse (?onglet=financement).
- *
- * @param {{ donnees: object, lienRetour: string, libelleRetour: string,
- *           pastilles?: React.ReactNode, action?: React.ReactNode,
- *           votrePart?: { libelle: string, montant: string, note?: string } | null }} proprietes
- */
 export default function FicheProjet({ donnees, lienRetour, libelleRetour, pastilles, action, votrePart = null }) {
   const [parametres, setParametres] = useSearchParams();
   const onglet = ONGLETS.includes(parametres.get('onglet')) ? parametres.get('onglet') : 'general';
@@ -52,7 +26,6 @@ export default function FicheProjet({ donnees, lienRetour, libelleRetour, pastil
         <Link to={lienRetour}>← {libelleRetour}</Link>
       </p>
 
-      {/* ---------- La tete du projet ---------- */}
       <section className="tete-projet">
         {projet.mediaUrl && (
           <div className="tete-projet__image">
@@ -128,7 +101,6 @@ export default function FicheProjet({ donnees, lienRetour, libelleRetour, pastil
   );
 }
 
-/** Ce qu'est le projet, et ou en sont ses actions. */
 function OngletGeneral({ projet, avancement }) {
   const total = avancement.realisees + avancement.enCours + avancement.aVenir;
 
@@ -174,7 +146,6 @@ function OngletGeneral({ projet, avancement }) {
         )}
       </section>
 
-      {/* Les actions du projet : des comptes, et les dernieres realisees. */}
       <section className="bloc">
         <div className="bloc__entete">
           <h2 className="bloc__titre">Avancement des actions</h2>
@@ -218,14 +189,6 @@ function OngletGeneral({ projet, avancement }) {
   );
 }
 
-/**
- * Le financement du projet.
- *
- * La "somme investie" est celle de la fiche projet et du rapport : dons
- * recus et fonds de HOPE. Les affectations des partenaires sont comptees
- * a part -- le libelle le dit, sans quoi un partenaire lirait sa propre
- * affectation absente de la somme investie.
- */
 function OngletFinancement({ projet, finance, depenses, votrePart }) {
   const devise = projet.currency ?? 'MGA';
   const reste = Number(finance.remainingNeed) || 0;
@@ -252,8 +215,6 @@ function OngletFinancement({ projet, finance, depenses, votrePart }) {
         />
       </div>
 
-      {/* Ce que la personne y a mis, a part : l'affectation d'un bailleur,
-          les dons d'un donateur. */}
       {votrePart && (
         <section className="bloc fiche-projet__votre-part">
           <p className="fiche-projet__votre-part-libelle">{votrePart.libelle}</p>
@@ -307,14 +268,6 @@ function OngletFinancement({ projet, finance, depenses, votrePart }) {
   );
 }
 
-/**
- * L'impact du projet, comme dans la fiche de l'administration : les
- * totaux mesures, l'impact general en phrases, les mesures objectif par
- * objectif. Seules les mesures collectives arrivent ici.
- *
- * Exporte : la fiche projet de l'espace bailleur, qui a sa propre mise
- * en page, montre le meme onglet Impact.
- */
 export function OngletImpact({ impacts, synthese, indicateurs }) {
   const generaux = impacts.filter((impact) => !impact.objectiveId);
   const parObjectif = impacts.filter((impact) => impact.objectiveId);
@@ -410,7 +363,6 @@ export function OngletImpact({ impacts, synthese, indicateurs }) {
   );
 }
 
-/** Un chiffre du financement : sa valeur, et ce qu'elle represente. */
 function CarteChiffre({ libelle, valeur, note }) {
   return (
     <div className="carte-chiffre">

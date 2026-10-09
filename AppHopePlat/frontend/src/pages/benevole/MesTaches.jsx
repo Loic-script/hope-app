@@ -9,10 +9,6 @@ import { LIBELLES_PRIORITE } from '../../utils/priorites.js';
 import { ActionDemande } from './composants.jsx';
 import { DetailTacheModale, FormulaireLivraison } from './ModalesTache.jsx';
 
-/**
- * Les trois colonnes, dans l'ordre ou une tache les traverse : on la
- * demande, on la fait, on la livre. Chacune a sa couleur.
- */
 const COLONNES = [
   {
     cle: 'prendre',
@@ -34,16 +30,6 @@ const COLONNES = [
   },
 ];
 
-/**
- * Mes taches, en trois colonnes : a prendre, en cours, livree.
- *
- * Une carte ne dit que l'essentiel -- le nom de la tache, sa priorite, et
- * ce qu'on peut y faire. Tout le reste (projet, consignes, experience
- * requise, equipe, date de fin) est dans la fenetre qu'ouvre un clic sur
- * la carte, quelle que soit la colonne : les boutons y sont repris.
- *
- * Sur telephone, les colonnes deviennent des onglets : une a la fois.
- */
 export default function MesTaches() {
   const miennes = useChargement(() => service.mesTaches(), []);
   const libres = useChargement(() => service.tachesLibres(), []);
@@ -51,14 +37,11 @@ export default function MesTaches() {
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
 
-  // La tache ouverte (sa colonne, et si sa livraison est depliee), la preuve.
   const [ouverte, setOuverte] = useState(null);
   const [livraisonEnvoi, setLivraisonEnvoi] = useState(false);
   const [preuve, setPreuve] = useState(null);
-  // Sur telephone : la colonne affichee.
   const [vue, setVue] = useState(null);
 
-  /** @returns {Promise<boolean>} vrai si l'action a abouti */
   async function agir(action) {
     setEnvoi(true);
     setRefus('');
@@ -82,20 +65,12 @@ export default function MesTaches() {
     livree: taches.filter((t) => t.statut === 'livree'),
   };
 
-  // Sur telephone, on ouvre sur ce qui est en cours, sinon sur ce qui
-  // reste a prendre.
   useEffect(() => {
     if (vue || !miennes.donnees || !libres.donnees) return;
     setVue(parColonne.cours.length > 0 ? 'cours' : 'prendre');
-    // Une fois les deux listes arrivees.
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [miennes.donnees, libres.donnees]);
 
-  /**
-   * Les boutons d'une tache selon sa colonne. Les memes sur la carte et
-   * dans la fenetre ; seule leur taille change.
-   */
   function actionsDe(colonne, tache, dansFenetre = false) {
     const principal = dansFenetre ? 'btn btn--principal' : 'btn btn--principal btn--petit';
     const neutre = dansFenetre ? 'btn btn--neutre' : 'btn btn--neutre btn--petit';
@@ -118,8 +93,6 @@ export default function MesTaches() {
     }
 
     if (colonne === 'cours') {
-      // Dans la fenetre, une fois la livraison depliee en bas, le bouton
-      // s'efface : c'est la livraison qui porte l'action.
       const livraisonOuverte = dansFenetre && ouverte?.livrer;
       return (
         <>
@@ -147,7 +120,6 @@ export default function MesTaches() {
       );
     }
 
-    // Livree : la preuve, si elle existe (les plus anciennes n'en ont pas).
     return (
       <>
         {dansFenetre && (
@@ -179,7 +151,6 @@ export default function MesTaches() {
       {refus && <p className="alerte-benevole">{refus}</p>}
       {miennes.erreur && <p className="alerte-benevole">{miennes.erreur}</p>}
 
-      {/* Sur telephone : une colonne a la fois. */}
       <div className="onglets-taches" role="tablist" aria-label="Colonnes">
         {COLONNES.map((c) => (
           <button
@@ -249,7 +220,6 @@ export default function MesTaches() {
         <DetailTacheModale
           tache={ouverte.tache}
           envoi={envoi || livraisonEnvoi}
-          // Pendant un televersement, fermer l'abandonnerait.
           onFermer={() => !livraisonEnvoi && setOuverte(null)}
           actions={actionsDe(ouverte.colonne, ouverte.tache, true)}
           livraison={
@@ -281,13 +251,6 @@ export default function MesTaches() {
   );
 }
 
-/**
- * Une tache en carte : son nom, sa priorite, ses boutons. Rien d'autre.
- *
- * Toute la carte s'ouvre au clic : le nom est un bouton dont la zone
- * s'etire sur la carte entiere. Les boutons passent au-dessus et gardent
- * leur propre clic -- "Quitter" ne doit pas ouvrir la fenetre au passage.
- */
 function CarteTache({ tache, actions, onOuvrir, choisie = false }) {
   const priorite = tache.priorite ?? 'moyenne';
   return (
@@ -316,7 +279,6 @@ function CarteTache({ tache, actions, onOuvrir, choisie = false }) {
   );
 }
 
-/** Le petit dessin d'une colonne vide. */
 function IconeVide({ colonne }) {
   const traits = {
     prendre: <path d="M12 5v14M5 12h14" />,

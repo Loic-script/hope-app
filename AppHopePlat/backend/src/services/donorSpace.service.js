@@ -1,15 +1,3 @@
-/**
- * L'espace donateur : ses dons, un nouveau don, le fil d'actualite, les
- * projets, et sa photo de profil.
- *
- * Le parcours d'accueil (donorProfile.service) tient la fiche et les
- * preferences ; ce fichier tient ce que le donateur fait une fois chez lui.
- *
- * Un don fait ici est une PROMESSE (promesseDon.service, commun aux
- * espaces) : il part en statut PENDING, et l'equipe le passe a RECEIVED
- * quand l'argent arrive. Seuls les dons recus comptent dans les totaux ;
- * une promesse se lit a part, "en attente".
- */
 import { config } from '../config/env.js';
 import * as donorProfileRepository from '../repositories/donorProfile.repository.js';
 import * as donorSpaceRepository from '../repositories/donorSpace.repository.js';
@@ -27,11 +15,6 @@ import {
   promettreUnDon,
 } from './promesseDon.service.js';
 
-/**
- * Les totaux du donateur, par devise : un don en euros ne s'additionne
- * pas a un don en ariary. Seuls les dons recus comptent ; les promesses
- * se comptent a part.
- */
 function synthese(dons) {
   const parDevise = new Map();
   for (const don of dons) {
@@ -42,7 +25,6 @@ function synthese(dons) {
   }
 
   const recus = dons.filter((d) => d.statut === 'RECEIVED');
-  // Des dates ISO : triees comme du texte, elles le sont dans le temps.
   const dates = recus
     .map((d) => d.recuLe)
     .filter(Boolean)
@@ -65,22 +47,15 @@ function synthese(dons) {
   };
 }
 
-/** GET /api/donateur/dons : ses dons, et ce qu'ils font ensemble. */
 export async function mesDons(utilisateurId) {
   const dons = (await donorSpaceRepository.mesDons(utilisateurId)).map(presenter);
   return { items: dons, synthese: synthese(dons) };
 }
 
-/**
- * Qui donne, depuis l'espace donateur : l'identite de son parcours
- * d'accueil -- nom, pays, structure. La raison sociale d'une entreprise
- * ou d'une association figurera sur ses recus.
- */
 export function identiteDonateur(compte) {
   return {
     utilisateurId: compte.id,
     qui: [compte.prenom, compte.nom].filter(Boolean).join(' ') || compte.email,
-    // Ou envoyer un lien de paiement, quand le don se regle par carte.
     email: compte.email,
     origine: 'donateur',
     nouvelleFiche: async (client) => {
@@ -99,27 +74,14 @@ export function identiteDonateur(compte) {
   };
 }
 
-/**
- * GET /api/donateur/paiement/mvola : le compte MVola de HOPE.
- *
- * Rien de secret : c'est le numero auquel le donateur envoie son don.
- */
 export function compteMvola() {
   return compteOperateur(config.mvola);
 }
 
-/** GET /api/donateur/paiement/orange-money : le compte Orange Money de HOPE. */
 export function compteOrangeMoney() {
   return compteOperateur(config.orangeMoney);
 }
 
-/**
- * GET /api/donateur/paiement/coordonnees : ou envoyer un don hors ligne.
- *
- * Le compte bancaire, le bureau, les comptes sur les plateformes, et
- * les numeros mobiles (certaines plateformes versent sur MVola ou
- * Orange Money). Chaque bloc dit s'il est utilisable.
- */
 export function coordonneesDePaiement() {
   const { banque, bureau, plateformes, equipe } = config;
   const rib = String(banque.rib ?? '').replace(/\D/g, '');
@@ -152,13 +114,6 @@ export function coordonneesDePaiement() {
   };
 }
 
-/**
- * PATCH /api/donateur/dons/:id/justificatif : le donateur signale qu'il
- * a paye une promesse deja enregistree -- un virement, un depot --, avec
- * la reference que sa banque lui a donnee.
- *
- * Seulement sur ses propres dons, et tant qu'ils sont en attente.
- */
 export async function declarerPaiement(compte, donId, corps = {}) {
   const id = identifiantRequis(donId, 'id');
   const don = await donorSpaceRepository.unDeMesDons(compte.id, id);
@@ -171,7 +126,6 @@ export async function declarerPaiement(compte, donId, corps = {}) {
   return declarerJustificatif(compte, don, corps);
 }
 
-/** Un compte de paiement mobile : utilisable s'il porte un numero malgache. */
 function compteOperateur({ numero, titulaire }) {
   const chiffres = String(numero ?? '').replace(/\D/g, '');
   return {
@@ -181,30 +135,14 @@ function compteOperateur({ numero, titulaire }) {
   };
 }
 
-/**
- * POST /api/donateur/dons : promettre un don -- ponctuel ou mensuel.
- * Voir promesseDon.service.
- *
- * @param {object} compte  req.donateur
- */
 export async function faireUnDon(compte, corps = {}) {
   return promettreUnDon(identiteDonateur(compte), corps);
 }
 
-/**
- * GET /api/donateur/actualites : les nouvelles de HOPE.
- *
- * Les actualites seules, comme chez le benevole : un appel a financement
- * s'adresse aux partenaires, et le donateur a son propre bouton de don.
- */
 export async function actualites() {
   return { items: await publicationRepository.listerPourBenevole() };
 }
 
-/**
- * GET /api/donateur/projets/:id : la fiche d'un projet, et ce que le
- * donateur y a donne.
- */
 export async function projet(utilisateurId, projetId) {
   const id = identifiantRequis(projetId, 'id');
   const lisible = await donorSpaceRepository.projetLisible(utilisateurId, id);
@@ -221,19 +159,11 @@ export async function projet(utilisateurId, projetId) {
 
   return {
     ...fiche,
-    // Ce que le donateur y a mis : recu, et promis.
     vosDons: synthese(auProjet.map(presenter)),
-    // Peut-on encore y donner ? En cours, objectif non atteint.
     ouvertAuxDons: Boolean(propose && !propose.atteint),
   };
 }
 
-/**
- * PATCH /api/donateur/profil/photo : poser ou retirer sa photo.
- *
- * Seule une adresse servie par HOPE est acceptee : la photo se televerse
- * d'abord (POST /profil/photo), puis se rattache ici.
- */
 export async function changerPhoto(utilisateurId, corps = {}) {
   const valeur = corps.photoUrl;
   let photoUrl = null;

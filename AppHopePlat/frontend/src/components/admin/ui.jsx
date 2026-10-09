@@ -1,10 +1,3 @@
-/**
- * Briques d'interface partagees par toutes les pages de l'espace admin.
- *
- * Objectif : que chaque ecran se compose de la meme facon (en-tete de page,
- * barre d'outils, panneau, tableau) pour obtenir un ensemble homogene sans
- * dupliquer le balisage.
- */
 import { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -17,29 +10,10 @@ import {
 } from './AdminIcons.jsx';
 import * as fmt from '../../utils/format.js';
 
-/* ------------------------------------------------------------------
-   En-tete de page
-   ------------------------------------------------------------------ */
-
-/**
- * @param {{ fil?: {label: string, to?: string}[], titre: string,
- *           accroche?: string, actions?: React.ReactNode }} props
- */
-/**
- * @param {object} props
- * @param {boolean} [props.retour] affiche la fleche de retour ; vrai par
- *        defaut, a passer a faux sur une page sans page precedente
- */
 export function EntetePage({ fil = [], titre, accroche, actions, retour = true, visuel = null }) {
   const navigate = useNavigate();
   const emplacement = useLocation();
 
-  /*
-   * Une cle "default" signale la toute premiere entree de l'historique :
-   * la page a ete ouverte directement, par un lien ou un rafraichissement.
-   * Un navigate(-1) sortirait alors de l'application ; on remonte a
-   * l'accueil a la place.
-   */
   const revenir = () => (emplacement.key === 'default' ? navigate('/admin') : navigate(-1));
 
   return (
@@ -55,7 +29,6 @@ export function EntetePage({ fil = [], titre, accroche, actions, retour = true, 
             <IconeRetour />
           </button>
         )}
-        {/* Un visage, un logo : ce qui identifie la page avant son titre. */}
         {visuel && <div className="page-entete__visuel">{visuel}</div>}
         <div className="page-entete__intitule">
         {fil.length > 0 && (
@@ -66,8 +39,6 @@ export function EntetePage({ fil = [], titre, accroche, actions, retour = true, 
                 {index < fil.length - 1 && ' / '}
               </span>
             ))}
-            {/* La barre et son soleil ferment la ligne, a droite du
-                dernier intitule. Purement decoratifs. */}
             <span className="trait-hope" aria-hidden="true" />
           </nav>
         )}
@@ -79,10 +50,6 @@ export function EntetePage({ fil = [], titre, accroche, actions, retour = true, 
     </header>
   );
 }
-
-/* ------------------------------------------------------------------
-   Panneau
-   ------------------------------------------------------------------ */
 
 export function Panneau({ titre, sousTitre, actions, children, serre = false, className = '' }) {
   return (
@@ -100,10 +67,6 @@ export function Panneau({ titre, sousTitre, actions, children, serre = false, cl
     </section>
   );
 }
-
-/* ------------------------------------------------------------------
-   Etats transverses
-   ------------------------------------------------------------------ */
 
 export function Chargement({ texte = 'Chargement…' }) {
   return (
@@ -134,50 +97,31 @@ export function EtatVide({ titre, texte, action }) {
   );
 }
 
-/* ------------------------------------------------------------------
-   Badges de statut
-   ------------------------------------------------------------------ */
-
-/** Couleur associee a chaque statut, tous modules confondus. */
 const COULEURS_STATUT = {
-  // Projets
   DRAFT: 'gris',
   ACTIVE: 'vert',
   COMPLETED: 'bleu',
   SUSPENDED: 'ambre',
   ARCHIVED: 'gris',
-  // Budgets
   CLOSED: 'gris',
-  // Depenses
   VALIDATED: 'bleu',
   PAID: 'vert',
   CANCELLED: 'rouge',
-  // Dons
   PENDING: 'ambre',
   RECEIVED: 'vert',
   REFUNDED: 'gris',
-  // Affectations
   DONOR_DESIGNATED: 'violet',
   HOPE_ALLOCATED: 'bleu',
-  // Beneficiaires
   INACTIVE: 'gris',
   WITHDRAWN: 'gris',
 };
 
-/**
- * @param {{ valeur: string, libelles?: Record<string,string>, couleur?: string }} props
- */
 export function Badge({ valeur, libelles, couleur }) {
   if (!valeur) return <span className="badge badge--gris">—</span>;
   const teinte = couleur ?? COULEURS_STATUT[valeur] ?? 'gris';
   return <span className={`badge badge--${teinte}`}>{libelles?.[valeur] ?? valeur}</span>;
 }
 
-/* ------------------------------------------------------------------
-   Progression
-   ------------------------------------------------------------------ */
-
-/** Vert au-dela de 75 %, bleu au-dela de 40 %, ambre en dessous. */
 function teinteProgression(valeur) {
   if (valeur >= 100) return 'vert';
   if (valeur >= 75) return 'vert';
@@ -206,15 +150,6 @@ export function Progression({ valeur, teinte }) {
   );
 }
 
-/* ------------------------------------------------------------------
-   Barre d'outils
-   ------------------------------------------------------------------ */
-
-/**
- * @param {{ recherche?: string, onRecherche?: Function, placeholder?: string,
- *           filtres?: {valeur: string, label: string}[], filtreActif?: string,
- *           onFiltre?: Function, compteur?: string, actions?: React.ReactNode }} props
- */
 export function BarreOutils({
   recherche,
   onRecherche,
@@ -266,56 +201,24 @@ export function BarreOutils({
   );
 }
 
-/* ------------------------------------------------------------------
-   Tableau
-   ------------------------------------------------------------------ */
-
-/**
- * Tableau de donnees generique.
- *
- * @param {{ colonnes: {cle: string, titre: string, rendu?: Function,
- *           aligne?: 'droite'|'gauche', largeur?: string}[],
- *           lignes: object[], cleLigne?: Function,
- *           chargement?: boolean, erreur?: string, vide?: React.ReactNode }} props
- */
-/** 'droite' pour les montants, 'centre' pour une colonne centree. */
 function classeAlignement(aligne) {
   if (aligne === 'droite') return 'table__nombre';
   if (aligne === 'centre') return 'table__centre';
   return undefined;
 }
 
-/**
- * @param {object} props
- * @param {(ligne: object) => void} [props.onLigne] rend la ligne entiere
- *        cliquable. Les boutons et liens qu'elle porte gardent leur propre
- *        clic ; le clavier passe par un bouton de la ligne, que la page
- *        fournit.
- */
 export function Tableau({
   colonnes,
   lignes,
   cleLigne,
   idLigne,
-  // Une classe de plus pour certaines lignes : une ligne de total, par exemple.
   classeLigne,
   chargement,
   erreur,
   vide,
   onLigne,
-  // Sur telephone, chaque ligne devient une fiche : la premiere cellule
-  // en titre, les autres en lignes "libelle : valeur". Pour les tableaux
-  // trop larges pour un petit ecran.
   empilable = false,
 }) {
-  /*
-   * Arriver sur une ligne par son ancre (#compte-xxx).
-   *
-   * La liste se charge apres la navigation : le navigateur ne trouve rien a
-   * faire defiler, on le fait une fois les lignes la. Et une navigation
-   * interne (pushState) ne met pas :target a jour -- la ligne visee porte
-   * donc sa propre classe.
-   */
   const { hash } = useLocation();
   const visee = idLigne && hash ? decodeURIComponent(hash.slice(1)) : null;
 
@@ -390,14 +293,6 @@ export function Tableau({
   );
 }
 
-/* ------------------------------------------------------------------
-   Onglets
-   ------------------------------------------------------------------ */
-
-/**
- * @param {{ onglets: {cle: string, label: string, compteur?: number}[],
- *           actif: string, onChange: Function }} props
- */
 export function Onglets({ onglets, actif, onChange }) {
   return (
     <div className="onglets" role="tablist">
@@ -420,11 +315,6 @@ export function Onglets({ onglets, actif, onChange }) {
   );
 }
 
-/* ------------------------------------------------------------------
-   Divers
-   ------------------------------------------------------------------ */
-
-/** Bouton principal des en-tetes de page ("Nouveau projet"). */
 export function BoutonAjout({ children, ...reste }) {
   return (
     <button type="button" className="btn btn--principal" {...reste}>
@@ -434,7 +324,6 @@ export function BoutonAjout({ children, ...reste }) {
   );
 }
 
-/** Cellule "titre + sous-titre" utilisee dans les tableaux. */
 export function CelluleDouble({ principal, secondaire, to }) {
   return (
     <div>
@@ -450,7 +339,6 @@ export function CelluleDouble({ principal, secondaire, to }) {
   );
 }
 
-/** Bloc "libelle / valeur" de la fiche projet. */
 export function LigneFiche({ terme, children }) {
   return (
     <div>

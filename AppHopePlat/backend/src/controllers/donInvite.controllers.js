@@ -1,13 +1,6 @@
-/**
- * Le don sans compte, depuis le site vitrine (donInvite.service).
- *
- * Aucune session : le jeton remis avec le don voyage dans l'en-tete
- * X-Hope-Don, a part de toute autre autorisation du navigateur.
- */
 import * as donInviteService from '../services/donInvite.service.js';
 import { gerer } from './handler.js';
 
-/** Le jeton du don, tel que le navigateur le renvoie. */
 function jetonDe(req) {
   return req.get('x-hope-don') ?? '';
 }

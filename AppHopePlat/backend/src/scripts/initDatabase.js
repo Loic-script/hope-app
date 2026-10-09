@@ -1,13 +1,3 @@
-/**
- * Preparation de la base PostgreSQL HOPE.
- *
- *   npm run db:init
- *
- * Le script est idempotent : il peut etre relance sans risque.
- *   1. cree la base hope_db si elle n'existe pas ;
- *   2. cree la table admins si elle n'existe pas ;
- *   3. installe le declencheur qui tient updated_at a jour.
- */
 import pg from 'pg';
 import { config } from '../config/env.js';
 
@@ -65,10 +55,7 @@ const SQL_TRIGGER_UPDATED_AT = `
     EXECUTE FUNCTION definir_updated_at();
 `;
 
-/** Cree la base cible si elle n'existe pas encore. */
 async function creerBaseSiNecessaire() {
-  // On se connecte a la base de maintenance "postgres" : impossible de creer
-  // une base depuis une connexion ouverte sur cette meme base.
   const client = new Client({
     host: config.database.host,
     port: config.database.port,
@@ -86,8 +73,6 @@ async function creerBaseSiNecessaire() {
     if (existe.rowCount > 0) {
       console.log(`[HOPE] Base "${config.database.name}" deja presente.`);
     } else {
-      // Le nom de base ne peut pas etre un parametre : il est echappe via
-      // un identifiant entre guillemets.
       await client.query(`CREATE DATABASE "${config.database.name.replace(/"/g, '""')}"`);
       console.log(`[HOPE] Base "${config.database.name}" creee.`);
     }
@@ -96,7 +81,6 @@ async function creerBaseSiNecessaire() {
   }
 }
 
-/** Cree la table admins et son declencheur. */
 async function creerSchema() {
   const client = new Client(
     config.database.url
@@ -127,8 +111,6 @@ async function creerSchema() {
 
 async function executer() {
   console.log('[HOPE] Initialisation de la base de donnees...');
-  // Une adresse complete (DATABASE_URL) designe une base deja creee par
-  // l'hebergeur : il n'y a qu'a y poser le schema.
   if (config.database.url) {
     console.log('[HOPE] Cible : la base de DATABASE_URL (fournie par l hebergeur).');
   } else {

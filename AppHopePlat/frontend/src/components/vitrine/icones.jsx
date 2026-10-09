@@ -1,18 +1,3 @@
-/**
- * Les icones des medaillons du site vitrine, pleines comme sur les
- * maquettes.
- *
- * Elles sont dessinees dans le repere du medaillon : l'origine (0, 0) est
- * son centre, l'unite celle de la maquette (une carte d'activite fait 167
- * unites de large). Les details en blanc (`creux`) sont des vides dans la
- * forme ; un trait blanc (`trait`) reste un trait, pas un remplissage.
- *
- * La classe des creux et des traits est passee par les proprietes, car
- * elle change d'une section a l'autre (`v-activite__creux` sur l'accueil,
- * `v-medaillon__creux` sur les autres pages).
- */
-
-/** Le mortier du diplome : le plateau, la calotte, le gland. */
 export function IconeDiplome() {
   return (
     <>
@@ -23,7 +8,6 @@ export function IconeDiplome() {
   );
 }
 
-/** La mallette, posee sur une main ouverte. */
 export function IconeMallette({ creux = 'v-activite__creux' }) {
   return (
     <>
@@ -37,7 +21,6 @@ export function IconeMallette({ creux = 'v-activite__creux' }) {
   );
 }
 
-/** Le coeur, traverse par le trace d'un pouls. */
 export function IconeCoeurPouls({ trait = 'v-activite__pouls' }) {
   return (
     <>
@@ -47,7 +30,6 @@ export function IconeCoeurPouls({ trait = 'v-activite__pouls' }) {
   );
 }
 
-/** La fourchette, l'assiette et la cuillere. */
 export function IconeCouvert({ creux = 'v-activite__creux' }) {
   return (
     <>
@@ -65,36 +47,20 @@ export function IconeCouvert({ creux = 'v-activite__creux' }) {
   );
 }
 
-/**
- * La personne dans la loupe, posee sur son socle : reperer et former.
- * Relevee sur l'icone fournie par HOPE (33 x 36 px), redessinee a la
- * meme taille, l'origine au centre de la loupe ; le groupe recentre
- * l'ensemble (manche et socle compris) sur le medaillon.
- */
 export function IconeFormation({ creux = 'v-activite__creux' }) {
   return (
     <g transform="translate(-1.9 -4.8)">
-      {/* La loupe : l'anneau (le disque interieur tourne a l'envers, d'ou le vide), puis le manche. */}
       <path d="M0 -13.2A13.2 13.2 0 1 1 0 13.2A13.2 13.2 0 1 1 0 -13.2ZM0 -9.6A9.6 9.6 0 1 0 0 9.6A9.6 9.6 0 1 0 0 -9.6Z" />
       <rect x="-2.9" y="-24.5" width="5.8" height="14.5" rx="2.9" transform="rotate(135)" />
-      {/* La personne : la tete et son reflet, les epaules qui rejoignent l'anneau. */}
       <circle cx="0.6" cy="-0.7" r="6.4" />
       <ellipse className={creux} cx="0.3" cy="0" rx="2.9" ry="1.3" transform="rotate(12 0.3 0)" />
       <path d="M-6.87 9.34A9 9 0 0 1 7.87 9.34L6.5 10.2H-5.5Z" />
-      {/* Le socle : la tablette, creusee sous la loupe, et son pied. */}
       <path d="M-6.2 15.6Q0.5 17.8 7.2 15.6Q8 15.5 8 16.3V18.9Q8 19.7 7.2 19.7H-6.2Q-7 19.7 -7 18.9V16.3Q-7 15.5 -6.2 15.6Z" />
       <rect x="-4.5" y="19.3" width="10" height="3.5" rx="0.8" />
     </g>
   );
 }
 
-/*
- * Les icones de la page "S'engager", relevees sur les fichiers fournis
- * par HOPE et redessinees a leur taille en pixels, l'origine au centre
- * de l'icone ; le medaillon les reduit par `echelle`.
- */
-
-/** Trois personnes, celle de devant detachee des deux autres par un trait blanc. */
 export function IconeGroupe({ creux = 'v-activite__creux' }) {
   return (
     <g transform="translate(-18 -15)">
@@ -109,7 +75,6 @@ export function IconeGroupe({ creux = 'v-activite__creux' }) {
   );
 }
 
-/** Une tour et ses fenetres, un batiment bas a ses cotes. */
 export function IconeBatiment({ creux = 'v-activite__creux' }) {
   return (
     <g transform="translate(-17.5 -16)">
@@ -127,7 +92,6 @@ export function IconeBatiment({ creux = 'v-activite__creux' }) {
   );
 }
 
-/** Un reseau : un noeud relie a deux autres. */
 export function IconeReseau() {
   return (
     <g transform="translate(-18 -21)">

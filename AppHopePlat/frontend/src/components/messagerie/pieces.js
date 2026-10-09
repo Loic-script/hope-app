@@ -1,12 +1,3 @@
-/**
- * Regles des pieces jointes, cote navigateur.
- *
- * Les memes que celles du serveur, qui les applique de toute facon : les
- * verifier ici evite d'envoyer vingt megaoctets pour apprendre qu'ils ne
- * passaient pas. Le serveur, lui, juge au contenu ; le navigateur ne peut
- * juger qu'au type annonce et a l'extension.
- */
-
 export const MAX_PIECES = 5;
 
 export const PLAFONDS = {
@@ -15,12 +6,10 @@ export const PLAFONDS = {
   pdf: 10 * 1024 * 1024,
 };
 
-/** Ce que le selecteur de fichiers propose. */
 export const ACCEPTE = 'image/*,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,application/pdf,.pdf';
 
 const LIBELLES = { image: 'photo', video: 'vidéo', pdf: 'PDF' };
 
-/** La nature d'un fichier choisi : image, video, pdf, ou null. */
 export function natureDe(fichier) {
   const type = String(fichier.type ?? '').toLowerCase();
   const extension = String(fichier.name ?? '').toLowerCase().split('.').pop();
@@ -32,11 +21,6 @@ export function natureDe(fichier) {
   return null;
 }
 
-/**
- * Ajoute des fichiers a une selection, en respectant les regles.
- *
- * @returns {{ retenus: File[], erreurs: string[] }}
- */
 export function ajouterFichiers(actuels, nouveaux) {
   const retenus = [...actuels];
   const erreurs = [];

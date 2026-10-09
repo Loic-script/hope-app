@@ -1,11 +1,3 @@
-/* ============================================================
-   Le site vitrine de HOPE : en-tete, pied de page, pages
-   (layouts/VitrineLayout.jsx, components/vitrine/)
-
-   Police Quicksand, arrondie comme le logotype. Une barre blanche en
-   haut, logotype au centre ; un pied violet, soleil au centre.
-   ============================================================ */
-
 .vitrine {
   --vitrine-police: 'Quicksand', 'Poppins', system-ui, sans-serif;
   --vitrine-hauteur: 88px;
@@ -23,7 +15,6 @@
   outline: none;
 }
 
-/* Le lien d'evitement : invisible tant qu'on ne tabule pas dessus. */
 .vitrine__evitement {
   position: absolute;
   top: 8px;
@@ -41,8 +32,6 @@
 .vitrine__evitement:focus {
   transform: none;
 }
-
-/* ---------------------------- L'en-tete ---------------------------- */
 
 .vitrine-entete {
   position: sticky;
@@ -99,10 +88,6 @@
   transform: scale(1.04);
 }
 
-/* Les deux colonnes se partagent la largeur a egalite pour que le logo
-   reste au centre : a droite, trois liens, la pastille "Connexion" et le
-   bouton de don doivent tenir dans une moitie (523 px quand la barre est
-   a sa largeur maximale), d'ou des liens de 14 px et des ecarts mesures. */
 .vitrine-entete__droite {
   display: flex;
   align-items: center;
@@ -131,8 +116,6 @@
   transition: color 0.2s ease;
 }
 
-/* Le trait sous le lien : il pousse du centre au survol, reste sous la
-   page courante. */
 .vitrine-nav__lien::after {
   content: '';
   position: absolute;
@@ -157,7 +140,6 @@
   right: 0;
 }
 
-/* La page courante : le bleu de la charte, comme sur la maquette. */
 .vitrine-nav__lien--actif,
 .vitrine-nav__lien--actif:hover {
   color: var(--hope-bleu);
@@ -167,9 +149,6 @@
   background: var(--hope-bleu);
 }
 
-/* Le bouton d'acces (BoutonAcces.jsx) : la seule couleur pleine de la
-   barre. A gauche le lien dont le mot glisse -- "Faire un don", puis
-   "Connexion" -- ; a droite la fleche qui ouvre le menu des deux portes. */
 .vitrine-acces {
   position: relative;
   display: inline-flex;
@@ -208,20 +187,10 @@
   white-space: nowrap;
 }
 
-/* Le gabarit tient la largeur du mot le plus long ; les mots, eux,
-   glissent dans la meme case. */
 .vitrine-acces__gabarit {
   visibility: hidden;
 }
 
-/* Les mots se superposent dans la meme case (BoutonAcces.jsx). Les
-   briques : chaque lettre du mot qui arrive tombe de haut, l'une apres
-   l'autre (--i, toutes les 75 ms), avec sa propre inclinaison (--rx) ;
-   elle touche le sol a 55 % de sa chute, s'ecrase, rebondit et se pose.
-   A chaque brique qui atterrit ensuite, le corps des lettres deja posees
-   encaisse une secousse (--reste fois, au rythme des atterrissages) :
-   c'est l'onde qui se propage le long du mot. Le mot qui part est
-   renverse et tombe par le bas. */
 .vitrine-acces__mots {
   position: absolute;
   inset: 0 14px 0 18px;
@@ -248,8 +217,6 @@
 .vitrine-acces__lettre-corps {
   display: inline-block;
   transform-origin: 50% 100%;
-  /* La secousse : 75 ms par brique suivante, a partir de l'impact de la
-     brique d'apres (250 + (i + 1) * 75 + 385 ms). */
   animation: acces-brique-secousse 75ms ease-in-out both;
   animation-delay: calc(250ms + (var(--i, 0) + 1) * 75ms + 385ms);
   animation-iteration-count: var(--reste, 0);
@@ -264,8 +231,6 @@
   animation: none;
 }
 
-/* La fleche : une case a part, separee d'un filet clair ; elle se
-   retourne quand le menu est ouvert. */
 .vitrine-acces__fleche {
   display: grid;
   place-items: center;
@@ -294,7 +259,6 @@
   transform: rotate(180deg);
 }
 
-/* Le menu des deux portes, sous la fleche. */
 .vitrine-acces__menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -362,9 +326,6 @@
   }
 }
 
-
-/* La chute d'une brique : la gravite jusqu'a l'impact (55 %), l'ecrasement,
-   un rebond, un petit second rebond, puis le repos. */
 @keyframes acces-brique-tombe {
   0% {
     opacity: 0;
@@ -400,7 +361,6 @@
   }
 }
 
-/* La secousse d'une lettre posee quand une autre atterrit a cote. */
 @keyframes acces-brique-secousse {
   0%,
   100% {
@@ -411,7 +371,6 @@
   }
 }
 
-/* Une brique renversee : elle bascule et tombe par le bas. */
 @keyframes acces-brique-chute {
   0% {
     opacity: 1;
@@ -437,7 +396,6 @@
   }
 }
 
-/* "Faire un don" seul, en bouton plein : les pages en preparation. */
 .vitrine-don {
   position: relative;
   display: inline-flex;
@@ -461,7 +419,6 @@
     box-shadow 0.2s ease;
 }
 
-/* Un reflet le traverse de temps en temps : il attire l'oeil sans crier. */
 .vitrine-don::before {
   content: '';
   position: absolute;
@@ -492,7 +449,6 @@
   outline-offset: 3px;
 }
 
-/* Le bouton de menu des petits ecrans : trois traits qui deviennent une croix. */
 .vitrine-entete__menu {
   display: none;
   flex-direction: column;
@@ -532,8 +488,6 @@
 .vitrine-mobile {
   display: none;
 }
-
-/* ------------------------ Tablette et telephone ------------------------ */
 
 @media (max-width: 1100px) {
   .vitrine-entete__barre {
@@ -626,8 +580,6 @@
   }
 }
 
-/* --------------------------- Le pied de page --------------------------- */
-
 .vitrine-pied {
   background: var(--hope-violet);
   color: #ffffff;
@@ -664,7 +616,6 @@
   fill: var(--soleil-dome);
 }
 
-/* Le soleil du pied se leve doucement, ses rayons respirent. */
 .vitrine-pied__soleil {
   height: 76px;
 }
@@ -743,8 +694,6 @@
   }
 }
 
-/* ---------------------- Une page en preparation ---------------------- */
-
 .vitrine-preparation {
   display: flex;
   flex-direction: column;
@@ -801,8 +750,6 @@
   background: var(--hope-violet);
   color: #fff;
 }
-
-/* ----------------------------- Animations ----------------------------- */
 
 @keyframes vitrine-descente {
   from {

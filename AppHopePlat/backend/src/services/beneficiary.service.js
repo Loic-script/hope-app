@@ -1,10 +1,3 @@
-/**
- * Service des beneficiaires et de leur rattachement aux projets.
- *
- * Confidentialite (cahier des charges, section 30) : ces donnees ne sont
- * servies que par des routes /api/admin/* protegees par le JWT
- * administrateur. Rien ici n'est destine a la partie publique du site.
- */
 import * as beneficiaryRepository from '../repositories/beneficiary.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import * as expenseRepository from '../repositories/expense.repository.js';
@@ -27,7 +20,6 @@ export const STATUTS = ['ACTIVE', 'INACTIVE'];
 export const GENRES = ['F', 'M', 'OTHER'];
 export const STATUTS_RATTACHEMENT = ['ACTIVE', 'COMPLETED', 'WITHDRAWN'];
 
-/** Libelles metier envoyes au frontend. */
 export const LIBELLES_TYPES = {
   ORPHAN: 'Orphelin',
   SINGLE_MOTHER: 'Mere celibataire',
@@ -35,7 +27,6 @@ export const LIBELLES_TYPES = {
   OTHER: 'Autre',
 };
 
-/** Calcule l'age a partir de la date de naissance. */
 function calculerAge(dateNaissance) {
   if (!dateNaissance) return null;
   const naissance = new Date(dateNaissance);
@@ -48,11 +39,6 @@ function calculerAge(dateNaissance) {
   return age >= 0 && age < 130 ? age : null;
 }
 
-/**
- * Ce que l'ecran recoit : l'age, le libelle du type, et l'adresse signee
- * de la photo pour l'administrateur qui demande -- jamais le chemin du
- * fichier seul, qui ne se lit pas sans signature.
- */
 function enrichir(beneficiaire, admin = null) {
   if (!beneficiaire) return null;
   return {
@@ -63,12 +49,6 @@ function enrichir(beneficiaire, admin = null) {
   };
 }
 
-/**
- * Le nom d'une photo televersee, verifie avant d'etre rattache.
- *
- * Il doit designer un fichier que le service a lui-meme ecrit, et qui
- * n'est pas deja la photo de quelqu'un d'autre.
- */
 async function photoValide(fichier, beneficiaryId = null) {
   if (fichier === null || fichier === '') return null;
   if (!photos.existe(fichier)) {
@@ -84,7 +64,6 @@ async function photoValide(fichier, beneficiaryId = null) {
   return fichier;
 }
 
-/** Televerse une photo ; c'est l'enregistrement de la fiche qui la rattache. */
 export async function televerserPhoto(fichier, admin) {
   const nom = await photos.enregistrer(fichier);
   return { fichier: nom, url: photos.adresseSignee(nom, admin) };
@@ -112,21 +91,10 @@ export async function recupererParId(id, admin = null) {
   return {
     ...enrichir(beneficiaire, admin),
     projects: projets,
-    // Les depenses faites pour cette personne, annulees comprises (la
-    // fiche les montre barrees) ; le total ne compte que les autres.
     expenses: depenses,
   };
 }
 
-/**
- * Cree la fiche. Deux complements facultatifs, dans la meme transaction
- * (tout s'enregistre, ou rien) :
- *
- *   - projectId : le projet auquel la personne est rattachee ;
- *   - depense : { amount, description?, category?, expenseDate? }, l'argent
- *     depense pour elle sur ce projet -- il faut alors un projet, en
- *     cours, qui a recu de quoi payer.
- */
 export async function creer(corps = {}, admin = null) {
   const photoFichier =
     corps.photoFichier === undefined ? null : await photoValide(corps.photoFichier);
@@ -213,16 +181,12 @@ export async function mettreAJour(id, corps = {}, admin = null) {
   if (corps.city !== undefined) colonnes.city = texteFacultatif(corps.city, 'city', { max: 120 });
   if (corps.status !== undefined) colonnes.status = valeurParmi(corps.status, 'status', STATUTS);
   if (corps.notes !== undefined) colonnes.notes = texteFacultatif(corps.notes, 'notes', { max: 5000 });
-  // La photo n'est touchee que si le formulaire l'a changee : une fiche
-  // enregistree sans elle ne la perd pas.
   if (corps.photoFichier !== undefined) {
     colonnes.photo_fichier = await photoValide(corps.photoFichier, beneficiaryId);
   }
 
   const misAJour = await beneficiaryRepository.mettreAJour(beneficiaryId, colonnes);
 
-  // L'ancienne photo s'efface une fois la fiche enregistree, pas avant :
-  // un echec aurait laisse la fiche pointer vers un fichier disparu.
   if (
     colonnes.photo_fichier !== undefined &&
     existant.photoFichier &&
@@ -233,10 +197,6 @@ export async function mettreAJour(id, corps = {}, admin = null) {
 
   return enrichir(misAJour, admin);
 }
-
-// ------------------------------------------------------------------
-// Rattachement aux projets
-// ------------------------------------------------------------------
 
 export async function listerParProjet(projectId) {
   const id = identifiantRequis(projectId, 'projectId');
@@ -253,15 +213,12 @@ export async function listerParProjet(projectId) {
   };
 }
 
-/** Rattache un beneficiaire existant a un projet. */
 export async function rattacherAuProjet(projectId, corps = {}) {
   const idProjet = identifiantRequis(projectId, 'projectId');
   const idBeneficiaire = identifiantRequis(corps.beneficiaryId, 'beneficiaryId');
 
   const projet = await projectRepository.trouverParId(idProjet);
   if (!projet) throw new ErreurIntrouvable('Le projet', idProjet);
-  // On peut nommer les beneficiaires apres la cloture du projet ;
-  // seul l'archivage fige definitivement le dossier.
   if (projet.status === 'ARCHIVED') {
     throw new ErreurRegleMetier(
       'Ce projet est archivé : sa liste de bénéficiaires est figée.',
@@ -289,7 +246,6 @@ export async function rattacherAuProjet(projectId, corps = {}) {
   });
 }
 
-/** Met a jour un rattachement (sortie du programme, notes de suivi). */
 export async function mettreAJourRattachement(id, corps = {}) {
   const rattachementId = identifiantRequis(id, 'id');
 

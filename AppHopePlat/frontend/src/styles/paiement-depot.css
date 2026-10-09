@@ -1,13 +1,3 @@
-/* ==================================================================
-   Depot bancaire (pages/donateur/PaiementDepot.jsx)
-
-   L'objet de reference : le bordereau de versement du guichet. Papier
-   de securite vert d'eau, libelles imprimes en vert, filets de
-   formulaire -- et la valeur de chaque ligne ecrite au stylo bille
-   bleu, qui apparait a mesure, comme sous la main d'un caissier. Un
-   double carbone rose depasse dessous. Le tampon vient en dernier.
-   ================================================================== */
-
 .dep {
   --de-bureau: #e6ecea;
   --de-papier: #eef6ef;
@@ -26,7 +16,6 @@
   font-family: var(--police-titre);
 }
 
-/* ---------- En-tete ---------- */
 .dep__tete {
   display: flex;
   align-items: center;
@@ -103,7 +92,6 @@
   height: auto;
 }
 
-/* ---------- La page ---------- */
 .dep__page {
   max-width: 620px;
   margin: 0 auto;
@@ -154,7 +142,6 @@
   font-weight: 400;
 }
 
-/* Le champ du montant, trace comme une case de formulaire. */
 .dep__montant {
   min-height: 56px;
   padding: 0 14px;
@@ -310,7 +297,6 @@
   outline: none;
 }
 
-/* ---------- Le bordereau : la signature ---------- */
 .bordereau-pile {
   position: relative;
   margin: 4px 4px 0 0;
@@ -385,7 +371,6 @@
   color: var(--de-imprime);
 }
 
-/* L'ecriture a la main : chaque valeur se revele de gauche a droite. */
 .bordereau__main {
   min-width: 0;
   color: var(--de-stylo);
@@ -432,7 +417,6 @@
   color: var(--de-imprime);
 }
 
-/* Le tampon : il tombe, tourne, et s'ecrase sur le papier. */
 .bordereau__tampon {
   position: absolute;
   right: 18px;
@@ -489,7 +473,6 @@
   color: var(--de-tampon);
 }
 
-/* ---------- Ordinateur ---------- */
 @media (min-width: 900px) {
   .dep__tete {
     padding-top: 28px;
@@ -508,7 +491,6 @@
   }
 }
 
-/* ---------- Telephone ---------- */
 @media (max-width: 600px) {
   .dep__tete {
     padding: 10px 14px 4px;
@@ -560,7 +542,6 @@
   }
 }
 
-/* Imprimer : le bordereau, et rien d'autre, sans inclinaison. */
 @media print {
   body * {
     visibility: hidden;

@@ -1,17 +1,3 @@
-/**
- * Un rapport, mis en page comme le document imprime.
- *
- * Bandeau de la charte, titre, periode, puis les sections telles qu'elles
- * sont redigees. Le contenu arrive en blocs -- le vocabulaire dont le PDF
- * est compose -- et rien d'autre : ce composant ne charge rien, il sert
- * aussi bien l'apercu du partenaire que l'onglet Rapport de la fiche
- * projet.
- *
- * @param {{ titre: string, sousTitre?: string, blocs: Array|null,
- *           pied?: string, pleine?: boolean }} props
- *   pleine : la feuille prend sa hauteur naturelle au lieu de defiler
- *   dans une fenetre.
- */
 export default function FeuilleRapport({ titre, sousTitre, blocs, pied, pleine = false }) {
   return (
     <article className={`feuille${pleine ? ' feuille--pleine' : ''}`}>
@@ -38,10 +24,6 @@ export default function FeuilleRapport({ titre, sousTitre, blocs, pied, pleine =
   );
 }
 
-/**
- * Un bloc du document : titre de section, paragraphe, puce, ou tableau
- * de deux colonnes pour les chiffres.
- */
 function Bloc({ bloc }) {
   if (bloc.t === 'h2') return <h4 className="feuille__section">{bloc.texte}</h4>;
   if (bloc.t === 'p') return <p className="feuille__paragraphe">{bloc.texte}</p>;

@@ -1,14 +1,6 @@
-/**
- * Repository de l'ecran Statistiques.
- *
- * Trois familles de chiffres, comme demande : le budget, les projets, les
- * donateurs. Tout est agrege en SQL ; le service se contente de mettre en
- * forme.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/** Dons recus mois par mois sur les 12 derniers mois. */
 export async function donsParMois(client = null) {
   const resultat = await query(
     `WITH mois AS (
@@ -35,7 +27,6 @@ export async function donsParMois(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Repartition des projets par statut. */
 export async function projetsParStatut(client = null) {
   const resultat = await query(
     `SELECT status,
@@ -50,7 +41,6 @@ export async function projetsParStatut(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Repartition des projets et des fonds par categorie. */
 export async function projetsParCategorie(client = null) {
   const resultat = await query(
     `SELECT COALESCE(c.name, 'Sans catégorie') AS categorie,
@@ -73,7 +63,6 @@ export async function projetsParCategorie(client = null) {
   return versListe(resultat.rows);
 }
 
-/** Projets les mieux finances, avec leur taux de couverture du besoin. */
 export async function projetsLesPlusFinances(limite = 6, client = null) {
   const resultat = await query(
     `SELECT p.id, p.reference, p.name, p.status, p.required_budget, p.currency,
@@ -98,7 +87,6 @@ export async function projetsLesPlusFinances(limite = 6, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Repartition des donateurs : compte, origine, frequence. */
 export async function repartitionDonateurs(client = null) {
   const resultat = await query(
     `SELECT
@@ -119,7 +107,6 @@ export async function repartitionDonateurs(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Donateurs ayant le plus contribue. */
 export async function meilleursDonateurs(limite = 6, client = null) {
   const resultat = await query(
     `SELECT o.id, o.origin, o.country,
@@ -140,7 +127,6 @@ export async function meilleursDonateurs(limite = 6, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Repartition des dons par moyen de paiement. */
 export async function repartitionParPaiement(client = null) {
   const resultat = await query(
     `SELECT COALESCE(NULLIF(TRIM(payment_method), ''), 'Non précisé') AS moyen,

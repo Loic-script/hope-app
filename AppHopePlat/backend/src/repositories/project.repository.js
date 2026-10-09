@@ -1,13 +1,3 @@
-/**
- * Repository des projets.
- *
- * Chaque projet remonte ses agregats financiers calcules en SQL :
- *
- *   investi = dons affectes a ce projet + investissements du fonds HOPE
- *   depense = utilisations enregistrees, hors depenses annulees
- *
- * Les calculer ici evite une cascade de requetes par projet cote service.
- */
 import { query } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 
@@ -119,10 +109,6 @@ const COLONNES = `
   COALESCE(depenses.liste, '[]'::json)  AS spend_by_category
 `;
 
-/**
- * @param {{ statut?: string, categorieId?: number, type?: string, recherche?: string,
- *           inclureArchives?: boolean, limite?: number, decalage?: number }} filtres
- */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -193,16 +179,6 @@ export async function compter(filtres = {}, client = null) {
   return resultat.rows[0].total;
 }
 
-/**
- * Les projets tels que l'espace benevole les montre.
- *
- * Une selection etroite, et voulue : ni budget, ni dons, ni depenses. Un
- * benevole vient voir ou il peut aider, pas ce que le projet coute --
- * et ces montants ne lui sont pas destines.
- *
- * Les comptes disent ce qu'il y a a prendre : des taches libres. Un
- * projet sans tache libre reste dans la liste, mais il le dit.
- */
 export async function listerPourBenevole(client = null) {
   const resultat = await query(
     `SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
@@ -230,17 +206,6 @@ export async function listerPourBenevole(client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * La fiche d'un projet hors de l'administration : sa vue generale.
- *
- * Tout ce qui dit ce qu'est le projet -- responsable, dates, public,
- * objectifs, resultat -- et rien de ce qu'il coute : ni budget, ni dons,
- * ni depenses. Les beneficiaires ne sont qu'un nombre : leurs fiches
- * restent dans l'espace administrateur.
- *
- * Lue par les espaces benevole et bailleur ; chacun y ajoute sa
- * condition (WHERE).
- */
 const FICHE_HORS_ADMIN = `
   SELECT p.id, p.reference, p.name, p.description_titre, p.description, p.location,
          p.media_url, p.media_type, p.status, p.created_at,
@@ -262,7 +227,6 @@ const FICHE_HORS_ADMIN = `
     ) ben ON TRUE
 `;
 
-/** Un projet, pour l'espace benevole : les projets archives n'y sont plus. */
 export async function trouverPourBenevole(id, client = null) {
   const resultat = await query(
     `${FICHE_HORS_ADMIN} WHERE p.id = $1 AND p.archived_at IS NULL`,
@@ -272,11 +236,6 @@ export async function trouverPourBenevole(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Un projet, pour l'espace bailleur. Pas de filtre ici : l'appelant a
- * deja verifie que ce bailleur le voit -- un projet qu'il a finance lui
- * reste lisible, meme archive.
- */
 export async function trouverPourBailleur(id, client = null) {
   const resultat = await query(`${FICHE_HORS_ADMIN} WHERE p.id = $1`, [id], client);
   return versObjet(resultat.rows[0]);
@@ -291,10 +250,6 @@ export async function trouverParId(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Verrouille le projet et calcule ses totaux dans la meme transaction.
- * Indispensable avant tout controle de solde suivi d'une ecriture.
- */
 export async function trouverPourMiseAJour(id, client) {
   const projet = await query('SELECT * FROM projects WHERE id = $1 FOR UPDATE', [id], client);
   if (!projet.rows[0]) return null;
@@ -314,11 +269,8 @@ export async function trouverPourMiseAJour(id, client) {
   return versObjet({ ...projet.rows[0], ...totaux.rows[0] });
 }
 
-/** Genere une reference lisible : PRJ-2026-0007. */
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
-  // Le plus grand numero + 1 : apres une suppression, le compte + 1
-  // retomberait sur une reference deja prise (voir donation.repository).
   if (client) await query("SELECT pg_advisory_xact_lock(hashtext('projects.reference'))", [], client);
   const resultat = await query(
     `SELECT COALESCE(MAX(SUBSTRING(reference FROM '[0-9]+$')::int), 0) AS dernier
@@ -362,16 +314,6 @@ export async function creer(donnees, client = null) {
   return trouverParId(projetId, client);
 }
 
-/**
- * Reecrit le devis d'un projet.
- *
- * Meme principe que les objectifs : la liste arrive entiere du
- * formulaire, l'ordre en fait partie, et une poignee de postes ne
- * justifie pas de comparer les anciens aux nouveaux.
- *
- * @param {{ label: string, category: string|null, amount: string }[]} lignes
- *        montants deja normalises en texte NUMERIC par le service
- */
 export async function remplacerDevis(projetId, lignes, client = null) {
   await query('DELETE FROM project_quote_items WHERE project_id = $1', [projetId], client);
 
@@ -385,13 +327,6 @@ export async function remplacerDevis(projetId, lignes, client = null) {
   }
 }
 
-/**
- * Reecrit la liste des objectifs d'un projet.
- *
- * Effacer puis reinserer plutot que reconcilier ligne a ligne : la liste
- * arrive entiere du formulaire, l'ordre en fait partie, et une poignee
- * d'objectifs ne justifie pas de comparer les anciens aux nouveaux.
- */
 export async function remplacerObjectifs(projetId, objectifs, client = null) {
   await query('DELETE FROM project_objectives WHERE project_id = $1', [projetId], client);
 
@@ -412,7 +347,6 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
-/** Termine le projet : statut TERMINE, date de fin, resultat obtenu. */
 export async function terminer(id, resultatObtenu, client = null) {
   await query(
     `UPDATE projects
@@ -424,7 +358,6 @@ export async function terminer(id, resultatObtenu, client = null) {
   return trouverParId(id, client);
 }
 
-/** Repasse un projet termine en cours (correction d'une cloture hative). */
 export async function rouvrir(id, client = null) {
   await query(
     `UPDATE projects
@@ -436,7 +369,6 @@ export async function rouvrir(id, client = null) {
   return trouverParId(id, client);
 }
 
-/** Archive un projet deja termine : il sort des listes courantes. */
 export async function archiver(id, client = null) {
   await query(
     "UPDATE projects SET status = 'ARCHIVED', archived_at = NOW() WHERE id = $1",
@@ -446,31 +378,11 @@ export async function archiver(id, client = null) {
   return trouverParId(id, client);
 }
 
-/**
- * Supprime un projet. N'aboutit que s'il ne porte aucune ecriture :
- * les cles etrangeres en RESTRICT protegent l'historique financier.
- */
 export async function supprimer(id, client = null) {
   const resultat = await query('DELETE FROM projects WHERE id = $1 RETURNING id', [id], client);
   return resultat.rowCount > 0;
 }
 
-/**
- * Detache et efface ce qui retient un projet, avant sa suppression
- * forcee.
- *
- * Tout n'a pas le meme poids :
- *
- *   * un DON appartient a celui qui l'a fait. On ne l'efface pas : on le
- *     detache du projet et il rejoint les fonds de HOPE. Le donateur le
- *     garde dans "Mes dons", et la comptabilite ne perd pas un ariary ;
- *   * un INVESTISSEMENT est une affectation interne : le retirer rend la
- *     somme aux fonds disponibles ;
- *   * une DEPENSE et une AFFECTATION de partenaire ne valent que par ce
- *     projet : elles partent avec lui, comme les missions.
- *
- * Rend le compte de ce qui a ete touche, pour le journal.
- */
 export async function detacherEcritures(id, client) {
   const dons = await query(
     `UPDATE donations SET project_id = NULL, allocation = 'HOPE'
@@ -509,7 +421,6 @@ export async function detacherEcritures(id, client) {
   };
 }
 
-/** Compte les ecritures rattachees, pour expliquer un refus de suppression. */
 export async function compterEcritures(id, client = null) {
   const resultat = await query(
     `SELECT
@@ -524,7 +435,6 @@ export async function compterEcritures(id, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Projets termines ou archives, pour l'ecran Impact. */
 export async function listerTermines(client = null) {
   const resultat = await query(
     `SELECT ${COLONNES}, impact.nombre AS impacts_count

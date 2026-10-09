@@ -1,20 +1,6 @@
-/**
- * Repository de l'espace bailleur.
- *
- * Regle de securite qui gouverne tout ce fichier : l'espace se filtre
- * sur bailleur_id, jamais sur utilisateur_id. Un bailleur peut avoir
- * plusieurs contacts avec un compte ; filtrer par personne cacherait a
- * l'un ce que l'autre voit.
- *
- * notes_internes ne sort jamais d'ici : elle est reservee a HOPE.
- */
 import { query, transaction } from '../config/database.js';
 import { construireSet, versListe, versObjet } from '../shared/mapping.js';
 import { COLONNES_PUBLICATION, PROJET_ET_FINANCEMENT } from './publication.repository.js';
-
-/* ================================================================
-   Organisation et contacts
-   ================================================================ */
 
 const COLONNES_BAILLEUR = `
   b.id, b.raison_sociale, b.type_organisation, b.secteur, b.pays,
@@ -22,12 +8,6 @@ const COLONNES_BAILLEUR = `
   b.statut, b.niveau, b.cree_le
 `;
 
-/**
- * Cree l'organisation, son contact principal et le compte associe.
- *
- * Les trois vont ensemble : un bailleur sans contact ne pourrait pas se
- * connecter, et un contact sans organisation ne menerait a rien.
- */
 export async function creerAvecContact(organisation, utilisateurId, fonction, client = null) {
   const executer = async (transaction_) => {
     const bailleur = await query(
@@ -60,12 +40,6 @@ export async function creerAvecContact(organisation, utilisateurId, fonction, cl
   return client ? executer(client) : transaction(executer);
 }
 
-/**
- * Resout le bailleur d'un compte connecte.
- *
- * C'est le point d'entree de tout l'espace : sans lui, aucune requete
- * ne sait de quelle organisation elle parle.
- */
 export async function trouverParUtilisateur(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES_BAILLEUR},
@@ -86,13 +60,6 @@ export async function trouverParUtilisateur(utilisateurId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Met a jour les champs facultatifs de l'organisation d'un contact. */
-/**
- * Met a jour la fiche d'une organisation.
- *
- * Les colonnes arrivent deja nommees comme en base : la liste de ce qui
- * est modifiable est arretee par le service, pas ici.
- */
 export async function mettreAJourOrganisation(bailleurId, colonnes, client = null) {
   const { clause, valeurs, vide } = construireSet(colonnes, 2);
   if (vide) return;
@@ -117,13 +84,6 @@ export async function mettreAJourOrganisationParUtilisateur(
   );
 }
 
-/** Met a jour la fiche de contact d'une personne. */
-/**
- * Pose la photo sur le compte rattache a ce contact.
- *
- * On passe par le contact plutot que par l'utilisateur : c'est son
- * identifiant que porte le jeton du bailleur.
- */
 export async function mettreAJourPhoto(contactId, photoUrl, client = null) {
   await query(
     `UPDATE utilisateur u
@@ -135,12 +95,6 @@ export async function mettreAJourPhoto(contactId, photoUrl, client = null) {
   );
 }
 
-/**
- * Le nom, le prenom et le telephone de la personne derriere un contact.
- *
- * Ils vivent sur le compte, comme la photo : c'est la personne, et non
- * son role dans l'organisation.
- */
 export async function mettreAJourIdentite(contactId, colonnes, client = null) {
   const { clause, valeurs, vide } = construireSet(colonnes, 2);
   if (vide) return;
@@ -166,7 +120,6 @@ export async function mettreAJourContact(contactId, colonnes, client = null) {
   );
 }
 
-/** Les autres personnes de l'organisation, pour le profil. */
 export async function listerContacts(bailleurId, client = null) {
   const resultat = await query(
     `SELECT c.id, c.fonction, c.contact_principal, c.actif,
@@ -181,7 +134,6 @@ export async function listerContacts(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Les distinctions obtenues : le badge "Partenaire Or" et les autres. */
 export async function listerDistinctions(bailleurId, client = null) {
   const resultat = await query(
     `SELECT d.code, d.libelle, d.regle, bd.obtenue_le
@@ -195,21 +147,6 @@ export async function listerDistinctions(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/* ================================================================
-   Indicateurs du tableau de bord
-   ================================================================ */
-
-/**
- * Les quatre chiffres du haut de page.
- *
- * Aucun n'est stocke : ce sont des agregats. Une colonne figee se
- * desynchroniserait des la saisie du versement suivant.
- *
- * Les trois sous-requetes sont separees a dessein. Reunies en une
- * seule jointure, versements et affectations se multiplieraient l'un
- * par l'autre et gonfleraient les sommes -- c'est precisement le
- * double comptage a eviter.
- */
 export async function indicateurs(bailleurId, client = null) {
   const resultat = await query(
     `WITH engage AS (
@@ -255,12 +192,6 @@ export async function indicateurs(bailleurId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Repartition des montants affectes par domaine.
- *
- * Le domaine se lit dans project_categories : le modele annoncait une
- * colonne "domaine" sur le projet, elle n'existe pas ici.
- */
 export async function repartitionParDomaine(bailleurId, client = null) {
   const resultat = await query(
     `SELECT COALESCE(c.name, 'Sans domaine') AS domaine,
@@ -279,7 +210,6 @@ export async function repartitionParDomaine(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Zones d'intervention, deduites de projects.location. */
 export async function zonesDIntervention(bailleurId, client = null) {
   const resultat = await query(
     `SELECT COALESCE(p.location, 'Non precisee') AS zone,
@@ -297,17 +227,6 @@ export async function zonesDIntervention(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Ce qu'un bailleur voit des projets.
- *
- * Tous les projets HOPE en cours ou termines : les projets internes
- * font evoluer l'association elle-meme et restent a l'equipe, les
- * archives sont retires. S'y ajoutent, quels qu'ils soient, les projets
- * que CE bailleur finance -- un partenaire ne perd pas de vue un projet
- * ou son argent est affecte parce que l'equipe l'a archive.
- *
- * $1 est le bailleur_id ; "p" designe le projet.
- */
 const PROJET_VISIBLE = `
   (
     (p.project_type = 'HOPE' AND p.status IN ('IN_PROGRESS', 'COMPLETED'))
@@ -320,20 +239,6 @@ const PROJET_VISIBLE = `
   )
 `;
 
-/**
- * Les projets visibles par ce bailleur, avec ce qu'il y a affecte.
- *
- * Le montant affecte est celui de CE bailleur, pas le budget total du
- * projet : sinon il croirait avoir finance plus qu'en realite. Il vaut 0
- * sur un projet qu'il ne finance pas.
- *
- * Le financement du projet reprend la "somme investie" de la fiche et
- * du rapport -- dons recus et investissements de HOPE -- pour que la
- * carte et le rapport disent le meme chiffre.
- *
- * Rien d'identifiant : ni nom de donateur, ni beneficiaire. La photo
- * n'est rendue que si le media du projet en est une.
- */
 export async function projetsVisibles(bailleurId, client = null) {
   const resultat = await query(
     `SELECT p.id, p.reference, p.name, p.status, p.project_type,
@@ -377,12 +282,6 @@ export async function projetsVisibles(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Le projet est-il visible par ce bailleur ?
- *
- * La meme regle que la liste : un identifiant devine ne donne pas a lire
- * le rapport d'un projet interne.
- */
 export async function projetVisible(bailleurId, projetId, client = null) {
   const resultat = await query(
     `SELECT p.id, p.reference, p.name
@@ -394,10 +293,6 @@ export async function projetVisible(bailleurId, projetId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Part de l'institutionnel face a l'individuel, tous financeurs
- * confondus. C'est le 71 % / 29 % de la maquette.
- */
 export async function origineDesFonds(client = null) {
   const resultat = await query(
     `SELECT
@@ -410,17 +305,6 @@ export async function origineDesFonds(client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/* ================================================================
-   Engagements et versements
-   ================================================================ */
-
-/**
- * Les engagements du bailleur, avec ce qui a ete verse et affecte.
- *
- * Les deux sous-requetes laterales restent separees pour la meme
- * raison que dans indicateurs() : jointes a plat, elles se
- * multiplieraient.
- */
 export async function listerEngagements(bailleurId, client = null) {
   const resultat = await query(
     `SELECT e.id, e.intitule, e.type_soutien, e.montant_engage, e.devise,
@@ -452,11 +336,6 @@ export async function listerEngagements(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/**
- * Historique des versements.
- *
- * @param {{ recusSeulement?: boolean }} filtres
- */
 export async function listerVersements(bailleurId, filtres = {}, client = null) {
   const valeurs = [bailleurId];
   let condition = '';
@@ -484,14 +363,6 @@ export async function listerVersements(bailleurId, filtres = {}, client = null) 
   return versListe(resultat.rows);
 }
 
-/**
- * Les financements des bailleurs affectes a un projet, pour sa fiche
- * cote administration : qui finance, par quel engagement, combien.
- *
- * Le montant est dans la devise de l'engagement. Date et montant sont
- * rendus en texte : une date sans heure ne doit pas glisser d'un jour
- * selon le fuseau, et un NUMERIC ne passe pas par un flottant.
- */
 export async function affectationsDuProjet(projetId, client = null) {
   const resultat = await query(
     `SELECT a.id, a.montant::text AS montant, a.date_affectation::text AS date_affectation,
@@ -510,7 +381,6 @@ export async function affectationsDuProjet(projetId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Les affectations d'un engagement, projet par projet. */
 export async function listerAffectations(bailleurId, engagementId = null, client = null) {
   const valeurs = [bailleurId];
   let condition = '';
@@ -535,15 +405,6 @@ export async function listerAffectations(bailleurId, engagementId = null, client
   return versListe(resultat.rows);
 }
 
-/* ================================================================
-   Documents
-   ================================================================ */
-
-/**
- * Les documents du bailleur.
- *
- * @param {{ type?: string }} filtres
- */
 export async function listerDocuments(bailleurId, filtres = {}, client = null) {
   const valeurs = [bailleurId];
   let condition = '';
@@ -569,7 +430,6 @@ export async function listerDocuments(bailleurId, filtres = {}, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Nombre de documents par type, pour les onglets. */
 export async function compterDocuments(bailleurId, client = null) {
   const resultat = await query(
     `SELECT type, COUNT(*)::int AS nombre
@@ -590,13 +450,6 @@ export async function compterDocuments(bailleurId, client = null) {
   return compteurs;
 }
 
-/**
- * Retrouve un document en verifiant qu'il appartient bien au bailleur.
- *
- * Le controle est ici et pas seulement dans le service : c'est la
- * seule barriere entre un identifiant devine et le rapport d'un autre
- * partenaire.
- */
 export async function trouverDocument(bailleurId, documentId, client = null) {
   const resultat = await query(
     `SELECT id, bailleur_id, type, titre, fichier_url, nb_telechargements
@@ -608,15 +461,6 @@ export async function trouverDocument(bailleurId, documentId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Le contenu d'un document, pour le lire dans l'espace.
- *
- * Cherche AVEC le bailleur_id, comme le telechargement : un identifiant
- * devine ne donne pas a lire le rapport d'un autre partenaire.
- *
- * L'adresse du fichier n'est pas renvoyee : l'apercu ne doit donner lieu
- * a aucune requete vers le PDF.
- */
 export async function apercuDocument(bailleurId, documentId, client = null) {
   const resultat = await query(
     `SELECT d.id, d.type, d.titre, d.periode_debut, d.periode_fin,
@@ -633,7 +477,6 @@ export async function apercuDocument(bailleurId, documentId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Enregistre un telechargement : HOPE saura si le rapport est lu. */
 export async function marquerTelechargement(documentId, client = null) {
   const resultat = await query(
     `UPDATE document_bailleur
@@ -647,7 +490,6 @@ export async function marquerTelechargement(documentId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Depose un document genere par la plateforme. */
 export async function creerDocument(bailleurId, donnees, client = null) {
   const resultat = await query(
     `INSERT INTO document_bailleur
@@ -670,7 +512,6 @@ export async function creerDocument(bailleurId, donnees, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Numero d'ordre du prochain certificat, pour HFBL-PART-000112. */
 export async function prochainNumeroCertificat(client = null) {
   const resultat = await query(
     `SELECT COUNT(*)::int + 112 AS numero
@@ -681,16 +522,6 @@ export async function prochainNumeroCertificat(client = null) {
   return resultat.rows[0].numero;
 }
 
-/* ================================================================
-   Fil d'actualite
-   ================================================================ */
-
-/**
- * Les publications diffusees aux bailleurs.
- *
- * La photo et le financement viennent du projet lie, comme dans
- * l'administration : voir publication.repository.
- */
 export async function listerPublications(bailleurId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES_PUBLICATION},
@@ -709,7 +540,6 @@ export async function listerPublications(bailleurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Enregistre une manifestation d'interet. Rien n'est debite. */
 export async function creerManifestation(bailleurId, donnees, client = null) {
   const resultat = await query(
     `INSERT INTO manifestation_interet

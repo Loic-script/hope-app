@@ -10,17 +10,6 @@ import { LIEN_DON } from '../../components/vitrine/liens.js';
 import { useApparition, useCompteur } from '../../hooks/useApparition.js';
 import { Actualites as ActualitesAccueil, Contribuer, Partenaires, Realisations } from './SectionsAccueil.jsx';
 
-/**
- * L'accueil du site vitrine : le bandeau d'appel, les quatre activites
- * de HOPE, et ses impacts chiffres.
- *
- * Chaque bloc entre en scene quand il arrive a l'ecran (useApparition) ;
- * les chiffres d'impact se comptent sous les yeux (useCompteur). Tout
- * s'arrete si le visiteur a demande moins de mouvement.
- */
-
-/* ============================ Le bandeau ============================ */
-
 function Hero() {
   return (
     <section className="accueil-hero" aria-labelledby="accueil-hero-titre">
@@ -31,8 +20,6 @@ function Hero() {
           <span className="accueil-hero__ligne accueil-hero__ligne--1">Unissons-nous</span>
           <span className="accueil-hero__ligne accueil-hero__ligne--2">pour un avenir meilleur</span>
         </h1>
-        {/* Le trait de la charte, comme sur la page d'authentification :
-            la barre bleue et le soleil officiel, coupole en haut. */}
         <div className="trait-hope accueil-hero__trait" aria-hidden="true" />
         <p className="accueil-hero__texte">
           Nous ne faisons pas que faire naître l’espoir. Nous éclairons le chemin des orphelins et des mères
@@ -51,10 +38,6 @@ function Hero() {
   );
 }
 
-/* ============================ Les activites ============================ */
-
-/* Les icones des medaillons vivent dans components/vitrine/icones.jsx :
-   la page "Nous decouvrir" reprend le diplome et la mallette. */
 const ICONES = {
   scolarite: <IconeDiplome />,
   employabilite: <IconeMallette />,
@@ -89,12 +72,6 @@ const ACTIVITES = [
   },
 ];
 
-/**
- * Le soleil qui coiffe une carte, releve sur la maquette : trois rayons,
- * un anneau autour de l'icone, et un disque blanc qui creuse une encoche
- * dans le haut de la carte. Les deux barres d'horizon sont a part
- * (.v-activite__barre) : elles s'etirent jusqu'aux bords de la carte.
- */
 function Soleil({ cle }) {
   return (
     <svg className="v-activite__soleil" viewBox="-50 -60 100 98" aria-hidden="true">
@@ -145,13 +122,6 @@ function Activites() {
   );
 }
 
-/* ============================ Les impacts ============================ */
-
-/*
- * Les icones en filigrane, fournies par HOPE : blanches, deja
- * transparentes (10 % environ). `largeur` est leur taille naturelle, celle
- * de la maquette sur grand ecran ; elles retrecissent avec l'ecran.
- */
 const IMPACTS = [
   {
     nombre: 300,
@@ -192,7 +162,6 @@ function Impact({ impact, rang, demarre }) {
         style={{ '--largeur': impact.filigrane.largeur }}
       />
       <p className="impact__chiffre">
-        {/* Le lecteur d'ecran lit la valeur finale, pas le decompte. */}
         <span aria-hidden="true">{impact.nombre === null ? impact.enLettres : valeur}</span>
         <span className="sr-only">{impact.nombre === null ? impact.enLettres : impact.nombre}</span>
       </p>

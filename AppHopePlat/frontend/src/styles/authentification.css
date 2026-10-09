@@ -1,28 +1,7 @@
-/* ============================================================
-   HOPE - Authentification des utilisateurs, completion, espace
-   donateur
-
-   La page reprend la coquille de la connexion administrateur
-   (admin-login.css) : meme panneau d'illustration, meme carte, memes
-   champs. Seuls s'ajoutent ici la bascule connexion / inscription, la
-   liste du type d'utilisateur, et les deux formulaires de completion.
-
-   Chargee APRES admin-login.css, dont elle ajuste quelques regles.
-   ============================================================ */
-
-/* Le panneau d'illustration porte un titre plus court que celui de
-   l'administrateur : on garde la meme photo, la meme composition. */
 .connexion__illustration--utilisateur .illustration__titre {
   font-size: clamp(34px, 4vw, 46px);
 }
 
-/*
- * Le trait bleu sous le titre court jusqu'au "n" de "demain".
- *
- * Sa largeur totale -- celle de la plus longue ligne du titre -- est
- * mesuree par la page (Authentification.jsx) ; le soleil garde la
- * sienne, et la barre prend tout le reste.
- */
 .connexion__illustration--utilisateur .illustration__barre {
   display: flex;
   max-width: 100%;
@@ -34,17 +13,9 @@
 }
 
 .carte-connexion--utilisateur {
-  /* Le formulaire d'inscription est plus long que celui de connexion :
-     la carte respire un peu plus. */
   max-width: 470px;
 }
 
-/* ============================================================
-   1. Bascule connexion / inscription
-   ============================================================ */
-
-/* Deux onglets sur un rail ; la pastille blanche glisse de l'un a
-   l'autre (data-section, pose par la page) au lieu de sauter. */
 .bascule-acces {
   position: relative;
   display: flex;
@@ -108,16 +79,10 @@
   color: var(--hope-violet);
 }
 
-/* La bascule porte deja la marge du haut du formulaire. */
 .carte-connexion--utilisateur .formulaire {
   margin-top: 22px;
 }
 
-/* ============================================================
-   2. Champs propres a cette page
-   ============================================================ */
-
-/* Prenom et nom vont ensemble : ils tiennent sur une ligne. */
 .paire-acces {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -125,20 +90,11 @@
   gap: 14px;
 }
 
-/* admin-login.css espace les champs par ".champ + .champ". Dans la
-   grille, cette marge decalerait le second champ vers le bas et les
-   deux colonnes ne seraient plus alignees.
-
-   Le selecteur reprend ".paire-acces" : sans lui il aurait le meme
-   poids que la regle heritee, qui le suit dans la cascade. */
 .paire-acces .champ + .champ {
   margin-top: 0;
 }
 
-/* La liste du type d'utilisateur reprend l'habillage des champs de
-   saisie : meme boite, meme hauteur, meme focus. */
 .champ__selection {
-  /* La fleche natine du select est masquee par la boite : on la rend. */
   appearance: none;
   -webkit-appearance: none;
   padding-right: 34px;
@@ -148,18 +104,10 @@
   cursor: pointer;
 }
 
-/* ------------------------------------------------------------
-   La liste du type d'utilisateur, sur mesure (ChampType)
-   ------------------------------------------------------------ */
-
-/* Ouverte, la boite passe au-dessus des champs suivants : son leger
-   soulevement au focus en fait un contexte d'empilement a part, le
-   panneau ne peut pas en sortir. */
 .liste-type--ouverte {
   z-index: 30;
 }
 
-/* Le bouton tient toute la boite ; le chevron se retourne a l'ouverture. */
 .liste-type__bouton {
   display: flex;
   align-items: center;
@@ -175,7 +123,6 @@
   cursor: default;
 }
 
-/* Un gris lisible (4,6:1 sur blanc) : c'est un vrai texte, pas un placeholder. */
 .liste-type__bouton--vide .liste-type__valeur {
   color: #75728a;
 }
@@ -202,7 +149,6 @@
   transform: rotate(180deg);
 }
 
-/* L'icone du champ prend la couleur du type choisi. */
 .liste-type__icone {
   transition: color 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -227,8 +173,6 @@
   transform: scale(1.1);
 }
 
-/* Le panneau, sous le champ : il se deplie en douceur, ses lignes
-   arrivent l'une apres l'autre. */
 .liste-type__panneau {
   position: absolute;
   top: calc(100% + 8px);
@@ -270,7 +214,6 @@
   color: var(--hope-violet);
 }
 
-/* La pastille : le fond pale du type, son icone en couleur pleine. */
 .liste-type__pastille {
   display: grid;
   place-items: center;
@@ -365,7 +308,6 @@
   color: var(--hope-erreur);
 }
 
-/* Ce que le type choisi implique, dit avant l'envoi du formulaire. */
 .note-acces {
   margin-top: 14px;
   padding: 11px 14px;
@@ -383,7 +325,6 @@
   color: #1f6b48;
 }
 
-/* Compte en attente de validation : ni le rouge, ni le ton d'un refus. */
 .formulaire__attente {
   margin-top: 16px;
   padding: 11px 14px;
@@ -404,12 +345,6 @@
   color: #1f6b48;
 }
 
-/* ============================================================
-   3. La troisieme porte de la page d'entree
-   ============================================================ */
-
-/* Une seule porte pour les trois types : elle est plus large que celle
-   de l'admin, et le violet de la marque la porte. */
 .redirection__lien--utilisateur {
   background-color: var(--hope-violet);
 }
@@ -417,13 +352,6 @@
 .redirection__lien--utilisateur:hover {
   background-color: var(--hope-violet-fonce);
 }
-
-/* ============================================================
-   4. Formulaires de completion
-
-   Ils s'affichent avant d'entrer dans l'espace, hors de sa coquille :
-   il n'y a encore rien a y montrer.
-   ============================================================ */
 
 .completion {
   display: flex;
@@ -601,12 +529,6 @@
   outline-offset: 2px;
 }
 
-/* ============================================================
-   5. Mouvements : ce que la page fait quand on agit dessus
-   ============================================================ */
-
-/* A l'ouverture : la carte se pose, les textes de l'illustration
-   arrivent l'un apres l'autre. */
 .carte-connexion--utilisateur {
   animation: acces-carte 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -631,8 +553,6 @@
   animation-delay: 500ms;
 }
 
-/* A chaque bascule : le titre, l'accroche et le formulaire entrent par
-   le bas, en fondu. */
 .carte-connexion__titre--anime,
 .carte-connexion__accroche--anime {
   animation: acces-monte 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -646,8 +566,6 @@
   animation: acces-section 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Un champ qui prend le focus : son etiquette passe au violet, son icone
-   se redresse, sa boite se souleve d'un cheveu. */
 .champ:focus-within .champ__label {
   color: var(--hope-violet);
 }
@@ -678,12 +596,10 @@
   transform: scale(1.12);
 }
 
-/* Un champ refuse tremble une fois. */
 .carte-connexion--utilisateur .champ__boite--erreur {
   animation: acces-secousse 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* L'oeil du mot de passe : l'icone change d'un petit bond. */
 .carte-connexion--utilisateur .champ__bascule svg {
   animation: acces-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -692,8 +608,6 @@
   transform: scale(0.9);
 }
 
-/* Le bouton principal : il se souleve au survol, sa fleche s'avance, un
-   reflet le traverse ; refuse, il secoue la tete. */
 .carte-connexion--utilisateur .bouton--principal {
   position: relative;
   overflow: hidden;
@@ -728,7 +642,6 @@
   animation: acces-secousse 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* Le texte de chargement : les points respirent. */
 .carte-connexion--utilisateur .bouton__chargement {
   border-color: rgba(43, 33, 18, 0.25);
   border-top-color: #2b2112;
@@ -808,17 +721,12 @@
   }
 }
 
-/* ============================================================
-   6. Petits ecrans
-   ============================================================ */
-
 @media (max-width: 620px) {
   .paire-acces,
   .completion__paire {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Repliees en colonne, les paires retrouvent l'espacement normal. */
   .paire-acces .champ + .champ {
     margin-top: 22px;
   }

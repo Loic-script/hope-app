@@ -1,15 +1,3 @@
-/**
- * Installation des categories de projet.
- *
- *   npm run db:categories
- *
- * Ce sont des donnees de reference, pas des exemples : elles alimentent le
- * formulaire de creation de projet et les statistiques par categorie.
- * L'administrateur peut les completer ou en ajouter depuis l'ecran
- * Parametres.
- *
- * Le script est idempotent : une categorie deja presente n'est pas dupliquee.
- */
 import { fermerPool } from '../config/database.js';
 import * as catalogService from '../services/catalog.service.js';
 

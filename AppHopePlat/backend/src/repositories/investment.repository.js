@@ -1,10 +1,3 @@
-/**
- * Repository des investissements du fonds HOPE.
- *
- * Un investissement, c'est l'action "Investir" de l'ecran Budget :
- * l'administrateur prend sur les dons non affectes et les engage sur un
- * projet precis, en justifiant sa decision.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
@@ -22,7 +15,6 @@ const JOINTURES = `
   LEFT JOIN project_categories c ON c.id = p.category_id
 `;
 
-/** @param {{ projectId?: number, recherche?: string, limite?: number }} filtres */
 export async function lister(filtres = {}, client = null) {
   const conditions = [];
   const valeurs = [];
@@ -83,11 +75,8 @@ export async function creer(donnees, client = null) {
   return trouverParId(resultat.rows[0].id, client);
 }
 
-/** Genere une reference lisible : INV-2026-0007. */
 export async function genererReference(client = null) {
   const annee = new Date().getFullYear();
-  // Le plus grand numero + 1 : apres une suppression, le compte + 1
-  // retomberait sur une reference deja prise (voir donation.repository).
   if (client) await query("SELECT pg_advisory_xact_lock(hashtext('investments.reference'))", [], client);
   const resultat = await query(
     `SELECT COALESCE(MAX(SUBSTRING(reference FROM '[0-9]+$')::int), 0) AS dernier

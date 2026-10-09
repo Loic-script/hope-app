@@ -1,7 +1,3 @@
-/*
- * Les montants : tout passe en centimes entiers, jamais en flottant.
- * Lance par `npm test` (node --test).
- */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -35,7 +31,6 @@ test('enCentimes borne le maximum de NUMERIC(14,2)', () => {
 });
 
 test('la precision tient la ou un flottant se tromperait', () => {
-  // 0.1 + 0.2 en flottant vaut 0.30000000000000004.
   assert.equal(sommeDepuisBase(['0.10', '0.20']), 30);
   assert.equal(centimesVersTexte(sommeDepuisBase(['0.10', '0.20'])), '0.30');
 });

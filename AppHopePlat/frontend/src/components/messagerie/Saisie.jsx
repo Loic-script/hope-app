@@ -4,16 +4,8 @@ import { messageErreur } from '../../services/api.js';
 import { poids } from './outils.js';
 import { ACCEPTE, MAX_PIECES, ajouterFichiers, natureDe } from './pieces.js';
 
-/** Hauteur maximale du champ, au-dela il defile. */
 const HAUTEUR_MAX = 160;
 
-/**
- * Une trentaine d'emojis, choisis.
- *
- * Des reactions de travail, et les drapeaux des pays avec qui HOPE
- * echange. Une bibliotheque entiere pesait plus lourd que la messagerie
- * elle-meme, pour des milliers de symboles que personne n'envoie ici.
- */
 export const EMOJIS = [
   ['👍', 'Pouce levé'], ['👏', 'Applaudissements'], ['🙏', 'Merci'], ['🙂', 'Sourire'],
   ['😊', 'Content'], ['😄', 'Rire'], ['😉', 'Clin d’œil'], ['🤝', 'Poignée de main'],
@@ -25,20 +17,6 @@ export const EMOJIS = [
   ['🇬🇧', 'Royaume-Uni'], ['🇺🇸', 'États-Unis'],
 ];
 
-/**
- * La zone de saisie.
- *
- * - le champ grandit avec le texte, jusqu'a HAUTEUR_MAX ;
- * - Entree envoie, Maj+Entree passe a la ligne, et rien ne part pendant
- *   une composition IME -- l'Entree qui valide un caractere en chinois ou
- *   en japonais n'est pas un envoi ;
- * - un emoji s'insere au curseur, qui se replace juste apres lui ;
- * - le trombone joint jusqu'a cinq photos, videos ou PDF, affiches en
- *   etiquettes qu'on retire avant l'envoi.
- *
- * @param {{ onEnvoyer: (contenu: {corps: string, fichiers: File[]}) => Promise<void>,
- *           desactive?: boolean }} props
- */
 export default function Saisie({ onEnvoyer, desactive = false }) {
   const [texte, setTexte] = useState('');
   const [envoi, setEnvoi] = useState(false);
@@ -48,12 +26,6 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
   const champ = useRef(null);
   const selecteur = useRef(null);
 
-  /*
-   * Le champ fichier cache reflete la selection affichee.
-   *
-   * Retirer une etiquette doit aussi retirer le fichier du champ : sa
-   * liste n'est pas modifiable, on la reconstruit donc par DataTransfer.
-   */
   useEffect(() => {
     if (!selecteur.current || typeof DataTransfer === 'undefined') return;
     const transfert = new DataTransfer();
@@ -72,7 +44,6 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
     setErreur('');
   }
 
-  // Le champ suit la hauteur de son contenu.
   useLayoutEffect(() => {
     const element = champ.current;
     if (!element) return;
@@ -89,8 +60,6 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
     setErreur('');
     try {
       await onEnvoyer({ corps: texte, fichiers });
-      // Reinitialise seulement une fois l'envoi confirme : un echec garde
-      // le texte et les pieces, qu'on n'a pas a reprendre.
       setTexte('');
       setFichiers([]);
     } catch (echec) {
@@ -102,8 +71,6 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
   }
 
   function surTouche(evenement) {
-    // keyCode 229 : ce que certains navigateurs envoient pendant une
-    // composition, quand isComposing n'est pas encore pose.
     const composition = evenement.nativeEvent.isComposing || evenement.keyCode === 229;
     if (evenement.key === 'Enter' && !evenement.shiftKey && !composition) {
       evenement.preventDefault();
@@ -118,7 +85,6 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
     setTexte(texte.slice(0, debut) + emoji + texte.slice(fin));
     setPalette(false);
 
-    // Le curseur se replace apres l'emoji, une fois le texte rendu.
     requestAnimationFrame(() => {
       if (!element) return;
       element.focus();
@@ -180,8 +146,6 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
           hidden
           onChange={(evenement) => {
             const liste = [...(evenement.target.files ?? [])];
-            // Les fichiers deja retenus sont dans l'etat : le champ, lui,
-            // ne garde que la derniere selection du systeme.
             choisir(liste.filter((f) => !fichiers.includes(f)));
           }}
         />
@@ -219,23 +183,15 @@ export default function Saisie({ onEnvoyer, desactive = false }) {
   );
 }
 
-/**
- * La palette d'emojis : un bouton, et une grille qu'on parcourt au clavier.
- *
- * Fleches pour se deplacer, Entree pour choisir, Echap pour refermer --
- * le focus revient alors au bouton qui l'avait ouverte.
- */
 function PaletteEmojis({ ouverte, onBasculer, onChoisir }) {
   const bouton = useRef(null);
   const grille = useRef(null);
   const COLONNES = 6;
 
-  // Ouverte : le premier emoji prend le focus.
   useEffect(() => {
     if (ouverte) grille.current?.querySelector('button')?.focus();
   }, [ouverte]);
 
-  // Un clic ailleurs referme.
   useEffect(() => {
     if (!ouverte) return undefined;
     const surClic = (evenement) => {

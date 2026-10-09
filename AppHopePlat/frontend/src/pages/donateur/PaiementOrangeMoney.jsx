@@ -5,7 +5,6 @@ import logoOrangeMoney from '../../assets/paiement/orange-money.webp';
 import { MONTANTS_RAPIDES, numeroLisible, usePaiementMobile } from '../../hooks/usePaiementMobile.js';
 import * as fmt from '../../utils/format.js';
 
-/** Orange Money : un numero Orange, 032 ou 037. */
 const ORANGE_MONEY = {
   mode: 'orange_money',
   numeroValide: /^3[27]\d{7}$/,
@@ -13,29 +12,14 @@ const ORANGE_MONEY = {
   cleCompte: 'orangeMoney',
 };
 
-/** Les trois temps, tels que les chevrons les nomment. */
 const CHEVRONS = ['Montant', 'Envoi', 'Reçu'];
 
-/** "24 sept. 2026 10:12:03", comme sur un recu Orange Money. */
 function horodatage(date) {
   const jour = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   return `${jour} ${heure}`;
 }
 
-/**
- * Le paiement par Orange Money, ouvert depuis l'etape 4 du parcours.
- *
- * La grammaire des pages d'Orange Money : un bandeau noir, un titre
- * franc, des chevrons noir / orange / gris qui disent l'etape, des
- * champs sobres. Le troisieme temps est un recu de transaction, dans
- * la forme de celui qu'Orange Money delivre -- sections en gras, lignes
- * libelle / valeur --, et il s'imprime.
- *
- * La mecanique (usePaiementMobile) est celle de MVola : le donateur
- * envoie depuis #144#, recopie le numero de transaction, et l'equipe
- * rapproche avant de confirmer. Aucun code secret n'est demande.
- */
 export default function PaiementOrangeMoney() {
   const {
     profil,
@@ -64,7 +48,6 @@ export default function PaiementOrangeMoney() {
     libellePlusTard,
   } = usePaiementMobile(ORANGE_MONEY);
 
-  // L'heure du recu : celle ou le don a ete enregistre.
   const [edition, setEdition] = useState(null);
   useEffect(() => {
     if (don) setEdition(new Date());
@@ -152,7 +135,6 @@ export default function PaiementOrangeMoney() {
           </section>
         )}
 
-        {/* ---------- 1. Le montant ---------- */}
         {pret && temps === 'montant' && (
           <section className="om__temps" key="montant">
             <form className="om__formulaire" onSubmit={validerMontant} noValidate aria-label="Montant du don">
@@ -241,13 +223,10 @@ export default function PaiementOrangeMoney() {
           </section>
         )}
 
-        {/* ---------- 2. L'envoi ---------- */}
         {pret && temps === 'envoi' && (
           <section className="om__temps" key="envoi">
             <div className="om__envoi">
               <ol className="om__consignes">
-                {/* Le texte dans un seul span : la puce carree est l'autre
-                    element du flex, et le gras reste dans la phrase. */}
                 <li style={{ '--rang': 0 }}>
                   <span>
                     Composez <strong>#144#</strong>
@@ -270,7 +249,6 @@ export default function PaiementOrangeMoney() {
               <section className="om__beneficiaire" aria-labelledby="om-beneficiaire-titre">
                 <h2 className="om__section-titre" id="om-beneficiaire-titre">
                   Bénéficiaire
-                  {/* Sur telephone, le nom rejoint le titre : une ligne de moins. */}
                   <span className="om__section-nom"> · {compte.titulaire}</span>
                 </h2>
                 <Ligne libelle="Nom" valeur={compte.titulaire} className="om__ligne--nom" />
@@ -335,7 +313,6 @@ export default function PaiementOrangeMoney() {
           </section>
         )}
 
-        {/* ---------- 3. Le recu ---------- */}
         {profil && temps === 'merci' && don && (
           <section className="om__temps om__temps--recu" key="merci">
             <p className="om__merci">
@@ -347,7 +324,6 @@ export default function PaiementOrangeMoney() {
               Merci ! Votre don est enregistré. L’équipe HOPE le confirme dès réception.
             </p>
 
-            {/* La fente : le recu en sort, comme d'une imprimante. */}
             <div className="om__fente" aria-hidden="true" />
             <div className="om__sortie">
               <article className="om__recu" aria-labelledby="om-recu-titre">
@@ -419,10 +395,6 @@ export default function PaiementOrangeMoney() {
   );
 }
 
-/**
- * Une ligne de recu : le libelle a gauche, la valeur a droite. Avec
- * aCopier, un bouton "Copier" la suit.
- */
 function Ligne({ libelle, valeur, aCopier, className = '' }) {
   const [copie, setCopie] = useState(false);
 
@@ -437,7 +409,6 @@ function Ligne({ libelle, valeur, aCopier, className = '' }) {
       await navigator.clipboard.writeText(aCopier);
       setCopie(true);
     } catch {
-      /* le texte reste lisible et selectionnable */
     }
   }
 

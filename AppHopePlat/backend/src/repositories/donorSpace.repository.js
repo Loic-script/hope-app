@@ -1,15 +1,6 @@
-/**
- * Acces aux donnees de l'espace donateur : sa fiche de don, ses dons, sa
- * photo, et les projets qu'il peut consulter.
- *
- * Un compte donateur (utilisateur) et ses dons ne se rejoignent que par
- * donors.utilisateur_id : la fiche de don rattachee au compte. Jamais par
- * l'adresse electronique -- voir schema.sql.
- */
 import { query } from '../config/database.js';
 import { versListe, versObjet } from '../shared/mapping.js';
 
-/** Un don tel que les espaces et le site le lisent (mesDons, donsDeLaFiche). */
 const COLONNES_DON = `
   d.id, d.reference, d.amount AS montant, d.currency AS devise,
   d.allocation AS affectation, d.project_id AS projet_id,
@@ -20,13 +11,11 @@ const COLONNES_DON = `
   d.message
 `;
 
-/** La fiche de don rattachee a ce compte, ou undefined. */
 export async function ficheDuCompte(utilisateurId, client = null) {
   const resultat = await query('SELECT id FROM donors WHERE utilisateur_id = $1', [utilisateurId], client);
   return versObjet(resultat.rows[0]);
 }
 
-/** Cree la fiche de don d'un compte, rattachee a lui. */
 export async function creerFicheDuCompte(donnees, client = null) {
   const resultat = await query(
     `INSERT INTO donors (first_name, last_name, organization_name, email, phone,
@@ -49,12 +38,6 @@ export async function creerFicheDuCompte(donnees, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/**
- * Les dons du compte, du plus recent au plus ancien.
- *
- * La date d'un don est celle de sa reception quand il est recu, celle de
- * la promesse sinon.
- */
 export async function mesDons(utilisateurId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES_DON}
@@ -69,15 +52,6 @@ export async function mesDons(utilisateurId, client = null) {
   return versListe(resultat.rows);
 }
 
-/* ------------------------------------------------------------------
-   Le donateur sans compte (don depuis le site vitrine)
-   ------------------------------------------------------------------ */
-
-/**
- * La fiche sans compte qui porte cette adresse, ou undefined : le
- * donateur sans compte qui revient donner retrouve sa fiche. Une fiche
- * rattachee a un compte, elle, n'est jamais reprise par le courriel.
- */
 export async function ficheSansCompte(email, client = null) {
   const resultat = await query(
     `SELECT f.id
@@ -93,7 +67,6 @@ export async function ficheSansCompte(email, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** Les dons d'une fiche, par son identifiant, dans la forme de mesDons. */
 export async function donsDeLaFiche(donorId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES_DON}
@@ -108,25 +81,17 @@ export async function donsDeLaFiche(donorId, client = null) {
   return versListe(resultat.rows);
 }
 
-/** Un don de la fiche, par son identifiant : undefined s'il n'est pas a elle. */
 export async function unDonDeLaFiche(donorId, donId, client = null) {
   if (!donorId) return undefined;
   const liste = await donsDeLaFiche(donorId, client);
   return liste.find((don) => Number(don.id) === Number(donId));
 }
 
-/** Un don du compte, par son identifiant : undefined s'il n'est pas a lui. */
 export async function unDeMesDons(utilisateurId, donId, client = null) {
   const liste = await mesDons(utilisateurId, client);
   return liste.find((don) => Number(don.id) === Number(donId));
 }
 
-/**
- * Le projet est-il lisible par ce donateur ?
- *
- * Les projets HOPE en cours ou termines -- ni archives, ni internes --, et
- * tout projet auquel il a donne, quel que soit son etat.
- */
 export async function projetLisible(utilisateurId, projetId, client = null) {
   const resultat = await query(
     `SELECT p.id
@@ -147,7 +112,6 @@ export async function projetLisible(utilisateurId, projetId, client = null) {
   return versObjet(resultat.rows[0]);
 }
 
-/** La photo de profil du compte. */
 export async function mettreAJourPhoto(utilisateurId, photoUrl, client = null) {
   await query('UPDATE utilisateur SET photo_url = $2 WHERE id = $1', [utilisateurId, photoUrl], client);
 }

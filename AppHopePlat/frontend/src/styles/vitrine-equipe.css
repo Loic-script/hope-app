@@ -1,23 +1,6 @@
-/* ============================================================
-   Site vitrine : l'equipe de HOPE, sur "Nous decouvrir"
-   (pages/vitrine/EquipeHope.jsx)
-
-   Quatre temps : l'equipe en quelques lignes, les membres du bureau sur
-   un fond jaune pale seme de soleils, les benevoles en carrousel sur un
-   fond lavande, et le mot de la presidente a cote de son portrait.
-
-   Les fonds pales viennent de la palette : le jaune et le violet de la
-   charte melanges au blanc, avec le motif officiel de soleils, voile.
-   ============================================================ */
-
-/* ------------------------------ Le portrait ------------------------------ */
-
-/* Le boitier fait trois fois le rayon de l'anneau (viewBox de 120 pour
-   R = 40) : les rayons et les barres, a 1,42 R, tiennent dedans. */
 .v-portrait {
   display: block;
   width: var(--portrait, 260px);
-  /* 104 unites de haut pour 120 de large : le boitier s'arrete sous l'anneau. */
   height: calc(var(--portrait, 260px) * 104 / 120);
   overflow: visible;
 }
@@ -40,9 +23,6 @@
   fill: var(--hope-bleu);
 }
 
-/* A l'apparition : le portrait se pose, les rayons se levent, les barres
-   sortent de l'anneau. Le survol joue sur le groupe interieur des rayons,
-   sans se disputer la propriete avec l'animation d'entree. */
 .v-portrait__rayons,
 .v-portrait__barre {
   opacity: 0;
@@ -99,8 +79,6 @@
   }
 }
 
-/* ------------------------------ Notre equipe ------------------------------ */
-
 .v-equipe {
   padding: clamp(56px, 7vw, 88px) 0 clamp(48px, 6vw, 72px);
   background: #ffffff;
@@ -137,11 +115,6 @@
   font-weight: 700;
 }
 
-/* --------------------------- Les membres du bureau --------------------------- */
-
-/* Le fond des deux sections de portraits : la couleur de la charte
-   fondue dans le blanc, et le motif officiel de soleils sous un voile de
-   cette meme couleur (theme.css). */
 .v-bureau,
 .v-benevoles {
   --fond: color-mix(in srgb, var(--hope-jaune) 26%, #ffffff);
@@ -207,8 +180,6 @@
   font-weight: 600;
 }
 
-/* ------------------------------ Les benevoles ------------------------------ */
-
 .v-benevoles__carrousel {
   --portrait: clamp(200px, 26vw, 340px);
 
@@ -241,7 +212,6 @@
   color: var(--hope-bleu);
 }
 
-/* Sans photo : le disque bleu pale et l'initiale. */
 .v-portrait__fond {
   fill: var(--hope-bleu-clair);
 }
@@ -253,7 +223,6 @@
   font-weight: 700;
 }
 
-/* Pas encore de benevole a montrer, ou la liste se charge. */
 .v-benevoles__message {
   display: flex;
   flex-direction: column;
@@ -270,8 +239,6 @@
   margin: 0;
 }
 
-/* Les fleches : un carre bleu translucide pose sur le bord du portrait,
-   a la hauteur des barres, comme sur la maquette. */
 .v-benevoles__fleche {
   position: absolute;
   top: calc(var(--portrait) / 2);
@@ -332,7 +299,6 @@
   border-radius: 12px;
 }
 
-/* Les points : une pilule bleue, le point courant en blanc. */
 .v-benevoles__points {
   display: flex;
   gap: 14px;
@@ -361,20 +327,12 @@
   transform: scale(1.15);
 }
 
-/* --------------------------- Le mot de la direction --------------------------- */
-
 .v-direction {
-  /* La carte entre par la droite (translateX) : avant son entree, elle
-     ne doit pas elargir la page sur telephone. */
   overflow-x: clip;
   padding: clamp(56px, 7vw, 88px) 0 clamp(64px, 8vw, 100px);
   background: #ffffff;
 }
 
-/* Le portrait a gauche : la photo fait 63 % du boitier, soit un peu plus
-   de 300 px sur un ecran de 1366 px. La carte part un peu au-dessus de
-   son milieu, passe derriere la photo et devant le soleil, et son texte
-   commence apres l'anneau. */
 .v-direction__ensemble {
   --portrait: clamp(300px, 38vw, 546px);
 
@@ -385,9 +343,6 @@
   margin: clamp(28px, 4vw, 44px) auto 0;
 }
 
-/* Les calques du portrait s'empilent dans le meme carre. Le boitier ne
-   porte ni transformation ni z-index : ses calques se rangent ainsi de
-   part et d'autre de la carte (soleil 0, carte 1, photo 2). */
 .v-direction__portrait {
   position: relative;
   width: var(--portrait);
@@ -404,7 +359,6 @@
   overflow: visible;
 }
 
-/* Le halo : une lueur jaune entre l'anneau et les rayons. */
 .v-direction__halo {
   position: absolute;
   inset: 5%;
@@ -428,9 +382,6 @@
   transform: none;
 }
 
-/* La couronne tourne lentement, l'orbite a contresens : un tour en une
-   minute, assez lent pour ne pas distraire de la lecture. A l'arret tant
-   que la section n'est pas a l'ecran. */
 .v-direction__couronne,
 .v-direction__orbite {
   z-index: 0;
@@ -466,7 +417,6 @@
   fill: var(--hope-violet);
 }
 
-/* La photo et son anneau, devant la carte. */
 .v-direction__medaillon {
   z-index: 2;
   opacity: 0;
@@ -481,8 +431,6 @@
   transform: none;
 }
 
-/* L'anneau se trace autour de la photo (pathLength = 100) ; le tiret
-   depasse un peu le tour pour ne laisser aucune jointure au sommet. */
 .v-direction__anneau {
   stroke-width: 5.2;
   stroke-dasharray: 101;
@@ -494,7 +442,6 @@
   stroke-dashoffset: 0;
 }
 
-/* La photo recule doucement pour se poser dans son cadre. */
 .v-direction__photo {
   transform: scale(1.16);
   transition: transform 1.8s cubic-bezier(0.22, 1, 0.36, 1) 200ms;
@@ -525,7 +472,6 @@
   box-sizing: border-box;
   min-height: calc(var(--portrait) * 0.44);
   margin: calc(var(--portrait) * 0.42) 0 0 calc(var(--portrait) * -0.42);
-  /* A gauche : le texte demarre juste apres l'anneau (0,853 du boitier). */
   padding: clamp(32px, 3.4vw, 46px) clamp(32px, 3.6vw, 52px) clamp(30px, 3.2vw, 42px) calc(var(--portrait) * 0.325);
   border-radius: 22px;
   background: var(--hope-violet);
@@ -566,10 +512,6 @@
   }
 }
 
-/* Un ecran par section, comme le reste du site (vitrine-accueil.css) :
-   sur ordinateur, la section occupe la hauteur de la fenetre moins
-   l'en-tete ; le portrait et le texte se reglent aussi sur la hauteur,
-   pour que l'ensemble tienne entier sur les ecrans peu hauts. */
 @media (min-width: 1101px) {
   .v-direction {
     display: flex;
@@ -594,8 +536,6 @@
     font-size: clamp(15px, min(1.35vw, 2.7vh), 18px);
   }
 }
-
-/* ------------------------------ Petits ecrans ------------------------------ */
 
 @media (max-width: 1000px) {
   .v-benevoles__piste {
@@ -626,8 +566,6 @@
     justify-items: center;
   }
 
-  /* La carte remonte sous l'anneau : les rayons du bas se couchent
-     derriere elle. */
   .v-direction__carte {
     width: 100%;
     min-height: 0;
@@ -649,8 +587,6 @@
     grid-auto-columns: 100%;
   }
 
-  /* Un seul portrait a l'ecran, plus petit : la fleche se pose sur la barre,
-     hors du visage. */
   .v-benevoles__fleche {
     width: 40px;
     height: 40px;
@@ -691,7 +627,6 @@
     transition: none;
   }
 
-  /* Le soleil ne tourne pas, l'anneau est deja trace. */
   .v-direction__couronne,
   .v-direction__orbite {
     animation: none;

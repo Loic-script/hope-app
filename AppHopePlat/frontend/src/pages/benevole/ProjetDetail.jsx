@@ -18,21 +18,6 @@ const ONGLETS = ['general', 'taches', 'impact'];
 const STATUTS_PROJET = { IN_PROGRESS: 'En cours', COMPLETED: 'Terminé' };
 const TYPES_PREUVE = { PHOTO: 'Photo', VIDEO: 'Vidéo', DOCUMENT: 'Document', TESTIMONY: 'Témoignage' };
 
-/**
- * Un projet, et tout ce qu'un benevole peut y faire.
- *
- * La tete du projet -- sa photo, son nom, son lieu -- puis trois onglets :
- *   - Vue generale : ce qu'il est, ce qu'il vise, pour qui, qui le mene.
- *     Rien d'argent : ni budget, ni financement, ni dons -- ils ne
- *     regardent pas le benevole, et le serveur ne les envoie meme pas ;
- *   - Taches : ce qu'il y a a faire, et la place du benevole dans chacune ;
- *   - Impact : ce que le projet a produit, comme dans la fiche du projet
- *     de l'administration. Le benevole y lit les mesures, et y ajoute ses
- *     preuves terrain -- il est souvent celui qui a la photo.
- *
- * L'onglet ouvert se lit dans l'adresse (?onglet=taches) : une
- * notification peut y mener directement.
- */
 export default function ProjetDetail() {
   const { id } = useParams();
   const [parametres, setParametres] = useSearchParams();
@@ -45,16 +30,12 @@ export default function ProjetDetail() {
 
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');
-  // La preuve dont on feuillette les fichiers, et le rang du fichier montre.
   const [carrousel, setCarrousel] = useState(null);
-  // Ajouter une preuve, et celle qu'on s'apprete a retirer.
   const [ajoutPreuve, setAjoutPreuve] = useState(false);
   const [aRetirer, setARetirer] = useState(null);
   const [retrait, setRetrait] = useState({ envoi: false, erreur: '' });
   const [annonce, setAnnonce] = useState('');
 
-  // Un chargeur stable : les vignettes rechargeraient leur fichier a
-  // chaque rendu s'il changeait.
   const chargerFichier = useCallback(
     (preuve, fichier) => service.urlDuFichierPreuve(id, preuve, fichier),
     [id]
@@ -108,12 +89,9 @@ export default function ProjetDetail() {
         <Link to="/benevole/projets">← Tous les projets</Link>
       </p>
 
-      {/* ---------- La tete du projet ---------- */}
       <section className="tete-projet">
         {projet.mediaUrl && (
           <div className="tete-projet__image">
-            {/* Une video se regarde, elle ne s'agrandit pas comme une
-                photo : rendue en image, elle s'affichait cassee. */}
             {projet.mediaType === 'VIDEO' ? (
               <video
                 src={urlMedia(projet.mediaUrl)}
@@ -160,12 +138,10 @@ export default function ProjetDetail() {
       />
 
       {refus && <p className="alerte-benevole">{refus}</p>}
-      {/* Annonce aux lecteurs d'ecran, et confirmation visible. */}
       <p className="confirmation-benevole" role="status" hidden={!annonce}>
         {annonce}
       </p>
 
-      {/* ================= Vue generale ================= */}
       {onglet === 'general' && (
         <>
           {projet.description && (
@@ -220,7 +196,6 @@ export default function ProjetDetail() {
         </>
       )}
 
-      {/* ================= Taches ================= */}
       {onglet === 'taches' && (
         <section className="bloc">
           <div className="bloc__entete">
@@ -270,12 +245,6 @@ export default function ProjetDetail() {
                     </p>
                   </div>
 
-                  {/*
-                    Toute tache non livree se demande : libre, pour la
-                    prendre ; commencee, pour rejoindre son equipe. L'equipe
-                    HOPE valide. "Mes tâches" est l'ecran ou l'on agit
-                    ensuite sur les siennes.
-                  */}
                   <div className="tache-projet__action">
                     <ActionDemande
                       tache={tache}
@@ -293,7 +262,6 @@ export default function ProjetDetail() {
         </section>
       )}
 
-      {/* ================= Impact ================= */}
       {onglet === 'impact' && (
         <OngletImpact
           impacts={impacts}
@@ -350,15 +318,6 @@ export default function ProjetDetail() {
   );
 }
 
-/**
- * L'impact du projet, comme dans la fiche de l'administration : les totaux
- * mesures, l'impact general en phrases, les mesures objectif par objectif
- * -- en lecture seule --, et les preuves terrain, auxquelles le benevole
- * ajoute les siennes et dont il peut retirer celles qu'il a deposees.
- *
- * Aucun nom de beneficiaire : une mesure individuelle dit seulement
- * qu'elle porte sur une personne.
- */
 function OngletImpact({
   impacts,
   synthese,
@@ -467,7 +426,6 @@ function OngletImpact({
             <h2 className="bloc__titre">Preuves terrain</h2>
             <p className="bloc__sous-titre">Les photos, vidéos et témoignages du terrain</p>
           </div>
-          {/* Le benevole est sur le terrain : c'est souvent lui qui a la photo. */}
           <button type="button" className="bouton-hope" onClick={onAjouter}>
             + Ajouter une preuve
           </button>
@@ -503,7 +461,6 @@ function OngletImpact({
                       Voir {preuve.files.length > 1 ? `les ${preuve.files.length} fichiers` : 'le fichier'}
                     </button>
                   )}
-                  {/* On ne retire que ce qu'on a depose soi-meme. */}
                   {preuve.mienne && (
                     <button
                       type="button"

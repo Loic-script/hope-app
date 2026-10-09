@@ -1,19 +1,3 @@
-/**
- * Jeu de donnees de demonstration de l'espace bailleur.
- *
- *   npm run db:seed-funders             installe si l'espace est vide
- *   npm run db:seed-funders -- --force  efface et recommence
- *
- * Rejoue le parcours reel d'un financement institutionnel :
- *
- *   bailleur -> engagement (ce qui est promis)
- *            -> versements (ce qui arrive vraiment, par tranches)
- *            -> affectations (la part attribuee a chaque projet)
- *            -> rapports et justificatifs
- *
- * Le script suppose que les projets existent : lancer d'abord
- * "npm run db:seed-demo -- --force".
- */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -26,7 +10,6 @@ import { ACTUALITES_DEMO } from './actualitesDemo.js';
 
 const FORCER = process.argv.includes('--force');
 
-/** Date nue AAAA-MM-JJ, decalee de n jours. */
 function jour(decalage = 0) {
   const date = new Date();
   date.setDate(date.getDate() + decalage);
@@ -50,15 +33,10 @@ async function vider() {
   await query(`TRUNCATE ${TABLES.join(', ')} CASCADE`);
   await query(`DELETE FROM utilisateur WHERE email LIKE '%@bailleur.hope.example'`);
 
-  // Les visuels des publications n'ont plus de ligne en base. Sans ce
-  // menage, chaque passage en laisserait une copie de plus sur le
-  // disque, que rien ne viendrait jamais reclamer.
   try {
     const fichiers = await fs.readdir(DOSSIER_MEDIAS);
     await Promise.all(
       fichiers
-        // Visuels des publications, et PDF des documents et certificats :
-        // leurs lignes viennent d'etre videes.
         .filter((nom) => /^(publication|document|certificat)-/.test(nom))
         .map((nom) => fs.unlink(path.join(DOSSIER_MEDIAS, nom)))
     );
@@ -67,7 +45,6 @@ async function vider() {
   }
 }
 
-/** Les distinctions du referentiel, et leur regle en clair. */
 const DISTINCTIONS = [
   ['partenaire_or', 'Partenaire Or', 'Plus de 20 000 000 Ar engages, tous engagements confondus.'],
   ['multi_domaines', 'Multi-domaines', 'Finance des projets dans au moins trois domaines.'],
@@ -75,7 +52,6 @@ const DISTINCTIONS = [
   ['premier_partenaire', 'Premier partenaire', 'Partenaire de HOPE depuis plus de deux ans.'],
 ];
 
-/** Les deux organisations de demonstration. */
 const BAILLEURS = [
   {
     cle: 'fondation',
@@ -126,8 +102,6 @@ async function installer() {
   const parNom = new Map(projets.rows.map((p) => [p.name, p.id]));
   const visuelParNom = new Map(projets.rows.map((p) => [p.name, p.media_url]));
 
-  /** Identifiant d'un projet par son nom. Sans repli : un nom errone
-   *  rattacherait le financement au mauvais projet sans qu'on le voie. */
   const projet = (nom) => {
     const id = parNom.get(nom);
     if (id === undefined) {
@@ -142,7 +116,6 @@ async function installer() {
   const admin = await query('SELECT id FROM admins ORDER BY id LIMIT 1');
   const adminId = admin.rows[0]?.id ?? null;
 
-  // --- Referentiel des distinctions ---------------------------------
   for (const [code, libelle, regle] of DISTINCTIONS) {
     await query(
       `INSERT INTO distinction (code, libelle, regle)
@@ -152,7 +125,6 @@ async function installer() {
     );
   }
 
-  // --- Organisations et comptes -------------------------------------
   const fiches = new Map();
   for (const b of BAILLEURS) {
     const inscrit = await funderAuthService.inscrire({
@@ -169,8 +141,6 @@ async function installer() {
       confirmation: 'bailleur2026',
     });
 
-    // Les comptes de demonstration sont directement utilisables : on
-    // saute l'activation, deja eprouvee ailleurs.
     await query(`UPDATE utilisateur SET statut = 'actif' WHERE id = $1`, [inscrit.utilisateurId]);
 
     await query(
@@ -195,7 +165,6 @@ async function installer() {
   const fondation = fiches.get('fondation');
   const entreprise = fiches.get('entreprise');
 
-  /** Cree un engagement et renvoie son identifiant. */
   async function engager(bailleurId, e) {
     const resultat = await query(
       `INSERT INTO engagement
@@ -215,7 +184,6 @@ async function installer() {
     return resultat.rows[0].id;
   }
 
-  /** Cree un versement. */
   async function verser(engagementId, v) {
     await query(
       `INSERT INTO versement
@@ -230,7 +198,6 @@ async function installer() {
     );
   }
 
-  /** Cree une affectation. Le declencheur SQL verifie le plafond. */
   async function affecter(engagementId, nomProjet, montant, commentaire = null) {
     await query(
       `INSERT INTO affectation (engagement_id, projet_id, montant, date_affectation, commentaire)
@@ -239,9 +206,6 @@ async function installer() {
     );
   }
 
-  // ---------------------------------------------------------------
-  // Fondation Avenir : trois engagements, dont un a affectation libre
-  // ---------------------------------------------------------------
   const education = await engager(fondation, {
     intitule: 'Financement — Éducation 2026',
     typeSoutien: 'financier',
@@ -251,8 +215,6 @@ async function installer() {
     dateFin: jour(115),
     reference: 'CONV-AOI-2026-01',
   });
-  // 8 000 000 au lancement, puis le volet Education : l'historique des
-  // maquettes.
   await verser(education, {
     tranche: 1, montant: 8000000, datePrevue: jour(-250), dateRecue: jour(-248),
     moyen: 'virement', reference: 'VIR-AOI-88120', statut: 'recu',
@@ -275,7 +237,6 @@ async function installer() {
     dateDebut: jour(-140),
     dateFin: jour(225),
     reference: 'CONV-AOI-2026-02',
-    // HOPE choisit les projets : le pendant du don non affecte.
     affectationLibre: true,
   });
   await verser(sante, {
@@ -300,9 +261,6 @@ async function installer() {
     reference: 'CONV-AOI-2026-03',
   });
 
-  // ---------------------------------------------------------------
-  // Telma : un financement et un don materiel
-  // ---------------------------------------------------------------
   const eau = await engager(entreprise, {
     intitule: 'Financement — Accès à l’eau potable',
     typeSoutien: 'financier',
@@ -333,11 +291,6 @@ async function installer() {
     statut: 'finalise',
   });
 
-  // --- Documents ------------------------------------------------------
-  //
-  // Rapports d'impact, justificatifs, conventions et un certificat, chacun
-  // avec son vrai PDF. Le catalogue vit dans documentsBailleurDemo.js, que
-  // "npm run db:seed-rapports" rejoue aussi sans toucher aux comptes.
   const documents = await installerDocumentsDemo((sql, valeurs) => query(sql, valeurs), {
     fondation: { id: fondation, education, sante, formation },
     telma: { id: entreprise, eau, materiel },
@@ -345,12 +298,7 @@ async function installer() {
     adminId,
   });
 
-  // --- Fil d'actualite -------------------------------------------------
   const PUBLICATIONS = [
-    // Les actualites de demonstration (actualitesDemo.js). La rentree a
-    // une photo propre a l'annonce, et non celle du projet : une salle de
-    // classe malgache le jour de la rentree dit la nouvelle mieux que le
-    // visuel generique du programme.
     ...ACTUALITES_DEMO.map((a) => ({
       type: 'actualite',
       titre: a.titre,
@@ -380,10 +328,6 @@ async function installer() {
   ];
 
   for (const p of PUBLICATIONS) {
-    // Une publication illustree se lit ; une liste de titres se
-    // survole. A defaut de visuel propre, elle reprend celui de son
-    // projet : le bailleur reconnait alors le programme d'un coup
-    // d'oeil, d'une carte a l'autre.
     const media = p.media
       ? (await poserMedia(p.media, 'publication')).mediaUrl
       : (p.projet ? visuelParNom.get(p.projet) ?? null : null);

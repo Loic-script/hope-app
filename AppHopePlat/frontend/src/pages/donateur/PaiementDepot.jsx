@@ -9,23 +9,10 @@ import * as fmt from '../../utils/format.js';
 const RAPIDES = [25000, 50000, 100000, 250000];
 const MINIMUM = 1000;
 
-/** Le RIB en ses cases, pour la ligne "compte a crediter" du bordereau. */
 function ribEnCases(rib) {
   return `${rib.slice(0, 5)} ${rib.slice(5, 10)} ${rib.slice(10, 21)} ${rib.slice(21, 23)}`;
 }
 
-/**
- * Le depot en especes a la banque, sur le compte de HOPE.
- *
- * L'objet de reference : le bordereau de versement, que l'on remplit au
- * guichet. La page le remplit pour le donateur -- a la main, a l'encre
- * bleue, champ apres champ, montant en chiffres ET en lettres -- et il
- * n'a plus qu'a l'imprimer ou le recopier. Une fois le depot fait, il
- * donne le numero du bordereau ; le tampon "Declare" vient s'y poser.
- *
- * La promesse s'enregistre au premier temps : sa reference est le motif
- * inscrit sur le bordereau.
- */
 export default function PaiementDepot() {
   const {
     profil,
@@ -52,11 +39,8 @@ export default function PaiementDepot() {
   const [declare, setDeclare] = useState(false);
   const titre = useRef(null);
 
-  // Le montant du don prepare dans l'espace, s'il est en ariary.
   useEffect(() => {
     if (profil) setMontant((m) => m || montantInitial(montantPrevu, devisePrevue));
-    // Seulement au chargement.
-  // Pre-remplissage a l'arrivee des donnees : volontairement pas a chaque saisie.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profil]);
 
@@ -148,7 +132,6 @@ export default function PaiementDepot() {
           />
         )}
 
-        {/* ---------- 1. Le montant ---------- */}
         {pret && etape === 0 && (
           <section className="dep__temps" key="montant">
             <h1 className="dep__titre" ref={titre} tabIndex={-1}>
@@ -170,7 +153,6 @@ export default function PaiementDepot() {
                   aria-describedby="dep-lettres"
                 />
               </label>
-              {/* Le montant en lettres se lit a mesure qu'on le tape. */}
               <p className="dep__lettres" id="dep-lettres" aria-live="polite">
                 {soumis && erreurMontant ? (
                   <span className="dep__erreur">{erreurMontant}</span>
@@ -207,7 +189,6 @@ export default function PaiementDepot() {
           </section>
         )}
 
-        {/* ---------- 2. Le bordereau ---------- */}
         {pret && etape >= 1 && don && (
           <section className={`dep__temps${etape === 2 ? ' dep__temps--fin' : ''}`} key="bordereau">
             {etape === 1 ? (
@@ -221,7 +202,6 @@ export default function PaiementDepot() {
             )}
 
             <div className="bordereau-pile">
-              {/* Le double carbone, rose, depasse sous l'original. */}
               <span className="bordereau-pile__double" aria-hidden="true" />
               <article className="bordereau" aria-label="Bordereau de versement prérempli">
                 <header className="bordereau__tete">
@@ -305,10 +285,6 @@ export default function PaiementDepot() {
   );
 }
 
-/**
- * Une ligne du bordereau : le libelle imprime, la valeur ecrite a la
- * main -- elle apparait de gauche a droite, a son tour (rang).
- */
 function Ligne({ libelle, valeur, rang, court = false, chiffres = false }) {
   return (
     <div className={`bordereau__ligne${court ? ' bordereau__ligne--court' : ''}`}>

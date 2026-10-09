@@ -2,20 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import * as fmt from '../../utils/format.js';
 
-/**
- * Les quatre sommes du budget, en tete de l'ecran Budget :
- *
- *   ce que HOPE a recu, ce qu'il faut aux projets, ce qui reste a
- *   trouver, ce que le fonds HOPE a deja investi.
- *
- * Chaque carte porte son chiffre (qui monte jusqu'a sa valeur), une
- * jauge qui dit ou l'on en est, et une ligne de detail. Sans animation
- * si le systeme le demande (prefers-reduced-motion).
- */
-
 const calme = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-/** Un nombre qui monte de 0 a sa cible, en ralentissant a l'arrivee. */
 function useCompteur(cible, duree = 1100) {
   const [valeur, setValeur] = useState(() => (calme() ? cible : 0));
   const depart = useRef(0);
@@ -67,7 +55,6 @@ const ICONES = {
   ),
 };
 
-/** Une carte : icone, libelle, montant anime, jauge, detail. */
 function Carte({ teinte, icone, libelle, montant, devise, texte, jauge, detail, rang }) {
   const compte = useCompteur(Number(montant));
   const [pret, setPret] = useState(false);
@@ -87,7 +74,6 @@ function Carte({ teinte, icone, libelle, montant, devise, texte, jauge, detail, 
         <h3 className="carte-budget__libelle">{libelle}</h3>
       </div>
       <p className="carte-budget__montant">
-        {/* La valeur finale pour les lecteurs d'ecran ; le compteur anime est decoratif. */}
         <span className="sr-only">{texte ?? fmt.montant(montant, devise)}</span>
         <span aria-hidden="true">{affiche}</span>
       </p>
@@ -112,13 +98,6 @@ function Carte({ teinte, icone, libelle, montant, devise, texte, jauge, detail, 
   );
 }
 
-/**
- * @param {object} props
- * @param {object} props.resume   l'etat du fonds (summary de /admin/fund)
- * @param {object|null} props.total le total des projets dans une seule devise, ou null
- * @param {string} props.texteNecessaire / props.texteRestant   la somme ecrite, si plusieurs devises
- * @param {number} props.nombreProjets
- */
 export default function CartesBudget({ resume, total, texteNecessaire, texteRestant, nombreProjets }) {
   const recu = Number(resume?.grandTotal ?? 0);
   const affectes = Number(resume?.designatedTotal ?? 0);

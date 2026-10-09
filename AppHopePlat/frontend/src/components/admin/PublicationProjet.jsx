@@ -12,21 +12,10 @@ import { urlMedia } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 import { PhotoAgrandissable } from '../VisionneuseImage.jsx';
 
-/**
- * Jauge horizon : la part financee du projet.
- *
- * Le logo HOPE est un soleil qui monte vers une ligne d'horizon ; un taux
- * de financement est une valeur qui monte vers sa cible. On reprend donc
- * la grammaire de la marque : la ligne porte la part recue en plein, la
- * part manquante en hachures, et le soleil se tient exactement a la
- * frontiere entre les deux.
- */
 export function JaugeHorizon({ taux, recu, manque, devise }) {
   const [anime, setAnime] = useState(false);
   const borne = Math.max(0, Math.min(100, Number(taux) || 0));
 
-  // Le soleil part de zero puis rejoint sa position : la montee ne se
-  // declenche qu'apres le premier rendu.
   useEffect(() => {
     const image = requestAnimationFrame(() => setAnime(true));
     return () => cancelAnimationFrame(image);
@@ -63,7 +52,6 @@ export function JaugeHorizon({ taux, recu, manque, devise }) {
   );
 }
 
-/** Le visuel du projet, ou une invitation a en ajouter un. */
 function Visuel({ projet }) {
   const adresse = urlMedia(projet.mediaUrl);
 
@@ -90,7 +78,6 @@ function Visuel({ projet }) {
     );
   }
 
-  // Sans visuel, on ne montre pas un cadre vide : on propose d'en poser un.
   return (
     <Link className="publication__sans-visuel" to={`/admin/projects/${projet.id}/edit`}>
       <HopeLogo compact />
@@ -99,12 +86,6 @@ function Visuel({ projet }) {
   );
 }
 
-/**
- * Une donnee chiffree de la ligne de pied.
- *
- * Exportee : la page Actualites presente ses publications dans la meme
- * carte, et son pied porte les memes mesures.
- */
 export function Mesure({ Icone, libelle, valeur }) {
   return (
     <div className="publication__mesure">
@@ -115,18 +96,6 @@ export function Mesure({ Icone, libelle, valeur }) {
   );
 }
 
-/**
- * Un projet en cours, presente comme une publication : le visuel a gauche,
- * ce qu'il faut savoir pour decider a droite.
- *
- * La liste des projets y ajoute deux choses, facultatives : des
- * etiquettes (le statut) en face du surtitre, et une rangee d'actions
- * (Voir, Modifier, Terminer...) au pied, a droite des mesures. Sans elles,
- * la carte est celle de l'accueil.
- *
- * @param {{ projet: object, rang?: number, etiquettes?: React.ReactNode,
- *           actions?: React.ReactNode }} proprietes
- */
 export default function PublicationProjet({ projet, rang = 0, etiquettes = null, actions = null }) {
   const devise = projet.currency ?? 'MGA';
   const cible = Number(projet.beneficiaryTarget) || 0;
