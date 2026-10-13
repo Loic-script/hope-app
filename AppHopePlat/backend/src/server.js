@@ -20,6 +20,7 @@ async function demarrer() {
   const serveur = app.listen(config.port, () => {
     console.log(`[HOPE] API demarree sur http://localhost:${config.port}`);
     console.log(`[HOPE] Origine CORS autorisee : ${config.corsOrigin}`);
+    console.log(`[HOPE] Adresse publique du site : ${config.siteUrl}`);
     console.log('[HOPE] Endpoints : POST /api/admin/login | GET /api/admin/me');
   });
 

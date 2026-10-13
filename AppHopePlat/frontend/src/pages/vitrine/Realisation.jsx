@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router-dom';
 
 import { MessageFiche, Paragraphes } from '../../components/vitrine/fiche.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
+import { useTitre } from '../../hooks/useTitre.js';
 import { urlMedia } from '../../services/api.js';
+import { PAGE_INTROUVABLE, ficheDuProjet } from '../../utils/pagesDuSite.js';
 
 const MOIS = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
 
@@ -37,6 +39,14 @@ export default function Realisation() {
       });
     return () => controle.abort();
   }, [id]);
+
+  useTitre(
+    etat.statut === 'pret'
+      ? ficheDuProjet(etat.projet).titre
+      : etat.statut === 'introuvable'
+        ? PAGE_INTROUVABLE.titre
+        : null
+  );
 
   if (etat.statut === 'chargement') {
     return <p className="realisation__attente">Chargement du projet…</p>;

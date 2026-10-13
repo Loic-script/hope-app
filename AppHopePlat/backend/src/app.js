@@ -9,6 +9,7 @@ import { query } from './config/database.js';
 import apiRoutes from './routes/index.js';
 import { gestionnaireErreurs, routeIntrouvable } from './middleware/error.middleware.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from './middleware/upload.middleware.js';
+import { servirCoquille, versHoteDeReference } from './middleware/referencement.middleware.js';
 import { verifierOrigine } from './shared/session.js';
 import { pagesDesActualites, pagesDesProjets, robotsTxt, sitemapXml } from './shared/referencement.js';
 import { actualitesPourPlan, projetsPourPlan } from './services/vitrine.service.js';
@@ -35,7 +36,7 @@ function enTetesDeSecurite(req, res, suite) {
   suite();
 }
 
-export function creerApplication() {
+export function creerApplication({ siteUrl = config.siteUrl, dossierFrontend = DOSSIER_FRONTEND } = {}) {
   const app = express();
 
   app.set('trust proxy', 1);
@@ -50,6 +51,8 @@ export function creerApplication() {
       res.status(503).json({ statut: 'base indisponible' });
     }
   });
+
+  app.use(versHoteDeReference(siteUrl));
 
   app.use(
     cors({
@@ -93,7 +96,7 @@ export function creerApplication() {
   app.use('/api', apiRoutes);
 
   app.get('/robots.txt', (_req, res) => {
-    res.type('text/plain').send(robotsTxt(config.siteUrl));
+    res.type('text/plain').send(robotsTxt(siteUrl));
   });
   app.get('/sitemap.xml', async (_req, res) => {
     const [projets, actualites] = await Promise.all([
@@ -102,25 +105,22 @@ export function creerApplication() {
     ]);
     res
       .type('application/xml')
-      .send(sitemapXml(config.siteUrl, [...pagesDesProjets(projets), ...pagesDesActualites(actualites)]));
+      .send(sitemapXml(siteUrl, [...pagesDesProjets(projets), ...pagesDesActualites(actualites)]));
   });
 
-  const index = path.join(DOSSIER_FRONTEND, 'index.html');
+  const index = path.join(dossierFrontend, 'index.html');
   if (config.servirFrontend && fs.existsSync(index)) {
     app.use(
       '/assets',
-      express.static(path.join(DOSSIER_FRONTEND, 'assets'), {
+      express.static(path.join(dossierFrontend, 'assets'), {
         immutable: true,
         maxAge: '365d',
         fallthrough: false,
       })
     );
-    app.use(express.static(DOSSIER_FRONTEND, { index: false, maxAge: '1h' }));
-    app.get(/^\/(?!api\/|api$|media\/).*/, (req, res, suite) => {
-      if (!req.accepts('html')) return suite();
-      res.setHeader('Cache-Control', 'no-cache');
-      return res.sendFile(index);
-    });
+    app.get('/index.html', (_req, res) => res.redirect(301, '/'));
+    app.use(express.static(dossierFrontend, { index: false, maxAge: '1h' }));
+    app.get(/^\/(?!api\/|api$|media\/).*/, servirCoquille({ gabarit: fs.readFileSync(index, 'utf8'), siteUrl }));
   }
 
   app.use(routeIntrouvable);

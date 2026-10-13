@@ -52,7 +52,7 @@ Railway : elles se mettent à jour seules.
 | `JWT_SECRET` | 48 octets aléatoires (voir ci-dessous). Le serveur **refuse de démarrer** en production avec un secret court ou d'exemple. |
 | `ADMIN_LOG` | l'identifiant de connexion de l'administrateur |
 | `ADMIN_PASSWORD` | son mot de passe (long, unique). Il n'est lu qu'à la création du compte. |
-| `HOPE_SITE_URL` | l'adresse publique, ex. `https://hope-production.up.railway.app` (sert aux liens des courriels et au retour de Stripe) |
+| `HOPE_SITE_URL` | l'adresse publique de référence, en `https`, ex. `https://hope-production.up.railway.app`. Elle sert aux liens des courriels, au retour de Stripe, à `robots.txt`, au plan du site, aux adresses canoniques et aux aperçus de partage. Le serveur **refuse de démarrer** en production si elle manque, n'est pas en `https` ou désigne `localhost`. |
 | `CORS_ORIGIN` | la même adresse |
 
 Générer le secret JWT :
@@ -153,15 +153,16 @@ dossier des fichiers est `/app/backend/uploads`.)
 
 ## 4. Premier déploiement
 
-1. Lancer le déploiement (il part tout seul après la configuration, sinon **Deploy**).
+1. **Settings → Networking → Generate Domain** pour obtenir l'adresse publique (tant qu'il n'y
+   en a pas, Railway affiche « Unexposed service »), et la reporter dans `HOPE_SITE_URL` et
+   `CORS_ORIGIN` (et dans le webhook Stripe) **avant** de déployer : sans `HOPE_SITE_URL`, le
+   serveur refuse de démarrer. Si Railway demande un port, donner celui de la variable `PORT`
+   du service (le journal de démarrage l'affiche : `[HOPE] API demarree sur …:8080`).
+2. Lancer le déploiement (il part tout seul après la configuration, sinon **Deploy**).
    - construction : `npm run build` installe le backend, le frontend, et construit le frontend ;
    - avant la mise en ligne : `npm run db:preparer` crée la table administrateur et applique le
      schéma (sans risque : il est rejouable) ;
    - démarrage : `npm start`, puis Railway attend que `/api/sante` réponde.
-2. **Settings → Networking → Generate Domain** pour obtenir l'adresse publique (tant qu'il n'y
-   en a pas, Railway affiche « Unexposed service »). Si Railway demande un port, donner celui
-   du journal de démarrage (`[HOPE] API demarree sur …:8080`). Reporter ensuite cette adresse
-   dans `HOPE_SITE_URL` et `CORS_ORIGIN` (et dans le webhook Stripe).
 3. **Une seule fois**, créer le compte administrateur (à partir de `ADMIN_LOG` et
    `ADMIN_PASSWORD`) et les catégories de projet. La commande doit tourner **dans** le service :
    la base est sur le réseau privé de Railway, qu'un poste ne joint pas (`railway run` exécute
@@ -199,6 +200,10 @@ production.
 | inscription d'un donateur | la case de consentement est exigée, le compte s'ouvre |
 | « Mot de passe oublié ? » | un courriel arrive (si SMTP est configuré) |
 | une photo téléversée, puis un redéploiement | la photo est toujours là (volume monté) |
+| `curl -s https://<adresse>/nos-projets \| grep -E '<title>\|canonical'` | le titre de la page « Nos projets » et son adresse canonique, sous `HOPE_SITE_URL` |
+| `curl -sI https://<adresse>/une-page-inconnue` | `404` |
+| `curl -sI https://www.<domaine>/contact` | `301` vers `HOPE_SITE_URL` (si `www` pointe sur le service) |
+| `https://<adresse>/robots.txt` et `/sitemap.xml` | l'adresse de `HOPE_SITE_URL`, jamais `localhost` |
 
 ### Dépannage
 
@@ -232,6 +237,10 @@ production.
   Essayer une restauration sur une base de test une fois, pour savoir qu'elle marche.
 - **Nom de domaine** : **Settings → Networking → Custom Domain**, puis mettre à jour
   `HOPE_SITE_URL`, `CORS_ORIGIN` et le webhook Stripe.
+- **Référencement** : le titre et la description de chaque page publique se règlent dans
+  `backend/src/shared/pagesDuSite.js`, lu par le serveur (balises de la page) comme par le site
+  (titre de l'onglet). L'image des aperçus de partage, le logo et l'icône iOS sont dans
+  `frontend/public` ; `npm run visuels --prefix backend` les refabrique à partir du logo.
 - **Textes légaux** : la politique de confidentialité et les conditions d'utilisation
   (`frontend/src/pages/Legal.jsx`) sont une base de travail ; les faire relire par le bureau de
   l'association avant l'ouverture au public. Si elles changent, changer aussi
