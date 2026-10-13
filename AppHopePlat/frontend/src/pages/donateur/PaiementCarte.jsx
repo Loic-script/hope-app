@@ -399,14 +399,12 @@ export default function PaiementCarte() {
               options={{
                 clientSecret: paiement.clientSecret,
                 elementsOptions: { appearance: APPARENCE },
-                defaultValues: { email },
               }}
             >
               <FormulaireStripe
                 somme={somme}
                 devise={devise}
                 reference={paiement.don?.reference}
-                retour={`${window.location.origin}${emplacement.pathname}?session=${paiement.sessionId}`}
                 onModifier={() => {
                   setPaiement(null);
                   setRefus('');
@@ -483,7 +481,7 @@ export default function PaiementCarte() {
   );
 }
 
-function FormulaireStripe({ somme, devise, reference, retour, onModifier, onPaye, libellePlusTard, quitter }) {
+function FormulaireStripe({ somme, devise, reference, onModifier, onPaye, libellePlusTard, quitter }) {
   const etat = useCheckoutElements();
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -516,7 +514,7 @@ function FormulaireStripe({ somme, devise, reference, retour, onModifier, onPaye
     setErreur('');
     setEnvoi(true);
     try {
-      const resultat = await checkout.confirm({ returnUrl: retour, redirect: 'if_required' });
+      const resultat = await checkout.confirm({ redirect: 'if_required' });
       if (resultat.type === 'error') {
         setErreur(resultat.error?.message ?? 'Votre paiement n’a pas abouti.');
         return;
