@@ -7,11 +7,8 @@ export const LOGO = '/logo.png';
 
 const FERMES = ['/api/', '/media/', ...ESPACES_FERMES.map((espace) => espace.chemin)];
 
-const BALISES_DE_PAGE = [
-  /\s*<meta\b[^>]*\bname="(?:description|robots)"[^>]*>/gi,
-  /\s*<meta\b[^>]*\bproperty="og:(?:title|description|url|image[^"]*)"[^>]*>/gi,
-  /\s*<link\b[^>]*\brel="canonical"[^>]*>/gi,
-];
+const BALISE = /\s*<(?:meta|link)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
+const DE_PAGE = /\s(?:name="(?:description|robots)"|property="og:(?:title|description|url|image[^"]*)"|rel="canonical")/i;
 const TITRE = /<title>[\s\S]*?<\/title>/i;
 const DONNEES_STRUCTUREES = /(<script\b[^>]*\btype="application\/ld\+json"[^>]*>)([\s\S]*?)(<\/script>)/i;
 
@@ -116,8 +113,7 @@ export function preparerCoquille(gabarit, siteUrl) {
   const racine = base(siteUrl);
   if (!TITRE.test(gabarit)) return () => gabarit;
 
-  let html = gabarit;
-  for (const balise of BALISES_DE_PAGE) html = html.replace(balise, '');
+  let html = gabarit.replace(BALISE, (balise) => (DE_PAGE.test(balise) ? '' : balise));
   html = html.replace(
     DONNEES_STRUCTUREES,
     (_tout, ouverture, json, fermeture) => `${ouverture}${completerDonnees(json, racine)}${fermeture}`

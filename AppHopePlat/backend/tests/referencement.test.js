@@ -206,6 +206,27 @@ test('les donnees structurees recoivent l adresse et le logo, sans reseau social
   assert.equal(site.publisher['@id'], association['@id']);
 });
 
+test('les balises d origine sont retirees entieres, meme quand leur texte contient un chevron', () => {
+  const gabarit = [
+    '<!doctype html><html><head>',
+    '<title>Ancien</title>',
+    '<meta name="description" content="a > b" />',
+    "<meta property='og:locale' content='fr_FR' />",
+    '<meta property="og:title" content="x > y" />',
+    '<link rel="canonical" href="https://ailleurs.example/?a=1&gt;2" />',
+    '<meta name="twitter:description" content="garde" />',
+    '<link rel="icon" href="/favicon.svg" />',
+    '</head><body><div id="root"></div></body></html>',
+  ].join('\n');
+  const html = preparerCoquille(gabarit, SITE)(decrirePage('/contact'));
+  assert.doesNotMatch(html, /Ancien|a > b|x > y|ailleurs/);
+  assert.equal(compter(html, /rel="canonical"/g), 1);
+  assert.match(html, /<meta property='og:locale' content='fr_FR' \/>/);
+  assert.match(html, /<meta name="twitter:description" content="garde" \/>/);
+  assert.match(html, /<link rel="icon" href="\/favicon\.svg" \/>/);
+  assert.match(html, /<title>Contacter l’association — HOPE<\/title>/);
+});
+
 test('une coquille sans titre est rendue telle quelle', () => {
   const nue = '<!doctype html><html><head></head><body><div id="root"></div></body></html>';
   assert.equal(preparerCoquille(nue, SITE)(decrirePage('/')), nue);
