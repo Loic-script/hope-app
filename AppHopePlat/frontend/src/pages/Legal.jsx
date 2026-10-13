@@ -426,13 +426,8 @@ function PageLegale({ cle }) {
   const corps = useRef(null);
 
   useEffect(() => {
-    const avant = window.document.title;
-    window.document.title = `${document_.titre} — HOPE`;
     window.scrollTo(0, 0);
-    return () => {
-      window.document.title = avant;
-    };
-  }, [document_.titre]);
+  }, [cle]);
 
   useEffect(() => {
     const articles = [...(corps.current?.querySelectorAll('.legal__article') ?? [])];

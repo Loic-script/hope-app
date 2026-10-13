@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router-dom';
 
 import { MessageFiche, Paragraphes } from '../../components/vitrine/fiche.jsx';
 import { LIEN_DON } from '../../components/vitrine/liens.js';
+import { useTitre } from '../../hooks/useTitre.js';
 import { urlMedia } from '../../services/api.js';
+import { PAGE_INTROUVABLE, ficheDeLActualite } from '../../utils/pagesDuSite.js';
 
 const FORMAT_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
@@ -25,6 +27,14 @@ export default function Actualite() {
       });
     return () => controle.abort();
   }, [id]);
+
+  useTitre(
+    etat.statut === 'pret'
+      ? ficheDeLActualite(etat.actualite).titre
+      : etat.statut === 'introuvable'
+        ? PAGE_INTROUVABLE.titre
+        : null
+  );
 
   if (etat.statut === 'chargement') {
     return <p className="realisation__attente">Chargement de l’actualité…</p>;

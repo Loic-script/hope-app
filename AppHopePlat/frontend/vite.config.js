@@ -9,6 +9,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     open: false,
+    fs: { allow: ['.', '../backend/src/shared'] },
     proxy: {
       '/api': BACKEND,
       '/media': BACKEND,

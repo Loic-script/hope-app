@@ -16,6 +16,8 @@ import RequireBailleur from './RequireBailleur.jsx';
 import RequireAuth from './RequireAuth.jsx';
 import ContextePaiement from '../components/paiement/ContextePaiement.jsx';
 import ChargementPage from '../components/ChargementPage.jsx';
+import { useTitre } from '../hooks/useTitre.js';
+import { decrirePage, estEspaceFerme } from '../utils/pagesDuSite.js';
 
 const AdminLoginSuccess = lazy(() => import('../pages/AdminLoginSuccess.jsx'));
 const AdminHome = lazy(() => import('../pages/admin/AdminHome.jsx'));
@@ -71,6 +73,7 @@ const Actualites = lazy(() => import('../pages/vitrine/Actualites.jsx'));
 const Actualite = lazy(() => import('../pages/vitrine/Actualite.jsx'));
 const SEngager = lazy(() => import('../pages/vitrine/SEngager.jsx'));
 const Contact = lazy(() => import('../pages/vitrine/Contact.jsx'));
+const PageIntrouvable = lazy(() => import('../pages/vitrine/PageIntrouvable.jsx'));
 const VerifierCourriel = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.VerifierCourriel })));
 const PolitiqueConfidentialite = lazy(() =>
   import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
@@ -136,7 +139,16 @@ function VersNosProjets() {
   return <Navigate to={`/nos-projets/${id}`} replace />;
 }
 
+function RouteInconnue() {
+  const { pathname } = useLocation();
+  if (estEspaceFerme(pathname)) return <Navigate to="/admin" replace />;
+  return <PageIntrouvable />;
+}
+
 export default function AppRoutes() {
+  const { pathname } = useLocation();
+  useTitre(decrirePage(pathname).titre, pathname);
+
   return (
     <Suspense fallback={<ChargementPage />}>
     <Routes>
@@ -151,6 +163,7 @@ export default function AppRoutes() {
         <Route path="/actualites/:id" element={<Actualite />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/s-engager" element={<SEngager />} />
+        <Route path="*" element={<RouteInconnue />} />
       </Route>
       <Route path="/espaces" element={<Redirection />} />
       <Route path="/admin/login" element={<Navigate to="/authentification?type=aucun" replace />} />
@@ -303,8 +316,6 @@ export default function AppRoutes() {
           <Route path="/admin/audit" element={<AuditPage />} />
         </Route>
       </Route>
-
-      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
     </Suspense>
   );
