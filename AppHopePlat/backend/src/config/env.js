@@ -49,6 +49,35 @@ function secretJwt() {
   return secret;
 }
 
+export function defautAdresseDuSite(valeur) {
+  if (!valeur) return 'elle est absente';
+  let adresse;
+  try {
+    adresse = new URL(valeur);
+  } catch {
+    return `"${valeur}" n'est pas une adresse complete`;
+  }
+  if (adresse.protocol !== 'https:') return `"${valeur}" n'est pas en https`;
+  if (['localhost', '127.0.0.1', '[::1]'].includes(adresse.hostname)) return `"${valeur}" designe ce poste`;
+  return null;
+}
+
+function adresseDuSite() {
+  const valeur = optionnel('HOPE_SITE_URL', '');
+  if (!enProduction) return valeur || 'http://localhost:5173';
+  const defaut = defautAdresseDuSite(valeur);
+  if (defaut) {
+    console.error(
+      `[HOPE] HOPE_SITE_URL ne convient pas a la production : ${defaut}.\n` +
+        "       Elle porte l'adresse publique du site (https://votre-domaine) : les liens des courriels,\n" +
+        '       le retour apres un paiement par carte, robots.txt, le plan du site et les adresses\n' +
+        "       canoniques en dependent. Chez l'hebergeur : les variables du service."
+    );
+    process.exit(1);
+  }
+  return valeur;
+}
+
 export const config = {
   env: optionnel('NODE_ENV', 'development'),
   enProduction,
@@ -115,7 +144,7 @@ export const config = {
     secretWebhook: optionnel('STRIPE_WEBHOOK_SECRET', ''),
   },
 
-  siteUrl: optionnel('HOPE_SITE_URL', 'http://localhost:5173'),
+  siteUrl: adresseDuSite(),
 
   smtp: {
     host: optionnel('SMTP_HOST', ''),
