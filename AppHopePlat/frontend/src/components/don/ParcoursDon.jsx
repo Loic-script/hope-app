@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { pageDePaiement } from '../../utils/pagesPaiement.js';
+import { modeRetenu, pageDePaiement } from '../../utils/pagesPaiement.js';
 
 import {
   IconeCalendrierRenouvele,
@@ -120,7 +120,7 @@ export default function ParcoursDon({
       setAffectation('HOPE');
     }
     setDevise(prefs.devise || 'MGA');
-    setMode(prefs.mode || '');
+    setMode(modeRetenu(options.modes, prefs.mode));
     setFrequence(avecRythme ? prefs.frequence || 'ONE_TIME' : 'ONE_TIME');
     setPret(true);
   }, [pret, options, projets, projetImpose, projetPropose, avecRythme]);

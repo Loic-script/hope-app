@@ -159,6 +159,8 @@ export const MODES_PAIEMENT = [
   },
 ];
 
+export const MODES_PROPOSES = MODES_PAIEMENT.filter((m) => m.cle === 'carte_bancaire');
+
 export const FREQUENCES = [
   {
     cle: 'ONE_TIME',
@@ -213,7 +215,7 @@ export async function recuperer(utilisateurId) {
     },
     options: {
       frequences: FREQUENCES,
-      modesPaiement: MODES_PAIEMENT,
+      modesPaiement: MODES_PROPOSES,
       sources: SOURCES_CONNAISSANCE,
       types: TYPES_DONATEUR,
       devises: DEVISES,

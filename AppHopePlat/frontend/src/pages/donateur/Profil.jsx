@@ -8,6 +8,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as service from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
+import { modeRetenu } from '../../utils/pagesPaiement.js';
 import { tousLesFuseaux } from '../../utils/fuseaux.js';
 import { PAYS } from '../../utils/pays.js';
 
@@ -104,7 +105,7 @@ export default function Profil() {
     setPref({
       affectation: profil.don?.affectation || 'HOPE',
       projetId: profil.don?.projetId ?? '',
-      mode: profil.paiement?.mode || '',
+      mode: modeRetenu(profil.options?.modesPaiement, profil.paiement?.mode),
       frequence: profil.frequence?.valeur || 'ONE_TIME',
     });
   }, [profil, info]);

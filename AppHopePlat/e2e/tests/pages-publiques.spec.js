@@ -183,22 +183,13 @@ test('faire un don sans compte : connexion et don dans l en-tete, trois etapes, 
   await cocher(page.locator('input[name="affectation"][value="HOPE"]'));
   await page.locator('.parcours__continuer').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mode de paiement');
-  await cocher(page.locator('input[name="paiement"][value="mvola"]'));
+  await expect(page.locator('input[name="paiement"]')).toHaveCount(1);
+  await cocher(page.locator('input[name="paiement"][value="carte_bancaire"]'));
   await page.locator('.parcours__continuer').click();
 
-  await expect(page).toHaveURL(/\/faire-un-don\/mvola$/);
-  await expect(page.locator('#mvola-numero')).toHaveValue('341234567');
-  await page.fill('#mvola-montant', '10000');
-  await page.locator('form[aria-label="Montant du don"] button[type="submit"]').click();
-  const reference = page.locator('form[aria-label="Référence de la transaction"]');
-  await reference.locator('input').fill(`MP${Date.now() % 100000}.E2E`);
-  await reference.locator('button[type="submit"]').click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Misaotra');
-  await expect(page.locator('body')).toContainText('En attente de confirmation');
+  await expect(page).toHaveURL(/\/faire-un-don\/carte$/);
+  await expect(page.locator('.carte')).toBeVisible();
   await sansDebordement(page);
-
-  await page.getByRole('button', { name: 'Revenir au site HOPE' }).click();
-  await expect(page).toHaveURL(/\/$/);
 });
 
 test('contact : le formulaire ecrit a l equipe, qui le voit dans sa cloche', async ({ page, request }, testInfo) => {

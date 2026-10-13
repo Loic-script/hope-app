@@ -46,7 +46,7 @@ import { useChargement } from '../../hooks/useChargement.js';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as donateurService from '../../services/donateur.service.js';
 import * as fmt from '../../utils/format.js';
-import { pageDePaiement } from '../../utils/pagesPaiement.js';
+import { modeRetenu, pageDePaiement } from '../../utils/pagesPaiement.js';
 import { focusAutomatique, useEcranTelephone } from '../../utils/ecran.js';
 import {
   decalage,
@@ -1400,7 +1400,7 @@ export function EtapePaiement({
     ? [...modes.filter((m) => m.zone === 'international'), ...modes.filter((m) => m.zone !== 'international')]
     : modes;
 
-  const [mode, setMode] = useState(initiales.mode || '');
+  const [mode, setMode] = useState(() => modeRetenu(modes, initiales.mode));
   const [soumis, setSoumis] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [refus, setRefus] = useState('');

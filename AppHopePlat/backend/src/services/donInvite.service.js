@@ -4,7 +4,7 @@ import { config } from '../config/env.js';
 import * as donorRepository from '../repositories/donor.repository.js';
 import * as donorSpaceRepository from '../repositories/donorSpace.repository.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
-import { DEVISES, MODES_PAIEMENT, projetsProposes } from './donorProfile.service.js';
+import { DEVISES, MODES_PROPOSES, projetsProposes } from './donorProfile.service.js';
 import { coordonneesDePaiement } from './donorSpace.service.js';
 import { creerSession, etatSession, reglages } from './paiementCarte.service.js';
 import { declarerJustificatif, nomDuPays, origineDuPays, promettreUnDon } from './promesseDon.service.js';
@@ -16,7 +16,7 @@ const TELEPHONE_E164 = /^\+[1-9]\d{6,14}$/;
 const CODE_PAYS = /^[A-Z]{2}$/;
 
 export async function options() {
-  return { modesPaiement: MODES_PAIEMENT, devises: DEVISES, projets: await projetsProposes() };
+  return { modesPaiement: MODES_PROPOSES, devises: DEVISES, projets: await projetsProposes() };
 }
 
 export function coordonnees() {

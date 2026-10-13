@@ -5,7 +5,7 @@ import * as notificationRepository from '../repositories/notification.repository
 import { ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, enCentimes, normaliserDevise } from '../shared/money.js';
 import { identifiantRequis, texteFacultatif, valeurParmi } from '../shared/validation.js';
-import { DEVISES, FREQUENCES, MODES_PAIEMENT, projetsProposes } from './donorProfile.service.js';
+import { DEVISES, FREQUENCES, MODES_PAIEMENT, MODES_PROPOSES, projetsProposes } from './donorProfile.service.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 async function ficheDuDonateur(identite, client) {
@@ -54,7 +54,7 @@ export function origineDuPays(valeur) {
 }
 
 export function options() {
-  return { modesPaiement: MODES_PAIEMENT, devises: DEVISES };
+  return { modesPaiement: MODES_PROPOSES, devises: DEVISES };
 }
 
 export async function promettreUnDon(

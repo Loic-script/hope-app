@@ -13,3 +13,9 @@ export function pageDePaiement(base, mode) {
   const chemin = PAGES_DE_PAIEMENT[mode];
   return chemin ? `${base}/${chemin}` : null;
 }
+
+export function modeRetenu(modes, voulu) {
+  const proposes = modes ?? [];
+  if (voulu && proposes.some((m) => m.cle === voulu)) return voulu;
+  return proposes.length === 1 ? proposes[0].cle : '';
+}
