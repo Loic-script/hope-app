@@ -246,3 +246,34 @@ test('l image de partage, le logo et l icone existent, aux dimensions annoncees'
   assert.deepEqual(await dimensions('/apple-touch-icon.png'), { width: 180, height: 180, hasAlpha: false });
   assert.ok((await dimensions(LOGO)).width >= 112);
 });
+
+test('l icone du site est carree, et declaree en ICO et en PNG pour les moteurs de recherche', async () => {
+  const dossier = path.join(FRONTEND, 'public');
+  const [, , largeur, hauteur] = fs
+    .readFileSync(path.join(dossier, 'favicon.svg'), 'utf8')
+    .match(/viewBox="([^"]+)"/)[1]
+    .split(' ')
+    .map(Number);
+  assert.equal(largeur, hauteur);
+
+  const png = await sharp(path.join(dossier, 'favicon-96x96.png')).metadata();
+  assert.deepEqual([png.format, png.width, png.height], ['png', 96, 96]);
+  assert.equal(png.width % 48, 0);
+
+  const ico = fs.readFileSync(path.join(dossier, 'favicon.ico'));
+  assert.deepEqual([ico.readUInt16LE(0), ico.readUInt16LE(2)], [0, 1]);
+  const tailles = [];
+  for (let rang = 0; rang < ico.readUInt16LE(4); rang += 1) {
+    const entree = 6 + 16 * rang;
+    const image = ico.subarray(ico.readUInt32LE(entree + 12), ico.readUInt32LE(entree + 12) + ico.readUInt32LE(entree + 8));
+    const { format, width, height } = await sharp(image).metadata();
+    assert.deepEqual([format, width, height], ['png', ico.readUInt8(entree), ico.readUInt8(entree + 1)]);
+    tailles.push(width);
+  }
+  assert.deepEqual(tailles, [16, 32, 48]);
+
+  const html = preparerCoquille(GABARIT, SITE)(decrirePage('/'));
+  assert.match(html, /<link rel="icon" href="\/favicon\.ico" sizes="48x48" \/>/);
+  assert.match(html, /<link rel="icon" type="image\/png" sizes="96x96" href="\/favicon-96x96\.png" \/>/);
+  assert.match(html, /<link rel="icon" type="image\/svg\+xml" href="\/favicon\.svg" \/>/);
+});
