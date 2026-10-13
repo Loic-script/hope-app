@@ -1,7 +1,13 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { ADMIN_TEST, preparerBaseDeTest } from './aide/baseDeTest.js';
+
+const FRONTEND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'frontend');
 
 let base;
 let serveur;
@@ -566,5 +572,79 @@ describe('les benevoles du site vitrine', () => {
     const retour = await appel('PATCH', '/benevole/profil', { jeton: discret, corps: { masqueSite: false } });
     assert.equal(retour.corps.masqueSite, false);
     assert.ok((await appel('GET', '/public/benevoles')).corps.items.some((b) => b.prenom === 'Fy'), 'il revient quand il le decide');
+  });
+});
+
+describe('les fiches du site, servies avec leurs metadonnees', () => {
+  const SITE = 'https://hope.example';
+  let dossier;
+  let vitrine;
+  let adresse;
+
+  before(async () => {
+    dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'hope-fiches-'));
+    fs.copyFileSync(path.join(FRONTEND, 'index.html'), path.join(dossier, 'index.html'));
+    const { creerApplication } = await import('../src/app.js');
+    vitrine = creerApplication({ siteUrl: SITE, dossierFrontend: dossier }).listen(0);
+    await new Promise((resolve) => vitrine.once('listening', resolve));
+    adresse = `http://127.0.0.1:${vitrine.address().port}`;
+  });
+
+  after(async () => {
+    await new Promise((resolve) => vitrine?.close(resolve));
+    fs.rmSync(dossier, { recursive: true, force: true });
+  });
+
+  test('un projet et une actualite recoivent leur titre, echappe ; ce qui n existe pas repond 404', async () => {
+    const projet = await creerProjet('Ecole "des collines" & <cantine>', 400_000);
+    const { corps: catalogue } = await appel('GET', '/admin/catalog', { jeton: jetonAdmin });
+    const interne = await appel('POST', '/admin/projects', {
+      jeton: jetonAdmin,
+      corps: {
+        name: 'Tableau de bord interne',
+        categoryId: catalogue.categories[0].id,
+        location: 'Antananarivo',
+        startDate: '2026-01-01',
+        requiredBudget: '100000',
+        projectType: 'INTERNAL',
+      },
+    });
+    assert.equal(interne.statut, 201, JSON.stringify(interne.corps));
+    const publiee = await appel('POST', '/admin/publications', {
+      jeton: jetonAdmin,
+      corps: { type: 'actualite', titre: 'Distribution de cartables', corps: 'Deux cents cartables.\n\nUn par enfant.' },
+    });
+    assert.equal(publiee.statut, 201, JSON.stringify(publiee.corps));
+
+    const fiche = await fetch(`${adresse}/nos-projets/${projet}`);
+    const html = await fiche.text();
+    assert.equal(fiche.status, 200);
+    assert.match(html, /<title>Ecole &quot;des collines&quot; &amp; &lt;cantine&gt; — HOPE<\/title>/);
+    assert.match(html, /<meta name="description" content="Projet cree par les tests d integration." \/>/);
+    assert.match(html, new RegExp(`<link rel="canonical" href="${SITE}/nos-projets/${projet}" />`));
+    assert.doesNotMatch(html, /name="robots"/);
+    assert.doesNotMatch(html, /<cantine>/);
+
+    const article = await fetch(`${adresse}/actualites/${idDe(publiee.corps)}`);
+    const texte = await article.text();
+    assert.equal(article.status, 200);
+    assert.match(texte, /<title>Distribution de cartables — HOPE<\/title>/);
+    assert.match(texte, /<meta name="description" content="Deux cents cartables. Un par enfant." \/>/);
+    assert.match(texte, new RegExp(`<meta property="og:url" content="${SITE}/actualites/${idDe(publiee.corps)}" />`));
+
+    for (const chemin of [
+      '/nos-projets/999999',
+      `/nos-projets/${idDe(interne.corps)}`,
+      '/actualites/0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11',
+    ]) {
+      const absente = await fetch(adresse + chemin);
+      assert.equal(absente.status, 404, chemin);
+      assert.match(await absente.text(), /<title>Page introuvable — HOPE<\/title>/, chemin);
+    }
+
+    const plan = await (await fetch(`${adresse}/sitemap.xml`)).text();
+    assert.match(plan, new RegExp(`<loc>${SITE}/nos-projets/${projet}</loc>`));
+    assert.match(plan, new RegExp(`<loc>${SITE}/actualites/${idDe(publiee.corps)}</loc>`));
+    assert.doesNotMatch(plan, new RegExp(`/nos-projets/${idDe(interne.corps)}<`));
   });
 });

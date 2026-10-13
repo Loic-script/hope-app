@@ -21,6 +21,7 @@
     "db:seed-funders": "node src/scripts/seedFunderData.js",
     "db:seed-espace": "node src/scripts/seedEspaceData.js",
     "db:seed-rapports": "node src/scripts/seedRapportsBailleur.js",
+    "visuels": "node src/scripts/genererVisuels.js",
     "lint": "eslint .",
     "test": "node --test",
     "couverture": "node --test --experimental-test-coverage --test-coverage-exclude=tests/**"
