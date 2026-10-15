@@ -1,6 +1,7 @@
 import { config } from './config/env.js';
 import { creerApplication } from './app.js';
 import { fermerPool, verifierConnexion } from './config/database.js';
+import { verifierEnvoi } from './services/courriel.service.js';
 
 async function demarrer() {
   try {
@@ -22,6 +23,10 @@ async function demarrer() {
     console.log(`[HOPE] Origine CORS autorisee : ${config.corsOrigin}`);
     console.log(`[HOPE] Adresse publique du site : ${config.siteUrl}`);
     console.log('[HOPE] Endpoints : POST /api/admin/login | GET /api/admin/me');
+    verifierEnvoi().then(({ pret, raison }) => {
+      if (pret) console.log(`[HOPE] Courriels : connexion SMTP etablie (${config.smtp.host}, ${config.smtp.user}).`);
+      else console.warn(`[HOPE] Courriels : envoi indisponible — ${raison}`);
+    });
   });
 
   const arreter = (signal) => {

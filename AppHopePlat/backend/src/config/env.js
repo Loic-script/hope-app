@@ -78,6 +78,20 @@ function adresseDuSite() {
   return valeur;
 }
 
+const smtpHote = optionnel('SMTP_HOST', '');
+const smtpUtilisateur = optionnel('SMTP_USER', '').trim();
+
+function motDePasseSmtp(valeur) {
+  return /(^|\.)gmail\.com$/i.test(smtpHote) ? valeur.replace(/\s+/g, '') : valeur;
+}
+
+function expediteur(valeur) {
+  const texte = String(valeur ?? '').trim();
+  const adresse = /<\s*([^<>\s]+@[^<>\s]+)\s*>/.exec(texte)?.[1] ?? (/^[^<>\s]+@[^<>\s]+$/.test(texte) ? texte : '');
+  if (adresse) return texte;
+  return smtpUtilisateur ? `HOPE <${smtpUtilisateur}>` : 'HOPE <no-reply@hope.mg>';
+}
+
 export const config = {
   env: optionnel('NODE_ENV', 'development'),
   enProduction,
@@ -147,12 +161,12 @@ export const config = {
   siteUrl: adresseDuSite(),
 
   smtp: {
-    host: optionnel('SMTP_HOST', ''),
+    host: smtpHote,
     port: Number.parseInt(optionnel('SMTP_PORT', '587'), 10),
     secure: optionnel('SMTP_SECURE', 'false') === 'true',
-    user: optionnel('SMTP_USER', ''),
-    password: optionnel('SMTP_PASSWORD', ''),
-    from: optionnel('SMTP_FROM', 'HOPE <no-reply@hope.mg>'),
+    user: smtpUtilisateur,
+    password: motDePasseSmtp(optionnel('SMTP_PASSWORD', '')),
+    from: expediteur(optionnel('SMTP_FROM', '')),
   },
 
   admin: {

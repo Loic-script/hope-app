@@ -24,7 +24,7 @@ async function destinataireDuDon(donationId) {
     `SELECT d.id, d.reference, d.amount, d.currency, d.allocation, d.payment_method, d.status,
             d.received_at, d.created_at, p.name AS projet,
             o.email AS email_fiche, o.first_name AS prenom_fiche,
-            u.email AS email_compte, u.prenom AS prenom_compte, u.email_verifie_le
+            u.email AS email_compte, u.prenom AS prenom_compte
        FROM donations d
        JOIN donors o ON o.id = d.donor_id
        LEFT JOIN projects p ON p.id = d.project_id
@@ -35,7 +35,6 @@ async function destinataireDuDon(donationId) {
   const don = rows[0];
   if (!don) return null;
   if (don.email_compte) {
-    if (!don.email_verifie_le) return null;
     return { ...don, a: don.email_compte, prenom: don.prenom_compte || don.prenom_fiche, avecCompte: true };
   }
   return don.email_fiche ? { ...don, a: don.email_fiche, prenom: don.prenom_fiche, avecCompte: false } : null;
@@ -55,7 +54,7 @@ export function donRecu(donationId) {
         `Référence : ${don.reference}${don.payment_method ? ` · moyen : ${don.payment_method}` : ''}.`,
         'Vous pourrez suivre ce qu’il devient : l’équipe publie l’avancement des projets, les dépenses et les preuves de terrain.',
       ],
-      bouton: don.avecCompte ? { texte: 'Voir mes dons', lien: `${site()}/donateur/dons` } : null,
+      bouton: don.avecCompte ? { texte: 'Ouvrir mon espace', lien: `${site()}/authentification` } : null,
       note: 'Conservez ce courriel : il vaut accusé de réception de votre don.',
     });
   });
@@ -73,7 +72,7 @@ export function promesseEnregistree(donationId) {
         `Votre promesse de don de ${montant(don.amount, don.currency)} est enregistrée sous la référence ${don.reference}.`,
         'Dès que votre paiement nous parvient, l’équipe HOPE le confirme et vous recevez un courriel de remerciement.',
       ],
-      bouton: don.avecCompte ? { texte: 'Suivre mon don', lien: `${site()}/donateur/dons` } : null,
+      bouton: don.avecCompte ? { texte: 'Suivre mon don', lien: `${site()}/authentification` } : null,
       note: 'Vous n’êtes pas à l’origine de ce don ? Répondez à ce courriel ou écrivez à l’équipe HOPE.',
     });
   });

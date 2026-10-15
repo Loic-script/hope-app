@@ -24,6 +24,15 @@ export async function dernierLien(email, page) {
   throw new Error(`Aucun lien ${page} pour ${email}`);
 }
 
+export function courrielsPour(email) {
+  const texte = fs.existsSync(JOURNAL) ? fs.readFileSync(JOURNAL, 'utf8') : '';
+  return texte
+    .split(/\[HOPE\] Courriel \([^)]*\) a /)
+    .slice(1)
+    .filter((b) => b.startsWith(`${email} `))
+    .map((b) => b.slice(0, 2000));
+}
+
 export async function sansDebordement(page) {
   const deborde = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(deborde, 'la page ne doit pas defiler horizontalement').toBe(false);

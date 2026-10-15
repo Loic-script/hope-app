@@ -19,6 +19,20 @@ export function envoiConfigure() {
   return Boolean(config.smtp.host);
 }
 
+export async function verifierEnvoi() {
+  const smtp = transporteur();
+  if (!smtp) return { pret: false, raison: 'SMTP non configure (SMTP_HOST vide)' };
+  if (!config.smtp.user && (config.smtp.password || /(^|\.)gmail\.com$/i.test(config.smtp.host))) {
+    return { pret: false, raison: 'SMTP_USER vide : renseignez l’adresse du compte qui envoie les courriels' };
+  }
+  try {
+    await smtp.verify();
+    return { pret: true };
+  } catch (erreur) {
+    return { pret: false, raison: String(erreur.response || erreur.message).split('\n')[0] };
+  }
+}
+
 function echapper(texte) {
   return String(texte ?? '')
     .replace(/&/g, '&amp;')
