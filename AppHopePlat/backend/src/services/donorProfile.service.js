@@ -54,7 +54,7 @@ export const TYPES_DONATEUR = [
   },
 ];
 
-const LIBELLES_DEVISE = { MGA: 'Ariary', EUR: 'Euro', USD: 'Dollar américain' };
+const LIBELLES_DEVISE = { MGA: 'Ariary', EUR: 'Euro', USD: 'Dollar américain', CAD: 'Dollar canadien' };
 export const DEVISES = DEVISES_ACCEPTEES.map((code) => ({
   code,
   libelle: LIBELLES_DEVISE[code] ?? code,

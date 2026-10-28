@@ -1170,7 +1170,7 @@ ALTER TABLE donateur ADD CONSTRAINT donateur_type_valide CHECK (
 
 ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_devise_valide;
 ALTER TABLE donateur ADD CONSTRAINT donateur_devise_valide CHECK (
-  devise IS NULL OR devise IN ('MGA', 'EUR', 'USD'));
+  devise IS NULL OR devise IN ('MGA', 'EUR', 'USD', 'CAD'));
 
 ALTER TABLE donateur DROP CONSTRAINT IF EXISTS donateur_langue_valide;
 ALTER TABLE donateur ADD CONSTRAINT donateur_langue_valide CHECK (

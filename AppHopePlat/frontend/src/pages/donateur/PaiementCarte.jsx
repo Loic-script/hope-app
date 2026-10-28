@@ -18,6 +18,7 @@ const DEVISES = [
   { code: 'MGA', symbole: 'Ar', rapides: [10000, 25000, 50000, 100000], minimum: 1000 },
   { code: 'EUR', symbole: '€', rapides: [10, 25, 50, 100], minimum: 1 },
   { code: 'USD', symbole: '$', rapides: [10, 25, 50, 100], minimum: 1 },
+  { code: 'CAD', symbole: 'C$', rapides: [10, 25, 50, 100], minimum: 1 },
 ];
 
 function montantSaisi(texte) {

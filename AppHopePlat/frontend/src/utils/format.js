@@ -2,6 +2,7 @@ const DEVISES = {
   MGA: { suffixe: ' Ar', decimales: 0 },
   EUR: { suffixe: ' €', decimales: 2 },
   USD: { suffixe: ' $', decimales: 2 },
+  CAD: { suffixe: ' $ CA', decimales: 2 },
 };
 
 export function montant(valeur, devise = 'MGA') {

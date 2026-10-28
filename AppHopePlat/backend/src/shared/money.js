@@ -2,7 +2,7 @@ import { ErreurValidation } from './errors.js';
 
 export const DEVISE_PAR_DEFAUT = 'MGA';
 
-export const DEVISES_ACCEPTEES = ['MGA', 'EUR', 'USD'];
+export const DEVISES_ACCEPTEES = ['MGA', 'EUR', 'USD', 'CAD'];
 
 const CENTIMES_MAX = 99_999_999_999_99;
 

@@ -147,7 +147,7 @@
 .carte__devises {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
@@ -155,7 +155,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: calc((100% - 12px) / 3);
+  width: calc((100% - 18px) / 4);
   height: 100%;
   border: 1.5px solid #fff;
   border-radius: 8px;
