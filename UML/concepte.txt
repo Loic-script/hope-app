@@ -1,0 +1,19 @@
+Affectation : affecté, projet précis par le donateur | non affecté, budget non destiné pour un projet
+Projet : Si le donateur a fait un don affecté et choisi un projet
+Budget : Les dons récus : don affecté (projet précis), don non affecté pour hope
+Depense/Utilisation: la depense faites pour le projet, matériel,...
+Justification : Description de la depense, facture ou récu 
+Beneficiaire : qui a été aidé 
+Impact : Le resultat du projet 
+Paiememnt : Don ponctuel -- paiement en une seule fois
+	Don mensuel -- paiement par mois
+	Le systeme distingue aussi un mode de paiement selon la localisation du donateur 
+Donateur : Donateur regulié : Un donateur qui possède un compte pour suivre de plus près l'information, projet financé de l'organisation, et aussi grace à ce compte le donateur suivre l'historique de ses dons.
+	   Donateur ou visiteur : qui ne possède pas de compte. Mais juste un don poctuel ou mensuel
+	   Donateur international : c'est un donateur qui fait un don depuis l'etranger
+
+Compte : 
+-Admin Hope : création projet, archiver les projets terminé, gerer les dons (don Hope et projet), suivre les paiement, suire les depenses/budgets/impact, ajouter les justifications et beneficiaire dans le projet   
+-Donateur : faire un don, suivre historique de ses dons/ transaction, voir ses projets soutenus, gerer profil
+
+

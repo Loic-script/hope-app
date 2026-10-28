@@ -1,0 +1,197 @@
+@import 'tailwindcss';
+
+/* ===========================================================================
+   DESIGN SYSTEM HOPE
+   ---------------------------------------------------------------------------
+   Palette imposee par la charte HOPE. Les valeurs derivees (-deep, -ink-soft)
+   ont ete ajoutees pour une seule raison : la lisibilite.
+
+   CE QUE DIT LA MESURE DE CONTRASTE (WCAG AA demande 4.5:1 pour du texte)
+
+     texte violet #5D5696 sur blanc .............. 6.49:1   OK
+     texte encre  #353343 sur blanc .............. 12.31:1  OK
+     blanc sur violet #5D5696 .................... 6.49:1   OK
+     jaune #F5E389 sur violet .................... 5.01:1   OK
+
+     BLANC sur orange #E09735 .................... 2.43:1   INSUFFISANT
+     ENCRE sur orange #E09735 .................... 5.07:1   OK
+
+   D'ou une decision de design dictee par l'accessibilite : le bouton primaire
+   est orange a TEXTE ENCRE, jamais a texte blanc. Il est de surcroit plus
+   chaleureux ainsi.
+
+   L'orange en TEXTE sur blanc etant illisible (2.43:1), toute mention orange
+   ecrite utilise --color-hope-orange-deep (#96600F, 5.28:1). L'orange vif
+   reste reserve aux aplats et aux bordures.
+
+   Bleu, lavande et jaune ne servent JAMAIS de couleur de texte sur blanc :
+   ce sont des fonds.
+   =========================================================================== */
+
+@theme {
+  /* --- Palette HOPE --- */
+  --color-hope-purple: #5d5696;
+  --color-hope-purple-light: #6d67a0;
+  --color-hope-purple-deep: #423d6e;
+
+  --color-hope-blue: #86b9de;
+  --color-hope-blue-light: #dbeaf5;
+  --color-hope-blue-mist: #d0deee;
+
+  --color-hope-orange: #e09735;
+  --color-hope-orange-light: #e4a44e;
+  /* Seule declinaison lisible en texte sur blanc. */
+  --color-hope-orange-deep: #96600f;
+
+  --color-hope-yellow: #f5e389;
+  --color-hope-lavender: #d7d4e5;
+
+  --color-hope-ink: #353343;
+  --color-hope-ink-soft: #5c596b;
+
+  /* --- Typographie ---
+     Fraunces : serif chaleureuse, un peu artisanale. Elle evite l'elegance
+     froide des serifs editoriales et convient a une ONG.
+     Instrument Sans : humaniste, tres lisible en francais accentue.
+     JetBrains Mono : reservee aux MONTANTS et aux REFERENCES. Les references
+     HOPE-TXN-... sont concues pour etre dictees au telephone ; une chasse fixe
+     rend chaque caractere distinct. Les chiffres tabulaires alignent les
+     montants les uns sous les autres. */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* --- Rayons : arrondis doux, jamais de pilule sauf sur les badges --- */
+  --radius-hope-sm: 0.5rem;
+  --radius-hope: 0.875rem;
+  --radius-hope-lg: 1.25rem;
+  --radius-hope-xl: 1.75rem;
+
+  /* --- Ombres : tres basses et teintees de violet, jamais du gris pur --- */
+  --shadow-hope-sm: 0 1px 2px rgb(53 51 67 / 0.06), 0 1px 3px rgb(93 86 150 / 0.05);
+  --shadow-hope: 0 2px 4px rgb(53 51 67 / 0.04), 0 6px 16px rgb(93 86 150 / 0.08);
+  --shadow-hope-lg: 0 4px 8px rgb(53 51 67 / 0.04), 0 16px 40px rgb(93 86 150 / 0.12);
+
+  /* --- Animations --- */
+  --animate-hope-fade: hope-fade 0.5s ease-out both;
+  --animate-hope-rise: hope-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes hope-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hope-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hope-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ===========================================================================
+   FONDATIONS
+   =========================================================================== */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-hope-ink);
+    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Anneau de focus visible partout, y compris sur fond violet.
+     On ne supprime jamais l'indicateur de focus : c'est le seul repere d'une
+     personne qui navigue au clavier. */
+  :focus-visible {
+    outline: 3px solid var(--color-hope-orange);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Les chiffres monetaires s'alignent en colonne. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Lien d'evitement : premier element atteint au clavier, invisible sinon. */
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -100%;
+    z-index: 100;
+    border-radius: var(--radius-hope-sm);
+    background-color: var(--color-hope-purple);
+    padding: 0.75rem 1.25rem;
+    color: #ffffff;
+    font-weight: 600;
+    transition: top 0.2s ease;
+  }
+
+  .skip-link:focus {
+    top: 1rem;
+  }
+}
+
+/* ===========================================================================
+   MOUVEMENT REDUIT
+   ---------------------------------------------------------------------------
+   Certaines personnes ressentent des vertiges devant une interface animee.
+   Quand le systeme le signale, tout mouvement s'arrete : le contenu reste
+   entierement accessible, simplement immobile.
+   =========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

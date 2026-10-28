@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HOPE">
+  <rect width="64" height="64" rx="14" fill="#5D5696" />
+  <path
+    d="M32 49.5S15 39.8 15 28.9c0-5.6 4.4-9.9 9.7-9.9 3 0 5.8 1.4 7.3 3.7 1.5-2.3 4.3-3.7 7.3-3.7 5.3 0 9.7 4.3 9.7 9.9C49 39.8 32 49.5 32 49.5Z"
+    fill="#E09735"
+  />
+</svg>

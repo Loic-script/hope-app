@@ -1,0 +1,56 @@
+I-Plateforame de donation : 
+
+Faire un don ->
+Formulaire : 
+-nom et prénom
+-pays
+-email
+-telephone
+-mot de passe 
+-confirmer le mot de passe
+- Adresse 
+- Ville
+- Profession 
+- Site web
+- Comment il a connu Hope 
+-type de donateur : particulier, entreprise, fondation, organisation, partenaire, international
+- Si type de donateur = international ou Pays different de Madagascar alors la formulaire a quelque champs supplementaire comme : 
+	- Devise préférée
+	- Langue
+	- Fuseau horaire (definir automatiquement selon le pays)
+- Mode de paiement Si à madagascar(Mvola, Orange Money, verement Bancaire, Dépot bancaire, Especes) si à l'etranger (carte Bancaire, Virement International, platormes de paiement, Autres prestataires futur)
+
+-Date de création du compte (rempli automatiquement apres avoir créé le compte du donateur)
+
+2- Se Connecter si la personne à un compte 
+-email
+-mot de passe
+ 
+3- Faire un don seulement
+-id
+-nom et prénom
+-pays
+-email
+-telephone
+- Adresse 
+- Ville
+- Profession 
+- Site web
+- Comment il a connu Hope 
+-type de donateur : particulier, entreprise, fondation, organisation, partenaire, international
+- Si type de donateur = international ou Pays different de Madagascar alors la formulaire a quelque champs supplementaire comme : 
+	- Devise préférée
+	- Langue
+	- Fuseau horaire (definir automatiquement selon le pays)
+
+- Don affecté (relié à un Projet spécifique) ou don non affecté (pour hope) si spécifique alors selectionner le Projet
+- Don ponctuel ou Don mensuel 
+- Saisir le montant 
+- Mode de paiement Si à madagascar(Mvola, Orange Money, verement Bancaire, Dépot bancaire, Especes) si à l'etranger (carte Bancaire, Virement International, platormes de paiement, Autres prestataires futur)
+-Date de création du compte (rempli automatiquement apres avoir créé le compte du donateur)
+
+
+
+
+
+

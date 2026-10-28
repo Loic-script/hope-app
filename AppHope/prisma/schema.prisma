@@ -1,0 +1,656 @@
+// ---------------------------------------------------------------------------
+// HOPE - Hope for a Better Life
+// Schema de la base de donnees "hope_donations".
+//
+// CONVENTIONS
+//   * Les identifiants sont des UUID (@db.Uuid).
+//   * Les noms de tables et de colonnes sont en snake_case (@map / @@map),
+//     les noms de modeles et de champs Prisma restent en camelCase/PascalCase.
+//   * TOUS les montants financiers utilisent Decimal(18, 2) : jamais de Float.
+//   * Les devises sont stockees en Char(3) (code ISO 4217 : MGA, EUR, USD...).
+//     Ce choix (plutot qu'un enum) permet d'ajouter une devise sans migration ;
+//     la liste autorisee est validee dans src/shared/currency.ts.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// ENUMS
+// ===========================================================================
+
+/// Nature juridique du donateur.
+/// "International" n'est PAS un type de donateur : c'est une propriete deduite
+/// du champ `country` (voir src/shared/geography.ts).
+enum DonorType {
+  INDIVIDUAL
+  COMPANY
+  FOUNDATION
+  ORGANIZATION
+  PARTNER
+}
+
+/// Ponctuel ou recurrent. Un don RECURRING genere N transactions.
+enum DonationType {
+  ONE_TIME
+  RECURRING
+}
+
+enum DonationFrequency {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum DonationStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+/// Portee geographique d'une methode de paiement.
+enum PaymentScope {
+  LOCAL
+  INTERNATIONAL
+  BOTH
+}
+
+/// Cycle de vie d'un mouvement financier reel.
+/// Transitions autorisees : voir src/modules/payments/transaction-status.ts
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+/// Qui a decide de l'affectation du don a un projet.
+enum AllocationType {
+  DONOR_DESIGNATED
+  HOPE_ALLOCATED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+  CANCELLED
+}
+
+enum BudgetStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  CANCELLED
+}
+
+enum ExpenseStatus {
+  DRAFT
+  VALIDATED
+  PAID
+  CANCELLED
+}
+
+enum DocumentType {
+  INVOICE
+  RECEIPT
+  BANK_PROOF
+  CONTRACT
+  OTHER
+}
+
+enum BeneficiaryType {
+  ORPHAN
+  SINGLE_MOTHER
+  FAMILY
+  OTHER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum BeneficiaryStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  WITHDRAWN
+}
+
+enum ProjectBeneficiaryStatus {
+  ACTIVE
+  COMPLETED
+  LEFT
+  SUSPENDED
+}
+
+// ===========================================================================
+// 1. DONATEURS
+// ===========================================================================
+
+model Donor {
+  id String @id @default(uuid()) @db.Uuid
+
+  firstName String @map("first_name") @db.VarChar(120)
+  lastName  String @map("last_name") @db.VarChar(120)
+
+  /// Renseigne uniquement pour COMPANY / FOUNDATION / ORGANIZATION / PARTNER.
+  /// Pour ces types, firstName/lastName designent la personne de contact.
+  organizationName String? @map("organization_name") @db.VarChar(180)
+
+  email String @unique @db.VarChar(180)
+  phone String @db.VarChar(40)
+
+  donorType DonorType @map("donor_type")
+
+  /// Code pays ISO 3166-1 alpha-2 (MG, FR, US...).
+  country String @db.Char(2)
+
+  /// Devise dans laquelle le donateur souhaite donner (ISO 4217).
+  preferredCurrency String @map("preferred_currency") @db.Char(3)
+
+  preferredLanguage String? @map("preferred_language") @db.VarChar(10)
+  timezone          String? @db.VarChar(64)
+  address           String?
+  city              String? @db.VarChar(120)
+  profession        String? @db.VarChar(120)
+  website           String? @db.VarChar(255)
+  discoverySource   String? @map("discovery_source") @db.VarChar(120)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  donations Donation[]
+
+  @@index([donorType])
+  @@index([country])
+  @@index([createdAt])
+  @@map("donors")
+}
+
+// ===========================================================================
+// 2. DONS
+// ===========================================================================
+
+/// Un DON est un ENGAGEMENT / une INTENTION du donateur.
+/// Il ne represente AUCUN mouvement d'argent : ce sont les Transaction liees
+/// qui portent l'argent reellement recu. Voir docs/database.md.
+model Donation {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Reference lisible : HOPE-DON-20260903-A1B2C3
+  reference String @unique @db.VarChar(40)
+
+  donorId String @map("donor_id") @db.Uuid
+  donor   Donor  @relation(fields: [donorId], references: [id], onDelete: Restrict)
+
+  donationType DonationType   @map("donation_type")
+  status       DonationStatus @default(DRAFT)
+
+  currency String @db.Char(3)
+
+  /// Montant ATTENDU (par echeance pour un don recurrent, total pour un
+  /// don ponctuel). Ce n'est PAS le montant recu : voir Transaction.
+  expectedAmount Decimal @map("expected_amount") @db.Decimal(18, 2)
+
+  startDate       DateTime?          @map("start_date") @db.Date
+  endDate         DateTime?          @map("end_date") @db.Date
+  frequency       DonationFrequency?
+  nextPaymentDate DateTime?          @map("next_payment_date") @db.Date
+
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  transactions Transaction[]
+  allocations  DonationAllocation[]
+
+  @@index([donorId])
+  @@index([status])
+  @@index([donationType])
+  @@index([nextPaymentDate])
+  @@map("donations")
+}
+
+// ===========================================================================
+// 3. METHODES DE PAIEMENT
+// ===========================================================================
+
+/// Catalogue extensible : ajouter une methode = ajouter une ligne, pas
+/// modifier le code. Le lien vers l'implementation technique se fait par
+/// `provider` (voir src/modules/payments/providers/provider.registry.ts).
+model PaymentMethod {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Identifiant stable utilise par le code : MVOLA, ORANGE_MONEY, CARD...
+  code String @unique @db.VarChar(60)
+  name String @db.VarChar(120)
+
+  /// Fournisseur technique : MOCK aujourd'hui, puis STRIPE, MVOLA, PAYPAL...
+  provider String @db.VarChar(60)
+
+  scope    PaymentScope
+  isActive Boolean      @default(true) @map("is_active")
+
+  /// Devises acceptees (ISO 4217). Tableau vide = aucune restriction.
+  supportedCurrencies String[] @default([]) @map("supported_currencies") @db.Char(3)
+
+  description String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  transactions Transaction[]
+
+  @@index([scope])
+  @@index([isActive])
+  @@map("payment_methods")
+}
+
+// ===========================================================================
+// 4. TRANSACTIONS (mouvements financiers reels) - MODULE PRIORITAIRE
+// ===========================================================================
+
+model Transaction {
+  id String @id @default(uuid()) @db.Uuid
+
+  donationId String   @map("donation_id") @db.Uuid
+  donation   Donation @relation(fields: [donationId], references: [id], onDelete: Restrict)
+
+  paymentMethodId String        @map("payment_method_id") @db.Uuid
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @db.Char(3)
+
+  status TransactionStatus @default(PENDING)
+
+  /// Reference renvoyee par le prestataire (Stripe, MVola...). Jamais de
+  /// donnee bancaire sensible ici : uniquement un identifiant opaque.
+  providerReference String? @map("provider_reference") @db.VarChar(180)
+
+  /// Reference interne HOPE : HOPE-TXN-20260903-A1B2C3
+  internalReference String @unique @map("internal_reference") @db.VarChar(40)
+
+  /// Numero d'echeance pour un don recurrent (1 = janvier, 2 = fevrier...).
+  installmentNumber Int? @map("installment_number")
+
+  /// Date effective du mouvement d'argent (renseignee a la confirmation).
+  transactionDate DateTime? @map("transaction_date") @db.Timestamptz(6)
+
+  failureReason String? @map("failure_reason")
+
+  /// Montant deja rembourse. Permet de gerer un remboursement partiel.
+  /// Montant net reellement acquis = amount - refundedAmount (si SUCCESS).
+  refundedAmount Decimal   @default(0) @map("refunded_amount") @db.Decimal(18, 2)
+  refundedAt     DateTime? @map("refunded_at") @db.Timestamptz(6)
+  refundReason   String?   @map("refund_reason")
+
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([donationId])
+  @@index([paymentMethodId])
+  @@index([status])
+  @@index([transactionDate])
+  @@index([donationId, status])
+  @@map("transactions")
+}
+
+// ===========================================================================
+// 5. AFFECTATIONS DE DONS
+// ===========================================================================
+
+/// Repartition d'un don vers un ou plusieurs projets.
+/// REGLE : la somme des affectations d'un don ne peut jamais depasser le
+/// montant NET reellement recu (transactions SUCCESS moins remboursements).
+model DonationAllocation {
+  id String @id @default(uuid()) @db.Uuid
+
+  donationId String   @map("donation_id") @db.Uuid
+  donation   Donation @relation(fields: [donationId], references: [id], onDelete: Restrict)
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @db.Char(3)
+
+  allocationType AllocationType @map("allocation_type")
+
+  allocatedAt DateTime @default(now()) @map("allocated_at") @db.Timestamptz(6)
+  notes       String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([donationId])
+  @@index([projectId])
+  @@index([projectId, currency])
+  @@map("donation_allocations")
+}
+
+// ===========================================================================
+// 6. CATEGORIES DE PROJET
+// ===========================================================================
+
+model ProjectCategory {
+  id String @id @default(uuid()) @db.Uuid
+
+  name        String  @unique @db.VarChar(120)
+  description String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  projects Project[]
+
+  @@map("project_categories")
+}
+
+// ===========================================================================
+// 7. PROJETS
+// ===========================================================================
+
+model Project {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Reference lisible : HOPE-PRJ-20260903-A1B2C3
+  code String @unique @db.VarChar(40)
+
+  categoryId String          @map("category_id") @db.Uuid
+  category   ProjectCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  name        String @db.VarChar(180)
+  description String
+
+  location    String?   @db.VarChar(180)
+  managerName String?   @map("manager_name") @db.VarChar(180)
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+
+  status ProjectStatus @default(DRAFT)
+
+  photoUrl String? @map("photo_url") @db.VarChar(500)
+  videoUrl String? @map("video_url") @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  allocations   DonationAllocation[]
+  budgets       ProjectBudget[]
+  expenses      Expense[]
+  beneficiaries ProjectBeneficiary[]
+  impacts       Impact[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("projects")
+}
+
+// ===========================================================================
+// 8. BUDGETS
+// ===========================================================================
+
+/// Un projet peut avoir plusieurs budgets (un par periode, par exemple
+/// "Scolarisation 2027" puis "Scolarisation 2028").
+model ProjectBudget {
+  id String @id @default(uuid()) @db.Uuid
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  name        String  @db.VarChar(180)
+  totalAmount Decimal @map("total_amount") @db.Decimal(18, 2)
+  currency    String  @db.Char(3)
+
+  startDate DateTime? @map("start_date") @db.Date
+  endDate   DateTime? @map("end_date") @db.Date
+
+  status BudgetStatus @default(DRAFT)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  items    BudgetItem[]
+  expenses Expense[]
+
+  @@index([projectId])
+  @@index([status])
+  @@map("project_budgets")
+}
+
+model BudgetItem {
+  id String @id @default(uuid()) @db.Uuid
+
+  budgetId String        @map("budget_id") @db.Uuid
+  budget   ProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  name        String  @db.VarChar(180)
+  description String?
+
+  plannedAmount Decimal @map("planned_amount") @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  expenses Expense[]
+
+  @@index([budgetId])
+  @@map("budget_items")
+}
+
+// ===========================================================================
+// 9. DEPENSES
+// ===========================================================================
+
+model Expense {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Reference lisible : HOPE-EXP-20260903-A1B2C3
+  reference String @unique @db.VarChar(40)
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  budgetId String?        @map("budget_id") @db.Uuid
+  budget   ProjectBudget? @relation(fields: [budgetId], references: [id], onDelete: Restrict)
+
+  budgetItemId String?     @map("budget_item_id") @db.Uuid
+  budgetItem   BudgetItem? @relation(fields: [budgetItemId], references: [id], onDelete: Restrict)
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @db.Char(3)
+
+  description String
+  expenseDate DateTime @map("expense_date") @db.Date
+
+  status ExpenseStatus @default(DRAFT)
+
+  validatedAt DateTime? @map("validated_at") @db.Timestamptz(6)
+  paidAt      DateTime? @map("paid_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  documents SupportingDocument[]
+
+  @@index([projectId])
+  @@index([budgetId])
+  @@index([budgetItemId])
+  @@index([status])
+  @@index([projectId, status])
+  @@map("expenses")
+}
+
+// ===========================================================================
+// 10. JUSTIFICATIFS
+// ===========================================================================
+
+/// Phase 1 : on enregistre uniquement les METADONNEES du document.
+/// Aucun upload HTTP, aucun stockage binaire.
+model SupportingDocument {
+  id String @id @default(uuid()) @db.Uuid
+
+  expenseId String  @map("expense_id") @db.Uuid
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  documentType DocumentType @map("document_type")
+
+  fileName String  @map("file_name") @db.VarChar(255)
+  filePath String  @map("file_path") @db.VarChar(500)
+  mimeType String? @map("mime_type") @db.VarChar(120)
+  fileSize Int?    @map("file_size")
+
+  /// Numero de facture / de recu du document.
+  reference String?   @db.VarChar(120)
+  issuedAt  DateTime? @map("issued_at") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([expenseId])
+  @@index([documentType])
+  @@map("supporting_documents")
+}
+
+// ===========================================================================
+// 11. BENEFICIAIRES
+// ===========================================================================
+
+model Beneficiary {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Reference anonyme utilisable dans les rapports : HOPE-BEN-20260903-A1B2C3
+  reference String @unique @db.VarChar(40)
+
+  firstName String? @map("first_name") @db.VarChar(120)
+  lastName  String? @map("last_name") @db.VarChar(120)
+
+  beneficiaryType BeneficiaryType @map("beneficiary_type")
+
+  gender    Gender?
+  birthDate DateTime? @map("birth_date") @db.Date
+
+  country String  @db.Char(2)
+  city    String? @db.VarChar(120)
+
+  status BeneficiaryStatus @default(ACTIVE)
+  notes  String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  projects ProjectBeneficiary[]
+  impacts  Impact[]
+
+  @@index([beneficiaryType])
+  @@index([status])
+  @@index([country])
+  @@map("beneficiaries")
+}
+
+/// Table de liaison N-N : un projet a plusieurs beneficiaires, un
+/// beneficiaire participe a plusieurs projets.
+model ProjectBeneficiary {
+  id String @id @default(uuid()) @db.Uuid
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  beneficiaryId String      @map("beneficiary_id") @db.Uuid
+  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime  @default(now()) @map("joined_at") @db.Timestamptz(6)
+  leftAt   DateTime? @map("left_at") @db.Timestamptz(6)
+
+  status ProjectBeneficiaryStatus @default(ACTIVE)
+  notes  String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([projectId, beneficiaryId])
+  @@index([projectId])
+  @@index([beneficiaryId])
+  @@map("project_beneficiaries")
+}
+
+// ===========================================================================
+// 12. IMPACT
+// ===========================================================================
+
+model Impact {
+  id String @id @default(uuid()) @db.Uuid
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  /// Nul si l'impact est mesure au niveau du projet et non d'une personne.
+  beneficiaryId String?      @map("beneficiary_id") @db.Uuid
+  beneficiary   Beneficiary? @relation(fields: [beneficiaryId], references: [id], onDelete: SetNull)
+
+  title       String @db.VarChar(180)
+  description String
+
+  /// Indicateur mesurable : women_trained, children_schooled...
+  indicator String?  @db.VarChar(120)
+  value     Decimal? @db.Decimal(18, 4)
+  unit      String?  @db.VarChar(60)
+
+  measuredAt DateTime @map("measured_at") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([projectId])
+  @@index([beneficiaryId])
+  @@index([indicator])
+  @@map("impacts")
+}
+
+// ===========================================================================
+// 13. JOURNAL D'AUDIT FINANCIER
+// ===========================================================================
+
+/// Trace immuable des operations financieres sensibles.
+/// `action` est une chaine (et non un enum) pour pouvoir ajouter un evenement
+/// sans migration ; les valeurs autorisees sont listees dans
+/// src/modules/audit/audit.types.ts.
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+
+  entityType String @map("entity_type") @db.VarChar(60)
+  entityId   String @map("entity_id") @db.Uuid
+  action     String @db.VarChar(60)
+
+  oldData Json? @map("old_data")
+  newData Json? @map("new_data")
+
+  /// Reserve pour la future authentification : identifiant de l'utilisateur
+  /// a l'origine de l'action. Nul tant qu'il n'y a pas de systeme de comptes.
+  actorId String? @map("actor_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

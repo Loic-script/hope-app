@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Environnement (NE JAMAIS COMMITER : contient le mot de passe PostgreSQL)
+.env
+.env.local
+.env.test
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Tests
+coverage/
+.vitest/
+
+# Fichiers uploades (justificatifs) - non versionnes
+storage/
+uploads/
+
+# Editeurs / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Captures et artefacts de test de bout en bout
+frontend/e2e-shots/
+frontend/e2e-echec.png

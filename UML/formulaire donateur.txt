@@ -1,0 +1,27 @@
+Formulaire Donateur :
+1 - Page Information perso (phase 1)
+- nom et prénom
+- Adresse 
+- Ville
+- Telephone
+- Profession
+- pays 
+- Comment il a connu Hope 
+
+2 - Page (je sais pas) (phase 2)
+-type de donateur : particulier, entreprise, fondation, organisation, partenaire, international
+- Site Web
+- Devise préférée
+- Langue
+- Fuseau horaire (definir automatiquement selon le pays)
+
+3 - Page Affectation (phase 3)
+-Don affecté (don relié à un projet spécifique) : choix de projet disponible non terminé et la somme utile est affichée
+- Don non affecté (don libre d'être utilisé par HOPE pour un ou plusieur projet de son choix)
+
+4 - Page Mode de paiement (phase 4)
+- Type de Paiement : choix (Mvola, Orange Money, verement Bancaire, Dépot bancaire, Especes, carte Bancaire, Virement International, platormes de paiement)
+
+5 - Page (je sais pas) (phase 5)
+-Don Ponctuel (Don payé en une fois)
+-Don mensuel (Don payé par mois)
