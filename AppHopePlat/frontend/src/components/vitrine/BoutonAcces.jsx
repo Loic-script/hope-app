@@ -18,22 +18,13 @@ function mouvementReduit() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
-function hasard(amplitude) {
-  return (Math.random() * 2 - 1) * amplitude;
-}
-
-function Lettres({ mot, graine }) {
-  const lettres = useMemo(
-    () => [...mot].map((car) => ({ car, rx: hasard(14).toFixed(1) })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mot, graine]
-  );
-  const total = lettres.length;
+function Lettres({ mot }) {
+  const lettres = useMemo(() => [...mot], [mot]);
   return (
     <span className="vitrine-acces__lettres" aria-hidden="true">
-      {lettres.map(({ car, rx }, i) => (
-        <span key={i} className="vitrine-acces__lettre" style={{ '--i': i, '--rx': `${rx}deg`, '--reste': total - 1 - i }}>
-          <span className="vitrine-acces__lettre-corps">{car === ' ' ? ESPACE : car}</span>
+      {lettres.map((car, i) => (
+        <span key={i} className="vitrine-acces__lettre" style={{ '--i': i }}>
+          {car === ' ' ? ESPACE : car}
         </span>
       ))}
     </span>
@@ -109,11 +100,11 @@ export default function BoutonAcces() {
         <span className="vitrine-acces__mots" aria-hidden="true">
           {sortant !== null && (
             <span key={`sortant-${bascule}`} className="vitrine-acces__mot vitrine-acces__mot--sortant">
-              <Lettres mot={OPTIONS[sortant].libelle} graine={`s${bascule}`} />
+              <Lettres mot={OPTIONS[sortant].libelle} />
             </span>
           )}
           <span key={`courant-${bascule}`} className="vitrine-acces__mot vitrine-acces__mot--courant" data-mot={courant.libelle}>
-            <Lettres mot={courant.libelle} graine={`c${bascule}`} />
+            <Lettres mot={courant.libelle} />
           </span>
         </span>
       </Link>

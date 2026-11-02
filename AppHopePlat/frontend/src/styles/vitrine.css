@@ -196,6 +196,9 @@
   inset: 0 14px 0 18px;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
+  mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
 }
 
 .vitrine-acces__mot {
@@ -205,30 +208,20 @@
 
 .vitrine-acces__lettres {
   display: inline-flex;
+  perspective: 320px;
 }
 
 .vitrine-acces__lettre {
   display: inline-block;
-  transform-origin: 50% 100%;
-  animation: acces-brique-tombe 0.7s linear both;
-  animation-delay: calc(250ms + var(--i, 0) * 75ms);
-}
-
-.vitrine-acces__lettre-corps {
-  display: inline-block;
-  transform-origin: 50% 100%;
-  animation: acces-brique-secousse 75ms ease-in-out both;
-  animation-delay: calc(250ms + (var(--i, 0) + 1) * 75ms + 385ms);
-  animation-iteration-count: var(--reste, 0);
+  transform-origin: 50% 50% -0.5em;
+  backface-visibility: hidden;
+  animation: acces-roule-entre 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(190ms + var(--i, 0) * 32ms);
 }
 
 .vitrine-acces__mot--sortant .vitrine-acces__lettre {
-  animation: acces-brique-chute 0.42s cubic-bezier(0.55, 0, 1, 0.45) both;
-  animation-delay: calc(var(--i, 0) * 26ms);
-}
-
-.vitrine-acces__mot--sortant .vitrine-acces__lettre-corps {
-  animation: none;
+  animation: acces-roule-sort 0.38s cubic-bezier(0.55, 0, 0.8, 0.3) both;
+  animation-delay: calc(var(--i, 0) * 22ms);
 }
 
 .vitrine-acces__fleche {
@@ -326,62 +319,33 @@
   }
 }
 
-@keyframes acces-brique-tombe {
-  0% {
+@keyframes acces-roule-entre {
+  from {
     opacity: 0;
-    transform: translateY(-1.7em) rotate(var(--rx, 0deg));
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+    filter: blur(3px);
+    transform: translateY(0.9em) rotateX(-80deg);
   }
-  12% {
+  60% {
     opacity: 1;
+    filter: blur(0);
   }
-  55% {
-    transform: translateY(0) rotate(0deg) scale(1, 1);
-    animation-timing-function: ease-out;
-  }
-  62% {
-    transform: translateY(0.02em) scale(1.14, 0.8);
-    animation-timing-function: ease-out;
-  }
-  74% {
-    transform: translateY(-0.24em) scale(0.98, 1.04);
-    animation-timing-function: ease-in;
-  }
-  84% {
-    transform: translateY(0) scale(1.05, 0.95);
-    animation-timing-function: ease-out;
-  }
-  92% {
-    transform: translateY(-0.06em) scale(1, 1);
-    animation-timing-function: ease-in;
-  }
-  100% {
+  to {
     opacity: 1;
+    filter: none;
     transform: none;
   }
 }
 
-@keyframes acces-brique-secousse {
-  0%,
-  100% {
-    transform: none;
-  }
-  50% {
-    transform: translateY(-0.09em) scale(1.02, 0.96);
-  }
-}
-
-@keyframes acces-brique-chute {
-  0% {
+@keyframes acces-roule-sort {
+  from {
     opacity: 1;
+    filter: none;
     transform: none;
   }
-  25% {
-    transform: translateY(-0.08em) rotate(calc(var(--rx, 0deg) * 0.6));
-  }
-  100% {
+  to {
     opacity: 0;
-    transform: translateY(1.6em) rotate(calc(var(--rx, 0deg) * 2));
+    filter: blur(3px);
+    transform: translateY(-0.9em) rotateX(80deg);
   }
 }
 
@@ -810,7 +774,6 @@
   }
 
   .vitrine-acces__lettre,
-  .vitrine-acces__lettre-corps,
   .vitrine-acces__menu,
   .vitrine-acces__choix {
     animation: none;
