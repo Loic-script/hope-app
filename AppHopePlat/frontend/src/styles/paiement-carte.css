@@ -376,14 +376,15 @@
 }
 
 .carte__rapides {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
   gap: 6px;
   margin-top: 8px;
 }
 
 .carte__rapide {
+  flex: 1 1 auto;
   min-height: 40px;
+  padding: 0 6px;
   border: 1px solid var(--ct-trait);
   border-radius: 999px;
   background: #fff;

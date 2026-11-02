@@ -15,10 +15,10 @@ import { messageErreur } from '../../services/api.js';
 import * as fmt from '../../utils/format.js';
 
 const DEVISES = [
-  { code: 'MGA', symbole: 'Ar', rapides: [10000, 25000, 50000, 100000], minimum: 1000 },
-  { code: 'EUR', symbole: '€', rapides: [10, 25, 50, 100], minimum: 1 },
-  { code: 'USD', symbole: '$', rapides: [10, 25, 50, 100], minimum: 1 },
-  { code: 'CAD', symbole: 'C$', rapides: [10, 25, 50, 100], minimum: 1 },
+  { code: 'MGA', symbole: 'Ar', rapides: [100000, 250000, 500000, 1000000], minimum: 1000 },
+  { code: 'EUR', symbole: '€', rapides: [100, 250, 500, 1000], minimum: 1 },
+  { code: 'USD', symbole: '$', rapides: [100, 250, 500, 1000], minimum: 1 },
+  { code: 'CAD', symbole: 'C$', rapides: [100, 250, 500, 1000], minimum: 1 },
 ];
 
 function montantSaisi(texte) {
