@@ -371,7 +371,7 @@
   }
 
   .v-actualites .v-actualite__image {
-    max-height: clamp(110px, 21vh, 243px);
+    max-height: clamp(130px, 25vh, 260px);
   }
 
   .v-actualites .v-carrousel__piste {
