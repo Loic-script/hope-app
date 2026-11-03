@@ -220,33 +220,19 @@
 }
 
 .v-actualite__image {
-  position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: var(--hope-violet);
 }
 
-.v-actualite__fond {
-  position: absolute;
-  inset: 0;
+.v-actualite__image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(18px) saturate(1.1) brightness(0.85);
-  transform: scale(1.2);
-}
-
-.v-actualite__photo {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
   transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.v-actualite:hover .v-actualite__photo {
-  transform: scale(1.04);
+.v-actualite:hover .v-actualite__image img {
+  transform: scale(1.06);
 }
 
 .v-actualite__corps {
@@ -385,7 +371,7 @@
   }
 
   .v-actualites .v-actualite__image {
-    max-height: clamp(130px, 28vh, 243px);
+    max-height: clamp(110px, 21vh, 243px);
   }
 
   .v-actualites .v-carrousel__piste {
@@ -672,7 +658,7 @@
 
   .v-contribuer__photo,
   .v-realisation__image img,
-  .v-actualite__photo {
+  .v-actualite__image img {
     transform: none;
     transition: none;
   }
