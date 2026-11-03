@@ -210,6 +210,99 @@
   cursor: pointer;
 }
 
+.photo-actualite__apercu img {
+  aspect-ratio: 16 / 10;
+  max-height: none;
+}
+
+.recadrage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recadrage__cadre {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 10px;
+  background-color: #1f1d2b;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.recadrage__cadre--saisi {
+  cursor: grabbing;
+}
+
+.recadrage__cadre:focus-visible {
+  outline: 2px solid var(--hope-bleu);
+  outline-offset: 2px;
+}
+
+.recadrage__image {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+
+.recadrage__grille {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  background:
+    linear-gradient(to right, transparent calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.recadrage__cadre:hover .recadrage__grille,
+.recadrage__cadre:focus-visible .recadrage__grille,
+.recadrage__cadre--saisi .recadrage__grille {
+  opacity: 1;
+}
+
+.recadrage__attente {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+}
+
+.recadrage__reglages {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recadrage__zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-texte-doux);
+}
+
+.recadrage__zoom input {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  accent-color: var(--hope-violet);
+}
+
+.recadrage__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 @media (max-width: 720px) {
   .interet-admin {
     grid-template-columns: minmax(0, 1fr);

@@ -1,6 +1,7 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { IconeTelechargement } from './AdminIcons.jsx';
+import RecadragePhoto from './RecadragePhoto.jsx';
 import { messageErreur, urlMedia } from '../../services/api.js';
 import * as publicationService from '../../services/publication.service.js';
 
@@ -15,21 +16,46 @@ export default function ChampPhotoActualite({
   const champ = useRef(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [recadrage, setRecadrage] = useState(null);
 
-  async function importer(evenement) {
-    const fichier = evenement.target.files?.[0];
-    if (!fichier) return;
+  useEffect(() => () => recadrage && URL.revokeObjectURL(recadrage), [recadrage]);
+
+  async function envoyer(fichier) {
     setErreur('');
     setEnvoi(true);
     try {
       const media = await publicationService.televerserPhoto(fichier);
       onChange(media.url);
+      return true;
     } catch (echec) {
       setErreur(messageErreur(echec, 'L’import de la photo a échoué.'));
+      return false;
     } finally {
       setEnvoi(false);
-      if (champ.current) champ.current.value = '';
     }
+  }
+
+  async function importer(evenement) {
+    const fichier = evenement.target.files?.[0];
+    if (!fichier) return;
+    await envoyer(fichier);
+    if (champ.current) champ.current.value = '';
+  }
+
+  async function ouvrirRecadrage() {
+    setErreur('');
+    try {
+      const reponse = await fetch(urlMedia(affichee));
+      if (!reponse.ok) throw new Error();
+      setRecadrage(URL.createObjectURL(await reponse.blob()));
+    } catch {
+      setErreur('La photo n’a pas pu être ouverte pour la redimensionner.');
+    }
+  }
+
+  async function validerRecadrage(blob) {
+    const fichier = new File([blob], 'photo-recadree.jpg', { type: 'image/jpeg' });
+    if (await envoyer(fichier)) setRecadrage(null);
   }
 
   const affichee = photoPropre || photoProjet;
@@ -60,8 +86,15 @@ export default function ChampPhotoActualite({
       </span>
 
       <div className="media-import">
-        {affichee ? (
-          <figure className="media-import__apercu">
+        {recadrage ? (
+          <RecadragePhoto
+            source={recadrage}
+            onValider={validerRecadrage}
+            onAnnuler={() => setRecadrage(null)}
+            envoi={envoi}
+          />
+        ) : affichee ? (
+          <figure className="media-import__apercu photo-actualite__apercu">
             <img src={urlMedia(affichee)} alt="" />
             <figcaption className="photo-actualite__legende">
               <span>
@@ -70,6 +103,14 @@ export default function ChampPhotoActualite({
                   : 'Photo propre à cette actualité'}
               </span>
               <span className="photo-actualite__actions">
+                <button
+                  type="button"
+                  className="btn btn--neutre btn--petit"
+                  onClick={ouvrirRecadrage}
+                  disabled={desactive || envoi}
+                >
+                  Redimensionner
+                </button>
                 {boutonFichier(suitLeProjet ? 'Choisir une autre photo' : 'Remplacer')}
                 {!suitLeProjet && (
                   <button
