@@ -15,6 +15,11 @@ export async function creer(don) {
   return data;
 }
 
+export async function supprimer(id) {
+  const { data } = await api.delete(`/admin/donations/${id}`);
+  return data;
+}
+
 export async function changerStatut(id, status) {
   const { data } = await api.patch(`/admin/donations/${id}/status`, { status });
   return data;

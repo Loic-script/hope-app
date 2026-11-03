@@ -5,6 +5,7 @@ import * as projectRepository from '../repositories/project.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
+import { fermerSession } from './paiementCarte.service.js';
 
 import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
 import { centimesVersTexte, depuisBase, enCentimes, normaliserDevise } from '../shared/money.js';
@@ -178,6 +179,41 @@ export async function genererEcheancesMensuelles(auteur = null) {
     items: crees,
     message: `${crees.length} échéance(s) créée(s), en attente d’encaissement.`,
   };
+}
+
+export async function supprimer(id, auteur) {
+  const donationId = identifiantRequis(id, 'id');
+  const don = await donationRepository.trouverParId(donationId);
+  if (!don) throw new ErreurIntrouvable('Le don', donationId);
+  if (don.status !== 'PENDING') {
+    throw new ErreurRegleMetier(
+      'Seul un don en attente peut être supprimé. Un don reçu se rembourse.',
+      'DON_NON_SUPPRIMABLE'
+    );
+  }
+
+  const fournisseur = await donationRepository.sessionFournisseur(donationId);
+  if (fournisseur?.paymentProvider === 'stripe' && fournisseur.providerSessionId) {
+    await fermerSession(fournisseur.providerSessionId);
+  }
+
+  await transaction(async (client) => {
+    const supprime = await donationRepository.supprimerEnAttente(donationId, client);
+    if (!supprime) {
+      throw new ErreurRegleMetier('Ce don vient de changer de statut : rechargez la page.', 'DON_NON_SUPPRIMABLE');
+    }
+    await activityLogRepository.deposer(
+      auteur,
+      {
+        action: 'DELETE',
+        entityType: 'DONATION',
+        entityId: donationId,
+        label: `a supprimé le don en attente ${don.reference} (${centimesVersTexte(depuisBase(don.amount))} ${don.currency})`,
+      },
+      client
+    );
+  });
+  return { supprime: true, id: donationId };
 }
 
 export async function changerStatut(id, corps = {}) {

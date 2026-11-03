@@ -4,7 +4,7 @@ import { config } from '../config/env.js';
 import * as donationRepository from '../repositories/donation.repository.js';
 import * as donorSpaceRepository from '../repositories/donorSpace.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
-import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
+import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, enCentimes } from '../shared/money.js';
 import { presenter, promettreUnDon } from './promesseDon.service.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
@@ -198,6 +198,23 @@ export async function etatSession(identite, sessionId) {
     erreur: messageDuRefus(session),
     don: aJour ? presenter(aJour) : null,
   };
+}
+
+export async function fermerSession(sessionId) {
+  const client = chezStripe();
+  let session;
+  try {
+    session = await client.checkout.sessions.retrieve(sessionId);
+    if (session.status === 'open') session = await client.checkout.sessions.expire(sessionId);
+  } catch (echec) {
+    throw erreurLisible(echec);
+  }
+  if (session.status === 'complete') {
+    throw new ErreurRegleMetier(
+      'Ce paiement par carte a abouti chez Stripe : le don ne peut pas être supprimé. Rechargez la page, il passera en reçu.',
+      'PAIEMENT_CARTE_ABOUTI'
+    );
+  }
 }
 
 export async function traiterEvenement(corpsBrut, signature) {

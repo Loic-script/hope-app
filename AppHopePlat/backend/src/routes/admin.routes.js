@@ -142,6 +142,7 @@ router.get('/donations', donations.lister);
 router.post('/donations', donations.creer);
 router.get('/donations/:id', donations.recuperer);
 router.patch('/donations/:id/status', donations.changerStatut);
+router.delete('/donations/:id', donations.supprimer);
 router.post('/donations/generate-monthly', donations.genererEcheances);
 
 router.get('/messages', messages.lister);

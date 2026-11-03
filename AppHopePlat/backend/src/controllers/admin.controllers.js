@@ -103,6 +103,7 @@ export const donations = {
   recuperer: gerer((req) => donationService.recupererParId(req.params.id)),
   creer: gerer((req) => donationService.creer(req.body), { statut: 201 }),
   changerStatut: gerer((req) => donationService.changerStatut(req.params.id, req.body)),
+  supprimer: gerer((req) => donationService.supprimer(req.params.id, req.admin)),
   genererEcheances: gerer((req) => donationService.genererEcheancesMensuelles(req.admin), {
     statut: 201,
   }),

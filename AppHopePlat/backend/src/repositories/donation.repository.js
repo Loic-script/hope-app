@@ -117,6 +117,24 @@ export async function mettreAJour(id, colonnes, client = null) {
   return trouverParId(id, client);
 }
 
+export async function sessionFournisseur(id, client = null) {
+  const resultat = await query(
+    'SELECT payment_provider, provider_session_id FROM donations WHERE id = $1',
+    [id],
+    client
+  );
+  return versObjet(resultat.rows[0]);
+}
+
+export async function supprimerEnAttente(id, client = null) {
+  const resultat = await query(
+    "DELETE FROM donations WHERE id = $1 AND status = 'PENDING' RETURNING id",
+    [id],
+    client
+  );
+  return resultat.rowCount > 0;
+}
+
 export async function parSessionFournisseur(sessionId, client = null) {
   const resultat = await query(
     `SELECT ${COLONNES}, d.payment_provider, d.provider_session_id,

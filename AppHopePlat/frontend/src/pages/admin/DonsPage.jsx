@@ -87,6 +87,23 @@ export default function DonsPage() {
   const [envoi, setEnvoi] = useState(false);
   const [messageEcheances, setMessageEcheances] = useState('');
   const [aEncaisser, setAEncaisser] = useState(null);
+  const [aSupprimer, setASupprimer] = useState(null);
+  const [erreurSuppression, setErreurSuppression] = useState('');
+
+  async function supprimer() {
+    setEnvoi(true);
+    setErreurSuppression('');
+    try {
+      await donationService.supprimer(aSupprimer.id);
+      setASupprimer(null);
+      rechargerDons();
+      rechargerDonateurs();
+    } catch (echec) {
+      setErreurSuppression(messageErreur(echec, 'Suppression impossible.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
 
   async function encaisser() {
     setEnvoi(true);
@@ -239,9 +256,21 @@ export default function DonsPage() {
               titre: '',
               rendu: (don) =>
                 don.status === 'PENDING' ? (
-                  <button type="button" className="lien-action" onClick={() => setAEncaisser(don)}>
-                    Encaisser
-                  </button>
+                  <span className="table__actions-don">
+                    <button type="button" className="lien-action" onClick={() => setAEncaisser(don)}>
+                      Encaisser
+                    </button>
+                    <button
+                      type="button"
+                      className="lien-action lien-action--danger"
+                      onClick={() => {
+                        setErreurSuppression('');
+                        setASupprimer(don);
+                      }}
+                    >
+                      Supprimer
+                    </button>
+                  </span>
                 ) : null,
             },
           ]}
@@ -287,6 +316,21 @@ export default function DonsPage() {
         onConfirmer={encaisser}
         envoi={envoi}
         libelleConfirmer="Marquer comme reçu"
+      />
+      <ModaleConfirmation
+        ouverte={aSupprimer !== null}
+        titre="Supprimer ce don en attente ?"
+        message={
+          aSupprimer
+            ? `${aSupprimer.reference} — ${fmt.montant(aSupprimer.amount, aSupprimer.currency)} de ${aSupprimer.donorName}. Il ne sera pas encaissé et disparaîtra de la liste. Cette action est définitive.`
+            : ''
+        }
+        onFermer={() => setASupprimer(null)}
+        onConfirmer={supprimer}
+        envoi={envoi}
+        erreur={erreurSuppression}
+        danger
+        libelleConfirmer="Supprimer le don"
       />
 
     </>

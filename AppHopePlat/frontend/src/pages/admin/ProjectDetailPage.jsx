@@ -190,6 +190,9 @@ export default function ProjectDetailPage() {
       onSucces: rechargerTout,
     });
   }
+  async function supprimerDon() {
+    await soumettre(() => donationService.supprimer(modale.cible.id), { onSucces: rechargerTout });
+  }
   async function annulerDepense() {
     await soumettre(() => expenseService.annuler(modale.cible.id), { onSucces: rechargerTout });
   }
@@ -644,13 +647,22 @@ export default function ProjectDetailPage() {
                   titre: '',
                   rendu: (don) =>
                     don.status === 'PENDING' ? (
-                      <button
-                        type="button"
-                        className="lien-action"
-                        onClick={() => ouvrir('encaisser', don)}
-                      >
-                        Encaisser
-                      </button>
+                      <span className="table__actions-don">
+                        <button
+                          type="button"
+                          className="lien-action"
+                          onClick={() => ouvrir('encaisser', don)}
+                        >
+                          Encaisser
+                        </button>
+                        <button
+                          type="button"
+                          className="lien-action lien-action--danger"
+                          onClick={() => ouvrir('supprimerDon', don)}
+                        >
+                          Supprimer
+                        </button>
+                      </span>
                     ) : null,
                 },
               ]}
@@ -1460,6 +1472,22 @@ export default function ProjectDetailPage() {
         envoi={envoi}
         erreur={erreurAction}
         libelleConfirmer="Marquer comme reçu"
+      />
+
+      <ModaleConfirmation
+        ouverte={modale.nom === 'supprimerDon'}
+        titre="Supprimer ce don en attente ?"
+        message={
+          modale.cible
+            ? `${modale.cible.reference} — ${fmt.montant(modale.cible.amount, modale.cible.currency)} de ${modale.cible.donorName}. Il ne sera pas encaissé et disparaîtra de la liste. Cette action est définitive.`
+            : ''
+        }
+        onFermer={fermer}
+        onConfirmer={supprimerDon}
+        envoi={envoi}
+        erreur={erreurAction}
+        danger
+        libelleConfirmer="Supprimer le don"
       />
 
       <ModaleSuppressionForcee
