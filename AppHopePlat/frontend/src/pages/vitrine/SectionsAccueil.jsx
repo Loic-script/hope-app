@@ -22,6 +22,17 @@ export function SansImage() {
   );
 }
 
+export function PhotoActualite({ url }) {
+  if (!url) return <SansImage />;
+  const source = urlMedia(url);
+  return (
+    <>
+      <img className="v-actualite__fond" src={source} alt="" loading="lazy" aria-hidden="true" />
+      <img className="v-actualite__photo" src={source} alt="" loading="lazy" />
+    </>
+  );
+}
+
 function EnteteSection({ id, titre, lien, libelleLien }) {
   return (
     <div className="v-entete-section">
@@ -165,7 +176,7 @@ export function Actualites() {
               {actualites.map((a, rang) => (
                 <li key={a.id} className="v-actualite v-entree" style={{ '--rang': Math.min(rang, 3) }}>
                   <div className="v-actualite__image">
-                    {a.photoUrl ? <img src={urlMedia(a.photoUrl)} alt="" loading="lazy" /> : <SansImage />}
+                    <PhotoActualite url={a.photoUrl} />
                   </div>
                   <div className="v-actualite__corps">
                     <h3 className="v-actualite__titre">{a.titre}</h3>

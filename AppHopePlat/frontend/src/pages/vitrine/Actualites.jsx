@@ -5,8 +5,7 @@ import couverture from '../../assets/vitrine/actualites-couverture.jpg';
 import Recherche from '../../components/vitrine/Recherche.jsx';
 import { filtrerParMots } from '../../components/vitrine/recherche.js';
 import { useApparition } from '../../hooks/useApparition.js';
-import { urlMedia } from '../../services/api.js';
-import { SansImage } from './SectionsAccueil.jsx';
+import { PhotoActualite } from './SectionsAccueil.jsx';
 
 const FORMAT_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
@@ -58,7 +57,7 @@ function Carte({ actualite, rang }) {
   return (
     <li className="v-actualite actualites-carte v-entree" style={{ '--rang': Math.min(rang, 5) }}>
       <Link to={lien} className="v-actualite__image actualites-carte__image" tabIndex={-1} aria-hidden="true">
-        {actualite.photoUrl ? <img src={urlMedia(actualite.photoUrl)} alt="" loading="lazy" /> : <SansImage />}
+        <PhotoActualite url={actualite.photoUrl} />
       </Link>
       <div className="v-actualite__corps">
         <h2 className="v-actualite__titre">{actualite.titre}</h2>
