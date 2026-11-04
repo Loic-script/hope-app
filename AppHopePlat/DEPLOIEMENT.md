@@ -98,11 +98,18 @@ Une fois SMTP configuré, la plateforme écrit d'elle-même :
 | Événement | Destinataire |
 |---|---|
 | inscription : lien de confirmation de l'adresse | la personne |
+| adresse confirmée : bienvenue (espace ouvert, ou validation en cours) | la personne |
 | mot de passe oublié : lien de réinitialisation | la personne |
 | promesse de don enregistrée (référence, suite) | le donateur |
 | don reçu (confirmé par l'équipe ou payé par carte) : remerciement | le donateur |
+| paiement par carte abandonné ou refusé, sans autre don depuis : invitation à recommencer | le donateur |
 | compte bénévole ou bailleur validé | la personne |
-| compte à valider, promesse de don à confirmer | l'équipe (`EQUIPE_EMAIL`) |
+| compte suspendu, inscription refusée, compte fermé | la personne |
+| tâche confiée, retirée, demande acceptée ou non retenue | le bénévole |
+| message de l'équipe dans la messagerie (un seul tant que le fil n'est pas ouvert) | la personne |
+| compte à valider, promesse de don à confirmer, don payé par carte | l'équipe (`EQUIPE_EMAIL`) |
+| demande de tâche d'un bénévole, intérêt d'un bailleur pour un projet | l'équipe (`EQUIPE_EMAIL`) |
+| message d'un utilisateur à l'équipe (le premier d'une suite) | l'équipe (`EQUIPE_EMAIL`) |
 | erreur interne du serveur | `ALERTE_EMAIL` |
 
 Un compte d'utilisateur ne reçoit ces courriels qu'une fois son adresse confirmée. Les

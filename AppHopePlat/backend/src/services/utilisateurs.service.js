@@ -5,6 +5,7 @@ import * as depot from '../repositories/utilisateurs.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { identifiantRequis, texteFacultatif } from '../shared/validation.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import {
   FREQUENCES,
   LANGUES,
@@ -262,6 +263,7 @@ export async function supprimerCompte(id, admin = null) {
   const compte = await depot.trouverCompte(idCompte(id));
   if (!compte || compte.statut === 'supprime') throw new ErreurIntrouvable('Le compte', id);
   await volunteerRepository.changerStatut(compte.id, 'supprime', admin?.id ?? null);
+  void courrielsAuto.accesRetire(compte.id, { statut: 'supprime', enAttente: compte.statut === 'en_attente' });
   return { supprime: true };
 }
 

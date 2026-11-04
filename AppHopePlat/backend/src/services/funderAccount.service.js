@@ -91,6 +91,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
     return compte;
   });
   if (statut === 'actif') void courrielsAuto.compteValide(id, 'bailleur');
+  else void courrielsAuto.accesRetire(id, { statut, enAttente: existant.statut === 'en_attente' });
   return resultat;
 }
 

@@ -46,6 +46,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
 
   const compte = await volunteerRepository.changerStatut(id, statut, admin?.id ?? null);
   if (statut === 'actif') void courrielsAuto.compteValide(id, 'benevole');
+  else void courrielsAuto.accesRetire(id, { statut, enAttente: existant.statut === 'en_attente' });
 
   return versBenevolePublic(compte);
 }

@@ -1,6 +1,7 @@
 import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import * as pieceJointe from './pieceJointe.service.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 
@@ -417,6 +418,7 @@ export async function envoyer(acteur, id, corps = {}, fichiers = []) {
     await pieceJointe.effacer(ecrites.map((piece) => piece.fichier));
     throw erreur;
   }
+  void courrielsAuto.nouveauMessage(message.id);
 
   const complet = await conversationRepository.trouverMessage(message.id);
   return presenterMessage(complet, acteur);

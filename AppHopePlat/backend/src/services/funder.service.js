@@ -6,6 +6,7 @@ import * as funderRepository from '../repositories/funder.repository.js';
 import * as projectRepository from '../repositories/project.repository.js';
 import { TYPES_ORGANISATION } from './funderAuth.service.js';
 import { signalerInteretBailleur } from './notification.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import * as ficheProjetService from './ficheProjet.service.js';
 import * as projectReportService from './projectReport.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
@@ -467,6 +468,11 @@ export async function manifesterUnInteret(bailleurId, corps = {}, contact = null
     organisation: contact?.raisonSociale || 'Un partenaire',
     projet: projet?.name ?? null,
     projetId,
+  });
+  void courrielsAuto.interetDeBailleur({
+    organisation: contact?.raisonSociale || 'Un partenaire',
+    projet: projet?.name ?? null,
+    message,
   });
 
   return {
