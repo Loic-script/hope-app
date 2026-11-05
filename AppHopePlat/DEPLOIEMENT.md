@@ -239,8 +239,9 @@ production.
   `HOPE_SITE_URL`, `CORS_ORIGIN` et le webhook Stripe.
 - **Référencement** : le titre et la description de chaque page publique se règlent dans
   `backend/src/shared/pagesDuSite.js`, lu par le serveur (balises de la page) comme par le site
-  (titre de l'onglet). L'image des aperçus de partage, le logo et l'icône iOS sont dans
-  `frontend/public` ; `npm run visuels --prefix backend` les refabrique à partir du logo.
+  (titre de l'onglet). L'image des aperçus de partage, le logo et les icônes du site (`favicon.svg`,
+  carré, et ses versions ICO, PNG et iOS) sont dans `frontend/public` ;
+  `npm run visuels --prefix backend` les refabrique à partir du logo et de `favicon.svg`.
 - **Textes légaux** : la politique de confidentialité et les conditions d'utilisation
   (`frontend/src/pages/Legal.jsx`) sont une base de travail ; les faire relire par le bureau de
   l'association avant l'ouverture au public. Si elles changent, changer aussi

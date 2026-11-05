@@ -28,11 +28,16 @@ test('sans navigateur : chaque page publique a son titre, sa description et son 
     expect(html).toContain(`"logo":"${baseURL}/logo.png"`);
   }
 
-  for (const image of ['/partage.png', '/apple-touch-icon.png', '/logo.png']) {
+  for (const image of ['/partage.png', '/apple-touch-icon.png', '/logo.png', '/favicon-96x96.png']) {
     const reponse = await request.get(image);
     expect(reponse.status(), image).toBe(200);
     expect(reponse.headers()['content-type'], image).toBe('image/png');
   }
+  const icone = await request.get('/favicon.ico');
+  expect(icone.status()).toBe(200);
+  expect(icone.headers()['content-type']).toMatch(/^image\/(x-icon|vnd\.microsoft\.icon)$/);
+  expect(accueil).toContain('<link rel="icon" href="/favicon.ico" sizes="48x48" />');
+  expect(accueil).toContain('<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />');
 });
 
 test('sans navigateur : une fiche porte son titre ; les espaces sont hors index ; l inconnu repond 404', async ({ request, baseURL }, testInfo) => {
@@ -59,7 +64,7 @@ test('sans navigateur : une fiche porte son titre ; les espaces sont hors index 
 
   for (const chemin of [
     '/une-page-qui-n-existe-pas',
-    '/favicon.ico',
+    '/fichier-absent.png',
     '/sitemap_index.xml',
     '/nos-projets/999999',
     '/actualites/0d7e2a2e-7d3f-4a6f-9c1b-2f8a3e5b1c11',
