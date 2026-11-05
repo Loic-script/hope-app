@@ -50,7 +50,7 @@ export async function inscrire(page, { email, type = 'donateur', motDePasse, con
   await page.selectOption('#typeUtilisateur', type);
   await page.fill('input[name="motDePasse"]', motDePasse);
   await page.fill('#confirmation', motDePasse);
-  if (consentement) await page.locator('label.case-a-cocher--texte').click({ position: { x: 10, y: 10 } });
+  if (consentement) await page.locator('label.case-a-cocher--texte', { hasText: 'J’accepte' }).click({ position: { x: 10, y: 10 } });
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
 }
 
