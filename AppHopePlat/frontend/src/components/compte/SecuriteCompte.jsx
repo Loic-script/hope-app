@@ -208,6 +208,77 @@ function ChangerMotDePasse({ client }) {
   );
 }
 
+function ActualitesParCourriel({ client }) {
+  const [abonne, setAbonne] = useState(null);
+  const [message, setMessage] = useState('');
+  const [refus, setRefus] = useState('');
+  const [envoi, setEnvoi] = useState(false);
+
+  useEffect(() => {
+    let actif = true;
+    client
+      .get('/espace/compte/actualites')
+      .then(({ data }) => actif && setAbonne(data.actualites))
+      .catch(() => actif && setAbonne(false));
+    return () => {
+      actif = false;
+    };
+  }, [client]);
+
+  async function basculer() {
+    setMessage('');
+    setRefus('');
+    setEnvoi(true);
+    try {
+      const { data } = await client.put('/espace/compte/actualites', { actualites: !abonne });
+      setAbonne(data.actualites);
+      setMessage(data.message);
+    } catch (echec) {
+      setRefus(messageErreur(echec, 'Votre choix n’a pas pu être enregistré.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <div className="securite__ligne">
+      <div className="securite__entete">
+        <span className="securite__pictogramme" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="M3 7l9 6 9-6" />
+          </svg>
+        </span>
+        <div>
+          <h3 id="titre-actualites">Actualités par courriel</h3>
+          <p>Recevez chaque nouvelle actualité de HOPE. Vous pouvez arrêter à tout moment.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          className="securite__interrupteur"
+          aria-checked={Boolean(abonne)}
+          aria-labelledby="titre-actualites"
+          onClick={basculer}
+          disabled={abonne === null || envoi}
+        >
+          <span className="securite__interrupteur-curseur" aria-hidden="true" />
+        </button>
+      </div>
+      {message && (
+        <p className="securite__succes" role="status">
+          {message}
+        </p>
+      )}
+      {refus && (
+        <p className="securite__refus securite__refus--decale" role="alert">
+          {refus}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function SupprimerCompte({ client }) {
   const navigate = useNavigate();
   const [ouvert, setOuvert] = useState(false);
@@ -348,9 +419,10 @@ export default function SecuriteCompte({ espace }) {
   return (
     <section className="securite" aria-labelledby="titre-securite">
       <h2 id="titre-securite" className="securite__titre">
-        Sécurité du compte
+        Compte et courriels
       </h2>
       <ChangerMotDePasse client={client} />
+      <ActualitesParCourriel client={client} />
       <SupprimerCompte client={client} />
     </section>
   );

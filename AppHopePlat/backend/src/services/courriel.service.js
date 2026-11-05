@@ -50,7 +50,7 @@ const FOND = '#f3f1fb';
 const TEXTE = '#353343';
 const TEXTE_DOUX = '#615d75';
 
-export function miseEnPage({ titre, paragraphes, bouton = null, note = '' }) {
+export function miseEnPage({ titre, paragraphes, bouton = null, note = '', image = null, desinscription = null }) {
   const site = config.siteUrl.replace(/\/$/, '');
   const hote = site.replace(/^https?:\/\//, '');
   const corps = paragraphes
@@ -85,6 +85,7 @@ export function miseEnPage({ titre, paragraphes, bouton = null, note = '' }) {
 </td></tr>
 <tr><td height="4" bgcolor="${SOLEIL}" style="background:${SOLEIL};height:4px;font-size:0;line-height:0">&nbsp;</td></tr>
 <tr><td bgcolor="#ffffff" style="background:#ffffff;border-radius:0 0 16px 16px;padding:34px 32px 32px;font-family:${POLICE}">
+${image ? `<img src="${echapper(image.src)}" width="496" alt="${echapper(image.alt)}" style="display:block;width:100%;max-width:496px;height:auto;border:0;border-radius:12px;margin:0 0 24px">` : ''}
 <h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;font-weight:700;color:#2a2433">${echapper(titre)}</h1>
 ${corps}${action}${encart}
 </td></tr>
@@ -92,14 +93,22 @@ ${corps}${action}${encart}
 <strong style="color:${TEXTE}">HOPE – Hope for a Better Life</strong><br>
 Aux côtés des orphelins et des mères célibataires de Madagascar<br>
 <a href="${echapper(site)}/" style="color:${VIOLET}">${echapper(hote)}</a> · <a href="${echapper(site)}/contact" style="color:${VIOLET}">Écrire à l’équipe</a>
+${desinscription ? `<br>Vous recevez les actualités de HOPE à votre demande. <a href="${echapper(desinscription.page)}" style="color:${VIOLET}">Se désinscrire</a>` : ''}
 </td></tr>
 </table>
 </td></tr></table>
 </body></html>`;
 }
 
-export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, note = '' }) {
-  const texte = [titre, '', ...paragraphes, bouton ? `${bouton.texte} : ${bouton.lien}` : '', note]
+export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, note = '', image = null, desinscription = null }) {
+  const texte = [
+    titre,
+    '',
+    ...paragraphes,
+    bouton ? `${bouton.texte} : ${bouton.lien}` : '',
+    note,
+    desinscription ? `Se désinscrire des actualités : ${desinscription.page}` : '',
+  ]
     .filter((ligne) => ligne !== undefined)
     .join('\n');
 
@@ -125,7 +134,15 @@ export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, not
       to: a,
       subject: sujet,
       text: texte,
-      html: miseEnPage({ titre, paragraphes, bouton, note }),
+      html: miseEnPage({ titre, paragraphes, bouton, note, image, desinscription }),
+      ...(desinscription
+        ? {
+            headers: {
+              'List-Unsubscribe': `<${desinscription.api}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }
+        : {}),
     });
     return true;
   } catch (erreur) {

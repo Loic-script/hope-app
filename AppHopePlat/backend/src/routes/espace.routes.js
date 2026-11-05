@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { conversations } from '../controllers/conversation.controllers.js';
 import { televerserGroupe, televerserMessage } from '../middleware/upload.middleware.js';
 import * as espace from '../controllers/espace.controllers.js';
+import * as lettreActualites from '../controllers/lettreActualites.controllers.js';
 import { authenticateEspace } from '../middleware/espaceAuth.middleware.js';
 import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 
@@ -20,6 +21,8 @@ router.get('/compte', espace.etatCompte);
 router.post('/compte/verification', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 3 }), espace.renvoyerVerification);
 router.post('/compte/mot-de-passe', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 10 }), espace.changerMotDePasse);
 router.post('/compte/suppression', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 5 }), espace.supprimerCompte);
+router.get('/compte/actualites', lettreActualites.etat);
+router.put('/compte/actualites', lettreActualites.choisir);
 
 router.get('/notifications', espace.listerNotifications);
 router.patch('/notifications/lues', espace.marquerToutLu);

@@ -1320,6 +1320,8 @@ CREATE TABLE IF NOT EXISTS publication_commentaire (
 
 CREATE INDEX IF NOT EXISTS publication_commentaire_pub_idx ON publication_commentaire (publication_id, cree_le DESC);
 
+ALTER TABLE utilisateur ADD COLUMN IF NOT EXISTS actualites_acceptees_le TIMESTAMPTZ;
+
 ALTER TABLE benevole DROP COLUMN IF EXISTS visible_site;
 ALTER TABLE benevole ADD COLUMN IF NOT EXISTS masque_site BOOLEAN NOT NULL DEFAULT FALSE;
 

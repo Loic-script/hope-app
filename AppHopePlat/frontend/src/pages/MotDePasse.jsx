@@ -286,6 +286,70 @@ export function ReinitialiserMotDePasse() {
   );
 }
 
+export function SeDesinscrire() {
+  const [parametres] = useSearchParams();
+  const jeton = parametres.get('jeton') ?? '';
+  const lienValide = /^[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$/i.test(jeton);
+  const [etat, setEtat] = useState(lienValide ? 'envoi' : 'invalide');
+  const [message, setMessage] = useState('');
+
+  const appel = useRef({ jeton: null, promesse: null });
+
+  useEffect(() => {
+    if (!lienValide) return undefined;
+    let actif = true;
+    if (appel.current.jeton !== jeton) {
+      appel.current = { jeton, promesse: utilisateurService.seDesinscrire(jeton) };
+    }
+    appel.current.promesse
+      .then((texte) => {
+        if (!actif) return;
+        setMessage(texte);
+        setEtat('fait');
+      })
+      .catch((echec) => {
+        if (!actif) return;
+        setMessage(messageErreur(echec, 'La désinscription n’a pas abouti.'));
+        setEtat('refus');
+      });
+    return () => {
+      actif = false;
+    };
+  }, [jeton, lienValide]);
+
+  const titres = {
+    envoi: ['Désinscription…', 'Un instant : nous enregistrons votre choix.'],
+    fait: ['Désinscription faite', 'Plus d’actualités par courriel.'],
+    refus: ['Lien non valable', 'Ce lien ne peut pas servir.'],
+    invalide: ['Lien incomplet', 'Ce lien ne contient pas ce qu’il faut.'],
+  };
+
+  return (
+    <CadreMotDePasse
+      titre={titres[etat][0]}
+      accroche={titres[etat][1]}
+      illustration={['Merci', 'de nous avoir suivis']}
+      sousTitre="Les courriels liés à votre compte et à vos dons continuent d’arriver : seules les actualités s’arrêtent."
+    >
+      <div className="formulaire" role="status">
+        {etat === 'fait' && <p className="note-acces note-acces--ok">{message}</p>}
+        {(etat === 'refus' || etat === 'invalide') && (
+          <p className="formulaire__erreur" role="alert">
+            {message || 'Ouvrez le lien directement depuis le courriel reçu.'} Vous pouvez aussi vous désinscrire depuis
+            votre espace, rubrique « Compte et courriels ».
+          </p>
+        )}
+        {etat !== 'envoi' && (
+          <Link className="bouton bouton--principal" to="/">
+            Retour au site
+            <IconeFleche />
+          </Link>
+        )}
+      </div>
+    </CadreMotDePasse>
+  );
+}
+
 export function VerifierCourriel() {
   const [parametres] = useSearchParams();
   const jeton = parametres.get('jeton') ?? '';

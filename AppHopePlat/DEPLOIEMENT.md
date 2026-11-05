@@ -110,10 +110,17 @@ Une fois SMTP configuré, la plateforme écrit d'elle-même :
 | message de l'équipe dans la messagerie (un seul tant que le fil n'est pas ouvert) | la personne |
 | rapport d'impact publié sur un projet financé | les contacts du bailleur |
 | projet terminé : ce que le don a permis | les donateurs du projet |
+| actualité publiée (pas les appels à financement) | les comptes abonnés aux actualités |
 | compte à valider, promesse de don à confirmer, don payé par carte | l'équipe (`EQUIPE_EMAIL`) |
 | demande de tâche d'un bénévole, tâche livrée, intérêt d'un bailleur pour un projet | l'équipe (`EQUIPE_EMAIL`) |
 | message d'un utilisateur à l'équipe (le premier d'une suite) | l'équipe (`EQUIPE_EMAIL`) |
 | erreur interne du serveur | `ALERTE_EMAIL` |
+
+La lettre d'actualités ne part qu'aux comptes qui l'ont demandée : case cochée à l'inscription,
+ou interrupteur « Actualités par courriel » de leur espace. Chaque envoi porte un lien de
+désinscription (page `/se-desinscrire`) et l'en-tête de désinscription en un clic que Gmail
+demande. Attention au plafond du fournisseur : l'offre gratuite de Brevo envoie 300 courriels
+par jour, tous courriels confondus.
 
 Tous portent le logo de HOPE, servi par le site à l'adresse `HOPE_SITE_URL/courriel-logo.png`
 (`npm run visuels` le régénère). Un compte d'utilisateur ne reçoit ces courriels qu'une fois son adresse confirmée. Les

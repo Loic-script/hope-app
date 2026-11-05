@@ -133,7 +133,11 @@ const CONFIDENTIALITE = [
           <li>
             protéger la plateforme et ses membres contre la fraude et les intrusions (intérêt légitime de HOPE) ;
           </li>
-          <li>vous écrire au sujet de votre compte : validation, mot de passe oublié, suivi d’un don.</li>
+          <li>vous écrire au sujet de votre compte : validation, mot de passe oublié, suivi d’un don ;</li>
+          <li>
+            vous envoyer les actualités de HOPE par courriel, seulement si vous l’avez demandé (votre consentement) ;
+            chaque courriel porte un lien pour vous désinscrire, et votre espace permet d’arrêter à tout moment.
+          </li>
         </ul>
         <p>
           Pas de publicité, pas de revente, pas de profilage commercial. Vos données ne servent qu’à la mission de
