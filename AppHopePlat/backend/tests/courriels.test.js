@@ -12,6 +12,7 @@ let api;
 let fermerPool;
 let jetonAdmin;
 let courrielsAuto;
+let projetCantine;
 const journal = console.log;
 const courriels = [];
 
@@ -97,13 +98,14 @@ test('une adresse confirmee recoit sa bienvenue, une seule fois, selon que l esp
 
 test('valider, suspendre ou refuser un compte : la personne est prevenue', async () => {
   const [{ id: hery }] = await base.sql("SELECT id FROM utilisateur WHERE email = 'hery.benevole@hope.test'");
-  const statut = (id, valeur) =>
-    appel('PATCH', `/admin/volunteers/${id}/status`, { jeton: jetonAdmin, corps: { statut: valeur } });
+  const statut = (id, valeur, motif) =>
+    appel('PATCH', `/admin/volunteers/${id}/status`, { jeton: jetonAdmin, corps: { statut: valeur, motif } });
 
   assert.equal((await statut(hery, 'actif')).statut, 200);
   await attendre('hery.benevole@hope.test', /votre compte bénévole est validé/);
-  assert.equal((await statut(hery, 'suspendu')).statut, 200);
+  assert.equal((await statut(hery, 'suspendu', 'Absences répétées aux ateliers.')).statut, 200);
   const suspendu = await attendre('hery.benevole@hope.test', /votre espace est suspendu/);
+  assert.match(suspendu.texte, /Motif indiqué par l’équipe : « Absences répétées aux ateliers. »/);
   assert.match(suspendu.texte, /\/contact$/m);
 
   const refuse = await inscrire('lova.benevole@hope.test', 'benevole');
@@ -130,9 +132,9 @@ test('une demande de tache previent l equipe, et sa reponse previent le benevole
       description: 'Projet cree par les tests des courriels.',
     },
   });
-  const projetId = projet.corps.id ?? projet.corps.project?.id;
+  projetCantine = projet.corps.id ?? projet.corps.project?.id;
   const taches = await import('../src/services/task.service.js');
-  const tache = await taches.creerPourProjet(projetId, { titre: 'Peindre la cantine' });
+  const tache = await taches.creerPourProjet(projetCantine, { titre: 'Peindre la cantine' });
 
   const vue = await taches.demander(tache.id, fara.id);
   const demande = await attendre(EQUIPE, /une demande de tâche à valider/);
@@ -143,6 +145,10 @@ test('une demande de tache previent l equipe, et sa reponse previent le benevole
   const reponse = await attendre('fara.benevole@hope.test', /demande acceptée/);
   assert.match(reponse.texte, /Vous faites partie de l’équipe de « Peindre la cantine »/);
   assert.match(reponse.texte, /\/benevole\/taches$/m);
+
+  await taches.livrer(tache.id, fara.id, [], { commentaire: 'Les murs sont peints.' });
+  const livree = await attendre(EQUIPE, /une tâche livrée, à vérifier/);
+  assert.match(livree.texte, /a livré la tâche « Peindre la cantine »/);
 });
 
 test('messagerie : un courriel par message non lu, pas un par ligne', async () => {
@@ -215,4 +221,68 @@ test('l interet d un bailleur arrive a l equipe avec son message', async () => {
   await courrielsAuto.interetDeBailleur({ organisation: 'Fondation Avenir', projet: 'Cantine de Betafo', message: 'Nous aimerions financer la cantine.' });
   const interet = await attendre(EQUIPE, /Fondation Avenir souhaite financer « Cantine de Betafo »/);
   assert.match(interet.texte, /Son message : « Nous aimerions financer la cantine. »/);
+});
+
+test('un projet termine remercie ses donateurs avec ce que leur don a permis', async () => {
+  const [{ id: mamy }] = await base.sql("SELECT id FROM donors WHERE email = 'mamy.carte@hope.test'");
+  const don = await appel('POST', '/admin/donations', {
+    jeton: jetonAdmin,
+    corps: { donorId: mamy, amount: '80000', allocation: 'PROJECT', projectId: projetCantine, paymentMethod: 'Carte bancaire' },
+  });
+  assert.equal(don.statut, 201, JSON.stringify(don.corps));
+  const fin = await appel('PATCH', `/admin/projects/${projetCantine}/complete`, {
+    jeton: jetonAdmin,
+    corps: { outcome: '120 enfants mangent chaque midi à la cantine de Betafo.' },
+  });
+  assert.equal(fin.statut, 200, JSON.stringify(fin.corps));
+  const merci = await attendre('mamy.carte@hope.test', /le projet « Cantine de Betafo » est terminé/);
+  assert.match(merci.texte, /« 120 enfants mangent chaque midi à la cantine de Betafo. »/);
+  assert.match(merci.texte, new RegExp(`/nos-projets/${projetCantine}$`, 'm'));
+});
+
+test('un rapport publie arrive aux contacts du bailleur', async () => {
+  const bailleur = await inscrire('tiana.bailleur@hope.test', 'bailleur');
+  await confirmer(bailleur.jeton);
+  await appel('PATCH', `/admin/funders/${bailleur.id}/status`, { jeton: jetonAdmin, corps: { statut: 'actif' } });
+  const [{ bailleur_id: organisation }] = await base.sql('SELECT bailleur_id FROM bailleur_contact WHERE utilisateur_id = $1', [
+    bailleur.id,
+  ]);
+
+  await courrielsAuto.rapportPublie({ bailleurIds: [organisation], projet: 'Cantine de Betafo', titre: 'Rapport d’impact de novembre' });
+  const rapport = await attendre('tiana.bailleur@hope.test', /nouveau rapport d’impact : « Cantine de Betafo »/);
+  assert.match(rapport.texte, /« Rapport d’impact de novembre »/);
+  assert.match(rapport.texte, /\/bailleur\/rapports$/m);
+});
+
+test('mot de passe change, adresse changee par l equipe : la personne est alertee', async () => {
+  const [{ id: ravo }] = await base.sql("SELECT id FROM utilisateur WHERE email = 'ravo.donateur@hope.test'");
+  const { changerMotDePasse } = await import('../src/services/compte.service.js');
+  await changerMotDePasse(ravo, { actuel: 'courriels-2026', nouveau: 'courriels-2027', confirmation: 'courriels-2027' });
+  const alerte = await attendre('ravo.donateur@hope.test', /votre mot de passe a été changé/);
+  assert.match(alerte.texte, /\/mot-de-passe-oublie$/m);
+
+  const modification = await appel('PATCH', `/admin/utilisateurs/comptes/${ravo}`, {
+    jeton: jetonAdmin,
+    corps: { prenom: 'Ravo', nom: 'Test', email: 'ravo.nouvelle@hope.test', telephone: '' },
+  });
+  assert.equal(modification.statut, 200, JSON.stringify(modification.corps));
+  const ancienne = await attendre('ravo.donateur@hope.test', /l’adresse de votre compte a changé/);
+  assert.match(ancienne.texte, /par ravo.nouvelle@hope.test/);
+});
+
+test('le gabarit porte le logo, un bouton et son lien de secours, et echappe le texte', async () => {
+  const { miseEnPage } = await import('../src/services/courriel.service.js');
+  const html = miseEnPage({
+    titre: 'Bienvenue <Ravo>',
+    paragraphes: ['Votre espace est ouvert & prêt.'],
+    bouton: { texte: 'Ouvrir mon espace', lien: 'http://localhost:5173/donateur?a=1&b=2' },
+    note: 'Une note',
+  });
+  assert.match(html, /<html lang="fr">/);
+  assert.match(html, /<img src="http:\/\/localhost:5173\/courriel-logo.png" width="168" height="76" alt="HOPE – for a better life"/);
+  assert.match(html, /Bienvenue &lt;Ravo&gt;/);
+  assert.match(html, /Votre espace est ouvert &amp; prêt\./);
+  assert.equal(html.match(/href="http:\/\/localhost:5173\/donateur\?a=1&amp;b=2"/g).length, 2);
+  assert.match(html, /href="http:\/\/localhost:5173\/contact"/);
+  assert.doesNotMatch(html, /<script/);
 });

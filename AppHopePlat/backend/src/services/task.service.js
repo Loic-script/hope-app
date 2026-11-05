@@ -545,7 +545,7 @@ export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
   verifierFichiersLivraison(fichiers);
   const commentaire = texteFacultatif(corps?.commentaire, 'commentaire', { max: 2000 });
 
-  return transaction(async (client) => {
+  const { vue, qui } = await transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
     const tache = await verrouiller(id, client);
 
@@ -580,8 +580,10 @@ export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
       client
     );
 
-    return vue;
+    return { vue, qui: nomDuBenevole(fiche) };
   });
+  void courrielsAuto.tacheLivree({ qui, tache: vue.titre, projet: vue.projetNom });
+  return vue;
 }
 
 export async function fichierDeLivraison(tacheId, fichierId, utilisateurId = null) {

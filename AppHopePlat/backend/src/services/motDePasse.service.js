@@ -5,6 +5,7 @@ import { config } from '../config/env.js';
 import { query, transaction } from '../config/database.js';
 import { ErreurValidation } from '../shared/errors.js';
 import * as courriel from './courriel.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import { fermerSessionsUtilisateur } from './session.service.js';
 
 const DUREE_MS = 60 * 60 * 1000;
@@ -75,7 +76,7 @@ export async function reinitialiser(corps = {}) {
   if (!/^[a-f0-9]{64}$/.test(jeton)) throw lienInvalide();
 
   const hash = await bcrypt.hash(motDePasse, config.admin.saltRounds);
-  await transaction(async (client) => {
+  const utilisateurId = await transaction(async (client) => {
     const { rows } = await query(
       `SELECT id, utilisateur_id FROM reinitialisation_mot_de_passe
         WHERE jeton_empreinte = $1 AND utilise_le IS NULL AND expire_le > NOW()
@@ -98,7 +99,9 @@ export async function reinitialiser(corps = {}) {
       [demande.utilisateur_id],
       client
     );
+    return demande.utilisateur_id;
   });
+  void courrielsAuto.motDePasseChange(utilisateurId);
 
   return { message: 'Votre mot de passe est changé. Vous pouvez vous connecter.' };
 }

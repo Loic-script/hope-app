@@ -5,7 +5,7 @@ import { messageErreur } from '../../services/api.js';
 import * as funderService from '../../services/funder.service.js';
 import * as utilisateursService from '../../services/utilisateurs.service.js';
 import * as volunteerService from '../../services/volunteer.service.js';
-import { ChampTexte, ModaleConfirmation, ModaleFormulaire } from './forms.jsx';
+import { ChampTexte, ChampTexteLong, ModaleConfirmation, ModaleFormulaire } from './forms.jsx';
 import { DonateurModale } from './modales.jsx';
 
 export const STATUTS_UTILISATEUR = {
@@ -162,11 +162,13 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
   const [erreurFenetre, setErreurFenetre] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [donsRattaches, setDonsRattaches] = useState(false);
+  const [motif, setMotif] = useState('');
 
   const fermer = () => {
     setDemande({ action: null, cible: null, profil: null });
     setErreurFenetre('');
     setDonsRattaches(false);
+    setMotif('');
   };
 
   async function demander(action, cible) {
@@ -206,12 +208,12 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
               forcer: Boolean(options.forcer),
               avecDons: Boolean(options.avecDons),
             })
-          : utilisateursService.supprimerCompte(cible.id));
+          : utilisateursService.supprimerCompte(cible.id, motif));
         fermer();
         onSupprime?.(reponse?.message ?? null);
       } else if (action === 'desactiver') {
         const service = cible.onglet === 'bailleurs' ? funderService : volunteerService;
-        await service.changerStatut(cible.id, 'suspendu');
+        await service.changerStatut(cible.id, 'suspendu', motif);
         fermer();
         onStatut?.();
       }
@@ -225,6 +227,18 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
 
   const { action, cible, profil } = demande;
   const nom = cible?.nom || 'cet utilisateur';
+  const champMotif = (
+    <ChampTexteLong
+      label="Motif, transmis à la personne par courriel"
+      id="utilisateur-motif"
+      rows={3}
+      maxLength={500}
+      value={motif}
+      onChange={(evenement) => setMotif(evenement.target.value)}
+      disabled={enCours}
+      aide="Sans motif, le courriel l’invite simplement à écrire à l’équipe."
+    />
+  );
 
   const fenetres = (
     <>
@@ -270,7 +284,9 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
             ? { libelle: 'Tout supprimer, dons compris', onAction: () => confirmer({ avecDons: true }) }
             : null
         }
-      />
+      >
+        {cible?.genre !== 'fiche' && champMotif}
+      </ModaleConfirmation>
 
       <ModaleConfirmation
         ouverte={action === 'desactiver'}
@@ -282,7 +298,9 @@ export function useGestionUtilisateur({ onModifie, onSupprime, onStatut, libelle
         erreur={erreurFenetre}
         libelleConfirmer="Désactiver"
         danger
-      />
+      >
+        {champMotif}
+      </ModaleConfirmation>
     </>
   );
 

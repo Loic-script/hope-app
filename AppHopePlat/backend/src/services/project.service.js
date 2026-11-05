@@ -12,6 +12,7 @@ import * as impactRepository from '../repositories/impact.repository.js';
 import * as notificationRepository from '../repositories/notification.repository.js';
 import * as activityLogRepository from '../repositories/activityLog.repository.js';
 
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import * as mediaService from './media.service.js';
 import { CATEGORIES as CATEGORIES_DEPENSE } from './expense.service.js';
 
@@ -398,7 +399,7 @@ export async function mettreAJour(id, corps = {}) {
 export async function terminer(id, corps = {}, auteur = null) {
   const projectId = identifiantRequis(id, 'id');
 
-  return transaction(async (client) => {
+  const fini = await transaction(async (client) => {
     const projet = await projectRepository.trouverPourMiseAJour(projectId, client);
     if (!projet) throw new ErreurIntrouvable('Le projet', projectId);
 
@@ -431,6 +432,8 @@ export async function terminer(id, corps = {}, auteur = null) {
 
     return enrichir(termine);
   });
+  void courrielsAuto.projetTermine(projectId);
+  return fini;
 }
 
 export async function rouvrir(id) {

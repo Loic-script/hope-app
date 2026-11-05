@@ -20,8 +20,8 @@ export async function modifierCompte(id, modifications) {
   return data;
 }
 
-export async function supprimerCompte(id) {
-  const { data } = await api.delete(`/admin/utilisateurs/comptes/${id}`);
+export async function supprimerCompte(id, motif = '') {
+  const { data } = await api.delete(`/admin/utilisateurs/comptes/${id}`, { data: { motif } });
   return data;
 }
 

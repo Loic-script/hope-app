@@ -146,7 +146,7 @@ export function bienvenue(utilisateurId) {
   });
 }
 
-export function accesRetire(utilisateurId, { statut, enAttente = false }) {
+export function accesRetire(utilisateurId, { statut, enAttente = false, motif = null }) {
   return sansEchec('acces retire', async () => {
     const compte = await compteJoignable(utilisateurId);
     if (!compte) return;
@@ -178,11 +178,103 @@ export function accesRetire(utilisateurId, { statut, enAttente = false }) {
       },
     }[statut === 'supprime' && enAttente ? 'refuse' : statut];
     if (!courrielDe) return;
+    const [constat, suite] = courrielDe.paragraphes;
     await courriel.envoyer({
       a: compte.email,
       ...courrielDe,
+      paragraphes: motif ? [constat, `Motif indiqué par l’équipe : « ${motif} »`, suite] : courrielDe.paragraphes,
       bouton: { texte: 'Écrire à l’équipe HOPE', lien: `${site()}/contact` },
     });
+  });
+}
+
+export function motDePasseChange(utilisateurId) {
+  return sansEchec('mot de passe change', async () => {
+    const compte = await compteJoignable(utilisateurId);
+    if (!compte) return;
+    await courriel.envoyer({
+      a: compte.email,
+      sujet: 'HOPE — votre mot de passe a été changé',
+      titre: 'Votre mot de passe a été changé',
+      paragraphes: [
+        'Le mot de passe de votre compte HOPE vient d’être changé, et vos autres sessions ont été fermées.',
+        'C’était vous ? Vous n’avez rien à faire.',
+        'Ce n’était pas vous ? Choisissez tout de suite un nouveau mot de passe, puis prévenez l’équipe HOPE.',
+      ],
+      bouton: { texte: 'Choisir un nouveau mot de passe', lien: `${site()}/mot-de-passe-oublie` },
+    });
+  });
+}
+
+export function adresseChangee({ ancienne, nouvelle, prenom }) {
+  return sansEchec('adresse changee', async () => {
+    await courriel.envoyer({
+      a: ancienne,
+      sujet: 'HOPE — l’adresse de votre compte a changé',
+      titre: `${prenom ? `${prenom}, l` : 'L'}’adresse de votre compte a changé`,
+      paragraphes: [
+        `L’équipe HOPE a remplacé l’adresse de votre compte par ${nouvelle}. C’est désormais elle qui sert à vous connecter, et à laquelle HOPE vous écrit.`,
+        'Vous n’avez pas demandé ce changement ? Écrivez à l’équipe.',
+      ],
+      bouton: { texte: 'Écrire à l’équipe HOPE', lien: `${site()}/contact` },
+    });
+  });
+}
+
+export function rapportPublie({ bailleurIds, projet, titre }) {
+  return sansEchec('rapport publie', async () => {
+    const { rows } = await query(
+      `SELECT DISTINCT u.email, u.prenom
+         FROM bailleur_contact c
+         JOIN utilisateur u ON u.id = c.utilisateur_id
+        WHERE c.bailleur_id = ANY($1::uuid[]) AND u.statut = 'actif' AND u.email_verifie_le IS NOT NULL`,
+      [bailleurIds]
+    );
+    for (const contact of rows) {
+      await courriel.envoyer({
+        a: contact.email,
+        sujet: `HOPE — nouveau rapport d’impact : « ${projet} »`,
+        titre: `${contact.prenom ? `${contact.prenom}, v` : 'V'}otre rapport d’impact est disponible`,
+        paragraphes: [
+          `L’équipe HOPE vient de publier « ${titre} » pour le projet « ${projet} », que vous financez.`,
+          'Le rapport vous attend dans votre espace bailleur, avec l’avancement du projet et ses dépenses.',
+        ],
+        bouton: { texte: 'Lire le rapport', lien: `${site()}/bailleur/rapports` },
+      });
+    }
+  });
+}
+
+export function projetTermine(projetId) {
+  return sansEchec('projet termine', async () => {
+    const { rows } = await query(
+      `SELECT DISTINCT ON (t.adresse) t.adresse, t.prenom, t.projet, t.resultat
+         FROM (SELECT COALESCE(u.email, o.email) AS adresse,
+                      COALESCE(NULLIF(u.prenom, ''), o.first_name) AS prenom,
+                      p.name AS projet, p.outcome AS resultat
+                 FROM donations d
+                 JOIN projects p ON p.id = d.project_id
+                 JOIN donors o ON o.id = d.donor_id
+                 LEFT JOIN utilisateur u ON u.id = o.utilisateur_id
+                WHERE d.project_id = $1 AND d.status = 'RECEIVED'
+                  AND (u.id IS NULL OR u.statut <> 'supprime')) t
+        WHERE t.adresse IS NOT NULL
+        ORDER BY t.adresse`,
+      [projetId]
+    );
+    for (const donateur of rows) {
+      await courriel.envoyer({
+        a: donateur.adresse,
+        sujet: `HOPE — le projet « ${donateur.projet} » est terminé`,
+        titre: `Merci${donateur.prenom ? ` ${donateur.prenom}` : ''} : « ${donateur.projet} » est terminé`,
+        paragraphes: [
+          'Vous avez soutenu ce projet, et il vient d’aboutir. Voici ce que votre don a permis :',
+          `« ${extrait(donateur.resultat, 600)} »`,
+          'Les photos, les dépenses et les preuves de terrain restent consultables sur la fiche du projet.',
+        ],
+        bouton: { texte: 'Voir le projet', lien: `${site()}/nos-projets/${projetId}` },
+      });
+    }
   });
 }
 
@@ -366,6 +458,17 @@ export function demandeDeTache({ qui, tache, projet }) {
     [
       `${qui} souhaite prendre la tâche « ${tache} »${projet ? ` (${projet})` : ''}.`,
       'Acceptez ou refusez sa demande : la personne est prévenue de votre réponse.',
+    ],
+    '/admin/taches'
+  );
+}
+
+export function tacheLivree({ qui, tache, projet }) {
+  return alerterEquipe(
+    'une tâche livrée, à vérifier',
+    [
+      `${qui} a livré la tâche « ${tache} »${projet ? ` (${projet})` : ''}.`,
+      'Sa preuve et son commentaire vous attendent sur la page Tâches.',
     ],
     '/admin/taches'
   );
