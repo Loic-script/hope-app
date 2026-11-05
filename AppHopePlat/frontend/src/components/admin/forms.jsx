@@ -221,6 +221,7 @@ export function ModaleConfirmation({
   libelleConfirmer = 'Confirmer',
   danger = false,
   actionSecondaire = null,
+  children = null,
 }) {
   return (
     <Modale
@@ -257,6 +258,7 @@ export function ModaleConfirmation({
       <p style={{ fontSize: '14.5px', lineHeight: 1.55, color: 'var(--admin-texte-doux)' }}>
         {message}
       </p>
+      {children}
     </Modale>
   );
 }

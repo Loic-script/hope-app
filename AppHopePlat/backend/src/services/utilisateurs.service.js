@@ -5,6 +5,7 @@ import * as depot from '../repositories/utilisateurs.repository.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { identifiantRequis, texteFacultatif } from '../shared/validation.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import {
   FREQUENCES,
   LANGUES,
@@ -255,13 +256,22 @@ export async function modifierCompte(id, corps = {}) {
     throw erreur;
   }
 
+  if (email !== compte.email && compte.emailVerifieLe) {
+    void courrielsAuto.adresseChangee({ ancienne: compte.email, nouvelle: email, prenom: prenom || compte.prenom });
+  }
   return profilCompte(compte.id);
 }
 
-export async function supprimerCompte(id, admin = null) {
+export async function supprimerCompte(id, admin = null, corps = {}) {
+  const motif = texteFacultatif(corps?.motif, 'motif', { max: 500 });
   const compte = await depot.trouverCompte(idCompte(id));
   if (!compte || compte.statut === 'supprime') throw new ErreurIntrouvable('Le compte', id);
   await volunteerRepository.changerStatut(compte.id, 'supprime', admin?.id ?? null);
+  void courrielsAuto.accesRetire(compte.id, {
+    statut: 'supprime',
+    enAttente: compte.statut === 'en_attente',
+    motif,
+  });
   return { supprime: true };
 }
 

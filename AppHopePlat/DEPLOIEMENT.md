@@ -98,14 +98,25 @@ Une fois SMTP configuré, la plateforme écrit d'elle-même :
 | Événement | Destinataire |
 |---|---|
 | inscription : lien de confirmation de l'adresse | la personne |
+| adresse confirmée : bienvenue (espace ouvert, ou validation en cours) | la personne |
 | mot de passe oublié : lien de réinitialisation | la personne |
 | promesse de don enregistrée (référence, suite) | le donateur |
 | don reçu (confirmé par l'équipe ou payé par carte) : remerciement | le donateur |
+| paiement par carte abandonné ou refusé, sans autre don depuis : invitation à recommencer | le donateur |
 | compte bénévole ou bailleur validé | la personne |
-| compte à valider, promesse de don à confirmer | l'équipe (`EQUIPE_EMAIL`) |
+| compte suspendu, inscription refusée, compte fermé (avec le motif, si l'équipe en écrit un) | la personne |
+| mot de passe changé ; adresse du compte changée par l'équipe (à l'ancienne adresse) | la personne |
+| tâche confiée, retirée, demande acceptée ou non retenue | le bénévole |
+| message de l'équipe dans la messagerie (un seul tant que le fil n'est pas ouvert) | la personne |
+| rapport d'impact publié sur un projet financé | les contacts du bailleur |
+| projet terminé : ce que le don a permis | les donateurs du projet |
+| compte à valider, promesse de don à confirmer, don payé par carte | l'équipe (`EQUIPE_EMAIL`) |
+| demande de tâche d'un bénévole, tâche livrée, intérêt d'un bailleur pour un projet | l'équipe (`EQUIPE_EMAIL`) |
+| message d'un utilisateur à l'équipe (le premier d'une suite) | l'équipe (`EQUIPE_EMAIL`) |
 | erreur interne du serveur | `ALERTE_EMAIL` |
 
-Un compte d'utilisateur ne reçoit ces courriels qu'une fois son adresse confirmée. Les
+Tous portent le logo de HOPE, servi par le site à l'adresse `HOPE_SITE_URL/courriel-logo.png`
+(`npm run visuels` le régénère). Un compte d'utilisateur ne reçoit ces courriels qu'une fois son adresse confirmée. Les
 adresses des domaines réservés (`.test`, `.example`) des comptes de démonstration ne sont
 jamais envoyées : elles s'écrivent dans le journal.
 

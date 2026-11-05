@@ -2,6 +2,7 @@ import { query, transaction } from '../config/database.js';
 import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { versListe } from '../shared/mapping.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
+import { texteFacultatif } from '../shared/validation.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 const STATUTS_ADMIN = ['actif', 'suspendu', 'supprime'];
@@ -58,6 +59,7 @@ export async function lister(requete = {}) {
 
 export async function changerStatut(id, corps = {}, admin = null) {
   const statut = statutParmi(corps.statut, STATUTS_ADMIN);
+  const motif = texteFacultatif(corps.motif, 'motif', { max: 500 });
 
   const existant = await volunteerRepository.trouverParId(id);
   if (!existant) throw new ErreurIntrouvable('Le compte bailleur', id);
@@ -91,6 +93,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
     return compte;
   });
   if (statut === 'actif') void courrielsAuto.compteValide(id, 'bailleur');
+  else void courrielsAuto.accesRetire(id, { statut, enAttente: existant.statut === 'en_attente', motif });
   return resultat;
 }
 

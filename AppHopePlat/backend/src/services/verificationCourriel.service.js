@@ -4,6 +4,7 @@ import { config } from '../config/env.js';
 import { query, transaction } from '../config/database.js';
 import { ErreurValidation } from '../shared/errors.js';
 import * as courriel from './courriel.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 
 const DUREE_MS = 48 * 60 * 60 * 1000;
 
@@ -52,7 +53,7 @@ export async function verifier(corps = {}) {
     });
   if (!/^[a-f0-9]{64}$/.test(jeton)) throw invalide();
 
-  await transaction(async (client) => {
+  const premiere = await transaction(async (client) => {
     const { rows } = await query(
       `SELECT id, utilisateur_id FROM verification_courriel
         WHERE jeton_empreinte = $1 AND utilise_le IS NULL AND expire_le > NOW()
@@ -62,8 +63,14 @@ export async function verifier(corps = {}) {
     );
     if (!rows[0]) throw invalide();
     await query('UPDATE verification_courriel SET utilise_le = NOW() WHERE utilisateur_id = $1 AND utilise_le IS NULL', [rows[0].utilisateur_id], client);
-    await query('UPDATE utilisateur SET email_verifie_le = COALESCE(email_verifie_le, NOW()) WHERE id = $1', [rows[0].utilisateur_id], client);
+    const confirmee = await query(
+      'UPDATE utilisateur SET email_verifie_le = NOW() WHERE id = $1 AND email_verifie_le IS NULL RETURNING id',
+      [rows[0].utilisateur_id],
+      client
+    );
+    return confirmee.rows[0]?.id ?? null;
   });
+  if (premiere) void courrielsAuto.bienvenue(premiere);
   return { message: 'Votre adresse est confirmée. Merci !' };
 }
 
