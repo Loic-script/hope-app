@@ -95,6 +95,7 @@ const PAGES_HORS_INDEX = [
   { chemin: '/mot-de-passe-oublie', titre: `Mot de passe oublié${SUFFIXE}` },
   { chemin: '/reinitialiser-mot-de-passe', titre: `Nouveau mot de passe${SUFFIXE}` },
   { chemin: '/verifier-courriel', titre: `Confirmation de votre adresse${SUFFIXE}` },
+  { chemin: '/se-desinscrire', titre: `Se désinscrire des actualités${SUFFIXE}` },
 ];
 
 const FICHES = [

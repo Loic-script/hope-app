@@ -10,7 +10,7 @@ export async function activer(id) {
   return data;
 }
 
-export async function changerStatut(id, statut) {
-  const { data } = await api.patch(`/admin/volunteers/${id}/status`, { statut });
+export async function changerStatut(id, statut, motif = '') {
+  const { data } = await api.patch(`/admin/volunteers/${id}/status`, { statut, motif });
   return data;
 }

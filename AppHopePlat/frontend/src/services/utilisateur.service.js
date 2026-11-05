@@ -112,6 +112,11 @@ export async function deconnecterDonateur() {
   }
 }
 
+export async function seDesinscrire(jeton) {
+  const { data } = await apiAuth.post('/public/actualites/desinscription', { jeton });
+  return data.message;
+}
+
 export async function verifierCourriel(jeton) {
   const { data } = await apiAuth.post('/auth/verifier-courriel', { jeton });
   return data.message;

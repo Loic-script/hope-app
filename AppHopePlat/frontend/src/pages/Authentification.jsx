@@ -46,6 +46,7 @@ const FORMULAIRE_VIDE = {
   motDePasse: '',
   confirmation: '',
   accepteConditions: false,
+  accepteActualites: false,
 };
 
 export default function Authentification() {
@@ -427,6 +428,7 @@ function Inscription({ types, navigate, onInscrit }) {
         motDePasse: champs.motDePasse,
         confirmation: champs.confirmation,
         accepteConditions: champs.accepteConditions,
+        accepteActualites: champs.accepteActualites,
       });
 
       if (jetonCompletion && aCompleter) {
@@ -563,6 +565,20 @@ function Inscription({ types, navigate, onInscrit }) {
             {erreursChamps.accepteConditions}
           </p>
         )}
+        <label className="case-a-cocher case-a-cocher--texte">
+          <input
+            type="checkbox"
+            name="accepteActualites"
+            checked={champs.accepteActualites}
+            onChange={(e) => {
+              const coche = e.target.checked;
+              setChamps((precedents) => ({ ...precedents, accepteActualites: coche }));
+            }}
+            disabled={envoi}
+          />
+          <span className="case-a-cocher__repere" />
+          <span>Je souhaite recevoir les actualités de HOPE par courriel (facultatif, désinscription à tout moment).</span>
+        </label>
       </div>
 
       {erreur && (

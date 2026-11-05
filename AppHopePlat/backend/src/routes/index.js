@@ -13,6 +13,7 @@ import donorSpaceRoutes from './donorSpace.routes.js';
 import { webhookStripe } from '../controllers/paiementCarte.controllers.js';
 import * as donInvite from '../controllers/donInvite.controllers.js';
 import * as contact from '../controllers/contact.controllers.js';
+import * as lettreActualites from '../controllers/lettreActualites.controllers.js';
 import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 import { fichiers as fichiersMessagerie } from '../controllers/conversation.controllers.js';
 import { photosBeneficiaires } from '../controllers/admin.controllers.js';
@@ -37,6 +38,11 @@ router.get('/public/contact', (_req, res) => {
 
 router.get('/public/contact/sujets', contact.options);
 router.post('/public/contact', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 6 }), contact.envoyer);
+router.post(
+  '/public/actualites/desinscription',
+  limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }),
+  lettreActualites.desinscrire
+);
 
 router.get('/public/actualites', async (req, res, next) => {
   try {

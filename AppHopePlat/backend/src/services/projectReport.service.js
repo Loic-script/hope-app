@@ -9,6 +9,7 @@ import * as reportRepository from '../repositories/projectReport.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier } from '../shared/errors.js';
 import { construirePdf } from '../shared/pdfRapport.js';
 import { recuperer as recupererCatalogue } from './catalog.service.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import { recupererApercu } from './project.service.js';
 
 function morceaux(valeur) {
@@ -334,6 +335,11 @@ export async function publier(projetId, admin) {
         client
       );
       return lignes;
+    });
+    void courrielsAuto.rapportPublie({
+      bailleurIds: destinataires.map((b) => b.id),
+      projet: projet.name,
+      titre: rapport.titre,
     });
 
     return {

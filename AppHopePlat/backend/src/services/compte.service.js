@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { config } from '../config/env.js';
 import { query, transaction } from '../config/database.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import { fermerSessionsUtilisateur } from './session.service.js';
 
 const LONGUEUR_MOT_DE_PASSE = 8;
@@ -45,6 +46,7 @@ export async function changerMotDePasse(utilisateurId, corps = {}) {
     await query('UPDATE utilisateur SET mot_de_passe = $2 WHERE id = $1', [utilisateurId, hash], client);
     await fermerSessionsUtilisateur(utilisateurId, client);
   });
+  void courrielsAuto.motDePasseChange(utilisateurId);
   return { message: 'Votre mot de passe est changé. Vos autres sessions sont fermées.' };
 }
 

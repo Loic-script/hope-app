@@ -5,6 +5,7 @@ import * as profileRepository from '../repositories/volunteerProfile.repository.
 import * as taskRepository from '../repositories/task.repository.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { texteFacultatif } from '../shared/validation.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import { signalerDemandeDeTache, signalerTacheLivree } from './notification.service.js';
 
 const STATUTS = ['a_faire', 'en_cours', 'livree'];
@@ -37,6 +38,13 @@ async function prevenir(benevoleIds, { titre, corps }, client) {
       client
     );
   }
+  return { benevoleIds, titre, corps };
+}
+
+async function puisPrevenirParCourriel(travail) {
+  const { resultat, avis } = await transaction(travail);
+  if (avis?.benevoleIds.length > 0) void courrielsAuto.avisDeTache(avis.benevoleIds, avis);
+  return resultat;
 }
 
 export async function listerParProjet(projetId) {
@@ -112,7 +120,7 @@ export async function creerPourProjet(projetId, corps = {}) {
     }
   }
 
-  return transaction(async (client) => {
+  return puisPrevenirParCourriel(async (client) => {
     const tache = await taskRepository.creer(
       {
         projetId,
@@ -132,7 +140,7 @@ export async function creerPourProjet(projetId, corps = {}) {
         await taskRepository.affecter(tache.id, benevoleId, null, client);
       }
       await taskRepository.alignerStatut(tache.id, client);
-      await prevenir(
+      const avis = await prevenir(
         benevoleIds,
         {
           titre: 'Une tâche vous est confiée',
@@ -140,10 +148,10 @@ export async function creerPourProjet(projetId, corps = {}) {
         },
         client
       );
-      return taskRepository.trouverParId(tache.id, client);
+      return { resultat: await taskRepository.trouverParId(tache.id, client), avis };
     }
 
-    return tache;
+    return { resultat: tache, avis: null };
   });
 }
 
@@ -289,7 +297,7 @@ export async function affecter(id, corps = {}, admin = null) {
     });
   }
 
-  return transaction(async (client) => {
+  return puisPrevenirParCourriel(async (client) => {
     const tache = await verrouiller(id, client);
     exigerNonLivree(tache);
 
@@ -309,7 +317,7 @@ export async function affecter(id, corps = {}, admin = null) {
     }
     await taskRepository.alignerStatut(tache.id, client);
 
-    await prevenir(
+    const avis = await prevenir(
       nouveaux,
       {
         titre: 'Une tâche vous est confiée',
@@ -318,13 +326,16 @@ export async function affecter(id, corps = {}, admin = null) {
       client
     );
 
-    return { ...(await taskRepository.trouverParId(tache.id, client)), affectes: nouveaux.length };
+    return {
+      resultat: { ...(await taskRepository.trouverParId(tache.id, client)), affectes: nouveaux.length },
+      avis,
+    };
   });
 }
 
 export async function retirer(id, benevoleId, _admin = null) {
   const benevole = uuid(benevoleId, 'Le bénévole');
-  return transaction(async (client) => {
+  return puisPrevenirParCourriel(async (client) => {
     const tache = await verrouiller(id, client);
     exigerNonLivree(tache);
 
@@ -335,7 +346,7 @@ export async function retirer(id, benevoleId, _admin = null) {
     await taskRepository.retirer(tache.id, benevole, client);
     await taskRepository.alignerStatut(tache.id, client);
 
-    await prevenir(
+    const avis = await prevenir(
       [benevole],
       {
         titre: 'Tâche retirée',
@@ -343,13 +354,13 @@ export async function retirer(id, benevoleId, _admin = null) {
       },
       client
     );
-    return taskRepository.trouverParId(tache.id, client);
+    return { resultat: await taskRepository.trouverParId(tache.id, client), avis };
   });
 }
 
 export async function accepter(id, benevoleId, admin = null) {
   const benevole = uuid(benevoleId, 'La demande');
-  return transaction(async (client) => {
+  return puisPrevenirParCourriel(async (client) => {
     const tache = await verrouiller(id, client);
     exigerNonLivree(tache);
 
@@ -360,7 +371,7 @@ export async function accepter(id, benevoleId, admin = null) {
     await taskRepository.affecter(tache.id, benevole, admin?.id ?? null, client);
     await taskRepository.alignerStatut(tache.id, client);
 
-    await prevenir(
+    const avis = await prevenir(
       [benevole],
       {
         titre: 'Demande acceptée',
@@ -368,13 +379,13 @@ export async function accepter(id, benevoleId, admin = null) {
       },
       client
     );
-    return taskRepository.trouverParId(tache.id, client);
+    return { resultat: await taskRepository.trouverParId(tache.id, client), avis };
   });
 }
 
 export async function refuser(id, benevoleId, admin = null) {
   const benevole = uuid(benevoleId, 'La demande');
-  return transaction(async (client) => {
+  return puisPrevenirParCourriel(async (client) => {
     const tache = await verrouiller(id, client);
 
     const actuelle = await taskRepository.place(tache.id, benevole, client);
@@ -382,7 +393,7 @@ export async function refuser(id, benevoleId, admin = null) {
 
     await taskRepository.refuser(tache.id, benevole, admin?.id ?? null, client);
 
-    await prevenir(
+    const avis = await prevenir(
       [benevole],
       {
         titre: 'Demande non retenue',
@@ -390,7 +401,7 @@ export async function refuser(id, benevoleId, admin = null) {
       },
       client
     );
-    return taskRepository.trouverParId(tache.id, client);
+    return { resultat: await taskRepository.trouverParId(tache.id, client), avis };
   });
 }
 
@@ -431,7 +442,7 @@ export async function listerPourBenevoleParProjet(projetId, utilisateurId) {
 }
 
 export async function demander(id, utilisateurId) {
-  return transaction(async (client) => {
+  const { vue, qui } = await transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
     const tache = await verrouiller(id, client);
 
@@ -463,8 +474,10 @@ export async function demander(id, utilisateurId) {
       client
     );
 
-    return vue;
+    return { vue, qui: nomDuBenevole(fiche) };
   });
+  void courrielsAuto.demandeDeTache({ qui, tache: vue.titre, projet: vue.projetNom });
+  return vue;
 }
 
 export async function annulerDemande(id, utilisateurId) {
@@ -532,7 +545,7 @@ export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
   verifierFichiersLivraison(fichiers);
   const commentaire = texteFacultatif(corps?.commentaire, 'commentaire', { max: 2000 });
 
-  return transaction(async (client) => {
+  const { vue, qui } = await transaction(async (client) => {
     const fiche = await profileRepository.garantir(utilisateurId, client);
     const tache = await verrouiller(id, client);
 
@@ -567,8 +580,10 @@ export async function livrer(id, utilisateurId, fichiers = [], corps = {}) {
       client
     );
 
-    return vue;
+    return { vue, qui: nomDuBenevole(fiche) };
   });
+  void courrielsAuto.tacheLivree({ qui, tache: vue.titre, projet: vue.projetNom });
+  return vue;
 }
 
 export async function fichierDeLivraison(tacheId, fichierId, utilisateurId = null) {

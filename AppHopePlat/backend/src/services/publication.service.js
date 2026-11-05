@@ -6,6 +6,7 @@ import * as publicationRepository from '../repositories/publication.repository.j
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { depuisBase, pourcentage } from '../shared/money.js';
 import { identifiantFacultatif, texteFacultatif, texteRequis } from '../shared/validation.js';
+import * as lettreActualites from './lettreActualites.service.js';
 import * as mediaService from './media.service.js';
 import * as reactions from './reactionsActualite.service.js';
 
@@ -124,7 +125,7 @@ export async function creer(corps = {}, admin = null) {
   const donnees = await valider(corps);
   const appel = donnees.type === 'appel_financement';
 
-  return transaction(async (client) => {
+  const publiee = await transaction(async (client) => {
     const { id } = await publicationRepository.creer(
       { ...donnees, publiePar: admin?.id ?? null },
       client
@@ -152,6 +153,8 @@ export async function creer(corps = {}, admin = null) {
 
     return { id, notifies };
   });
+  if (!appel) void lettreActualites.envoyerActualite(publiee.id);
+  return publiee;
 }
 
 export async function modifier(id, corps = {}, admin = null) {

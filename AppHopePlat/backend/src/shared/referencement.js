@@ -4,6 +4,7 @@ export { PAGES_PUBLIQUES };
 
 export const IMAGE_DE_PARTAGE = { chemin: '/partage.png', largeur: 1200, hauteur: 630 };
 export const LOGO = '/logo.png';
+export const LOGO_DES_COURRIELS = { chemin: '/courriel-logo.png', largeur: 168, hauteur: 76 };
 
 const FERMES = ['/api/', '/media/', ...ESPACES_FERMES.map((espace) => espace.chemin)];
 
