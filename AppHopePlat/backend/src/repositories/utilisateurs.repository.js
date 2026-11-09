@@ -272,9 +272,23 @@ export async function syntheseDons(ficheIds, client = null) {
 export async function modifierCompte(id, { nom, prenom, email, telephone }, client = null) {
   await query(
     `UPDATE utilisateur
-        SET nom = $2, prenom = $3, email = $4, telephone = $5
+        SET nom = $2, prenom = $3, email = $4::TEXT, telephone = $5,
+            email_verifie_le = CASE WHEN email = $4::TEXT THEN email_verifie_le END
       WHERE id = $1`,
     [id, nom, prenom, email, telephone],
+    client
+  );
+}
+
+export async function annulerLiensEnCours(utilisateurId, client = null) {
+  await query(
+    'UPDATE reinitialisation_mot_de_passe SET utilise_le = NOW() WHERE utilisateur_id = $1 AND utilise_le IS NULL',
+    [utilisateurId],
+    client
+  );
+  await query(
+    'UPDATE verification_courriel SET utilise_le = NOW() WHERE utilisateur_id = $1 AND utilise_le IS NULL',
+    [utilisateurId],
     client
   );
 }

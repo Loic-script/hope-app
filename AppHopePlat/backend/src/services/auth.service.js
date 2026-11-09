@@ -7,6 +7,7 @@ import * as volunteerRepository from '../repositories/volunteer.repository.js';
 import { garantirOrganisation } from './funderAuth.service.js';
 import * as verificationCourriel from './verificationCourriel.service.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
+import * as lettreActualites from './lettreActualites.service.js';
 import { signalerNouveauCompte } from './notification.service.js';
 import { signerJetonCompletion } from './volunteerAuth.service.js';
 import { VERSION_CONDITIONS, verifierConsentement } from '../shared/conditions.js';
@@ -26,7 +27,7 @@ import {
   estViolationUnicite,
 } from '../shared/errors.js';
 
-const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', 10);
+const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', config.admin.saltRounds);
 
 const LONGUEUR_MOT_DE_PASSE = 8;
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -140,6 +141,8 @@ export async function inscrire(corps = {}) {
       await garantirOrganisation(cree.id, {}, client);
       await volunteerRepository.marquerProfilComplete(cree.id, client);
     }
+
+    if (corps.accepteActualites === true) await lettreActualites.abonner(cree.id, client);
 
     await signalerNouveauCompte(
       { utilisateurId: cree.id, type, email, nom: '' },

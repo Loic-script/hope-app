@@ -3,7 +3,8 @@ import { Router } from 'express';
 import { actualites, benevoles, dons, profil, projets, taches } from '../controllers/volunteerSpace.controllers.js';
 import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
 import { identiteBenevole } from '../services/promesseDon.service.js';
-import { televerserMedia, televerserPreuve } from '../middleware/upload.middleware.js';
+import { televerserPhotoDeProfil, televerserPreuve } from '../middleware/upload.middleware.js';
+import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 import {
   authenticateVolunteer,
   authenticateVolunteerACompleter,
@@ -49,6 +50,6 @@ router.get('/benevoles/:id', benevoles.profil);
 router.get('/profil', profil.recuperer);
 router.patch('/profil', profil.mettreAJour);
 router.get('/journal', profil.journal);
-router.post('/profil/photo', televerserMedia, profil.televerserPhoto);
+router.post('/profil/photo', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }), televerserPhotoDeProfil, profil.televerserPhoto);
 
 export default router;

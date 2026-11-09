@@ -2,6 +2,9 @@ import fs from 'node:fs/promises';
 
 import { fermerPool, pool, query } from '../config/database.js';
 import { fichiersDesDocuments, installerDocumentsDemo } from './documentsBailleurDemo.js';
+import { refuserEnProduction } from './horsProduction.js';
+
+refuserEnProduction('seedRapportsBailleur');
 
 const FONDATION = 'Fondation Avenir Océan Indien';
 const TELMA = 'Telma Entreprise Citoyenne';

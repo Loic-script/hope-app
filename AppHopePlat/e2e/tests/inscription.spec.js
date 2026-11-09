@@ -18,7 +18,7 @@ test('inscription d un donateur, de la case de consentement a l adresse confirme
   await onglet.close();
   await expect(page.locator('input[name="email"]')).toHaveValue(email);
 
-  await page.locator('label.case-a-cocher--texte').click({ position: { x: 10, y: 10 } });
+  await page.locator('label.case-a-cocher--texte', { hasText: 'J’accepte' }).click({ position: { x: 10, y: 10 } });
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
 
   await expect(page).toHaveURL(/\/donateur\/completer-profil/, { timeout: 20_000 });

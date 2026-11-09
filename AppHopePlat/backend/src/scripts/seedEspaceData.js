@@ -1,4 +1,7 @@
 import { fermerPool, query } from '../config/database.js';
+import { refuserEnProduction } from './horsProduction.js';
+
+refuserEnProduction('seedEspaceData');
 
 const FORCER = process.argv.includes('--force');
 

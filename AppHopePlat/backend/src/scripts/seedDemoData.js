@@ -18,6 +18,9 @@ import * as documentService from '../services/document.service.js';
 import * as beneficiaryService from '../services/beneficiary.service.js';
 import * as impactService from '../services/impact.service.js';
 import * as messageService from '../services/message.service.js';
+import { refuserEnProduction } from './horsProduction.js';
+
+refuserEnProduction('seedDemoData');
 
 const FORCER = process.argv.includes('--force');
 

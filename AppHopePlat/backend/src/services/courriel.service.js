@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 
 import { config } from '../config/env.js';
+import { LOGO_DES_COURRIELS } from '../shared/referencement.js';
 
 let transport = null;
 
@@ -41,24 +42,73 @@ function echapper(texte) {
     .replace(/"/g, '&quot;');
 }
 
-function miseEnPage({ titre, paragraphes, bouton = null, note = '' }) {
-  const corps = paragraphes.map((p) => `<p style="margin:0 0 14px;line-height:1.55">${echapper(p)}</p>`).join('');
+const POLICE = "'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const VIOLET = '#5d5696';
+const NUIT = '#2c2748';
+const SOLEIL = '#e0973a';
+const FOND = '#f3f1fb';
+const TEXTE = '#353343';
+const TEXTE_DOUX = '#615d75';
+
+export function miseEnPage({ titre, paragraphes, bouton = null, note = '', image = null, desinscription = null }) {
+  const site = config.siteUrl.replace(/\/$/, '');
+  const hote = site.replace(/^https?:\/\//, '');
+  const corps = paragraphes
+    .map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${TEXTE}">${echapper(p)}</p>`)
+    .join('');
   const action = bouton
-    ? `<p style="margin:22px 0"><a href="${echapper(bouton.lien)}" style="display:inline-block;padding:12px 22px;border-radius:10px;background:#5d5696;color:#ffffff;text-decoration:none;font-weight:600">${echapper(bouton.texte)}</a></p>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0"><tr>
+<td align="center" bgcolor="${VIOLET}" style="border-radius:10px;background:${VIOLET}">
+<a href="${echapper(bouton.lien)}" style="display:inline-block;padding:15px 30px;font-family:${POLICE};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:10px">${echapper(bouton.texte)}</a>
+</td></tr></table>
+<p style="margin:14px 0 0;font-size:13px;line-height:1.5;color:${TEXTE_DOUX}">Le bouton ne s’ouvre pas ? Copiez ce lien dans votre navigateur :<br><a href="${echapper(bouton.lien)}" style="color:${VIOLET};word-break:break-all">${echapper(bouton.lien)}</a></p>`
     : '';
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f3f5fb;font-family:Arial,Helvetica,sans-serif;color:#353343">
-<div style="max-width:560px;margin:0 auto;padding:28px 18px">
-<p style="margin:0 0 18px;font-size:22px;font-weight:700;color:#5d5696">HOPE</p>
-<div style="background:#ffffff;border-radius:14px;padding:26px 24px">
-<h1 style="margin:0 0 16px;font-size:19px">${echapper(titre)}</h1>${corps}${action}
-${note ? `<p style="margin:18px 0 0;font-size:13px;color:#6b6880;line-height:1.5">${echapper(note)}</p>` : ''}
-</div>
-<p style="margin:16px 0 0;font-size:12px;color:#8a8aa0">HOPE — for a better life</p>
-</div></body></html>`;
+  const encart = note
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0"><tr>
+<td bgcolor="${FOND}" style="background:${FOND};border-left:4px solid ${SOLEIL};border-radius:8px;padding:14px 16px;font-size:14px;line-height:1.55;color:${TEXTE_DOUX}">${echapper(note)}</td>
+</tr></table>`
+    : '';
+
+  return `<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">
+<title>${echapper(titre)}</title>
+</head>
+<body style="margin:0;padding:0;background:${FOND};-webkit-text-size-adjust:100%">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${echapper(paragraphes[0] ?? '')}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FOND}" style="background:${FOND}"><tr>
+<td align="center" style="padding:32px 12px;font-family:${POLICE}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px">
+<tr><td align="center" bgcolor="${NUIT}" style="background:${NUIT};border-radius:16px 16px 0 0;padding:28px 24px 24px">
+<a href="${echapper(site)}/" style="text-decoration:none"><img src="${echapper(site + LOGO_DES_COURRIELS.chemin)}" width="${LOGO_DES_COURRIELS.largeur}" height="${LOGO_DES_COURRIELS.hauteur}" alt="HOPE – for a better life" style="display:block;border:0;outline:none;width:${LOGO_DES_COURRIELS.largeur}px;height:auto;font-family:${POLICE};font-size:22px;font-weight:700;color:#ffffff"></a>
+</td></tr>
+<tr><td height="4" bgcolor="${SOLEIL}" style="background:${SOLEIL};height:4px;font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td bgcolor="#ffffff" style="background:#ffffff;border-radius:0 0 16px 16px;padding:34px 32px 32px;font-family:${POLICE}">
+${image ? `<img src="${echapper(image.src)}" width="496" alt="${echapper(image.alt)}" style="display:block;width:100%;max-width:496px;height:auto;border:0;border-radius:12px;margin:0 0 24px">` : ''}
+<h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;font-weight:700;color:#2a2433">${echapper(titre)}</h1>
+${corps}${action}${encart}
+</td></tr>
+<tr><td align="center" style="padding:24px 16px 0;font-family:${POLICE};font-size:13px;line-height:1.6;color:${TEXTE_DOUX}">
+<strong style="color:${TEXTE}">HOPE – Hope for a Better Life</strong><br>
+Aux côtés des orphelins et des mères célibataires de Madagascar<br>
+<a href="${echapper(site)}/" style="color:${VIOLET}">${echapper(hote)}</a> · <a href="${echapper(site)}/contact" style="color:${VIOLET}">Écrire à l’équipe</a>
+${desinscription ? `<br>Vous recevez les actualités de HOPE à votre demande. <a href="${echapper(desinscription.page)}" style="color:${VIOLET}">Se désinscrire</a>` : ''}
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
 }
 
-export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, note = '' }) {
-  const texte = [titre, '', ...paragraphes, bouton ? `${bouton.texte} : ${bouton.lien}` : '', note]
+export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, note = '', image = null, desinscription = null }) {
+  const texte = [
+    titre,
+    '',
+    ...paragraphes,
+    bouton ? `${bouton.texte} : ${bouton.lien}` : '',
+    note,
+    desinscription ? `Se désinscrire des actualités : ${desinscription.page}` : '',
+  ]
     .filter((ligne) => ligne !== undefined)
     .join('\n');
 
@@ -84,7 +134,15 @@ export async function envoyer({ a, sujet, titre, paragraphes, bouton = null, not
       to: a,
       subject: sujet,
       text: texte,
-      html: miseEnPage({ titre, paragraphes, bouton, note }),
+      html: miseEnPage({ titre, paragraphes, bouton, note, image, desinscription }),
+      ...(desinscription
+        ? {
+            headers: {
+              'List-Unsubscribe': `<${desinscription.api}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }
+        : {}),
     });
     return true;
   } catch (erreur) {

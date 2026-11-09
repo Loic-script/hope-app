@@ -133,6 +133,7 @@ export async function reinitialiserMotDePasse(id, corps = {}, auteur = null) {
 
   const motDePasse = verifierMotDePasse(corps.password, 'password');
   await adminRepository.mettreAJourMotDePasse(adminId, await hasher(motDePasse));
+  await fermerSessionsAdmin(adminId);
 
   await activityLogRepository.deposer(auteur, {
     action: 'RESET_PASSWORD',

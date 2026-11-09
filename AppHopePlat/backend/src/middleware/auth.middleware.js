@@ -60,11 +60,11 @@ export function exigerRole(...roles) {
 export const exigerEcriture = exigerRole('ADMIN', 'COORDINATOR', 'GESTIONNAIRE');
 
 const ECRITURES_MANAGER = [
-  ['POST', /^\/projects$/],
-  ['POST', /^\/projects\/media$/],
-  ['PATCH', /^\/projects\/\d+$/],
+  ['POST', /^\/projects\/?$/i],
+  ['POST', /^\/projects\/media\/?$/i],
+  ['PATCH', /^\/projects\/\d+\/?$/i],
 ];
-const LECTURES_INTERDITES_MANAGER = [/^\/utilisateurs/, /^\/team/, /^\/backoffice/, /^\/audit/, /^\/consulter/];
+const LECTURES_INTERDITES_MANAGER = [/^\/utilisateurs/i, /^\/team/i, /^\/backoffice/i, /^\/audit/i, /^\/consulter/i];
 
 function refus(req) {
   const erreur = new ErreurRegleMetier('Votre rôle ne permet pas cette action.', 'DROIT_INSUFFISANT', {

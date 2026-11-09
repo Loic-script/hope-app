@@ -1,5 +1,8 @@
 import { fermerPool, query } from '../config/database.js';
 import * as volunteerAuthService from '../services/volunteerAuth.service.js';
+import { refuserEnProduction } from './horsProduction.js';
+
+refuserEnProduction('seedVolunteerData');
 
 const FORCER = process.argv.includes('--force');
 

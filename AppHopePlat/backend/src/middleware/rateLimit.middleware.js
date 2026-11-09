@@ -1,4 +1,11 @@
 const tentatives = new Map();
+const PLAFOND_DES_CLES = 10_000;
+
+function oublierLesExpirees(maintenant) {
+  for (const [cle, entree] of tentatives) {
+    if (maintenant > entree.expireA) tentatives.delete(cle);
+  }
+}
 
 function limiteurDesactive() {
   return (
@@ -16,6 +23,7 @@ export function limiterTentatives({ fenetreMs = 60_000, maximum = 10 } = {}) {
     const entree = tentatives.get(cle);
 
     if (!entree || maintenant > entree.expireA) {
+      if (!entree && tentatives.size >= PLAFOND_DES_CLES) oublierLesExpirees(maintenant);
       tentatives.set(cle, { compteur: 1, expireA: maintenant + fenetreMs });
       return next();
     }

@@ -1,6 +1,7 @@
 import { transaction } from '../config/database.js';
 import { config } from '../config/env.js';
 import * as conversationRepository from '../repositories/conversation.repository.js';
+import * as courrielsAuto from './courrielsAutomatiques.service.js';
 import * as pieceJointe from './pieceJointe.service.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 
@@ -211,6 +212,10 @@ export async function recuperer(acteur, id) {
     conversationRepository.luLe(acteur, fil.id),
   ]);
 
+  const ontEcrit = new Set(liste.filter((m) => !m.supprimeLe).map((m) => `${m.auteurType}:${m.auteurId}`));
+  const coordonneesVisibles = (p) =>
+    acteur.type === 'admin' || memeActeur(p, acteur) || ontEcrit.has(`${p.type}:${p.id}`);
+
   return {
     conversation: {
       id: nombre(fil.id),
@@ -222,8 +227,8 @@ export async function recuperer(acteur, id) {
       participants: (fil.participants ?? []).map((p) => ({
         ...resume(p),
         fonction: p.fonction ?? null,
-        email: p.email ?? null,
-        telephone: p.telephone ?? null,
+        email: coordonneesVisibles(p) ? p.email ?? null : null,
+        telephone: coordonneesVisibles(p) ? p.telephone ?? null : null,
         siteWeb: p.siteWeb ?? null,
         ajouteLe: p.ajouteLe,
         estMoi: memeActeur(p, acteur),
@@ -417,6 +422,7 @@ export async function envoyer(acteur, id, corps = {}, fichiers = []) {
     await pieceJointe.effacer(ecrites.map((piece) => piece.fichier));
     throw erreur;
   }
+  void courrielsAuto.nouveauMessage(message.id);
 
   const complet = await conversationRepository.trouverMessage(message.id);
   return presenterMessage(complet, acteur);

@@ -5,7 +5,7 @@ import { config } from '../config/env.js';
 import * as adminRepository from '../repositories/admin.repository.js';
 import { ErreurAuthentification, ErreurValidation } from '../shared/errors.js';
 
-const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', 10);
+const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', config.admin.saltRounds);
 
 function versAdminPublic(admin) {
   return {

@@ -9,7 +9,7 @@ import {
   exigerOrganisation,
 } from '../middleware/funderAuth.middleware.js';
 import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
-import { televerserMedia } from '../middleware/upload.middleware.js';
+import { televerserPhotoDeProfil } from '../middleware/upload.middleware.js';
 
 const router = Router();
 
@@ -65,6 +65,6 @@ router.get('/profil', funder.espace.profil);
 router.patch('/organisation', funder.espace.mettreAJourOrganisation);
 router.patch('/profil/contact', funder.espace.mettreAJourContact);
 
-router.post('/profil/photo', televerserMedia, funder.espace.televerserPhoto);
+router.post('/profil/photo', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }), televerserPhotoDeProfil, funder.espace.televerserPhoto);
 
 export default router;

@@ -456,3 +456,62 @@
 @media (prefers-reduced-motion: reduce) {
   .bandeau-verif { animation: none; }
 }
+
+.securite__interrupteur {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #d6d4e3;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.securite__interrupteur::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+
+.securite__interrupteur[aria-checked='true'] {
+  background: var(--hope-violet);
+}
+
+.securite__interrupteur:focus-visible {
+  outline: 3px solid var(--hope-violet);
+  outline-offset: 3px;
+}
+
+.securite__interrupteur:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.securite__interrupteur-curseur {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(53, 51, 67, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.securite__interrupteur[aria-checked='true'] .securite__interrupteur-curseur {
+  transform: translateX(22px);
+}
+
+.securite__refus--decale {
+  margin: 12px 0 0 56px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .securite__interrupteur,
+  .securite__interrupteur-curseur {
+    transition: none;
+  }
+}

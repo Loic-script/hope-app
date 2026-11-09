@@ -75,6 +75,7 @@ const SEngager = lazy(() => import('../pages/vitrine/SEngager.jsx'));
 const Contact = lazy(() => import('../pages/vitrine/Contact.jsx'));
 const PageIntrouvable = lazy(() => import('../pages/vitrine/PageIntrouvable.jsx'));
 const VerifierCourriel = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.VerifierCourriel })));
+const SeDesinscrire = lazy(() => import('../pages/MotDePasse.jsx').then((m) => ({ default: m.SeDesinscrire })));
 const PolitiqueConfidentialite = lazy(() =>
   import('../pages/Legal.jsx').then((m) => ({ default: m.PolitiqueConfidentialite }))
 );
@@ -189,6 +190,7 @@ export default function AppRoutes() {
       <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
       <Route path="/reinitialiser-mot-de-passe" element={<ReinitialiserMotDePasse />} />
       <Route path="/verifier-courriel" element={<VerifierCourriel />} />
+      <Route path="/se-desinscrire" element={<SeDesinscrire />} />
       <Route path="/confidentialite" element={<PolitiqueConfidentialite />} />
       <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
 

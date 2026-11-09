@@ -224,7 +224,7 @@ export const utilisateurs = {
   profilCompte: gerer((req) => utilisateursService.profilCompte(req.params.id)),
   profilFiche: gerer((req) => utilisateursService.profilFiche(req.params.id)),
   modifierCompte: gerer((req) => utilisateursService.modifierCompte(req.params.id, req.body)),
-  supprimerCompte: gerer((req) => utilisateursService.supprimerCompte(req.params.id, req.admin)),
+  supprimerCompte: gerer((req) => utilisateursService.supprimerCompte(req.params.id, req.admin, req.body ?? {})),
   supprimerFiche: gerer((req) =>
     utilisateursService.supprimerFiche(req.params.id, {
       forcer: req.query.forcer === '1',

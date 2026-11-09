@@ -9,7 +9,7 @@ import * as verificationCourriel from './verificationCourriel.service.js';
 
 const AUDIENCE = 'hope-benevole';
 
-const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', 10);
+const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', config.admin.saltRounds);
 
 const LONGUEUR_MOT_DE_PASSE = 8;
 

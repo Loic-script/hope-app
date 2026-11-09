@@ -2,6 +2,7 @@ import { transaction } from '../config/database.js';
 import * as donorProfileRepository from '../repositories/donorProfile.repository.js';
 import { ErreurValidation } from '../shared/errors.js';
 import { DEVISES_ACCEPTEES } from '../shared/money.js';
+import { siteValide } from '../shared/validation.js';
 import { lister as listerProjets } from './project.service.js';
 
 export const SOURCES_CONNAISSANCE = [
@@ -287,28 +288,6 @@ export async function enregistrerEtape1(utilisateurId, corps = {}) {
   }
 
   return recuperer(utilisateurId);
-}
-
-function siteValide(valeur, details) {
-  const texte = String(valeur ?? '').trim();
-  if (texte === '') return null;
-  const complet = /^https?:\/\//i.test(texte) ? texte : `https://${texte}`;
-  try {
-    const adresse = new URL(complet);
-    const domaine = adresse.hostname;
-    if (!['http:', 'https:'].includes(adresse.protocol) || !domaine.includes('.')
-      || domaine.startsWith('.') || domaine.endsWith('.')) {
-      throw new Error('adresse');
-    }
-  } catch {
-    details.siteWeb = 'Adresse de site invalide';
-    return null;
-  }
-  if (complet.length > 255) {
-    details.siteWeb = 'Au plus 255 caractères';
-    return null;
-  }
-  return complet;
 }
 
 function fuseauValide(valeur) {

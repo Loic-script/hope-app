@@ -174,8 +174,8 @@ export async function etatSession(identite, sessionId) {
   }
 
   const don = await donationRepository.parSessionFournisseur(id);
-  const autorise = identite.peutLire ? identite.peutLire(don) : don.utilisateurId === identite.utilisateurId;
-  if (!don || !autorise) {
+  const autorise = Boolean(don) && (identite.peutLire ? identite.peutLire(don) : don.utilisateurId === identite.utilisateurId);
+  if (!autorise) {
     throw new ErreurIntrouvable('Le paiement', id);
   }
 
@@ -243,6 +243,9 @@ export async function traiterEvenement(corpsBrut, signature) {
   if (!don) return { recu: true, ignore: 'don introuvable' };
 
   await synchroniser(don, session);
+  if (evenement.type === 'checkout.session.expired' || evenement.type === 'checkout.session.async_payment_failed') {
+    void courrielsAuto.paiementInabouti(don.id);
+  }
   return { recu: true, traite: evenement.type };
 }
 
@@ -297,6 +300,7 @@ async function synchroniser(don, session) {
     projectId: don.projectId ?? null,
   });
   void courrielsAuto.donRecu(don.id);
+  void courrielsAuto.donParCarte(don.id);
   return confirme;
 }
 
