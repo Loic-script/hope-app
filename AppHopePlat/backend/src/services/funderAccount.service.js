@@ -4,6 +4,7 @@ import { versListe } from '../shared/mapping.js';
 import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { texteFacultatif } from '../shared/validation.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
+import { fermerSessionsUtilisateur } from './session.service.js';
 
 const STATUTS_ADMIN = ['actif', 'suspendu', 'supprime'];
 const STATUTS = ['en_attente', ...STATUTS_ADMIN];
@@ -75,6 +76,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
       admin?.id ?? null,
       client
     );
+    if (statut !== 'actif') await fermerSessionsUtilisateur(id, client);
 
     if (statut === 'actif') {
       await query(

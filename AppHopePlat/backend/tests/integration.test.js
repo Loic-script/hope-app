@@ -395,6 +395,7 @@ describe('back office : Admin et Manager', () => {
 
     assert.equal((await appel('GET', '/admin/projects', { jeton: jm })).statut, 200);
     assert.equal((await appel('GET', '/admin/utilisateurs/donateurs', { jeton: jm })).statut, 403);
+    assert.equal((await appel('GET', '/admin/Utilisateurs/benevoles', { jeton: jm })).statut, 403, 'la casse ne contourne pas le refus');
     assert.equal((await appel('GET', '/admin/backoffice', { jeton: jm })).statut, 403);
     const { corps: catalogue } = await appel('GET', '/admin/catalog', { jeton: jm });
     const projet = await appel('POST', '/admin/projects', {

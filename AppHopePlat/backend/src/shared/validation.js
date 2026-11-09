@@ -106,3 +106,25 @@ export function pagination(requete = {}) {
   const taille = Math.min(200, Math.max(1, Number.parseInt(requete.pageSize ?? '50', 10) || 50));
   return { page, taille, decalage: (page - 1) * taille };
 }
+
+export function siteValide(valeur, details) {
+  const texte = String(valeur ?? '').trim();
+  if (texte === '') return null;
+  const complet = /^https?:\/\//i.test(texte) ? texte : `https://${texte}`;
+  try {
+    const adresse = new URL(complet);
+    const domaine = adresse.hostname;
+    if (!['http:', 'https:'].includes(adresse.protocol) || !domaine.includes('.')
+      || domaine.startsWith('.') || domaine.endsWith('.')) {
+      throw new Error('adresse');
+    }
+  } catch {
+    details.siteWeb = 'Adresse de site invalide';
+    return null;
+  }
+  if (complet.length > 255) {
+    details.siteWeb = 'Au plus 255 caractères';
+    return null;
+  }
+  return complet;
+}

@@ -174,8 +174,8 @@ export async function etatSession(identite, sessionId) {
   }
 
   const don = await donationRepository.parSessionFournisseur(id);
-  const autorise = identite.peutLire ? identite.peutLire(don) : don.utilisateurId === identite.utilisateurId;
-  if (!don || !autorise) {
+  const autorise = Boolean(don) && (identite.peutLire ? identite.peutLire(don) : don.utilisateurId === identite.utilisateurId);
+  if (!autorise) {
     throw new ErreurIntrouvable('Le paiement', id);
   }
 

@@ -212,6 +212,10 @@ export async function recuperer(acteur, id) {
     conversationRepository.luLe(acteur, fil.id),
   ]);
 
+  const ontEcrit = new Set(liste.filter((m) => !m.supprimeLe).map((m) => `${m.auteurType}:${m.auteurId}`));
+  const coordonneesVisibles = (p) =>
+    acteur.type === 'admin' || memeActeur(p, acteur) || ontEcrit.has(`${p.type}:${p.id}`);
+
   return {
     conversation: {
       id: nombre(fil.id),
@@ -223,8 +227,8 @@ export async function recuperer(acteur, id) {
       participants: (fil.participants ?? []).map((p) => ({
         ...resume(p),
         fonction: p.fonction ?? null,
-        email: p.email ?? null,
-        telephone: p.telephone ?? null,
+        email: coordonneesVisibles(p) ? p.email ?? null : null,
+        telephone: coordonneesVisibles(p) ? p.telephone ?? null : null,
         siteWeb: p.siteWeb ?? null,
         ajouteLe: p.ajouteLe,
         estMoi: memeActeur(p, acteur),

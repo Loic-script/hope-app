@@ -268,6 +268,9 @@ test('mot de passe change, adresse changee par l equipe : la personne est alerte
   assert.equal(modification.statut, 200, JSON.stringify(modification.corps));
   const ancienne = await attendre('ravo.donateur@hope.test', /l’adresse de votre compte a changé/);
   assert.match(ancienne.texte, /par ravo.nouvelle@hope.test/);
+  await attendre('ravo.nouvelle@hope.test', /confirmez votre adresse/);
+  const [compte] = await base.sql('SELECT email_verifie_le FROM utilisateur WHERE id = $1', [ravo]);
+  assert.equal(compte.email_verifie_le, null, 'la nouvelle adresse reste a confirmer');
 });
 
 test('le gabarit porte le logo, un bouton et son lien de secours, et echappe le texte', async () => {

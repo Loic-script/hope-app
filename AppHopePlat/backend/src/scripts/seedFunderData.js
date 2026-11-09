@@ -7,6 +7,9 @@ import * as funderAuthService from '../services/funderAuth.service.js';
 import { installerDocumentsDemo } from './documentsBailleurDemo.js';
 import { poserMedia } from './mediasDemo.js';
 import { ACTUALITES_DEMO } from './actualitesDemo.js';
+import { refuserEnProduction } from './horsProduction.js';
+
+refuserEnProduction('seedFunderData');
 
 const FORCER = process.argv.includes('--force');
 

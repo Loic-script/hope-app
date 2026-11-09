@@ -3,6 +3,7 @@ import { ErreurIntrouvable, ErreurValidation } from '../shared/errors.js';
 import { texteFacultatif } from '../shared/validation.js';
 import { versBenevolePublic } from './volunteerAuth.service.js';
 import * as courrielsAuto from './courrielsAutomatiques.service.js';
+import { fermerSessionsUtilisateur } from './session.service.js';
 
 const STATUTS_ADMIN = ['actif', 'suspendu', 'supprime'];
 
@@ -47,6 +48,7 @@ export async function changerStatut(id, corps = {}, admin = null) {
   }
 
   const compte = await volunteerRepository.changerStatut(id, statut, admin?.id ?? null);
+  if (statut !== 'actif') await fermerSessionsUtilisateur(id);
   if (statut === 'actif') void courrielsAuto.compteValide(id, 'benevole');
   else void courrielsAuto.accesRetire(id, { statut, enAttente: existant.statut === 'en_attente', motif });
 

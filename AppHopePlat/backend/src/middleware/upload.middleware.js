@@ -173,6 +173,33 @@ export function televerserMedia(req, res, suite) {
   });
 }
 
+const PHOTOS_DE_PROFIL = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+const televerseurPhotoDeProfil = multer({
+  storage: stockageMedia,
+  fileFilter(req, fichier, suite) {
+    if (!PHOTOS_DE_PROFIL.has(fichier.mimetype)) {
+      suite(new ErreurValidation('Format non accepté. Photos : JPG, PNG, WEBP.', { file: 'Format non accepté' }));
+      return;
+    }
+    filtrerMedia(req, fichier, suite);
+  },
+  limits: { fileSize: TAILLE_MAXIMALE, files: 1, fields: 10, fieldSize: 64 * 1024 },
+});
+
+export function televerserPhotoDeProfil(req, res, suite) {
+  televerseurPhotoDeProfil.single('file')(req, res, (erreur) => {
+    if (erreur instanceof multer.MulterError) {
+      const message = erreur.code === 'LIMIT_FILE_SIZE'
+        ? 'La photo dépasse la taille maximale de 10 Mo.'
+        : `Téléversement refusé : ${erreur.message}`;
+      suite(new ErreurValidation(message, { file: erreur.code }));
+      return;
+    }
+    suite(erreur);
+  });
+}
+
 export const DOSSIER_PREUVES = path.resolve(dossierCourant, '..', '..', 'uploads', 'preuves');
 
 const PREUVES_ACCEPTEES = new Map([

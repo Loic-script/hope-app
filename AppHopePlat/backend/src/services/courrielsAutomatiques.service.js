@@ -514,14 +514,12 @@ export function messageDeContact(message) {
 
 export function contactRecu(message) {
   return sansEchec('contact recu', async () => {
-    const prenom = String(message.nom ?? '').trim().split(/\s+/)[0] ?? '';
     await courriel.envoyer({
       a: message.email,
       sujet: 'HOPE — nous avons bien reçu votre message',
-      titre: `Merci${prenom ? ` ${prenom}` : ''}, votre message est bien arrivé.`,
+      titre: 'Merci, votre message est bien arrivé.',
       paragraphes: [
         `Vous nous écrivez au sujet de : ${message.sujetLibelle}. Une personne de l’équipe HOPE vous répond à cette adresse sous 48 h ouvrées.`,
-        `Votre message : « ${message.message} »`,
       ],
       note: 'Vous n’êtes pas à l’origine de ce message ? Ignorez simplement ce courriel.',
     });

@@ -27,7 +27,7 @@ import {
   estViolationUnicite,
 } from '../shared/errors.js';
 
-const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', 10);
+const HASH_FACTICE = bcrypt.hashSync('hash-factice-anti-timing-attack', config.admin.saltRounds);
 
 const LONGUEUR_MOT_DE_PASSE = 8;
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

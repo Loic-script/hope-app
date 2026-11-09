@@ -49,7 +49,7 @@ export async function demander(corps = {}) {
   });
 
   const lien = `${config.siteUrl.replace(/\/$/, '')}/reinitialiser-mot-de-passe?jeton=${jeton}`;
-  await courriel.envoyer({
+  void courriel.envoyer({
     a: email,
     sujet: 'HOPE — choisir un nouveau mot de passe',
     titre: `Bonjour${compte.prenom ? ` ${compte.prenom}` : ''},`,

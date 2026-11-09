@@ -156,7 +156,7 @@ export async function confirmerPaiementEnLigne(id, donnees, client = null) {
             provider_payment_id = $3,
             provider_status = $4,
             provider_updated_at = NOW()
-      WHERE id = $1 AND status <> 'RECEIVED'
+      WHERE id = $1 AND status = 'PENDING'
       RETURNING id`,
     [id, donnees.referencePaiement ?? null, donnees.paiementId ?? null, donnees.statutFournisseur ?? null],
     client

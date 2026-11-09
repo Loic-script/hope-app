@@ -74,7 +74,18 @@ function identiteInvite(donateur) {
       };
       const existante = await donorSpaceRepository.ficheSansCompte(donateur.email, client);
       if (existante) {
-        await donorRepository.mettreAJour(existante.id, colonnes, client);
+        const actuelle = await donorRepository.trouverParId(existante.id, client);
+        const { first_name: prenom, last_name: nom, phone: telephone, ...lieu } = colonnes;
+        await donorRepository.mettreAJour(
+          existante.id,
+          {
+            ...lieu,
+            ...(actuelle?.firstName ? {} : { first_name: prenom }),
+            ...(actuelle?.lastName ? {} : { last_name: nom }),
+            ...(actuelle?.phone ? {} : { phone: telephone }),
+          },
+          client
+        );
         ficheId = Number(existante.id);
       } else {
         const fiche = await donorRepository.creer(

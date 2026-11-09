@@ -13,6 +13,8 @@ import {
   SOURCES_CONNAISSANCE,
   TYPES_DONATEUR,
 } from './donorProfile.service.js';
+import { fermerSessionsUtilisateur } from './session.service.js';
+import * as verificationCourriel from './verificationCourriel.service.js';
 
 const ROLES = { donateurs: 'donateur', benevoles: 'benevole', bailleurs: 'bailleur' };
 
@@ -234,6 +236,7 @@ export async function modifierCompte(id, corps = {}) {
   try {
     await transaction(async (client) => {
       await depot.modifierCompte(compte.id, { nom, prenom, email, telephone }, client);
+      if (email !== compte.email) await depot.annulerLiensEnCours(compte.id, client);
       if (nomStructure !== undefined) {
         await depot.modifierNomStructure(compte.id, nomStructure, client);
       }
@@ -259,6 +262,7 @@ export async function modifierCompte(id, corps = {}) {
   if (email !== compte.email && compte.emailVerifieLe) {
     void courrielsAuto.adresseChangee({ ancienne: compte.email, nouvelle: email, prenom: prenom || compte.prenom });
   }
+  if (email !== compte.email) void verificationCourriel.envoyerLien({ id: compte.id, email, prenom: prenom || compte.prenom });
   return profilCompte(compte.id);
 }
 
@@ -267,6 +271,7 @@ export async function supprimerCompte(id, admin = null, corps = {}) {
   const compte = await depot.trouverCompte(idCompte(id));
   if (!compte || compte.statut === 'supprime') throw new ErreurIntrouvable('Le compte', id);
   await volunteerRepository.changerStatut(compte.id, 'supprime', admin?.id ?? null);
+  await fermerSessionsUtilisateur(compte.id);
   void courrielsAuto.accesRetire(compte.id, {
     statut: 'supprime',
     enAttente: compte.statut === 'en_attente',

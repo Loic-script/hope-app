@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   dateFacultative,
   identifiantRequis,
+  siteValide,
   texteFacultatif,
   texteRequis,
   valeurParmi,
@@ -58,4 +59,15 @@ test('inscription : le consentement doit valoir true, rien d approchant', () => 
   const details = {};
   verifierConsentement({ accepteConditions: true }, details);
   assert.deepEqual(details, {});
+});
+
+test('siteValide n accepte qu une adresse http ou https', () => {
+  for (const piege of ['javascript:alert(1)', 'data:text/html,<b>x</b>', 'vbscript:msgbox(1)', 'localhost']) {
+    const details = {};
+    assert.equal(siteValide(piege, details), null, piege);
+    assert.ok(details.siteWeb, piege);
+  }
+  assert.equal(siteValide('fondation.mg', {}), 'https://fondation.mg');
+  assert.equal(siteValide('http://fondation.mg/a-propos', {}), 'http://fondation.mg/a-propos');
+  assert.equal(siteValide('', {}), null);
 });

@@ -4,7 +4,8 @@ import { actualites, dons, profil } from '../controllers/donorSpace.controllers.
 import { controleursCarte } from '../controllers/paiementCarte.controllers.js';
 import { identiteDonateur } from '../services/donorSpace.service.js';
 import { authenticateDonor } from '../middleware/donorAuth.middleware.js';
-import { televerserMedia } from '../middleware/upload.middleware.js';
+import { televerserPhotoDeProfil } from '../middleware/upload.middleware.js';
+import { limiterTentatives } from '../middleware/rateLimit.middleware.js';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.put('/profil/etape-3', profil.enregistrerEtape3);
 router.put('/profil/etape-4', profil.enregistrerEtape4);
 router.put('/profil/etape-5', profil.enregistrerEtape5);
 
-router.post('/profil/photo', televerserMedia, profil.televerserPhoto);
+router.post('/profil/photo', limiterTentatives({ fenetreMs: 15 * 60_000, maximum: 20 }), televerserPhotoDeProfil, profil.televerserPhoto);
 router.patch('/profil/photo', profil.changerPhoto);
 
 router.get('/projets', profil.projets);

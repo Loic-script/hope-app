@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -12,6 +13,7 @@ import * as projectReportService from './projectReport.service.js';
 import { DOSSIER_MEDIAS, PREFIXE_MEDIAS } from '../middleware/upload.middleware.js';
 import { ErreurIntrouvable, ErreurRegleMetier, ErreurValidation } from '../shared/errors.js';
 import { centimesVersTexte, depuisBase, pourcentage } from '../shared/money.js';
+import { siteValide } from '../shared/validation.js';
 
 export const TYPES_DOCUMENT = {
   rapport_impact: 'Rapport d’impact',
@@ -341,7 +343,7 @@ export async function genererCertificat(bailleurId, bailleur) {
   });
 
   await fs.mkdir(DOSSIER_MEDIAS, { recursive: true });
-  const nomDisque = `certificat-${reference}.pdf`;
+  const nomDisque = `certificat-${reference}-${crypto.randomBytes(8).toString('hex')}.pdf`;
   await fs.writeFile(path.join(DOSSIER_MEDIAS, nomDisque), pdf);
 
   const document = await funderRepository.creerDocument(bailleurId, {
@@ -493,6 +495,7 @@ export async function mettreAJourOrganisation(bailleurId, corps = {}) {
   const typeOrganisation = String(corps.typeOrganisation ?? '').trim().toLowerCase();
 
   const details = {};
+  const siteWeb = siteValide(corps.siteWeb, details);
   if (!raisonSociale) details.raisonSociale = 'Champ obligatoire';
   if (typeOrganisation === '') details.typeOrganisation = 'Champ obligatoire';
   else if (!TYPES_ORGANISATION.includes(typeOrganisation)) {
@@ -508,7 +511,7 @@ export async function mettreAJourOrganisation(bailleurId, corps = {}) {
     secteur: texte(corps.secteur, 120),
     pays: texte(corps.pays, 80) ?? 'Madagascar',
     adresse: texte(corps.adresse, 2000),
-    site_web: texte(corps.siteWeb, 500),
+    site_web: siteWeb,
     nif: texte(corps.nif, 40),
   });
 
