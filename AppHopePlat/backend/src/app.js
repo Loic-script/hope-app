@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 
 import { config } from './config/env.js';
 import { query } from './config/database.js';
@@ -41,6 +42,7 @@ export function creerApplication({ siteUrl = config.siteUrl, dossierFrontend = D
 
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
+  app.use(compression());
   app.use(enTetesDeSecurite);
 
   app.get('/api/sante', async (_req, res) => {
