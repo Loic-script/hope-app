@@ -1,0 +1,28 @@
+/* ÉQUIPE */
+
+Conception et développement : TwinsDev
+Duo de développeurs et informaticiens, Madagascar
+LinkedIn : https://www.linkedin.com/in/twinsdev/
+
+Développeur et informaticien : Faneva Loïc Razafimamonjy (Loïc)
+Aussi écrit : RAZAFIMAMONJY Faneva Loïc, Loïc Razafimamonjy, Loic Razafimamonjy
+LinkedIn : https://www.linkedin.com/in/faneva-loïc-razafimamonjy
+GitHub : https://github.com/Loic-script
+
+Développeur et informaticien : Fahendrena Marco Razafimamonjy (Marco)
+Aussi écrit : RAZAFIMAMONJY Fahendrena Marco, Marco Razafimamonjy
+LinkedIn : https://www.linkedin.com/in/fahendrena-marco-razafimamonjy-310971343/
+
+/* PROJET */
+
+Client : HOPE – Hope for a Better Life, association à Madagascar
+Réalisation : site vitrine public et plateforme de dons (espaces administrateur, donateur, bénévole et bailleur)
+Langue : français
+
+/* TECHNIQUE */
+
+Front : React, Vite, CSS
+Back : Node.js, Express, PostgreSQL
+Paiement par carte : Stripe
+Tests : node --test, Playwright, axe-core
+Hébergement : Railway

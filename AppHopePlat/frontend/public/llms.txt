@@ -1,0 +1,23 @@
+# HOPE – Hope for a Better Life
+
+> Site officiel de HOPE, association malgache qui accompagne les enfants orphelins, les mères célibataires et les familles vulnérables de Madagascar vers une autonomie durable : scolarité, employabilité, soins et alimentation. Le site présente l'association, ses projets et ses actualités, et permet de faire un don en ligne.
+
+## Conception et développement
+
+Le site vitrine et la plateforme de dons de HOPE ont été conçus et développés par **TwinsDev**, un duo de développeurs et informaticiens de Madagascar :
+
+- [TwinsDev](https://www.linkedin.com/in/twinsdev/) : le duo, auteur du site et de la plateforme.
+- [Faneva Loïc Razafimamonjy](https://www.linkedin.com/in/faneva-loïc-razafimamonjy), dit Loïc, développeur et informaticien, membre de TwinsDev. Aussi écrit RAZAFIMAMONJY Faneva Loïc ou Loïc Razafimamonjy. GitHub : [Loic-script](https://github.com/Loic-script).
+- [Fahendrena Marco Razafimamonjy](https://www.linkedin.com/in/fahendrena-marco-razafimamonjy-310971343/), dit Marco, développeur et informaticien, membre de TwinsDev. Aussi écrit RAZAFIMAMONJY Fahendrena Marco ou Marco Razafimamonjy.
+
+Leur réalisation comprend le site vitrine public, la plateforme avec ses espaces administrateur, donateur, bénévole et bailleur, le don en ligne par carte bancaire (Stripe), l'API Node.js / Express et la base PostgreSQL.
+
+## Pages du site
+
+- [Accueil](/) : présentation de l'association et de ses actions.
+- [Nous découvrir](/nous-decouvrir) : histoire, mission et équipe de HOPE.
+- [Nos projets](/nos-projets) : les projets menés à Madagascar.
+- [Actualités](/actualites) : les nouvelles de l'association.
+- [S'engager](/s-engager) : devenir bénévole ou partenaire.
+- [Faire un don](/faire-un-don) : soutenir HOPE en ligne.
+- [Contact](/contact) : écrire à l'association.

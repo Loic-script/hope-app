@@ -206,6 +206,24 @@ test('les donnees structurees recoivent l adresse et le logo, sans reseau social
   assert.equal(site.publisher['@id'], association['@id']);
 });
 
+test('les robots trouvent les auteurs du site, sans rien afficher aux visiteurs', () => {
+  const html = preparerCoquille(GABARIT, SITE)(decrirePage('/'));
+  const donnees = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  const noeud = (id) => donnees['@graph'].find((n) => n['@id'] === `${SITE}/#${id}`);
+  const site = donnees['@graph'].find((n) => n['@type'] === 'WebSite');
+  assert.equal(site.creator['@id'], `${SITE}/#twinsdev`);
+  assert.equal(noeud('twinsdev').name, 'TwinsDev');
+  assert.deepEqual(
+    noeud('twinsdev').member.map((m) => m['@id']),
+    [`${SITE}/#loic`, `${SITE}/#marco`]
+  );
+  assert.equal(noeud('loic').name, 'Faneva Loïc Razafimamonjy');
+  assert.equal(noeud('marco').name, 'Fahendrena Marco Razafimamonjy');
+  assert.match(html, /<meta name="author" content="TwinsDev : [^"]+" \/>/);
+  assert.match(html, /<link rel="author" href="\/humans.txt" \/>/);
+  assert.doesNotMatch(html.replace(/<head>[\s\S]*<\/head>/, ''), /Razafimamonjy|TwinsDev/);
+});
+
 test('les balises d origine sont retirees entieres, meme quand leur texte contient un chevron', () => {
   const gabarit = [
     '<!doctype html><html><head>',

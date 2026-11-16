@@ -11,8 +11,9 @@ autonomie durable.
 >
 > **Mise en ligne** : voir [DEPLOIEMENT.md](DEPLOIEMENT.md) (Railway, un seul service).
 >
-> **Conception et développement** : [RAZAFIMAMONJY Faneva Loïc](https://github.com/Loic-script)
-> (Loïc RAZAFIMAMONJY), développeur web full stack.
+> **Conception et développement** : [TwinsDev](https://www.linkedin.com/in/twinsdev/), duo de
+> développeurs et informaticiens : [Faneva Loïc Razafimamonjy](https://www.linkedin.com/in/faneva-loïc-razafimamonjy)
+> (Loïc) et [Fahendrena Marco Razafimamonjy](https://www.linkedin.com/in/fahendrena-marco-razafimamonjy-310971343/) (Marco).
 
 ---
 
@@ -470,6 +471,12 @@ horizontal en 430 px, la déconnexion.
 
 ## Auteur
 
-Site vitrine et plateforme HOPE conçus et développés par **RAZAFIMAMONJY Faneva Loïc**
-(aussi écrit Faneva Loïc RAZAFIMAMONJY, Loïc RAZAFIMAMONJY, Loic Razafimamonjy), développeur
-web full stack à Madagascar — [github.com/Loic-script](https://github.com/Loic-script).
+Site vitrine et plateforme HOPE conçus et développés par **TwinsDev**
+([linkedin.com/in/twinsdev](https://www.linkedin.com/in/twinsdev/)), duo de développeurs et
+informaticiens à Madagascar :
+
+- **RAZAFIMAMONJY Faneva Loïc** (Loïc ; aussi écrit Faneva Loïc RAZAFIMAMONJY, Loïc RAZAFIMAMONJY,
+  Loic Razafimamonjy) — [LinkedIn](https://www.linkedin.com/in/faneva-loïc-razafimamonjy),
+  [github.com/Loic-script](https://github.com/Loic-script) ;
+- **RAZAFIMAMONJY Fahendrena Marco** (Marco ; aussi écrit Fahendrena Marco RAZAFIMAMONJY, Marco
+  Razafimamonjy) — [LinkedIn](https://www.linkedin.com/in/fahendrena-marco-razafimamonjy-310971343/).
