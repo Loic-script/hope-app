@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm ci --prefix backend --omit=dev && npm ci --prefix frontend --include=dev && npm run build --prefix frontend",
+    "build": "npm ci --prefix backend --omit=dev && npm ci --prefix frontend --include=dev && npm run build --prefix frontend && rm -rf frontend/node_modules",
     "start": "npm start --prefix backend",
     "db:preparer": "npm run db:init --prefix backend && npm run db:migrate --prefix backend",
     "db:premier-deploiement": "npm run db:preparer && npm run db:seed --prefix backend && npm run db:categories --prefix backend",
